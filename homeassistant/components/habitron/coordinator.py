@@ -304,6 +304,12 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
 
         An add-on hub is reached through Home Assistant, a standalone one on
         its own port.
+
+        The slug is the add-on's own panel path: the Supervisor registers one
+        per ingress add-on with ``frontend_url_path=addon``
+        (``hassio/addon_panel.py``), and ``/ingress`` is the entry within it.
+        Not ``homeassistant://app/<slug>``, which several integrations use --
+        that is a Companion-app deep link and opens nothing in a browser.
         """
         if self.hub.is_addon:
             return f"homeassistant://{self.hub.slug}/ingress"

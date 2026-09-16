@@ -1,15 +1,25 @@
 """Tests for the Habitron sensor platform."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import Area, Diagnostic, Sensor, SmartController, SmartHub
+from habitron_client import (
+    Area,
+    Diagnostic,
+    Input,
+    Logic,
+    Router,
+    Sensor,
+    SmartController,
+    SmartHub,
+)
 import pytest
 
 from homeassistant.components.habitron import sensor as habitron_sensor
 from homeassistant.components.habitron.const import DOMAIN
+from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.components.habitron.sensor import (
     AIRQUALITY_DESCRIPTION,
     ANALOG_DESCRIPTION,
@@ -37,13 +47,15 @@ from homeassistant.components.habitron.sensor import (
     HbtnHostSensor,
     HbtnSensorEntityDescription,
     LogicSensor,
-    async_setup_entry,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import MOCK_HOST, MOCK_UID
 
 from tests.common import MockConfigEntry
 
@@ -576,201 +588,130 @@ def test_ekey_finger_value_fn_named_finger() -> None:
     assert result in EKEY_FINGER_NAME_DESCRIPTION.options
 
 
-async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> None:
-    """async_setup_entry creates the broad mix of sensor entities."""
-    # SmartHub-level sensors
-    mem = MagicMock()
-    mem.name = "Memory usage"
-    mem.nmbr = 0
-    mem.type = 1
-    disk = MagicMock()
-    disk.name = "Disk usage"
-    disk.nmbr = 1
-    disk.type = 1
-    cpu_freq = MagicMock()
-    cpu_freq.name = "CPU Frequency"
-    cpu_freq.nmbr = 0
-    cpu_freq.type = 1
-    cpu_load = MagicMock()
-    cpu_load.name = "CPU load"
-    cpu_load.nmbr = 1
-    cpu_load.type = 1
-    cpu_temp = MagicMock()
-    cpu_temp.name = "CPU Temperature"
-    cpu_temp.nmbr = 2
-    cpu_temp.type = 1
+async def test_setup_registers_the_broad_mix_of_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
+) -> None:
+    """A full bus yields one registered entity per member the platform serves.
 
-    # Module-level sensors
-    temp = MagicMock()
-    temp.name = "Temperature"
-    temp.nmbr = 0
-    temp.type = 1
-    hum = MagicMock()
-    hum.name = "Humidity"
-    hum.nmbr = 1
-    hum.type = 1
-    illum = MagicMock()
-    illum.name = "Illuminance"
-    illum.nmbr = 2
-    illum.type = 1
-    wind = MagicMock()
-    wind.name = "Wind"
-    wind.nmbr = 3
-    wind.type = 1
-    air = MagicMock()
-    air.name = "Airquality"
-    air.nmbr = 4
-    air.type = 1
-    ident = MagicMock()
-    ident.name = "Identifier"
-    ident.nmbr = 5
-    ident.type = 1
-    finger = MagicMock()
-    finger.name = "Finger"
-    finger.nmbr = 6
-    finger.type = 1
-    ain = MagicMock()
-    ain.name = "AIn 1"
-    ain.nmbr = 0
-    ain.type = 3
-    ain.area = 0
-    logic = MagicMock()
-    logic.nmbr = 0
-    logic.idx = 0
-    logic.name = "Cnt"
-    logic.type = 5
-    status = MagicMock()
-    status.name = "Status"
-    status.nmbr = 0
-    status.type = 1
-    power_temp = MagicMock()
-    power_temp.name = "PowerTemp"
-    power_temp.nmbr = 1
-    power_temp.type = 1
+    Counted in the entity registry rather than in the list the platform hands
+    back: that is what Home Assistant ends up with, diagnostics included -- they
+    are registered but disabled, so they never appear as a state.
+    """
+    hub = SmartHub(uid=MOCK_UID)
+    hub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=1),
+        Sensor(name="Disk usage", nmbr=1, type=1),
+    ]
+    hub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=1),
+        Diagnostic(name="CPU load", nmbr=1, type=1),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=1),
+    ]
 
-    mod = MagicMock(spec=SmartController)
-    mod.uid = "MOD-1"
-    mod.mod_type = "Smart Controller Touch"
-    mod.typ = b"\x01\x04"
-    mod.area = 0
-    mod.sensors = [temp, hum, illum, wind, air, ident, finger]
-    mod.analogins = [ain]
-    mod.logic = [logic]
-    mod.diags = [status, power_temp]
-    mod.stream_name = "touch_1"
+    module = SmartController(
+        uid="MOD-1", addr=1, typ=b"\x01\x03", name="Controller", area=1
+    )
+    module.sensors = [
+        Sensor(name="Temperature", nmbr=0, type=1),
+        Sensor(name="Humidity", nmbr=1, type=1),
+        Sensor(name="Illuminance", nmbr=2, type=1),
+        Sensor(name="Wind", nmbr=3, type=1),
+        Sensor(name="Airquality", nmbr=4, type=1),
+        Sensor(name="Identifier", nmbr=5, type=1),
+        Sensor(name="Finger", nmbr=6, type=1),
+    ]
+    module.analogins = [Input(name="AIn 1", nmbr=0, type=3, area=0)]
+    module.logic = [Logic(name="Counter 1", nmbr=1, idx=0, type=5)]
+    module.diags = [
+        Diagnostic(name="Status", nmbr=0, type=1),
+        Diagnostic(name="PowerTemp", nmbr=1, type=1),
+    ]
 
-    smhub = MagicMock()
-    smhub.sensors = [mem, disk]
-    smhub.diags = [cpu_freq, cpu_load, cpu_temp]
-    smhub.uid = "HUB-1"
+    router = Router(uid="rt_1", name="Router")
+    router.modules = [module]
+    router.areas = [Area(nmbr=1, name="Living")]
+    router.chan_timeouts = [Diagnostic(name="Timeouts channel 1", nmbr=0, type=1)]
+    router.chan_currents = [Diagnostic(name="Current channel 1", nmbr=0, type=1)]
+    router.voltages = [Diagnostic(name="Voltage 5V", nmbr=0, type=1)]
 
-    chan_to = MagicMock()
-    chan_to.nmbr = 0
-    chan_to.value = 100
-    chan_to.type = 1
-    chan_curr = MagicMock()
-    chan_curr.nmbr = 0
-    chan_curr.value = 1.0
-    chan_curr.type = 1
-    rt_vtg = MagicMock()
-    rt_vtg.nmbr = 0
-    rt_vtg.value = 230
-    rt_vtg.type = 1
-    router = MagicMock()
-    router.modules = [mod]
-    router.coord = MagicMock()
-    router.chan_timeouts = [chan_to]
-    router.chan_currents = [chan_curr]
-    router.voltages = [rt_vtg]
-    router.areas = [Area(nmbr=0, name="House")]
+    entry = await setup_with_model(router, hub)
 
-    coordinator = MagicMock()
-    coordinator.hub = smhub
-    coordinator.router = router
-    entry = MagicMock()
-    entry.runtime_data = coordinator
-
-    added: list = []
-    await async_setup_entry(hass, entry, added.extend)  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
-
+    registered = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     # 2 hub perc + 3 hub diag + 1 analog + (temp/hum/illum/wind/air) 5
     # + ekey (2 identifier, 2 finger) + 1 logic + 2 module diag
     # + timeout + current + voltage
-    assert len(added) == 21
-    assert all(isinstance(e, HbtnDescribedSensor) for e in added)
-    assert sum(isinstance(e, LogicSensor) for e in added) == 1
-
-    keys = {e.entity_description.key for e in added}
-    assert keys == {
-        "memory_usage",
-        "disk_usage",
-        "cpu_frequency",
-        "cpu_load",
-        "cpu_temperature",
-        "analog_in",
-        "temperature",
-        "humidity",
-        "illuminance",
-        "wind",
-        "airquality",
-        "ekey_identifier",
-        "ekey_user_name",
-        "ekey_finger",
-        "ekey_finger_name",
-        "logic",
-        "module_status",
-        "power_temperature",
-        "timeout",
-        "current",
-        "voltage",
-    }
+    assert len(registered) == 21
+    assert all(item.domain == "sensor" for item in registered)
 
 
 _ANALOG_UNIQUE_ID = "MOD-1_analog_in_0"
 
 
-def _analog_coordinator(ain_area: int, module_area: int = 1) -> MagicMock:
-    """Build a coordinator exposing one module with a single analog input."""
-    ain = MagicMock()
-    ain.name = "AIn 1"
-    ain.nmbr = 0
-    ain.type = 3
-    ain.area = ain_area
-    mod = MagicMock(spec=SmartController)
-    mod.uid = "MOD-1"
-    mod.typ = b"\x01\x03"
-    mod.area = module_area
-    mod.sensors = []
-    mod.analogins = [ain]
-    mod.logic = []
-    mod.diags = []
-    router = MagicMock()
-    router.modules = [mod]
-    router.chan_timeouts = []
-    router.chan_currents = []
-    router.voltages = []
+@pytest.fixture
+def setup_with_model(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_config_entry: MockConfigEntry,
+    mock_habitron_client: MagicMock,
+) -> Callable[[Router, SmartHub | None], Awaitable[MockConfigEntry]]:
+    """Set up the entry the way Home Assistant does, over a given bus model.
+
+    Only the bus itself is replaced: the config entry is set up through
+    ``hass.config_entries.async_setup``, so the platform is forwarded, the
+    entities are registered and the registries end up in the state the tests
+    assert on -- rather than the tests inspecting the objects the platform
+    happened to construct.
+    """
+
+    async def _setup(router: Router, hub: SmartHub | None = None) -> MockConfigEntry:
+        async def _connect_and_build(coordinator: HbtnCoordinator) -> None:
+            coordinator._client = AsyncMock()
+            coordinator.host = MOCK_HOST
+            coordinator.hub = hub if hub is not None else SmartHub(uid=MOCK_UID)
+            coordinator.base_url = f"http://{MOCK_HOST}:7780"
+            coordinator.router = router
+
+        # A test that pre-registers entities adds the entry itself first.
+        if hass.config_entries.async_get_entry(mock_config_entry.entry_id) is None:
+            mock_config_entry.add_to_hass(hass)
+        with (
+            patch(
+                "homeassistant.components.habitron.coordinator."
+                "HbtnCoordinator._async_connect_and_build",
+                new=_connect_and_build,
+            ),
+            patch(
+                "homeassistant.components.habitron.coordinator.async_refresh_system",
+                new=AsyncMock(return_value=4711),
+            ),
+            patch(
+                "homeassistant.components.habitron.coordinator.async_refresh_hub",
+                new=AsyncMock(),
+            ),
+        ):
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+        return mock_config_entry
+
+    return _setup
+
+
+def _analog_router(ain_area: int, module_area: int = 1) -> Router:
+    """A bus with one controller carrying a single analog input."""
+    module = SmartController(
+        uid="MOD-1",
+        addr=1,
+        typ=b"\x01\x03",
+        name="Controller",
+        area=module_area,
+    )
+    module.analogins = [Input(name="AIn 1", nmbr=0, type=3, area=ain_area)]
+    router = Router(uid="rt_1", name="Router")
+    router.modules = [module]
     router.areas = [Area(nmbr=1, name="Living"), Area(nmbr=2, name="Kitchen")]
-    smhub = MagicMock()
-    smhub.sensors = []
-    smhub.diags = []
-    coordinator = MagicMock()
-    coordinator.hub = smhub
-    coordinator.router = router
-    return coordinator
-
-
-def _registering_add(
-    registry: er.EntityRegistry, entry: MockConfigEntry
-) -> Callable[[list], None]:
-    """Return an add_entities callback that registers each entity (like HA)."""
-
-    def _add(entities: list) -> None:
-        for ent in entities:
-            registry.async_get_or_create(
-                "sensor", DOMAIN, ent.unique_id, config_entry=entry
-            )
-
-    return _add
+    return router
 
 
 def _analog_entity_with_area(
@@ -826,24 +767,24 @@ async def test_analog_deviating_area_stamped_only_on_first_create(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
 ) -> None:
     """A brand-new analog input carries its deviating area into the entity."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+    entry = await setup_with_model(_analog_router(ain_area=2, module_area=1))
 
-    captured: list[HbtnDescribedSensor] = []
-    await async_setup_entry(hass, entry, captured.extend)  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
-
-    analog = next(e for e in captured if e.unique_id == _ANALOG_UNIQUE_ID)
     kitchen = area_registry.async_get_area_by_name("Kitchen")
     assert kitchen is not None
-    assert analog._initial_area_id == kitchen.id
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).area_id == kitchen.id
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_analog_deviating_area_not_restamped_on_reload(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
 ) -> None:
     """On reload the deviating area is not re-applied.
 
@@ -852,25 +793,24 @@ async def test_analog_deviating_area_not_restamped_on_reload(
     silently overwrite that choice, so an already-registered entity carries no
     ``initial_area_id``.
     """
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
-    # Pre-register as if from a prior run.
+    mock_config_entry.add_to_hass(hass)
+    # Registered as if from a prior run, with the area the user has since cleared.
     entity_registry.async_get_or_create(
-        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=entry
+        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=mock_config_entry
     )
 
-    captured: list[HbtnDescribedSensor] = []
-    await async_setup_entry(hass, entry, captured.extend)  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+    await setup_with_model(_analog_router(ain_area=2, module_area=1))
 
-    analog = next(e for e in captured if e.unique_id == _ANALOG_UNIQUE_ID)
-    assert analog._initial_area_id is None
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).area_id is None
 
 
 async def test_bus_areas_are_not_created_up_front(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
 ) -> None:
     """A reload does not resurrect bus areas the user has since removed.
 
@@ -878,12 +818,8 @@ async def test_bus_areas_are_not_created_up_front(
     setup would recreate one the user renamed or deleted. Only the area an
     entity is actually being stamped with may be created.
     """
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
     # The analog input matches its module's area, so no area has to be stamped.
-    entry.runtime_data = _analog_coordinator(ain_area=1, module_area=1)
-
-    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+    await setup_with_model(_analog_router(ain_area=1, module_area=1))
 
     assert area_registry.async_get_area_by_name("Living") is None
     assert area_registry.async_get_area_by_name("Kitchen") is None
@@ -894,13 +830,10 @@ async def test_analog_non_deviating_area_not_applied(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ain_area: int,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
 ) -> None:
     """No area override for an analog input that matches its module's area."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = _analog_coordinator(ain_area=ain_area, module_area=1)
-
-    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+    await setup_with_model(_analog_router(ain_area=ain_area, module_area=1))
 
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
     assert entity_id is not None
@@ -910,6 +843,7 @@ async def test_analog_non_deviating_area_not_applied(
 async def test_analog_input_created_for_module_type_beyond_hardcoded_set(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    setup_with_model: Callable[..., Awaitable[MockConfigEntry]],
 ) -> None:
     """Any module the library gave analog inputs gets its analog sensors.
 
@@ -917,13 +851,10 @@ async def test_analog_input_created_for_module_type_beyond_hardcoded_set(
     enumerated set of type codes, so a controller variant beyond the ones that
     used to be hard-coded still yields its analog input.
     """
-    coordinator = _analog_coordinator(ain_area=0)
-    coordinator.router.modules[0].typ = b"\x01\x05"
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = coordinator
+    router = _analog_router(ain_area=0)
+    router.modules[0].typ = b"\x01\x05"
 
-    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+    await setup_with_model(router)
 
     assert (
         entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
