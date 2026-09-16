@@ -26,7 +26,12 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -62,6 +67,74 @@ def connect_timeout_fixture() -> Generator[int]:
         yield timeout
 
 
+@pytest.mark.parametrize(
+    ("unique_id", "data", "expected_unique_id", "expected_data"),
+    [
+        pytest.param(
+            3245146787,
+            {"url": "ws://test.org"},
+            "3245146787",
+            {"url": "ws://test.org"},
+            id="int_unique_id",
+        ),
+        pytest.param(
+            "3245146787",
+            {"url": "ws://test.org", "network_key": "abc123"},
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "abc123"},
+            id="network_key_only",
+        ),
+        pytest.param(
+            "3245146787",
+            {
+                "url": "ws://test.org",
+                "network_key": "abc123",
+                "s0_legacy_key": "def456",
+            },
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "def456"},
+            id="existing_s0_legacy_key_wins",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    unique_id: int | str,
+    data: dict[str, Any],
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Test migration of a version 1.1 config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=data, unique_id=unique_id, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zwave_js.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.unique_id == expected_unique_id
+    assert dict(entry.data) == expected_data
+
+
+async def test_migrate_entry_from_future_version(hass: HomeAssistant) -> None:
+    """Test migration of a config entry from a future version fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://test.org"}, unique_id="3245146787", version=2
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     client: MagicMock,
@@ -88,6 +161,33 @@ async def test_home_assistant_stop(
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
+
+
+async def test_home_assistant_stop_waits_for_neighbors_refresh(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test stop disconnects only after a neighbors refresh releases the lock.
+
+    The refresh turns the radio back on before releasing, so disconnecting
+    earlier could leave the radio off.
+    """
+    disconnected = asyncio.Event()
+
+    async def mock_disconnect() -> None:
+        disconnected.set()
+
+    client.disconnect.side_effect = mock_disconnect
+
+    async with integration.runtime_data.network_neighbors_lock:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not disconnected.is_set()
+
+    await hass.async_block_till_done()
+    assert disconnected.is_set()
 
 
 @pytest.mark.usefixtures("client", "connect_timeout")
@@ -966,7 +1066,7 @@ async def test_start_addon(
     "set_addon_options_side_effect",
     [
         SupervisorError(
-            "not a valid value for dictionary value @ data['options']. "
+            "not a valid value at 'options'. "
             f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
         )
     ],
@@ -996,7 +1096,7 @@ async def test_start_addon_redacts_set_options_error(
     assert set_addon_options.call_count == 1
     assert start_addon.call_count == 0
     assert "Failed to set the Z-Wave JS app options" in caplog.text
-    assert "not a valid value for dictionary value" in caplog.text
+    assert "not a valid value at" in caplog.text
     assert REDACTED in caplog.text
     assert secret not in caplog.text
 

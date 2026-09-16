@@ -1,6 +1,6 @@
 """Implement device conditions for binary sensor."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import (
@@ -37,6 +37,8 @@ CONF_IS_CONNECTED = "is_connected"
 CONF_IS_NOT_CONNECTED = "is_not_connected"
 CONF_IS_GAS = "is_gas"
 CONF_IS_NO_GAS = "is_no_gas"
+CONF_IS_GLASS_BREAK = "is_glass_break"
+CONF_IS_NO_GLASS_BREAK = "is_no_glass_break"
 CONF_IS_HOT = "is_hot"
 CONF_IS_NOT_HOT = "is_not_hot"
 CONF_IS_LIGHT = "is_light"
@@ -83,6 +85,7 @@ IS_ON = [
     CONF_IS_COLD,
     CONF_IS_CONNECTED,
     CONF_IS_GAS,
+    CONF_IS_GLASS_BREAK,
     CONF_IS_HOT,
     CONF_IS_LIGHT,
     CONF_IS_NOT_LOCKED,
@@ -123,6 +126,7 @@ IS_OFF = [
     CONF_IS_NOT_UNSAFE,
     CONF_IS_NO_CO,
     CONF_IS_NO_GAS,
+    CONF_IS_NO_GLASS_BREAK,
     CONF_IS_NO_LIGHT,
     CONF_IS_NO_MOTION,
     CONF_IS_NO_PROBLEM,
@@ -166,6 +170,10 @@ ENTITY_CONDITIONS = {
     BinarySensorDeviceClass.GAS: [
         {CONF_TYPE: CONF_IS_GAS},
         {CONF_TYPE: CONF_IS_NO_GAS},
+    ],
+    BinarySensorDeviceClass.GLASS_BREAK: [
+        {CONF_TYPE: CONF_IS_GLASS_BREAK},
+        {CONF_TYPE: CONF_IS_NO_GLASS_BREAK},
     ],
     BinarySensorDeviceClass.HEAT: [
         {CONF_TYPE: CONF_IS_HOT},
@@ -255,9 +263,9 @@ ENTITY_CONDITIONS = {
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(IS_OFF + IS_ON),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(IS_OFF + IS_ON),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -320,10 +328,10 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     return {
-        "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        "extra_fields": probatio.Schema(
+            {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
         )
     }

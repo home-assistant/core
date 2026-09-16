@@ -4,12 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.knx.const import (
+    DOMAIN,
+    KNX_MODULE_KEY,
+    REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+)
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -113,6 +118,73 @@ async def test_create_entity_error(
     assert not res["result"]["success"]
     assert res["result"]["errors"][0]["path"] == ["platform"]
     assert res["result"]["error_base"].startswith("value must be one of")
+
+
+@pytest.mark.parametrize(
+    ("platform", "knx_data", "read_response"),
+    [
+        pytest.param(
+            Platform.SENSOR,
+            {"ga_sensor": {"state": "1/2/3", "dpt": "5.001"}},
+            (0,),
+            id="sensor",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            {"ga_sensor": {"state": "1/2/3", "dpt": "1"}},
+            0,
+            id="binary_sensor",
+        ),
+    ],
+)
+async def test_create_entity_unsupported_entity_category(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    create_ui_entity: KnxEntityGenerator,
+    platform: Platform,
+    knx_data: dict[str, Any],
+    read_response: int | tuple[int, ...],
+) -> None:
+    """Test read-only platforms reject `EntityCategory.CONFIG`."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": platform,
+            "data": {
+                "entity": {
+                    "name": "Test config category",
+                    "entity_category": EntityCategory.CONFIG,
+                },
+                "knx": knx_data,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert not res["result"]["success"]
+    assert res["result"]["errors"][0]["path"] == ["data", "entity", "entity_category"]
+    assert "is not supported by the" in res["result"]["error_base"]
+    assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+
+    entity_entry = await create_ui_entity(
+        platform=platform,
+        entity_data={
+            "name": "Test diagnostic category",
+            "entity_category": EntityCategory.DIAGNOSTIC,
+        },
+        knx_data=knx_data,
+    )
+    await knx.assert_read("1/2/3", response=read_response)
+    assert (
+        entity_registry.async_get(entity_entry.entity_id).entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
 
 
 async def test_update_entity(
@@ -419,7 +491,7 @@ async def test_validate_entity(
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
     assert res["result"]["error_base"].startswith("required key not provided")
 
     # invalid group_select data
@@ -443,7 +515,7 @@ async def test_validate_entity(
     assert res["success"], res
     assert res["result"]["success"] is False
     # This shall test that a required key of the second GroupSelect schema is missing
-    # and not yield the "extra keys not allowed" error of the first GroupSelect Schema
+    # and not yield the "not a valid option" error of the first GroupSelect Schema
     assert res["result"]["errors"][0]["path"] == [
         "data",
         "knx",
@@ -451,8 +523,37 @@ async def test_validate_entity(
         "ga_blue_brightness",
     ]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
     assert res["result"]["error_base"].startswith("required key not provided")
+
+    # partially configured group_select option
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.LIGHT,
+            "data": {
+                "entity": {"name": "test_name"},
+                "knx": {
+                    "color": {
+                        "ga_hue": {"write": "1/2/3"},
+                        # ga_saturation is missing - which is required
+                    }
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    # the error of the option the user started configuring shall be reported,
+    # not a "required key" error of one of the other options
+    assert res["result"]["errors"][0]["path"] == [
+        "data",
+        "knx",
+        "color",
+        "ga_saturation",
+    ]
+    assert res["result"]["errors"][0]["code"] == "required"
 
 
 ########
@@ -481,7 +582,7 @@ async def test_update_expose_error(
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "write"]
     assert res["result"]["errors"][0]["message"] == "required key not provided"
-    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
+    assert res["result"]["errors"][0]["code"] == "required"
 
 
 async def test_validate_expose(
@@ -576,6 +677,86 @@ async def test_delete_expose_error(
     )
 
 
+##################
+# STORE VALIDATION
+##################
+
+VALID_SWITCH_UID = "knx_es_01JWDFHP1ZG6NT62BX6ENR3MG7"
+INVALID_SWITCH_UID = "knx_es_01JWDFKBG3PYPPRQDJZ3N3PMCB"
+LIGHT_UID = "knx_es_01J85ZKTFHSZNG4X9DYBE592TF"
+
+
+async def test_load_skips_invalid_entity_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an invalid stored config is skipped without failing its platform."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, VALID_SWITCH_UID
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.SWITCH, DOMAIN, INVALID_SWITCH_UID)
+        is None
+    )
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{Platform.SWITCH}"
+    )
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform": Platform.SWITCH,
+        "entities": f"- {INVALID_SWITCH_UID}",
+    }
+
+
+async def test_load_applies_schema_defaults_and_coercion(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stored configs are normalized on load.
+
+    The light in the fixture predates `color_temp_min` / `color_temp_max`, which
+    `KnxUiLight.__init__` reads by direct key access, and the switch stores
+    `entity_category` as a plain string.
+    """
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    assert hass.states.get("light.missing_defaults") is not None
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID][DOMAIN]
+    assert light_config["color_temp_min"] == 2700
+    assert light_config["color_temp_max"] == 6000
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, VALID_SWITCH_UID
+    )
+    assert entity_registry.async_get(switch_id).entity_category is EntityCategory.CONFIG
+
+
+async def test_load_valid_store_creates_no_issue(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a valid store doesn't raise a repair issue."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_light_switch.json", state_updater=False
+    )
+    assert not [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.issue_id.startswith(REPAIR_ISSUE_ENTITY_VALIDATION_ERROR)
+    ]
+
+
 ###########
 # MIGRATION
 ###########
@@ -596,12 +777,12 @@ async def test_migration_1_to_2(
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
 
 
-async def test_migration_2_1_to_2_4(
+async def test_migration_2_1_to_2_5(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test migration from schema 2.1 to schema 2.4."""
+    """Test migration from schema 2.1 to schema 2.5."""
     await knx.setup_integration(
         config_store_fixture="config_store_binarysensor_v2_1.json",
         state_updater=False,
@@ -610,3 +791,23 @@ async def test_migration_2_1_to_2_4(
         hass, "config_store_binarysensor.json", "knx"
     )
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+
+async def test_migration_2_4_to_2_5(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 2.4 to schema 2.5."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_entity_category_v2_4.json",
+        state_updater=False,
+    )
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_entity_category.json", "knx"
+    )
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+    # entities that could not be set up before are now created
+    assert hass.states.get("sensor.test_sensor")
+    assert hass.states.get("binary_sensor.test_binary_sensor")

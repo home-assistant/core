@@ -1,0 +1,11 @@
+{
+  "domain": "sunsynk",
+  "name": "Sunsynk",
+  "codeowners": ["@jamesridgway"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sunsynk",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["sunsynk-api-client==1.4.0"]
+}

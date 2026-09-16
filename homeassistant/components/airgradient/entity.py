@@ -3,7 +3,14 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from airgradient import AirGradientConnectionError, AirGradientError, get_model_name
+from airgradient import (
+    AirGradientBusyError,
+    AirGradientConnectionError,
+    AirGradientError,
+    AirGradientForbiddenError,
+    AirGradientNotSupportedError,
+    get_model_name,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -49,6 +56,27 @@ def exception_handler[_EntityT: AirGradientEntity, **_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+        except AirGradientForbiddenError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="forbidden_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+        except AirGradientBusyError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="busy_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+        except AirGradientNotSupportedError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_error",
                 translation_placeholders={"error": str(error)},
             ) from error
 

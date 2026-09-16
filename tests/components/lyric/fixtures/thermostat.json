@@ -1,0 +1,15 @@
+{
+  "deviceClass": "Thermostat",
+  "units": "Celsius",
+  "indoorTemperature": 21.5,
+  "indoorHumidity": 45,
+  "outdoorTemperature": 10,
+  "displayedOutdoorHumidity": 60,
+  "deviceModel": "T9",
+  "changeableValues": {
+    "mode": "Heat",
+    "heatSetpoint": 20,
+    "coolSetpoint": 24,
+    "thermostatSetpointStatus": "NoHold"
+  }
+}
