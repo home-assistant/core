@@ -2,9 +2,9 @@
 
 from typing import cast
 
+import probatio
 from tplink_omada_client import OmadaClientSettings
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DEVICE_ID, ATTR_NAME
@@ -172,15 +172,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_client_name",
         _handle_set_client_name,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                probatio.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
-                vol.Required(ATTR_NAME): vol.All(cv.string, vol.Length(min=1)),
+                probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(),
+                probatio.Required(ATTR_NAME): probatio.All(
+                    cv.string, probatio.Length(min=1)
+                ),
             }
         ),
     )
@@ -188,14 +190,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "reconnect_client",
         _handle_reconnect_client,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+                probatio.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required(ATTR_MAC): cv.string,
+                probatio.Required(ATTR_MAC): cv.string,
             }
         ),
     )
