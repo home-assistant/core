@@ -7,6 +7,7 @@ from asyncsleepiq import (
     AsyncSleepIQ,
     SleepIQAPIException,
     SleepIQBed,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
@@ -76,6 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     try:
         await gateway.login(email, password)
+    except SleepIQConnectionException as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Transient connection failure during authentication"
+        ) from err
     except SleepIQLoginException as err:
         _LOGGER.error("Could not authenticate with SleepIQ server")
         raise ConfigEntryAuthFailed(err) from err
