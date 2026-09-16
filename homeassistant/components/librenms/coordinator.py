@@ -24,23 +24,27 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class LibrenmsData:
+class LibrenmsCentralData:
     """Data class for storing data from the API."""
 
     system: LibrenmsSystemInfo
     devices: dict[int, LibrenmsDeviceInfo]
 
 
-type LibrenmsConfigEntry = ConfigEntry[LibrenmsDataUpdateCoordinator]
+type LibrenmsConfigEntry = ConfigEntry[LibrenmsCentralDataUpdateCoordinator]
 
 
-class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
-    """Class to manage fetching LibreNMS data."""
+class LibrenmsBaseDataUpdateCoordinator[T](DataUpdateCoordinator[T]):
+    """Base class to manage fetching LibreNMS data."""
 
     config_entry: LibrenmsConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: LibrenmsConfigEntry, api: Librenms
+        self,
+        hass: HomeAssistant,
+        config_entry: LibrenmsConfigEntry,
+        api: Librenms,
+        update_interval: timedelta,
     ) -> None:
         """Initialize the data update coordinator."""
         self.api = api
@@ -56,11 +60,28 @@ class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
+            update_interval=update_interval,
+        )
+
+
+class LibrenmsCentralDataUpdateCoordinator(
+    LibrenmsBaseDataUpdateCoordinator[LibrenmsCentralData]
+):
+    """Coordinator to fetch librenms system data and monitored devices meta data."""
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: LibrenmsConfigEntry, api: Librenms
+    ) -> None:
+        """Initialize the data update coordinator."""
+        super().__init__(
+            hass,
+            config_entry=config_entry,
+            api=api,
             update_interval=timedelta(seconds=60),
         )
 
     @override
-    async def _async_update_data(self) -> LibrenmsData:
+    async def _async_update_data(self) -> LibrenmsCentralData:
         """Update data via internal method."""
         try:
             system = await self.api.system.async_get_system_info()
@@ -77,4 +98,4 @@ class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        return LibrenmsData(system, {dev.device_id: dev for dev in devices})
+        return LibrenmsCentralData(system, {dev.device_id: dev for dev in devices})

@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import LibrenmsConfigEntry, LibrenmsDataUpdateCoordinator
+from .coordinator import LibrenmsCentralDataUpdateCoordinator, LibrenmsConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> 
             translation_key="cannot_connect",
         ) from err
 
-    coordinator = LibrenmsDataUpdateCoordinator(hass, entry, api)
+    coordinator = LibrenmsCentralDataUpdateCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
