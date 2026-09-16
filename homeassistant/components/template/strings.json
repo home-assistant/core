@@ -107,6 +107,7 @@
       "climate": {
         "data": {
           "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
           "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
           "hvac_mode": "HVAC mode",
           "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
@@ -118,6 +119,7 @@
         },
         "data_description": {
           "current_temperature": "Defines a template for the current temperature.",
+          "device_id": "[%key:component::template::common::device_id_description%]",
           "hvac_action": "Defines a template for the current HVAC action. Valid HVAC actions are `cooling`, `defrosting`, `drying`, `fan`, `heating`, `idle`, `off`, and `preheating`.",
           "hvac_mode": "Defines a template for the current HVAC mode. Valid HVAC modes are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
           "hvac_modes": "Defines a template for a list of available HVAC modes. Valid HVAC modes for the list are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
@@ -745,6 +747,7 @@
       "climate": {
         "data": {
           "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
           "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
           "hvac_mode": "[%key:component::template::config::step::climate::data::hvac_mode%]",
           "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
@@ -756,6 +759,7 @@
         },
         "data_description": {
           "current_temperature": "[%key:component::template::config::step::climate::data_description::current_temperature%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
           "hvac_action": "[%key:component::template::config::step::climate::data_description::hvac_action%]",
           "hvac_mode": "[%key:component::template::config::step::climate::data_description::hvac_mode%]",
           "hvac_modes": "[%key:component::template::config::step::climate::data_description::hvac_modes%]",
