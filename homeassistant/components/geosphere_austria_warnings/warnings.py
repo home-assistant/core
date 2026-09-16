@@ -86,14 +86,14 @@ def sort_warnings(warnings: Iterable[WeatherWarning]) -> list[WeatherWarning]:
     """Return warnings in deterministic, actionability-ranked order.
 
     This ordering is used for display and for selecting the "featured"
-    warning (see ``select_highest_warning``); it is intentionally not pure
+    warning (see ``select_priority_warning``); it is intentionally not pure
     severity order. For the true worst-case severity, use
     ``highest_warning_level`` instead.
     """
     return sorted(warnings, key=warning_sort_key)
 
 
-def select_highest_warning(
+def select_priority_warning(
     warnings: Iterable[WeatherWarning],
 ) -> WeatherWarning | None:
     """Return the highest-priority warning, or ``None`` for an empty iterable."""
@@ -112,7 +112,7 @@ def warning_sensor_attributes(
     common case the selected warning already carries that level.
     """
     warnings = list(warnings)
-    warning = select_highest_warning(warnings)
+    warning = select_priority_warning(warnings)
     if warning is None:
         return {}
 

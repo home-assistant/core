@@ -14,7 +14,7 @@ from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.components.geosphere_austria_warnings.warnings import (
     LEVEL_NONE,
     highest_warning_level,
-    select_highest_warning,
+    select_priority_warning,
     sort_warnings,
     warning_sensor_attributes,
 )
@@ -58,11 +58,11 @@ def test_sort_warnings_is_deterministic(warnings: list[WeatherWarning]) -> None:
     ] == expected
 
 
-def test_select_highest_warning_uses_severity_then_end_time(
+def test_select_priority_warning_uses_severity_then_end_time(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test orange warnings outrank yellow and earlier end wins within orange."""
-    selected = select_highest_warning(warnings)
+    selected = select_priority_warning(warnings)
 
     assert selected is not None
     assert selected.level == WarningLevel.ORANGE
@@ -76,7 +76,7 @@ def test_highest_warning_level(warnings: list[WeatherWarning]) -> None:
     assert highest_warning_level([]) == LEVEL_NONE
 
 
-def test_select_highest_warning_prefers_storm_over_concurrent_heat(
+def test_select_priority_warning_prefers_storm_over_concurrent_heat(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test acute orange storm wins over concurrent demoted yellow heat."""
@@ -86,7 +86,7 @@ def test_select_highest_warning_prefers_storm_over_concurrent_heat(
         if warning.start.date().isoformat() == "2023-03-27"
     ]
 
-    selected = select_highest_warning(concurrent_warnings)
+    selected = select_priority_warning(concurrent_warnings)
 
     assert selected is not None
     assert selected.course_id == 12
@@ -121,7 +121,7 @@ def test_highest_warning_level_ignores_type_demotion(
     assert highest_warning_level(heat_and_thunderstorm) == "orange"
 
 
-def test_select_highest_warning_prefers_acute_over_sustained(
+def test_select_priority_warning_prefers_acute_over_sustained(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test a concurrent yellow thunderstorm wins over orange all-day heat."""
@@ -132,7 +132,7 @@ def test_select_highest_warning_prefers_acute_over_sustained(
         and warning.warning_type in {WarningType.HEAT, WarningType.THUNDERSTORM}
     ]
 
-    selected = select_highest_warning(concurrent_warnings)
+    selected = select_priority_warning(concurrent_warnings)
 
     assert selected is not None
     assert selected.course_id == 2
@@ -177,7 +177,7 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         update_reason="",
     )
 
-    selected = select_highest_warning([all_day_heat, afternoon_thunderstorm])
+    selected = select_priority_warning([all_day_heat, afternoon_thunderstorm])
 
     assert selected is not None
     assert selected.warning_id == 200
@@ -188,7 +188,7 @@ def test_warning_sensor_attributes_are_flat_and_minimal(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test that sensor attributes expose only the selected warning details."""
-    selected = select_highest_warning(warnings)
+    selected = select_priority_warning(warnings)
     assert selected is not None
 
     assert warning_sensor_attributes([selected]) == {
@@ -203,7 +203,7 @@ def test_warning_sensor_attributes_are_flat_and_minimal(
     assert warning_sensor_attributes([]) == {}
 
 
-def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
+def test_warning_sensor_attributes_include_diverging_warning_level() -> None:
     """Test that sensor attributes expose only the selected warning details."""
     all_day_heat = WeatherWarning(
         warning_id=100,
@@ -236,7 +236,7 @@ def test_warning_sensor_attributes_include_diverting_warning_level() -> None:
 
     all_warnings = [all_day_heat, afternoon_thunderstorm]
 
-    selected = select_highest_warning(all_warnings)
+    selected = select_priority_warning(all_warnings)
     assert selected is not None
     assert selected.warning_id == 200  # thunderstorm wins the tie
 
