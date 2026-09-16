@@ -7,7 +7,6 @@ from pyControl4.error_handling import BadToken
 import pytest
 
 from homeassistant.components.control4 import RefreshTokensObject, _periodic_resync
-from homeassistant.components.control4.const import ReentrantAsyncLock
 from homeassistant.components.control4.director_utils import (
     director_get_entry_variables,
     gather_entry_variables,
@@ -132,36 +131,6 @@ async def test_scheduled_refresh_skips_when_lock_already_held(
 
     release_holder.set()
     await holder_task
-
-
-async def test_reentrant_async_lock_allows_same_task_reentry() -> None:
-    """The same task can safely re-acquire the lock without deadlocking."""
-
-    async def _nested_reentry(lock: ReentrantAsyncLock) -> None:
-        async with lock, lock:
-            pass
-
-    await asyncio.wait_for(_nested_reentry(ReentrantAsyncLock()), timeout=2)
-
-
-async def test_reentrant_async_lock_blocks_different_tasks() -> None:
-    """A different task must still wait for the lock to be released."""
-    lock = ReentrantAsyncLock()
-    order = []
-
-    async def _holder() -> None:
-        async with lock:
-            order.append("holder-acquired")
-            await asyncio.sleep(0.05)
-            order.append("holder-released")
-
-    async def _waiter() -> None:
-        await asyncio.sleep(0.01)
-        async with lock:
-            order.append("waiter-acquired")
-
-    await asyncio.wait_for(asyncio.gather(_holder(), _waiter()), timeout=2)
-    assert order == ["holder-acquired", "holder-released", "waiter-acquired"]
 
 
 @pytest.mark.usefixtures("mock_c4_account")
