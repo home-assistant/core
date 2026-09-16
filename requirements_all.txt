@@ -3552,7 +3552,7 @@ zamg==0.4.1
 zcc-helper==3.8
 
 # homeassistant.components.zentraly
-zentraly==0.1.0
+zentraly==0.1.1
 
 # homeassistant.components.zeroconf
 zeroconf==0.151.3

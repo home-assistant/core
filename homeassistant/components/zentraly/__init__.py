@@ -63,89 +63,6 @@ def create_device(
     )
 
 
-def _supports_device_info_polling(
-    device: ZentralyDevice,
-) -> bool:
-    """Return whether the device supports device-information polling."""
-
-    firmware_builder = getattr(
-        device.commands,
-        "build_read_firmware_version",
-        None,
-    )
-    firmware_parser = getattr(
-        device.commands,
-        "parse_firmware_version_response",
-        None,
-    )
-    hardware_builder = getattr(
-        device.commands,
-        "build_read_hardware_version",
-        None,
-    )
-    hardware_parser = getattr(
-        device.commands,
-        "parse_hardware_version_response",
-        None,
-    )
-
-    return (
-        callable(firmware_builder)
-        and callable(firmware_parser)
-        and callable(hardware_builder)
-        and callable(hardware_parser)
-    )
-
-
-async def _async_read_device_info_value(
-    device: ZentralyDevice,
-    *,
-    builder_name: str,
-    parser_name: str,
-) -> str | None:
-    """Read one device-information value."""
-
-    builder = getattr(
-        device.commands,
-        builder_name,
-        None,
-    )
-    parser = getattr(
-        device.commands,
-        parser_name,
-        None,
-    )
-
-    if not callable(builder) or not callable(parser):
-        return None
-
-    result = await device.async_execute_command(
-        lambda rid: builder(
-            rid,
-            device.mac,
-        )
-    )
-
-    if result is None:
-        return None
-
-    rid, response = result
-
-    try:
-        value = parser(
-            response,
-            rid,
-        )
-
-    except TypeError, ValueError:
-        return None
-
-    if not isinstance(value, str):
-        return None
-
-    return value
-
-
 async def _async_refresh_device_info(
     device: ZentralyDevice,
     device_registry: dr.DeviceRegistry,
@@ -156,17 +73,9 @@ async def _async_refresh_device_info(
     if not device.connected:
         return
 
-    firmware_version = await _async_read_device_info_value(
-        device,
-        builder_name="build_read_firmware_version",
-        parser_name="parse_firmware_version_response",
-    )
-
-    hardware_version = await _async_read_device_info_value(
-        device,
-        builder_name="build_read_hardware_version",
-        parser_name="parse_hardware_version_response",
-    )
+    info = await device.async_get_device_info()
+    firmware_version = info.firmware_version
+    hardware_version = info.hardware_version
 
     changed = False
 
@@ -204,7 +113,7 @@ def _register_device_info_polling(
 ) -> None:
     """Register periodic device-information polling when supported."""
 
-    if not _supports_device_info_polling(device):
+    if not device.supports_device_info:
         return
 
     async def _async_periodic_device_info_refresh(
