@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from tests.common import MockConfigEntry
+
 from homeassistant.components.heiman_home import async_unload_entry
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +16,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-
-from tests.common import MockConfigEntry
 
 __all__ = [
     "MockConfigEntry",

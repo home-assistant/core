@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
+from tests.common import MockConfigEntry
 
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.sensor import (
@@ -12,8 +13,6 @@ from homeassistant.components.heiman_home.sensor import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensor_setup(hass: HomeAssistant, setup_credentials: None) -> None:

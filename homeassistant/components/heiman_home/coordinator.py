@@ -200,10 +200,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         if self.data.user_info is None:
             try:
                 self.data.user_info = await cloud_wrapper.async_get_user_info()
+            except HeimanAuthError as err:
+                raise ConfigEntryAuthFailed from err
             except HeimanConnectionError as err:
                 raise UpdateFailed(f"Connection error: {err}") from err
             except ConfigEntryAuthFailed:
-                # Re-raise authentication errors to trigger re-auth flow
                 raise
             except Exception as err:
                 _LOGGER.error("Failed to fetch user info: %s", err)
@@ -263,17 +264,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             raise ConfigEntryAuthFailed from err
         except HeimanConnectionError as err:
             self.data.errors["devices"] = str(err)
-            if not self.data.devices:
-                raise UpdateFailed(f"Connection error fetching devices: {err}") from err
+            raise UpdateFailed(f"Connection error fetching devices: {err}") from err
         except ConfigEntryAuthFailed:
             # Re-raise authentication errors to trigger re-auth flow
             raise
         except Exception as err:
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
-            # If there was previous device data, keep it
-            if not self.data.devices:
-                raise UpdateFailed(f"Failed to fetch devices: {err}") from err
+            raise UpdateFailed(f"Failed to fetch devices: {err}") from err
 
     async def _update_device_details(self, devices: dict[str, HeimanDevice]) -> None:
         """Update device details including properties from deriveMetadata.

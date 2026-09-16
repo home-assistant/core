@@ -6,7 +6,7 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/heiman_home",
   "integration_type": "hub",
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "loggers": ["heimanconnect"],
   "quality_scale": "bronze",
   "requirements": ["heiman-connect==1.0.10"]

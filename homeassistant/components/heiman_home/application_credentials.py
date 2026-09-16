@@ -103,6 +103,21 @@ class HeimanOAuth2Implementation(AuthImplementation):
                 raise  # pragma: no cover - Python coverage tool limitation with bare raise
             except (ValueError, ClientError, JSONDecodeError) as err:
                 _LOGGER.exception("Failed to process token response")
+                if (
+                    request_data.get("grant_type") == "refresh_token"
+                    and isinstance(err, ValueError)
+                    and str(err).startswith("Empty response from token endpoint")
+                ):
+                    # An empty refresh-token response means the refresh token is
+                    # no longer usable: start re-authentication instead of
+                    # retrying this request indefinitely.
+                    raise OAuth2TokenRequestReauthError(
+                        request_info=resp.request_info,
+                        history=resp.history,
+                        status=resp.status,
+                        headers=resp.headers,
+                        domain=self.domain,
+                    ) from err
                 self._raise_token_error(resp, from_exception=err)
             else:
                 # This check should never trigger - result should always be set

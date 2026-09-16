@@ -95,14 +95,21 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     errors={"base": "no_home_selected"},
                 )
 
-            await self.async_set_unique_id(self._auth_info.user_info.user_id)
+            # Scope the unique ID to the selected home: each entry covers a
+            # single home, so a second home of the same account stays addable.
+            await self.async_set_unique_id(
+                f"{self._auth_info.user_info.user_id}_{selected_home_id}"
+            )
             if self.source == SOURCE_REAUTH:
                 self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+                reauth_entry = self._get_reauth_entry()
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                    reauth_entry,
                     data_updates={
                         **self._auth_info.auth_data,
-                        CONF_HOME_ID: selected_home_id,
+                        # Keep the home this entry was created for; accepting a
+                        # different selection would silently swap its devices.
+                        CONF_HOME_ID: reauth_entry.data[CONF_HOME_ID],
                         CONF_USER_ID: self._auth_info.user_info.user_id,
                     },
                 )

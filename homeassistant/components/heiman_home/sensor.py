@@ -290,6 +290,10 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 and not isinstance(prop.value, bool)
             )
             if data_type_is_numeric or value_is_numeric:
+                # Expose the SDK-provided unit so statistics and unit
+                # conversion work for properties discovered dynamically.
+                if prop.unit:
+                    self._attr_native_unit_of_measurement = prop.unit
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 

@@ -3,7 +3,7 @@
 import contextlib
 import logging
 
-from heimanconnect import DeviceManagement
+from heimanconnect import DeviceManagement, HeimanMQTTError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -70,8 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     try:
         await coordinator.async_config_entry_first_refresh()
 
-        # Initialize MQTT client after successful first refresh
-        await coordinator.async_init_mqtt_client()
+        # Initialize MQTT client after successful first refresh. A transient
+        # broker outage must be retried by Home Assistant instead of leaving
+        # the config entry in a setup error state.
+        try:
+            await coordinator.async_init_mqtt_client()
+        except HeimanMQTTError as err:
+            raise ConfigEntryNotReady(f"MQTT connection failed: {err}") from err
     except Exception:
         # Clean up resources if first refresh or MQTT initialization fails
         mqtt_client = getattr(coordinator, "mqtt_client", None)

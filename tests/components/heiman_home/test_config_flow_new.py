@@ -373,7 +373,7 @@ async def test_select_home_success_with_nickname(hass: HomeAssistant) -> None:
         assert result["title"] == "John Doe"
         assert result["data"][CONF_HOME_ID] == "home-1"
         assert result["data"][CONF_USER_ID] == "test-user"
-        mock_set_unique.assert_called_once_with("test-user")
+        mock_set_unique.assert_called_once_with("test-user_home-1")
 
 
 async def test_select_home_success_with_email(hass: HomeAssistant) -> None:
@@ -610,7 +610,7 @@ async def test_async_step_select_home_reauth_wrong_account(
     flow._auth_info.auth_data = {"token": "test_token"}
 
     # Set unique_id to current user
-    await flow.async_set_unique_id("current-user-id")
+    await flow.async_set_unique_id("current-user-id_home-1")
 
     # Mock _abort_if_unique_id_mismatch to raise AbortFlow
     with (
@@ -653,12 +653,13 @@ async def test_async_step_select_home_reauth_success(
     flow._auth_info.auth_data = {"token": "new_token"}
 
     # Set unique_id to match
-    await flow.async_set_unique_id("test-user-id")
+    await flow.async_set_unique_id("test-user-id_home-1")
 
     # Mock _abort_if_unique_id_mismatch to do nothing (no mismatch)
     # Mock _get_reauth_entry to return a mock entry
     mock_entry = MagicMock()
-    mock_entry.unique_id = "test-user-id"
+    mock_entry.unique_id = "test-user-id_home-1"
+    mock_entry.data = {CONF_HOME_ID: "home-1"}
 
     with (
         patch.object(flow, "_abort_if_unique_id_mismatch"),
