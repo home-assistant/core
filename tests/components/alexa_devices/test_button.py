@@ -96,6 +96,37 @@ async def test_dynamic_entities(
         assert hass.states.get(entity_id) is None
 
 
+async def test_routine_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test routine button is recreated when removed and re-added."""
+
+    entity_id = f"button.{slugify(TEST_USERNAME)}_test_routine"
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id) is not None
+
+    mock_amazon_devices_client.routines = []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+    mock_amazon_devices_client.routines = ["Test Routine"]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is not None
+
+
 async def test_restart_button(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
