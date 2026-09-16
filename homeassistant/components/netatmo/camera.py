@@ -236,6 +236,16 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether the camera can currently operate."""
+        return (
+            super().available
+            and self.device.reachable is not False
+            and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        )
+
+    @property
+    @override
     def is_on(self) -> bool:
         if self.device_type == "NDB":
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
