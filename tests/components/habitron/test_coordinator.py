@@ -6,7 +6,9 @@ These tests cover that span -- the setup path, the poll path, and the identity
 rules that only Home Assistant can apply.
 """
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager, nullcontext
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from habitron_client import (
@@ -296,33 +298,42 @@ async def test_setup_does_not_retry_a_duplicate_hub(hass: HomeAssistant) -> None
 
 
 @pytest.mark.parametrize(
-    ("configured", "expected", "resolver"),
+    ("configured", "expected", "patch_resolver"),
     [
-        (MOCK_HOST, MOCK_HOST, None),
-        ("local", "192.168.1.10", "get_own_ip"),
-        ("smarthub.local", MOCK_HOST, "get_host_ip"),
+        (MOCK_HOST, MOCK_HOST, lambda resolved: nullcontext()),
+        (
+            "local",
+            "192.168.1.10",
+            lambda resolved: patch(f"{_COORD}.get_own_ip", return_value=resolved),
+        ),
+        (
+            "smarthub.local",
+            MOCK_HOST,
+            lambda resolved: patch(
+                f"{_COORD}.get_host_ip", new=AsyncMock(return_value=resolved)
+            ),
+        ),
     ],
     ids=["literal-ip", "local-sentinel", "hostname"],
 )
 async def test_host_resolution(
-    hass: HomeAssistant, configured: str, expected: str, resolver: str | None
+    hass: HomeAssistant,
+    configured: str,
+    expected: str,
+    patch_resolver: Callable[[str], AbstractContextManager[Any]],
 ) -> None:
     """A literal address is used as-is; anything else is resolved.
 
     ``get_own_ip`` blocks, so it goes to the executor; ``get_host_ip`` resolves
     with async DNS and must be awaited directly -- handing it to the executor
-    would only build the coroutine and never run it.
+    would only build the coroutine and never run it. Which of the two is
+    stubbed travels in the parameter, so the literal case simply patches
+    nothing.
     """
     entry = MagicMock()
     entry.data = {"host": configured}
     coord = HbtnCoordinator(hass, entry)
-    if resolver == "get_own_ip":
-        with patch(f"{_COORD}.get_own_ip", return_value=expected):
-            assert await coord._async_resolve_host() == expected
-    elif resolver == "get_host_ip":
-        with patch(f"{_COORD}.get_host_ip", new=AsyncMock(return_value=expected)):
-            assert await coord._async_resolve_host() == expected
-    else:
+    with patch_resolver(expected):
         assert await coord._async_resolve_host() == expected
 
 

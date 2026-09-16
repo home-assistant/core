@@ -76,7 +76,7 @@ async def async_setup_entry(
         )
     }
 
-    new_devices: list[SensorEntity] = []
+    new_entities: list[SensorEntity] = []
 
     def add_described(
         owner: HbtnOwner,
@@ -88,12 +88,12 @@ async def async_setup_entry(
     ) -> None:
         """Create one entity per description for this bus member."""
         for description in descriptions:
-            new_devices.append(
+            new_entities.append(
                 entity_class(
                     owner,
                     member,
                     hbtn_cord,
-                    len(new_devices),
+                    len(new_entities),
                     description,
                     initial_area_id=initial_area_id,
                 )
@@ -141,8 +141,8 @@ async def async_setup_entry(
             )
         for mod_logic in hbt_module.logic:
             if mod_logic.type > 0:
-                new_devices.append(
-                    LogicSensor(hbt_module, mod_logic, hbtn_cord, len(new_devices))
+                new_entities.append(
+                    LogicSensor(hbt_module, mod_logic, hbtn_cord, len(new_entities))
                 )
         for mod_diag in hbt_module.diags:
             add_described(hbt_module, mod_diag, MODULE_DIAGS.get(mod_diag.name, ()))
@@ -155,8 +155,8 @@ async def async_setup_entry(
         for router_member in router_members:
             add_described(hbtn_rt, router_member, (router_description,))
 
-    if new_devices:
-        async_add_entities(new_devices)
+    if new_entities:
+        async_add_entities(new_entities)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -234,7 +234,6 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
                 entry.entity_id, area_id=self._initial_area_id
             )
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
-            # Push subscription: keep HA state in sync whenever the member changes.
             member = subscribe_fn(self._module, self._sensor_idx)
             member.add_listener(self._handle_coordinator_update)
             # Unsubscribed through ``async_on_remove`` rather than

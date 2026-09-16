@@ -1632,70 +1632,89 @@ async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
+def _entry_in_backoff(
+    hass: HomeAssistant, unique_id: str, host: str
+) -> MockConfigEntry:
+    """Add an entry that is sitting out a setup-retry backoff.
+
+    Such an entry has no update listener -- the integration only registers one
+    once setup has succeeded -- so nothing picks up a host a flow writes to it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=unique_id,
+        data={CONF_HOST: host},
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_RETRY)
+    return entry
+
+
 @pytest.mark.parametrize(
-    ("stored_id", "stored_host", "source"),
+    ("stored_id", "stored_host"),
     [
         # Matched by address, so the entry has to be at the one discovered --
         # a legacy entry that also moved cannot be recognised at all.
-        (f"habitron_{MOCK_HOST}", MOCK_HOST, config_entries.SOURCE_SSDP),
+        (f"habitron_{MOCK_HOST}", MOCK_HOST),
         # Matched by MAC, so the address is free to have moved.
-        (MOCK_UID, "192.168.1.99", config_entries.SOURCE_USER),
-        # The same, announced by the hub itself: the discovery abort writes the
-        # new host but reloads nothing, and a retrying entry has no listener to
-        # pick it up.
-        (MOCK_UID, "192.168.1.99", config_entries.SOURCE_SSDP),
+        (MOCK_UID, "192.168.1.99"),
     ],
-    ids=[
-        "host-matched legacy entry",
-        "MAC-keyed entry re-entered by hand",
-        "MAC-keyed entry rediscovered over SSDP",
-    ],
+    ids=["host-matched legacy entry", "MAC-keyed entry"],
 )
-async def test_a_retrying_entry_is_reloaded_instead_of_waiting_out_its_backoff(
+async def test_ssdp_rediscovery_reloads_a_retrying_entry(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     stored_id: str,
     stored_host: str,
-    source: str,
 ) -> None:
-    """Reaching the hub through a flow must not leave its entry in backoff.
+    """A hub announcing itself must not leave its entry in backoff.
 
-    A data change reaches a loaded entry through the integration's update
-    listener, but that listener is only registered once setup has succeeded.
-    An entry in ``SETUP_RETRY`` has none, and neither of these two paths is
-    covered by the reload ``_abort_if_unique_id_configured`` does for discovery
-    sources -- so without an explicit reload the entry would sit out the rest
-    of its backoff.
+    Config entries reload a retrying entry themselves for the discovery
+    sources, so the abort is enough here -- and the count is what pins it:
+    scheduling a reload of our own in ``async_step_ssdp`` would make it two.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=stored_id,
-        data={CONF_HOST: stored_host},
-    )
-    entry.add_to_hass(hass)
-    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_RETRY)
+    entry = _entry_in_backoff(hass, stored_id, stored_host)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        if source == config_entries.SOURCE_SSDP:
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": source},
-                data=SsdpServiceInfo(
-                    ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
-                    ssdp_st="urn:habitron-com:device:SmartHub:1",
-                    ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
-                    upnp={ATTR_UPNP_UDN: MOCK_UDN},
-                ),
-            )
-        else:
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": source}
-            )
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_HOST: MOCK_HOST}
-            )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=SsdpServiceInfo(
+                ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+                ssdp_st="urn:habitron-com:device:SmartHub:1",
+                ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+                upnp={ATTR_UPNP_UDN: MOCK_UDN},
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_user_flow_reloads_a_retrying_entry(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """Re-entering a moved hub by hand must not leave its entry in backoff.
+
+    The user source is not one of the discovery sources config entries reload
+    on their own, and the entry has no update listener to pick up the new host,
+    so the flow has to schedule the reload itself.
+    """
+    entry = _entry_in_backoff(hass, MOCK_UID, "192.168.1.99")
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: MOCK_HOST}
+        )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT

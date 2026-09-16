@@ -441,11 +441,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         default_host = CONF_DEFAULT_HOST
 
-        # Pre-fill with discovery if just opened
         if user_input is None:
             discovered = await self._cached_discover()
 
-            # Filter: Keep only devices that are NOT yet configured
             valid_devices = [
                 d
                 for d in discovered
