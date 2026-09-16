@@ -39,6 +39,7 @@ LOGIN_ERRORS: list[tuple[Exception, ConfigEntryState]] = [
 REFRESH_CONNECTION_ERRORS: list[Exception] = [
     ClientConnectionError(),
     http_error(500),
+    TimeoutError(),
 ]
 
 REFRESH_AUTH_ERRORS: list[Exception] = [
@@ -64,6 +65,7 @@ async def test_unload_entry(
 SETUP_CONNECTION_ERRORS: list[Exception] = [
     ClientConnectionError(),
     http_error(500),
+    TimeoutError(),
 ]
 
 
@@ -71,7 +73,7 @@ SETUP_CONNECTION_ERRORS: list[Exception] = [
 @pytest.mark.parametrize(
     "error",
     SETUP_CONNECTION_ERRORS,
-    ids=["connection_error", "http_500"],
+    ids=["connection_error", "http_500", "timeout"],
 )
 async def test_setup_entry_cannot_connect(
     hass: HomeAssistant,
@@ -120,7 +122,7 @@ async def test_setup_entry_invalid_auth(
 @pytest.mark.parametrize(
     "error",
     REFRESH_CONNECTION_ERRORS,
-    ids=["connection_error", "http_500"],
+    ids=["connection_error", "http_500", "timeout"],
 )
 async def test_refresh_cannot_connect(
     hass: HomeAssistant,

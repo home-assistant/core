@@ -54,7 +54,7 @@ class ArrisConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except ClientResponseError as err:
             errors["base"] = "invalid_auth" if err.status == 401 else "cannot_connect"
-        except ClientConnectionError:
+        except ClientConnectionError, TimeoutError:
             errors["base"] = "cannot_connect"
         else:
             return self.async_create_entry(
@@ -94,7 +94,7 @@ class ArrisConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except ClientResponseError as err:
             errors["base"] = "invalid_auth" if err.status == 401 else "cannot_connect"
-        except ClientConnectionError:
+        except ClientConnectionError, TimeoutError:
             errors["base"] = "cannot_connect"
         else:
             return self.async_update_reload_and_abort(
@@ -119,7 +119,7 @@ class ArrisConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(
                 reason="invalid_auth" if err.status == 401 else "cannot_connect"
             )
-        except ClientConnectionError:
+        except ClientConnectionError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(

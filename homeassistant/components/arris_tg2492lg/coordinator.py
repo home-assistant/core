@@ -47,6 +47,8 @@ class ArrisCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             result = await self.connect_box.async_get_connected_devices()
         except ClientConnectionError as err:
             raise UpdateFailed(f"Error communicating with router: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed(f"Timed out communicating with router: {err}") from err
         except InvalidCredentialError as err:
             raise ConfigEntryAuthFailed("Invalid credentials for router") from err
         except ClientResponseError as err:

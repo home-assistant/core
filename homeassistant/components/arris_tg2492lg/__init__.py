@@ -27,6 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArrisConfigEntry) -> boo
         raise ConfigEntryNotReady(
             f"Cannot connect to router at {entry.data[CONF_HOST]}"
         ) from err
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            f"Timed out connecting to router at {entry.data[CONF_HOST]}"
+        ) from err
     except InvalidCredentialError as err:
         raise ConfigEntryAuthFailed("Invalid credentials for router") from err
     except ClientResponseError as err:
