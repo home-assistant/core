@@ -190,7 +190,13 @@ steps:
       git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
       git checkout --detach FETCH_HEAD
       # Agent configuration must come from the trusted default branch, not from the PR.
-      for path in .github .agents .claude AGENTS.md; do
+      # Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.
+      git diff -z --name-only --no-renames "${BASE_SHA}" FETCH_HEAD -- '*.md' \
+        | while IFS= read -r -d '' path; do
+          rm -rf "${path}"
+          git checkout "${BASE_SHA}" -- "${path}" 2>/dev/null || true
+        done
+      for path in .github .agents .claude .codex .gemini .pi; do
         rm -rf "${path}"
         git checkout "${BASE_SHA}" -- "${path}" 2>/dev/null || true
       done
