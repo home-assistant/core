@@ -3884,9 +3884,7 @@ async def test_async_retry_migration_on_disabled_entry(
         await manager.async_retry_migration(entry.entry_id)
 
     with pytest.raises(config_entries.OperationNotAllowed):
-        await manager.async_set_disabled_by(
-            entry.entry_id, disabled_by=None
-        )
+        await manager.async_set_disabled_by(entry.entry_id, disabled_by=None)
     assert entry.disabled_by is None
 
     with mock_config_flow("comp", TestFlow):
