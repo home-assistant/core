@@ -54,7 +54,11 @@ rules:
   discovery-update-info: done
   discovery:
     status: exempt
-    comment: Discovery is not done via a well-known protocol.
+    comment: >
+      DHCP is used to synchronize the IP address of already configured devices
+      when their DHCP lease changes. It is not used for device discovery because
+      DHCP information alone is insufficient to identify and configure most supported
+      Midea appliances.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
