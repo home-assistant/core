@@ -1,7 +1,7 @@
 """Tests for Zentraly thermostat modes and setpoints."""
 
 from contextlib import AbstractContextManager, nullcontext
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from zentraly import (
@@ -117,3 +117,34 @@ async def test_missing_readings_clear_previous_values(
     assert entity.current_humidity is None
     assert entity.hvac_mode is None
     assert entity.hvac_action is None
+
+
+@pytest.mark.parametrize(
+    ("mode", "operation"),
+    [
+        pytest.param(HVACMode.AUTO, ClimateOperationMode.AUTO, id="auto"),
+        pytest.param(HVACMode.OFF, ClimateOperationMode.OFF, id="off"),
+        pytest.param(HVACMode.HEAT, ClimateOperationMode.MANUAL, id="heat"),
+    ],
+)
+async def test_temperature_with_explicit_mode(
+    platform_device: MagicMock, mode: HVACMode, operation: ClimateOperationMode
+) -> None:
+    """Apply the requested mode after the setpoint's manual-mode side effect."""
+    api = MagicMock(spec=ZentralyClimateApi)
+    api.configuration = get_device_commands(DeviceModel.ZTTIN).climate_configuration
+    api.supports.return_value = True
+    api.async_set_target_temperature.return_value = True
+    api.async_set_operation_mode.return_value = True
+    writes = MagicMock()
+    writes.attach_mock(api.async_set_target_temperature, "temperature")
+    writes.attach_mock(api.async_set_operation_mode, "mode")
+    entity = ZentralyClimate(platform_device, climate_api=api)
+    with patch.object(entity, "async_write_ha_state"):
+        await entity.async_set_temperature(temperature=22.0, hvac_mode=mode)
+    assert entity.target_temperature == 22.0
+    assert entity.hvac_mode == mode
+    assert writes.mock_calls == [
+        call.temperature(22.0),
+        call.mode(operation),
+    ]

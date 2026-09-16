@@ -69,7 +69,6 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
                 CONF_HOST: discovery_info.host,
                 CONF_PORT: discovery_info.port,
             },
-            reload_on_update=False,
         )
 
         return await self.async_step_auth()

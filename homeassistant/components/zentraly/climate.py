@@ -13,6 +13,7 @@ from zentraly import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
@@ -391,6 +392,10 @@ class ZentralyClimate(ClimateEntity):
         self._update_hvac_action()
 
         self.async_write_ha_state()
+
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            # Writing a setpoint selects manual mode on the thermostat.
+            await self.async_set_hvac_mode(hvac_mode)
 
     @override
     @translate_action_errors
