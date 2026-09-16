@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyaftership import AfterShip, AfterShipException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -42,6 +42,6 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

@@ -95,6 +95,11 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
 
         await self._async_run_command(self.client.async_set_charge_amps(amps))
 
+    async def async_set_temperature_unit(self, unit: str) -> None:
+        """Set the charger display temperature unit."""
+
+        await self._async_run_command(self.client.async_set_temperature_unit(unit))
+
     async def _async_run_command(self, command: Awaitable[None]) -> None:
         """Run a charger command and translate command failures."""
 

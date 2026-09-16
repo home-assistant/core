@@ -2,7 +2,7 @@
 
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
@@ -39,9 +39,9 @@ ACTION_TYPES: Final[set[str]] = {
 
 _ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional(CONF_CODE): cv.string,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional(CONF_CODE): cv.string,
     }
 )
 
@@ -120,7 +120,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     # We need to refer to the state directly because CODE_ARM_REQUIRED is not a
     # capability attribute
@@ -138,4 +138,4 @@ async def async_get_action_capabilities(
     ):
         return {}
 
-    return {"extra_fields": vol.Schema({vol.Optional(CONF_CODE): str})}
+    return {"extra_fields": probatio.Schema({probatio.Optional(CONF_CODE): str})}
