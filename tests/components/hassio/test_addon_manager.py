@@ -212,6 +212,8 @@ async def test_configure_addon_preserves_options(
     """Test configuring an add-on preserves all options outside the update."""
     existing_options = {
         "test_key": "test",
+        "log_level": "debug",
+        "log_to_file": True,
         "user_option": {"enabled": False, "values": [1, "two", None]},
     }
     addon_options.update(existing_options)
@@ -223,6 +225,8 @@ async def test_configure_addon_preserves_options(
         "test_addon", AddonsOptions(config=expected_options)
     )
     assert addon_options == expected_options
+    assert addon_options["log_level"] == "debug"
+    assert addon_options["log_to_file"] is True
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -240,13 +244,19 @@ async def test_configure_addon_unchanged(
     addon_config: dict[str, str],
 ) -> None:
     """Test unchanged managed options do not trigger a write."""
-    existing_options = {"test_key": "test", "user_option": "preserved"}
+    existing_options = {
+        "test_key": "test",
+        "log_level": "debug",
+        "log_to_file": True,
+    }
     addon_options.update(existing_options)
 
     await addon_manager.async_configure_addon(addon_config)
 
     set_addon_options.assert_not_awaited()
     assert addon_options == existing_options
+    assert addon_options["log_level"] == "debug"
+    assert addon_options["log_to_file"] is True
 
 
 async def test_set_addon_options_error(
