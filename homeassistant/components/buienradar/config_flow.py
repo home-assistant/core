@@ -3,7 +3,7 @@
 import copy
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
@@ -25,14 +25,14 @@ from .const import (
     SUPPORTED_COUNTRY_CODES,
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY
         ): selector.CountrySelector(
             selector.CountrySelectorConfig(countries=SUPPORTED_COUNTRY_CODES)
         ),
-        vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
+        probatio.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 step=1,
@@ -40,7 +40,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 unit_of_measurement="seconds",
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME
         ): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -97,12 +97,12 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=f"{lat},{lon}", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                probatio.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
             }

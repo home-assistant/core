@@ -12,7 +12,7 @@ from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
 from ical.timeline import Timeline, materialize_timeline
 from ical.types import Range, Recur
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.calendar import (
     EVENT_END,
@@ -21,6 +21,7 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEventStatus,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -225,7 +226,24 @@ def _parse_event(event: dict[str, Any]) -> Event:
         return Event(**event)
     except CalendarParseError as err:
         _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
-        raise vol.Invalid("Error parsing event input fields") from err
+        raise probatio.Invalid("Error parsing event input fields") from err
+
+
+def _get_status(event: Event) -> CalendarEventStatus | None:
+    """Return the status of an event, if a calendar entity reports that status.
+
+    ical models the full rfc5545 set, which includes cancelled, and an imported
+    calendar can contain such an event. A calendar entity does not report a
+    cancelled status, so anything outside the supported set maps to no status.
+    ical's enum is a plain (str, Enum) rather than a StrEnum, so its value has
+    to be read explicitly.
+    """
+    if event.status is None:
+        return None
+    try:
+        return CalendarEventStatus(event.status.value.lower())
+    except ValueError:
+        return None
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
@@ -252,4 +270,5 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        status=_get_status(event),
     )
