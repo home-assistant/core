@@ -3040,7 +3040,7 @@ samsung-exlink==1.1.1
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==3.0.5
+samsungtvws[async,encrypted]==3.0.6
 
 # homeassistant.components.sanix
 sanix==1.0.6
