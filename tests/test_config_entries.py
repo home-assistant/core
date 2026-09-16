@@ -3868,7 +3868,7 @@ async def test_async_retry_migration_on_disabled_entry(
     assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
 
     with pytest.raises(config_entries.OperationNotAllowed):
-        await hass.config_entries.async_set_disabled_by(
+        await manager.async_set_disabled_by(
             entry.entry_id, disabled_by=config_entries.ConfigEntryDisabler.USER
         )
     # Disabled by user is set even if it's not allowed to reload after
@@ -3884,7 +3884,7 @@ async def test_async_retry_migration_on_disabled_entry(
         await manager.async_retry_migration(entry.entry_id)
 
     with pytest.raises(config_entries.OperationNotAllowed):
-        await hass.config_entries.async_set_disabled_by(
+        await manager.async_set_disabled_by(
             entry.entry_id, disabled_by=None
         )
     assert entry.disabled_by is None
