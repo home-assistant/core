@@ -2047,7 +2047,6 @@ async def test_value_incorrect_state_class_config(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unique_id": "veryunique",
                     "entity_category": "config",
                 }
             }
@@ -2057,15 +2056,15 @@ async def test_value_incorrect_state_class_config(
 async def test_unsupported_entity_category(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test `config` entity category is ignored for this read-only platform."""
+    """Test `config` entity category is rejected for this read-only platform."""
     assert await mqtt_mock_entry()
-    assert "Ignoring entity category 'config'" in caplog.text
-    assert hass.states.get("sensor.test") is not None
-    entity_entry = entity_registry.async_get("sensor.test")
-    assert entity_entry.entity_category is None
+    assert (
+        "Entity category 'config' is not supported by the sensor platform"
+        in caplog.text
+    )
+    assert hass.states.get("sensor.test") is None
 
 
 async def test_unsupported_entity_category_discovery(
@@ -2074,7 +2073,7 @@ async def test_unsupported_entity_category_discovery(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a discovered `config` entity category is ignored."""
+    """Test a discovered `config` entity category is rejected."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -2083,7 +2082,41 @@ async def test_unsupported_entity_category_discovery(
         ' "unique_id": "veryunique", "entity_category": "config"}',
     )
     await hass.async_block_till_done()
-    assert "Ignoring entity category 'config'" in caplog.text
+    assert (
+        "Entity category 'config' is not supported by the sensor platform"
+        in caplog.text
+    )
+    assert (
+        entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique") is None
+    )
+
+
+async def test_unsupported_entity_category_discovery_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unsupported entity category is rejected on a discovery update."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic", "unique_id": "veryunique"}',
+    )
+    await hass.async_block_till_done()
     entity_id = entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique")
     assert entity_id is not None
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Entity category 'config' is not supported by the sensor platform"
+        in caplog.text
+    )
     assert entity_registry.async_get(entity_id).entity_category is None

@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EntityCapabilityAttribute,
-    EntityCategory,
     EntityStateAttribute,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -131,7 +130,7 @@ from .util import (
     async_cleanup_device_registry,
     learn_more_url,
     mqtt_config_entry_enabled,
-    valid_entity_categories,
+    validate_entity_category,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -259,6 +258,12 @@ def async_setup_entity_entry_helper(  # noqa: C901
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
+    # entity categories are not supported by all platforms
+    _validate_entity_category = validate_entity_category(domain)
+    discovery_schema = probatio.All(discovery_schema, _validate_entity_category)
+    platform_schema_modern = probatio.All(
+        platform_schema_modern, _validate_entity_category
+    )
 
     @callback
     def _async_migrate_subentry(
@@ -1588,6 +1593,7 @@ class MqttEntity(
         """Handle updated discovery message."""
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
+            validate_entity_category(self._entity_id_format.split(".")[0])(config)
         except probatio.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return
@@ -1666,26 +1672,9 @@ class MqttEntity(
                 config,
             )
 
-    def _entity_category_from_config(self, config: ConfigType) -> EntityCategory | None:
-        """Return the entity category if it is supported by the platform."""
-        entity_category: EntityCategory | None = config.get(CONF_ENTITY_CATEGORY)
-        platform = self._entity_id_format.split(".")[0]
-        if entity_category is None or entity_category in valid_entity_categories(
-            platform
-        ):
-            return entity_category
-        _LOGGER.warning(
-            "Ignoring entity category '%s' for %s entity %s, "
-            "it is not supported by this platform",
-            entity_category,
-            platform,
-            self.unique_id,
-        )
-        return None
-
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""
-        self._attr_entity_category = self._entity_category_from_config(config)
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_entity_registry_enabled_default = bool(
             config.get(CONF_ENABLED_BY_DEFAULT, True)
         )
