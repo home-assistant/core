@@ -19,7 +19,7 @@ from aiohasupervisor.models.mounts import (
 )
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio import DOMAIN, get_addons_info
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -167,6 +167,7 @@ async def test_addon_state_from_supervisor_event(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "on"
+    assert get_addons_info(hass)["test2"]["state"] == "started"
 
     await client.send_json(
         {
@@ -182,6 +183,7 @@ async def test_addon_state_from_supervisor_event(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "off"
+    assert get_addons_info(hass)["test2"]["state"] == "stopped"
 
 
 async def test_addon_state_event_during_poll(

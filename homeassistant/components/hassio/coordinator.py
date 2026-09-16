@@ -1005,16 +1005,23 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None]:
     )
     if addons_info is None:
         raise HassioNotReadyError
+    # The add-on list is kept up to date by state change events, while the
+    # cached add-on info is only refreshed by polling. Overlay the state from
+    # the list so consumers see the current one.
+    states = {
+        addon.slug: addon.state.value for addon in hass.data.get(DATA_ADDONS_LIST) or []
+    }
     # Converting these fields for compatibility as that is what was returned here.
     # We'll leave it this way as long as these component APIs continue to return
     # dictionaries. If/when we switch to using the aiohasupervisor models for everything
     # internally and externally that will be dropped.
     return {
-        slug: dict(
-            hassio_api=info.supervisor_api,
-            hassio_role=info.supervisor_role,
+        slug: {
+            "hassio_api": info.supervisor_api,
+            "hassio_role": info.supervisor_role,
             **info.to_dict(),
-        )
+            ATTR_STATE: states.get(slug, info.state),
+        }
         if info is not None
         else None
         for slug, info in addons_info.items()
