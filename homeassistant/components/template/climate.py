@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -117,46 +117,52 @@ def _round_to_step(value: float, step: float) -> float:
     )
 
 
-CLIMATE_COMMON_SCHEMA = vol.Schema(
+CLIMATE_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CURRENT_HUMIDITY): cv.template,
-        vol.Optional(CONF_CURRENT_TEMPERATURE): cv.template,
-        vol.Optional(CONF_FAN_MODE): cv.template,
-        vol.Optional(CONF_FAN_MODES): cv.template,
-        vol.Optional(CONF_HVAC_ACTION): cv.template,
-        vol.Optional(CONF_HVAC_MODE): cv.template,
-        vol.Required(CONF_HVAC_MODES): cv.template,
-        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_PRECISION): vol.Any(
+        probatio.Optional(CONF_CURRENT_HUMIDITY): cv.template,
+        probatio.Optional(CONF_CURRENT_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_FAN_MODE): cv.template,
+        probatio.Optional(CONF_FAN_MODES): cv.template,
+        probatio.Optional(CONF_HVAC_ACTION): cv.template,
+        probatio.Optional(CONF_HVAC_MODE): cv.template,
+        probatio.Required(CONF_HVAC_MODES): cv.template,
+        probatio.Optional(CONF_MAX_HUMIDITY): probatio.Coerce(int),
+        probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_HUMIDITY): probatio.Coerce(int),
+        probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_PRECISION): probatio.Any(
             PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
         ),
-        vol.Optional(CONF_PRESET_MODE): cv.template,
-        vol.Optional(CONF_PRESET_MODES): cv.template,
-        vol.Optional(CONF_SWING_MODE): cv.template,
-        vol.Optional(CONF_SWING_MODES): cv.template,
-        vol.Optional(CONF_SWING_HORIZONTAL_MODE): cv.template,
-        vol.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
-        vol.Optional(CONF_TARGET_HUMIDITY): cv.template,
-        vol.Optional(CONF_TARGET_HUMIDITY_STEP): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Optional(CONF_PRESET_MODE): cv.template,
+        probatio.Optional(CONF_PRESET_MODES): cv.template,
+        probatio.Optional(CONF_SWING_MODE): cv.template,
+        probatio.Optional(CONF_SWING_MODES): cv.template,
+        probatio.Optional(CONF_SWING_HORIZONTAL_MODE): cv.template,
+        probatio.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
+        probatio.Optional(CONF_TARGET_HUMIDITY): cv.template,
+        probatio.Optional(CONF_TARGET_HUMIDITY_STEP): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
-        vol.Inclusive(CONF_TARGET_TEMPERATURE_HIGH, "temperature_limits"): cv.template,
-        vol.Inclusive(CONF_TARGET_TEMPERATURE_LOW, "temperature_limits"): cv.template,
-        vol.Optional(CONF_TARGET_TEMPERATURE_STEP): vol.All(
-            vol.Coerce(float), vol.Range(min=PRECISION_TENTHS)
+        probatio.Inclusive(
+            CONF_TARGET_TEMPERATURE_HIGH, "temperature_limits"
+        ): cv.template,
+        probatio.Inclusive(
+            CONF_TARGET_TEMPERATURE_LOW, "temperature_limits"
+        ): cv.template,
+        probatio.Optional(CONF_TARGET_TEMPERATURE_STEP): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=PRECISION_TENTHS)
         ),
-        vol.Optional(CONF_TARGET_TEMPERATURE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(SET_FAN_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_HUMIDITY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(SET_HVAC_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_SWING_HORIZONTAL_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_SWING_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_TARGET_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_UNIT): probatio.In(
+            TemperatureConverter.VALID_UNITS
+        ),
+        probatio.Optional(SET_FAN_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SET_HUMIDITY_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(SET_HVAC_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SET_SWING_HORIZONTAL_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SET_SWING_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SET_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
     },
 )
 
@@ -181,7 +187,7 @@ _CLIMATE_VALIDATION = (
 )
 
 
-CLIMATE_YAML_SCHEMA = vol.All(
+CLIMATE_YAML_SCHEMA = probatio.All(
     CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
         make_template_entity_common_schema(
             CLIMATE_DOMAIN,
@@ -192,7 +198,7 @@ CLIMATE_YAML_SCHEMA = vol.All(
     *_CLIMATE_VALIDATION,
 )
 
-CLIMATE_CONFIG_ENTRY_SCHEMA = vol.All(
+CLIMATE_CONFIG_ENTRY_SCHEMA = probatio.All(
     CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
     *_CLIMATE_VALIDATION,
 )

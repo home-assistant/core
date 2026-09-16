@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
@@ -28,9 +28,9 @@ CONF_OPERATION_MODE = "operation_mode"
 _OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required(CONF_OPERATION_MODE): vol.All(
-                    cv.ensure_list, vol.Length(min=1), [str]
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required(CONF_OPERATION_MODE): probatio.All(
+                    cv.ensure_list, probatio.Length(min=1), [str]
                 ),
             },
         }

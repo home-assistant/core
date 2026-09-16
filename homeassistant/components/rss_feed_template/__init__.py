@@ -3,7 +3,7 @@
 from html import escape
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
@@ -14,20 +14,22 @@ from homeassistant.helpers.typing import ConfigType
 CONTENT_TYPE_XML = "text/xml"
 DOMAIN = "rss_feed_template"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                cv.match_all: vol.Schema(
+                cv.match_all: probatio.Schema(
                     {
-                        vol.Optional("requires_api_password", default=True): cv.boolean,
-                        vol.Optional("title"): cv.template,
-                        vol.Required("items"): vol.All(
+                        probatio.Optional(
+                            "requires_api_password", default=True
+                        ): cv.boolean,
+                        probatio.Optional("title"): cv.template,
+                        probatio.Required("items"): probatio.All(
                             cv.ensure_list,
                             [
                                 {
-                                    vol.Optional("title"): cv.template,
-                                    vol.Optional("description"): cv.template,
+                                    probatio.Optional("title"): cv.template,
+                                    probatio.Optional("description"): cv.template,
                                 }
                             ],
                         ),
@@ -36,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
