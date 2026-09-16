@@ -481,6 +481,7 @@ FLOWS = {
         "melcloud",
         "melcloud_home",
         "melnor",
+        "meross",
         "met",
         "met_eireann",
         "meteo_france",

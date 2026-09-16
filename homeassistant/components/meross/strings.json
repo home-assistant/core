@@ -1,0 +1,122 @@
+{
+  "config": {
+    "flow_title": "{name} ({address})",
+    "step": {
+      "user": {
+        "title": "Meross",
+        "description": "Select your Meross Bluetooth product model.",
+        "menu_options": {
+          "ms120": "MS120",
+          "ms220": "MS220",
+          "ms420": "MS420",
+          "ms700": "MS700"
+        }
+      },
+      "bluetooth_setup": {
+        "title": "Meross Bluetooth",
+        "description": "Choose a discovered {model} nearby.",
+        "data": {
+          "address": "Device"
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Meross Bluetooth",
+        "description": "Do you want to set up {name} ({address})?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_bluetooth_adapter": "No Bluetooth adapter or proxy is configured in Home Assistant",
+      "no_devices_found": "No {model} Bluetooth devices found nearby",
+      "not_supported": "Device not supported"
+    },
+    "error": {
+      "identify_failed": "Could not connect to send Identify. Bring the device closer and try again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Meross Bluetooth options",
+        "description": "Options for {model}",
+        "data": {
+          "retry_count": "Connection retry count"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "absolute_humidity": {
+        "name": "Absolute humidity"
+      },
+      "vpd": {
+        "name": "Vapor pressure deficit"
+      }
+    },
+    "binary_sensor": {
+      "battery_low": {
+        "name": "Battery low"
+      },
+      "connectivity": {
+        "name": "Connectivity"
+      },
+      "opening": {
+        "name": "Opening"
+      },
+      "alarm_vibration": {
+        "name": "Vibration alarm"
+      },
+      "alarm_door_open_long": {
+        "name": "Door open too long"
+      },
+      "alarm_door_closed_long": {
+        "name": "Door closed too long"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "rain_detected": {
+        "name": "Rain detected"
+      },
+      "freeze_alarm": {
+        "name": "Freeze alarm"
+      }
+    },
+    "event": {
+      "button": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_end": "Press",
+              "multi_press_end": "Multi press"
+            }
+          }
+        }
+      },
+      "ms700_button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_end": "Press"
+            }
+          }
+        }
+      },
+      "doorbell": {
+        "name": "Doorbell",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      }
+    }
+  }
+}
