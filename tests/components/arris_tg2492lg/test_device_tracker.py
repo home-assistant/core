@@ -6,9 +6,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.arris_tg2492lg.const import SCAN_INTERVAL
+from homeassistant.components.arris_tg2492lg.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,8 +51,8 @@ async def test_device_tracker_data_shape(
     ]
     # Offline device, MAC-less device and the dual-stack duplicate are dropped.
     assert {entity.unique_id for entity in entities} == {
-        "AA:BB:CC:DD:EE:FF",
-        "11:22:33:44:55:66",
+        f"{mock_config_entry.entry_id}_AA:BB:CC:DD:EE:FF",
+        f"{mock_config_entry.entry_id}_11:22:33:44:55:66",
     }
 
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
@@ -62,6 +63,40 @@ async def test_device_tracker_data_shape(
     assert state.attributes["host_name"] == "my-phone"
     assert state.attributes["source_type"] == "router"
     assert state.attributes["tracking_type"] == "connection"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
+async def test_device_tracker_two_entries_same_mac(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The same device seen by two configured routers gets one tracker per entry."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JBBBBBBBBBBBBBBBBBBBBBBBBB",
+        title="192.168.178.2",
+        data={CONF_HOST: "192.168.178.2", CONF_PASSWORD: "password"},
+    )
+    mock_config_entry.add_to_hass(hass)
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.domain == DEVICE_TRACKER_DOMAIN
+    ]
+    assert {entity.unique_id for entity in entities} == {
+        f"{mock_config_entry.entry_id}_AA:BB:CC:DD:EE:FF",
+        f"{mock_config_entry.entry_id}_11:22:33:44:55:66",
+        f"{second_entry.entry_id}_AA:BB:CC:DD:EE:FF",
+        f"{second_entry.entry_id}_11:22:33:44:55:66",
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

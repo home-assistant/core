@@ -120,10 +120,19 @@ class ArrisScannerEntity(CoordinatorEntity[ArrisCoordinator], ScannerEntity):
         """Initialize the scanner entity."""
         super().__init__(coordinator)
         self._mac = mac
+        # Scoped to the config entry: the same client can be connected to
+        # multiple configured routers.
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
         self._attr_name = device.hostname or mac
+
+    @property
+    @override
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity."""
+        return self._attr_unique_id
 
     @property
     @override
