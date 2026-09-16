@@ -4,7 +4,7 @@ from datetime import timedelta
 from operator import attrgetter
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
@@ -21,7 +21,7 @@ from .const import DOMAIN
 class CalendarGetEventsTool(Tool):
     """LLM Tool allowing querying a calendar."""
 
-    name = "calendar_get_events"
+    name = "calendar__get_events"
     description = (
         "Get events from a calendar. "
         "When asked if something happens, search the whole week. "
@@ -30,10 +30,10 @@ class CalendarGetEventsTool(Tool):
 
     def __init__(self, calendars: list[str]) -> None:
         """Init the get events tool."""
-        self.parameters = vol.Schema(
+        self.parameters = probatio.Schema(
             {
-                vol.Required("calendar"): vol.In(calendars),
-                vol.Required("range"): vol.In(["today", "week"]),
+                probatio.Required("calendar"): probatio.In(calendars),
+                probatio.Required("range"): probatio.In(["today", "week"]),
             }
         )
 

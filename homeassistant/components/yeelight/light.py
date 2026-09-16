@@ -5,7 +5,7 @@ import logging
 import math
 from typing import Any, Concatenate, override
 
-import voluptuous as vol
+import probatio
 import yeelight
 from yeelight import Flow, RGBTransition, SleepTransition, flows
 from yeelight.aio import AsyncBulb
@@ -40,6 +40,7 @@ from homeassistant.util import color as color_util
 from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
+    ACTIVE_COLOR_FLOWING,
     ATTR_ACTION,
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
@@ -161,46 +162,52 @@ EFFECTS_MAP = {
     EFFECT_TEA_TIME: flows.tea_time,
 }
 
-VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
+VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE: VolDictType = {
-    vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
+    probatio.Required(ATTR_MODE): probatio.In([mode.name.lower() for mode in PowerMode])
 }
 
-SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
+SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {
+    probatio.Required(ATTR_MODE_MUSIC): cv.boolean
+}
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
-    vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
+    probatio.Required(ATTR_RGB_COLOR): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
-    vol.Required(ATTR_HS_COLOR): vol.All(
-        vol.Coerce(tuple),
-        vol.ExactSequence(
+    probatio.Required(ATTR_HS_COLOR): probatio.All(
+        probatio.Coerce(tuple),
+        probatio.ExactSequence(
             (
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=359)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
             )
         ),
     ),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
-    vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_KELVIN): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1700, max=6500)
+    ),
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
-    vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
-    vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(ATTR_MINUTES): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=60)
+    ),
+    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 
@@ -549,7 +556,12 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     @override
     def effect(self) -> str | None:
         """Return the current effect."""
-        return self._effect if self.device.is_color_flow_enabled else None
+        return self._effect if self._is_color_flow_enabled else None
+
+    @property
+    def _is_color_flow_enabled(self) -> bool:
+        color_flow = self._get_property("flowing")
+        return bool(color_flow) and int(color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _bulb(self) -> AsyncBulb:
@@ -583,7 +595,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes = {
-            "flowing": self.device.is_color_flow_enabled,
+            "flowing": self._is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,
         }
 
@@ -655,7 +667,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         ):
             return
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.HS
             and self.hs_color == hs_color
         ):
@@ -680,7 +692,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         ):
             return
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.RGB
             and self.rgb_color == rgb
         ):
@@ -706,7 +718,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             return
 
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.COLOR_TEMP
             and self.color_temp_kelvin == temp_in_k
         ):
@@ -764,6 +776,8 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
 
         if effect == EFFECT_STOP:
             await self._bulb.async_stop_flow(light_type=self.light_type)
+            self._effect = None
+            await self.device.async_update(True)
             return
 
         if effect in self.custom_effects_names:
@@ -783,6 +797,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
 
         await self._bulb.async_start_flow(flow, light_type=self.light_type)
         self._effect = effect
+        await self.device.async_update(True)
 
     @_async_cmd
     async def _async_turn_on(self, duration) -> None:

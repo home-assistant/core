@@ -6,17 +6,28 @@ from typing import override
 from open_meteo import Forecast as OpenMeteoForecast
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
+from homeassistant.const import (
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +56,9 @@ class OpenMeteoWeatherEntity(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    # Open-Meteo has no request parameter to set the pressure unit; it always
+    # returns pressure_msl in hPa, so the native unit is safe to hardcode here.
+    _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_supported_features = (
@@ -123,6 +137,11 @@ class OpenMeteoWeatherEntity(
                     daily.weathercode[index]
                 )
 
+            if daily.apparent_temperature_max is not None:
+                forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = (
+                    daily.apparent_temperature_max[index]
+                )
+
             if daily.precipitation_sum is not None:
                 forecast[ATTR_FORECAST_NATIVE_PRECIPITATION] = daily.precipitation_sum[
                     index
@@ -139,6 +158,11 @@ class OpenMeteoWeatherEntity(
             if daily.wind_direction_10m_dominant is not None:
                 forecast[ATTR_FORECAST_WIND_BEARING] = (
                     daily.wind_direction_10m_dominant[index]
+                )
+
+            if daily.wind_gusts_10m_max is not None:
+                forecast[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = (
+                    daily.wind_gusts_10m_max[index]
                 )
 
             if daily.wind_speed_10m_max is not None:
@@ -178,13 +202,41 @@ class OpenMeteoWeatherEntity(
                     hourly.weather_code[index]
                 )
 
+            if hourly.apparent_temperature is not None:
+                forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = (
+                    hourly.apparent_temperature[index]
+                )
+
+            if hourly.cloud_cover is not None:
+                forecast[ATTR_FORECAST_CLOUD_COVERAGE] = hourly.cloud_cover[index]
+
+            if hourly.dew_point_2m is not None:
+                forecast[ATTR_FORECAST_NATIVE_DEW_POINT] = hourly.dew_point_2m[index]
+
             if hourly.precipitation is not None:
                 forecast[ATTR_FORECAST_NATIVE_PRECIPITATION] = hourly.precipitation[
                     index
                 ]
 
+            if hourly.pressure_msl is not None:
+                forecast[ATTR_FORECAST_NATIVE_PRESSURE] = hourly.pressure_msl[index]
+
+            if hourly.relative_humidity_2m is not None:
+                forecast[ATTR_FORECAST_HUMIDITY] = hourly.relative_humidity_2m[index]
+
             if hourly.temperature_2m is not None:
                 forecast[ATTR_FORECAST_NATIVE_TEMP] = hourly.temperature_2m[index]
+
+            if hourly.wind_direction_10m is not None:
+                forecast[ATTR_FORECAST_WIND_BEARING] = hourly.wind_direction_10m[index]
+
+            if hourly.wind_gusts_10m is not None:
+                forecast[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = hourly.wind_gusts_10m[
+                    index
+                ]
+
+            if hourly.wind_speed_10m is not None:
+                forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = hourly.wind_speed_10m[index]
 
             forecasts.append(forecast)
 

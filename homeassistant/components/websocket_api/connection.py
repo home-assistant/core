@@ -5,7 +5,8 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
@@ -82,9 +83,9 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
-            self.hass.data[const.DOMAIN]
-        )
+        self.handlers: dict[
+            str, tuple[MessageHandler, probatio.Schema | Literal[False]]
+        ] = self.hass.data[const.DOMAIN]
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
@@ -244,7 +245,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
+                    raise probatio.Invalid("extra keys not allowed")  # noqa: TRY301
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))
@@ -293,9 +294,9 @@ class ActiveConnection:
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
-        elif isinstance(err, vol.Invalid):
+        elif isinstance(err, probatio.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = vol.humanize.humanize_error(msg, err)
+            err_message = humanize_error(msg, err)
         elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"

@@ -3,8 +3,8 @@
 from types import MappingProxyType
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.bayesian.config_flow import (
@@ -1023,7 +1023,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert result0["type"] is FlowResultType.FORM
 
         # priors should never be Zero, because then the sensor can never return 'on'
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
@@ -1036,7 +1036,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert excinfo.value.error_message == "extreme_prior_error"
 
         # priors should never be 100% because then the sensor can never be 'off'
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
@@ -1049,7 +1049,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert excinfo.value.error_message == "extreme_prior_error"
 
         # Threshold should never be 100% because then the sensor can never be 'on'
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
@@ -1062,7 +1062,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert excinfo.value.error_message == "extreme_threshold_error"
 
         # Threshold should never be 0 because then the sensor can never be 'off'
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.flow.async_configure(
                 result0["flow_id"],
                 {
@@ -1099,7 +1099,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
 
         # Observations with a probability of 0 will create certainties
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.subentries.async_configure(
                 result["flow_id"],
                 {
@@ -1114,7 +1114,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert excinfo.value.error_message == "extreme_prob_given_error"
 
         # Observations with a probability of 1 will create certainties
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             result = await hass.config_entries.subentries.async_configure(
                 result["flow_id"],
                 {

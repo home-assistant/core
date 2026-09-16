@@ -93,6 +93,7 @@ FIXTURES = [
     "mock_window_covering_full",
     "mock_window_covering_lift",
     "mock_window_covering_pa_lift",
+    "mock_window_covering_pa_lift_null_tilt",
     "mock_window_covering_pa_tilt",
     "mock_window_covering_tilt",
     "onoff_light_with_levelcontrol_present",
@@ -109,6 +110,8 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "wago_home_blind_control",
+    "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
 ]
@@ -129,13 +132,13 @@ async def _setup_integration_with_nodes(
     hass: HomeAssistant,
     client: MagicMock,
     nodes: list[MatterNode],
-) -> MatterNode:
+) -> None:
     """Set up Matter integration with nodes."""
     client.get_nodes.return_value = nodes
 
     def _get_node(node_id: int) -> MatterNode:
         try:
-            next(node for node in nodes if node.node_id == node_id)
+            return next(node for node in nodes if node.node_id == node_id)
         except StopIteration as err:
             raise KeyError(f"Node with id {node_id} not found") from err
 

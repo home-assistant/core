@@ -1,7 +1,7 @@
 """Blebox sensors tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfDensity,
     UnitOfTemperature,
@@ -25,7 +26,7 @@ from .conftest import (
     async_setup_entity,
     mock_feature,
     mock_only_feature,
-    setup_product_mock,
+    setup_multi_feature_product,
 )
 
 from tests.common import MockConfigEntry
@@ -133,6 +134,41 @@ async def test_update_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_update_with_error_state_is_unavailable(
+    hass: HomeAssistant, tempsensor: tuple[Mock, str]
+) -> None:
+    """A sensor reporting an error state must become unavailable."""
+
+    feature_mock, entity_id = tempsensor
+    feature_mock.is_error = True
+    feature_mock.native_value = None
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_recovers_after_error_state_clears(
+    hass: HomeAssistant, tempsensor: tuple[Mock, str], config_entry: MockConfigEntry
+) -> None:
+    """Entity becomes available again once the sensor reports a valid state."""
+
+    feature_mock, entity_id = tempsensor
+    feature_mock.is_error = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    feature_mock.is_error = False
+    feature_mock.native_value = 21.5
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "21.5"
+
+
 async def test_airsensor_init(
     airsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -201,18 +237,7 @@ async def test_multi_sensor_multiple_have_channel_suffix(
         for i in range(4)
     ]
 
-    product = setup_product_mock("sensors", features)
-    type(product).name = PropertyMock(return_value="My smart meter")
-    type(product).model = PropertyMock(return_value="smartMeter")
-    type(product).product = PropertyMock(return_value="smartMeter")
-    type(product).brand = PropertyMock(return_value="BleBox")
-    type(product).firmware_version = PropertyMock(return_value="1.23")
-    type(product).unique_id = PropertyMock(return_value="aabbcc112233")
-
-    for feature in features:
-        type(feature).product = PropertyMock(return_value=product)
-        type(feature).name = PropertyMock(return_value=None)
-        feature.async_update = AsyncMock()
+    setup_multi_feature_product("sensors", features, "My smart meter", "smartMeter")
 
     entity_ids = [
         "sensor.my_smart_meter_voltage",
@@ -226,6 +251,44 @@ async def test_multi_sensor_multiple_have_channel_suffix(
     assert hass.states.get(entity_ids[1]).name == "My smart meter Voltage 1"
     assert hass.states.get(entity_ids[2]).name == "My smart meter Voltage 2"
     assert hass.states.get(entity_ids[3]).name == "My smart meter Voltage 3"
+
+
+async def test_sensor_error_does_not_affect_sibling_sensors(
+    hass: HomeAssistant,
+) -> None:
+    """A single errored sensor must not make sibling sensors unavailable."""
+    ok_feature = mock_only_feature(
+        blebox_uniapi.sensor.GenericSensor,
+        unique_id="BleBox-multiSensor-aabbcc-humidity_0",
+        full_name="multiSensor-humidity_0",
+        device_class="humidity",
+        unit="percentage",
+        native_value=42,
+        sensor_id=0,
+        index=0,
+    )
+    error_feature = mock_only_feature(
+        blebox_uniapi.sensor.Temperature,
+        unique_id="BleBox-multiSensor-aabbcc-temperature_1",
+        full_name="multiSensor-temperature_1",
+        device_class="temperature",
+        unit="celsius",
+        current=None,
+        native_value=None,
+        is_error=True,
+        sensor_id=1,
+        index=1,
+    )
+    setup_multi_feature_product(
+        "sensors", [ok_feature, error_feature], "My multi sensor", "multiSensor"
+    )
+
+    ok_entity_id = "sensor.my_multi_sensor_humidity"
+    error_entity_id = "sensor.my_multi_sensor_temperature"
+    await async_setup_entities(hass, [ok_entity_id, error_entity_id])
+
+    assert hass.states.get(ok_entity_id).state == "42"
+    assert hass.states.get(error_entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:

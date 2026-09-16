@@ -1,14 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "The host entry was not in full URL format, e.g., {sample_ip}",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "ssl_error": "TLS handshake failed. The controller may require a newer TLS version, or SSL verification may be failing due to a self-signed certificate.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

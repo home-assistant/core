@@ -3,7 +3,7 @@
 from operator import attrgetter
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
@@ -32,7 +32,7 @@ LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMO
 class TodoGetItemsTool(Tool):
     """LLM Tool allowing querying a to-do list."""
 
-    name = "todo_get_items"
+    name = "todo__get_items"
     description = (
         "Query a to-do list to find out what items are on it. "
         "Use this to answer questions like "
@@ -43,10 +43,10 @@ class TodoGetItemsTool(Tool):
 
     def __init__(self, todo_lists: list[str]) -> None:
         """Init the get items tool."""
-        self.parameters = vol.Schema(
+        self.parameters = probatio.Schema(
             {
-                vol.Required("todo_list"): vol.In(todo_lists),
-                vol.Optional(
+                probatio.Required("todo_list"): probatio.In(todo_lists),
+                probatio.Optional(
                     "status",
                     description=(
                         "Filter returned items by status,"
@@ -54,7 +54,7 @@ class TodoGetItemsTool(Tool):
                         " items"
                     ),
                     default="needs_action",
-                ): vol.In(["needs_action", "completed", "all"]),
+                ): probatio.In(["needs_action", "completed", "all"]),
             }
         )
 
@@ -115,7 +115,7 @@ def async_get_tools(
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
-        IntentTool(handler.intent_type, handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     )
