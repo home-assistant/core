@@ -1518,8 +1518,8 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
     info.address = new_address
 
     # async_schedule_reload is left unpatched so the real reload runs here with the
-    # committed BLE address; keep the setup-time Bluetooth mocks active so it neither
-    # writes the vehicle key file nor opens a real connection.
+    # committed BLE address; it reuses the parent cached by the initial setup, so no
+    # key file is written and no real connection is opened.
     with (
         patch(
             "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
@@ -1533,14 +1533,8 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
             "homeassistant.components.teslemetry.async_ble_device_from_address",
             return_value=MagicMock(),
         ) as mock_ble_device,
-        patch(
-            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
-        ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
-        mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
-
         result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
