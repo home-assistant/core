@@ -9,6 +9,12 @@ from place.provider import Provider
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
@@ -23,7 +29,12 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> bool:
     """Set up Place from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
-    token = await auth_implementation.async_refresh_token(entry.data["token"])
+    try:
+        token = await auth_implementation.async_refresh_token(entry.data["token"])
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except OAuth2TokenRequestBaseError as err:
+        raise ConfigEntryNotReady(err) from err
 
     hass.config_entries.async_update_entry(entry, data={**entry.data, "token": token})
 
