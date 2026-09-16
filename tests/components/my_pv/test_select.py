@@ -27,7 +27,7 @@ async def test_select(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test successful setup of a water heater."""
+    """Test successful setup of the select platform."""
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SELECT]):
         mock_config_entry.add_to_hass(hass)
