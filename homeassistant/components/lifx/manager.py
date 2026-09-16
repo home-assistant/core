@@ -8,30 +8,39 @@ from typing import TYPE_CHECKING, Any
 import aiolifx_effects
 from aiolifx_themes.painter import ThemePainter
 from aiolifx_themes.themes import Theme, ThemeLibrary
-import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
     ATTR_TRANSITION,
-    ATTR_XY_COLOR,
-    COLOR_GROUP,
-    VALID_BRIGHTNESS,
-    VALID_BRIGHTNESS_PCT,
 )
 from homeassistant.const import ATTR_MODE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.target import (
-    TargetSelection,
-    async_extract_referenced_entity_ids,
-)
+from homeassistant.core import HomeAssistant, callback
 
-from .const import ATTR_THEME, DOMAIN
+from .const import (
+    ATTR_CHANGE,
+    ATTR_CLOUD_SATURATION_MAX,
+    ATTR_CLOUD_SATURATION_MIN,
+    ATTR_CYCLES,
+    ATTR_DIRECTION,
+    ATTR_PALETTE,
+    ATTR_PERIOD,
+    ATTR_POWER_ON,
+    ATTR_SATURATION_MAX,
+    ATTR_SATURATION_MIN,
+    ATTR_SKY_TYPE,
+    ATTR_SPEED,
+    ATTR_SPREAD,
+    ATTR_THEME,
+    SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_FLAME,
+    SERVICE_EFFECT_MORPH,
+    SERVICE_EFFECT_MOVE,
+    SERVICE_EFFECT_PULSE,
+    SERVICE_EFFECT_SKY,
+    SERVICE_EFFECT_STOP,
+    SERVICE_PAINT_THEME,
+)
 from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
 
@@ -39,30 +48,6 @@ if TYPE_CHECKING:
     from aiolifx.aiolifx import Light
 
 SCAN_INTERVAL = timedelta(seconds=10)
-
-SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
-SERVICE_EFFECT_FLAME = "effect_flame"
-SERVICE_EFFECT_MORPH = "effect_morph"
-SERVICE_EFFECT_MOVE = "effect_move"
-SERVICE_EFFECT_PULSE = "effect_pulse"
-SERVICE_EFFECT_SKY = "effect_sky"
-SERVICE_EFFECT_STOP = "effect_stop"
-SERVICE_PAINT_THEME = "paint_theme"
-
-ATTR_CHANGE = "change"
-ATTR_CLOUD_SATURATION_MIN = "cloud_saturation_min"
-ATTR_CLOUD_SATURATION_MAX = "cloud_saturation_max"
-ATTR_CYCLES = "cycles"
-ATTR_DIRECTION = "direction"
-ATTR_PALETTE = "palette"
-ATTR_PERIOD = "period"
-ATTR_POWER_OFF = "power_off"
-ATTR_POWER_ON = "power_on"
-ATTR_SATURATION_MAX = "saturation_max"
-ATTR_SATURATION_MIN = "saturation_min"
-ATTR_SKY_TYPE = "sky_type"
-ATTR_SPEED = "speed"
-ATTR_SPREAD = "spread"
 
 EFFECT_FLAME = "FLAME"
 EFFECT_MORPH = "MORPH"
@@ -77,178 +62,12 @@ EFFECT_MORPH_DEFAULT_THEME = "exciting"
 
 EFFECT_MOVE_DEFAULT_SPEED = 3
 EFFECT_MOVE_DEFAULT_DIRECTION = "right"
-EFFECT_MOVE_DIRECTION_RIGHT = "right"
-EFFECT_MOVE_DIRECTION_LEFT = "left"
-
-EFFECT_MOVE_DIRECTIONS = [EFFECT_MOVE_DIRECTION_LEFT, EFFECT_MOVE_DIRECTION_RIGHT]
-
 EFFECT_SKY_DEFAULT_SPEED = 50
 EFFECT_SKY_DEFAULT_SKY_TYPE = "Clouds"
 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN = 50
 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX = 180
 
-EFFECT_SKY_SKY_TYPES = ["Sunrise", "Sunset", "Clouds"]
-
 PAINT_THEME_DEFAULT_TRANSITION = 1
-
-PULSE_MODE_BLINK = "blink"
-PULSE_MODE_BREATHE = "breathe"
-PULSE_MODE_PING = "ping"
-PULSE_MODE_SOLID = "solid"
-PULSE_MODE_STROBE = "strobe"
-
-PULSE_MODES = [
-    PULSE_MODE_BLINK,
-    PULSE_MODE_BREATHE,
-    PULSE_MODE_PING,
-    PULSE_MODE_STROBE,
-    PULSE_MODE_SOLID,
-]
-
-LIFX_EFFECT_SCHEMA = {
-    probatio.Optional(ATTR_POWER_ON, default=True): cv.boolean,
-}
-
-LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-        probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-        probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
-            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
-        ),
-        probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
-            probatio.Coerce(tuple),
-            probatio.ExactSequence((cv.small_float, cv.small_float)),
-        ),
-        probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
-            probatio.Coerce(tuple),
-            probatio.ExactSequence(
-                (
-                    probatio.All(
-                        probatio.Coerce(float), probatio.Range(min=0, max=360)
-                    ),
-                    probatio.All(
-                        probatio.Coerce(float), probatio.Range(min=0, max=100)
-                    ),
-                )
-            ),
-        ),
-        probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=1500, max=9000)
-        ),
-        ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Range(min=0.05)),
-        ATTR_CYCLES: probatio.All(probatio.Coerce(float), probatio.Range(min=1)),
-        ATTR_MODE: probatio.In(PULSE_MODES),
-    }
-)
-
-LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-        ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
-        ),
-        ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
-        ),
-        ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
-        ATTR_CHANGE: probatio.All(
-            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
-        ),
-        ATTR_SPREAD: probatio.All(
-            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
-        ),
-        ATTR_TRANSITION: cv.positive_float,
-    }
-)
-
-LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
-
-LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
-    }
-)
-
-HSBK_SCHEMA = probatio.All(
-    probatio.Coerce(tuple),
-    probatio.ExactSequence(
-        (
-            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
-            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
-            probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=100)),
-            probatio.All(probatio.Coerce(int), probatio.Clamp(min=1500, max=9000)),
-        )
-    ),
-)
-
-LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
-        probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
-        ),
-    }
-)
-
-LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: probatio.All(
-            probatio.Coerce(float), probatio.Clamp(min=0.1, max=60)
-        ),
-        ATTR_DIRECTION: probatio.In(EFFECT_MOVE_DIRECTIONS),
-        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary().themes),
-    }
-)
-
-LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        ATTR_SPEED: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=86400)
-        ),
-        ATTR_SKY_TYPE: probatio.In(EFFECT_SKY_SKY_TYPES),
-        ATTR_CLOUD_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=255)
-        ),
-        ATTR_CLOUD_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=255)
-        ),
-        ATTR_PALETTE: probatio.All(cv.ensure_list, [HSBK_SCHEMA]),
-    }
-)
-
-LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIFX_EFFECT_SCHEMA,
-        ATTR_TRANSITION: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=3600)
-        ),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
-        probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
-        ),
-    }
-)
-
-SERVICES_SCHEMA = {
-    SERVICE_EFFECT_COLORLOOP: LIFX_EFFECT_COLORLOOP_SCHEMA,
-    SERVICE_EFFECT_FLAME: LIFX_EFFECT_FLAME_SCHEMA,
-    SERVICE_EFFECT_MORPH: LIFX_EFFECT_MORPH_SCHEMA,
-    SERVICE_EFFECT_MOVE: LIFX_EFFECT_MOVE_SCHEMA,
-    SERVICE_EFFECT_PULSE: LIFX_EFFECT_PULSE_SCHEMA,
-    SERVICE_EFFECT_SKY: LIFX_EFFECT_SKY_SCHEMA,
-    SERVICE_EFFECT_STOP: LIFX_EFFECT_STOP_SCHEMA,
-    SERVICE_PAINT_THEME: LIFX_PAINT_THEME_SCHEMA,
-}
 
 
 class LIFXManager:
@@ -259,12 +78,6 @@ class LIFXManager:
         self.hass = hass
         self.effects_conductor = aiolifx_effects.Conductor(hass.loop)
         self.entity_id_to_coordinator: dict[str, LIFXUpdateCoordinator] = {}
-
-    @callback
-    def async_unload(self) -> None:
-        """Release resources."""
-        for service in SERVICES_SCHEMA:
-            self.hass.services.async_remove(DOMAIN, service)
 
     @callback
     def async_register_entity(
@@ -279,24 +92,6 @@ class LIFXManager:
             self.entity_id_to_coordinator.pop(entity_id)
 
         return unregister_entity
-
-    @callback
-    def async_setup(self) -> None:
-        """Register the LIFX effects as hass service calls."""
-
-        async def service_handler(service: ServiceCall) -> None:
-            """Apply a service, i.e. start an effect."""
-            referenced = async_extract_referenced_entity_ids(
-                self.hass, TargetSelection(service.data)
-            )
-            all_referenced = referenced.referenced | referenced.indirectly_referenced
-            if all_referenced:
-                await self.start_effect(all_referenced, service.service, **service.data)
-
-        for service, schema in SERVICES_SCHEMA.items():
-            self.hass.services.async_register(
-                DOMAIN, service, service_handler, schema=schema
-            )
 
     @staticmethod
     def build_theme(theme_name: str = "exciting", palette: list | None = None) -> Theme:
