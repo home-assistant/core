@@ -71,8 +71,7 @@ def notify_auth_data_update(
 
     def _notify(auth_data: CookidooAuthData) -> None:
         mock_cookidoo.return_value.auth_data = auth_data
-        if callback := mock_cookidoo.call_args.kwargs["on_auth_data_update"]:
-            callback(auth_data)
+        mock_cookidoo.call_args.kwargs["on_auth_data_update"](auth_data)
 
     return _notify
 
