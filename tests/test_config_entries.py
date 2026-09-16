@@ -3573,9 +3573,7 @@ async def test_async_retry_migration(
             """Test user step."""
             return self.async_create_entry(title="title", data={})
 
-    with (
-        mock_config_flow("comp", TestFlow),
-    ):
+    with mock_config_flow("comp", TestFlow):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
 
@@ -3635,7 +3633,7 @@ async def test_async_retry_migration_on_disabled_entry(
 ) -> None:
     """Test we can't use async_retry_migration.
 
-    On entries that is disabled while in `MIGRATION_ERROR` state.
+    On a disabled entry that is in `MIGRATION_ERROR` state.
     """
     entry = MockConfigEntry(domain="comp")
     entry.add_to_hass(hass)
@@ -3669,9 +3667,7 @@ async def test_async_retry_migration_on_disabled_entry(
             """Test user step."""
             return self.async_create_entry(title="title", data={})
 
-    with (
-        mock_config_flow("comp", TestFlow),
-    ):
+    with mock_config_flow("comp", TestFlow):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
 
