@@ -56,7 +56,7 @@ from .binary_sensor import (
     CONF_DELAY_OFF,
     CONF_DELAY_ON,
     async_create_preview_binary_sensor,
-}
+)
 from .climate import (
     CONF_CURRENT_TEMPERATURE,
     CONF_HVAC_ACTION,
