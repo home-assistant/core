@@ -79,6 +79,8 @@ class CometWiFiClimateEntity(CometWiFiEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None:
             await self.coordinator.client.set_setpoint_temperature(temperature)
+            # Keep temperature when reset within debounce window
+            self.coordinator.last_heating_setpoint = temperature
             await self.coordinator.async_request_refresh()
 
     @override

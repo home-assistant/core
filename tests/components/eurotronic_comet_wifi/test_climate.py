@@ -23,6 +23,7 @@ from . import (
     PAYLOAD_OFF,
     PAYLOAD_SETPOINT_21,
     PAYLOAD_SETPOINT_23,
+    PAYLOAD_SETPOINT_25,
 )
 from .conftest import FakeDevice
 
@@ -156,3 +157,47 @@ async def test_turn_off_and_on(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("device")
+async def test_turn_on_restores_debounced_setpoint(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test turning on restores a setpoint that was set while refreshes were debounced."""
+    # The first refresh request runs at once and starts the debounce.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23.0},
+        blocking=True,
+    )
+    # Inside the cooldown no refresh runs, so the coordinator does not see 25.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 25.0},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_any_call(
+        COMMAND_TOPIC_SETPOINT,
+        PAYLOAD_SETPOINT_25,
+        0,
+        False,
+        message_expiry_interval=None,
+    )

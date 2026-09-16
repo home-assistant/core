@@ -11,5 +11,6 @@ REPLY_TOPIC_AMBIENT = f"01/{MAC}/V/A1"
 # Payloads are "#" + hex of the doubled temperature
 PAYLOAD_SETPOINT_21 = "#2A"
 PAYLOAD_SETPOINT_23 = "#2E"
+PAYLOAD_SETPOINT_25 = "#32"
 PAYLOAD_AMBIENT_22 = "#2C"
 PAYLOAD_OFF = "#0F"
