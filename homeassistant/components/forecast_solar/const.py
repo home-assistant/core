@@ -20,4 +20,3 @@ MAX_PLANES = 4
 SUBENTRY_TYPE_PLANE = "plane"
 CONF_AZIMUTH_SENSOR = "azimuth_sensor"
 CONF_DECLINATION_SENSOR = "declination_sensor"
-CONF_TRACK_HOME_LOCATION = "track_home_location"

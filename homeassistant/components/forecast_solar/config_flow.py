@@ -28,7 +28,6 @@ from .const import (
     CONF_DECLINATION_SENSOR,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
-    CONF_TRACK_HOME_LOCATION,
     DEFAULT_AZIMUTH,
     DEFAULT_DAMPING,
     DEFAULT_DECLINATION,
@@ -45,25 +44,10 @@ _ANGLE_SENSOR_SELECTOR = selector.EntitySelector(
 )
 
 
-def _location_data(
-    user_input: Mapping[str, Any],
-) -> tuple[dict[str, Any], dict[str, str]]:
-    """Resolve location data from a submitted form, returning data and errors."""
-    if user_input[CONF_TRACK_HOME_LOCATION]:
-        return {}, {}
-    if CONF_LATITUDE in user_input and CONF_LONGITUDE in user_input:
-        return {
-            CONF_LATITUDE: user_input[CONF_LATITUDE],
-            CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-        }, {}
-    return {}, {"base": "location_required"}
-
-
-_LOCATION_SCHEMA = vol.Schema(
+_COORDINATES_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TRACK_HOME_LOCATION, default=True): bool,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Required(CONF_LATITUDE): cv.latitude,
+        vol.Required(CONF_LONGITUDE): cv.longitude,
     }
 )
 
@@ -83,7 +67,7 @@ def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _plane_title(data: Mapping[str, Any], hass: HomeAssistant) -> str:
+def _plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
     """Build a plane subentry title from its resolved azimuth/declination/power."""
     if entity_id := data.get(CONF_DECLINATION_SENSOR):
         state = hass.states.get(entity_id)
@@ -132,6 +116,13 @@ _PLANE_SCHEMA = vol.Schema(
 )
 
 
+_PLANE_DEFAULTS = {
+    CONF_DECLINATION: DEFAULT_DECLINATION,
+    CONF_AZIMUTH: DEFAULT_AZIMUTH,
+    CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
+}
+
+
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Forecast.Solar."""
 
@@ -160,75 +151,119 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors: dict[str, str] = {}
+        return self.async_show_menu(
+            step_id="user", menu_options=["home_location", "fixed_location"]
+        )
 
+    async def async_step_home_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow tracking Home Assistant's location."""
         if user_input is not None:
-            location_data, errors = _location_data(user_input)
-
-            if not errors:
-                plane_data = _plane_data(user_input)
-                return self.async_create_entry(
-                    title="",
-                    data=location_data,
-                    subentries=[
-                        {
-                            "subentry_type": SUBENTRY_TYPE_PLANE,
-                            "data": plane_data,
-                            "title": _plane_title(plane_data, self.hass),
-                            "unique_id": None,
-                        },
-                    ],
-                )
-
-        schema = _LOCATION_SCHEMA.extend(_PLANE_SCHEMA.schema)
+            return self._async_create_entry({}, user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="home_location",
             data_schema=self.add_suggested_values_to_schema(
-                schema,
+                _PLANE_SCHEMA, _PLANE_DEFAULTS
+            ),
+        )
+
+    async def async_step_fixed_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow using fixed coordinates."""
+        if user_input is not None:
+            return self._async_create_entry(
+                {
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                },
+                user_input,
+            )
+
+        return self.async_show_form(
+            step_id="fixed_location",
+            data_schema=self.add_suggested_values_to_schema(
+                _COORDINATES_SCHEMA.extend(_PLANE_SCHEMA.schema),
                 {
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
-                    CONF_DECLINATION: DEFAULT_DECLINATION,
-                    CONF_AZIMUTH: DEFAULT_AZIMUTH,
-                    CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
-                },
+                }
+                | _PLANE_DEFAULTS,
             ),
-            errors=errors,
+        )
+
+    def _async_create_entry(
+        self, location_data: dict[str, Any], user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Create the entry, with the submitted plane as its first subentry."""
+        plane_data = _plane_data(user_input)
+        return self.async_create_entry(
+            title="",
+            data=location_data,
+            subentries=[
+                {
+                    "subentry_type": SUBENTRY_TYPE_PLANE,
+                    "data": plane_data,
+                    "title": _plane_title(self.hass, plane_data),
+                    "unique_id": None,
+                },
+            ],
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of an existing entry's location."""
-        errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            location_data, errors = _location_data(user_input)
-            if not errors:
-                if (
-                    self.hass.config_entries.async_update_entry(
-                        entry, data=location_data
-                    )
-                    and not entry.update_listeners
-                ):
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
-
-        suggested_values = user_input or {
-            CONF_TRACK_HOME_LOCATION: not entry.data,
-            CONF_LATITUDE: entry.data.get(CONF_LATITUDE, self.hass.config.latitude),
-            CONF_LONGITUDE: entry.data.get(CONF_LONGITUDE, self.hass.config.longitude),
-        }
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                _LOCATION_SCHEMA, suggested_values
-            ),
-            errors=errors,
+            menu_options=["reconfigure_home_location", "reconfigure_fixed_location"],
         )
+
+    async def async_step_reconfigure_home_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure an entry to track Home Assistant's location."""
+        return self._async_update_location({})
+
+    async def async_step_reconfigure_fixed_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure an entry to use fixed coordinates."""
+        if user_input is not None:
+            return self._async_update_location(
+                {
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                }
+            )
+
+        entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure_fixed_location",
+            data_schema=self.add_suggested_values_to_schema(
+                _COORDINATES_SCHEMA,
+                {
+                    CONF_LATITUDE: entry.data.get(
+                        CONF_LATITUDE, self.hass.config.latitude
+                    ),
+                    CONF_LONGITUDE: entry.data.get(
+                        CONF_LONGITUDE, self.hass.config.longitude
+                    ),
+                },
+            ),
+        )
+
+    def _async_update_location(self, location_data: dict[str, Any]) -> ConfigFlowResult:
+        """Store the entry's new location, letting its update listener reload it."""
+        entry = self._get_reconfigure_entry()
+        if (
+            self.hass.config_entries.async_update_entry(entry, data=location_data)
+            and not entry.update_listeners
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        return self.async_abort(reason="reconfigure_successful")
 
 
 class ForecastSolarOptionFlowHandler(OptionsFlow):
@@ -340,18 +375,13 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=_plane_title(user_input, self.hass), data=user_input
+                title=_plane_title(self.hass, user_input), data=user_input
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _PLANE_SCHEMA,
-                {
-                    CONF_DECLINATION: DEFAULT_DECLINATION,
-                    CONF_AZIMUTH: DEFAULT_AZIMUTH,
-                    CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
-                },
+                _PLANE_SCHEMA, _PLANE_DEFAULTS
             ),
         )
 
@@ -363,7 +393,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             entry = self._get_entry()
-            title = _plane_title(user_input, self.hass)
+            title = _plane_title(self.hass, user_input)
             if (
                 self._async_update(entry, subentry, data=user_input, title=title)
                 and not entry.update_listeners
