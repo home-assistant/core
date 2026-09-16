@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
@@ -93,18 +93,18 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_IR_EMITTER_ENTITY_ID): EntitySelector(
+                    probatio.Required(CONF_IR_EMITTER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=list(emitter_entity_ids),
+                            include_entities=emitter_entity_ids,
                         )
                     ),
-                    vol.Optional(CONF_IR_RECEIVER_ENTITY_ID): EntitySelector(
+                    probatio.Optional(CONF_IR_RECEIVER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=list(receiver_entity_ids),
+                            include_entities=receiver_entity_ids,
                         )
                     ),
                 }
