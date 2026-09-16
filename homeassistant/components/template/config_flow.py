@@ -219,6 +219,13 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
             probatio.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
             probatio.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
         }
         additional_options |= {
             probatio.Optional(CONF_MIN_TEMP): selector.NumberSelector(
