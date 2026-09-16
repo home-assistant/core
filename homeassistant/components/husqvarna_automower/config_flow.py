@@ -28,6 +28,7 @@ class HusqvarnaConfigFlowHandler(
     """Handle a config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @override

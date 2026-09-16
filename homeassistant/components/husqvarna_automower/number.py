@@ -11,7 +11,6 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -26,7 +25,6 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-_LEGACY_WORK_AREA_CUTTING_HEIGHT_CLEANUP = "legacy_work_area_cutting_height_cleanup"
 
 
 @callback
@@ -115,34 +113,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up number platform."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
-    registered_entries = {
-        registry_entry.unique_id: registry_entry
-        for registry_entry in er.async_entries_for_config_entry(
-            entity_registry, coordinator.config_entry.entry_id
-        )
-    }
-    description = WORK_AREA_NUMBER_TYPES[0]
-
-    if not entry.data.get(_LEGACY_WORK_AREA_CUTTING_HEIGHT_CLEANUP, False):
-        for mower_id, mower_data in coordinator.data.items():
-            work_areas = mower_data.work_areas
-            if work_areas is None:
-                continue
-            for work_area_id, work_area in work_areas.items():
-                if description.exists_fn(work_area):
-                    continue
-                unique_id = f"{mower_id}_{work_area_id}_{description.key}"
-                if registry_entry := registered_entries.get(unique_id):
-                    entity_registry.async_remove(registry_entry.entity_id)
-
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                **entry.data,
-                _LEGACY_WORK_AREA_CUTTING_HEIGHT_CLEANUP: True,
-            },
-        )
 
     entities: list[NumberEntity] = []
     for mower_id in coordinator.data:

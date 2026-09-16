@@ -229,7 +229,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         if orphaned_devices:
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
             device_registry = dr.async_get(self.hass)
-
             for mower_id in orphaned_devices:
                 dev = device_registry.async_get_device_by_identifier(
                     (DOMAIN, mower_id), self.config_entry.entry_id

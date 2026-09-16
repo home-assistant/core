@@ -151,14 +151,14 @@
         'use_global_cutting_height': True,
       }),
       '123456': dict({
-        'current_orientation': 0,
+        'current_orientation': 0.0,
         'cutting_height': 50,
         'enabled': True,
         'last_time_abandoned': None,
         'last_time_completed': '2024-08-12T07:54:29+02:00',
         'name': 'Front lawn',
-        'orientation': 1800,
-        'orientation_shift': 1800,
+        'orientation': 180.0,
+        'orientation_shift': 180.0,
         'progress': 40,
         'type': 'systematic',
         'use_global_cutting_height': False,
@@ -183,7 +183,6 @@
   dict({
     'data': dict({
       'auth_implementation': 'husqvarna_automower',
-      'legacy_work_area_cutting_height_cleanup': True,
       'token': dict({
         'access_token': '**REDACTED**',
         'expires_at': 1685919600.0,
@@ -200,7 +199,7 @@
     }),
     'domain': 'husqvarna_automower',
     'entry_id': 'automower_test',
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'pref_disable_new_entities': False,
