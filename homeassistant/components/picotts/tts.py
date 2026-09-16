@@ -17,7 +17,7 @@ from homeassistant.components.tts import (
     TextToSpeechEntity,
     TtsAudioType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,7 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
-from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,14 +42,6 @@ async def async_get_engine(
     if await hass.async_add_executor_job(shutil.which, "pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
         return None
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-    deprecate_yaml_issue(hass)
 
     return PicoProvider(config[CONF_LANG])
 
