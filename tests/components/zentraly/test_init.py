@@ -1,5 +1,6 @@
 """Tests for the Zentraly integration setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -38,8 +39,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 PARENT_DEVICE_ID = "ZTTIN0100000631"
 HOST = "192.168.1.42"
@@ -333,3 +335,39 @@ async def test_refresh_device_info(
             await _async_refresh_device_info(device, device_registry, registered.id)
         update.assert_not_called()
         assert read_info.await_count == 3
+
+
+async def test_device_info_periodic_refresh(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Run the scheduled public version read and cancel it when unloading."""
+    entry = _parent_entry()
+    entry.add_to_hass(hass)
+    api = MagicMock(spec=ZentralyApi)
+    api.connected = True
+    api.device_id = PARENT_DEVICE_ID
+    api.host = HOST
+    api.port = PORT
+    api.async_validate_password.return_value = PARENT_MAC
+    with (
+        patch("homeassistant.components.zentraly.ZentralyApi", return_value=api),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        patch(
+            "homeassistant.components.zentraly.models.ZentralyDevice.async_get_device_info",
+            return_value=ZentralyDeviceInfo("1.0", "2.0"),
+        ) as read_info,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        read_info.assert_awaited_once_with()
+        registered = device_registry.async_get_device_by_identifier(
+            (DOMAIN, PARENT_DEVICE_ID), entry.entry_id
+        )
+        assert registered.sw_version == "1.0"
+        assert registered.hw_version == "2.0"
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        async_fire_time_changed(hass, now + timedelta(minutes=10))
+        await hass.async_block_till_done()
+        read_info.assert_awaited_once_with()
