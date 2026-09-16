@@ -289,6 +289,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Re-run Bluetooth pairing for an already added vehicle."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
         self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
         return await self.async_step_scan()
 
@@ -371,7 +373,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 data_updates={CONF_ADDRESS: self._address},
             )
             # Reload manually: the subentry change listener only fires on add or
-            # remove, and async_update_reload_and_abort would warn (listener present).
+            # remove, and async_update_reload_and_abort raises while a listener is set.
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return result
         return self.async_create_entry(

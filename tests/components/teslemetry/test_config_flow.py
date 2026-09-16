@@ -1467,6 +1467,7 @@ async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
     assert result["reason"] == "entry_not_loaded"
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None:
     """Reconfigure re-scans and re-pairs an already added vehicle, updating its address."""
     entry = await _setup_paired_entry(hass)
@@ -1505,6 +1506,7 @@ async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None
     vehicle.disconnect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_reconfigure_reloads_onto_new_address(
     hass: HomeAssistant,
 ) -> None:
@@ -1556,6 +1558,22 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
     assert mock_ble_device.call_args.args[1] == new_address
 
 
+async def test_subentry_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:
+    """Reconfigure aborts immediately when no Bluetooth integration is set up."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_available"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> None:
     """Reconfigure re-shows the scan form when the vehicle cannot be found."""
     entry = await _setup_paired_entry(hass)
