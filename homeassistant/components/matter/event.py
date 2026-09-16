@@ -90,11 +90,14 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_types.append("long_release")
 
         if self.entity_description.device_class == EventDeviceClass.DOORBELL:
-            # the doorbell device class requires the standard 'ring' event type
+            # the doorbell device class requires the standard 'ring' event type,
+            # even if the device only reports multi-press events
             event_types = [
                 "ring" if event_type == "initial_press" else event_type
                 for event_type in event_types
             ]
+            if "ring" not in event_types:
+                event_types.insert(0, "ring")
 
         self._attr_event_types = event_types
 
