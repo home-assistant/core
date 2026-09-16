@@ -46,7 +46,7 @@ async def test_sensor_updates(
         domain="sensor",
         platform="indi_allsky",
         unique_id=f"{mock_config_entry.entry_id}_binmode",
-        suggested_object_id="indi_allsky_bin_mode",
+        suggested_object_id="indi_allsky_binning_mode",
         disabled_by=None,
     )
     entity_registry.async_get_or_create(
@@ -87,7 +87,7 @@ async def test_sensor_updates(
     assert state is not None
     assert state.state == "0"
 
-    state = hass.states.get("sensor.indi_allsky_bin_mode")
+    state = hass.states.get("sensor.indi_allsky_binning_mode")
     assert state is not None
     assert state.state == "1"
 

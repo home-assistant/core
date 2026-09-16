@@ -29,7 +29,7 @@
   "entity": {
     "sensor": {
       "binmode": {
-        "name": "Bin mode"
+        "name": "Binning mode"
       },
       "exposure": {
         "name": "Exposure time"
