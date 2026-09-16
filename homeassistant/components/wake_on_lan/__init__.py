@@ -3,7 +3,7 @@
 from functools import partial
 import logging
 
-import voluptuous as vol
+import probatio
 import wakeonlan
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SEND_MAGIC_PACKET = "send_magic_packet"
 
-WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
+WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_SECUREON_PASSWORD): cv.string,
-        vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-        vol.Optional(CONF_BROADCAST_PORT): cv.port,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_SECUREON_PASSWORD): cv.string,
+        probatio.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+        probatio.Optional(CONF_BROADCAST_PORT): cv.port,
     }
 )
 

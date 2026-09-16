@@ -11,7 +11,7 @@ from fyta_cli.fyta_exceptions import (
     FytaPasswordError,
 )
 from fyta_cli.fyta_models import Credentials
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
@@ -26,15 +26,15 @@ from .const import CONF_EXPIRATION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

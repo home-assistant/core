@@ -20,7 +20,7 @@ audioop-lts==0.2.2
 av==17.0.1
 awesomeversion==25.8.0
 bcrypt==5.0.0
-bleak-retry-connector==4.7.0
+bleak-retry-connector==4.7.1
 bleak==3.0.2
 bluetooth-adapters==2.4.0
 bluetooth-auto-recovery==1.6.4
@@ -29,7 +29,7 @@ cached-ipaddress==1.1.2
 certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
-cryptography==48.0.1
+cryptography==50.0.1
 dbus-fast==5.0.22
 file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
@@ -38,27 +38,27 @@ go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==7.0.0
 hass-nabucasa==2.7.0
-hassil==3.12.0
+hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260826.6
+home-assistant-frontend==20260826.7
 home-assistant-intents==2026.8.28
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
-openai==2.45.0
+openai==3.10.0
 orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
-probatio==0.11.4
-propcache==0.5.2
+probatio==0.12.1
+propcache==0.5.4
 psutil-home-assistant==0.0.1
 PyJWT==2.13.0
 pymicro-vad==1.0.1
 PyNaCl==1.6.2
-pyOpenSSL==26.2.0
+pyopenssl==26.4.0
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.3
@@ -72,9 +72,9 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.9
+uv==0.12.11
 webrtc-models==0.3.0
-yarl==1.24.5
+yarl==1.25.1
 zeroconf==0.151.3
 
 # Constrain pycryptodome to avoid vulnerability

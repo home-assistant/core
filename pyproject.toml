@@ -57,10 +57,10 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.13.0",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==48.0.1",
+  "cryptography==50.0.1",
   "Pillow==12.3.0",
-  "propcache==0.5.2",
-  "pyOpenSSL==26.2.0",
+  "propcache==0.5.4",
+  "pyopenssl==26.4.0",
   # Do not bump orjson until the very aggressive buffer resizing introduced in
   # 3.12.0, which causes memory use to balloon, has been adjusted or a workaround
   # is available.
@@ -77,9 +77,9 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.9",
-  "probatio==0.11.4",
-  "yarl==1.24.5",
+  "uv==0.12.11",
+  "probatio==0.12.1",
+  "yarl==1.25.1",
   "webrtc-models==0.3.0",
   "zeroconf==0.151.3",
 ]
@@ -638,7 +638,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.5"
+required-version = ">=0.16.6"
 
 [tool.ruff.lint]
 select = [
@@ -848,6 +848,7 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
+"voluptuous".msg = "use probatio instead"
 "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]

@@ -7,8 +7,8 @@ import time
 from typing import Any, override
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
+import probatio
 from pydoods import PyDOODS
-import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
@@ -46,36 +46,38 @@ CONF_RIGHT = "right"
 CONF_LEFT = "left"
 CONF_FILE_OUT = "file_out"
 
-AREA_SCHEMA = vol.Schema(
+AREA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_BOTTOM, default=1): cv.small_float,
-        vol.Optional(CONF_LEFT, default=0): cv.small_float,
-        vol.Optional(CONF_RIGHT, default=1): cv.small_float,
-        vol.Optional(CONF_TOP, default=0): cv.small_float,
-        vol.Optional(CONF_COVERS, default=True): cv.boolean,
+        probatio.Optional(CONF_BOTTOM, default=1): cv.small_float,
+        probatio.Optional(CONF_LEFT, default=0): cv.small_float,
+        probatio.Optional(CONF_RIGHT, default=1): cv.small_float,
+        probatio.Optional(CONF_TOP, default=0): cv.small_float,
+        probatio.Optional(CONF_COVERS, default=True): cv.boolean,
     }
 )
 
-LABEL_SCHEMA = vol.Schema(
+LABEL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_AREA): AREA_SCHEMA,
-        vol.Optional(CONF_CONFIDENCE): vol.Range(min=0, max=100),
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_AREA): AREA_SCHEMA,
+        probatio.Optional(CONF_CONFIDENCE): probatio.Range(min=0, max=100),
     }
 )
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_DETECTOR): cv.string,
-        vol.Required(CONF_TIMEOUT, default=90): cv.positive_int,
-        vol.Optional(CONF_AUTH_KEY, default=""): cv.string,
-        vol.Optional(CONF_FILE_OUT, default=[]): vol.All(cv.ensure_list, [cv.template]),
-        vol.Optional(CONF_CONFIDENCE, default=0.0): vol.Range(min=0, max=100),
-        vol.Optional(CONF_LABELS, default=[]): vol.All(
-            cv.ensure_list, [vol.Any(cv.string, LABEL_SCHEMA)]
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Required(CONF_DETECTOR): cv.string,
+        probatio.Required(CONF_TIMEOUT, default=90): cv.positive_int,
+        probatio.Optional(CONF_AUTH_KEY, default=""): cv.string,
+        probatio.Optional(CONF_FILE_OUT, default=[]): probatio.All(
+            cv.ensure_list, [cv.template]
         ),
-        vol.Optional(CONF_AREA): AREA_SCHEMA,
+        probatio.Optional(CONF_CONFIDENCE, default=0.0): probatio.Range(min=0, max=100),
+        probatio.Optional(CONF_LABELS, default=[]): probatio.All(
+            cv.ensure_list, [probatio.Any(cv.string, LABEL_SCHEMA)]
+        ),
+        probatio.Optional(CONF_AREA): AREA_SCHEMA,
     }
 )
 

@@ -147,6 +147,9 @@
       },
       "tank_full": {
         "name": "Tank full"
+      },
+      "water_pump_running": {
+        "name": "Water pump running"
       }
     },
     "button": {
@@ -720,6 +723,14 @@
     "time": {
       "timing_regeneration": {
         "name": "Regeneration time"
+      }
+    },
+    "water_heater": {
+      "water_heater_bathing": {
+        "name": "Bathing water heater"
+      },
+      "water_heater_heating": {
+        "name": "Heating water heater"
       }
     }
   },
