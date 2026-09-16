@@ -39,6 +39,20 @@ async def test_setup_and_unload(
     mock_anylist_client.close.assert_awaited_once()
 
 
+async def test_unload_ignores_close_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Test a timeout while closing AnyList does not block unload."""
+    await setup_integration(hass, mock_config_entry)
+    mock_anylist_client.close.side_effect = TimeoutError()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_anylist_client.close.assert_awaited_once()
+
+
 async def test_rotated_tokens_are_persisted(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

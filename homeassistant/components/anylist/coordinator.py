@@ -95,6 +95,6 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
         """Shut down the AnyList client."""
         try:
             await self.client.close()
-        except AnyListError:
+        except AnyListError, TimeoutError:
             _LOGGER.debug("Error while closing AnyList client", exc_info=True)
         await super().async_shutdown()
