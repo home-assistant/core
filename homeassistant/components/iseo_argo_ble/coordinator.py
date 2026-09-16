@@ -68,6 +68,9 @@ class IseoCoordinator(ActiveBluetoothDataUpdateCoordinator[LockState | None]):
         self.connection_lock = asyncio.Lock()
         # None until the first reading tells us whether the lock has a door sensor.
         self.door_status_supported: bool | None = None
+        # Bumped on every reading, so listeners can tell a fresh one from the
+        # advertisements that fire them in between.
+        self.poll_count = 0
 
     @callback
     def _needs_poll(
@@ -105,6 +108,7 @@ class IseoCoordinator(ActiveBluetoothDataUpdateCoordinator[LockState | None]):
 
         try:
             self.data = await self._async_poll_data(self._last_service_info)
+            self.poll_count += 1
         except IseoAuthError as exc:
             if self.last_poll_successful:
                 # A rejected identity never recovers on its own: the gateway has

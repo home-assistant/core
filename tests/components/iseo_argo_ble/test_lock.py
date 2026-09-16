@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from iseo_argo_ble import IseoAuthError, IseoConnectionError, LockState as IseoLockState
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
 from . import inject_advertisement, setup_integration, trigger_poll
@@ -44,6 +46,17 @@ async def _unlock(hass: HomeAssistant) -> None:
         blocking=True,
     )
     await hass.async_block_till_done()
+
+
+def _record_states(hass: HomeAssistant) -> list[str]:
+    """Return a list that collects every state the lock reports from now on."""
+    reported: list[str] = []
+    async_track_state_change_event(
+        hass,
+        ENTITY_ID,
+        lambda event: reported.append(event.data["new_state"].state),
+    )
+    return reported
 
 
 @pytest.fixture(autouse=True)
@@ -123,6 +136,74 @@ async def test_unlock_assumes_locked_when_door_status_disappears(
     state = hass.states.get(ENTITY_ID)
     assert state.state == LockState.LOCKED
     assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+
+async def test_advertisement_does_not_relock_a_lock_without_door_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    lock_state: IseoLockState,
+) -> None:
+    """Test an advertisement mid-unlock does not relock a sensorless lock."""
+    lock_state.door_closed = None
+    await setup_integration(hass, mock_config_entry)
+
+    async def _advertise_while_opening(**kwargs: Any) -> None:
+        inject_advertisement(hass)
+        await hass.async_block_till_done()
+
+    mock_iseo_client.gw_open.side_effect = _advertise_while_opening
+    reported = _record_states(hass)
+
+    await _unlock(hass)
+
+    # An advertisement carries no reading, so the latch stays released until
+    # the lock has had time to re-latch on its own.
+    assert reported == [LockState.UNLOCKING, LockState.UNLOCKED, LockState.LOCKED]
+
+
+async def test_advertisement_does_not_relock_before_the_door_is_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    lock_state: IseoLockState,
+) -> None:
+    """Test an advertisement does not relock while the door is being verified."""
+
+    async def _advertise_then_read() -> IseoLockState:
+        inject_advertisement(hass)
+        await hass.async_block_till_done()
+        # The door was opened right after the latch was released.
+        lock_state.door_closed = False
+        return lock_state
+
+    mock_iseo_client.read_state.side_effect = _advertise_then_read
+    reported = _record_states(hass)
+
+    await _unlock(hass)
+
+    # The reading on file still said the door was closed, from before the unlock.
+    assert reported == [LockState.UNLOCKING, LockState.UNLOCKED]
+
+
+async def test_unlock_polls_when_door_support_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_iseo_client: MagicMock,
+    lock_state: IseoLockState,
+) -> None:
+    """Test an unlock verifies the door when the first reading never succeeded."""
+    mock_iseo_client.read_state.side_effect = IseoConnectionError("no link")
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.runtime_data.door_status_supported is None
+
+    # The door is opened right after the latch is released.
+    mock_iseo_client.read_state.side_effect = None
+    lock_state.door_closed = False
+
+    await _unlock(hass)
+
+    assert hass.states.get(ENTITY_ID).state == LockState.UNLOCKED
 
 
 @pytest.mark.usefixtures("config_entry")

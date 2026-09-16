@@ -44,6 +44,7 @@ class IseoLockEntity(IseoEntity, LockEntity):
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.config_entry.unique_id
         self._relock_task: asyncio.Task[None] | None = None
+        self._applied_poll = 0
         # Unknown until the first successful read: the lock is only known to be
         # latched once it reports its door status.
         self._attr_is_locked: bool | None = None
@@ -64,21 +65,34 @@ class IseoLockEntity(IseoEntity, LockEntity):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Apply a fresh reading from the lock."""
+        """Apply a fresh reading from the lock, or just its availability."""
         self._async_update_firmware_version()
+        self._async_apply_reading()
+        self.async_write_ha_state()
 
-        if (state := self.coordinator.data) is None:
+    @callback
+    def _async_apply_reading(self) -> None:
+        """Apply the last reading, unless it has been applied already.
+
+        Listeners also fire on every advertisement and when the lock goes away,
+        neither of which carries a reading. Re-applying the one already on file
+        then would undo an unlock before the lock has re-latched.
+        """
+        state = self.coordinator.data
+        if state is None or self._applied_poll == self.coordinator.poll_count:
             return
+        self._applied_poll = self.coordinator.poll_count
 
         if state.door_closed is None:
             # Without a door sensor the state can only ever be assumed: the
             # lock re-latches on its own after every unlock.
             self._attr_assumed_state = True
-            self._attr_is_locked = True
-        elif not self._attr_is_unlocking:
-            self._attr_is_locked = state.door_closed
+            door_closed = True
+        else:
+            door_closed = state.door_closed
 
-        self.async_write_ha_state()
+        if not self._attr_is_unlocking:
+            self._attr_is_locked = door_closed
 
     @callback
     def _set_locked(self) -> None:
@@ -89,7 +103,9 @@ class IseoLockEntity(IseoEntity, LockEntity):
 
     async def _auto_relock(self) -> None:
         """Revert to 'locked' after the motor has re-latched."""
-        if self.coordinator.door_status_supported:
+        # Support is unknown until a reading succeeds; try to take one rather
+        # than assume the door has closed behind an unlock.
+        if self.coordinator.door_status_supported is not False:
             await asyncio.sleep(RELOCK_POLL_DELAY)
             if await self.coordinator.async_poll_now():
                 return
