@@ -30,7 +30,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -286,14 +286,16 @@ def _setup_vehicle_repairs(
     )
 
 
-def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
-    """Return the paired Bluetooth address for a vehicle, if one was added."""
+def _ble_subentry_for_vin(
+    entry: TeslemetryConfigEntry, vin: str
+) -> ConfigSubentry | None:
+    """Return the Bluetooth subentry for a vehicle, if one was added."""
     for subentry in entry.subentries.values():
         if (
             subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
             and subentry.data.get(CONF_VIN) == vin
         ):
-            return subentry.data.get(CONF_ADDRESS)
+            return subentry
     return None
 
 
@@ -316,8 +318,8 @@ async def _async_resolve_vehicle_api(
     cloud_vehicle: Vehicle,
 ) -> Vehicle | VehicleRouter:
     """Return the API a vehicle's platforms should call."""
-    address = _ble_address_for_vin(entry, vin)
-    if not address:
+    subentry = _ble_subentry_for_vin(entry, vin)
+    if subentry is None or not (address := subentry.data.get(CONF_ADDRESS)):
         return cloud_vehicle
 
     # A bad BLE key file for one vehicle must not tear down the whole entry.
@@ -366,7 +368,11 @@ async def _async_resolve_vehicle_api(
                     severity=ir.IssueSeverity.WARNING,
                     translation_key=ISSUE_TYPE_BLE_KEY_REJECTED,
                     translation_placeholders={"vehicle": vehicle_name},
-                    data={"issue_type": ISSUE_TYPE_BLE_KEY_REJECTED, "vin": vin},
+                    data={
+                        "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+                        "entry_id": entry.entry_id,
+                        "subentry_id": subentry.subentry_id,
+                    },
                 )
         # Always fail over: the cloud signs with its own key, so it can still succeed.
         return True

@@ -2264,7 +2264,13 @@ async def test_ble_key_rejected_raises_repair(
         assert issue.translation_placeholders == {"vehicle": "Test"}
         assert issue.severity is ir.IssueSeverity.WARNING
         assert issue.is_fixable
-        assert issue.data == {"issue_type": ISSUE_TYPE_BLE_KEY_REJECTED, "vin": VIN}
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+        assert issue.data == {
+            "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+            "entry_id": entry.entry_id,
+            "subentry_id": subentry.subentry_id,
+        }
 
 
 async def test_ble_key_rejected_repair_clears_on_bluetooth_success(

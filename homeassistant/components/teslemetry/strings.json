@@ -1303,25 +1303,13 @@
     "ble_key_rejected": {
       "fix_flow": {
         "abort": {
-          "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to re-approve the key over Bluetooth."
-        },
-        "error": {
-          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "device_not_found": "[%key:component::teslemetry::config_subentries::vehicle::error::device_not_found%]",
-          "pair_failed": "[%key:component::teslemetry::config_subentries::vehicle::error::pair_failed%]",
-          "timeout": "[%key:component::teslemetry::config_subentries::vehicle::error::timeout%]"
-        },
-        "progress": {
-          "pair": "[%key:component::teslemetry::config_subentries::vehicle::progress::pair%]"
+          "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to re-approve the key over Bluetooth.",
+          "reconfigure": "Continue re-approving the key in the vehicle's Bluetooth reconfiguration."
         },
         "step": {
-          "instructions": {
-            "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to re-approve Home Assistant's virtual key.",
-            "title": "Re-approve the Bluetooth key"
-          },
-          "scan": {
-            "description": "Vehicle {vin} has stopped accepting Home Assistant's Bluetooth key, so commands are being sent through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nTo re-approve the key, Home Assistant will look for the vehicle over Bluetooth. Make sure it is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",
-            "title": "Re-approve the Bluetooth key"
+          "confirm": {
+            "description": "{vehicle} has stopped accepting Home Assistant's Bluetooth key, so commands are being sent through the cloud instead. This usually means the key was removed from the vehicle's Locks screen.\n\nSelect **Submit** to reconfigure the vehicle's Bluetooth connection and re-approve the key with your key card.",
+            "title": "[%key:component::teslemetry::issues::ble_key_rejected::title%]"
           }
         }
       },

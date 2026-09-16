@@ -1,19 +1,23 @@
 """Repairs for the Teslemetry integration."""
 
-from typing import Any, override
+from typing import Any
 
-from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
+    FlowType,
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TeslemetryConfigEntry
-from .config_flow import VehiclePairingFlow
-from .const import ISSUE_TYPE_BLE_KEY_REJECTED, VEHICLE_ISSUE_LEARN_MORE
+from .const import (
+    ISSUE_TYPE_BLE_KEY_REJECTED,
+    SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_ISSUE_LEARN_MORE,
+)
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
@@ -60,27 +64,37 @@ class VehicleMetadataRepairFlow(RepairsFlow):
         )
 
 
-class BluetoothKeyRepairFlow(VehiclePairingFlow, RepairsFlow):
-    """Re-approve Home Assistant's Bluetooth key on a vehicle that rejected it."""
+class BluetoothKeyRepairFlow(RepairsFlow):
+    """Hand a rejected Bluetooth key over to the vehicle's reconfigure flow."""
 
-    def __init__(self, vin: str) -> None:
+    def __init__(self, entry_id: str, subentry_id: str) -> None:
         """Create flow."""
-        super().__init__()
-        self._vin = vin
+        self._entry_id = entry_id
+        self._subentry_id = subentry_id
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
-        """Start re-pairing by finding the vehicle over Bluetooth."""
-        if not async_scanner_count(self.hass, connectable=True):
-            return self.async_abort(reason="bluetooth_not_available")
-        return await self.async_step_scan()  # type: ignore[return-value]
+        """Handle the first step of a fix flow."""
+        return await self.async_step_confirm()
 
-    @callback
-    @override
-    def _async_finish_pairing(self) -> RepairsFlowResult:  # type: ignore[override]
-        """Resolve the repair once the key is back on the vehicle's whitelist."""
-        return self.async_create_entry(data={})
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Open the vehicle's reconfigure flow to re-approve the key."""
+        if user_input is None:
+            return self.async_show_form(step_id="confirm")
+        result = await self.hass.config_entries.subentries.async_init(
+            (self._entry_id, SUBENTRY_TYPE_VEHICLE),
+            context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
+        )
+        if result["type"] is FlowResultType.ABORT:
+            return self.async_abort(reason=result["reason"])
+        # Aborting keeps the issue open until the reconfigure reloads the entry.
+        return self.async_abort(
+            reason="reconfigure",
+            next_flow=(FlowType.CONFIG_SUBENTRIES_FLOW, result["flow_id"]),
+        )
 
 
 async def async_create_fix_flow(
@@ -92,9 +106,12 @@ async def async_create_fix_flow(
     if (
         data is not None
         and data.get("issue_type") == ISSUE_TYPE_BLE_KEY_REJECTED
-        and isinstance(vin := data.get("vin"), str)
+        and isinstance(entry_id := data.get("entry_id"), str)
+        and isinstance(subentry_id := data.get("subentry_id"), str)
+        and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
+        and subentry_id in entry.subentries
     ):
-        return BluetoothKeyRepairFlow(vin)
+        return BluetoothKeyRepairFlow(entry_id, subentry_id)
     if (
         data is not None
         and isinstance(entry_id := data.get("entry_id"), str)
