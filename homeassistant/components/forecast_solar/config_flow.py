@@ -231,7 +231,14 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             location_data, errors = _location_data(user_input)
             if not errors:
-                return self.async_update_reload_and_abort(entry, data=location_data)
+                if (
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=location_data
+                    )
+                    and not entry.update_listeners
+                ):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
         suggested_values = user_input or {
             CONF_TRACK_HOME_LOCATION: not entry.data,

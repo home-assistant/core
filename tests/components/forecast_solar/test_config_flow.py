@@ -1,9 +1,10 @@
 """Test the Forecast.Solar config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.forecast_solar import async_setup_entry
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
@@ -196,6 +197,36 @@ async def test_reconfigure_flow_switch_to_home_tracking(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {}
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_reconfigure_flow_reloads_entry_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry's update listener performs the reload, without doubling it."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry",
+        wraps=async_setup_entry,
+    ) as mock_async_setup_entry:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_async_setup_entry.mock_calls) == 1
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TRACK_HOME_LOCATION: True},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert mock_config_entry.data == {}
+        # The update listener reloads; the flow must not schedule a second reload.
+        assert len(mock_async_setup_entry.mock_calls) == 2
 
 
 async def test_reconfigure_flow_requires_location_when_not_tracking(
