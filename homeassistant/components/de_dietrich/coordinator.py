@@ -79,10 +79,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
 
     def child_device_info(self, component: str) -> dr.ChildDeviceInfo | None:
-        """Return a ChildDeviceInfo for the bundle, or None when no live readings remain.
-
-        Presence is cached by the dependency. A transient poll failure keeps the child device visible, and only a bundle that loses all its readings reverts to the boiler device.
-        """
+        """Return child device information when the component is present."""
         if component not in CHILD_COMPONENT_DEVICE_NAMES:
             return None
         if component == "circuit_a":
