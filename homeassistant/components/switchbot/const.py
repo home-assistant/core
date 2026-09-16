@@ -8,6 +8,8 @@ from switchbot import SwitchbotModel
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
+OAUTH_CLIENT_ID = "RuCCpYJPMcuZsWOfupJQYmuIPr"
+
 # Config Attributes
 
 DEFAULT_NAME = "Switchbot"
