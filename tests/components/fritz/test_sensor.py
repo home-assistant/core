@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
-from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritzstatus import DefaultConnectionService, FritzStatus
 import pytest
 from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
@@ -41,6 +41,49 @@ async def test_sensor_setup(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+async def test_dsl_sensors_available_in_modem_mode(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test DSL sensors are available when the FRITZ!Box is used as a modem."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus.has_wan_enabled",
+            new=False,
+        ),
+        patch(
+            "homeassistant.components.fritz.PLATFORMS",
+            [Platform.SENSOR],
+        ),
+        patch.object(
+            FritzStatus,
+            "get_default_connection_service",
+            return_value=DefaultConnectionService("1", "WANIPConnection", "1"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_is_registered(
+        "sensor.mock_title_link_upload_noise_margin"
+    )
+    assert entity_registry.async_is_registered(
+        "sensor.mock_title_link_download_noise_margin"
+    )
+    assert entity_registry.async_is_registered(
+        "sensor.mock_title_link_upload_power_attenuation"
+    )
+    assert entity_registry.async_is_registered(
+        "sensor.mock_title_link_download_power_attenuation"
+    )
 
 
 async def test_sensor_update_fail(
