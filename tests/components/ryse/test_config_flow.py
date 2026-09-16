@@ -249,6 +249,7 @@ async def test_async_step_user_keeps_device_after_pairing_error(
 @pytest.mark.usefixtures("discovery")
 async def test_async_step_user_device_added_between_steps(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we abort if the device gets added in another flow."""
     result = await hass.config_entries.flow.async_init(
@@ -256,12 +257,7 @@ async def test_async_step_user_device_added_between_steps(
     )
     assert result["type"] is FlowResultType.FORM
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DEVICE_ADDRESS,
-        data={},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
@@ -348,14 +344,10 @@ async def test_async_step_bluetooth_errors(
 
 async def test_async_step_bluetooth_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test abort if device already configured before bluetooth discovery."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DEVICE_ADDRESS,
-        data={},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -370,14 +362,10 @@ async def test_async_step_bluetooth_already_configured(
 @pytest.mark.usefixtures("discovery")
 async def test_async_step_user_skips_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we skip already configured devices in user flow discovery."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DEVICE_ADDRESS,
-        data={},
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -487,6 +475,7 @@ async def test_async_step_user_skips_proxy_source(
 
 async def test_async_step_user_keeps_proxy_selected_when_also_local(
     hass: HomeAssistant,
+    mock_device: MagicMock,
     discovery: MagicMock,
     mock_scanner_devices_by_address: MagicMock,
 ) -> None:
@@ -505,6 +494,14 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
 
 
 async def test_async_step_bluetooth_not_in_pairing_mode(
@@ -570,6 +567,14 @@ async def test_async_step_bluetooth_proxy_selected_when_also_local(
     assert result["step_id"] == "bluetooth_confirm"
     mock_device.pair.assert_not_called()
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
+
 
 async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     hass: HomeAssistant,
@@ -588,6 +593,16 @@ async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     mock_device.pair.assert_not_called()
+
+    mock_last_service_info.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
 
 
 async def test_async_step_bluetooth_lost_local_source(
@@ -654,6 +669,16 @@ async def test_async_step_bluetooth_left_pairing_mode(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_in_pairing_mode"}
     mock_device.pair.assert_not_called()
+
+    mock_last_service_info.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
 
 
 async def test_async_step_bluetooth_idle_then_pair(
