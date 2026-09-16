@@ -114,6 +114,33 @@ async def test_flow_user_stores_token_rotated_during_validation(
     assert result["data"][CONF_TOKEN] == asdict(rotated)
 
 
+async def test_flow_user_login_without_tokens(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+) -> None:
+    """Test the entry is still created when the login yields no tokens.
+
+    The library only hands us an auth data when the token response carries a
+    refresh token, and it tolerates one that does not.
+    """
+    mock_cookidoo_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_USER_STEP,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LANGUAGE_STEP,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Nothing to restore, so the coordinator logs in with the credentials
+    assert result["data"][CONF_TOKEN] == {}
+
+
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [

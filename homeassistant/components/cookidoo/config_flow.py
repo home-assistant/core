@@ -71,7 +71,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
-    token: dict[str, Any]
+    # A login whose token response carries no refresh token leaves the library
+    # with nothing to hand us, and the entry is then created without tokens
+    token: dict[str, Any] = {}
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
