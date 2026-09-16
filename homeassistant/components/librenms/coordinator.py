@@ -13,16 +13,9 @@ from aiolibrenms.system.models import LibrenmsSystemInfo
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -46,15 +39,11 @@ class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
 
     config_entry: LibrenmsConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: LibrenmsConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: LibrenmsConfigEntry, api: Librenms
+    ) -> None:
         """Initialize the data update coordinator."""
-        self.api = Librenms(
-            async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
-            config_entry.data[CONF_API_KEY],
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_SSL],
-        )
+        self.api = api
         self.configuration_url = str(
             URL.build(
                 scheme="https" if config_entry.data[CONF_SSL] else "http",
@@ -69,22 +58,6 @@ class LibrenmsDataUpdateCoordinator(DataUpdateCoordinator[LibrenmsData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
-
-    @override
-    async def _async_setup(self) -> None:
-        """Handle setup of the coordinator."""
-        try:
-            await self.api.system.async_get_system_info()
-        except LibrenmsUnauthenticatedError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-            ) from err
-        except CONNECT_ERRORS as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
     @override
     async def _async_update_data(self) -> LibrenmsData:
