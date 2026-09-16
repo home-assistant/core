@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pulsectl import Pulse, PulseError
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -30,11 +30,11 @@ IGNORED_SWITCH_WARN = "Switch is already in the desired state. Ignoring."
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_SINK_NAME): cv.string,
-        vol.Required(CONF_SOURCE_NAME): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_SINK_NAME): cv.string,
+        probatio.Required(CONF_SOURCE_NAME): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 

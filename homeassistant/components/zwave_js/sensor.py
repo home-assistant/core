@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass, RssiError
 from zwave_js_server.const.command_class.energy_production import (
     CC_SPECIFIC_PARAMETER,
@@ -730,8 +730,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_RESET_METER,
         {
-            vol.Optional(ATTR_METER_TYPE): vol.Coerce(int),
-            vol.Optional(ATTR_VALUE): vol.Coerce(int),
+            probatio.Optional(ATTR_METER_TYPE): probatio.Coerce(int),
+            probatio.Optional(ATTR_VALUE): probatio.Coerce(int),
         },
         "async_reset_meter",
     )
