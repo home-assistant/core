@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -97,5 +98,39 @@ class LibrenmsCentralDataUpdateCoordinator(
                 translation_key="update_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        device_reg = dr.async_get(self.hass)
+        for device in devices:
+            identifier = f"{self.config_entry.entry_id}_{device.device_id}"
+            if (
+                device_reg.async_get_device_by_identifier(
+                    identifier=(DOMAIN, identifier),
+                    config_entry_id=self.config_entry.entry_id,
+                )
+                is not None
+            ):
+                continue
+
+            sw_version = device.version
+            model = None
+            if device.os != "ping":
+                if sw_version and (feature := device.features) is not None:
+                    sw_version += f" ({feature})"
+                model = device.hardware
+
+            device_reg.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, identifier)},
+                sw_version=sw_version,
+                configuration_url=f"{self.configuration_url}/device/{device.device_id}",
+                name=device.display,
+                model=model,
+                serial_number=device.serial,
+            )
+            self.logger.debug(
+                "Created device entry for new device '%s' (id: %s)",
+                device.display,
+                device.device_id,
+            )
 
         return LibrenmsCentralData(system, {dev.device_id: dev for dev in devices})

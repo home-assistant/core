@@ -24,23 +24,10 @@ class LibrenmsDeviceEntity(CoordinatorEntity[LibrenmsCentralDataUpdateCoordinato
         """Initialize."""
         super().__init__(coordinator)
         self.device_id = device_id
-
-        identifier = f"{coordinator.config_entry.entry_id}_{self.device_id}"
-        sw_version = self._data.version
-        model = None
-        configuration_url = f"{coordinator.configuration_url}/device/{self.device_id}"
-        if self._data.os != "ping":
-            if sw_version and (feature := self._data.features) is not None:
-                sw_version += f" ({feature})"
-            model = self._data.hardware
-
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            sw_version=sw_version,
-            configuration_url=configuration_url,
-            name=self._data.display,
-            model=model,
-            serial_number=self._data.serial,
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.device_id}")
+            }
         )
 
     @property
