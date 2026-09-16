@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import Final
 
+DOMAIN: Final = "lawn_mower"
+
 
 class LawnMowerActivity(StrEnum):
     """Activity state of lawn mower devices."""
@@ -34,8 +36,6 @@ class LawnMowerEntityFeature(IntFlag):
     DOCK = 4
     STOP = 8
 
-
-DOMAIN: Final = "lawn_mower"
 
 SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"
