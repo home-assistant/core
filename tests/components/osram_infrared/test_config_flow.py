@@ -177,7 +177,7 @@ async def test_user_flow_stale_emitter_selection(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
-            CONF_IR_EMITTER_ENTITY_ID: "cannot_connect",
+            CONF_IR_EMITTER_ENTITY_ID: "entity_not_available",
         }
 
         result = await hass.config_entries.flow.async_configure(
@@ -227,7 +227,7 @@ async def test_user_flow_stale_receiver_selection(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
-            CONF_IR_RECEIVER_ENTITY_ID: "cannot_connect",
+            CONF_IR_RECEIVER_ENTITY_ID: "entity_not_available",
         }
 
         result = await hass.config_entries.flow.async_configure(

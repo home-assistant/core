@@ -20,7 +20,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
@@ -167,13 +167,17 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light and apply optional effect and color."""
-        if not self._attr_is_on:
-            await self._async_send_code(
-                OsramLightCode.ON,
-                repeat_count=CMD_REPEAT_COUNT,
-            )
+        effect = kwargs.get(ATTR_EFFECT)
 
-        if (effect := kwargs.get(ATTR_EFFECT)) is not None:
+        if effect is not None and effect not in EFFECT_LIST:
+            raise ServiceValidationError(f"Unsupported OSRAM infrared effect: {effect}")
+
+        await self._async_send_code(
+            OsramLightCode.ON,
+            repeat_count=CMD_REPEAT_COUNT,
+        )
+
+        if effect is not None:
             await self._async_set_effect(effect)
         elif (rgb_color := kwargs.get(ATTR_RGB_COLOR)) is not None:
             await self._async_set_rgb_color(rgb_color)
@@ -208,6 +212,9 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
     async def _async_set_effect(self, effect: str) -> None:
         """Start or stop a native OSRAM effect."""
+        if effect not in EFFECT_LIST:
+            raise ServiceValidationError(f"Unsupported OSRAM infrared effect: {effect}")
+
         if effect == EFFECT_OFF:
             await self._async_send_code(
                 self._last_static_color_code,
@@ -220,14 +227,10 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             )
             return
 
-        try:
-            code = EFFECT_TO_CODE[effect]
-        except KeyError as err:
-            raise HomeAssistantError(
-                f"Unsupported OSRAM infrared effect: {effect}"
-            ) from err
-
-        await self._async_send_code(code, repeat_count=CMD_REPEAT_COUNT)
+        await self._async_send_code(
+            EFFECT_TO_CODE[effect],
+            repeat_count=CMD_REPEAT_COUNT,
+        )
         self._update_effect_state(effect)
 
     @callback

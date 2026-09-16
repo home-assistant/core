@@ -49,12 +49,12 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
         if emitter_entity_id not in emitter_entity_ids:
-            errors[CONF_IR_EMITTER_ENTITY_ID] = "cannot_connect"
+            errors[CONF_IR_EMITTER_ENTITY_ID] = "entity_not_available"
 
         if (
             receiver_entity_id := user_input.get(CONF_IR_RECEIVER_ENTITY_ID)
         ) and receiver_entity_id not in receiver_entity_ids:
-            errors[CONF_IR_RECEIVER_ENTITY_ID] = "cannot_connect"
+            errors[CONF_IR_RECEIVER_ENTITY_ID] = "entity_not_available"
 
         return errors
 

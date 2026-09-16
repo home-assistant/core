@@ -25,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -234,13 +234,10 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
         blocking=True,
     )
 
-    assert (
-        mock_infrared_emitter_entity.send_command_calls
-        == [
-            OsramLightCode.HUE_120,
-        ]
-        * CMD_REPEAT_COUNT
-    )
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        *([OsramLightCode.ON] * CMD_REPEAT_COUNT),
+        *([OsramLightCode.HUE_120] * CMD_REPEAT_COUNT),
+    ]
 
     state = hass.states.get("light.osram_light")
     assert state
@@ -254,9 +251,9 @@ async def test_turn_on_with_unsupported_effect_raises(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
-    """Test turning on with an unsupported effect raises."""
+    """Test unsupported effect is rejected before sending infrared commands."""
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="Unsupported OSRAM infrared effect: invalid_effect",
     ):
         await hass.services.async_call(
@@ -269,13 +266,7 @@ async def test_turn_on_with_unsupported_effect_raises(
             blocking=True,
         )
 
-    assert (
-        mock_infrared_emitter_entity.send_command_calls
-        == [
-            OsramLightCode.ON,
-        ]
-        * CMD_REPEAT_COUNT
-    )
+    assert mock_infrared_emitter_entity.send_command_calls == []
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -5,7 +5,7 @@
       "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect"
+      "entity_not_available": "The selected infrared entity is no longer available. Select another entity."
     },
     "step": {
       "user": {
