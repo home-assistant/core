@@ -5,7 +5,6 @@ from typing import Any, override
 
 from diematic_modbus import HotWaterMode
 from modbus_connection import ModbusError
-from propcache.api import cached_property
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -79,7 +78,7 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
             ),
         )
 
-    @cached_property
+    @property
     @override
     def current_operation(self) -> str | None:
         """Return the current HA operation mode."""
@@ -88,7 +87,7 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
             return MODE_TO_HA[mode]
         return None
 
-    @cached_property
+    @property
     @override
     def current_temperature(self) -> float | None:
         """Return the current tank temperature, falling back to the DPSM module reading."""
@@ -97,13 +96,13 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
             return temp
         return getattr(hot_water, "temp_dpsm", None)
 
-    @cached_property
+    @property
     @override
     def target_temperature(self) -> float | None:
         """Return the day-mode setpoint."""
         return self.coordinator.device.hot_water.day_target
 
-    @cached_property
+    @property
     @override
     def target_temperature_low(self) -> float | None:
         """Return the night-mode setpoint."""
