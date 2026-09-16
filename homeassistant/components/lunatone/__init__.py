@@ -11,6 +11,7 @@ from lunatone_rest_api_client import (
     Info,
     Sensors,
 )
+from lunatone_rest_api_client.models import DeviceCapabilities
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
@@ -142,13 +143,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    sensors_api = Sensors(auth_api)
-    coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(hass, entry, sensors_api)
-    await coordinator_sensors.async_config_entry_first_refresh()
-
     dali_scan_api = DALIScan(auth_api)
     coordinator_scan = LunatoneScanDataUpdateCoordinator(hass, entry, dali_scan_api)
     await coordinator_scan.async_config_entry_first_refresh()
+
+    coordinator_sensors = None
+    if DeviceCapabilities.SENSORS in info_api.data.device_capabilities:
+        sensors_api = Sensors(auth_api)
+        coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(
+            hass, entry, sensors_api
+        )
+        await coordinator_sensors.async_config_entry_first_refresh()
 
     dali_line_broadcasts = [
         DALIBroadcast(auth_api, int(line)) for line in coordinator_info.data.lines
@@ -157,8 +162,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     entry.runtime_data = LunatoneData(
         coordinator_info,
         coordinator_devices,
-        coordinator_sensors,
         coordinator_scan,
+        coordinator_sensors,
         dali_line_broadcasts,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
