@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 import ring_doorbell
+from ring_doorbell import RingCapability
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ring.const import DOMAIN
@@ -24,6 +25,23 @@ from homeassistant.helpers import entity_registry as er
 from .common import MockConfigEntry, setup_platform
 
 from tests.common import snapshot_platform
+
+
+class BadChimeDoorbell:
+    """Doorbell whose chime type is unknown to ring_doorbell."""
+
+    family = "doorbots"
+    id = 987654321
+    device_api_id = 987654321
+
+    @property
+    def existing_doorbell_type(self) -> str:
+        """Mimic ring_doorbell raising for an unknown chime type."""
+        raise KeyError(3)
+
+    def has_capability(self, capability: RingCapability) -> bool:
+        """Return False for all capabilities."""
+        return False
 
 
 @pytest.fixture
@@ -169,3 +187,18 @@ async def test_switch_errors_when_turned_on(
         )
         == reauth_expected
     )
+
+
+async def test_switch_setup_succeeds_with_unknown_chime_type(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+    create_deprecated_siren_entity,
+) -> None:
+    """Test that an unknown doorbell chime type does not abort switch setup."""
+    mock_ring_devices.all_devices.append(BadChimeDoorbell())
+
+    await setup_platform(hass, Platform.SWITCH)
+
+    assert hass.states.get("switch.front_siren")
+    assert hass.states.get("switch.front_motion_detection")
