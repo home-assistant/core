@@ -40,9 +40,85 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.CLIMATE, Platform.COVER, Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 
+async def _fetch_tokens(
+    hass: HomeAssistant, entry: Control4ConfigEntry
+) -> tuple[C4Account, C4Director, dict[str, Any]]:
+    """Fetch fresh account + director bearer tokens."""
+    config = entry.data
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], session)
+    try:
+        await account.get_account_bearer_token()
+    except (TimeoutError, client_exceptions.ClientError) as err:
+        raise ConfigEntryNotReady(err) from err
+    except BadCredentials as err:
+        raise ConfigEntryAuthFailed(err) from err
+
+    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
+    try:
+        director_token_dict = await account.get_director_bearer_token(
+            controller_unique_id
+        )
+    except (TimeoutError, client_exceptions.ClientError) as err:
+        raise ConfigEntryNotReady(err) from err
+
+    no_verify_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session
+    )
+    return account, director, director_token_dict
+
+
+def _schedule_next_refresh(
+    hass: HomeAssistant, entry: Control4ConfigEntry, valid_seconds: int
+) -> None:
+    """Schedule the next token refresh and, once, the periodic resync poll."""
+    runtime_data = entry.runtime_data
+    delay = max(
+        valid_seconds - SCHEDULE_REFRESH_ADVANCE_SEC, SCHEDULE_REFRESH_ADVANCE_SEC
+    )
+    obj = RefreshTokensObject(hass, entry)
+    runtime_data.cancel_token_refresh_callback = async_call_later(
+        hass=hass, delay=delay, action=obj.refresh_tokens
+    )
+    # Only needed once, on initial setup.
+    if runtime_data.cancel_periodic_resync_callback is None:
+        runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
+            hass,
+            functools.partial(_periodic_resync, hass, entry),
+            timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
-    runtime_data = await refresh_tokens(hass, entry)
+    account, director, director_token_dict = await _fetch_tokens(hass, entry)
+
+    if hasattr(entry, "runtime_data"):
+        # A retry of a previously-failed setup reuses that attempt's WebSocket.
+        runtime_data = entry.runtime_data
+        runtime_data.account = account
+        runtime_data.director = director
+    else:
+        connection_tracker = C4WebsocketConnectionTracker(hass, entry)
+        websocket = C4Websocket(
+            entry.data[CONF_HOST],
+            aiohttp_client.async_get_clientsession(hass, verify_ssl=False),
+            connection_tracker.connect_callback,
+            connection_tracker.disconnect_callback,
+        )
+        runtime_data = Control4RuntimeData(
+            account=account, director=director, websocket=websocket
+        )
+        entry.runtime_data = runtime_data
+
+    try:
+        await runtime_data.websocket.sio_connect(director.director_bearer_token)
+    except Exception as err:
+        raise ConfigEntryNotReady(err) from err
+
+    _schedule_next_refresh(hass, entry, director_token_dict["validSeconds"])
 
     try:
         controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
@@ -142,77 +218,22 @@ async def get_items_of_category(
         return []
 
 
-async def refresh_tokens(
-    hass: HomeAssistant, entry: Control4ConfigEntry
-) -> Control4RuntimeData:
-    """Obtain fresh account + director tokens, start (or reuse) the WebSocket, and schedule the next refresh."""
-    config = entry.data
-    session = aiohttp_client.async_get_clientsession(hass)
+async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
+    """Refresh account + director tokens and reconnect the existing WebSocket."""
+    account, director, director_token_dict = await _fetch_tokens(hass, entry)
 
-    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], session)
-    try:
-        await account.get_account_bearer_token()
-    except (TimeoutError, client_exceptions.ClientError) as err:
-        raise ConfigEntryNotReady(err) from err
-    except BadCredentials as err:
-        raise ConfigEntryAuthFailed(err) from err
-
-    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
-    try:
-        director_token_dict = await account.get_director_bearer_token(
-            controller_unique_id
-        )
-    except (TimeoutError, client_exceptions.ClientError) as err:
-        raise ConfigEntryNotReady(err) from err
-
-    no_verify_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    director = C4Director(
-        config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session
-    )
-
-    # runtime_data.director must be set before sio_connect(), which can
-    # synchronously trigger a reconnect callback that reads it.
-    if hasattr(entry, "runtime_data"):
-        runtime_data = entry.runtime_data
-        websocket = runtime_data.websocket
-        if runtime_data.cancel_token_refresh_callback is not None:
-            runtime_data.cancel_token_refresh_callback()
-        runtime_data.account = account
-        runtime_data.director = director
-    else:
-        connection_tracker = C4WebsocketConnectionTracker(hass, entry)
-        websocket = C4Websocket(
-            config[CONF_HOST],
-            no_verify_session,
-            connection_tracker.connect_callback,
-            connection_tracker.disconnect_callback,
-        )
-        runtime_data = Control4RuntimeData(
-            account=account, director=director, websocket=websocket
-        )
-        entry.runtime_data = runtime_data
+    runtime_data = entry.runtime_data
+    if runtime_data.cancel_token_refresh_callback is not None:
+        runtime_data.cancel_token_refresh_callback()
+    runtime_data.account = account
+    runtime_data.director = director
 
     try:
-        await websocket.sio_connect(director.director_bearer_token)
+        await runtime_data.websocket.sio_connect(director.director_bearer_token)
     except Exception as err:
         raise ConfigEntryNotReady(err) from err
 
-    delay = max(
-        director_token_dict["validSeconds"] - SCHEDULE_REFRESH_ADVANCE_SEC,
-        SCHEDULE_REFRESH_ADVANCE_SEC,
-    )
-    obj = RefreshTokensObject(hass, entry)
-    runtime_data.cancel_token_refresh_callback = async_call_later(
-        hass=hass, delay=delay, action=obj.refresh_tokens
-    )
-    # Only needed once, on initial setup.
-    if runtime_data.cancel_periodic_resync_callback is None:
-        runtime_data.cancel_periodic_resync_callback = async_track_time_interval(
-            hass,
-            functools.partial(_periodic_resync, hass, entry),
-            timedelta(seconds=WEBSOCKET_RESYNC_INTERVAL_SEC),
-        )
-    return runtime_data
+    _schedule_next_refresh(hass, entry, director_token_dict["validSeconds"])
 
 
 async def _resync_items(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
