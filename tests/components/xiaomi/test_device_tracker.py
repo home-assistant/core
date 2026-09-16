@@ -269,7 +269,10 @@ async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None
 @patch("requests.get", side_effect=mocked_requests)
 @patch("requests.post", side_effect=mocked_requests)
 async def test_rejected_login_does_not_log_password(
-    mock_get, mock_post, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    mock_get: MagicMock,
+    mock_post: MagicMock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a router refusing the login keeps the password out of the log."""
     config = {
