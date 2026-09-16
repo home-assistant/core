@@ -146,6 +146,80 @@
           "on": "mdi:lightbulb-fluorescent-tube"
         }
       }
+    },
+    "time": {
+      "filtration1_start": {
+        "default": "mdi:clock-start"
+      },
+      "filtration1_stop": {
+        "default": "mdi:clock-end"
+      },
+      "filtration2_start": {
+        "default": "mdi:clock-start"
+      },
+      "filtration2_stop": {
+        "default": "mdi:clock-end"
+      },
+      "filtration3_start": {
+        "default": "mdi:clock-start"
+      },
+      "filtration3_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux1_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux1_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux1b_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux1b_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux2_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux2_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux2b_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux2b_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux3_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux3_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux3b_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux3b_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux4_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux4_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux4b_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux4b_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_light_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_light_stop": {
+        "default": "mdi:clock-end"
+      }
     }
   }
 }

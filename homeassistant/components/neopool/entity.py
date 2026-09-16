@@ -1,6 +1,6 @@
 """Base entity class for the NeoPool integration."""
 
-from typing import override
+from typing import Any, override
 
 from neopool_modbus.decoders import get_machine_name, parse_version
 
@@ -15,6 +15,10 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     """Base class for NeoPool entities."""
 
     _attr_has_entity_name = True
+
+    def __init__(self, coordinator: NeoPoolCoordinator, context: Any = None) -> None:
+        """Initialise the NeoPool base entity."""
+        super().__init__(coordinator, context=context)
 
     @property
     @override
