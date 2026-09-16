@@ -106,6 +106,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="black_drum_counter",
         translation_key="black_drum_page_counter",
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.black_drum_counter,
     ),
     BrotherSensorEntityDescription(
