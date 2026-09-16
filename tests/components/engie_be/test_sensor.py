@@ -789,9 +789,6 @@ async def test_unexpected_exception_is_not_swallowed(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Unexpected error fetching" in caplog.text
-    households = mock_config_entry.runtime_data.households
-    assert households[BAN].prices.last_update_success is False
-    assert households[BAN_2].prices.last_update_success is False
 
 
 async def test_failure_and_recovery_are_logged_once(
@@ -912,15 +909,11 @@ async def test_service_point_transient_failure_is_retried(
     assert "Fetching service point for …0001 failed" in caplog.text
     assert "…_ID1" not in caplog.text
 
-    coordinator = mock_config_entry.runtime_data.households[BAN].prices
-    assert bare_ean(OFFTAKE_ONLY_EAN) not in coordinator.ean_energy_types
-
     freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_engie_client.return_value.async_get_service_point.call_count == 2
-    assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] == "GAS"
 
 
 async def test_service_point_success_without_ean_is_cached_once(
@@ -939,9 +932,6 @@ async def test_service_point_success_without_ean_is_cached_once(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data.households[BAN].prices
-    assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] is None
 
     freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)

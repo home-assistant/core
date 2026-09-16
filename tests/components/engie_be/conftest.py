@@ -30,6 +30,7 @@ from tests.common import MockConfigEntry
 
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
+SUBJECT = "auth0|69f5b418f3be21cc2ede9c98"
 BAN = "000000000001"
 BAN_2 = "000000000002"
 OFFTAKE_ONLY_EAN = "541448820000000001_ID1"
@@ -149,7 +150,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=EMAIL,
-        unique_id=EMAIL.lower(),
+        unique_id=SUBJECT,
         data={
             CONF_EMAIL: EMAIL,
             CONF_MFA_METHOD: "sms",

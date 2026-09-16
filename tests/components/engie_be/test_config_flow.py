@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .conftest import EMAIL, PASSWORD
+from .conftest import EMAIL, PASSWORD, SUBJECT
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_full_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user config flow."""
-    mock_engie_client.return_value.subject = "auth0|alice@example.com"
+    mock_engie_client.return_value.subject = SUBJECT
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -72,7 +72,7 @@ async def test_full_flow(
         mock_setup_entry.call_args.kwargs.get("entry")
         or mock_setup_entry.call_args.args[1]
     )
-    assert entry.unique_id == "auth0|alice@example.com"
+    assert entry.unique_id == SUBJECT
 
 
 @pytest.mark.parametrize(
@@ -91,7 +91,7 @@ async def test_user_step_errors(
     error: str,
 ) -> None:
     """Test recoverable errors on the user step."""
-    mock_engie_client.return_value.subject = "auth0|test-account"
+    mock_engie_client.return_value.subject = SUBJECT
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -136,7 +136,7 @@ async def test_mfa_submit_errors_recovery(
     error: str,
 ) -> None:
     """Test recoverable errors on the MFA submit step."""
-    mock_engie_client.return_value.subject = "auth0|test-account"
+    mock_engie_client.return_value.subject = SUBJECT
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -168,11 +168,9 @@ async def test_already_configured(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test aborting when the JWT subject is already configured."""
-    mock_engie_client.return_value.subject = "auth0|user@example.com"
+    mock_engie_client.return_value.subject = SUBJECT
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, unique_id="auth0|user@example.com"
-    )
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=SUBJECT)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -196,7 +194,8 @@ async def test_two_accounts_get_distinct_entries(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that two distinct JWT subjects create two distinct entries."""
-    for subject in ("auth0|alice@example.com", "auth0|bob@example.com"):
+    other_subject = "auth0|7a3c9e21b48f5d0261af3d77"
+    for subject in (SUBJECT, other_subject):
         mock_engie_client.return_value.subject = subject
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -213,10 +212,7 @@ async def test_two_accounts_get_distinct_entries(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
-    assert {entry.unique_id for entry in entries} == {
-        "auth0|alice@example.com",
-        "auth0|bob@example.com",
-    }
+    assert {entry.unique_id for entry in entries} == {SUBJECT, other_subject}
 
 
 async def test_jwt_subject_missing_shows_form_error(
