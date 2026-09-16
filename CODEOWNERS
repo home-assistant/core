@@ -1740,8 +1740,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/smartthings/ @joostlek
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
-/homeassistant/components/smarty/ @z0mbieprocess
-/tests/components/smarty/ @z0mbieprocess
+/homeassistant/components/smarty/ @z0mbieprocess @marcodutto
+/tests/components/smarty/ @z0mbieprocess @marcodutto
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
