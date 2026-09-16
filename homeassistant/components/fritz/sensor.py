@@ -257,7 +257,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_sent_state,
-        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+        is_suitable=lambda info: info.connection == DSL_CONNECTION,
     ),
     FritzConnectionSensorEntityDescription(
         key="link_noise_margin_received",
@@ -266,7 +266,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_received_state,
-        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+        is_suitable=lambda info: info.connection == DSL_CONNECTION,
     ),
     FritzConnectionSensorEntityDescription(
         key="link_attenuation_sent",
@@ -275,7 +275,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_sent_state,
-        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+        is_suitable=lambda info: info.connection == DSL_CONNECTION,
     ),
     FritzConnectionSensorEntityDescription(
         key="link_attenuation_received",
@@ -284,7 +284,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
-        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+        is_suitable=lambda info: info.connection == DSL_CONNECTION,
     ),
 )
 
