@@ -444,6 +444,71 @@ async def test_clean_segments_command(
     ]
 
 
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+async def test_clean_segments_transient_revert_dismisses_repair_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a transient segment payload that reverts dismisses the repair issue.
+
+    Some vacuums (for example Valetudo) briefly publish segment names as
+    ids during a clean before publishing the correct names again. The
+    repair issue created for the transient payload should be dismissed
+    when the mapped segments are reported again.
+    """
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    # Transient payload: segment ids published as names
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning",
+        "segments":{
+            "1":"1",
+            "2":"2"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+
+    # The mapped segments are reported again
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning",
+        "segments":{
+            "1":"Livingroom",
+            "2":"Kitchen"
+        }
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [

@@ -437,6 +437,23 @@ class StateVacuumEntity(
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             self._segments_changed_last_seen = None
 
+    @callback
+    def async_delete_segments_issue(self) -> None:
+        """Delete the segments_changed issue if one is open.
+
+        Integrations should call this method when the vacuum reports
+        the same segments as last mapped to areas, for example when a
+        transient segment payload has reverted. Deleting a
+        non-existent issue is a no-op.
+        """
+        if self.registry_entry is None:
+            return
+        ir.async_delete_issue(
+            self.hass,
+            DOMAIN,
+            f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}",
+        )
+
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         raise NotImplementedError
