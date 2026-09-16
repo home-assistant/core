@@ -15,7 +15,10 @@ from tesla_fleet_api.exceptions import (
     BluetoothTransportError,
     NotOnWhitelistFault,
     TeslaFleetError,
+    TeslaFleetMessageFaultBusy,
+    TeslaFleetMessageFaultInternal,
     TeslaFleetMessageFaultKeychainIsFull,
+    TeslaFleetMessageFaultTimeout,
     TeslaFleetMessageFaultUnknownKeyId,
 )
 from tesla_fleet_api.router import VehicleRouter
@@ -423,23 +426,40 @@ async def test_ble_key_fix_flow_hands_off_to_reconfigure(
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
 
 
+@pytest.mark.parametrize(
+    ("repair_scanners", "ble_device", "pings"),
+    [
+        pytest.param(0, None, 0, id="no_scanner"),
+        # The scanner goes away before the reconfigure flow starts.
+        pytest.param(1, MagicMock(), 1, id="reconfigure_aborts"),
+    ],
+)
 async def test_ble_key_fix_flow_no_bluetooth(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
+    repair_scanners: int,
+    ble_device: MagicMock | None,
+    pings: int,
 ) -> None:
     """Without a connectable Bluetooth scanner the fix flow aborts and keeps the repair."""
     # No enable_bluetooth fixture here, so the reconfigure flow finds no scanner.
     entry = await _raise_ble_key_issue(hass)
-    entry.runtime_data.vehicles[0].api.primary.ping.side_effect = NotOnWhitelistFault()
+    router = entry.runtime_data.vehicles[0].api
+    router.primary.ping.side_effect = NotOnWhitelistFault()
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, BLE_KEY_ISSUE_ID)
 
-    result = await _submit_ble_key_fix_flow(client, result["flow_id"], MagicMock())
+    with patch(
+        "homeassistant.components.teslemetry.repairs.async_scanner_count",
+        return_value=repair_scanners,
+    ):
+        result = await _submit_ble_key_fix_flow(client, result["flow_id"], ble_device)
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "bluetooth_not_available"
     assert "next_flow" not in result
+    assert router.primary.ping.await_count == pings
     assert not hass.config_entries.subentries.async_progress()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
@@ -542,6 +562,23 @@ async def test_ble_key_fix_flow_pings_the_repaired_vehicle(
             MagicMock(), BluetoothTimeout(), "cannot_connect", 1, id="bluetooth_timeout"
         ),
         pytest.param(MagicMock(), _hang, "cannot_connect", 1, id="hung"),
+        pytest.param(
+            MagicMock(), TeslaFleetMessageFaultBusy(), "cannot_connect", 1, id="busy"
+        ),
+        pytest.param(
+            MagicMock(),
+            TeslaFleetMessageFaultTimeout(),
+            "cannot_connect",
+            1,
+            id="subsystem_timeout",
+        ),
+        pytest.param(
+            MagicMock(),
+            TeslaFleetMessageFaultInternal(),
+            "cannot_connect",
+            1,
+            id="booting",
+        ),
         pytest.param(
             MagicMock(),
             TeslaFleetMessageFaultKeychainIsFull(),

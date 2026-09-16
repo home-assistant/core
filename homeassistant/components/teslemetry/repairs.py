@@ -7,10 +7,14 @@ from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
     TeslaFleetError,
+    TeslaFleetMessageFaultBusy,
+    TeslaFleetMessageFaultInternal,
+    TeslaFleetMessageFaultTimeout,
     is_key_rejected,
 )
 from tesla_fleet_api.router import VehicleRouter
 
+from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     FlowType,
@@ -96,6 +100,8 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         """Ping the vehicle over Bluetooth and re-approve the key if it is still rejected."""
         if user_input is None:
             return self.async_show_form(step_id="confirm")
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
         if (router := self._async_get_router()) is None:
             return self.async_abort(reason="bluetooth_not_loaded")
         # The router's health check also refreshes the device handle the ping connects with.
@@ -107,20 +113,36 @@ class BluetoothKeyRepairFlow(RepairsFlow):
             async with asyncio.timeout(BLE_PING_TIMEOUT):
                 # Bypass the router, whose cloud failover would mask a still rejected key.
                 response = await router.primary.ping()
-        except (TimeoutError, BluetoothTimeout, BluetoothTransportError) as err:
+        except (
+            TimeoutError,
+            BluetoothTimeout,
+            BluetoothTransportError,
+            # Retryable faults from a vehicle subsystem that is asleep or still booting.
+            TeslaFleetMessageFaultBusy,
+            TeslaFleetMessageFaultInternal,
+            TeslaFleetMessageFaultTimeout,
+        ) as err:
             LOGGER.debug("Bluetooth ping could not reach the vehicle: %s", err)
             return self.async_show_form(
                 step_id="confirm", errors={"base": "cannot_connect"}
             )
         except TeslaFleetError as err:
-            if is_key_rejected(err):
-                return await self._async_reconfigure()
-            LOGGER.error("Bluetooth ping failed: %s", err)
-            return self.async_show_form(step_id="confirm", errors={"base": "unknown"})
-        if not response["response"]["result"]:
-            LOGGER.error("Bluetooth ping failed: %s", response["response"]["reason"])
-            return self.async_show_form(step_id="confirm", errors={"base": "unknown"})
-        return self.async_create_entry(data={})
+            if not is_key_rejected(err):
+                LOGGER.error("Bluetooth ping failed: %s", err)
+                return self.async_show_form(
+                    step_id="confirm", errors={"base": "unknown"}
+                )
+        else:
+            if not response["response"]["result"]:
+                LOGGER.error(
+                    "Bluetooth ping failed: %s", response["response"]["reason"]
+                )
+                return self.async_show_form(
+                    step_id="confirm", errors={"base": "unknown"}
+                )
+            return self.async_create_entry(data={})
+        # Only a rejected key reaches here.
+        return await self._async_reconfigure()
 
     @callback
     def _async_get_router(self) -> VehicleRouter | None:

@@ -18,7 +18,7 @@ VEHICLE_KEY_FILE = "tesla_vehicle.key"
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
 BLE_PARENT_LOCK_KEY = f"{DOMAIN}_ble_parent_lock"
 BLE_DISCONNECT_TIMEOUT = 10
-BLE_PING_TIMEOUT = 30
+BLE_PING_TIMEOUT = 60
 
 SUBENTRY_TYPE_ENERGY_SITE = "energy_site"
 CONF_SITE_ID = "site_id"
