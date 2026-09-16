@@ -294,9 +294,9 @@ class ComelitOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                    probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=Platform.COVER, integration=DOMAIN
                         )
@@ -324,9 +324,9 @@ class ComelitOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="cover_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_TRAVEL_TIME, default=current_travel_time
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(

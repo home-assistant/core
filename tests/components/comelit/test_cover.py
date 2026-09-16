@@ -39,9 +39,9 @@ from tests.common import (
 ENTITY_ID = "cover.cover0"
 
 
-def _stopped_cover_device(index: int, name: str) -> ComelitSerialBridgeObject:
+def _stopped_cover_device(index: int, name: str) -> ComelitDeviceObject:
     """Return a cover device reporting the stopped status."""
-    return ComelitSerialBridgeObject(
+    return ComelitDeviceObject(
         index=index,
         name=name,
         status=0,
