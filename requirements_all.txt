@@ -44,7 +44,7 @@ PSNAWP==3.0.3
 Pillow==12.3.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.16
+PlexAPI==4.18.2
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==2.7.0
+PySwitchbot==2.9.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -217,6 +217,9 @@ aioasuswrt==1.5.4
 # homeassistant.components.husqvarna_automower
 aioautomower==3.0.0
 
+# homeassistant.components.axle_energy
+aioaxlevpp==0.1.1
+
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
 
@@ -311,8 +314,11 @@ aioimaplib==2.0.1
 # homeassistant.components.immich
 aioimmich==0.17.0
 
+# homeassistant.components.indi_allsky
+aioindiallsky==0.1.1
+
 # homeassistant.components.ipp
-aioipp==0.19.0
+aioipp==0.19.3
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -670,7 +676,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.4.2
+besen==0.4.5
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
@@ -1330,7 +1336,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.16.0
+homematicip==2.17.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -1562,7 +1568,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.10.1
+lunatone-rest-api-client==0.10.2
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1704,7 +1710,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.7.0
+neopool-modbus==4.8.0
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
@@ -2717,7 +2723,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.17.0
+python-duco-connectivity==0.18.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2750,7 +2756,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==2.1.0
+python-hotspring==3.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2866,7 +2872,7 @@ pytouchlinesl==0.6.0
 pytraccar==3.0.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==9.0.1
+pytradfri[async]==14.0.0
 
 # homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry
@@ -3254,7 +3260,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.13.1
+teslemetry-stream==0.13.2
 
 # homeassistant.components.tessie
 tessie-api==0.1.3
@@ -3412,7 +3418,7 @@ vizaio==0.7.0
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.4.3
+voip-utils==0.5.0
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3437,7 +3443,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.9.2
+waterfurnace==1.9.7
 
 # homeassistant.components.watergate
 watergate-local-api==2026.2.2
