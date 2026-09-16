@@ -11,7 +11,6 @@ import pytest
 
 from homeassistant.components.de_dietrich.const import DEFAULT_UNIT_ID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -340,20 +339,6 @@ async def test_child_devices_route_per_component_sensors(
     outdoor_entry = entity_registry.async_get(outdoor_entity_id)
     assert outdoor_entry is not None
     assert outdoor_entry.device_id == parent.id
-
-    hot_water_child = device_registry.async_get_child_device_by_identifier(
-        (DOMAIN, f"{mock_config_entry.entry_id}_hot_water"),
-        mock_config_entry.entry_id,
-    )
-    assert hot_water_child is not None
-    assert hot_water_child.name == "Hot water"
-    hot_water_entity_id = entity_registry.async_get_entity_id(
-        WATER_HEATER_DOMAIN, DOMAIN, f"{mock_config_entry.entry_id}_hot_water"
-    )
-    assert hot_water_entity_id is not None
-    hot_water_entry = entity_registry.async_get(hot_water_entity_id)
-    assert hot_water_entry is not None
-    assert hot_water_entry.device_id == hot_water_child.id
 
 
 @pytest.mark.parametrize(

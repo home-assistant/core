@@ -22,7 +22,6 @@ type DeDietrichConfigEntry = ConfigEntry[DeDietrichDataUpdateCoordinator]
 
 
 CHILD_COMPONENT_DEVICE_NAMES: dict[str, str] = {
-    "hot_water": "Hot water",
     "circuit_a": "Heating circuit A",
     "circuit_b": "Heating circuit B",
     "circuit_c": "Heating circuit C",

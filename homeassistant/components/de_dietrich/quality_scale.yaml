@@ -69,7 +69,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: todo
-    comment: A detected heating circuit or hot-water bundle is exposed as a ChildDeviceInfo for that circuit or hot water on the boiler device, but discovery happens once at config-entry setup. Bundles that become present after setup need a config-entry reload before their child device and sensors appear.
+    comment: A detected heating circuit is exposed as a ChildDeviceInfo for that circuit on the boiler device, but discovery happens once at config-entry setup. Circuits that become present after setup need a config-entry reload before their child device and sensors appear.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -80,7 +80,7 @@ rules:
   repair-issues: todo
   stale-devices:
     status: todo
-    comment: A child device created at setup for a heating circuit or hot-water bundle stays in the device registry as long as the config entry exists, even after the bundle stops reporting and `child_device_info` returns None for it. Future work should track the set of bundle identifiers produced at setup and remove the corresponding child device once a bundle has been absent for sustained polling.
+    comment: A child device created at setup for a heating circuit stays in the device registry as long as the config entry exists, even after the circuit stops reporting and `child_device_info` returns None for it. Future work should track the set of circuit identifiers produced at setup and remove the corresponding child device once a circuit has been absent for sustained polling.
 
   # Platinum
   async-dependency: done
