@@ -4,15 +4,19 @@ from types import MappingProxyType
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from .const import (
     CONF_AZIMUTH,
+    CONF_AZIMUTH_SENSOR,
     CONF_DAMPING,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
+    CONF_DECLINATION_SENSOR,
     CONF_MODULES_POWER,
     DEFAULT_AZIMUTH,
     DEFAULT_DAMPING,
@@ -73,6 +77,44 @@ async def async_migrate_entry(
     return True
 
 
+@callback
+def _async_track_sensor_renames(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> CALLBACK_TYPE:
+    """Keep a plane's sensor reference pointing at the sensor when it is renamed."""
+    sensor_keys = (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR)
+    entity_ids = [
+        entity_id
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+        for key in sensor_keys
+        if (entity_id := subentry.data.get(key))
+    ]
+
+    @callback
+    def _async_sensor_renamed(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        if event.data["action"] != "update":
+            return
+        old_entity_id = event.data["changes"].get("entity_id")
+        if old_entity_id is None:
+            return
+
+        new_entity_id = event.data["entity_id"]
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
+            renamed = {
+                key: new_entity_id
+                for key in sensor_keys
+                if subentry.data.get(key) == old_entity_id
+            }
+            if renamed:
+                hass.config_entries.async_update_subentry(
+                    entry, subentry, data=subentry.data | renamed
+                )
+
+    return async_track_entity_registry_updated_event(
+        hass, entity_ids, _async_sensor_renamed
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> bool:
@@ -98,6 +140,7 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(_async_track_sensor_renames(hass, entry))
 
     return True
 

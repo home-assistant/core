@@ -642,8 +642,10 @@ async def test_subentry_flow_add_plane_with_sensors(
         CONF_DECLINATION_SENSOR: "sensor.roof_declination",
         CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
     }
-    # Title reflects the sensors' friendly names, not the fixed values.
-    assert result["title"] == "roof declination / roof azimuth / 3000W"
+    # Title names the sensors, marked so it cannot be read as a fixed value.
+    assert (
+        result["title"] == "roof declination (sensor) / roof azimuth (sensor) / 3000W"
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

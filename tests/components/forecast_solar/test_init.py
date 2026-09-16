@@ -3,9 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError, Plane
+import pytest
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
+    CONF_AZIMUTH_SENSOR,
     CONF_DAMPING,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
@@ -18,6 +20,7 @@ from homeassistant.components.forecast_solar.const import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -294,3 +297,62 @@ async def test_coordinator_multi_plane_initialization(
     assert planes[0].declination == 45
     assert planes[0].azimuth == 90  # 270 - 180
     assert planes[0].kwp == 3.0  # 3000 / 1000
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_plane_follows_renamed_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a plane's sensor reference follows the sensor when it is renamed."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+    hass.states.async_set("sensor.roof_azimuth", "100", {"unit_of_measurement": "°"})
+
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH: 190,
+                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="plane_1",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / roof azimuth (sensor) / 5100W",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A change that is not a rename leaves the reference alone.
+    entity_registry.async_update_entity("sensor.roof_azimuth", name="Roof angle")
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
+
+    entity_registry.async_update_entity(
+        "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
+    )
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
+
+    # Removal is not a rename either; the coordinator falls back to the fixed angle.
+    entity_registry.async_remove("sensor.camper_azimuth")
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"

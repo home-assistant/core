@@ -67,21 +67,21 @@ def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _angle_label(hass: HomeAssistant, entity_id: str | None, angle: int) -> str:
+    """Label a plane angle by its sensor's name, or by its fixed value."""
+    if entity_id is None:
+        return f"{angle}°"
+    state = hass.states.get(entity_id)
+    return f"{state.name if state else entity_id} (sensor)"
+
+
 def _plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
-    """Build a plane subentry title from its resolved azimuth/declination/power."""
-    if entity_id := data.get(CONF_DECLINATION_SENSOR):
-        state = hass.states.get(entity_id)
-        declination_label = state.name if state else entity_id
-    else:
-        declination_label = f"{data[CONF_DECLINATION]}°"
-
-    if entity_id := data.get(CONF_AZIMUTH_SENSOR):
-        state = hass.states.get(entity_id)
-        azimuth_label = state.name if state else entity_id
-    else:
-        azimuth_label = f"{data[CONF_AZIMUTH]}°"
-
-    return f"{declination_label} / {azimuth_label} / {data[CONF_MODULES_POWER]}W"
+    """Build a plane subentry title from its azimuth/declination/power."""
+    return (
+        f"{_angle_label(hass, data.get(CONF_DECLINATION_SENSOR), data[CONF_DECLINATION])}"
+        f" / {_angle_label(hass, data.get(CONF_AZIMUTH_SENSOR), data[CONF_AZIMUTH])}"
+        f" / {data[CONF_MODULES_POWER]}W"
+    )
 
 
 _PLANE_SCHEMA = vol.Schema(
