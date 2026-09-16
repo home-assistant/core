@@ -18,7 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 
 from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
-from .config_flow import VehiclePairingFlow
 from .const import (
     ISSUE_GATEWAY_NOT_FOUND,
     ISSUE_TYPE_BLE_KEY_REJECTED,
@@ -30,6 +29,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
+from .pairing_flow import VehiclePairingFlow
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
