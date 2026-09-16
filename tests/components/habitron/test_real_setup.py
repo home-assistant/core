@@ -140,8 +140,24 @@ async def test_real_recording_builds_devices_and_entities(
     assert linked
     assert all("0.0.0.0" not in device.configuration_url for device in linked)
 
-    # The sensor platform created entities from the real module model.
+    # The sensor platform created entities from the real module model. Counted
+    # per device rather than in total: "at least one sensor somewhere" would
+    # still pass if ten of the eleven recorded modules produced nothing.
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert any(entity.domain == "sensor" for entity in entities)
+    assert entities
+    assert all(entity.domain == "sensor" for entity in entities)
+    router = next(
+        device
+        for device in devices
+        if any(identifier[1].startswith("rt_") for identifier in device.identifiers)
+    )
+    module_devices = {
+        device.id for device in devices if device.via_device_id == router.id
+    }
+    with_entities = {entity.device_id for entity in entities}
+    assert len(module_devices) == recording["module_count"]
+    assert module_devices <= with_entities, (
+        f"{len(module_devices - with_entities)} recorded module(s) produced no entity"
+    )

@@ -1640,8 +1640,16 @@ async def test_user_flow_adds_a_different_hub_at_a_recycled_address(
         (f"habitron_{MOCK_HOST}", MOCK_HOST, config_entries.SOURCE_SSDP),
         # Matched by MAC, so the address is free to have moved.
         (MOCK_UID, "192.168.1.99", config_entries.SOURCE_USER),
+        # The same, announced by the hub itself: the discovery abort writes the
+        # new host but reloads nothing, and a retrying entry has no listener to
+        # pick it up.
+        (MOCK_UID, "192.168.1.99", config_entries.SOURCE_SSDP),
     ],
-    ids=["host-matched legacy entry", "MAC-keyed entry re-entered by hand"],
+    ids=[
+        "host-matched legacy entry",
+        "MAC-keyed entry re-entered by hand",
+        "MAC-keyed entry rediscovered over SSDP",
+    ],
 )
 async def test_a_retrying_entry_is_reloaded_instead_of_waiting_out_its_backoff(
     hass: HomeAssistant,

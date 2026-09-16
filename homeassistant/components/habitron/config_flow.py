@@ -384,7 +384,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         # The entry registers an update listener that reloads on a data change,
         # so leave the reload to it: having both schedules two reloads and is
-        # reported as breaking in 2026.12. The host is written in stored form --
+        # reported as breaking in 2026.12. An entry still sitting out its setup
+        # retry has no such listener, but needs no help either -- core reloads
+        # it from here regardless of ``reload_on_update``, because a discovery
+        # source proves the hub is online (``_abort_if_unique_id_configured``).
+        # The host is written in stored form --
         # overwriting a ``local`` entry with the discovered IP would leave setup
         # pointing at a stale address once that IP changes.
         self._abort_if_unique_id_configured(
@@ -407,7 +411,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Create entry with discovered data
             data = {CONF_HOST: self._discovered_device.get("ip")}
             try:
                 info = await validate_input(self.hass, data)
