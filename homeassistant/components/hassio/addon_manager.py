@@ -274,14 +274,15 @@ class AddonManager:
         self,
         addon_config: dict[str, Any],
     ) -> None:
-        """Configure the manager add-on, if needed."""
+        """Update the managed add-on options, preserving unspecified options."""
         addon_info = await self.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
             raise AddonError(f"{self.addon_name} app is not installed")
 
-        if addon_config != addon_info.options:
-            await self.async_set_addon_options(addon_config)
+        new_addon_config = addon_info.options | addon_config
+        if new_addon_config != addon_info.options:
+            await self.async_set_addon_options(new_addon_config)
 
     @callback
     def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
