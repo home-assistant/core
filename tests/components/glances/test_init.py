@@ -16,8 +16,8 @@ from homeassistant.components.glances.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import MOCK_USER_INPUT
 
@@ -59,18 +59,19 @@ async def test_setup_error(
     assert entry.state is entry_state
 
 
-async def test_update_error_includes_message(
+async def test_entity_unavailable_on_update_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_api: MagicMock,
 ) -> None:
-    """Test that the underlying API error message is propagated to UpdateFailed."""
+    """Test that entities become unavailable when a data update fails."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.0_0_0_0_ssl_disk_used").state != STATE_UNAVAILABLE
 
     mock_api.return_value.get_ha_sensor_data.side_effect = GlancesApiConnectionError(
         "Connection to http://localhost:61209/api/4/all failed"
@@ -79,12 +80,7 @@ async def test_update_error_includes_message(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = entry.runtime_data
-    assert coordinator.last_update_success is False
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert "Connection to http://localhost:61209/api/4/all failed" in str(
-        coordinator.last_exception
-    )
+    assert hass.states.get("sensor.0_0_0_0_ssl_disk_used").state == STATE_UNAVAILABLE
 
 
 async def test_dedicated_httpx_client_uses_timeout(
