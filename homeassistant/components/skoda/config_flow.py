@@ -1,6 +1,5 @@
 """Config flow for the Škoda integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -115,38 +114,6 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_VEHICLE_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "portal_url": f"[{MYSKODA_URL}]({MYSKODA_URL})",
+                "portal_url": MYSKODA_URL,
             },
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication when the stored API key stops working."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Prompt for a new API key and validate it before saving."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            api_key = user_input[CONF_API_KEY].strip()
-            vin = reauth_entry.data[CONF_VIN]
-
-            _, error = await self._async_validate(vin, api_key)
-            if error:
-                errors["base"] = error
-            else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_KEY: api_key},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
-            errors=errors,
         )

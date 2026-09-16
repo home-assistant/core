@@ -34,11 +34,11 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_auth_failure_starts_reauth(
+async def test_setup_auth_failure_starts_retry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that an authentication failure during setup starts a reauth flow."""
+    """Test that an authentication failure during setup triggers a setup retry."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -48,9 +48,7 @@ async def test_setup_auth_failure_starts_reauth(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_update_failed_starts_retry(
@@ -63,6 +61,23 @@ async def test_setup_update_failed_starts_retry(
     with patch(
         "homeassistant.components.skoda.OpenAPIClient.get_vehicle",
         side_effect=OpenApiError("boom"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_unexpected_error_starts_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a wholly unexpected exception during first refresh triggers a setup retry."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.skoda.OpenAPIClient.get_vehicle",
+        side_effect=RuntimeError("boom"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
