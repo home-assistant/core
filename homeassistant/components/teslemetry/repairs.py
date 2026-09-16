@@ -1,11 +1,19 @@
 """Repairs for the Teslemetry integration."""
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 import probatio
-from tesla_fleet_api.exceptions import PrivateKeyError, TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
+    BluetoothTransportError,
+    PrivateKeyError,
+    TeslaFleetError,
+    is_key_rejected,
+)
+from tesla_fleet_api.router import VehicleRouter
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -24,6 +32,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
 from .const import (
+    BLE_PING_TIMEOUT,
+    CONF_VIN,
     ISSUE_GATEWAY_NOT_FOUND,
     ISSUE_TYPE_BLE_KEY_REJECTED,
     LOGGER,
@@ -82,7 +92,7 @@ class VehicleMetadataRepairFlow(RepairsFlow):
 
 
 class BluetoothKeyRepairFlow(RepairsFlow):
-    """Hand a rejected Bluetooth key over to the vehicle's reconfigure flow."""
+    """Re-check a rejected Bluetooth key, then hand it to the vehicle's reconfigure flow."""
 
     def __init__(self, entry_id: str, subentry_id: str) -> None:
         """Create flow."""
@@ -98,9 +108,59 @@ class BluetoothKeyRepairFlow(RepairsFlow):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
-        """Open the vehicle's reconfigure flow to re-approve the key."""
+        """Ping the vehicle over Bluetooth and re-approve the key if it is still rejected."""
         if user_input is None:
             return self.async_show_form(step_id="confirm")
+        if (router := self._async_get_router()) is None:
+            return self.async_abort(reason="bluetooth_not_loaded")
+        # The router's health check also refreshes the device handle the ping connects with.
+        if not await router.is_healthy():
+            return self.async_show_form(
+                step_id="confirm", errors={"base": "cannot_connect"}
+            )
+        try:
+            async with asyncio.timeout(BLE_PING_TIMEOUT):
+                # Bypass the router, whose cloud failover would mask a still rejected key.
+                response = await router.primary.ping()
+        except (TimeoutError, BluetoothTimeout, BluetoothTransportError) as err:
+            LOGGER.debug("Bluetooth ping could not reach the vehicle: %s", err)
+            return self.async_show_form(
+                step_id="confirm", errors={"base": "cannot_connect"}
+            )
+        except TeslaFleetError as err:
+            if is_key_rejected(err):
+                return await self._async_reconfigure()
+            LOGGER.error("Bluetooth ping failed: %s", err)
+            return self.async_show_form(step_id="confirm", errors={"base": "unknown"})
+        if not response["response"]["result"]:
+            LOGGER.error("Bluetooth ping failed: %s", response["response"]["reason"])
+            return self.async_show_form(step_id="confirm", errors={"base": "unknown"})
+        return self.async_create_entry(data={})
+
+    @callback
+    def _async_get_router(self) -> VehicleRouter | None:
+        """Return the vehicle's running Bluetooth router, if the entry is loaded."""
+        entry: TeslemetryConfigEntry | None = self.hass.config_entries.async_get_entry(
+            self._entry_id
+        )
+        if (
+            entry is None
+            or entry.state is not ConfigEntryState.LOADED
+            or (subentry := entry.subentries.get(self._subentry_id)) is None
+        ):
+            return None
+        return next(
+            (
+                vehicle.api
+                for vehicle in entry.runtime_data.vehicles
+                if vehicle.vin == subentry.data[CONF_VIN]
+                and isinstance(vehicle.api, VehicleRouter)
+            ),
+            None,
+        )
+
+    async def _async_reconfigure(self) -> RepairsFlowResult:
+        """Open the vehicle's reconfigure flow to re-approve the key."""
         result = await self.hass.config_entries.subentries.async_init(
             (self._entry_id, SUBENTRY_TYPE_VEHICLE),
             context={"source": SOURCE_RECONFIGURE, "subentry_id": self._subentry_id},
