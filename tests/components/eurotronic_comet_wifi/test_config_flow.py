@@ -1,6 +1,6 @@
 """Test the Eurotronic Comet WiFi config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -89,6 +89,30 @@ async def test_form_invalid_mac(
     # Nothing was sent to the thermostat.
     published_topics = [call.args[0] for call in mqtt_mock.async_publish.mock_calls]
     assert not [topic for topic in published_topics if topic.startswith("01/")]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MAC: MAC}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mqtt_mock", "device")
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test an unexpected error is reported, and the flow recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.eurotronic_comet_wifi.config_flow.validate_input",
+        side_effect=RuntimeError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_MAC: MAC}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_MAC: MAC}
