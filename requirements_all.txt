@@ -218,7 +218,7 @@ aioasuswrt==1.5.4
 aioautomower==3.0.0
 
 # homeassistant.components.axle_energy
-aioaxlevpp==0.1.0
+aioaxlevpp==0.1.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
