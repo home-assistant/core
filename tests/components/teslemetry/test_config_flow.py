@@ -1560,11 +1560,8 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
 
 async def test_subentry_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:
     """Reconfigure aborts immediately when no Bluetooth integration is set up."""
-    entry = _entry_with_ble()
-    entry.add_to_hass(hass)
-    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    # No enable_bluetooth fixture here, so the scanner count is zero.
+    entry = await _setup_paired_entry(hass)
     subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
 
     result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
