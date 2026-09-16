@@ -54,7 +54,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: todo
