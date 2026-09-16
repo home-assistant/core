@@ -1034,28 +1034,28 @@ async def test_time_window(hass: HomeAssistant) -> None:
     test2 = await condition.async_from_config(hass, config2)
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not test1.async_check()
         assert test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not test1.async_check()
@@ -1104,7 +1104,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(
@@ -1115,7 +1115,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(
@@ -1126,7 +1126,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(
@@ -1137,7 +1137,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(
@@ -1149,7 +1149,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(
@@ -1163,7 +1163,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(
@@ -1202,28 +1202,28 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
         assert condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
@@ -1231,7 +1231,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="time.pm", before="time.am")
@@ -1241,7 +1241,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="time.pm", before="time.am")
@@ -1287,14 +1287,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1302,14 +1302,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1317,7 +1317,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
@@ -1331,7 +1331,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
