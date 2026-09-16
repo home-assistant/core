@@ -8,7 +8,6 @@ from typing import Literal, override
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.components.media_player import (
     BrowseError,
-    BrowseMedia,
     MediaClass,
     async_process_play_media_url,
 )
@@ -20,12 +19,14 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MEDIA, DOMAIN
+from .const import CONF_MEDIA, DOMAIN, MEDIA_CONTENT_ID, MEDIA_CONTENT_TYPE
+from .helpers import content_type_is_image
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,16 +37,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Collection Image image entities."""
-    media = entry.data[CONF_MEDIA]
-    if isinstance(media, dict):
-        content_ids = [media["media_content_id"]]
-    else:
-        content_ids = [item["media_content_id"] for item in media]
+    media = cv.ensure_list(entry.data[CONF_MEDIA])
+
     async_add_entities(
         [
             CollectionImageImageEntity(
                 name=entry.title,
-                media_content_ids=content_ids,
+                media=media,
                 unique_id=entry.entry_id,
                 hass=hass,
             )
@@ -62,7 +60,7 @@ class CollectionImageImageEntity(ImageEntity):
     def __init__(
         self,
         name: str,
-        media_content_ids: list[str],
+        media: list[dict],
         unique_id: str,
         hass: HomeAssistant,
     ) -> None:
@@ -71,7 +69,7 @@ class CollectionImageImageEntity(ImageEntity):
         self.path = None
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self.media_content_ids = media_content_ids
+        self.media = media
 
     def set_unavailable(self) -> None:
         """Set the entity to unavailable state."""
@@ -81,31 +79,37 @@ class CollectionImageImageEntity(ImageEntity):
         self._cached_image = None
         self.async_write_ha_state()
 
-    async def get_valid_images(self) -> list[BrowseMedia]:
+    async def get_valid_images(self) -> list[dict]:
         """Given the configured media directory for the entity, get a list of all child images."""
 
-        images: list[BrowseMedia] = []
+        images: list[dict] = []
 
-        for media_content_id in self.media_content_ids:
-            try:
-                media = await async_browse_media(self.hass, media_content_id)
-            except BrowseError as err:
-                _LOGGER.warning("%s: %s", self.entity_id, str(err))
-                continue
+        for media in self.media:
+            media_content_id = media[MEDIA_CONTENT_ID]
+            media_content_type = media[MEDIA_CONTENT_TYPE]
 
-            directory_images = [
-                item
-                for item in (media.children or [])
-                if item.media_class == MediaClass.IMAGE
-            ]
-            if directory_images:
-                images.extend(directory_images)
+            if content_type_is_image(media_content_type):
+                images.append({MEDIA_CONTENT_ID: media_content_id})
             else:
-                _LOGGER.warning(
-                    "%s: No valid images in %s",
-                    self.entity_id,
-                    media_content_id,
-                )
+                try:
+                    browse = await async_browse_media(self.hass, media_content_id)
+                except BrowseError as err:
+                    _LOGGER.warning("%s: %s", self.entity_id, str(err))
+                    continue
+
+                directory_images = [
+                    {MEDIA_CONTENT_ID: item.media_content_id}
+                    for item in (browse.children or [])
+                    if item.media_class == MediaClass.IMAGE
+                ]
+                if directory_images:
+                    images.extend(directory_images)
+                else:
+                    _LOGGER.warning(
+                        "%s: No valid images in %s",
+                        self.entity_id,
+                        media_content_id,
+                    )
 
         return images
 
@@ -122,14 +126,14 @@ class CollectionImageImageEntity(ImageEntity):
             filtered_new = [
                 item
                 for item in filtered
-                if item.media_content_id != self._current_image_id
+                if item[MEDIA_CONTENT_ID] != self._current_image_id
             ]
             if filtered_new:
                 filtered = filtered_new
 
-        child = random.choice(filtered)
+        selected = random.choice(filtered)
         self._attr_available = True
-        await self.update_image(child.media_content_id)
+        await self.update_image(selected[MEDIA_CONTENT_ID])
 
     async def get_first_image(self) -> None:
         """Get the first image."""
@@ -155,9 +159,9 @@ class CollectionImageImageEntity(ImageEntity):
             self.set_unavailable()
             return
 
-        child = filtered[position]
+        selected = filtered[position]
         self._attr_available = True
-        await self.update_image(child.media_content_id)
+        await self.update_image(selected[MEDIA_CONTENT_ID])
 
     async def _get_next_sequential_image(
         self, reverse: bool = False, wrap: bool = False
@@ -173,7 +177,7 @@ class CollectionImageImageEntity(ImageEntity):
             (
                 i
                 for i, item in enumerate(filtered)
-                if item.media_content_id == self._current_image_id
+                if item[MEDIA_CONTENT_ID] == self._current_image_id
             ),
             None,
         )
@@ -186,9 +190,9 @@ class CollectionImageImageEntity(ImageEntity):
             elif new_index >= len(filtered):
                 new_index = 0 if wrap else (len(filtered) - 1)
 
-        child = filtered[new_index]
+        selected = filtered[new_index]
         self._attr_available = True
-        await self.update_image(child.media_content_id)
+        await self.update_image(selected[MEDIA_CONTENT_ID])
 
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.collection_image.const import DOMAIN
+from homeassistant.components.collection_image.const import DOMAIN, MEDIA_CONTENT_ID
 from homeassistant.components.collection_image.image import CollectionImageImageEntity
 from homeassistant.components.collection_image.services import (
     CollectionImageService,
@@ -79,7 +79,7 @@ async def test_navigation(
 
     with patch(
         "homeassistant.components.collection_image.image.random.choice",
-        new=Mock(return_value=images[1]),
+        new=Mock(return_value={MEDIA_CONTENT_ID: images[1].media_content_id}),
     ):
         await _setup_integration(hass, config_entry)
         await hass.async_block_till_done()

@@ -16,6 +16,8 @@ from .const import (
     MOCK_MEDIA_DIR_URI_2,
     MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
     MOCK_MEDIA_DIR_URI_EMPTY,
+    MOCK_MEDIA_IMAGE_URI_1,
+    MOCK_MEDIA_IMAGE_URI_2,
 )
 from .helpers import data_from_uri
 
@@ -26,17 +28,49 @@ TEST_TIME_NEXT = "2026-09-12T07:30:00+00:00"
 
 
 @pytest.mark.parametrize(
-    ("uris", "expected_title"),
+    ("media", "expected_title"),
     [
-        ([MOCK_MEDIA_DIR_URI_1], "My pictures collection"),
-        ([MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2], "My pictures collection"),
-        ([MOCK_MEDIA_DIR_URI_2, MOCK_MEDIA_DIR_URI_1], "Three pictures collection"),
+        (
+            [{"media_content_id": MOCK_MEDIA_DIR_URI_1, "media_content_type": ""}],
+            "My pictures collection",
+        ),
+        (
+            [
+                {"media_content_id": MOCK_MEDIA_DIR_URI_1, "media_content_type": ""},
+                {"media_content_id": MOCK_MEDIA_DIR_URI_2, "media_content_type": ""},
+            ],
+            "My pictures collection",
+        ),
+        (
+            [
+                {
+                    "media_content_id": MOCK_MEDIA_IMAGE_URI_1,
+                    "media_content_type": "image/png",
+                },
+                {"media_content_id": MOCK_MEDIA_DIR_URI_2, "media_content_type": ""},
+                {"media_content_id": MOCK_MEDIA_DIR_URI_1, "media_content_type": ""},
+            ],
+            "Three pictures collection",
+        ),
+        (
+            [
+                {
+                    "media_content_id": MOCK_MEDIA_IMAGE_URI_1,
+                    "media_content_type": "image/png",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
+                    "media_content_type": "image/png",
+                },
+            ],
+            "Unnamed collection",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_media_source")
 @freeze_time(TEST_TIME)
 async def test_config_flow(
-    hass: HomeAssistant, uris: list[str], expected_title: str
+    hass: HomeAssistant, media: list[dict], expected_title: str
 ) -> None:
     """Test the config flow."""
 
@@ -46,8 +80,7 @@ async def test_config_flow(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
 
-    data = data_from_uri(uris)
-
+    data = {CONF_MEDIA: media}
     result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY

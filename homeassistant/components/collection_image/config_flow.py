@@ -12,14 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import MediaSelector
 
-from .const import CONF_MEDIA, DOMAIN
+from .const import CONF_MEDIA, DOMAIN, MEDIA_CONTENT_ID, MEDIA_CONTENT_TYPE
+from .helpers import content_type_is_image
 
 IMAGE_MEDIA_URI = f"{URI_SCHEME}{IMAGE_DOMAIN}"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_MEDIA): MediaSelector(
-            {"accept": ["directory"], "multiple": True}
+            {"accept": ["directory", "image/*"], "multiple": True}
         ),
     }
 )
@@ -33,35 +34,40 @@ async def _async_validate_media(
     errors: dict[str, str] = {}
     placeholders: dict[str, str] = {}
     found_pictures = False
-    title = "Unnamed collection"
+    title: str | None = None
 
     for user_media in user_input[CONF_MEDIA]:
-        if user_media["media_content_id"] == IMAGE_MEDIA_URI:
+        if user_media[MEDIA_CONTENT_ID] == IMAGE_MEDIA_URI:
             errors[CONF_MEDIA] = "invalid_selection"
             placeholders["error"] = IMAGE_MEDIA_URI
             break
 
-        try:
-            browse = await async_browse_media(
-                hass,
-                user_media["media_content_id"],
-            )
-        except BrowseError as err:
-            errors[CONF_MEDIA] = "failed_browse"
-            placeholders["error"] = str(err)
-            break
-
-        if (
-            not found_pictures
-            and browse.children
-            and any(item.media_class == MediaClass.IMAGE for item in browse.children)
-        ):
+        if content_type_is_image(user_media[MEDIA_CONTENT_TYPE]):
             found_pictures = True
-            if browse.title:
-                title = f"{browse.title} collection"
+
+        else:
+            try:
+                browse = await async_browse_media(
+                    hass,
+                    user_media[MEDIA_CONTENT_ID],
+                )
+            except BrowseError as err:
+                errors[CONF_MEDIA] = "failed_browse"
+                placeholders["error"] = str(err)
+                break
+
+            if browse.children and any(
+                item.media_class == MediaClass.IMAGE for item in browse.children
+            ):
+                found_pictures = True
+                if browse.title and not title:
+                    title = f"{browse.title} collection"
 
     if not errors and not found_pictures:
         errors[CONF_MEDIA] = "selected_media_no_images"
+
+    if not title:
+        title = "Unnamed collection"
 
     return (title if not errors else None), errors, placeholders
 

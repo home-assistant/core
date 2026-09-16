@@ -8,6 +8,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.collection_image import DOMAIN
+from homeassistant.components.collection_image.const import CONF_MEDIA, MEDIA_CONTENT_ID
 from homeassistant.components.image import Image, async_get_image
 from homeassistant.components.media_source import PlayMedia, Unresolvable
 from homeassistant.const import (
@@ -79,19 +80,42 @@ async def test_image(
 
 @pytest.mark.usefixtures("mock_media_source")
 @pytest.mark.parametrize(
-    ("uris", "expected_images"),
+    ("media", "expected_images"),
     [
         (
-            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_2],
+            [
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_1,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_2,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_IMAGE_URI_1,
+                    "media_content_type": "image/zzz",
+                },
+            ],
             [
                 MOCK_MEDIA_IMAGE_URI_1,
                 MOCK_MEDIA_IMAGE_URI_2,
                 MOCK_MEDIA_IMAGE_URI_3,
                 MOCK_MEDIA_IMAGE_URI_4,
+                MOCK_MEDIA_IMAGE_URI_1,
             ],
         ),
         (
-            [MOCK_MEDIA_DIR_URI_2, MOCK_MEDIA_DIR_URI_1],
+            [
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_2,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_1,
+                    "media_content_type": "",
+                },
+            ],
             [
                 MOCK_MEDIA_IMAGE_URI_2,
                 MOCK_MEDIA_IMAGE_URI_3,
@@ -100,21 +124,45 @@ async def test_image(
             ],
         ),
         (
-            [MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_DIR_URI_BROWSE_ERROR],
-            [MOCK_MEDIA_IMAGE_URI_1],
-        ),
-        (
             [
-                MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
-                MOCK_MEDIA_DIR_URI_1,
-                MOCK_MEDIA_DIR_URI_EMPTY,
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_1,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
+                    "media_content_type": "",
+                },
             ],
             [MOCK_MEDIA_IMAGE_URI_1],
         ),
         (
             [
-                MOCK_MEDIA_DIR_URI_EMPTY,
-                MOCK_MEDIA_DIR_URI_1,
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_BROWSE_ERROR,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_1,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_EMPTY,
+                    "media_content_type": "",
+                },
+            ],
+            [MOCK_MEDIA_IMAGE_URI_1],
+        ),
+        (
+            [
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_EMPTY,
+                    "media_content_type": "",
+                },
+                {
+                    "media_content_id": MOCK_MEDIA_DIR_URI_1,
+                    "media_content_type": "",
+                },
             ],
             [MOCK_MEDIA_IMAGE_URI_1],
         ),
@@ -125,7 +173,7 @@ async def test_image_multi(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     media_source_state: MediaSourceState,
-    uris: list[str],
+    media: list[dict],
     expected_images: list[str],
 ) -> None:
     """Test multiple media sources."""
@@ -133,18 +181,26 @@ async def test_image_multi(
         freeze_time(TEST_TIME),
         patch(
             "homeassistant.components.collection_image.image.random.choice",
-            return_value=media_source_state.browse_results[
-                MOCK_MEDIA_DIR_URI_2
-            ].children[2],
+            return_value={
+                MEDIA_CONTENT_ID: media_source_state.browse_results[
+                    MOCK_MEDIA_DIR_URI_2
+                ]
+                .children[2]
+                .media_content_id
+            },
         ) as mock_choice,
     ):
-        config_entry = config_entry_from_uri(uris)
+        config_entry = MockConfigEntry(
+            data={CONF_MEDIA: media},
+            domain=DOMAIN,
+            title="Random Image",
+        )
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert [
-        image.media_content_id for image in mock_choice.call_args.args[0]
+        image[MEDIA_CONTENT_ID] for image in mock_choice.call_args.args[0]
     ] == expected_images
     state = hass.states.get(DEFAULT_ENTITY_ID)
     assert state and state.state == TEST_TIME
@@ -380,16 +436,20 @@ async def test_multi_shuffle(
         freeze_time(TEST_TIME),
         patch(
             "homeassistant.components.collection_image.image.random.choice",
-            return_value=media_source_state.browse_results[
-                MOCK_MEDIA_DIR_URI_2
-            ].children[1],
+            return_value={
+                MEDIA_CONTENT_ID: media_source_state.browse_results[
+                    MOCK_MEDIA_DIR_URI_2
+                ]
+                .children[1]
+                .media_content_id
+            },
         ) as mock_choice,
     ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+    assert [image[MEDIA_CONTENT_ID] for image in mock_choice.call_args.args[0]] == [
         MOCK_MEDIA_IMAGE_URI_2,
         MOCK_MEDIA_IMAGE_URI_3,
         MOCK_MEDIA_IMAGE_URI_4,
@@ -412,9 +472,13 @@ async def test_multi_shuffle(
         freeze_time(TEST_TIME_NEXT),
         patch(
             "homeassistant.components.collection_image.image.random.choice",
-            return_value=media_source_state.browse_results[
-                MOCK_MEDIA_DIR_URI_2
-            ].children[2],
+            return_value={
+                MEDIA_CONTENT_ID: media_source_state.browse_results[
+                    MOCK_MEDIA_DIR_URI_2
+                ]
+                .children[2]
+                .media_content_id
+            },
         ) as mock_choice,
     ):
         await hass.services.async_call(
@@ -425,7 +489,7 @@ async def test_multi_shuffle(
         )
 
     # On the second call, URI_3 will not be included as it is the current image.
-    assert [image.media_content_id for image in mock_choice.call_args.args[0]] == [
+    assert [image[MEDIA_CONTENT_ID] for image in mock_choice.call_args.args[0]] == [
         MOCK_MEDIA_IMAGE_URI_2,
         MOCK_MEDIA_IMAGE_URI_4,
     ]
