@@ -119,3 +119,24 @@ async def test_setup_auth_refresh_missing_access_token(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
+async def test_setup_auth_transient_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a transient token refresh failure retries setup."""
+    aioclient_mock.post(
+        OAUTH2_TOKEN_URL,
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

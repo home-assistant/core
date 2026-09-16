@@ -2,7 +2,6 @@
 
 import logging
 
-from aiohttp import ClientResponseError
 from place.auth import get_iot_credentials
 from place.config import IOT_ENDPOINT
 from place.mqtt_client import MqttClient
@@ -10,7 +9,6 @@ from place.provider import Provider
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
@@ -25,10 +23,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> bool:
     """Set up Place from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
-    try:
-        token = await auth_implementation.async_refresh_token(entry.data["token"])
-    except ClientResponseError as err:
-        raise ConfigEntryAuthFailed(err) from err
+    token = await auth_implementation.async_refresh_token(entry.data["token"])
 
     hass.config_entries.async_update_entry(entry, data={**entry.data, "token": token})
 
