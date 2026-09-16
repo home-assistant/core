@@ -163,25 +163,13 @@ SENSOR_DESCRIPTIONS: tuple[DeDietrichSensorDescription, ...] = (
 def _enabled_descriptions(
     coordinator: DeDietrichDataUpdateCoordinator,
 ) -> tuple[DeDietrichSensorDescription, ...]:
-    """Drop descriptions whose bundle is not wired to this boiler. Must match coordinator.child_device_info so a setup-created entity does not flip between boiler and child on every poll."""
-    device = coordinator.device
-    eligible: list[DeDietrichSensorDescription] = []
-    for description in SENSOR_DESCRIPTIONS:
-        component = description.component
-        if component not in CHILD_COMPONENT_DEVICE_NAMES:
-            eligible.append(description)
-            continue
-        if component == "circuit_a":
-            if not device.circuit_a_present:
-                continue
-        elif component == "circuit_b":
-            if not device.circuit_b_present:
-                continue
-        elif component == "circuit_c":
-            if not (isinstance(device, DiematicISystem) and device.circuit_c_present):
-                continue
-        eligible.append(description)
-    return tuple(eligible)
+    """Return descriptions for boiler sensors and present child components."""
+    return tuple(
+        description
+        for description in SENSOR_DESCRIPTIONS
+        if description.component not in CHILD_COMPONENT_DEVICE_NAMES
+        or coordinator.child_device_info(description.component) is not None
+    )
 
 
 async def async_setup_entry(
