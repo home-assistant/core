@@ -109,7 +109,11 @@ class PsnMediaPlayerEntity(
             name=PLATFORM_MAP[platform],
             manufacturer="Sony Interactive Entertainment",
             model=PLATFORM_MAP[platform],
-            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.unique_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self.trophy_titles = trophy_titles
 

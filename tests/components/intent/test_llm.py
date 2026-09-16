@@ -6,9 +6,12 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
+from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_mock_service
 
 COVER_ENTITY_ID = "cover.test"
 
@@ -44,13 +47,51 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
     """Test the always-on generic intents are exposed."""
     names = await _tool_names(hass)
-    assert "HassTurnOn" in names
-    assert "HassTurnOff" in names
+    assert "intent__HassTurnOn" in names
+    assert "intent__HassTurnOff" in names
+
+
+async def test_turn_on_uses_domain_when_name_blank(hass: HomeAssistant) -> None:
+    """Test HassTurnOn treats a blank name as omitted and uses the domain."""
+    hass.states.async_set("light.test_light", "off", {"friendly_name": "Test Light"})
+    async_expose_entity(hass, "conversation", "light.test_light", True)
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+
+    await api.async_call_tool(
+        llm.ToolInput(
+            "intent__HassTurnOn",
+            {
+                "area": "",
+                "domain": "light",
+                "floor": " ",
+                "name": "",
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": ["light.test_light"]}
+
+
+async def test_turn_on_rejects_all_blank_targets(hass: HomeAssistant) -> None:
+    """Test HassTurnOn still requires a target after omitting blank values."""
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+
+    with pytest.raises(
+        intent.IntentHandleError, match="^Service handler cannot target all devices$"
+    ):
+        await api.async_call_tool(
+            llm.ToolInput(
+                "intent__HassTurnOn", {"area": "", "floor": " ", "name": None}
+            )
+        )
 
 
 async def test_timer_intents_require_timer_device(hass: HomeAssistant) -> None:
     """Test timer intents are not exposed without a timer-capable device."""
-    assert "HassStartTimer" not in await _tool_names(hass)
+    assert "intent__HassStartTimer" not in await _tool_names(hass)
 
 
 async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> None:
@@ -66,16 +107,16 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
         hass, _llm_context(device_id="test_device"), "assist"
     )
     names = {tool.name for tool in result.tools}
-    assert "HassStartTimer" in names
-    assert "HassTimerStatus" in names
+    assert "intent__HassStartTimer" in names
+    assert "intent__HassTimerStatus" in names
 
 
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
-    """Test HassSetPosition is only exposed when a cover/valve is exposed."""
-    assert "HassSetPosition" in await _tool_names(hass)
+    """Test intent__HassSetPosition is only exposed when a cover/valve is exposed."""
+    assert "intent__HassSetPosition" in await _tool_names(hass)
 
     async_expose_entity(hass, "conversation", COVER_ENTITY_ID, False)
-    assert "HassSetPosition" not in await _tool_names(hass)
+    assert "intent__HassSetPosition" not in await _tool_names(hass)
 
 
 async def test_prompt_includes_device_control(hass: HomeAssistant) -> None:

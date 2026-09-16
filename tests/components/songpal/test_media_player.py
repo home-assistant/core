@@ -147,7 +147,9 @@ async def test_state(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
     assert device.name == FRIENDLY_NAME
@@ -184,7 +186,9 @@ async def test_state_nosoundmode(
     assert "sound_mode" not in attributes
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
     assert device.name == FRIENDLY_NAME
@@ -221,8 +225,8 @@ async def test_state_wireless(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(
-        identifiers={(songpal.DOMAIN, WIRELESS_MAC)}
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, WIRELESS_MAC), entry.entry_id
     )
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC)}
     assert device.manufacturer == "Sony Corporation"
@@ -260,7 +264,9 @@ async def test_state_both(
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (songpal.DOMAIN, MAC), entry.entry_id
+    )
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, MAC),
         (dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC),

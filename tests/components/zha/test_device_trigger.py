@@ -79,8 +79,9 @@ async def test_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     triggers = await async_get_device_automations(
@@ -160,8 +161,9 @@ async def test_no_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     triggers = await async_get_device_automations(
@@ -211,8 +213,9 @@ async def test_if_fires_on_event(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -276,8 +279,9 @@ async def test_device_offline_fires(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -332,8 +336,9 @@ async def test_exception_no_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     await async_setup_component(
@@ -392,8 +397,9 @@ async def test_exception_bad_trigger(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     await async_setup_component(
@@ -457,8 +463,8 @@ async def test_validate_trigger_config_missing_info(
     # it be pulled from the current device, making it impossible to validate triggers
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)), config_entry.entry_id
     )
 
     assert await async_setup_component(
@@ -532,8 +538,8 @@ async def test_validate_trigger_config_unloaded_bad_info(
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)), config_entry.entry_id
     )
 
     assert await async_setup_component(
