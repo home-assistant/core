@@ -1,6 +1,7 @@
 """Tests for Search integration."""
 
 import attr
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -1123,9 +1124,11 @@ async def test_search_pre_migration_composite_device(
     device records the id of the pre-migration composite. Automations and scripts
     created before the split still reference the composite id, so:
     - searching a split device must return them, but not automations or scripts
-      referencing only a sibling split, and
+      referencing only a sibling split,
     - searching such an automation or script must return the live split devices, not
-      the virtual composite id.
+      the virtual composite id, and
+    - searching the composite id itself must return the union of the splits' config
+      entries and integrations, since the restored composite spans them all.
     """
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -1143,10 +1146,10 @@ async def test_search_pre_migration_composite_device(
 
     # Simulate a migration split: both devices carry the pre-migration composite id
     composite_device_id = "composite00000000000000000000ab"
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=composite_device_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=composite_device_id
     )
 
@@ -1219,3 +1222,245 @@ async def test_search_pre_migration_composite_device(
     }
     assert search(ItemType.AUTOMATION, "automation.composite") == expected_reverse
     assert search(ItemType.SCRIPT, "script.composite") == expected_reverse
+
+    # Searching the composite id itself resolves it to the read-only composite device,
+    # which belongs to every split's config entry, not just the base split's. Only
+    # references to the composite id match; the splits' own references do not.
+    assert search(ItemType.DEVICE, composite_device_id) == {
+        ItemType.AUTOMATION: {"automation.composite"},
+        ItemType.SCRIPT: {"script.composite"},
+        ItemType.CONFIG_ENTRY: {entry_1.entry_id, entry_2.entry_id},
+        ItemType.INTEGRATION: {"test1", "test2"},
+    }
+
+
+async def test_search_label_on_child_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test searching a label that is carried by a child device.
+
+    A child device carrying a label is surfaced by a label search just like a
+    mains device (dr.async_entries_for_label includes child devices). Resolving
+    up the child yields the area it inherits from its parent (and that area's
+    floor), plus the child's config entry and integration. The parent device is
+    also returned: resolve-up follows the first-class child -> parent edge, which
+    here contributes the same area / config entry / integration.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    label = label_registry.async_create("Outlet")
+
+    ground_floor = floor_registry.async_create("Ground Floor")
+    utility_area = area_registry.async_create("Utility", floor_id=ground_floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
+
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip-outlet-1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+    device_registry.async_update_child_device(child_device.id, labels={label.label_id})
+
+    searcher = Searcher(hass, {})
+    assert searcher.async_search(ItemType.LABEL, label.label_id) == {
+        ItemType.DEVICE: {child_device.id, parent_device.id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+
+async def test_search_child_devices(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test search surfaces the parent <-> child device relations.
+
+    A config entry search surfaces the entry's child devices, which
+    dr.async_entries_for_config_entry omits. Searching a parent device surfaces its
+    child devices and their entities. Searching a child device surfaces its parent
+    device (resolve-up), but not the parent's own entities: the parent is resolved
+    up, not fully searched, so unrelated sibling children are not pulled in.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ground_floor = floor_registry.async_create("Ground Floor")
+    utility_area = area_registry.async_create("Utility", floor_id=ground_floor.floor_id)
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    device_registry.async_update_device(parent_device.id, area_id=utility_area.id)
+
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip-outlet-1")},
+        parent_device_id=parent_device.id,
+        name="Outlet 1",
+    )
+
+    parent_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "strip-power",
+        config_entry=config_entry,
+        device_id=parent_device.id,
+    )
+    child_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "outlet-1-switch",
+        config_entry=config_entry,
+        device_id=child_device.id,
+    )
+
+    def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
+        """Search."""
+        searcher = Searcher(hass, {})
+        return searcher.async_search(item_type, item_id)
+
+    # A config entry search surfaces both the mains device and its child device,
+    # together with the entities of each.
+    assert search(ItemType.CONFIG_ENTRY, config_entry.entry_id) == {
+        ItemType.DEVICE: {parent_device.id, child_device.id},
+        ItemType.ENTITY: {parent_entity.entity_id, child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+    # Searching the parent device surfaces its child device and the child's entity.
+    assert search(ItemType.DEVICE, parent_device.id) == {
+        ItemType.DEVICE: {child_device.id},
+        ItemType.ENTITY: {parent_entity.entity_id, child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+    # Searching the child device surfaces its parent device, but not the parent's
+    # own entity: the parent is resolved up, not fully searched.
+    assert search(ItemType.DEVICE, child_device.id) == {
+        ItemType.DEVICE: {parent_device.id},
+        ItemType.ENTITY: {child_entity.entity_id},
+        ItemType.AREA: {utility_area.id},
+        ItemType.FLOOR: {ground_floor.floor_id},
+        ItemType.CONFIG_ENTRY: {config_entry.entry_id},
+        ItemType.INTEGRATION: {"test"},
+    }
+
+
+ALL_ENTITIES = {
+    "light.enabled",
+    "light.disabled",
+    "light.disabled_area_override",
+    "light.child_enabled",
+    "light.child_disabled",
+}
+PARENT_DEVICE_DEFAULT = {"light.enabled", "light.child_enabled"}
+AREA_DEFAULT = {"light.enabled", "light.disabled_area_override", "light.child_enabled"}
+
+
+@pytest.mark.parametrize(
+    ("item_type", "item_key", "expected_default", "expected_included"),
+    [
+        pytest.param(
+            ItemType.DEVICE, "device", PARENT_DEVICE_DEFAULT, ALL_ENTITIES, id="device"
+        ),
+        pytest.param(
+            ItemType.DEVICE,
+            "child_device",
+            {"light.child_enabled"},
+            {"light.child_enabled", "light.child_disabled"},
+            id="child_device",
+        ),
+        pytest.param(ItemType.AREA, "area", AREA_DEFAULT, ALL_ENTITIES, id="area"),
+        pytest.param(ItemType.FLOOR, "floor", AREA_DEFAULT, ALL_ENTITIES, id="floor"),
+    ],
+)
+async def test_search_include_disabled_entities(
+    hass: HomeAssistant,
+    search_item_ids: dict[str, str],
+    item_type: ItemType,
+    item_key: str,
+    expected_default: set[str],
+    expected_included: set[str],
+) -> None:
+    """Test device-inherited disabled entities are only returned when requested.
+
+    A child device is searched both directly and through the area and floor it
+    inherits from its parent. Searching the child does not return the parent's
+    entities, because the parent is only resolved up.
+    """
+    item_id = search_item_ids[item_key]
+
+    searcher = Searcher(hass, {})
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_default
+    )
+
+    searcher = Searcher(hass, {}, include_disabled_entities=True)
+    assert (
+        searcher.async_search(item_type, item_id)[ItemType.ENTITY] == expected_included
+    )
+
+
+@pytest.mark.parametrize(
+    ("extra_msg", "expected"),
+    [
+        pytest.param({}, PARENT_DEVICE_DEFAULT, id="key_omitted"),
+        pytest.param(
+            {"include_disabled_entities": False},
+            PARENT_DEVICE_DEFAULT,
+            id="explicit_false",
+        ),
+        pytest.param(
+            {"include_disabled_entities": True}, ALL_ENTITIES, id="explicit_true"
+        ),
+    ],
+)
+async def test_search_related_include_disabled_entities_websocket(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    search_item_ids: dict[str, str],
+    extra_msg: dict[str, bool],
+    expected: set[str],
+) -> None:
+    """Test the websocket command accepts the new option, and defaults it to False."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": "device",
+            "item_id": search_item_ids["device"],
+        }
+        | extra_msg
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"][ItemType.ENTITY] == unordered(list(expected))

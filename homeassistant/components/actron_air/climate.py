@@ -227,12 +227,6 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
         return self._zone.max_temp
 
     @property
-    def _zone(self) -> ActronAirZone:
-        """Get the current zone data from the coordinator."""
-        status = self.coordinator.data
-        return status.zones[self._zone_id]
-
-    @property
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""

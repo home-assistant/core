@@ -5,6 +5,7 @@ import ssl
 from typing import Any, override
 
 import librouteros
+from librouteros.exceptions import ConnectionClosed
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +40,7 @@ from .const import (
     LOGGER,
     MIKROTIK_SERVICES,
     NAME,
+    PING,
     POE,
     RESOURCE,
     ROUTERBOARD,
@@ -52,6 +54,8 @@ from .errors import CannotConnect, LoginError
 from .utils import calculate_uptime, mikrotik_config_entry_errors, percentage
 
 type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
+
+CONNECTION_ERRORS = (ConnectionClosed, OSError, TimeoutError)
 
 
 class MikrotikData:
@@ -233,23 +237,24 @@ class MikrotikData:
         device_list = {}
         wireless_devices = {}
         with mikrotik_config_entry_errors():
-            # Check if connection/login are still valid
-            self.api = get_api(dict(self.config_entry.data))
-
             # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_capsman:
-                LOGGER.debug("Hub is a CAPSman manager")
-                device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
-            elif self.support_wireless:
-                LOGGER.debug("Hub supports wireless Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
-            elif self.support_wifiwave2:
-                LOGGER.debug("Hub supports wifiwave2 Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFIWAVE2)
-            elif self.support_wifi:
-                LOGGER.debug("Hub supports wifi Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFI)
+
+            # A hub can expose more than one wireless stack at once (e.g. the
+            # legacy "wireless" package kept for CAPsMAN alongside the newer
+            # "wifi" registration table), so merge every supported interface
+            # instead of picking only the first match.
+            for supported, interface, message in (
+                (self.support_capsman, CAPSMAN, "Hub is a CAPSman manager"),
+                (self.support_wireless, WIRELESS, "Hub supports wireless Interface"),
+                (self.support_wifiwave2, WIFIWAVE2, "Hub supports wifiwave2 Interface"),
+                (self.support_wifi, WIFI, "Hub supports wifi Interface"),
+            ):
+                if supported:
+                    LOGGER.debug(message)
+                    wireless_devices.update(self.get_list_from_interface(interface))
+
+            device_list = wireless_devices
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
@@ -308,8 +313,7 @@ class MikrotikData:
             "interface": interface,
             "address": ip_address,
         }
-        cmd = "/ping"
-        data = self.command(cmd, params)
+        data = self.command(MIKROTIK_SERVICES[PING], params)
         if data:
             status = 0
             for result in data:
@@ -334,9 +338,20 @@ class MikrotikData:
         with mikrotik_config_entry_errors(
             suppress_errors=suppress_errors, during_setup=during_setup
         ):
-            if params:
-                return list(self.api(cmd, **params))
-            return list(self.api(cmd))
+            try:
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
+            except CONNECTION_ERRORS as err:
+                LOGGER.debug(
+                    "Mikrotik %s - connection dropped (%s), reconnecting",
+                    self._host,
+                    err,
+                )
+                self.api = get_api(dict(self.config_entry.data))
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):

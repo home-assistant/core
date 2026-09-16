@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import datetime, timedelta
 from math import isfinite
-from typing import override
+from typing import Final, override
 
 from aiohortos import (
     Readout,
@@ -21,10 +21,21 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEGREE,
+    LIGHT_LUX,
+    PERCENTAGE,
     EntityCategory,
+    UnitOfConductivity,
+    UnitOfEnergy,
+    UnitOfIrradiance,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
     UnitOfRatio,
     UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,7 +46,6 @@ from .const import (
     READOUT_ICONS,
     SECONDS_PER_DAY,
     TIME_OF_DAY_READOUTS,
-    UNIT_DESCRIPTIONS,
     UNIT_MAP,
     WIND_DIRECTION_SUBJECT,
 )
@@ -43,6 +53,68 @@ from .coordinator import HortimaxConfigEntry, HortimaxCoordinator
 from .entity import HortimaxEntity
 
 PARALLEL_UPDATES = 0
+
+
+# Everything that follows from the unit alone. Device classes that also need
+# the readout identifier or its source (humidity, CO2, wind, gas) are set
+# below in `_describe`. Precision is display only, and needs a default
+# because the API emits float32-converted doubles (90.15303039550781 %).
+UNIT_DESCRIPTIONS: Final[dict[str, SensorEntityDescription]] = {
+    unit: SensorEntityDescription(
+        key=unit,
+        native_unit_of_measurement=unit,
+        device_class=device_class,
+        suggested_display_precision=precision,
+    )
+    for unit, device_class, precision in (
+        (UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, 1),
+        (UnitOfTemperature.FAHRENHEIT, SensorDeviceClass.TEMPERATURE, 1),
+        (UnitOfTemperature.KELVIN, SensorDeviceClass.TEMPERATURE, 1),
+        (PERCENTAGE, None, 1),
+        ("g/kg", None, 1),
+        ("g/m³", None, 1),
+        ("J/cm²", None, 1),
+        ("J/m²", None, 0),
+        (UnitOfSpeed.METERS_PER_SECOND, None, 1),
+        (UnitOfSpeed.KILOMETERS_PER_HOUR, None, 1),
+        (UnitOfVolumeFlowRate.LITERS_PER_MINUTE, SensorDeviceClass.VOLUME_FLOW_RATE, 1),
+        (
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            1,
+        ),
+        ("l/m²", None, 1),
+        ("ml/m²", None, 0),
+        (UnitOfEnergy.KILO_WATT_HOUR, SensorDeviceClass.ENERGY, 2),
+        (UnitOfVolume.CUBIC_METERS, None, 2),
+        (UnitOfVolume.LITERS, None, 1),
+        (UnitOfVolume.MILLILITERS, None, 0),
+        (UnitOfTime.SECONDS, SensorDeviceClass.DURATION, 0),
+        (UnitOfTime.MINUTES, SensorDeviceClass.DURATION, 0),
+        (UnitOfTime.HOURS, SensorDeviceClass.DURATION, 1),
+        (UnitOfIrradiance.WATTS_PER_SQUARE_METER, SensorDeviceClass.IRRADIANCE, 0),
+        (UnitOfRatio.PARTS_PER_MILLION, None, 0),
+        (LIGHT_LUX, SensorDeviceClass.ILLUMINANCE, 0),
+        (UnitOfConductivity.MILLISIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 2),
+        (UnitOfConductivity.MICROSIEMENS_PER_CM, SensorDeviceClass.CONDUCTIVITY, 0),
+        (UnitOfPressure.BAR, SensorDeviceClass.PRESSURE, 2),
+        (UnitOfPressure.MBAR, SensorDeviceClass.PRESSURE, 0),
+        (UnitOfPressure.HPA, SensorDeviceClass.PRESSURE, 0),
+        (UnitOfPressure.PA, SensorDeviceClass.PRESSURE, 0),
+        ("µmol/m²/s", None, 0),
+        ("mol/m²/d", None, 1),
+        (DEGREE, None, 0),
+        (UnitOfPower.WATT, SensorDeviceClass.POWER, 0),
+        (UnitOfPower.KILO_WATT, SensorDeviceClass.POWER, 2),
+        (UnitOfMass.KILOGRAMS, SensorDeviceClass.WEIGHT, 1),
+        (UnitOfMass.GRAMS, SensorDeviceClass.WEIGHT, 0),
+    )
+} | {
+    # pH is dimensionless (a logarithmic ratio), so SensorDeviceClass.PH takes no unit.
+    "pH": SensorEntityDescription(
+        key="pH", device_class=SensorDeviceClass.PH, suggested_display_precision=1
+    )
+}
 
 
 async def async_setup_entry(
