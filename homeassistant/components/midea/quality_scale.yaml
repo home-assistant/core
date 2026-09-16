@@ -72,7 +72,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: No known use cases for repair issues, yet.
   stale-devices:
     status: exempt
     comment: One config entry per physical device, no hub.
