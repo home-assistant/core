@@ -1336,7 +1336,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.16.0
+homematicip==2.17.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -1568,7 +1568,7 @@ loqedAPI==2.1.11
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.10.1
+lunatone-rest-api-client==0.10.2
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
