@@ -75,6 +75,8 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
+DOMAIN: Final = "number"
+
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
@@ -84,7 +86,6 @@ DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
 
-DOMAIN: Final = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -208,7 +209,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -231,7 +232,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"
