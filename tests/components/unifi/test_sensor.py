@@ -1062,6 +1062,7 @@ async def test_outlet_power_reading_extended_caps(
         "device_payload",
         "device_name",
         "voltage_sensor",
+        "voltage_value",
         "missing_voltage_sensor",
         "metered_outlets",
     ),
@@ -1070,6 +1071,7 @@ async def test_outlet_power_reading_extended_caps(
             [UPS_DEVICE_1],
             "dummy_ups_2u_pro",
             "input_voltage",
+            "121.9",
             "bypass_voltage",
             (1, 2),
             id="input_voltage",
@@ -1078,6 +1080,7 @@ async def test_outlet_power_reading_extended_caps(
             [UPS_DEVICE_2],
             "dummy_ups_2u",
             "bypass_voltage",
+            "121.7",
             "input_voltage",
             (),
             id="bypass_voltage",
@@ -1092,6 +1095,7 @@ async def test_ups_battery_pool_sensors(
     device_payload: list[dict[str, Any]],
     device_name: str,
     voltage_sensor: str,
+    voltage_value: str,
     missing_voltage_sensor: str,
     metered_outlets: tuple[int, ...],
 ) -> None:
@@ -1109,7 +1113,9 @@ async def test_ups_battery_pool_sensors(
     assert hass.states.get(f"sensor.{device_name}_output_power").state == "42.5"
     assert hass.states.get(f"sensor.{device_name}_output_current").state == "0.35"
     assert hass.states.get(f"sensor.{device_name}_output_voltage").state == "121.7"
-    assert hass.states.get(f"sensor.{device_name}_{voltage_sensor}")
+    assert (
+        hass.states.get(f"sensor.{device_name}_{voltage_sensor}").state == voltage_value
+    )
     assert hass.states.get(f"sensor.{device_name}_{missing_voltage_sensor}") is None
     power_factor = hass.states.get(f"sensor.{device_name}_output_power_factor")
     assert power_factor is not None
