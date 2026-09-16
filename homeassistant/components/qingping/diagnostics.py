@@ -21,7 +21,6 @@ async def async_get_config_entry_diagnostics(
     assert address is not None
     service_info = bluetooth.async_last_service_info(hass, address, connectable=False)
     return {
-        "entry": entry.as_dict(),
         "service_info": async_redact_data(
             service_info.as_dict() if service_info else None,
             SERVICE_INFO_TO_REDACT,
