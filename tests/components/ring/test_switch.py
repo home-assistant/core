@@ -1,5 +1,6 @@
 """The tests for the Ring switch platform."""
 
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -189,11 +190,9 @@ async def test_switch_errors_when_turned_on(
     )
 
 
+@pytest.mark.usefixtures("mock_ring_client", "create_deprecated_siren_entity")
 async def test_switch_setup_succeeds_with_unknown_chime_type(
-    hass: HomeAssistant,
-    mock_ring_client,
-    mock_ring_devices,
-    create_deprecated_siren_entity,
+    hass: HomeAssistant, mock_ring_devices: Any
 ) -> None:
     """Test that an unknown doorbell chime type does not abort switch setup."""
     mock_ring_devices.all_devices.append(BadChimeDoorbell())
