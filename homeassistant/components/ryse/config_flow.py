@@ -5,9 +5,9 @@ import logging
 from typing import Any, override
 
 from bleak import BleakError
+import probatio
 from ryseble import is_pairing_mode
 from ryseble.device import RyseBLEDevice
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
@@ -295,9 +295,9 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: info.name
                             for address, info in self._discovered_devices.items()
