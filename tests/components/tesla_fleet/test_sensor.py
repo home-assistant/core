@@ -1,6 +1,7 @@
 """Test the Tesla Fleet sensor platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,7 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
-from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.tesla_fleet.coordinator import (
+    ENERGY_HISTORY_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -187,28 +191,39 @@ async def test_charge_energy_restore_last_reset(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("history", "last_reset"),
+    [
+        pytest.param(ENERGY_HISTORY, "2023-06-01T01:00:00-07:00", id="mid_period"),
+        pytest.param(
+            ENERGY_HISTORY_OVERNIGHT, "2026-09-12T00:00:00+01:00", id="local_midnight"
+        ),
+    ],
+)
 async def test_energy_history_last_reset(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_energy_history: AsyncMock,
+    history: dict[str, Any],
+    last_reset: str,
 ) -> None:
     """Test that energy history sensors have last_reset from period start."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_energy_history.return_value = history
 
     await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
 
     entity_id = "sensor.energy_site_battery_discharged"
 
     # Trigger coordinator refresh to populate data
-    freezer.tick(VEHICLE_INTERVAL)
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    # The first timestamp in the fixture is "2023-06-01T01:00:00-07:00"
-    assert state.attributes.get("last_reset") == "2023-06-01T01:00:00-07:00"
+    assert state.attributes.get("last_reset") == last_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -240,14 +255,13 @@ async def test_energy_history_omitted_fields_are_zero(
 
     await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
 
-    freezer.tick(VEHICLE_INTERVAL)
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
-    assert state.attributes["last_reset"] == "2026-09-12T00:00:00+01:00"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
