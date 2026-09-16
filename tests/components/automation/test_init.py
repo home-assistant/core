@@ -4938,6 +4938,59 @@ async def test_event_trigger_composite_device_id_replacement_preserves_dismissal
 
 
 @pytest.mark.usefixtures("split_devices")
+async def test_event_trigger_composite_device_id_rename_preserves_dismissal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A dismissed repair stays dismissed when the automation's entity_id is renamed.
+
+    A registry rename removes and re-adds the same entity. The issue id is keyed on the
+    stable unique id, so the repair must be updated in place rather than deleted and
+    recreated, which would reset the user's dismissal.
+    """
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "composite_auto"
+    )
+    config = {
+        automation.DOMAIN: {
+            "id": "composite_auto",
+            "alias": "Composite automation",
+            "triggers": {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": COMPOSITE_ID},
+            },
+            "actions": {"action": "test.automation"},
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    assert (
+        issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID) is not None
+    )
+
+    # The user dismisses the repair.
+    ir.async_ignore_issue(hass, "homeassistant", COMPOSITE_ISSUE_ID, True)
+    dismissed_version = issue_registry.async_get_issue(
+        "homeassistant", COMPOSITE_ISSUE_ID
+    ).dismissed_version
+    assert dismissed_version is not None
+
+    # Renaming the entity removes and re-adds the same entity object.
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    renamed = issue_registry.async_get_issue("homeassistant", COMPOSITE_ISSUE_ID)
+    assert renamed is not None
+    assert renamed.dismissed_version == dismissed_version
+    # The re-added entity refreshed the placeholder to the new entity_id.
+    assert renamed.translation_placeholders["entity_id"] == "automation.renamed"
+
+
+@pytest.mark.usefixtures("split_devices")
 async def test_event_trigger_composite_device_id_idless_no_edit(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

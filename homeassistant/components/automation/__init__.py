@@ -906,12 +906,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        async_clear_validation_issues(self.hass, self._validation_issue_ids)
         if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script or conditions as they will
-            # be reused.
+            # Entity ID change: keep the repair issues so the re-added entity updates
+            # them in place under the same unique-id-keyed id (preserving any dismissal),
+            # and do not unload the script or conditions as they will be reused.
             await self._async_disable()
             return
+        async_clear_validation_issues(self.hass, self._validation_issue_ids)
         await self._async_disable(stop_actions=False)
         await self.action_script.async_unload()
         if self._condition is not None:
