@@ -15,15 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture(name="ignore_missing_translations")
-def ignore_missing_translations_fixture() -> list[str]:
-    """Ignore the homeassistant config_entry_reauth issue translation.
-
-    It is triggered when ConfigEntryAuthFailed is raised during setup.
-    """
-    return ["homeassistant:issues.config_entry_reauth.title"]
-
-
 __all__ = [
     "MockConfigEntry",
 ]
