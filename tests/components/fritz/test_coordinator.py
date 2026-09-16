@@ -11,6 +11,7 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzstatus import DefaultConnectionService, FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
@@ -154,6 +155,37 @@ async def test_clear_connection_cache(
     fc_class_mock.return_value.clear_cache()
 
     assert "Cleared FritzConnection call action cache" in caplog.text
+
+
+async def test_modem_mode(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test setup when the Fritz!Box is used as DSL modem (does no routing)."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch.object(
+            FritzStatus,
+            "get_default_connection_service",
+            return_value=DefaultConnectionService("1", "WANIPConnection", "1"),
+        ),
+        patch.object(
+            FritzStatus,
+            "has_wan_enabled",
+            new_callable=PropertyMock,
+            side_effect=FritzActionError(
+                "UPnPError:\nerrorCode: 401\nerrorDescription: Invalid Action"
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.device_is_router is False
 
 
 async def test_no_connection(
