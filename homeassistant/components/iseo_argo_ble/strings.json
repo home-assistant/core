@@ -31,7 +31,26 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "access_log": {
+        "name": "Access log",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "access_denied": "Access denied",
+              "fault": "Fault",
+              "opened": "Opened"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
+    "access_log_entity_disabled": {
+      "message": "Enable the access log entity before reading the log. Reading empties the log on the lock, so there would be nothing left to report."
+    },
     "cannot_connect": {
       "message": "Could not connect to the lock."
     },
@@ -57,6 +76,12 @@
         "description": "Home Assistant always follows the door state the lock broadcasts in its advertisements, which is immediate and costs the lock nothing.\n\nTurning this on adds a connection to the lock every 30 seconds to read the door state as well, for when the advertisements do not reach Home Assistant reliably — at the edge of Bluetooth range, or with no Bluetooth proxy nearby. It wakes the lock each time.\n\nEither route needs the lock's **Door Status Advice** setting, which Home Assistant enables during setup and you can also turn on for the lock in the ISEO Argo app.",
         "title": "Door status updates"
       }
+    }
+  },
+  "services": {
+    "read_access_log": {
+      "description": "Reads the entries the lock has recorded since the last read and reports the newest of each kind on the access log entity. The lock marks them read, so each entry is only ever reported once.",
+      "name": "Read access log"
     }
   }
 }

@@ -1,0 +1,5 @@
+read_access_log:
+  target:
+    entity:
+      integration: iseo_argo_ble
+      domain: lock
