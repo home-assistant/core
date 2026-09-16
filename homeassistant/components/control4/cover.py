@@ -106,6 +106,9 @@ class Control4Cover(Control4Entity, CoverEntity):
 
     _attr_translation_key = "blind"
     _attr_device_class = CoverDeviceClass.SHADE
+    _ATTRIBUTES_OF_INTEREST = frozenset(
+        {CONTROL4_LEVEL, CONTROL4_FULLY_CLOSED, CONTROL4_OPENING, CONTROL4_CLOSING}
+    )
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE

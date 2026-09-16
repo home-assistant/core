@@ -141,6 +141,27 @@ class Control4Climate(Control4Entity, ClimateEntity):
     """Control4 climate entity."""
 
     _attr_translation_key = "thermostat"
+    _ATTRIBUTES_OF_INTEREST = frozenset(
+        {
+            ATTR_HUMIDITY,
+            ATTR_TEMPERATURE_F,
+            ATTR_TEMPERATURE_C,
+            ATTR_FAN_MODE,
+            ATTR_FAN_MODES_LIST,
+            ATTR_HVAC_STATE,
+            ATTR_HVAC_MODE,
+            ATTR_HVAC_MODES_LIST,
+            ATTR_SETPOINT_HEAT_F,
+            ATTR_HEAT_SETPOINT_F,
+            ATTR_SETPOINT_HEAT_C,
+            ATTR_HEAT_SETPOINT_C,
+            ATTR_SETPOINT_COOL_F,
+            ATTR_COOL_SETPOINT_F,
+            ATTR_SETPOINT_COOL_C,
+            ATTR_COOL_SETPOINT_C,
+            ATTR_SCALE,
+        }
+    )
 
     def create_api_object(self) -> C4Climate:
         """Create a pyControl4 device object.

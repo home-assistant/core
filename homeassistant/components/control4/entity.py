@@ -1,7 +1,7 @@
 """Base entity classes for the Control4 integration."""
 
 import logging
-from typing import Any, override
+from typing import Any, ClassVar, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr
@@ -22,6 +22,10 @@ class Control4Entity(Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+
+    # Every subclass must declare the specific Control4 variable names its
+    # properties read; anything else Control4 sends for the item is dropped.
+    _ATTRIBUTES_OF_INTEREST: ClassVar[frozenset[str]]
 
     def __init__(
         self,
@@ -46,7 +50,11 @@ class Control4Entity(Entity):
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
-        self._extra_state_attributes: dict[str, Any] = device_attributes
+        self._extra_state_attributes: dict[str, Any] = {
+            key: value
+            for key, value in device_attributes.items()
+            if key in self._ATTRIBUTES_OF_INTEREST
+        }
 
     @property
     @override
@@ -100,15 +108,16 @@ class Control4Entity(Entity):
         self.async_write_ha_state()
 
     async def _data_to_extra_state_attributes(self, data: Any) -> None:
-        """Merge push-event data into extra_state_attributes."""
+        """Merge modeled keys from push-event data into extra_state_attributes."""
         if isinstance(data, dict):
             for key, value in data.items():
                 if isinstance(value, dict):
                     for k, val in value.items():
-                        self._extra_state_attributes[k] = (
-                            None if val == "Undefined" else val
-                        )
-                else:
+                        if k in self._ATTRIBUTES_OF_INTEREST:
+                            self._extra_state_attributes[k] = (
+                                None if val == "Undefined" else val
+                            )
+                elif key in self._ATTRIBUTES_OF_INTEREST:
                     self._extra_state_attributes[key] = (
                         None if value == "Undefined" else value
                     )

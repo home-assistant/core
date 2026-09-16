@@ -26,6 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 CONTROL4_CATEGORY = "lights"
 CONTROL4_BRIGHTNESS_SCALE = (1, 100)
 
+CONTROL4_LIGHT_LEVEL = "LIGHT_LEVEL"
+CONTROL4_BRIGHTNESS_PERCENT = "Brightness Percent"
+CONTROL4_LIGHT_STATE = "LIGHT_STATE"
+CONTROL4_CURRENT_POWER = "CURRENT_POWER"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -99,6 +104,15 @@ async def async_setup_entry(
 class Control4Light(Control4Entity, LightEntity):
     """Control4 light entity."""
 
+    _ATTRIBUTES_OF_INTEREST = frozenset(
+        {
+            CONTROL4_LIGHT_LEVEL,
+            CONTROL4_BRIGHTNESS_PERCENT,
+            CONTROL4_LIGHT_STATE,
+            CONTROL4_CURRENT_POWER,
+        }
+    )
+
     def __init__(
         self,
         entry_data: Control4RuntimeData,
@@ -147,10 +161,10 @@ class Control4Light(Control4Entity, LightEntity):
         """Return whether this light is on."""
         attrs = self._extra_state_attributes
         for key in (
-            "LIGHT_LEVEL",
-            "Brightness Percent",
-            "LIGHT_STATE",
-            "CURRENT_POWER",
+            CONTROL4_LIGHT_LEVEL,
+            CONTROL4_BRIGHTNESS_PERCENT,
+            CONTROL4_LIGHT_STATE,
+            CONTROL4_CURRENT_POWER,
         ):
             if key in attrs:
                 value = self._to_float(attrs[key])
@@ -164,10 +178,10 @@ class Control4Light(Control4Entity, LightEntity):
         """Return brightness (0-255)."""
         attrs = self._extra_state_attributes
         raw_level = None
-        if "LIGHT_LEVEL" in attrs:
-            raw_level = attrs["LIGHT_LEVEL"]
-        elif "Brightness Percent" in attrs:
-            raw_level = attrs["Brightness Percent"]
+        if CONTROL4_LIGHT_LEVEL in attrs:
+            raw_level = attrs[CONTROL4_LIGHT_LEVEL]
+        elif CONTROL4_BRIGHTNESS_PERCENT in attrs:
+            raw_level = attrs[CONTROL4_BRIGHTNESS_PERCENT]
         level = self._to_float(raw_level)
         if level is None:
             return None
@@ -187,7 +201,7 @@ class Control4Light(Control4Entity, LightEntity):
     @property
     def _is_dimmer(self) -> bool:
         attrs = self._extra_state_attributes
-        return "LIGHT_LEVEL" in attrs or "Brightness Percent" in attrs
+        return CONTROL4_LIGHT_LEVEL in attrs or CONTROL4_BRIGHTNESS_PERCENT in attrs
 
     def _to_rate_ms(self, transition: float | None) -> int:
         if transition is None:
