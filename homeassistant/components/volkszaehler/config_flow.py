@@ -4,12 +4,12 @@ import logging
 from types import MappingProxyType
 from typing import Any, override
 
+import probatio
 from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import (
     VolkszaehlerApiConnectionError,
     VolkszaehlerNoDataAvailable,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -28,15 +28,15 @@ from .const import DEFAULT_PORT, DOMAIN, SUBENTRY_TYPE_CHANNEL
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_UUID): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_UUID): cv.string,
     }
 )
 
-STEP_SUBENTRY_DATA_SCHEMA = vol.Schema({vol.Required(CONF_UUID): cv.string})
+STEP_SUBENTRY_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_UUID): cv.string})
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
