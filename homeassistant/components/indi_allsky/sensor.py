@@ -47,7 +47,7 @@ SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.exposure.exposure if data.exposure else None,
-    )
+    ),
     IndiAllSkySensorEntityDescription(
         key="filename",
         translation_key="filename",
