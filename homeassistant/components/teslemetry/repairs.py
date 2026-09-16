@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from . import TeslemetryConfigEntry
-from .config_flow import VehiclePairingFlow
 from .const import ISSUE_TYPE_BLE_KEY_REJECTED, VEHICLE_ISSUE_LEARN_MORE
+from .pairing_flow import VehiclePairingFlow
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
