@@ -79,9 +79,9 @@ class IseoCoordinator(ActiveBluetoothDataUpdateCoordinator[LockState | None]):
         if self.connection_lock.locked():
             return False
         if self.door_status_supported is False:
-            # This lock has no door sensor, so connecting would return nothing
-            # new and would only cost battery; seeing it advertise is all the
-            # reachability information there is.
+            # This lock has no door sensor, so a connection would read nothing
+            # and would hold its single connection slot; seeing it advertise is
+            # all the reachability information there is.
             return False
         return (
             seconds_since_last_poll is None
