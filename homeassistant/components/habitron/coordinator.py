@@ -234,12 +234,10 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         self.base_url = self._resolve_base_url()
         self._register_hub_device()
 
-        # ``reinit_hub(0)`` stops the hub's event server for the duration of the
-        # build; ``reinit_hub(1)`` must always restore it, even when building
-        # the model or registering devices raises, or the hub would stay stopped
-        # while Home Assistant retries the setup.
-        await self.client.reinit_hub(0)
+        # The build needs the hub's event server stopped. The stop is inside the
+        # try because a failed stop request may still have reached the hub.
         try:
+            await self.client.reinit_hub(0)
             self.router = await async_build_system(self.client, b_uid=self.uid)
             await self._register_bus_devices()
         finally:

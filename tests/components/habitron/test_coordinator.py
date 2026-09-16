@@ -526,6 +526,39 @@ async def test_event_server_is_restored_even_when_the_build_fails(
     assert [call.args[0] for call in client.reinit_hub.await_args_list] == [0, 1]
 
 
+async def test_event_server_is_restored_when_the_stop_itself_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A lost reply does not mean the hub ignored the stop.
+
+    ``reinit_hub`` takes seconds, so its answer can go missing long after the
+    hub has already stopped the event server. Restoring only on a stop that
+    answered would leave it stopped for good.
+    """
+    mock_config_entry.add_to_hass(hass)
+    client = MagicMock()
+    client.connect = AsyncMock()
+
+    def _stop_never_answers(mode: int) -> None:
+        if mode == 0:
+            raise HabitronTimeoutError("no reply")
+
+    client.reinit_hub = AsyncMock(side_effect=_stop_never_answers)
+
+    coord = HbtnCoordinator(hass, mock_config_entry)
+    with (
+        patch(f"{_COORD}.HabitronClient", return_value=client),
+        patch(f"{_COORD}.async_build_hub", new=AsyncMock(return_value=_hub())),
+        patch(f"{_COORD}.async_build_system", new=AsyncMock()) as build_system,
+        pytest.raises(HabitronTimeoutError),
+    ):
+        await coord._async_connect_and_build()
+
+    assert [call.args[0] for call in client.reinit_hub.await_args_list] == [0, 1]
+    build_system.assert_not_awaited()
+
+
 async def test_host_readings_reach_the_hub_members(hass: HomeAssistant) -> None:
     """The library writes the readings; the coordinator only drives the poll."""
     coord = _ready(hass)
