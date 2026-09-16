@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import infrared
 from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
@@ -69,9 +69,9 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE_TYPE): SelectSelector(
+                    probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 device_type.value for device_type in DysonDeviceType
@@ -80,13 +80,13 @@ class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
-                    vol.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
+                    probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
                         )
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_COMMAND_STEP_DELAY, default=DEFAULT_COMMAND_STEP_DELAY
                     ): NumberSelector(
                         NumberSelectorConfig(
