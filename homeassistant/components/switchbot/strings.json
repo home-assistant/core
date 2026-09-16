@@ -161,7 +161,7 @@
           "speed": {
             "state": {
               "normal": "Normal",
-              "slow": "Slow"
+              "silent": "Silent"
             }
           }
         }

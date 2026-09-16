@@ -21,7 +21,7 @@ from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
     CURTAIN_SPEED_NORMAL,
-    CURTAIN_SPEED_SLOW,
+    CURTAIN_SPEED_SILENT,
     DEFAULT_RETRY_COUNT,
     ROLLER_SHADE_SPEED_PERFORMANCE,
     ROLLER_SHADE_SPEED_QUIET,
@@ -237,7 +237,7 @@ async def test_curtain3_custom_speed_controlling(
     ("speed", "expected_value"),
     [
         pytest.param(CURTAIN_SPEED_NORMAL, 255, id="normal"),
-        pytest.param(CURTAIN_SPEED_SLOW, 1, id="slow"),
+        pytest.param(CURTAIN_SPEED_SILENT, 1, id="silent"),
     ],
 )
 async def test_curtain3_speed(
@@ -274,7 +274,7 @@ async def test_curtain3_speed(
         state = hass.states.get(entity_id)
         assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
             CURTAIN_SPEED_NORMAL,
-            CURTAIN_SPEED_SLOW,
+            CURTAIN_SPEED_SILENT,
         ]
 
         await hass.services.async_call(
