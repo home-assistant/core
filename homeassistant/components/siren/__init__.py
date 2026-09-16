@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, TypedDict, cast, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -34,9 +34,9 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
 
 TURN_ON_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_TONE): vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_DURATION): cv.positive_int,
-    vol.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
+    probatio.Optional(ATTR_TONE): probatio.Any(probatio.Coerce(int), cv.string),
+    probatio.Optional(ATTR_DURATION): cv.positive_int,
+    probatio.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
 }
 
 

@@ -11,7 +11,7 @@ from lifx import (
     find_by_serial,
     mac_candidates_for_serial,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
@@ -203,8 +203,8 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}
             ),
             errors=errors,
         )
@@ -234,10 +234,10 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_HOST, default=""): str,
-                    vol.Optional(CONF_SERIAL, default=""): str,
+                    probatio.Optional(CONF_HOST, default=""): str,
+                    probatio.Optional(CONF_SERIAL, default=""): str,
                 }
             ),
             errors=errors,
@@ -276,7 +276,9 @@ class LIFXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(device_names)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(device_names)}
+            ),
         )
 
     @callback

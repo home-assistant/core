@@ -16,8 +16,8 @@ from lifx import (
     ThemeLibrary,
     TileEffectSkyType,
 )
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -1636,7 +1636,7 @@ async def test_set_state_schema_rejects_invalid_values(
     """Test the retained set_state service schema."""
     await async_setup_lifx_entry(hass, create_mock_light())
 
-    with pytest.raises((HomeAssistantError, vol.Invalid)):
+    with pytest.raises((HomeAssistantError, probatio.Invalid)):
         await hass.services.async_call(
             DOMAIN,
             "set_state",
@@ -1715,7 +1715,7 @@ async def test_palette_bounds_match_the_documented_action(
     device = factory()
     await async_setup_lifx_entry(hass, device)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,

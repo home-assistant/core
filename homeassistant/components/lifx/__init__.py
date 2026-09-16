@@ -1,7 +1,7 @@
 """Support for LIFX."""
 
 from lifx import Device, LifxError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -23,23 +23,25 @@ CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
 
 
-INTERFACE_SCHEMA = vol.Schema(
+INTERFACE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_BROADCAST): cv.string,
+        probatio.Optional(CONF_SERVER): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_BROADCAST): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.All(
+CONFIG_SCHEMA = probatio.All(
     cv.deprecated(DOMAIN),
-    vol.Schema(
+    probatio.Schema(
         {
             DOMAIN: {
-                LIGHT_DOMAIN: vol.Schema(vol.All(cv.ensure_list, [INTERFACE_SCHEMA]))
+                LIGHT_DOMAIN: probatio.Schema(
+                    probatio.All(cv.ensure_list, [INTERFACE_SCHEMA])
+                )
             }
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 

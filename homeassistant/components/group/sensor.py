@@ -9,7 +9,7 @@ import logging
 import statistics
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -95,16 +95,18 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(
             [SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN]
         ),
-        vol.Required(CONF_TYPE): vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): cv.boolean,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Required(CONF_TYPE): probatio.All(
+            cv.string, probatio.In(SENSOR_TYPES.values())
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_IGNORE_NON_NUMERIC, default=False): cv.boolean,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): str,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
 

@@ -50,6 +50,8 @@ SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_SKY = "effect_sky"
 SERVICE_EFFECT_STOP = "effect_stop"
 SERVICE_PAINT_THEME = "paint_theme"
+SERVICE_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
+SERVICE_SET_STATE = "set_state"
 
 HEV_CYCLE_STATE = "hev_cycle_state"
 LIFX_IDENTIFY_DELAY = 3.0

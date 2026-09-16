@@ -74,5 +74,10 @@
   "block_piracy": true,
   "block_porn": true,
   "block_social_networks": true,
-  "block_video_streaming": true
+  "block_video_streaming": true,
+  "block_data_drop_services": true,
+  "block_decentralized_web_gateways": true,
+  "block_free_hosting_domains": true,
+  "block_residential_hosting": true,
+  "block_tunneling_endpoints": true
 }
