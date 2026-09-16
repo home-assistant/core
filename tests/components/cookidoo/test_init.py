@@ -533,6 +533,37 @@ async def test_stored_tokens_skip_login(
     assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(STALE_AUTH_DATA)
 
 
+async def test_unusable_stored_tokens_fall_back_to_login(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test a stored token the library cannot read falls back to a login.
+
+    The shape is whatever the library wrote when the entry was last set up, so
+    a later version of it may no longer accept what is on the entry.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=3,
+        data={
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: PASSWORD,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
+            CONF_TOKEN: {**asdict(STALE_AUTH_DATA), "id_token": "unexpected-field"},
+        },
+        unique_id=TEST_UUID,
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_cookidoo_client.apply_auth_data.assert_not_called()
+    mock_cookidoo_client.login.assert_awaited_once()
+    assert config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
+
+
 async def test_expired_tokens_fall_back_to_login(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
@@ -552,52 +583,37 @@ async def test_expired_tokens_fall_back_to_login(
     assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
 
 
-async def test_rotated_tokens_persisted_when_update_fails(
+@pytest.mark.parametrize(
+    "subscription_side_effect",
+    [
+        pytest.param(None, id="update_succeeds"),
+        pytest.param(CookidooRequestException(), id="later_call_fails"),
+    ],
+)
+async def test_tokens_rotated_during_update_are_persisted(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry_with_token: MockConfigEntry,
     notify_auth_data_update: Callable[[CookidooAuthData], None],
+    subscription_side_effect: Exception | None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test tokens rotated during an update survive a later call failing."""
+    """Test tokens the library rotates while serving an update are persisted.
+
+    The refresh a request performs on its own rotates the refresh token with it,
+    so the new pair has to reach the entry whether the update as a whole went on
+    to succeed or a later call failed.
+    """
     await setup_integration(hass, cookidoo_config_entry_with_token)
 
-    # The library rotates the tokens on the first call, a later one then fails
-    def _rotate() -> list:
-        notify_auth_data_update(AUTH_DATA)
-        return []
-
-    mock_cookidoo_client.get_ingredient_items.side_effect = _rotate
-    mock_cookidoo_client.get_active_subscription.side_effect = (
-        CookidooRequestException()
-    )
-
-    freezer.tick(timedelta(seconds=90))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(AUTH_DATA)
-
-
-async def test_refreshed_tokens_are_persisted(
-    hass: HomeAssistant,
-    mock_cookidoo_client: AsyncMock,
-    cookidoo_config_entry_with_token: MockConfigEntry,
-    notify_auth_data_update: Callable[[CookidooAuthData], None],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test tokens refreshed by the library during an update are persisted."""
-    await setup_integration(hass, cookidoo_config_entry_with_token)
-
-    # The library refreshes the expired access token while serving the update
     ingredient_items = mock_cookidoo_client.get_ingredient_items.return_value
 
-    def _refresh() -> list:
+    def _rotate() -> list:
         notify_auth_data_update(AUTH_DATA)
         return ingredient_items
 
-    mock_cookidoo_client.get_ingredient_items.side_effect = _refresh
-    mock_cookidoo_client.login.assert_not_awaited()
+    mock_cookidoo_client.get_ingredient_items.side_effect = _rotate
+    mock_cookidoo_client.get_active_subscription.side_effect = subscription_side_effect
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)

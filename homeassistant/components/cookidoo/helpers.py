@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import asdict
+import logging
 from typing import Any
 
 from aiohttp import CookieJar
@@ -23,6 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import CookidooConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def cookidoo_from_config_data(
@@ -68,5 +71,9 @@ async def cookidoo_from_config_entry(
         hass, dict(entry.data), on_auth_data_update=save_auth_data
     )
     if token := entry.data.get(CONF_TOKEN):
-        cookidoo.apply_auth_data(CookidooAuthData(**token))
+        try:
+            cookidoo.apply_auth_data(CookidooAuthData(**token))
+        except TypeError:
+            # Nothing to restore, so the coordinator logs in with the credentials
+            _LOGGER.debug("Stored tokens are not in a shape the library accepts")
     return cookidoo
