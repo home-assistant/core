@@ -1280,6 +1280,7 @@ async def test_value_template_fails(
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
+                    "unique_id": "veryunique",
                     "entity_category": "config",
                 }
             }
@@ -1289,21 +1290,24 @@ async def test_value_template_fails(
 async def test_unsupported_entity_category(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test `config` entity category is rejected for this read-only platform."""
+    """Test `config` entity category is ignored for this read-only platform."""
     assert await mqtt_mock_entry()
-    assert "value must be one of ['diagnostic']" in caplog.text
-    assert hass.states.get("binary_sensor.test") is None
+    assert "Ignoring entity category 'config'" in caplog.text
+    assert hass.states.get("binary_sensor.test") is not None
+    entity_entry = entity_registry.async_get("binary_sensor.test")
+    assert entity_entry.entity_category is None
 
 
-@pytest.mark.no_fail_on_log_exception
 async def test_unsupported_entity_category_discovery(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a discovered `config` entity category does not set up an entity."""
+    """Test a discovered `config` entity category is ignored."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -1312,7 +1316,9 @@ async def test_unsupported_entity_category_discovery(
         ' "unique_id": "veryunique", "entity_category": "config"}',
     )
     await hass.async_block_till_done()
-    assert (
-        entity_registry.async_get_entity_id(binary_sensor.DOMAIN, DOMAIN, "veryunique")
-        is None
+    assert "Ignoring entity category 'config'" in caplog.text
+    entity_id = entity_registry.async_get_entity_id(
+        binary_sensor.DOMAIN, DOMAIN, "veryunique"
     )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).entity_category is None

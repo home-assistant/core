@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    Platform,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
@@ -59,12 +58,7 @@ from .const import (
     ENTITY_PLATFORMS,
     SUPPORTED_COMPONENTS,
 )
-from .util import (
-    entity_category_schema,
-    valid_publish_topic,
-    valid_qos_schema,
-    valid_subscribe_topic,
-)
+from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
 # Device discovery options that are also available at entity component level
 SHARED_OPTIONS = [
@@ -196,17 +190,6 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         probatio.Optional(CONF_VISIBLE_BY_DEFAULT, default=True): cv.boolean,
     }
 )
-
-
-def mqtt_entity_common_schema(platform: Platform) -> probatio.Schema:
-    """Return the common entity schema restricted to a platform.
-
-    Entity categories are not supported by all platforms.
-    """
-    return MQTT_ENTITY_COMMON_SCHEMA.extend(
-        {probatio.Optional(CONF_ENTITY_CATEGORY): entity_category_schema(platform)}
-    )
-
 
 _UNIQUE_ID_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_UNIQUE_ID): cv.string},

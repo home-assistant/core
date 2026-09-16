@@ -26,7 +26,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     template,
 )
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -333,20 +332,12 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
-def valid_entity_categories(platform: Platform) -> tuple[EntityCategory, ...]:
+def valid_entity_categories(platform: str) -> tuple[EntityCategory, ...]:
     """Return the entity categories a platform supports."""
     valid_categories = set(EntityCategory)
     if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
         valid_categories -= {EntityCategory.CONFIG}
     return tuple(sorted(valid_categories))
-
-
-def entity_category_schema(platform: Platform) -> probatio.All:
-    """Return the entity category schema for a platform."""
-    return probatio.All(
-        ENTITY_CATEGORIES_SCHEMA,
-        probatio.In([category.value for category in valid_entity_categories(platform)]),
-    )
 
 
 def valid_qos_schema(qos: Any) -> int:
