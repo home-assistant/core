@@ -33,6 +33,36 @@ async def test_sensor_setup_and_states(
         )
 
 
+@pytest.mark.usefixtures("mock_indi_allsky_client")
+async def test_disabled_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that disabled-by-default sensors are registered as disabled."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.indi_allsky_binning_mode",
+        "sensor.indi_allsky_filename",
+        "sensor.indi_allsky_gain",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for entity_id in (
+        "sensor.indi_allsky_exposure_time",
+        "sensor.indi_allsky_sky_quality",
+        "sensor.indi_allsky_stars",
+        "sensor.indi_allsky_temperature",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is None
+
+
 async def test_sensor_updates(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
