@@ -674,6 +674,9 @@
       }
     },
     "switch": {
+      "ai_switch": {
+        "name": "AI switch"
+      },
       "anion": {
         "name": "Anion"
       },
