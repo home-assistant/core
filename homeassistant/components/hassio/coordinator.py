@@ -1362,7 +1362,8 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
-        self._event_states_during_refresh: dict[str, AddonState] | None = None
+        # State change events recorded while data fetches are in flight
+        self._event_state_recorders: list[dict[str, AddonState]] = []
         self.supervisor_client = get_supervisor_client(hass)
         self._dispatcher_disconnect = async_dispatcher_connect(
             hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
@@ -1396,10 +1397,10 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         except KeyError, ValueError:
             return
 
-        # Record events arriving while a poll is in flight so the poll result
-        # reflects state changes that happened after its add-on list was fetched
-        if self._event_states_during_refresh is not None:
-            self._event_states_during_refresh[slug] = state
+        # Record events arriving while a data fetch is in flight so its result
+        # reflects state changes that happened after the fetch started
+        for event_states in self._event_state_recorders:
+            event_states[slug] = state
 
         if self.data is None or (addon_data := self.data.addons.get(slug)) is None:
             return
@@ -1438,7 +1439,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Collect state change events arriving while fetching, as the fetched
         # add-on list may predate them
         event_states: dict[str, AddonState] = {}
-        self._event_states_during_refresh = event_states
+        self._event_state_recorders.append(event_states)
         try:
             installed_addons: list[InstalledAddon] = await client.addons.list()
             all_addons = {addon.slug for addon in installed_addons}
@@ -1457,7 +1458,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
         finally:
-            self._event_states_during_refresh = None
+            self._event_state_recorders.remove(event_states)
 
         if event_states:
             installed_addons = [
@@ -1588,15 +1589,24 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
+        event_states: dict[str, AddonState] = {}
+        self._event_state_recorders.append(event_states)
         try:
             slug, info = await self._update_addon_info(addon_slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
             return
+        finally:
+            self._event_state_recorders.remove(event_states)
 
         if info is not None and self.data and slug in self.data.addons:
+            addon = _installed_addon_from_complete(info)
+            # A state change event received while the info request was in
+            # flight is at least as fresh as the fetched info
+            if (event_state := event_states.get(slug)) is not None:
+                addon = replace(addon, state=event_state)
             updated = AddonData(
-                addon=_installed_addon_from_complete(info),
+                addon=addon,
                 auto_update=info.auto_update,
                 repository=self.data.addons[slug].repository,
             )

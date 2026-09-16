@@ -20,6 +20,7 @@ from aiohasupervisor.models.mounts import (
 import pytest
 
 from homeassistant.components.hassio import DOMAIN, get_addons_info
+from homeassistant.components.hassio.const import ADDONS_COORDINATOR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -247,6 +248,70 @@ async def test_addon_state_event_during_poll(
     # Finishing the poll must not revert to the state of its older add-on list
     unblock_info.set()
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+
+async def test_addon_state_event_during_forced_refresh(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    addon_installed: AsyncMock,
+) -> None:
+    """Test a state event during a forced info refresh is not reverted by it."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Block the add-on info request so the forced refresh stays in flight
+    unblock_info = asyncio.Event()
+    info_side_effect = addon_installed.side_effect
+
+    async def blocked_addon_info(slug: str) -> Mock:
+        await unblock_info.wait()
+        return info_side_effect(slug)
+
+    addon_installed.side_effect = blocked_addon_info
+
+    # Start a forced refresh; its info response still reports test2 as stopped
+    coordinator = hass.data[ADDONS_COORDINATOR]
+    refresh_task = hass.async_create_task(
+        coordinator.force_addon_info_data_refresh("test2")
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    # The add-on state changes while the forced refresh is in flight
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "started"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    # Finishing the forced refresh must not revert to its older info response
+    unblock_info.set()
+    await refresh_task
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
