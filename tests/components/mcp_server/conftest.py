@@ -1,6 +1,7 @@
 """Common fixtures for the Model Context Protocol Server tests."""
 
 from collections.abc import Generator
+from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,8 +17,11 @@ from tests.common import MockConfigEntry
 TEST_LLM_API_ID = "test-api"
 
 
+@dataclass(slots=True, kw_only=True)
 class MockLLMAPI(llm.API):
-    """Test LLM API that does not expose any tools."""
+    """Test LLM API that exposes the tools it is created with."""
+
+    tools: list[llm.Tool] = field(default_factory=list)
 
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
@@ -27,7 +31,7 @@ class MockLLMAPI(llm.API):
             api=self,
             api_prompt="Test prompt",
             llm_context=llm_context,
-            tools=[],
+            tools=self.tools,
         )
 
 

@@ -113,7 +113,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
         # For passing type checking, existence of summary
-        # is already checked by voluptuous
+        # is already checked by probatio
         if TYPE_CHECKING:
             assert item.summary is not None
 
@@ -165,7 +165,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         list_items_lookup = self.coordinator.todo_list_items[self._list.id]
 
         # For passing type checking, existence of UID and summary
-        # is already checked by voluptuous
+        # is already checked by probatio
         if TYPE_CHECKING:
             assert item.uid is not None
             assert item.summary is not None

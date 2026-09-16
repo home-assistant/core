@@ -9,7 +9,7 @@ import time
 from typing import Any, Final
 
 from aiohttp import ClientError, hdrs, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "brands/access_token"})
+@websocket_api.websocket_command({probatio.Required("type"): "brands/access_token"})
 def ws_access_token(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
