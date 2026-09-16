@@ -23,6 +23,7 @@ from . import (
     LOCK_DISCOVERY_INFO_UUID_ADDRESS,
     NOT_YALE_DISCOVERY_INFO,
     OLD_FIRMWARE_LOCK_DISCOVERY_INFO,
+    SAME_LOCAL_NAME_DISCOVERY_INFO,
     YALE_ACCESS_LOCK_DISCOVERY_INFO,
 )
 
@@ -577,6 +578,41 @@ async def test_integration_discovery_success(hass: HomeAssistant) -> None:
     }
     assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_integration_discovery_prefers_address(hass: HomeAssistant) -> None:
+    """Test integration discovery binds to the address it was handed."""
+    with patch(
+        "homeassistant.components.yalexs_ble.util.async_discovered_service_info",
+        # Another device is advertising the same cached local name, and it is
+        # seen before the lock itself
+        return_value=[
+            SAME_LOCAL_NAME_DISCOVERY_INFO,
+            YALE_ACCESS_LOCK_DISCOVERY_INFO,
+        ],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                "name": "Front Door",
+                "address": YALE_ACCESS_LOCK_DISCOVERY_INFO.address,
+                "key": "2fd51b8621c6a139eaffbedcb846b60f",
+                "slot": 66,
+                "serial": "M1XXX012LU",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.yalexs_ble.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_ADDRESS] == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
 
 
 async def test_integration_discovery_device_not_found(hass: HomeAssistant) -> None:

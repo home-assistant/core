@@ -12,9 +12,9 @@ from energyzero import (
     PriceType,
     TimeRange,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.energyzero.const import (
     CONF_ELECTRICITY_PRICE_INTERVAL,
@@ -409,23 +409,23 @@ def config_entry_data(
 @pytest.mark.parametrize(
     ("config_entry_data", "service_data", "error", "error_message"),
     [
-        ({}, {}, vol.error.Error, "required key not provided .+"),
+        ({}, {}, probatio.error.Error, "required key not provided .+"),
         (
             {"config_entry": True},
             {},
-            vol.error.Error,
+            probatio.error.Error,
             "required key not provided .+",
         ),
         (
             {},
             {"incl_vat": True},
-            vol.error.Error,
+            probatio.error.Error,
             "required key not provided .+",
         ),
         (
             {"config_entry": True},
             {"incl_vat": "incorrect vat"},
-            vol.error.Error,
+            probatio.error.Error,
             "expected bool at .+",
         ),
         (
@@ -803,7 +803,7 @@ async def test_service_rejects_unsupported_options(
 ) -> None:
     """Only the electricity action accepts the supported new field values."""
     mock_energyzero.reset_mock()
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,
