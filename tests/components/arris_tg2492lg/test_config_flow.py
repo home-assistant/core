@@ -33,6 +33,7 @@ CONNECT_ERRORS: list[tuple[dict[str, Any], str]] = [
         {"side_effect": ClientConnectionError()},
         "cannot_connect",
     ),
+    ({"side_effect": http_error(500)}, "cannot_connect"),
     ({"side_effect": http_error(401)}, "invalid_auth"),
     ({"side_effect": InvalidCredentialError()}, "invalid_auth"),
 ]

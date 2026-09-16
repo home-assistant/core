@@ -61,13 +61,26 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
 
+SETUP_CONNECTION_ERRORS: list[Exception] = [
+    ClientConnectionError(),
+    http_error(500),
+]
+
+
+@pytest.mark.usefixtures("mock_connect_box")
+@pytest.mark.parametrize(
+    "error",
+    SETUP_CONNECTION_ERRORS,
+    ids=["connection_error", "http_500"],
+)
 async def test_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connect_box: MagicMock,
+    error: Exception,
 ) -> None:
     """Test setup fails with ConfigEntryNotReady on connection error."""
-    mock_connect_box.async_login.side_effect = ClientConnectionError()
+    mock_connect_box.async_login.side_effect = error
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
