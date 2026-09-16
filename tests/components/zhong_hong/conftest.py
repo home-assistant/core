@@ -1,6 +1,7 @@
 """Common fixtures for the ZhongHong tests."""
 
 from collections.abc import Callable, Generator
+import threading
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -77,6 +78,10 @@ class FakeGateway:
 
         self.send_result = True
         self.send_results: list[bool] = []
+        # Set to hold a command inside the executor, so that a test can
+        # have one still on its way out while something else happens.
+        self.send_gate: threading.Event | None = None
+        self.send_entered = threading.Event()
         self.query_all_status_result = True
         # The wire names of the speeds the units behind this gateway have.
         self.supported_fan_modes = {mode.name for mode in StatusFanMode}
@@ -138,6 +143,9 @@ class FakeGateway:
         let one command succeed and the next one fail.
         """
         self.send_calls += 1
+        if self.send_gate is not None:
+            self.send_entered.set()
+            self.send_gate.wait(timeout=10)
 
         header = ac_data.header
         if header.func_code is FuncCode.CTL_FAN_MODE:

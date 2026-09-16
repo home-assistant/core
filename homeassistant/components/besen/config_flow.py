@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 from besen.client import BesenClient
 from besen.const import DEFAULT_PIN
 from besen.exceptions import CannotConnect, InvalidAuth, NoConnectablePath
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
@@ -34,36 +34,33 @@ def _normalize_address(address: str) -> str:
     return address.strip().upper()
 
 
-PIN_SCHEMA = vol.All(
-    selector.TextSelector(
-        selector.TextSelectorConfig(
-            type=selector.TextSelectorType.PASSWORD,
-        )
-    ),
-    vol.Match(r"^\d{6}$"),
+PIN_SCHEMA = selector.TextSelector(
+    selector.TextSelectorConfig(
+        type=selector.TextSelectorType.PASSWORD,
+    )
 )
 
-PIN_ONLY_SCHEMA = vol.Schema(
+PIN_ONLY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+        probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
     }
 )
 
 
 def _user_schema(
     discoveries: dict[str, BluetoothServiceInfoBleak],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the user step schema."""
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_ADDRESS): vol.In(
+            probatio.Required(CONF_ADDRESS): probatio.In(
                 {
                     address: discovery.name or address
                     for address, discovery in discoveries.items()
                 }
             ),
-            vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+            probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
         }
     )
 
@@ -76,6 +73,9 @@ async def _async_validate_input(
     name: str | None,
 ) -> str:
     """Validate setup by logging into the charger."""
+
+    if len(pin) != 6 or not pin.isdecimal():
+        raise InvalidAuth("PIN must be exactly 6 digits")
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(

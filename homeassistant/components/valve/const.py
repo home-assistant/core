@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import Final
 
+import probatio
+
 DOMAIN: Final = "valve"
 
 
@@ -37,3 +39,6 @@ class ValveState(StrEnum):
     CLOSING = "closing"
     CLOSED = "closed"
     OPEN = "open"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ValveDeviceClass))
