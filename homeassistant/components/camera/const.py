@@ -1,6 +1,6 @@
 """Constants for Camera component."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -58,3 +58,10 @@ class StreamType(StrEnum):
 
     HLS = "hls"
     WEB_RTC = "web_rtc"
+
+
+class CameraEntityFeature(IntFlag):
+    """Supported features of the camera entity."""
+
+    ON_OFF = 1
+    STREAM = 2

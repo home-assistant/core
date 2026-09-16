@@ -18,7 +18,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "scene"
+from .const import DOMAIN
+
 DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
 STATES: Final = "states"
 
