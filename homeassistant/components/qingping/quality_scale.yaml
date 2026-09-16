@@ -89,10 +89,8 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: done
-    comment: |
-      Newly discovered devices start a discovery config flow automatically, so
-      entities appear without a restart.
+    status: exempt
+    comment: Each config entry represents a single device.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
