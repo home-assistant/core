@@ -322,7 +322,7 @@ async def test_more_than_default_limit_predicted(hass: HomeAssistant) -> None:
         results = await async_predict_common_control(hass, user_id)
 
     # 08:00 UTC = 00:00 local = night
-    assert results.night == entity_ids
+    assert results == EntityUsagePredictions(night=entity_ids)
 
 
 @pytest.mark.usefixtures("recorder_mock")
