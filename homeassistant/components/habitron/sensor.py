@@ -245,19 +245,28 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
             self.async_on_remove(
                 lambda: member.remove_listener(self._handle_coordinator_update)
             )
-        # CoordinatorEntity.async_added_to_hass does not write an initial state,
-        # and the coordinator's first refresh completed before this platform was
-        # set up, so without this the entity would read "unknown" until the next
-        # coordinator tick.
-        self._handle_coordinator_update()
+        # CoordinatorEntity.async_added_to_hass does not pick up a value, and
+        # the coordinator's first refresh completed before this platform was set
+        # up, so without this the entity would start out "unknown" until the
+        # next coordinator tick. Taking the value is all there is to do:
+        # ``add_to_platform_finish`` writes the state right after this hook
+        # returns, and a write attempted from in here would be dropped anyway --
+        # ``_async_write_ha_state`` returns early while ``_platform_state`` is
+        # still ADDING.
+        self._refresh_native_value()
+
+    @callback
+    def _refresh_native_value(self) -> None:
+        """Read this sensor's value out of the model."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self._module, self._sensor_idx
+        )
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator via the description."""
-        self._attr_native_value = self.entity_description.value_fn(
-            self._module, self._sensor_idx
-        )
+        self._refresh_native_value()
         self.async_write_ha_state()
 
 
