@@ -1,7 +1,7 @@
 """Support for De Dietrich water heater."""
 
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import Any, override
 
 from diematic_modbus import HotWaterMode
 from modbus_connection import ModbusError
@@ -64,7 +64,7 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 1.0
+    _attr_min_temp = 10.0
     _attr_max_temp = 80.0
     _attr_target_temperature_step = 1.0
     entity_description: DeDietrichWaterHeaterEntityDescription
@@ -84,9 +84,9 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
     def current_operation(self) -> str | None:
         """Return the current HA operation mode."""
         mode = self.coordinator.device.hot_water.mode
-        if mode is None:
-            return None
-        return MODE_TO_HA.get(cast(HotWaterMode, mode))
+        if isinstance(mode, HotWaterMode):
+            return MODE_TO_HA[mode]
+        return None
 
     @cached_property
     @override
@@ -112,7 +112,12 @@ class DeDietrichWaterHeater(DeDietrichEntity, WaterHeaterEntity):
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the boiler's hot-water mode to match the requested HA mode."""
-        mode = HA_TO_MODE[operation_mode]
+        mode = HA_TO_MODE.get(operation_mode)
+        if mode is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_operation_mode_error",
+            )
         try:
             await self.coordinator.device.set_hot_water_mode(mode)
         except ModbusError as err:

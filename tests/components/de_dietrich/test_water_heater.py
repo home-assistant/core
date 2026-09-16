@@ -16,6 +16,7 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -41,12 +42,13 @@ async def test_water_heater_state(
         STATE_PERFORMANCE,
         STATE_HIGH_DEMAND,
     ]
-    assert state.attributes["min_temp"] == 1.0
+    assert state.attributes["min_temp"] == 10.0
     assert state.attributes["max_temp"] == 80.0
     assert state.attributes["target_temp_step"] == 1.0
-    assert (
-        state.attributes["supported_features"] == 3
-    )  # TARGET_TEMPERATURE | OPERATION_MODE
+    assert state.attributes["supported_features"] == (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
 
 
 async def test_water_heater_set_operation_mode_writes_boiler(
@@ -56,6 +58,9 @@ async def test_water_heater_set_operation_mode_writes_boiler(
 ) -> None:
     """Test set_operation_mode maps the HA mode and writes via the lib."""
     unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    # Pre-load the shared mode register with a non-zero heating bit to prove
+    # set_hot_water_mode preserves it (only the hot-water bits are replaced).
+    unit.holding[659] = 0x02
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
@@ -63,11 +68,32 @@ async def test_water_heater_set_operation_mode_writes_boiler(
         target={ATTR_ENTITY_ID: "water_heater.de_dietrich_hot_water"},
         blocking=True,
     )
-    # iSystem uses register 659 (mask 0x50) for the hot-water mode.
-    assert unit.holding[659] == HotWaterMode.PERM
+    # iSystem uses register 659 with mask 0x50 for hot-water mode bits.
+    # PERM == 16 (bit 4); the heating bit (bit 1) must be preserved.
+    assert (unit.holding[659] & 0x50) == HotWaterMode.PERM
+    assert (unit.holding[659] & 0x2F) == 0x02
 
 
-async def test_water_heater_set_temperature_writes_day_target(
+async def test_water_heater_set_operation_mode_translates_modbus_error(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test set_operation_mode raises HomeAssistantError when the boiler fails."""
+    mock_connection.for_unit(DEFAULT_UNIT_ID).fail_write(
+        659, ModbusTimeoutError("boom")
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_OPERATION_MODE,
+            {ATTR_OPERATION_MODE: STATE_PERFORMANCE},
+            target={ATTR_ENTITY_ID: "water_heater.de_dietrich_hot_water"},
+            blocking=True,
+        )
+
+
+async def test_water_heater_set_temperature_writes_day_target_isystem(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
@@ -83,6 +109,34 @@ async def test_water_heater_set_temperature_writes_day_target(
     )
     # iSystem day_target register 672, float10 scaled by 10.
     assert unit.holding[672] == 550
+
+
+async def test_water_heater_set_temperature_writes_day_target_base(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test set_temperature writes to the day-target register on the base layout."""
+    unit = mock_connection.for_unit(DEFAULT_UNIT_ID)
+    seed_boiler(unit)
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.de_dietrich.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_TEMPERATURE: 55.0},
+        target={ATTR_ENTITY_ID: "water_heater.de_dietrich_hot_water"},
+        blocking=True,
+    )
+    # Base day_target register 59, float10 scaled by 10.
+    assert unit.holding[59] == 550
 
 
 async def test_water_heater_set_temperature_translates_modbus_error(
