@@ -133,8 +133,8 @@
           "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]",
-              "max_temp": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
-              "min_temp": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]"
+              "max_temperature": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
