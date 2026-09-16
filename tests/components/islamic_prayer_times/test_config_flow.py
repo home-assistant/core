@@ -9,6 +9,7 @@ from homeassistant.components.islamic_prayer_times.const import (
     CONF_MIDNIGHT_MODE,
     CONF_SCHOOL,
     DOMAIN,
+    NAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,7 +35,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home"
+    assert result["title"] == NAME
 
 
 async def test_options(hass: HomeAssistant) -> None:

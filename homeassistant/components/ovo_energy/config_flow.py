@@ -5,7 +5,7 @@ from typing import Any, override
 
 import aiohttp
 from ovoenergy import OVOEnergy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,12 +13,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ACCOUNT, DOMAIN
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-USER_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_ACCOUNT): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_ACCOUNT): str,
     }
 )
 

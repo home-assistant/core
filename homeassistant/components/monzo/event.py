@@ -16,6 +16,7 @@ from .const import (
     NON_TRANSFER_ACCOUNT_TYPES,
 )
 from .coordinator import MonzoConfigEntry
+from .helpers import get_account_name
 from .webhook import webhook_signal
 
 PARALLEL_UPDATES = 0
@@ -26,10 +27,27 @@ async def async_setup_entry(
     config_entry: MonzoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Monzo transaction event entities."""
-    async_add_entities(
-        MonzoTransactionEvent(account)
-        for account in config_entry.runtime_data.coordinator.data.accounts.values()
+    """Set up transaction events and discover new accounts."""
+    coordinator = config_entry.runtime_data.coordinator
+    known_account_ids: set[str] = set()
+
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add transaction events for newly discovered accounts."""
+        current_account_ids = set(coordinator.data.accounts)
+        known_account_ids.intersection_update(current_account_ids)
+        new_account_ids = current_account_ids - known_account_ids
+        if not new_account_ids:
+            return
+        async_add_entities(
+            MonzoTransactionEvent(coordinator.data.accounts[account_id])
+            for account_id in sorted(new_account_ids)
+        )
+        known_account_ids.update(new_account_ids)
+
+    _async_add_new_entities()
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_new_entities)
     )
 
 
@@ -54,7 +72,7 @@ class MonzoTransactionEvent(EventEntity):
                 if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
                 else DEVICE_MODEL_ACCOUNT
             ),
-            name=account["name"],
+            name=get_account_name(account),
         )
 
     @override

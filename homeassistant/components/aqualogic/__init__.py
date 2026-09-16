@@ -8,7 +8,7 @@ import time
 from typing import override
 
 from aqualogic.core import AquaLogic
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -25,13 +25,16 @@ _LOGGER = logging.getLogger(__name__)
 
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
+        DOMAIN: probatio.Schema(
+            {
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PORT): cv.port,
+            }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type AquaLogicConfigEntry = ConfigEntry[AquaLogicProcessor]

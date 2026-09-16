@@ -123,6 +123,20 @@ from .helpers import signal
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
+# Telegram keeps this per bot, server side, and keeps whatever it was told last
+# when the setting is omitted, so a bot narrowed by an earlier consumer of the
+# token silently drops the rest. Ask for what `handle_update` turns into events:
+# a callback query, and the updates `Update.effective_message` is drawn from.
+ALLOWED_UPDATES = [
+    Update.CALLBACK_QUERY,
+    Update.MESSAGE,
+    Update.EDITED_MESSAGE,
+    Update.CHANNEL_POST,
+    Update.EDITED_CHANNEL_POST,
+    Update.BUSINESS_MESSAGE,
+    Update.EDITED_BUSINESS_MESSAGE,
+]
+
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 _RETRY_DELAY = 1  # 1 second delay between retries
