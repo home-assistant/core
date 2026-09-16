@@ -1336,17 +1336,19 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             state = AddonState(event[ATTR_STATE])
         except KeyError, ValueError:
             return
-        if addon_data.addon.state == state:
-            return
         updated_addon = replace(addon_data.addon, state=state)
 
-        # Keep the addon list used by legacy accessors and the stats
-        # coordinator in sync
+        # Keep the addon list used by legacy accessors and the stats coordinator
+        # in sync. Sync even for an unchanged coordinator state, as
+        # force_addon_info_data_refresh updates only the coordinator data.
         addons_list: list[InstalledAddon] | None = self.hass.data.get(DATA_ADDONS_LIST)
         if addons_list is not None:
             self.hass.data[DATA_ADDONS_LIST] = [
                 updated_addon if addon.slug == slug else addon for addon in addons_list
             ]
+
+        if addon_data.addon.state == state:
+            return
 
         # Apply directly instead of async_set_updated_data to not reset the
         # polling interval on every state change event
