@@ -91,7 +91,6 @@ async def test_monitoring_component(
         """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        # Use partial to pass the current values of the nonlocal variables to the payload_modifier
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
@@ -986,7 +985,7 @@ async def test_camera_initial_setup_and_images(
         "null_monitoring_low_power",
     ],
 )
-async def test_camera_unhealth_status_scenarios(
+async def test_camera_unhealthy_status_scenarios(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -1009,7 +1008,6 @@ async def test_camera_unhealth_status_scenarios(
         """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        # Use partial to pass the current values of the nonlocal variables to the payload_modifier
         callback = partial(
             payload_modifier,
             target_id=mock_state["module_id"],
