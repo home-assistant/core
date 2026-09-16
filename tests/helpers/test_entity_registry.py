@@ -88,12 +88,12 @@ async def test_get_all_entity_aliases(
     )
 
 
-async def test_get_entity_aliases_name_context(
+async def test_get_entity_aliases_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the computed name follows the entity's name context."""
+    """Test the computed name follows next_name_part."""
     mock_config = MockConfigEntry(domain="light")
     mock_config.add_to_hass(hass)
 
@@ -118,11 +118,11 @@ async def test_get_entity_aliases_name_context(
     assert er.async_get_entity_aliases(hass, entry) == ["Wall switch Light"]
 
     # An entity with an area of its own leaves the device out of its computed
-    # name; the friendly name does not follow the name context and is unaffected
+    # name; the friendly name does not follow next_name_part and is unaffected
     entry = entity_registry.async_update_entity(entry.entity_id, area_id="garage")
     assert er.async_get_entity_aliases(hass, entry) == ["Light"]
     assert (
-        er.async_get_full_entity_name(hass, entry, follow_context=False)
+        er.async_get_full_entity_name(hass, entry, use_next_name_part=False)
         == "Wall switch Light"
     )
 
@@ -1276,7 +1276,7 @@ def test_generate_entity_id_parent_device_part(
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.outlet_1_power"
 
 
-def test_generate_entity_id_name_context(
+def test_generate_entity_id_next_name_part(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
@@ -1338,7 +1338,7 @@ def test_generate_entity_id_name_context(
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
 
 
-def test_context_source(
+def test_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -1349,8 +1349,8 @@ def test_context_source(
 
     # An entity without a device or an area of its own has no context
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
-    assert entry.context_source is None
-    assert entry.as_partial_dict["context_source"] is None
+    assert entry.next_name_part is None
+    assert entry.as_partial_dict["next_name_part"] is None
 
     # An entity on a device continues to the device
     device_entry = device_registry.async_get_or_create(
@@ -1361,12 +1361,12 @@ def test_context_source(
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
     )
-    assert entry.context_source is dr.ContextSource.DEVICE
+    assert entry.next_name_part is dr.NextNamePart.DEVICE
 
     # An entity with an area of its own continues to the area
     entry = entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
-    assert entry.context_source is dr.ContextSource.AREA
-    assert entry.as_partial_dict["context_source"] is dr.ContextSource.AREA
+    assert entry.next_name_part is dr.NextNamePart.AREA
+    assert entry.as_partial_dict["next_name_part"] is dr.NextNamePart.AREA
 
 
 def test_regenerate_entity_id_after_settings_change(

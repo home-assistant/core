@@ -271,8 +271,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     ("area_on_device", "expected_name"),
     [
         pytest.param(True, "Test Device Demo Light", id="area_on_device"),
-        # The device is not part of the entity's name context, the entity
-        # has an area of its own
+        # The entity has an area of its own, so its name skips the device
         pytest.param(False, "Demo Light", id="area_on_entity"),
     ],
 )

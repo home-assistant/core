@@ -15,8 +15,8 @@ SAVE_DELAY = 10
 SAVE_DELAY_LONG = 180
 
 
-class ContextSource(StrEnum):
-    """Kind of node an entry's name context continues to."""
+class NextNamePart(StrEnum):
+    """Next name part of a registry entry."""
 
     AREA = "area"
     DEVICE = "device"

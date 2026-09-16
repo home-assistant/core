@@ -263,7 +263,6 @@
       'configuration_url': None,
       'connections': list([
       ]),
-      'context_source': None,
       'disabled_by': None,
       'entry_type': None,
       'hw_version': None,
@@ -280,6 +279,7 @@
       'model_id': None,
       'name': 'Test Player',
       'name_by_user': None,
+      'next_name_part': None,
       'parent_device_id': None,
       'serial_number': '**REDACTED**',
       'sw_version': '1.0.0',
@@ -292,7 +292,6 @@
           'categories': dict({
           }),
           'config_subentry_id': None,
-          'context_source': 'device',
           'disabled_by': None,
           'entity_category': None,
           'entity_id': 'media_player.test_player',
@@ -302,6 +301,7 @@
           'labels': list([
           ]),
           'name': None,
+          'next_name_part': 'device',
           'options': dict({
           }),
           'original_name': None,

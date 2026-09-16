@@ -1162,7 +1162,7 @@ class Entity(
                     self.hass,
                     entry,
                     original_name=original_name,
-                    follow_context=False,
+                    use_next_name_part=False,
                 )
             self._cached_friendly_name = (original_name, name)
 

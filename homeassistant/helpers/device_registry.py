@@ -59,7 +59,7 @@ from .json import (
     find_paths_unserializable_data,
     json_fragment,
 )
-from .registry import BaseRegistry, BaseRegistryItems, ContextSource, RegistryIndexType
+from .registry import BaseRegistry, BaseRegistryItems, NextNamePart, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -537,9 +537,9 @@ class DeviceEntry(BaseDeviceEntry):
         return {self.config_entry_id: {self.config_subentry_id}}
 
     @property
-    def context_source(self) -> ContextSource | None:
-        """Kind of node the device's name context continues to."""
-        return ContextSource.AREA if self.area_id is not None else None
+    def next_name_part(self) -> NextNamePart | None:
+        """Next name part of the device."""
+        return NextNamePart.AREA if self.area_id is not None else None
 
     @property
     @override
@@ -572,7 +572,6 @@ class DeviceEntry(BaseDeviceEntry):
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
             "connections": list(self.connections),
-            "context_source": self.context_source,
             "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
             "entry_type": self.entry_type,
@@ -586,6 +585,7 @@ class DeviceEntry(BaseDeviceEntry):
             "modified_at": self.modified_at.timestamp(),
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "parent_device_id": None,
             "primary_config_entry": self.primary_config_entry,
             "serial_number": self.serial_number,
@@ -692,11 +692,11 @@ class ChildDeviceEntry(BaseDeviceEntry):
             return set() if name == "connections" else None
 
     @property
-    def context_source(self) -> ContextSource:
-        """Kind of node the child device's name context continues to."""
+    def next_name_part(self) -> NextNamePart:
+        """Next name part of the child device."""
         if self.area_id is not None:
-            return ContextSource.AREA
-        return ContextSource.PARENT_DEVICE
+            return NextNamePart.AREA
+        return NextNamePart.PARENT_DEVICE
 
     @property
     @override
@@ -707,7 +707,6 @@ class ChildDeviceEntry(BaseDeviceEntry):
             "area_id": self.area_id,
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
-            "context_source": self.context_source,
             "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
             "id": self.id,
@@ -716,6 +715,7 @@ class ChildDeviceEntry(BaseDeviceEntry):
             "modified_at": self.modified_at.timestamp(),
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "parent_device_id": self.parent_device_id,
         }
 
