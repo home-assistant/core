@@ -22,6 +22,7 @@ from . import (
     COMMAND_TOPIC_SETPOINT,
     ENTITY_ID,
     PAYLOAD_OFF,
+    PAYLOAD_SETPOINT_16,
     PAYLOAD_SETPOINT_21,
     PAYLOAD_SETPOINT_23,
     PAYLOAD_SETPOINT_25,
@@ -32,14 +33,22 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import MqttMockHAClient
 
 
+@pytest.fixture
+def initial_setpoint() -> str:
+    """Return the setpoint payload the thermostat reports at setup."""
+    return PAYLOAD_SETPOINT_21
+
+
 @pytest.fixture(autouse=True)
 async def setup_entry(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     device: FakeDevice,
     mock_config_entry: MockConfigEntry,
+    initial_setpoint: str,
 ) -> None:
     """Set up integration with fake thermostat answering."""
+    device.setpoint = initial_setpoint
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -179,6 +188,33 @@ async def test_turn_off_and_on(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT
+
+
+@pytest.mark.parametrize("initial_setpoint", [PAYLOAD_OFF])
+@pytest.mark.usefixtures("device")
+async def test_turn_on_initially_off(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test turning on a thermostat that was off at setup uses the default setpoint."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+
+    mqtt_mock.async_publish.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_any_call(
+        COMMAND_TOPIC_SETPOINT,
+        PAYLOAD_SETPOINT_16,
+        0,
+        False,
+        message_expiry_interval=None,
+    )
 
 
 @pytest.mark.usefixtures("device")
