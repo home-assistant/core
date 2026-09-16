@@ -228,6 +228,8 @@ async def test_unload_survives_an_unreachable_device(
     device.close.assert_awaited_once_with()
 
 
+# The failed unload leaves the entry loaded with its refresh interval scheduled
+@pytest.mark.parametrize("expected_lingering_timers", [True])
 async def test_failed_unload_keeps_device_open(hass: HomeAssistant) -> None:
     """Test the device closes only after all platforms unload."""
     entry = MockConfigEntry(
