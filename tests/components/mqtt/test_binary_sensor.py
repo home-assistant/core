@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -1268,4 +1269,50 @@ async def test_value_template_fails(
     assert (
         "TypeError: unsupported operand type(s) for *:"
         " 'NoneType' and 'int' rendering template" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        }
+    ],
+)
+async def test_unsupported_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test `config` entity category is rejected for this read-only platform."""
+    assert await mqtt_mock_entry()
+    assert "value must be one of ['diagnostic']" in caplog.text
+    assert hass.states.get("binary_sensor.test") is None
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_unsupported_entity_category_discovery(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a discovered `config` entity category does not set up an entity."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id(binary_sensor.DOMAIN, DOMAIN, "veryunique")
+        is None
     )

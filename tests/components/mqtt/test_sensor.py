@@ -27,7 +27,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -2032,4 +2036,49 @@ async def test_value_incorrect_state_class_config(
     assert (
         "The option `last_reset_value_template` cannot be used"
         " together with state class" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        }
+    ],
+)
+async def test_unsupported_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test `config` entity category is rejected for this read-only platform."""
+    assert await mqtt_mock_entry()
+    assert "value must be one of ['diagnostic']" in caplog.text
+    assert hass.states.get("sensor.test") is None
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_unsupported_entity_category_discovery(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a discovered `config` entity category does not set up an entity."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique") is None
     )

@@ -424,6 +424,7 @@ from .util import (
     get_file_path,
     learn_more_url,
     valid_birth_will,
+    valid_entity_categories,
     valid_publish_topic,
     valid_subscribe_topic,
     valid_subscribe_topic_template,
@@ -755,7 +756,9 @@ SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
 )
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(
-        options=[EntityCategory.DIAGNOSTIC.value],
+        options=[
+            category.value for category in valid_entity_categories(Platform.SENSOR)
+        ],
         mode=SelectSelectorMode.DROPDOWN,
         translation_key=CONF_ENTITY_CATEGORY,
         sort=True,

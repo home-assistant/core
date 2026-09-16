@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
@@ -53,7 +54,7 @@ from .const import (
 )
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         probatio.Optional(CONF_STATE_CLASS): probatio.Any(STATE_CLASSES_SCHEMA, None),
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.SENSOR).schema)
 
 
 def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
