@@ -58,6 +58,14 @@ async def websocket_delete(
         )
         return
 
+    if user.is_owner:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "cannot_delete_owner", "Unable to delete the owner"
+            )
+        )
+        return
+
     await hass.auth.async_remove_user(user)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
