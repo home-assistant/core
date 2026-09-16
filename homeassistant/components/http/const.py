@@ -16,8 +16,8 @@ KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"
 KEY_SUPERVISOR_UNIX_SOCKET: Final = "ha_supervisor_unix_socket"
 
-# System user that requests over the Supervisor Unix socket are authenticated
-# as. Set by the hassio integration during its setup; the Unix socket is only
+# System user used to authenticate requests over the Supervisor Unix socket.
+# Set by the hassio integration during its setup; the Unix socket is only
 # started once it is available.
 DATA_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
