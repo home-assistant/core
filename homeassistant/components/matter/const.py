@@ -40,6 +40,13 @@ CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to cl
 # 10 seconds accounts for Thread network latency and retransmissions.
 LOCK_TIMED_REQUEST_TIMEOUT_MS = 10000
 
+ATTR_PRESET_HANDLE = "preset_handle"
+ATTR_EXPIRATION_IN_MINUTES = "expiration_in_minutes"
+ATTR_UNIQUE_ID = "unique_id"
+
+SERVICE_ADD_THERMOSTAT_SUGGESTION = "add_thermostat_suggestion"
+SERVICE_REMOVE_THERMOSTAT_SUGGESTION = "remove_thermostat_suggestion"
+
 # Credential field keys
 ATTR_CREDENTIAL_DATA = "credential_data"
 ATTR_CREDENTIAL_INDEX = "credential_index"

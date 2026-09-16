@@ -183,6 +183,9 @@
     }
   },
   "services": {
+    "add_thermostat_suggestion": {
+      "service": "mdi:thermostat-auto"
+    },
     "clear_lock_credential": {
       "service": "mdi:key-remove"
     },
@@ -197,6 +200,9 @@
     },
     "get_lock_users": {
       "service": "mdi:account-multiple"
+    },
+    "remove_thermostat_suggestion": {
+      "service": "mdi:thermostat"
     },
     "set_lock_credential": {
       "service": "mdi:key-plus"
