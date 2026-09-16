@@ -198,7 +198,7 @@ async def test_coordinator_resolves_extra_plane_sensors_on_setup(
     await hass.async_block_till_done()
 
     coordinator = sensor_extra_plane_config_entry.runtime_data
-    extra_plane = coordinator.forecast.planes[0]
+    extra_plane = coordinator.planes[0]
     assert extra_plane.declination == 20
     assert extra_plane.azimuth == 160 - 180
 

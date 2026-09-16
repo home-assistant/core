@@ -6,7 +6,7 @@ from typing import Any, override
 
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -44,77 +44,73 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     config_entry: ForecastSolarConfigEntry
     forecast: ForecastSolar
+    planes: list[Plane]
 
     def __init__(self, hass: HomeAssistant, entry: ForecastSolarConfigEntry) -> None:
         """Initialize the Forecast.Solar coordinator."""
-        self._errors: set[str] = set()
-
         # Our option flow may cause it to be an empty string,
         # this if statement is here to catch that.
         api_key = entry.options.get(CONF_API_KEY) or None
+
+        # Free account have a resolution of 1 hour, using that as the default
+        # update interval. Using a higher value for accounts with an API key.
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=30)
+            if api_key is not None
+            else timedelta(hours=1),
+        )
 
         if (
             inverter_size := entry.options.get(CONF_INVERTER_SIZE)
         ) is not None and inverter_size > 0:
             inverter_size = inverter_size / 1000
 
-        self._plane_subentries: list[ConfigSubentry] = entry.get_subentries_of_type(
-            SUBENTRY_TYPE_PLANE
-        )
-        main_plane, *extra_planes = self._plane_subentries
+        main_plane, *extra_planes = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
 
-        # Real angle values are resolved by _refresh_plane_angles() below;
-        # 0.0 here is just a placeholder to construct the dataclasses with.
-        planes: list[Plane] = [
-            Plane(
-                declination=0.0,
-                azimuth=0.0,
-                kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
-            )
-            for subentry in extra_planes
-        ]
-
+        # Errors collected here are reported by the first refresh, which re-resolves.
+        errors: list[str] = []
+        declination, azimuth = self._plane_angles(main_plane.data, errors)
         latitude, longitude = _resolve_location(hass, entry.data)
+
+        self.planes = []
+        for subentry in extra_planes:
+            plane_declination, plane_azimuth = self._plane_angles(subentry.data, errors)
+            self.planes.append(
+                Plane(
+                    declination=plane_declination,
+                    azimuth=plane_azimuth,
+                    kwp=(subentry.data[CONF_MODULES_POWER] / 1000),
+                )
+            )
 
         self.forecast = ForecastSolar(
             api_key=api_key,
             session=async_get_clientsession(hass),
             latitude=latitude,
             longitude=longitude,
-            declination=0.0,
-            azimuth=0.0,
+            declination=declination,
+            azimuth=azimuth,
             kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
             damping_morning=entry.options.get(CONF_DAMPING_MORNING, DEFAULT_DAMPING),
             damping_evening=entry.options.get(CONF_DAMPING_EVENING, DEFAULT_DAMPING),
             inverter=inverter_size,
-            planes=planes,
-        )
-        self._refresh_plane_angles(hass)
-
-        # Free account have a resolution of 1 hour, using that as the default
-        # update interval. Using a higher value for accounts with an API key.
-        update_interval = timedelta(hours=1)
-        if api_key is not None:
-            update_interval = timedelta(minutes=30)
-
-        super().__init__(
-            hass,
-            LOGGER,
-            config_entry=entry,
-            name=DOMAIN,
-            update_interval=update_interval,
+            planes=self.planes,
         )
 
     def _get_safe_sensor_value(
         self,
-        hass: HomeAssistant,
         entity_id: str,
         min_value: float,
         max_value: float,
         name: str,
+        errors: list[str],
     ) -> float:
         """Fetch and validate a numeric sensor value. Returns 0.0 on failure."""
-        sensor = hass.states.get(entity_id)
+        sensor = self.hass.states.get(entity_id)
         error: str | None = None
 
         if sensor is None:
@@ -138,80 +134,61 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
                         return value
 
         LOGGER.debug(error)
-        self._errors.add(error)
+        errors.append(error)
         return 0.0
 
     def _resolve_angle(
         self,
-        hass: HomeAssistant,
         data: Mapping[str, Any],
         value_key: str,
         sensor_key: str,
         min_value: float,
         max_value: float,
         name: str,
+        errors: list[str],
     ) -> float:
         """Resolve a plane angle from its fixed value or a sensor."""
         if entity_id := data.get(sensor_key):
             return self._get_safe_sensor_value(
-                hass, entity_id, min_value, max_value, name
+                entity_id, min_value, max_value, name, errors
             )
         return float(data[value_key])
 
-    def _refresh_plane_angles(self, hass: HomeAssistant) -> None:
-        """Re-resolve every plane's declination/azimuth from live sensors.
+    def _plane_angles(
+        self, data: Mapping[str, Any], errors: list[str]
+    ) -> tuple[float, float]:
+        """Resolve a plane's declination and azimuth from fixed values or sensors.
 
         UI stores azimuth 0-360 (0=North); the API expects -180..180 (0=South).
         """
-        self._errors = set()
-        main_plane, *extra_planes = self._plane_subentries
-
-        self.forecast.declination = self._resolve_angle(
-            hass,
-            main_plane.data,
+        declination = self._resolve_angle(
+            data,
             CONF_DECLINATION,
             CONF_DECLINATION_SENSOR,
             0,
             90,
             "Declination",
+            errors,
         )
-        self.forecast.azimuth = (
-            self._resolve_angle(
-                hass,
-                main_plane.data,
-                CONF_AZIMUTH,
-                CONF_AZIMUTH_SENSOR,
-                0,
-                360,
-                "Azimuth",
-            )
-            - 180
+        azimuth = self._resolve_angle(
+            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, 0, 360, "Azimuth", errors
+        )
+        return declination, azimuth - 180
+
+    def _refresh_plane_angles(self) -> list[str]:
+        """Re-resolve every plane's declination/azimuth, returning any errors."""
+        errors: list[str] = []
+        main_plane, *extra_planes = self.config_entry.get_subentries_of_type(
+            SUBENTRY_TYPE_PLANE
         )
 
-        for plane, subentry in zip(
-            self.forecast.planes or [], extra_planes, strict=True
-        ):
-            plane.declination = self._resolve_angle(
-                hass,
-                subentry.data,
-                CONF_DECLINATION,
-                CONF_DECLINATION_SENSOR,
-                0,
-                90,
-                "Declination",
-            )
-            plane.azimuth = (
-                self._resolve_angle(
-                    hass,
-                    subentry.data,
-                    CONF_AZIMUTH,
-                    CONF_AZIMUTH_SENSOR,
-                    0,
-                    360,
-                    "Azimuth",
-                )
-                - 180
-            )
+        self.forecast.declination, self.forecast.azimuth = self._plane_angles(
+            main_plane.data, errors
+        )
+        for plane, subentry in zip(self.planes, extra_planes, strict=True):
+            plane.declination, plane.azimuth = self._plane_angles(subentry.data, errors)
+
+        return errors
 
     @override
     async def _async_update_data(self) -> Estimate:
@@ -219,9 +196,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         self.forecast.latitude, self.forecast.longitude = _resolve_location(
             self.hass, self.config_entry.data
         )
-        self._refresh_plane_angles(self.hass)
-        if self._errors:
-            raise UpdateFailed(f"Errors: {' '.join(sorted(self._errors))}")
+        if errors := self._refresh_plane_angles():
+            raise UpdateFailed(f"Errors: {' '.join(sorted(errors))}")
         try:
             return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:
