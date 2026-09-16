@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt as dt_util
 
@@ -113,6 +114,27 @@ async def test_set_temperature_and_turn_off(
     published = [call.args[:2] for call in mqtt_mock.async_publish.mock_calls]
     assert (COMMAND_TOPIC_SETPOINT, PAYLOAD_OFF) in published
     assert (COMMAND_TOPIC_SETPOINT, PAYLOAD_SETPOINT_23) not in published
+
+
+@pytest.mark.usefixtures("device")
+async def test_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test an unsupported HVAC mode is rejected."""
+    mqtt_mock.async_publish.reset_mock()
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 23.0,
+                ATTR_HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "not_valid_hvac_mode"
+    assert not mqtt_mock.async_publish.mock_calls
 
 
 @pytest.mark.usefixtures("device")

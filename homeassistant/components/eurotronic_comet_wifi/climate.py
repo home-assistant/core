@@ -73,7 +73,10 @@ class CometWiFiClimateEntity(CometWiFiEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature, unless also asked to turn off."""
-        if kwargs.get(ATTR_HVAC_MODE) == HVACMode.OFF:
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_hvac_mode(HVACMode.OFF)
             return
         temperature = kwargs.get(ATTR_TEMPERATURE)
