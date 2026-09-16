@@ -40,8 +40,10 @@ def _resolve_location(
     hass: HomeAssistant, data: Mapping[str, Any]
 ) -> tuple[float, float]:
     """Resolve the forecast location from config, falling back to HA's home location."""
-    if CONF_LATITUDE in data:
-        return data[CONF_LATITUDE], data[CONF_LONGITUDE]
+    if (latitude := data.get(CONF_LATITUDE)) is not None and (
+        longitude := data.get(CONF_LONGITUDE)
+    ) is not None:
+        return latitude, longitude
     return hass.config.latitude, hass.config.longitude
 
 

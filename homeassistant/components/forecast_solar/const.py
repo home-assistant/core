@@ -6,7 +6,9 @@ DOMAIN = "forecast_solar"
 LOGGER = logging.getLogger(__package__)
 
 CONF_DECLINATION = "declination"
+CONF_DECLINATION_SENSOR = "declination_sensor"
 CONF_AZIMUTH = "azimuth"
+CONF_AZIMUTH_SENSOR = "azimuth_sensor"
 CONF_MODULES_POWER = "modules_power"
 CONF_DAMPING = "damping"
 CONF_DAMPING_MORNING = "damping_morning"
@@ -18,5 +20,3 @@ DEFAULT_MODULES_POWER = 10000
 DEFAULT_DAMPING = 0.0
 MAX_PLANES = 4
 SUBENTRY_TYPE_PLANE = "plane"
-CONF_AZIMUTH_SENSOR = "azimuth_sensor"
-CONF_DECLINATION_SENSOR = "declination_sensor"

@@ -374,8 +374,9 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="api_key_required")
 
         if user_input is not None:
+            plane_data = _plane_data(user_input)
             return self.async_create_entry(
-                title=_plane_title(self.hass, user_input), data=user_input
+                title=_plane_title(self.hass, plane_data), data=plane_data
             )
 
         return self.async_show_form(
@@ -393,9 +394,10 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             entry = self._get_entry()
-            title = _plane_title(self.hass, user_input)
+            plane_data = _plane_data(user_input)
+            title = _plane_title(self.hass, plane_data)
             if (
-                self._async_update(entry, subentry, data=user_input, title=title)
+                self._async_update(entry, subentry, data=plane_data, title=title)
                 and not entry.update_listeners
             ):
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
