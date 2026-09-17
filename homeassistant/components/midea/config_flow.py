@@ -17,12 +17,7 @@ from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -56,6 +51,7 @@ from .const import (
     LOGGER,
 )
 from .device_catalog import MIDEA_DEVICE_NAMES
+from .entity import MideaConfigEntry
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
@@ -141,7 +137,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: MideaConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return MideaOptionsFlow(config_entry)
 
@@ -918,11 +914,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 class MideaOptionsFlow(OptionsFlow):
     """Handle Midea options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: MideaConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry
 
-    @override
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

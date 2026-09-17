@@ -113,18 +113,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "power_analysis_method": "Power/Energy decode method"
-        },
-        "data_description": {
-          "power_analysis_method": "Select how your AC reports power and energy counters."
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "arofene_link": {
@@ -761,6 +749,18 @@
     },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "power_analysis_method": "Power/Energy decode method"
+        },
+        "data_description": {
+          "power_analysis_method": "Select how your AC reports power and energy counters."
+        }
+      }
     }
   },
   "selector": {
