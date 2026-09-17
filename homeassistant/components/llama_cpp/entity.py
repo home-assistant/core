@@ -104,7 +104,7 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(content.result.data),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -177,7 +177,7 @@ def _convert_content_to_param(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(content.result.data),
         )
     if not isinstance(content, conversation.AssistantContent) or not content.tool_calls:
         if isinstance(content, conversation.SystemContent):
