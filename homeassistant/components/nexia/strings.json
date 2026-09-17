@@ -51,6 +51,15 @@
       "requested_compressor_speed": {
         "name": "Requested compressor speed"
       },
+      "room_iq_battery": {
+        "name": "RoomIQ battery"
+      },
+      "room_iq_humidity": {
+        "name": "RoomIQ humidity"
+      },
+      "room_iq_temperature": {
+        "name": "RoomIQ temperature"
+      },
       "system_status": {
         "name": "System status"
       },

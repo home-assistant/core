@@ -5,19 +5,14 @@ import logging
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_NAME, Platform
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.const import Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .common import (
@@ -26,35 +21,19 @@ from .common import (
     ShoppingListConfigEntry,
     _get_shopping_data,
 )
-from .const import (
-    ATTR_REVERSE,
-    DEFAULT_REVERSE,
-    DOMAIN,
-    SERVICE_ADD_ITEM,
-    SERVICE_CLEAR_COMPLETED_ITEMS,
-    SERVICE_COMPLETE_ALL,
-    SERVICE_COMPLETE_ITEM,
-    SERVICE_INCOMPLETE_ALL,
-    SERVICE_INCOMPLETE_ITEM,
-    SERVICE_REMOVE_ITEM,
-    SERVICE_SORT,
-)
+from .const import DOMAIN
+from .services import async_setup_services
 
 PLATFORMS = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
-
-SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
-SERVICE_LIST_SCHEMA = vol.Schema({})
-SERVICE_SORT_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
-)
+CONFIG_SCHEMA = probatio.Schema({DOMAIN: {}}, extra=probatio.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
+    async_setup_services(hass)
 
     if DOMAIN not in config:
         return True
@@ -79,7 +58,7 @@ async def _async_setup(hass: HomeAssistant) -> None:
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Shopping List",
+            "integration_title": "Shopping list",
         },
     )
 
@@ -88,112 +67,8 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ShoppingListConfigEntry
 ) -> bool:
     """Set up shopping list from config flow."""
-
-    async def add_item_service(call: ServiceCall) -> None:
-        """Add an item with `name`."""
-        await config_entry.runtime_data.async_add(call.data[ATTR_NAME])
-
-    async def remove_item_service(call: ServiceCall) -> None:
-        """Remove the first item with matching `name`."""
-        data = config_entry.runtime_data
-        name = call.data[ATTR_NAME]
-
-        try:
-            item = [item for item in data.items if item["name"] == name][0]
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error("Removing of item failed: %s cannot be found", name)
-        else:
-            await data.async_remove(str(item["id"]))
-
-    async def complete_item_service(call: ServiceCall) -> None:
-        """Mark the first item with matching `name` as completed."""
-        name = call.data[ATTR_NAME]
-        try:
-            await config_entry.runtime_data.async_complete(name)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except NoMatchingShoppingListItem:
-            _LOGGER.error("Completing of item failed: %s cannot be found", name)
-
-    async def incomplete_item_service(call: ServiceCall) -> None:
-        """Mark the first item with matching `name` as incomplete."""
-        data = config_entry.runtime_data
-        name = call.data[ATTR_NAME]
-
-        try:
-            item = [item for item in data.items if item["name"] == name][0]
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error("Restoring of item failed: %s cannot be found", name)
-        else:
-            await data.async_update(str(item["id"]), {"name": name, "complete": False})
-
-    async def complete_all_service(call: ServiceCall) -> None:
-        """Mark all items in the list as complete."""
-        await data.async_update_list({"complete": True})
-
-    async def incomplete_all_service(call: ServiceCall) -> None:
-        """Mark all items in the list as incomplete."""
-        await data.async_update_list({"complete": False})
-
-    async def clear_completed_items_service(call: ServiceCall) -> None:
-        """Clear all completed items from the list."""
-        await data.async_clear_completed()
-
-    async def sort_list_service(call: ServiceCall) -> None:
-        """Sort all items by name."""
-        await data.async_sort(call.data[ATTR_REVERSE])
-
     data = config_entry.runtime_data = ShoppingData(hass)
     await data.async_load()
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_ITEM, remove_item_service, schema=SERVICE_ITEM_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_INCOMPLETE_ITEM,
-        incomplete_item_service,
-        schema=SERVICE_ITEM_SCHEMA,
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_COMPLETE_ALL,
-        complete_all_service,
-        schema=SERVICE_LIST_SCHEMA,
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_INCOMPLETE_ALL,
-        incomplete_all_service,
-        schema=SERVICE_LIST_SCHEMA,
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CLEAR_COMPLETED_ITEMS,
-        clear_completed_items_service,
-        schema=SERVICE_LIST_SCHEMA,
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SORT,
-        sort_list_service,
-        schema=SERVICE_SORT_SCHEMA,
-    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
@@ -240,7 +115,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             return self.json(item)
         except NoMatchingShoppingListItem:
             return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
 
 
@@ -250,7 +125,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = "/api/shopping_list/item"
     name = "api:shopping_list:item"
 
-    @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
+    @RequestDataValidator(probatio.Schema({probatio.Required("name"): str}))
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Create a new shopping list item."""
         shopping_data = _get_shopping_data(request.app[http.KEY_HASS])
@@ -272,7 +147,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items"})
+@websocket_api.websocket_command({probatio.Required("type"): "shopping_list/items"})
 def websocket_handle_items(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -285,7 +160,10 @@ def websocket_handle_items(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/add",
+        probatio.Required("name"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_add(
@@ -301,7 +179,10 @@ async def websocket_handle_add(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/remove", vol.Required("item_id"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/remove",
+        probatio.Required("item_id"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_remove(
@@ -329,10 +210,10 @@ async def websocket_handle_remove(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/update",
-        vol.Required("item_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("complete"): bool,
+        probatio.Required("type"): "shopping_list/items/update",
+        probatio.Required("item_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("complete"): bool,
     }
 )
 @websocket_api.async_response
@@ -360,7 +241,9 @@ async def websocket_handle_update(
     connection.send_message(websocket_api.result_message(msg_id, item))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items/clear"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "shopping_list/items/clear"}
+)
 @websocket_api.async_response
 async def websocket_handle_clear(
     hass: HomeAssistant,
@@ -375,8 +258,8 @@ async def websocket_handle_clear(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/reorder",
-        vol.Required("item_ids"): [str],
+        probatio.Required("type"): "shopping_list/items/reorder",
+        probatio.Required("item_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -397,7 +280,7 @@ async def websocket_handle_reorder(
             "One or more item id(s) not found.",
         )
         return
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 

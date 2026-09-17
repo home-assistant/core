@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import jinja2
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -18,14 +18,12 @@ from homeassistant.components.sensor.helpers import (  # pylint: disable=home-as
     async_parse_date_datetime,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -48,29 +46,29 @@ CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
 CONF_TO_ATTRIBUTE = {
-    CONF_ICON: ATTR_ICON,
-    CONF_NAME: ATTR_FRIENDLY_NAME,
-    CONF_PICTURE: ATTR_ENTITY_PICTURE,
+    CONF_ICON: EntityStateAttribute.ICON,
+    CONF_NAME: EntityStateAttribute.FRIENDLY_NAME,
+    CONF_PICTURE: EntityStateAttribute.ENTITY_PICTURE,
 }
 
-TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_NAME): cv.template,
+        probatio.Optional(CONF_PICTURE): cv.template,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
-def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+def make_template_entity_base_schema(default_name: str) -> probatio.Schema:
     """Return a schema with default name."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ICON): cv.template,
-            vol.Optional(CONF_NAME, default=default_name): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_ICON): cv.template,
+            probatio.Optional(CONF_NAME, default=default_name): cv.template,
+            probatio.Optional(CONF_PICTURE): cv.template,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
 
@@ -96,11 +94,11 @@ def log_triggered_template_error(
     )
 
 
-TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
+TEMPLATE_SENSOR_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 

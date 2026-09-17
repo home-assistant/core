@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -79,10 +80,16 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         if (state := await self.async_get_last_state()) is None:
             return
 
-        if (brightness := state.attributes.get(ATTR_BRIGHTNESS)) is not None:
+        if (
+            brightness := state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+        ) is not None:
             self._attr_brightness = brightness
 
-        if (color_temp := state.attributes.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+        if (
+            color_temp := state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            )
+        ) is not None:
             self._attr_color_temp_kelvin = color_temp
 
     @staticmethod

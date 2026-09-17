@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.value import SetConfigParameterResult
 
@@ -302,6 +302,7 @@ async def test_set_config_parameter(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -330,7 +331,7 @@ async def test_set_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     # Test that we can't include a bitmask value if parameter is a string
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -379,7 +380,7 @@ async def test_set_config_parameter(
         )
 
     # Test that we can't include bitmask and value size and value format
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -395,7 +396,7 @@ async def test_set_config_parameter(
         )
 
     # Test that value size must be 1, 2, or 4 (not 3)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -477,7 +478,7 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -608,8 +609,8 @@ async def test_bulk_set_config_parameters(
     integration,
 ) -> None:
     """Test the bulk_set_partial_config_parameters service."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert device
 
@@ -800,6 +801,7 @@ async def test_bulk_set_config_parameters(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -943,6 +945,7 @@ async def test_refresh_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     client.async_send_command.return_value = {"result": 2}
     await hass.services.async_call(
@@ -960,7 +963,7 @@ async def test_refresh_value(
     client.async_send_command.reset_mock()
 
     # Test polling against an invalid entity raises MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_VALUE,
@@ -978,8 +981,8 @@ async def test_set_value(
     integration,
 ) -> None:
     """Test set_value service."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device
 
@@ -1075,6 +1078,7 @@ async def test_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1136,7 +1140,7 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test missing device and entities keys
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
@@ -1334,12 +1338,12 @@ async def test_multicast_set_value(
     client.async_send_command.reset_mock()
 
     # Test using area ID
-    device_eurotronic = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
+    device_eurotronic = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_eurotronic_spirit_z), integration.entry_id
     )
     assert device_eurotronic
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
     area = area_registry.async_get_or_create("test")
@@ -1385,6 +1389,7 @@ async def test_multicast_set_value(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1462,7 +1467,7 @@ async def test_multicast_set_value(
     client.async_send_command_no_wait.reset_mock()
 
     # Test no device, entity, or broadcast flag raises error
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1527,7 +1532,7 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with (
-        pytest.raises(vol.MultipleInvalid),
+        pytest.raises(probatio.MultipleInvalid),
         patch(
             "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
             side_effect=(climate_danfoss_lc_13, diff_network_node),
@@ -1553,7 +1558,7 @@ async def test_multicast_set_value(
     # without devices or entities
     new_entry = MockConfigEntry(domain=DOMAIN)
     new_entry.add_to_hass(hass)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1659,16 +1664,15 @@ async def test_ping(
     integration,
 ) -> None:
     """Test ping service."""
-    device_radio_thermostat = device_registry.async_get_device(
-        identifiers={
-            get_device_id(
-                client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
-            )
-        }
+    device_radio_thermostat = device_registry.async_get_device_by_identifier(
+        get_device_id(
+            client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
+        ),
+        integration.entry_id,
     )
     assert device_radio_thermostat
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
 
@@ -1761,6 +1765,7 @@ async def test_ping(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1785,7 +1790,7 @@ async def test_ping(
     client.async_send_command.reset_mock()
 
     # Test no device or entity raises error
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PING,
@@ -1816,16 +1821,15 @@ async def test_invoke_cc_api(
     integration,
 ) -> None:
     """Test invoke_cc_api service."""
-    device_radio_thermostat = device_registry.async_get_device(
-        identifiers={
-            get_device_id(
-                client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
-            )
-        }
+    device_radio_thermostat = device_registry.async_get_device_by_identifier(
+        get_device_id(
+            client.driver, climate_radio_thermostat_ct100_plus_different_endpoints
+        ),
+        integration.entry_id,
     )
     assert device_radio_thermostat
-    device_danfoss = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
+    device_danfoss = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_danfoss_lc_13), integration.entry_id
     )
     assert device_danfoss
 
@@ -1983,12 +1987,12 @@ async def test_refresh_notifications(
     integration,
 ) -> None:
     """Test refresh_notifications service."""
-    zen_31_device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, zen_31)}
+    zen_31_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, zen_31), integration.entry_id
     )
     assert zen_31_device
-    multisensor_6_device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    multisensor_6_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert multisensor_6_device
 

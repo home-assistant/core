@@ -6,8 +6,8 @@ import logging
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -1701,7 +1701,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
         (
             {},
             "could not be validated",
-            "required key not provided @ data['actions']",
+            "required key not provided at 'actions'",
             "validation_failed_schema",
         ),
         (
@@ -1711,8 +1711,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation', "
-            "'triggers': [{'platform': 'automation'}], 'actions': []",
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_triggers",
         ),
         (
@@ -1941,7 +1940,7 @@ async def test_automation_with_error_in_script_2(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while executing automation automation.hello: not valid",
             False,
         ),
@@ -1951,7 +1950,7 @@ async def test_automation_with_error_in_script_2(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_action_script(
     hass: HomeAssistant,
@@ -1985,7 +1984,7 @@ async def test_automation_with_error_in_action_script(
 
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -2010,7 +2009,7 @@ async def test_automation_with_error_in_action_script(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while checking conditions of automation automation.hello: not valid",
             False,
         ),
@@ -2020,7 +2019,7 @@ async def test_automation_with_error_in_action_script(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_condition(
     hass: HomeAssistant,
@@ -2060,7 +2059,7 @@ async def test_automation_with_error_in_condition(
     # The action must not run when the condition check raises.
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -2481,6 +2480,7 @@ async def test_extraction_functions(
         "sensor.trigger_state",
         "sensor.trigger_numeric_state",
         "sensor.trigger_event",
+        "light.bla",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -3302,10 +3302,7 @@ async def test_blueprint_automation_override(
                 "a_number": 5,
             },
             "Blueprint 'Call service based on event' generated invalid automation",
-            (
-                "value should be a string for dictionary value @"
-                " data['actions'][0]['action']"
-            ),
+            "value should be a string at 'actions[0].action'",
         ),
     ],
 )

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, override
 # _frozen_importlib._DeadlockError: deadlock detected by
 # _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
-import voluptuous as vol
+import probatio
 import yarl
 
 from . import (
@@ -47,7 +47,7 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     group as group_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
-    http,  # not named pre_import since it has requirements
+    http as http_import,  # noqa: F401 - not named pre_import since it has requirements
     image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
@@ -264,6 +264,7 @@ DEFAULT_INTEGRATIONS = {
     "occupancy",
     "power",
     "temperature",
+    "vibration",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
@@ -414,12 +415,7 @@ async def async_setup_hass(
         _LOGGER.info("Starting in recovery mode")
         hass.config.recovery_mode = True
 
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict(
-            {"recovery_mode": {}, "http": http_conf},
-            hass,
-        )
+        await async_from_config_dict({"recovery_mode": {}}, hass)
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -559,7 +555,7 @@ async def async_from_config_dict(
 
     try:
         await async_process_ha_core_config(hass, core_config)
-    except vol.Invalid as config_err:
+    except probatio.Invalid as config_err:
         conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
         return None
@@ -696,7 +692,7 @@ def _log_file_disabled_reason() -> str | None:
     try:
         if cv.boolean(disable_log_file):
             return LOG_FILE_DISABLED_REASON_ENVIRONMENT
-    except vol.Invalid:
+    except probatio.Invalid:
         _LOGGER.warning(
             "Ignoring invalid %s value: %s. Expected a boolean value: "
             "1/0, true/false, yes/no, on/off, or enable/disable",

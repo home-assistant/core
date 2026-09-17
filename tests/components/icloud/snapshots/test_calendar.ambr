@@ -1,0 +1,126 @@
+# serializer version: 1
+# name: test_all_day_event_end_is_exclusive
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-02',
+          'start': '2024-05-01',
+          'summary': 'Holiday',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_datetime_dates_are_accepted
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-01T11:00:00+02:00',
+          'start': '2024-05-01T10:00:00+02:00',
+          'summary': 'Naive',
+        }),
+        dict({
+          'end': '2024-05-01T11:00:00+00:00',
+          'start': '2024-05-01T10:00:00+00:00',
+          'summary': 'Aware',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_entities[calendar.test_icloud_account_personal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_icloud_account_personal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Personal',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Personal',
+    'platform': 'icloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'test_account_id_cal1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[calendar.test_icloud_account_personal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test iCloud Account Personal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_icloud_account_personal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_event_uses_its_own_timezone
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-01T11:00:00+02:00',
+          'start': '2024-05-01T10:00:00+02:00',
+          'summary': 'Meeting',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_events_filters_to_the_requested_window
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-01T20:00:00-07:00',
+          'start': '2024-05-01T07:00:00-07:00',
+          'summary': 'Spanning the window',
+        }),
+        dict({
+          'end': '2024-05-01T10:30:00-07:00',
+          'start': '2024-05-01T09:30:00-07:00',
+          'summary': 'Overlapping the start',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_unknown_event_timezone_falls_back
+  dict({
+    'calendar.test_icloud_account_personal': dict({
+      'events': list([
+        dict({
+          'end': '2024-05-01T11:00:00-07:00',
+          'start': '2024-05-01T10:00:00-07:00',
+          'summary': 'Meeting',
+        }),
+      ]),
+    }),
+  })
+# ---

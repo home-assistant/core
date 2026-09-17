@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
+import probatio
 from pyemby import EmbyServer
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
-    DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -48,10 +47,10 @@ SUPPORT_EMBY = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }
 )
 
@@ -179,7 +178,7 @@ class EmbyDevice(MediaPlayerEntity):
     @override
     def name(self):
         """Return the name of the device."""
-        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
+        return f"Emby {self.device.name}"
 
     @property
     @override

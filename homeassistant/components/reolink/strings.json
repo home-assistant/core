@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
@@ -203,6 +201,9 @@
       "guard_set": {
         "name": "Guard set current position"
       },
+      "pre_siren": {
+        "name": "Pre-siren"
+      },
       "ptz_auto": {
         "name": "PTZ continuous rotation"
       },
@@ -241,6 +242,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
@@ -478,6 +482,15 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "f50": "50 Hz",
+          "f60": "60 Hz",
+          "off": "[%key:common::state::off%]",
+          "other": "Other"
+        }
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -543,7 +556,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
@@ -723,6 +737,28 @@
           "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "work_mode_battery": {
+        "name": "Work mode battery",
+        "state": {
+          "always_on_custom": "Always on custom",
+          "continuous_recording": "Always on continuous recording",
+          "custom": "Custom",
+          "detection_priority": "Detection priority",
+          "extended_recording": "AI extended recording",
+          "optimal_surveillance": "Optimal surveillance",
+          "power_saving": "Power saving",
+          "pre_recording": "Always on pre-recording",
+          "smart": "Smart power"
+        }
+      },
+      "work_mode_powered": {
+        "name": "Work mode powered",
+        "state": {
+          "alarm_based": "Alarm recording",
+          "continuous": "Continuous recording",
+          "custom": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]"
+        }
       }
     },
     "sensor": {
@@ -846,8 +882,14 @@
       "pre_record": {
         "name": "Pre-recording"
       },
+      "pre_siren_on_event": {
+        "name": "Pre-siren on event"
+      },
       "privacy_mask": {
         "name": "Privacy mask"
+      },
+      "privacy_mask_lens": {
+        "name": "Privacy mask lens {channel}"
       },
       "privacy_mode": {
         "name": "Privacy mode"
@@ -869,6 +911,17 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
+      }
+    },
+    "time": {
+      "floodlight_schedule_end": {
+        "name": "Floodlight schedule end"
+      },
+      "floodlight_schedule_start": {
+        "name": "Floodlight schedule start"
       }
     }
   },
@@ -905,9 +958,6 @@
     },
     "not_supported": {
       "message": "Function not supported by this device: {err}"
-    },
-    "service_entry_ex": {
-      "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"

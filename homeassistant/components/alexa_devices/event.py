@@ -12,7 +12,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
 from .utils import async_remove_entity_from_virtual_group
@@ -78,7 +78,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 self.device.serial_number
             )
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "No vocal record found for device %s [%s]",
                 self.device.account_name,
                 self.device.serial_number,

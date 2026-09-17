@@ -6,19 +6,22 @@ Make sure expected clients are available for platforms.
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.models.api import ApiItem
+from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
+from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
 
@@ -34,30 +37,43 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self.api_updaters = (
-            hub.api.clients.update,
+        self._startup_only_api_updaters = (
             hub.api.clients_all.update,
-            hub.api.devices.update,
-            hub.api.dpi_apps.update,
-            hub.api.dpi_groups.update,
-            hub.api.port_forwarding.update,
             hub.api.sites.update,
             hub.api.system_information.update,
-            hub.api.firewall_policies.update,
-            hub.api.wlans.update,
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
+            id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
+            id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
+            id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
+            id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
+            id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
+                hub, hub.api.firewall_policies
+            ),
+            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
+                hub, hub.api.object_oriented_network_configs
+            ),
+            id(hub.api.port_forwarding): UnifiDataUpdateCoordinator(
+                hub, hub.api.port_forwarding
+            ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
                 hub, hub.api.traffic_rules
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
                 hub, hub.api.traffic_routes
             ),
+            id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }
-        for coordinator in self._polling_coordinators.values():
-            coordinator.async_add_listener(lambda: None)
+        self._data_coordinator_aliases: dict[int, int] = {
+            id(hub.api.outlets): id(hub.api.devices),
+            id(hub.api.ports): id(hub.api.devices),
+        }
+        for coordinator in self._data_coordinators.values():
+            self.hub.config.entry.async_on_unload(
+                coordinator.async_add_listener(lambda: None)
+            )
 
         self.platforms: list[
             tuple[
@@ -74,11 +90,11 @@ class UnifiEntityLoader:
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
         await asyncio.gather(
-            self._refresh_api_data(),
+            self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
                 [
                     coordinator.async_refresh
-                    for coordinator in self._polling_coordinators.values()
+                    for coordinator in self._data_coordinators.values()
                 ]
             ),
         )
@@ -96,29 +112,76 @@ class UnifiEntityLoader:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
 
-    async def _refresh_api_data(self) -> None:
-        """Refresh API data from network application."""
-        await self._refresh_data(self.api_updaters)
-
     @callback
     def _restore_inactive_clients(self) -> None:
-        """Restore inactive clients.
+        """Restore recently seen inactive clients and prune stale ones.
 
-        Provide inactive clients to device tracker and switch platform.
+        The UniFi controller keeps a record of every client it has ever seen.
+        Only clients seen within the retention window, or explicitly selected
+        or blocked, are restored. Trackers falling outside that window are
+        removed together with their device so the registry does not grow
+        unbounded.
         """
         config = self.hub.config
-        entity_registry = er.async_get(self.hub.hass)
-        macs: list[str] = [
-            entry.unique_id.split("-", 1)[1]
-            for entry in er.async_entries_for_config_entry(
-                entity_registry, config.entry.entry_id
-            )
-            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id
-        ]
         api = self.hub.api
-        for mac in config.option_supported_clients + config.option_block_clients + macs:
+        entity_registry = er.async_get(self.hub.hass)
+        device_registry = dr.async_get(self.hub.hass)
+
+        now = dt_util.utcnow()
+        always_restore = set(config.option_supported_clients)
+        always_restore.update(config.option_block_clients)
+
+        pruned = 0
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config.entry.entry_id
+        ):
+            if entry.domain != Platform.DEVICE_TRACKER or "-" not in entry.unique_id:
+                continue
+
+            mac = entry.unique_id.split("-", 1)[1]
+            if mac in api.clients or mac in always_restore:
+                continue
+
+            # Absent means the controller no longer reports it or the
+            # clients_all fetch failed this cycle. Never prune on that, a failed
+            # fetch would wipe every tracker and its device.
+            if (client := api.clients_all.get(mac)) is None:
+                continue
+
+            if not self._client_is_stale(client, now):
+                api.clients.process_raw([dict(client.raw)])
+                continue
+
+            self._remove_client(entity_registry, device_registry, entry.entity_id, mac)
+            pruned += 1
+
+        if pruned:
+            LOGGER.debug("Pruned %s stale UniFi client device(s)", pruned)
+
+        for mac in always_restore:
             if mac not in api.clients and mac in api.clients_all:
                 api.clients.process_raw([dict(api.clients_all[mac].raw)])
+
+    @callback
+    def _client_is_stale(self, client: Client, now: datetime) -> bool:
+        """Return if a client has not been seen within the retention window."""
+        last_seen = dt_util.utc_from_timestamp(client.last_seen or 0)
+        return now - last_seen > CLIENT_RESTORE_MAX_AGE
+
+    @callback
+    def _remove_client(
+        self,
+        entity_registry: er.EntityRegistry,
+        device_registry: dr.DeviceRegistry,
+        entity_id: str,
+        mac: str,
+    ) -> None:
+        """Remove a stale client's tracker entity and its device."""
+        entity_registry.async_remove(entity_id)
+        if device := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
+        ):
+            device_registry.async_remove_device(device.id)
 
     @callback
     def register_platform(
@@ -158,11 +221,13 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator(
-        self, handler: APIHandler
-    ) -> UnifiDataUpdateCoordinator | None:
-        """Return the polling coordinator for a handler, if available."""
-        return self._polling_coordinators.get(id(handler))
+    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
+        self, handler: HandlerT
+    ) -> UnifiDataUpdateCoordinator[HandlerT]:
+        """Return the data coordinator for a handler."""
+        handler_id = id(handler)
+        resolved_handler_id = self._data_coordinator_aliases.get(handler_id, handler_id)
+        return self._data_coordinators[resolved_handler_id]
 
     @callback
     def _load_entities(

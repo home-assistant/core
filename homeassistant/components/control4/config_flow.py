@@ -4,10 +4,10 @@ import logging
 from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
+import probatio
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials, NotFound, Unauthorized
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -34,11 +34,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -64,13 +64,13 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         account_session = aiohttp_client.async_get_clientsession(self.hass)
         account = C4Account(username, password, account_session)
         try:
-            await account.getAccountBearerToken()
+            await account.get_account_bearer_token()
 
-            account_controllers = await account.getAccountControllers()
+            account_controllers = await account.get_account_controllers()
             controller_unique_id = account_controllers["controllerCommonName"]
 
             director_bearer_token = (
-                await account.getDirectorBearerToken(controller_unique_id)
+                await account.get_director_bearer_token(controller_unique_id)
             )["token"]
         except BadCredentials, Unauthorized:
             errors["base"] = "invalid_auth"
@@ -91,7 +91,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         director = C4Director(host, director_bearer_token, director_session)
         try:
-            await director.getAllItemInfo()
+            await director.get_all_item_info()
         except Unauthorized:
             errors["base"] = "director_auth_failed"
             return errors, data, description_placeholders
@@ -167,16 +167,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
                 # pylint: disable-next=home-assistant-config-flow-polling-field
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
+                ): probatio.All(cv.positive_int, probatio.Clamp(min=MIN_SCAN_INTERVAL)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymonoprice import get_monoprice
 from serialx import SerialException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -40,9 +41,11 @@ SOURCES = [
     CONF_SOURCE_6,
 ]
 
-OPTIONS_FOR_DATA: VolDictType = {vol.Optional(source): str for source in SOURCES}
+OPTIONS_FOR_DATA: VolDictType = {probatio.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str, **OPTIONS_FOR_DATA})
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PORT): SerialPortSelector(), **OPTIONS_FOR_DATA}
+)
 
 
 @callback
@@ -114,11 +117,11 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 @callback
 def _key_for_source(index, source, previous_sources):
     if str(index) in previous_sources:
-        key = vol.Optional(
+        key = probatio.Optional(
             source, description={"suggested_value": previous_sources[str(index)]}
         )
     else:
-        key = vol.Optional(source)
+        key = probatio.Optional(source)
 
     return key
 
@@ -153,7 +156,7 @@ class MonopriceOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(options),
+            data_schema=probatio.Schema(options),
         )
 
 

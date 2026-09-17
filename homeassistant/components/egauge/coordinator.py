@@ -43,6 +43,7 @@ class EgaugeData:
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     """Class to manage fetching eGauge data."""
 
+    config_entry: EgaugeConfigEntry
     serial_number: str
     hostname: str
 
@@ -97,7 +98,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             EgaugeException,
         ) as err:
             # will raise ConfigEntryAuthFailed once reauth is implemented
-            raise ConfigEntryError("Error fetching device info: {err}") from err
+            raise ConfigEntryError(f"Error fetching device info: {err}") from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 

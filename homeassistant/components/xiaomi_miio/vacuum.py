@@ -92,7 +92,6 @@ class MiroboVacuum(
         | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.START
     )
@@ -113,12 +112,6 @@ class MiroboVacuum(
             return VacuumActivity.ERROR
 
         return super().activity
-
-    @property
-    @override
-    def battery_level(self) -> int:
-        """Return the battery level of the vacuum cleaner."""
-        return self.coordinator.data.status.battery
 
     @property
     @override

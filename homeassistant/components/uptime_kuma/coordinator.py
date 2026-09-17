@@ -128,8 +128,9 @@ def async_migrate_entities_unique_ids(
     # migrate device identifiers and update version
     device_reg = dr.async_get(hass)
     for monitor in metrics.values():
-        if device := device_reg.async_get_device(
-            {(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor.monitor_name!s}")}
+        if device := device_reg.async_get_device_by_identifier(
+            (DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor.monitor_name!s}"),
+            coordinator.config_entry.entry_id,
         ):
             new_identifier = {
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor.monitor_id!s}")
@@ -139,8 +140,9 @@ def async_migrate_entities_unique_ids(
                 new_identifiers=new_identifier,
                 sw_version=coordinator.api.version.version,
             )
-    if device := device_reg.async_get_device(
-        {(DOMAIN, f"{coordinator.config_entry.entry_id}_update")}
+    if device := device_reg.async_get_device_by_identifier(
+        (DOMAIN, f"{coordinator.config_entry.entry_id}_update"),
+        coordinator.config_entry.entry_id,
     ):
         device_reg.async_update_device(
             device.id,

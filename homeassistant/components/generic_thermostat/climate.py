@@ -9,15 +9,15 @@ import math
 import time
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -51,6 +51,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -95,35 +96,39 @@ CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
-    vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
+    probatio.Optional(v): probatio.Coerce(float) for v in CONF_PRESETS.values()
 }
 
-PLATFORM_SCHEMA_COMMON = vol.Schema(
+PLATFORM_SCHEMA_COMMON = probatio.Schema(
     {
-        vol.Required(CONF_HEATER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_AC_MODE): cv.boolean,
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MIN_DUR): cv.positive_time_period,
-        vol.Optional(CONF_MAX_DUR): cv.positive_time_period,
-        vol.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
-        vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
+        probatio.Required(CONF_HEATER): cv.entity_id,
+        probatio.Required(CONF_SENSOR): cv.entity_id,
+        probatio.Optional(CONF_AC_MODE): cv.boolean,
+        probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_MAX_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
+        probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(CONF_TARGET_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
+        probatio.Optional(CONF_INITIAL_HVAC_MODE): probatio.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
-        vol.Optional(CONF_PRECISION): vol.All(
-            vol.Coerce(float),
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+        probatio.Optional(CONF_PRECISION): probatio.All(
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_TEMP_STEP): vol.All(
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+        probatio.Optional(CONF_TEMP_STEP): probatio.All(
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,
     }
 )
@@ -143,6 +148,7 @@ async def async_setup_entry(
         PLATFORM_SCHEMA_COMMON(dict(config_entry.options)),
         config_entry.entry_id,
         async_add_entities,
+        device=async_entity_id_to_device(hass, config_entry.options[CONF_HEATER]),
     )
 
 
@@ -165,6 +171,7 @@ async def _async_setup_config(
     config: Mapping[str, Any],
     unique_id: str | None,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    device: AnyDeviceEntry | None = None,
 ) -> None:
     """Set up the generic thermostat platform."""
 
@@ -192,7 +199,6 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericThermostat(
-                hass,
                 name=name,
                 heater_entity_id=heater_entity_id,
                 sensor_entity_id=sensor_entity_id,
@@ -212,6 +218,7 @@ async def _async_setup_config(
                 target_temperature_step=target_temperature_step,
                 unit=unit,
                 unique_id=unique_id,
+                device=device,
             )
         ]
     )
@@ -224,7 +231,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         heater_entity_id: str,
@@ -245,15 +251,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         target_temperature_step: float | None,
         unit: UnitOfTemperature,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the thermostat."""
         self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            heater_entity_id,
-        )
+        self.device_entry = device
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration or timedelta()
         self.max_cycle_duration = max_cycle_duration
@@ -351,7 +355,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             # If we have no initial temperature, restore
             if self._target_temp is None:
                 # If we have a previously saved temperature
-                if old_state.attributes.get(ATTR_TEMPERATURE) is None:
+                if (
+                    old_state.attributes.get(
+                        ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                    )
+                    is None
+                ):
                     if self.ac_mode:
                         self._target_temp = self.max_temp
                     else:
@@ -361,12 +370,19 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._target_temp,
                     )
                 else:
-                    self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
+                    self._target_temp = float(
+                        old_state.attributes[
+                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                        ]
+                    )
             if (
                 self.preset_modes
-                and old_state.attributes.get(ATTR_PRESET_MODE) in self.preset_modes
+                and old_state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE)
+                in self.preset_modes
             ):
-                self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
+                self._attr_preset_mode = old_state.attributes.get(
+                    ClimateEntityStateAttribute.PRESET_MODE
+                )
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = HVACMode(old_state.state)
 

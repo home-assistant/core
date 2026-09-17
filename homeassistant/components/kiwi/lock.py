@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from kiwiki import KiwiClient, KiwiException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
@@ -13,10 +13,9 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import (
     ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -33,7 +32,10 @@ ATTR_CAN_INVITE = "can_invite_others"
 UNLOCK_MAINTAIN_TIME = 5
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+    }
 )
 
 
@@ -68,12 +70,8 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
 
         address = kiwi_lock.get("address")
-        address.update(
-            {
-                ATTR_LATITUDE: address.pop("lat", None),
-                ATTR_LONGITUDE: address.pop("lng", None),
-            }
-        )
+        latitude = address.pop("lat", None)
+        longitude = address.pop("lng", None)
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
@@ -81,6 +79,8 @@ class KiwiLock(LockEntity):
             ATTR_PERMISSION: kiwi_lock.get("highest_permission"),
             ATTR_CAN_INVITE: kiwi_lock.get("can_invite"),
             **address,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
         }
 
     @property

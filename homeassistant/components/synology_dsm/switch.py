@@ -8,6 +8,7 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -128,5 +129,9 @@ class SynoDSMSurveillanceHomeModeToggle(
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,
-            via_device=(DOMAIN, self._api.information.serial),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._api.information.serial),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )

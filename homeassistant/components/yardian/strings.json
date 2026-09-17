@@ -22,17 +22,22 @@
   },
   "entity": {
     "binary_sensor": {
-      "freeze_prevent": {
-        "name": "Freeze prevent"
+      "freeze_prevent_enabled": {
+        "name": "Freeze prevent enabled"
       },
       "standby": {
         "name": "Standby"
       },
       "watering_running": {
-        "name": "Watering running"
+        "name": "Water running"
       },
       "zone_enabled": {
         "name": "Enabled"
+      }
+    },
+    "button": {
+      "stop_irrigation": {
+        "name": "Stop irrigation"
       }
     },
     "sensor": {
@@ -53,14 +58,14 @@
   },
   "services": {
     "start_irrigation": {
-      "description": "Starts the irrigation.",
+      "description": "Start a zone with a duration.",
       "fields": {
         "duration": {
           "description": "Duration for the target to be turned on.",
           "name": "Duration"
         }
       },
-      "name": "Start irrigation"
+      "name": "Start zone"
     }
   }
 }

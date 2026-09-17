@@ -8,7 +8,7 @@ from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetw
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry, PanelStatus
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -39,34 +39,34 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-LOGIN_FORM_SCHEMA = vol.Schema(
+LOGIN_FORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_USERNAME): str,
-        vol.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(CONF_ELMAX_USERNAME): str,
+        probatio.Required(CONF_ELMAX_PASSWORD): str,
     }
 )
 
-REAUTH_FORM_SCHEMA = vol.Schema(
+REAUTH_FORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_USERNAME): str,
-        vol.Required(CONF_ELMAX_PASSWORD): str,
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_USERNAME): str,
+        probatio.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
 
-DIRECT_SETUP_SCHEMA = vol.Schema(
+DIRECT_SETUP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_PORT, default=443): int,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_PORT, default=443): int,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
 
-ZEROCONF_SETUP_SCHEMA = vol.Schema(
+ZEROCONF_SETUP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
     }
 )
 
@@ -110,7 +110,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_cloud_panelid: str | None
 
     # Panel selection variables
-    _panels_schema: vol.Schema
+    _panels_schema: probatio.Schema
     _panel_names: dict
 
     @override
@@ -133,7 +133,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _handle_direct_and_create_entry(
-        self, fallback_step_id: str, schema: vol.Schema
+        self, fallback_step_id: str, schema: probatio.Schema
     ) -> ConfigFlowResult:
         return await self._test_direct_and_create_entry()
 
@@ -220,18 +220,18 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
         self._panel_direct_follow_mdns = True
 
-        tmp_schema = vol.Schema(
+        tmp_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_HOST, default=self._panel_direct_hostname
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_PORT, default=self._panel_direct_port
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_SSL, default=self._panel_direct_use_ssl
                 ): bool,
-                vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
             }
         )
         return await self._handle_direct_and_create_entry(
@@ -255,10 +255,10 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             else self._panel_direct_http_port
         )
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
-        tmp_schema = vol.Schema(
+        tmp_schema = probatio.Schema(
             {
-                vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
-                vol.Required(
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_SSL, default=self._panel_direct_use_ssl
                 ): bool,
             }
@@ -336,10 +336,12 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._client = client
         self._panel_names = panel_names
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ELMAX_PANEL_NAME): vol.In(self._panel_names.keys()),
-                vol.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
+                probatio.Required(CONF_ELMAX_PANEL_NAME): probatio.In(
+                    self._panel_names.keys()
+                ),
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
             }
         )
         self._panels_schema = schema
