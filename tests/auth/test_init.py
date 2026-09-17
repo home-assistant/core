@@ -578,6 +578,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
+
+
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
     """Test that deactivating a user removes their refresh tokens."""
     manager = await auth.auth_manager_from_config(hass, [], [])

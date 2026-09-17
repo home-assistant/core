@@ -28,7 +28,8 @@ from homeassistant.helpers.entity import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass, SensorEntityCapabilityAttribute
+from . import SensorDeviceClass, SensorEntityCapabilityAttribute
+from .const import DOMAIN
 
 DEVICE_CLASS_NONE = "none"
 
