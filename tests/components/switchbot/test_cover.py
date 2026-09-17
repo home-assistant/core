@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityCapabilityAttribute,
+    CoverEntityFeature,
     CoverState,
 )
 from homeassistant.components.switchbot.const import (
@@ -28,6 +29,7 @@ from homeassistant.components.switchbot.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -300,6 +302,47 @@ async def test_curtain3_speed(
             blocking=True,
         )
         mock_set_position.assert_awaited_once_with(50, expected_value)
+
+
+async def test_curtain_speed_not_supported(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test a non-Curtain-3 curtain does not expose the speed feature."""
+    # A Curtain (not Curtain 3) advertises the "c" device type in its service data.
+    inject_bluetooth_service_info(
+        hass,
+        make_advertisement(
+            "AA:BB:CC:DD:EE:FF",
+            b"\xcf;Zwu\x0c\x19\x0b\x00\x11D\x006",
+            b"c\xc06\x00\x11D",
+        ),
+    )
+
+    entry = mock_entry_factory(sensor_type="curtain")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
+        new=AsyncMock(return_value=True),
+    ) as mock_open:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+
+        state = hass.states.get(entity_id)
+        assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+        assert CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS not in state.attributes
+
+        # A speed passed to a model that does not support it is ignored and the
+        # curtain moves at the default speed.
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: CURTAIN_SPEED_SILENT},
+            blocking=True,
+        )
+        mock_open.assert_awaited_once_with(255)
 
 
 async def test_blindtilt_setup(

@@ -20,6 +20,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_CURTAIN_SPEED,
+    CURTAIN_3_MODEL_FRIENDLY_NAME,
     CURTAIN_SPEED_TO_VALUE,
     DEFAULT_CURTAIN_SPEED,
     ROLLER_SHADE_SPEED_PERFORMANCE,
@@ -60,9 +61,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.SPEED
     )
-    _attr_supported_speeds = list(CURTAIN_SPEED_TO_VALUE)
     _attr_translation_key = "cover"
     _attr_name = None
 
@@ -70,6 +69,11 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._attr_is_closed = None
+        # Only the Curtain 3 honours the speed byte; expose cover speeds
+        # (e.g. silent mode) for that model only.
+        if self._device.data.get("modelFriendlyName") == CURTAIN_3_MODEL_FRIENDLY_NAME:
+            self._attr_supported_features |= CoverEntityFeature.SPEED
+            self._attr_supported_speeds = list(CURTAIN_SPEED_TO_VALUE)
 
     @callback
     def _get_curtain_speed(self, kwargs: dict[str, Any]) -> int:
