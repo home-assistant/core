@@ -244,7 +244,15 @@ async def test_sensor_dynamic_add_endpoint(
             key="new_service",
             name="New Service",
             group=None,
-            results=[Result(success=True, status=200, duration=15000000)],
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=15000000,
+                    certificate_expiration=7776000000000000,
+                    dns_rcode="NOERROR",
+                )
+            ],
         ),
     ]
 
@@ -282,7 +290,15 @@ async def test_sensor_readded_endpoint(
             key="backend_service",
             name="Backend Service",
             group="Core",
-            results=[Result(success=True, status=200, duration=15000000)],
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=15000000,
+                    certificate_expiration=1000000000,
+                    dns_rcode="NOERROR",
+                )
+            ],
         )
     ]
     freezer.tick(30)
@@ -290,3 +306,10 @@ async def test_sensor_readded_endpoint(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.core_backend_service_response_time") is not None
+    assert hass.states.get("sensor.core_backend_service_status_code") is not None
+    assert hass.states.get("sensor.core_backend_service_last_event") is not None
+    assert (
+        hass.states.get("sensor.core_backend_service_certificate_expiration")
+        is not None
+    )
+    assert hass.states.get("sensor.core_backend_service_dns_response_code") is not None
