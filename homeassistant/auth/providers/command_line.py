@@ -136,11 +136,18 @@ class CommandLineAuthProvider(AuthProvider):
         Currently, supports name, group and local_only.
         """
         meta = self._user_meta.get(credentials.data["username"], {})
+        local_only = meta.get("local_only")
         return UserMeta(
             name=meta.get("name") or None,
             is_active=True,
             group=meta.get("group"),
-            local_only=(meta["local_only"] == "true" if "local_only" in meta else None),
+            local_only=(
+                True
+                if local_only == "true"
+                else False
+                if local_only == "false"
+                else None
+            ),
         )
 
 

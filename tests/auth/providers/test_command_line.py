@@ -257,6 +257,33 @@ async def test_existing_user_missing_local_only_preserves_existing_value(
     assert updated_user.local_only
 
 
+async def test_existing_user_invalid_local_only_preserves_existing_value(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+) -> None:
+    """Test malformed local_only metadata does not disable remote protection."""
+    provider.config[command_line.CONF_ARGS] = ["--with-invalid-local-only"]
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    await store.async_create_user(
+        credentials=credentials,
+        name="Bob",
+        is_active=True,
+        group_ids=["system-users"],
+        local_only=True,
+    )
+    with patch.object(
+        manager, "async_update_user", wraps=manager.async_update_user
+    ) as mock_update:
+        await provider.async_validate_login("good-user", "good-pass")
+        updated_user = await manager.async_get_or_create_user(credentials)
+
+    assert mock_update.call_count == 0
+    assert updated_user.local_only
+
+
 async def test_existing_user_invalid_group_does_not_block_login(
     manager: AuthManager,
     provider: command_line.CommandLineAuthProvider,
