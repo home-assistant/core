@@ -810,7 +810,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             elif device is None:
                 error = "invalid_device_id_for_ip"
             else:
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
                 )
@@ -905,7 +905,6 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
                 )
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
 
         return self.async_abort(reason="no_devices_found")
