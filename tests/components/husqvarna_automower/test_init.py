@@ -744,17 +744,18 @@ async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
 
 
 @pytest.mark.parametrize(
-    ("side_effect"),
+    ("side_effect", "expected_state"),
     [
-        (AuthError()),
-        (ApiError()),
+        (AuthError(), ConfigEntryState.MIGRATION_ERROR),
+        (ApiError(), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_migration_failure(
     hass: HomeAssistant,
-    mock_automower_client,
+    mock_automower_client: AsyncMock,
     legacy_mock_config_entry: MockConfigEntry,
     side_effect: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test removal of a legacy global cutting height registry entry."""
     mock_automower_client.get_status.side_effect = side_effect
@@ -762,4 +763,4 @@ async def test_migration_failure(
     await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert legacy_mock_config_entry.minor_version == 1
-    assert legacy_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert legacy_mock_config_entry.state is expected_state
