@@ -28,6 +28,8 @@ from .api import (
     EnturStopPlace,
     async_get_stop_routes,
     async_search_stop_places,
+    format_stop_place_title,
+    line_id_label,
 )
 from .const import (
     CONF_EXPAND_PLATFORMS,
@@ -35,9 +37,11 @@ from .const import (
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_QUERY,
+    CONF_ROUTE_LABELS,
     CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
     CONF_STOP_IDS,
+    CONF_STOP_PLACE_TYPES,
     CONF_WHITELIST_LINES,
     DEFAULT_NAME,
     DOMAIN,
@@ -57,6 +61,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         self._route_error = False
         self._selected_place: EnturStopPlace | None = None
         self._selected_line_whitelist: list[str] = []
+        self._selected_route_labels: dict[str, str] = {}
 
     @classmethod
     @callback
@@ -81,6 +86,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 "place": self._selected_place,
                 "routes": self._routes,
                 CONF_WHITELIST_LINES: self._selected_line_whitelist,
+                CONF_ROUTE_LABELS: self._selected_route_labels,
             },
         )
         result["next_flow"] = (
@@ -171,6 +177,9 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             self._selected_line_whitelist = _combine_line_whitelist(
                 user_input.get(CONF_WHITELIST_LINES, []),
                 user_input.get(CONF_MANUAL_WHITELIST_LINES, ""),
+            )
+            self._selected_route_labels = _route_labels(
+                self._selected_line_whitelist, self._routes
             )
             return await self.async_step_confirm()
 
@@ -294,7 +303,9 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self._route_error = False
         self._selected_place: EnturStopPlace | None = None
         self._selected_line_whitelist: list[str] = []
+        self._selected_route_labels: dict[str, str] = {}
         self._existing_line_whitelist: list[str] = []
+        self._existing_route_labels: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -307,6 +318,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             self._selected_place = place
             self._routes = tuple(user_input.get("routes", ()))
             self._selected_line_whitelist = user_input.get(CONF_WHITELIST_LINES, [])
+            self._selected_route_labels = dict(user_input.get(CONF_ROUTE_LABELS, {}))
             return await self.async_step_confirm()
 
         return await self._async_step_search("user", user_input)
@@ -317,6 +329,9 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         """Reconfigure an existing stop place."""
         self._existing_line_whitelist = list(
             self._get_reconfigure_subentry().data.get(CONF_WHITELIST_LINES, [])
+        )
+        self._existing_route_labels = dict(
+            self._get_reconfigure_subentry().data.get(CONF_ROUTE_LABELS, {})
         )
         return await self._async_step_search("reconfigure", user_input)
 
@@ -389,6 +404,11 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 user_input.get(CONF_WHITELIST_LINES, []),
                 user_input.get(CONF_MANUAL_WHITELIST_LINES, ""),
             )
+            self._selected_route_labels = _route_labels(
+                self._selected_line_whitelist,
+                self._routes,
+                self._existing_route_labels,
+            )
             return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -423,17 +443,29 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             data = {
                 CONF_STOP_ID: self._selected_place.stop_id,
                 CONF_WHITELIST_LINES: line_whitelist,
+                CONF_ROUTE_LABELS: self._selected_route_labels,
+                CONF_STOP_PLACE_TYPES: list(self._selected_place.stop_place_types),
             }
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_and_abort(
                     entry,
                     self._get_reconfigure_subentry(),
-                    title=self._selected_place.name,
+                    title=format_stop_place_title(
+                        self._selected_place.name,
+                        self._selected_place.type_icons,
+                        line_whitelist,
+                        self._selected_route_labels,
+                    ),
                     data=data,
                     unique_id=self._selected_place.stop_id,
                 )
             return self.async_create_entry(
-                title=self._selected_place.name,
+                title=format_stop_place_title(
+                    self._selected_place.name,
+                    self._selected_place.type_icons,
+                    line_whitelist,
+                    self._selected_route_labels,
+                ),
                 data=data,
                 unique_id=self._selected_place.stop_id,
             )
@@ -492,7 +524,22 @@ def _place_description(place: EnturStopPlace, route_status: str) -> dict[str, st
         "role": (
             "transport hub" if place.role == "parent" else "standalone stop place"
         ),
+        "stop_place_types": ", ".join(place.stop_place_types) or "unknown",
         "entur_url": place.entur_url,
+    }
+
+
+def _route_labels(
+    line_ids: list[str],
+    routes: tuple[EnturRoute, ...],
+    existing_labels: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Return readable labels for selected API and manually entered lines."""
+    labels = existing_labels or {}
+    route_labels = {route.line_id: route.selection_label for route in routes}
+    return {
+        line_id: route_labels.get(line_id, labels.get(line_id, line_id_label(line_id)))
+        for line_id in line_ids
     }
 
 

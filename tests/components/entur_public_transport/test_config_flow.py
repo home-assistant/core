@@ -5,6 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.entur_public_transport import (
+    _migrate_subentry_display_data,
+)
 from homeassistant.components.entur_public_transport.api import (
     EnturApiError,
     EnturRoute,
@@ -39,6 +42,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         locality="Bergen",
         transport_modes=("bus", "rail"),
         role="parent",
+        stop_place_types=("busStation", "railStation"),
     )
     route = EnturRoute(
         line_id="RUT:Line:1",
@@ -113,10 +117,15 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert subentry_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.title == place.name
+    assert subentry.title == "🚌 🚆 Bergen busstasjon · 1 · bus · RUT, 2 · SKY"
     assert subentry.data == {
         CONF_STOP_ID: place.stop_id,
         CONF_WHITELIST_LINES: [route.line_id, "SKY:Line:2"],
+        "route_labels": {
+            "RUT:Line:1": "1 · bus · RUT",
+            "SKY:Line:2": "2 · SKY",
+        },
+        "stop_place_types": ["busStation", "railStation"],
     }
 
 
@@ -145,6 +154,7 @@ async def test_user_flow_accepts_manual_route_without_api_routes(
         locality="Bergen",
         transport_modes=("bus",),
         role="parent",
+        stop_place_types=("busStation",),
     )
 
     with (
@@ -215,6 +225,7 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         locality="Bergen",
         transport_modes=("bus",),
         role="parent",
+        stop_place_types=("busStation",),
     )
     new_route = EnturRoute(
         line_id="RUT:Line:1",
@@ -283,7 +294,10 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         CONF_STOP_ID: new_place.stop_id,
         CONF_WHITELIST_LINES: [new_route.line_id],
     }
-    assert entry.subentries["stop-subentry"].title == new_place.name
+    assert (
+        entry.subentries["stop-subentry"].title
+        == "🚌 Bergen busstasjon · 1 · bus · RUT"
+    )
 
 
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:
@@ -313,6 +327,7 @@ async def test_user_flow_rejects_invalid_selection(hass: HomeAssistant) -> None:
         locality="Bergen",
         transport_modes=("bus",),
         role="standalone",
+        stop_place_types=("onstreetBus",),
     )
 
     with patch(
@@ -365,3 +380,39 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         CONF_OMIT_NON_BOARDING: False,
         CONF_NUMBER_OF_DEPARTURES: 4,
     }
+
+
+def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None:
+    """Test that older subentries show their existing route filter."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Entur",
+            CONF_STOP_IDS: [],
+            CONF_EXPAND_PLATFORMS: True,
+            CONF_SHOW_ON_MAP: False,
+            CONF_WHITELIST_LINES: [],
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Hønefoss sentrum",
+                "unique_id": "NSR:StopPlace:1",
+                "data": {
+                    CONF_STOP_ID: "NSR:StopPlace:1",
+                    CONF_WHITELIST_LINES: ["BRA:Line:101"],
+                },
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    _migrate_subentry_display_data(hass, entry)
+
+    subentry = entry.subentries["stop-subentry"]
+    assert subentry.title == "🚏 Hønefoss sentrum · 101 · BRA"
+    assert subentry.data["route_labels"] == {"BRA:Line:101": "101 · BRA"}
+    assert subentry.data["stop_place_types"] == []

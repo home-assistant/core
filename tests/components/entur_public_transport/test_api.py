@@ -36,6 +36,7 @@ async def test_search_stop_places(aioclient_mock, hass: HomeAssistant) -> None:
                             {"mode": "bus"},
                             {"mode": "rail", "subMode": "localTrain"},
                         ],
+                        "stopPlaceTypes": ["busStation", "railStation"],
                         "stopPlaceRole": "parent",
                     },
                 },
@@ -56,6 +57,8 @@ async def test_search_stop_places(aioclient_mock, hass: HomeAssistant) -> None:
     assert places[0].locality == "Bergen"
     assert places[0].transport_modes == ("bus", "rail")
     assert places[0].role == "parent"
+    assert places[0].stop_place_types == ("busStation", "railStation")
+    assert places[0].type_icons == "🚌 🚆"
     assert places[0].selection_label == "Bergen busstasjon, Bergen · bus, rail"
     assert (
         places[0].entur_url

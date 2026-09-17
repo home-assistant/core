@@ -14,6 +14,7 @@ from .const import (
     ENTUR_STOP_PLACE_URL,
     GEOCODER_AUTOCOMPLETE_URL,
     JOURNEY_PLANNER_URL,
+    STOP_PLACE_TYPE_ICONS,
 )
 
 STOP_PLACE_LINES_QUERY = """
@@ -49,6 +50,7 @@ class EnturStopPlace:
     locality: str
     transport_modes: tuple[str, ...]
     role: str
+    stop_place_types: tuple[str, ...] = ()
 
     @property
     def selection_label(self) -> str:
@@ -68,6 +70,15 @@ class EnturStopPlace:
         """Return the Entur departure board URL for this stop place."""
         return ENTUR_STOP_PLACE_URL.format(quote(self.stop_id, safe=""))
 
+    @property
+    def type_icons(self) -> str:
+        """Return icons for all stop place types supplied by Entur."""
+        icons = dict.fromkeys(
+            STOP_PLACE_TYPE_ICONS.get(stop_place_type, "🚉")
+            for stop_place_type in self.stop_place_types
+        )
+        return " ".join(icons) or "🚏"
+
 
 @dataclass(frozen=True, slots=True)
 class EnturRoute:
@@ -82,6 +93,31 @@ class EnturRoute:
         """Return a user-friendly route label."""
         operator = self.line_id.split(":Line:", 1)[0]
         return f"{self.public_code} · {self.transport_mode} · {operator}"
+
+
+def line_id_label(line_id: str) -> str:
+    """Return a useful fallback label for a manually entered line ID."""
+    authority, separator, public_code = line_id.partition(":Line:")
+    if separator:
+        return f"{public_code} · {authority}"
+    return line_id
+
+
+def format_stop_place_title(
+    name: str,
+    type_icons: str,
+    line_ids: list[str],
+    route_labels: dict[str, str],
+) -> str:
+    """Return the title shown for a configured stop place subentry."""
+    route_summary = (
+        ", ".join(
+            route_labels.get(line_id, line_id_label(line_id)) for line_id in line_ids
+        )
+        if line_ids
+        else "all routes"
+    )
+    return f"{type_icons} {name} · {route_summary}"
 
 
 async def async_search_stop_places(
@@ -180,6 +216,13 @@ def _parse_stop_places(payload: Any) -> tuple[EnturStopPlace, ...]:
         role = properties.get("stopPlaceRole", "standalone")
         role = role if isinstance(role, str) else "standalone"
 
+        types = properties.get("stopPlaceTypes")
+        stop_place_types = (
+            tuple(value for value in types if isinstance(value, str))
+            if isinstance(types, list)
+            else ()
+        )
+
         places.append(
             EnturStopPlace(
                 stop_id=stop_id,
@@ -188,6 +231,7 @@ def _parse_stop_places(payload: Any) -> tuple[EnturStopPlace, ...]:
                 locality=locality,
                 transport_modes=transport_modes,
                 role=role,
+                stop_place_types=stop_place_types,
             )
         )
 

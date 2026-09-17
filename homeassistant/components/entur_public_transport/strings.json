@@ -13,7 +13,7 @@
     "step": {
       "confirm": {
         "data": {},
-        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
+        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
         "title": "Confirm the stop place"
       },
       "select_routes": {
@@ -65,7 +65,7 @@
       "step": {
         "confirm": {
           "data": {},
-          "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
+          "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
           "title": "Confirm the stop place"
         },
         "reconfigure": {
