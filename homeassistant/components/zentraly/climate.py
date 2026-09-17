@@ -123,8 +123,7 @@ class ZentralyClimate(ClimateEntity):
     ) -> None:
         """Refresh device state periodically as a synchronization fallback."""
 
-        await self.async_update()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     @override

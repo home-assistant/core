@@ -1,5 +1,6 @@
 """Tests for Zentraly thermostat modes and setpoints."""
 
+import asyncio
 from contextlib import AbstractContextManager, nullcontext
 from unittest.mock import MagicMock, call, patch
 
@@ -19,7 +20,9 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zentraly.climate import ZentralyClimate
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 
 @pytest.mark.parametrize(
@@ -184,3 +187,38 @@ async def test_exit_away_preset(
             await entity.async_set_preset_mode(PRESET_NONE)
     assert entity.preset_mode == preset
     api.async_set_operation_mode.assert_awaited_once_with(ClimateOperationMode.MANUAL)
+
+
+async def test_periodic_refresh_during_reconnect(
+    hass: HomeAssistant, platform_device: MagicMock
+) -> None:
+    """Do not start a second update while a reconnect refresh is running."""
+    api = MagicMock(spec=ZentralyClimateApi)
+    api.configuration = get_device_commands(DeviceModel.ZTTIN).climate_configuration
+    api.supports.return_value = True
+    entity = ZentralyClimate(platform_device, climate_api=api)
+    entity.hass = hass
+    entity.entity_id = "climate.zentraly"
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def update() -> None:
+        started.set()
+        await release.wait()
+
+    with (
+        patch.object(entity, "async_update", side_effect=update) as refresh,
+        patch.object(entity, "_async_write_ha_state"),
+    ):
+        entity._handle_connection_state(True)
+        await started.wait()
+        try:
+            async with asyncio.timeout(1):
+                await entity._async_periodic_refresh(dt_util.utcnow())
+            refresh.assert_awaited_once_with()
+        finally:
+            release.set()
+            await hass.async_block_till_done()
+        await entity._async_periodic_refresh(dt_util.utcnow())
+        await hass.async_block_till_done()
+        assert refresh.await_count == 2
