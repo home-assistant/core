@@ -47,6 +47,7 @@ _IZONE_FAN_TO_HA = {
 }
 
 ATTR_AIRFLOW = "airflow"
+ATTR_CONTROL_SETPOINT_SOURCE = "control_setpoint_source"
 
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
@@ -138,7 +139,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
-        return {
+        data: dict[str, Any] = {
             "supply_temperature": show_temp(
                 self.hass,
                 self.supply_temperature,
@@ -163,6 +164,23 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
                 PRECISION_HALVES,
             ),
         }
+        # Same idea as person.source: which climate entity owns the unit setpoint.
+        if (source := self.control_setpoint_source) is not None:
+            data[ATTR_CONTROL_SETPOINT_SOURCE] = source
+        return data
+
+    @property
+    def control_setpoint_source(self) -> str | None:
+        """Return the climate entity_id that currently owns the unit setpoint."""
+        owner = self.controller.control_setpoint_owner
+        if owner is self.controller:
+            return self.entity_id
+        if isinstance(owner, Zone):
+            zone_device = self.zones.get(owner)
+            if zone_device is None:
+                return None
+            return zone_device.entity_id
+        return None
 
     @property
     @override
