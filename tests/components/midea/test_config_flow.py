@@ -13,6 +13,7 @@ from homeassistant.components.midea.config_flow import (
     DEFAULT_CLOUD,
     LOGIN_MODE_ACCOUNT,
     LOGIN_MODE_PRESET,
+    MideaOptionsFlow,
     _select_and_connect,
 )
 from homeassistant.components.midea.const import (
@@ -2497,6 +2498,39 @@ async def test_reconfigure_flow_wrong_device_id_discovery(
         )
 
 
+async def test_reconfigure_flow_with_update_listener_uses_update_and_abort(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure uses update-and-abort when an update listener exists."""
+    config_entry.add_to_hass(hass)
+    config_entry.add_update_listener(AsyncMock())
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value={
+            TEST_DEVICE_ID: {
+                **BASE_DATA,
+                CONF_TYPE: TEST_TYPE,
+                CONF_IP_ADDRESS: "192.0.2.1",
+                CONF_MAC: TEST_MAC_ADDRESS,
+                CONF_SN: TEST_SERIAL_NUMBER,
+            }
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "192.0.2.1"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_IP_ADDRESS] == "192.0.2.1"
+
+
 async def test_dhcp_discovery_updates_host(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -2640,3 +2674,18 @@ async def test_non_ac_options_flow_skips_power_analysis_selector(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
+
+
+async def test_options_flow_invalid_power_analysis_method_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test options flow falls back to method 1 for invalid method values."""
+    config_entry = mock_config_entry(default_ac_device())
+    flow = MideaOptionsFlow(config_entry)
+    flow.hass = hass
+
+    result = await flow.async_step_init({CONF_POWER_ANALYSIS_METHOD: object()})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_POWER_ANALYSIS_METHOD] == 1
