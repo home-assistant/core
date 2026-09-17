@@ -61,11 +61,13 @@ class CommandLineAuthProvider(AuthProvider):
         self._user_meta: dict[str, dict[str, Any]] = {}
 
     @property
+    @override
     def refresh_user_meta(self) -> bool:
         """Return whether user metadata should be refreshed at login."""
         return bool(self.config[CONF_META])
 
     @callback
+    @override
     def should_update_local_only(self, credentials: Credentials) -> bool:
         """Return whether local_only should be refreshed for credentials.
 
@@ -147,9 +149,9 @@ class CommandLineAuthProvider(AuthProvider):
         """
         meta = self._user_meta.get(credentials.data["username"], {})
         return UserMeta(
-            name=meta.get("name"),
+            name=meta.get("name") or None,
             is_active=True,
-            group=meta.get("group"),
+            group=meta.get("group") or None,
             local_only=meta.get("local_only") == "true",
         )
 

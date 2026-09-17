@@ -315,6 +315,10 @@ class AuthManager:
             if user is None:
                 raise ValueError("Unable to find the user.")
 
+            # System-generated users cannot be modified through user management.
+            if user.system_generated:
+                return user
+
             if auth_provider is not None and auth_provider.refresh_user_meta:
                 try:
                     info = await auth_provider.async_user_meta_for_credentials(
@@ -334,7 +338,16 @@ class AuthManager:
                     if info.group is not None and (
                         len(user.groups) != 1 or user.groups[0].id != info.group
                     ):
-                        updates["group_ids"] = [info.group]
+                        if await self.async_get_group(info.group) is None:
+                            _LOGGER.warning(
+                                "Auth provider %s returned an invalid group %r "
+                                "for user %s",
+                                auth_provider.type,
+                                info.group,
+                                user.id,
+                            )
+                        else:
+                            updates["group_ids"] = [info.group]
 
                     # local_only is optional in provider output and may be coerced
                     # to a bool by providers; use the provider hook to avoid

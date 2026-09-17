@@ -1,5 +1,6 @@
 """Tests for the command_line auth provider."""
 
+import logging
 import os
 from unittest.mock import AsyncMock, patch
 import uuid
@@ -242,6 +243,134 @@ async def test_existing_user_missing_local_only_preserves_existing_value(
 
     assert mock_update.call_count == 0
     assert updated_user.local_only
+
+
+async def test_existing_user_invalid_group_does_not_block_login(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid metadata group does not prevent login."""
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    user = await store.async_create_user(
+        credentials=credentials,
+        name="Legacy Name",
+        is_active=True,
+        group_ids=["system-users"],
+        local_only=False,
+    )
+    caplog.set_level(logging.WARNING)
+    with (
+        patch.object(
+            provider,
+            "async_user_meta_for_credentials",
+            new=AsyncMock(
+                return_value=auth_models.UserMeta(
+                    name="Bob",
+                    is_active=True,
+                    group="invalid-group",
+                    local_only=True,
+                )
+            ),
+        ),
+        patch.object(provider, "should_update_local_only", return_value=True),
+    ):
+        updated_user = await manager.async_get_or_create_user(credentials)
+
+    assert updated_user is user
+    assert updated_user.name == "Bob"
+    assert updated_user.groups[0].id == "system-users"
+    assert updated_user.local_only
+    assert "returned an invalid group" in caplog.text
+
+
+async def test_existing_user_empty_name_preserves_existing_value(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+) -> None:
+    """Test empty metadata does not erase existing values."""
+    provider.config[command_line.CONF_ARGS] = ["--with-empty-name"]
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    await store.async_create_user(
+        credentials=credentials,
+        name="Legacy Name",
+        is_active=True,
+        group_ids=["system-admin"],
+        local_only=False,
+    )
+
+    await provider.async_validate_login("good-user", "good-pass")
+    updated_user = await manager.async_get_or_create_user(credentials)
+
+    assert updated_user.name == "Legacy Name"
+    assert updated_user.groups[0].id == "system-admin"
+    assert updated_user.local_only
+
+
+async def test_existing_system_generated_user_does_not_sync_meta(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+) -> None:
+    """Test provider metadata does not update system-generated users."""
+    provider.config[command_line.CONF_ARGS] = ["--with-meta"]
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    user = await store.async_create_user(
+        credentials=credentials,
+        name="Legacy Name",
+        is_active=True,
+        group_ids=["system-admin"],
+        local_only=False,
+        system_generated=True,
+    )
+
+    await provider.async_validate_login("good-user", "good-pass")
+    updated_user = await manager.async_get_or_create_user(credentials)
+
+    assert updated_user is user
+    assert updated_user.name == "Legacy Name"
+    assert updated_user.groups[0].id == "system-admin"
+    assert not updated_user.local_only
+
+
+async def test_existing_user_meta_refresh_error_does_not_block_login(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+    store: auth_store.AuthStore,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test metadata refresh errors do not prevent login."""
+    provider.config[command_line.CONF_META] = True
+
+    credentials = provider.async_create_credentials({"username": "good-user"})
+    user = await store.async_create_user(
+        credentials=credentials,
+        name="Legacy Name",
+        is_active=True,
+        group_ids=["system-admin"],
+        local_only=False,
+    )
+    caplog.set_level(logging.ERROR)
+    with patch.object(
+        provider,
+        "async_user_meta_for_credentials",
+        new=AsyncMock(side_effect=RuntimeError("metadata unavailable")),
+    ):
+        updated_user = await manager.async_get_or_create_user(credentials)
+
+    assert updated_user is user
+    assert updated_user.name == "Legacy Name"
+    assert updated_user.groups[0].id == "system-admin"
+    assert not updated_user.local_only
+    assert "Error while refreshing user metadata" in caplog.text
 
 
 async def test_utf_8_username_password(

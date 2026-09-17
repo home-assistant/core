@@ -313,6 +313,9 @@ class LoginFlowBaseView(HomeAssistantView):
         # Result can be None if credential was never linked to a user before.
         user = await hass.auth.async_get_user_by_credentials(result_obj)
 
+        if user is not None:
+            user = await hass.auth.async_get_or_create_user(result_obj)
+
         if user is not None and (
             user_access_error := async_user_not_allowed_do_auth(hass, user)
         ):
