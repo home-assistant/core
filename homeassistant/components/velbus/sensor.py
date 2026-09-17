@@ -85,7 +85,11 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_fn=lambda channel: float(channel.get_counter_state()),
+        value_fn=lambda channel: (
+            float(channel.get_counter_total())
+            if channel.get_counter_total() is not None
+            else None
+        ),
         unique_id_suffix="-counter",
     ),
     # Accumulating total of a water counter channel (volume, L).
@@ -95,7 +99,11 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        value_fn=lambda channel: float(channel.get_counter_state()),
+        value_fn=lambda channel: (
+            float(channel.get_counter_total())
+            if channel.get_counter_total() is not None
+            else None
+        ),
         unique_id_suffix="-counter",
     ),
 }
