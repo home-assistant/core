@@ -290,6 +290,35 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
+        except (
+            PyiCloud2FARequiredException,
+            PyiCloudAuthRequiredException,
+            PyiCloudAPIResponseException,
+        ) as error:
+            # Reading the devices is where iCloud turns down a session that
+            # logging in accepted, so a rejection here is the same one the
+            # login paths report rather than a reason to end the flow with an
+            # error the user cannot act on.
+            if isinstance(error, PyiCloud2FARequiredException) or (
+                isinstance(error, PyiCloudAPIResponseException) and is_2fa_status(error)
+            ):
+                # The session that was challenged is the one the code has to
+                # go through, so it is kept.
+                self._forced_2fa = True
+                return await self.async_step_verification_code()
+            _LOGGER.error(
+                "Could not read the devices of the iCloud account for %s: %s",
+                self._username,
+                error,
+            )
+            if not isinstance(error, PyiCloudAPIResponseException) or is_auth_error(
+                error
+            ):
+                # iCloud is refusing the session rather than failing: the flow
+                # starts again from the password, which builds a service
+                # without it. An outage leaves it alone.
+                self.api = None
+            return self._show_setup_form(user_input, {"base": "unknown"}, step_id)
 
         data = {
             CONF_USERNAME: self._username,

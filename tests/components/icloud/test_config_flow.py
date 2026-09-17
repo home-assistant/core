@@ -1,12 +1,16 @@
 """Tests for the iCloud config flow."""
 
-from unittest.mock import MagicMock, Mock, patch
+from contextlib import contextmanager
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
     PyiCloudAPIResponseException,
     PyiCloudFailedLoginException,
 )
 import pytest
+from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
     CONF_REQUEST_NEW_CODE,
@@ -260,6 +264,63 @@ async def test_no_device(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_device"
+
+
+@contextmanager
+def _service_rejecting_the_device_fetch(error: Exception):
+    """Mock a service that authenticates but is turned down reading devices."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService"
+    ) as service_mock:
+        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.requires_2sa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=True)
+        type(service_mock.return_value).devices = PropertyMock(side_effect=error)
+        yield service_mock
+
+
+async def test_device_fetch_challenged_asks_for_a_code(hass: HomeAssistant) -> None:
+    """Test that a challenge while reading the devices asks for the code.
+
+    iCloud turns down a session when it is refreshed to read the devices
+    rather than while logging in, so the challenge arrives after the login
+    the flow already treated as successful.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+
+
+async def test_device_fetch_rejected_returns_to_the_form(hass: HomeAssistant) -> None:
+    """Test that a rejection while reading the devices is reported.
+
+    The flow used to end on the unhandled exception, which left the user with
+    an error they could not act on and no way back to the password.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudAPIResponseException(
+            "Authentication required for Account.",
+            AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        )
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("service")

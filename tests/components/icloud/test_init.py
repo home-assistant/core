@@ -733,6 +733,54 @@ async def test_reauth_login_challenged_by_status_asks_for_a_code(
     assert result["step_id"] == "verification_code"
 
 
+async def test_reauth_login_rejected_by_status_is_reported(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that a status that is not a challenge is still reported.
+
+    Only a two-factor status leaves a session worth keeping. Any other
+    rejection of the fresh login is a failure the user has to see, so it must
+    not be mistaken for a challenge.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+    rejected_api = MagicMock()
+    rejected_api.requires_2fa = False
+    rejected_api.requires_2sa = False
+    rejected_api.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Authentication required for Account.", AppleAuthError.LOGIN_TOKEN_EXPIRED
+    )
+
+    def build_service(*args, **kwargs):
+        """Reject the stored session, then reject the fresh login too."""
+        if kwargs.get("authenticate", True):
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return rejected_api
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=build_service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_reauth_rejects_a_wrong_password(
     hass: HomeAssistant, service_auth_required: Mock
 ) -> None:
