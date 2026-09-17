@@ -261,10 +261,17 @@ async def test_get_events(
     assert response["id"] == 3
 
     results = response["result"]
+    assert len(results) == 5
     assert results[0]["entity_id"] == "light.kitchen"
     assert results[0]["state"] == "on"
     assert results[1]["entity_id"] == "light.kitchen"
-    assert results[1]["state"] == "off"
+    assert results[1]["state"] == "on"
+    assert results[2]["entity_id"] == "light.kitchen"
+    assert results[2]["state"] == "on"
+    assert results[3]["entity_id"] == "light.kitchen"
+    assert results[3]["state"] == "on"
+    assert results[4]["entity_id"] == "light.kitchen"
+    assert results[4]["state"] == "off"
 
     await client.send_json(
         {
@@ -278,14 +285,23 @@ async def test_get_events(
     assert response["id"] == 4
 
     results = response["result"]
-    assert len(results) == 3
+    assert len(results) == 6
     assert results[0]["message"] == "started"
     assert results[1]["entity_id"] == "light.kitchen"
     assert results[1]["state"] == "on"
     assert isinstance(results[1]["when"], float)
     assert results[2]["entity_id"] == "light.kitchen"
-    assert results[2]["state"] == "off"
+    assert results[2]["state"] == "on"
     assert isinstance(results[2]["when"], float)
+    assert results[3]["entity_id"] == "light.kitchen"
+    assert results[3]["state"] == "on"
+    assert isinstance(results[3]["when"], float)
+    assert results[4]["entity_id"] == "light.kitchen"
+    assert results[4]["state"] == "on"
+    assert isinstance(results[4]["when"], float)
+    assert results[5]["entity_id"] == "light.kitchen"
+    assert results[5]["state"] == "off"
+    assert isinstance(results[5]["when"], float)
 
     await client.send_json(
         {
@@ -548,13 +564,20 @@ async def test_get_events_with_device_ids(
     assert response["id"] == 2
 
     results = response["result"]
+    assert len(results) == 6
     assert results[0]["domain"] == "test"
     assert results[0]["message"] == "is on fire"
     assert results[0]["name"] == "device name"
     assert results[1]["entity_id"] == "light.kitchen"
     assert results[1]["state"] == "on"
     assert results[2]["entity_id"] == "light.kitchen"
-    assert results[2]["state"] == "off"
+    assert results[2]["state"] == "on"
+    assert results[3]["entity_id"] == "light.kitchen"
+    assert results[3]["state"] == "on"
+    assert results[4]["entity_id"] == "light.kitchen"
+    assert results[4]["state"] == "on"
+    assert results[5]["entity_id"] == "light.kitchen"
+    assert results[5]["state"] == "off"
 
     await client.send_json(
         {
@@ -568,7 +591,7 @@ async def test_get_events_with_device_ids(
     assert response["id"] == 3
 
     results = response["result"]
-    assert len(results) == 5
+    assert len(results) == 8
     assert results[0]["message"] == "started"
     assert results[1]["name"] == "device name"
     assert results[1]["message"] == "is on fire"
@@ -580,8 +603,17 @@ async def test_get_events_with_device_ids(
     assert results[3]["state"] == "on"
     assert isinstance(results[3]["when"], float)
     assert results[4]["entity_id"] == "light.kitchen"
-    assert results[4]["state"] == "off"
+    assert results[4]["state"] == "on"
     assert isinstance(results[4]["when"], float)
+    assert results[5]["entity_id"] == "light.kitchen"
+    assert results[5]["state"] == "on"
+    assert isinstance(results[5]["when"], float)
+    assert results[6]["entity_id"] == "light.kitchen"
+    assert results[6]["state"] == "on"
+    assert isinstance(results[6]["when"], float)
+    assert results[7]["entity_id"] == "light.kitchen"
+    assert results[7]["state"] == "off"
+    assert isinstance(results[7]["when"], float)
 
 
 async def test_get_events_with_composite_device_id(

@@ -296,12 +296,15 @@ def is_sensor_continuous(
 def _is_state_filtered(new_state: State, old_state: State) -> bool:
     """Check if the logbook should filter a state.
 
-    Used when we are in live mode to ensure
-    we only get significant changes (state.last_changed != state.last_updated)
+    Used when we are in live mode to ensure only real activity is kept.
+    Same-state attribute changes are still activity and should not be filtered,
+    but no-op updates with no state or attribute changes are skipped.
     """
     return bool(
-        new_state.state == old_state.state
-        or new_state.last_changed != new_state.last_updated
+        (
+            new_state.state == old_state.state
+            and new_state.attributes == old_state.attributes
+        )
         or new_state.domain in ALWAYS_CONTINUOUS_DOMAINS
         or (
             new_state.domain == SENSOR_DOMAIN
