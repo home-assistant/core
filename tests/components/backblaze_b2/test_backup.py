@@ -17,6 +17,7 @@ from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze_b2.backup import (
+    CACHE_TTL,
     _parse_metadata,
     async_get_backup_agents,
     async_register_backup_agents_listener,
@@ -25,7 +26,7 @@ from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, BackupNotFound
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -253,6 +254,99 @@ async def test_delete_during_id_search_keeps_iterating(
 
         backups = await agent.async_list_backups()
         assert [backup.backup_id for backup in backups] == ["second-id"]
+
+
+async def test_delete_during_in_flight_refresh_still_invalidates(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a delete completing during an in-flight refresh is not undone by it."""
+    agent = (await async_get_backup_agents(hass))[0]
+    second_file_versions = _second_backup_file_versions()
+    second_metadata_content = json.dumps(
+        {
+            "metadata_version": "1",
+            "backup_id": "second-id",
+            "backup_metadata": replace(TEST_BACKUP, backup_id="second-id").as_dict(),
+        }
+    ).encode("utf-8")
+    original_ls = BucketSimulator.ls
+    fetch_started = threading.Event()
+    release_fetch = threading.Event()
+    ls_calls = 0
+
+    def ls(self, prefix: str = "") -> list[tuple[FileVersion, str]]:
+        nonlocal ls_calls
+        ls_calls += 1
+        listed = original_ls(self, prefix)
+        listed.extend(
+            (file_version, file_version.file_name)
+            for file_version in second_file_versions
+        )
+        if ls_calls == 2:
+            fetch_started.set()
+            assert release_fetch.wait(timeout=30)
+        return listed
+
+    delete_started = threading.Event()
+    release_delete = threading.Event()
+    delete_calls = 0
+
+    def delete(self: FileVersion, *args: Any, **kwargs: Any) -> None:
+        nonlocal delete_calls
+        delete_calls += 1
+        if delete_calls == 1:
+            delete_started.set()
+            assert release_delete.wait(timeout=30)
+
+    metadata_contents = {
+        f"testprefix/{TEST_BACKUP.backup_id}.metadata.json": json.dumps(
+            BACKUP_METADATA
+        ).encode("utf-8"),
+        "testprefix/second-id.metadata.json": second_metadata_content,
+    }
+
+    def download(self: FileVersion, *args: Any, **kwargs: Any) -> Mock:
+        downloaded = Mock()
+        downloaded.response.content = metadata_contents.get(self.file_name, b"")
+        return downloaded
+
+    clock_now = 1000.0
+
+    def fake_time() -> float:
+        return clock_now
+
+    with (
+        patch.object(BucketSimulator, "ls", ls, create=True),
+        patch.object(FileVersion, "download", download),
+        patch.object(FileVersion, "delete", delete),
+        patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
+    ):
+        seeded = await agent.async_list_backups()
+        seeded_ids = [backup.backup_id for backup in seeded]
+        assert TEST_BACKUP.backup_id in seeded_ids
+        assert "second-id" in seeded_ids
+
+        delete_task = hass.async_create_task(
+            agent.async_delete_backup(TEST_BACKUP.backup_id)
+        )
+        assert await hass.async_add_executor_job(delete_started.wait, 30)
+
+        clock_now = 1000.0 + CACHE_TTL + 1
+        refresh_task = hass.async_create_task(agent.async_list_backups())
+        assert await hass.async_add_executor_job(fetch_started.wait, 30)
+
+        release_delete.set()
+        await asyncio.sleep(0.1)
+        release_fetch.set()
+
+        await refresh_task
+        await delete_task
+
+        with pytest.raises(BackupNotFound):
+            await agent.async_download_backup(TEST_BACKUP.backup_id)
+
+        remaining = await agent.async_list_backups()
+        assert [backup.backup_id for backup in remaining] == ["second-id"]
 
 
 async def test_agents_download(
