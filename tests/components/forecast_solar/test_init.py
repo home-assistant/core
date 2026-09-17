@@ -325,7 +325,8 @@ async def test_plane_follows_renamed_sensor(
                 },
                 subentry_id="plane_1",
                 subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / roof azimuth (sensor) / 5100W",
+                # Saved while the sensor had no state, so the title shows its entity ID.
+                title="30° / sensor.roof_azimuth (sensor) / 5100W",
                 unique_id=None,
             ),
         ],
@@ -353,3 +354,4 @@ async def test_plane_follows_renamed_sensor(
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
+    assert subentry.title == "30° / sensor.camper_azimuth (sensor) / 5100W"

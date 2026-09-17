@@ -143,8 +143,12 @@ def _async_track_sensor_renames(
                 if subentry.data.get(key) == old_entity_id
             }
             if renamed:
+                # Friendly names survive a rename; only entity ID labels go stale.
+                title = subentry.title.replace(
+                    f"{old_entity_id} (sensor)", f"{new_entity_id} (sensor)"
+                )
                 hass.config_entries.async_update_subentry(
-                    entry, subentry, data=subentry.data | renamed
+                    entry, subentry, data=subentry.data | renamed, title=title
                 )
 
     return async_track_entity_registry_updated_event(
