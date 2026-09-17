@@ -203,10 +203,10 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             ),
         }
         additional_options |= {
-            vol.Optional(CONF_DELAY_ON): selector.DurationSelector(
+            probatio.Optional(CONF_DELAY_ON): selector.DurationSelector(
                 selector.DurationSelectorConfig(allow_negative=False)
             ),
-            vol.Optional(CONF_DELAY_OFF): selector.DurationSelector(
+            probatio.Optional(CONF_DELAY_OFF): selector.DurationSelector(
                 selector.DurationSelectorConfig(allow_negative=False)
             ),
         }
