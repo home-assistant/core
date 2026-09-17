@@ -52,11 +52,15 @@
         "already_configured": "This stop place is already configured.",
         "invalid_selection": "The selected stop place could not be confirmed."
       },
+      "entry_type": "stop place",
       "error": {
         "cannot_connect": "Unable to search Entur right now. Try again later.",
         "invalid_selection": "The selected stop place is no longer available. Start the search again.",
         "no_results": "No stop places were found. Try a broader search or another spelling.",
         "query_too_short": "Enter at least two characters to search for a stop place."
+      },
+      "initiate_flow": {
+        "user": "Add a stop place"
       },
       "step": {
         "confirm": {
@@ -96,8 +100,7 @@
           "description": "Search by name. Results are stop places, such as stations, terminals, and transport hubs. Individual platforms are intentionally not shown in this step.",
           "title": "Add an Entur stop place"
         }
-      },
-      "title": "Entur stop place"
+      }
     }
   }
 }
