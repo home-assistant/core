@@ -29,7 +29,9 @@ def test_fetch_pull_request_maps_the_api_fields(requests_mock: rm.Mocker) -> Non
     requests_mock.get(_PULL_URL, json=_PULL_JSON)
     requests_mock.get(
         f"{_PULL_URL}/files",
-        json=[{"filename": "homeassistant/components/peblar/sensor.py"}],
+        json=[
+            {"filename": "homeassistant/components/peblar/sensor.py", "status": "added"}
+        ],
     )
 
     pr = github_api.fetch_pull_request(_REPO, 42, _TOKEN)
@@ -41,6 +43,7 @@ def test_fetch_pull_request_maps_the_api_fields(requests_mock: rm.Mocker) -> Non
     assert pr.base_ref == "dev"
     assert pr.changed_lines == 42
     assert pr.changed_files == 3
+    assert pr.file_statuses == {"homeassistant/components/peblar/sensor.py": "added"}
     assert pr.filenames == ["homeassistant/components/peblar/sensor.py"]
 
 
@@ -59,10 +62,13 @@ def test_fetch_pull_request_follows_the_file_pages(requests_mock: rm.Mocker) -> 
     requests_mock.get(_PULL_URL, json=_PULL_JSON)
     requests_mock.get(
         f"{_PULL_URL}/files",
-        json=[{"filename": "first.py"}],
+        json=[{"filename": "first.py", "status": "modified"}],
         headers={"Link": f'<{_PULL_URL}/files?page=2>; rel="next"'},
     )
-    requests_mock.get(f"{_PULL_URL}/files?page=2", json=[{"filename": "second.py"}])
+    requests_mock.get(
+        f"{_PULL_URL}/files?page=2",
+        json=[{"filename": "second.py", "status": "removed"}],
+    )
 
     pr = github_api.fetch_pull_request(_REPO, 42, _TOKEN)
 

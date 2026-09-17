@@ -82,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pr = github_api.fetch_pull_request(args.repo, args.pr_number, token)
     domains = integrations.with_quality_scale(
-        integrations.touched_domains(pr.filenames), pr.filenames
+        integrations.touched_domains(pr.filenames), pr.file_statuses
     )
     decision = decide_skip(
         pr,

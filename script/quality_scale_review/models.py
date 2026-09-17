@@ -20,7 +20,13 @@ class PullRequest:
     additions: int
     deletions: int
     changed_files: int
-    filenames: list[str]
+    file_statuses: dict[str, str]
+    """Changed file paths mapped to their GitHub API `status`."""
+
+    @property
+    def filenames(self) -> list[str]:
+        """Return the paths of the changed files."""
+        return list(self.file_statuses)
 
     @property
     def changed_lines(self) -> int:

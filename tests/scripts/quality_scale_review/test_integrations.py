@@ -50,40 +50,42 @@ def components_dir(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_keeps_only_domains_that_have_a_quality_scale(components_dir: Path) -> None:
-    """A domain without a quality_scale.yaml is not reviewed."""
-    assert integrations.with_quality_scale(["adax", "peblar"], [], components_dir) == [
-        "peblar"
-    ]
+_ADAX = "homeassistant/components/adax/quality_scale.yaml"
+_PEBLAR = "homeassistant/components/peblar/quality_scale.yaml"
 
 
-def test_keeps_a_quality_scale_the_pull_request_adds(components_dir: Path) -> None:
-    """The checkout predates the pull request, so an added file counts too."""
-    assert integrations.with_quality_scale(
-        ["adax", "peblar"],
-        ["homeassistant/components/adax/quality_scale.yaml"],
-        components_dir,
-    ) == ["adax", "peblar"]
-
-
-def test_ignores_a_quality_scale_added_for_an_untouched_domain(
+@pytest.mark.parametrize(
+    ("domains", "file_statuses", "expected"),
+    [
+        pytest.param(["adax", "peblar"], {}, ["peblar"], id="from-the-checkout"),
+        pytest.param(
+            ["adax", "peblar"], {_ADAX: "added"}, ["adax", "peblar"], id="added"
+        ),
+        pytest.param(["peblar"], {_PEBLAR: "modified"}, ["peblar"], id="modified"),
+        pytest.param(["adax", "peblar"], {_PEBLAR: "removed"}, [], id="removed"),
+        pytest.param(
+            ["peblar"], {_ADAX: "added"}, ["peblar"], id="added-for-untouched-domain"
+        ),
+        pytest.param(
+            ["adax"],
+            {"script/quality_scale.yaml": "added"},
+            [],
+            id="outside-components",
+        ),
+    ],
+)
+def test_with_quality_scale(
+    domains: list[str],
+    file_statuses: dict[str, str],
+    expected: list[str],
     components_dir: Path,
 ) -> None:
-    """Only domains the pull request touches are considered."""
-    assert integrations.with_quality_scale(
-        ["peblar"],
-        ["homeassistant/components/adax/quality_scale.yaml"],
-        components_dir,
-    ) == ["peblar"]
+    """Keep the domains whose quality scale exists at the pull request head.
 
-
-def test_a_quality_scale_outside_components_does_not_count(
-    components_dir: Path,
-) -> None:
-    """A file merely named quality_scale.yaml elsewhere is not an integration's."""
+    The checkout predates the pull request, so its own change to a quality
+    scale decides: an added one counts and a removed one does not.
+    """
     assert (
-        integrations.with_quality_scale(
-            ["adax"], ["script/quality_scale.yaml"], components_dir
-        )
-        == []
+        integrations.with_quality_scale(domains, file_statuses, components_dir)
+        == expected
     )

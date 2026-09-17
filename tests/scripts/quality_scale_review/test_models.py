@@ -16,7 +16,7 @@ def _pull_request(**overrides: object) -> PullRequest:
         "additions": 30,
         "deletions": 12,
         "changed_files": 3,
-        "filenames": ["homeassistant/components/peblar/sensor.py"],
+        "file_statuses": {"homeassistant/components/peblar/sensor.py": "modified"},
     }
     return PullRequest(**(fields | overrides))
 

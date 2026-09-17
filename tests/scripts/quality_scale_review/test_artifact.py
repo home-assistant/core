@@ -15,7 +15,7 @@ _PR = PullRequest(
     additions=30,
     deletions=12,
     changed_files=3,
-    filenames=["homeassistant/components/peblar/sensor.py"],
+    file_statuses={"homeassistant/components/peblar/sensor.py": "modified"},
 )
 _RESULTS = Results(
     pr_number=42,

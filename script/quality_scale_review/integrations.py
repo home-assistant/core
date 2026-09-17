@@ -17,18 +17,21 @@ def touched_domains(filenames: list[str]) -> list[str]:
 
 def with_quality_scale(
     domains: list[str],
-    filenames: list[str],
+    file_statuses: dict[str, str],
     components_dir: Path = _COMPONENTS_DIR,
 ) -> list[str]:
-    """Keep the domains whose integration has a `quality_scale.yaml`.
+    """Keep the domains whose integration has a `quality_scale.yaml` at the head.
 
-    The checkout is the default branch, so a quality scale that the pull
-    request itself adds shows up only in its changed files.
+    The checkout is the default branch, so when the pull request itself changes
+    a quality scale, its GitHub API status tells whether the file still exists.
     """
-    added = {name for name in filenames if name.endswith(f"/{_QUALITY_SCALE}")}
-    return [
-        domain
-        for domain in domains
-        if (components_dir / domain / _QUALITY_SCALE).is_file()
-        or f"homeassistant/components/{domain}/{_QUALITY_SCALE}" in added
-    ]
+
+    def has_quality_scale(domain: str) -> bool:
+        status = file_statuses.get(
+            f"homeassistant/components/{domain}/{_QUALITY_SCALE}"
+        )
+        if status is None:
+            return (components_dir / domain / _QUALITY_SCALE).is_file()
+        return status != "removed"
+
+    return [domain for domain in domains if has_quality_scale(domain)]

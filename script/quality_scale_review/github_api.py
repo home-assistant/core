@@ -59,7 +59,10 @@ def fetch_pull_request(repo: str, number: int, token: str) -> PullRequest:
         additions=data["additions"],
         deletions=data["deletions"],
         changed_files=data["changed_files"],
-        filenames=[file["filename"] for file in _paginate(session, f"{url}/files")],
+        file_statuses={
+            file["filename"]: file["status"]
+            for file in _paginate(session, f"{url}/files")
+        },
     )
 
 

@@ -35,7 +35,7 @@ def _pull_request(
         additions=additions,
         deletions=deletions,
         changed_files=files,
-        filenames=["homeassistant/components/peblar/sensor.py"],
+        file_statuses={"homeassistant/components/peblar/sensor.py": "modified"},
     )
 
 
