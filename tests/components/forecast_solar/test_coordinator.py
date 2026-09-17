@@ -1,5 +1,6 @@
 """Test the Forecast.Solar coordinator."""
 
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -131,6 +132,7 @@ async def test_coordinator_setup_retries_on_unusable_sensor(
 async def test_coordinator_update_fails_until_sensor_recovers(
     hass: HomeAssistant,
     mock_forecast_solar: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failing sensor fails updates, and its recovery refreshes right away."""
     hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
@@ -148,8 +150,17 @@ async def test_coordinator_update_fails_until_sensor_recovers(
     assert mock_forecast_solar.estimate.call_count == estimate_calls
 
     await coordinator.async_refresh()
+    await coordinator.async_refresh()
     assert coordinator.last_update_success is False
     assert coordinator.last_exception.translation_key == "sensor_invalid"
+    # A persistent failure is logged once, not on every poll.
+    assert caplog.text.count("Error fetching forecast_solar data") == 1
+    assert not [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.forecast_solar")
+        and record.levelno == logging.WARNING
+    ]
     # The sensor was rejected before calling the API.
     assert mock_forecast_solar.estimate.call_count == estimate_calls
 
