@@ -5,7 +5,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from random import randint
-from typing import Any, override
+from typing import Any, cast, override
 
 from enturclient import EnturPublicTransportData
 import probatio
@@ -78,6 +78,7 @@ class EnturStopConfiguration:
     show_on_map: bool
     device_stop_id: str | None = None
     device_stop_name: str | None = None
+    config_subentry_id: str | None = None
 
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -134,8 +135,8 @@ async def _async_setup(
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
-    entities = []
     for stop_config in _stop_configurations(config, subentries):
+        entities = []
         data = EnturPublicTransportData(
             API_CLIENT_NAME.format(str(randint(100000, 999999))),
             stops=list(stop_config.stops),
@@ -177,10 +178,20 @@ async def _async_setup(
                     stop_config.show_on_map,
                     stop_config.device_stop_id,
                     device_name,
+                    unique_id=(
+                        place if stop_config.config_subentry_id is not None else None
+                    ),
                 )
             )
 
-    async_add_entities(entities, True)
+        if stop_config.config_subentry_id is None:
+            async_add_entities(entities, True)
+        else:
+            cast(AddConfigEntryEntitiesCallback, async_add_entities)(
+                entities,
+                True,
+                config_subentry_id=stop_config.config_subentry_id,
+            )
 
 
 def _string_values(value: Any) -> tuple[str, ...]:
@@ -242,6 +253,7 @@ def _stop_configurations(
                 device_stop_name=(
                     stop_place_name if isinstance(stop_place_name, str) else None
                 ),
+                config_subentry_id=subentry.subentry_id,
             )
         )
     return configurations
@@ -280,13 +292,15 @@ class EnturPublicTransportSensor(SensorEntity):
         show_on_map: bool,
         device_stop_id: str | None = None,
         device_name: str | None = None,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
-        self._attr_unique_id = stop
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
         if device_stop_id and device_name:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_stop_id)},

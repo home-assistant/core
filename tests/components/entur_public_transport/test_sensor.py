@@ -116,10 +116,7 @@ async def test_async_setup_platform_creates_entities(
         "Transport Central station",
         "Transport Platform 2",
     ]
-    assert [entity.unique_id for entity in entities] == [
-        "NSR:StopPlace:1",
-        "NSR:Quay:2",
-    ]
+    assert [entity.unique_id for entity in entities] == [None, None]
     assert [entity.device_info for entity in entities] == [None, None]
     assert add_entities.call_args.args[1] is True
 
@@ -135,6 +132,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
     )
     subentries = [
         SimpleNamespace(
+            subentry_id="stop-1",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:1",
@@ -142,6 +140,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
             },
         ),
         SimpleNamespace(
+            subentry_id="stop-2",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:2",
@@ -158,6 +157,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
             expand_platforms=True,
             show_on_map=False,
             device_stop_id="NSR:StopPlace:1",
+            config_subentry_id="stop-1",
         ),
         EnturStopConfiguration(
             stops=("NSR:StopPlace:2",),
@@ -166,6 +166,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
             expand_platforms=True,
             show_on_map=False,
             device_stop_id="NSR:StopPlace:2",
+            config_subentry_id="stop-2",
         ),
     ]
 
@@ -181,6 +182,7 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
     )
     subentries = [
         SimpleNamespace(
+            subentry_id="stop-ui",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:ui",
@@ -205,6 +207,7 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
             expand_platforms=True,
             show_on_map=False,
             device_stop_id="NSR:StopPlace:ui",
+            config_subentry_id="stop-ui",
         ),
     ]
 
@@ -220,6 +223,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
     )
     subentries = [
         SimpleNamespace(
+            subentry_id="stop-1",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:1",
@@ -229,6 +233,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
             },
         ),
         SimpleNamespace(
+            subentry_id="stop-2",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:2",
@@ -250,6 +255,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
             show_on_map=False,
             device_stop_id="NSR:StopPlace:1",
             device_stop_name="Central station",
+            config_subentry_id="stop-1",
         ),
         EnturStopConfiguration(
             stops=(),
@@ -259,6 +265,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
             show_on_map=True,
             device_stop_id="NSR:StopPlace:2",
             device_stop_name="Bus terminal",
+            config_subentry_id="stop-2",
         ),
     ]
 
@@ -270,6 +277,7 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
     config = PLATFORM_SCHEMA({"platform": "entur_public_transport", "stop_ids": []})
     subentries = [
         SimpleNamespace(
+            subentry_id="stop-1",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:1",
@@ -277,6 +285,7 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
             },
         ),
         SimpleNamespace(
+            subentry_id="stop-2",
             subentry_type="stop_place",
             data={
                 "stop_id": "NSR:StopPlace:2",
@@ -312,19 +321,18 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
         ["RUT:Line:1"],
         ["SKY:Line:2"],
     ]
-    entities = add_entities.call_args.args[0]
-    assert [entity.unique_id for entity in entities] == [
-        "NSR:StopPlace:1",
-        "NSR:StopPlace:2",
-    ]
-    assert [entity.device_info["identifiers"] for entity in entities] == [
-        {(DOMAIN, "NSR:StopPlace:1")},
-        {(DOMAIN, "NSR:StopPlace:2")},
-    ]
-    assert [entity.device_info["name"] for entity in entities] == [
-        "Entur NSR:StopPlace:1",
-        "Entur NSR:StopPlace:2",
-    ]
+    assert len(add_entities.call_args_list) == 2
+    for call, stop_id, subentry_id in zip(
+        add_entities.call_args_list,
+        ("NSR:StopPlace:1", "NSR:StopPlace:2"),
+        ("stop-1", "stop-2"),
+        strict=True,
+    ):
+        entity = call.args[0][0]
+        assert entity.unique_id == stop_id
+        assert entity.device_info["identifiers"] == {(DOMAIN, stop_id)}
+        assert entity.device_info["name"] == f"Entur {stop_id}"
+        assert call.kwargs["config_subentry_id"] == subentry_id
 
 
 async def test_sensor_update_sets_departure_attributes() -> None:
