@@ -52,7 +52,7 @@ async def _async_migrate_subentry_display_data(
         try:
             place = await async_get_stop_place(hass, subentry.data["stop_id"])
         except EnturApiError, KeyError:
-            place = None
+            continue
 
         routes_loaded = not line_ids
         if line_ids:

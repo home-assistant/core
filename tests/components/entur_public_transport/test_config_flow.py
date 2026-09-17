@@ -42,7 +42,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry
 
@@ -546,6 +546,7 @@ async def test_subentry_reconfigure_edits_routes_on_current_stop(
 
 async def test_reconfigure_removes_replaced_stop_entities(
     hass: HomeAssistant,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test replacing a stop clears its entities from the registry."""
     old_stop_id = "NSR:StopPlace:1"
@@ -563,7 +564,7 @@ async def test_reconfigure_removes_replaced_stop_entities(
         ],
     )
     entry.add_to_hass(hass)
-    registry = er.async_get(hass)
+    registry = entity_registry
     registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -586,6 +587,7 @@ async def test_reconfigure_removes_replaced_stop_entities(
 
 async def test_reconfigure_removes_deselected_platform_entities(
     hass: HomeAssistant,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test changing platform selection keeps only selected platform entities."""
     stop_id = "NSR:StopPlace:1"
@@ -604,7 +606,7 @@ async def test_reconfigure_removes_deselected_platform_entities(
         ],
     )
     entry.add_to_hass(hass)
-    registry = er.async_get(hass)
+    registry = entity_registry
     for unique_id in (stop_id, selected_quay_id, removed_quay_id):
         registry.async_get_or_create(
             "sensor",
@@ -774,6 +776,35 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
     assert subentry.data[CONF_QUAY_IDS] == []
     assert subentry.data[CONF_STOP_PLACE_NAME] == "Hønefoss sentrum"
     assert subentry.data[CONF_SHOW_ON_MAP] is False
+
+
+async def test_migrate_legacy_subentry_skips_unavailable_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test unavailable metadata does not rewrite an existing subentry title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "🚏 Existing stop · all routes",
+                "unique_id": "NSR:StopPlace:1",
+                "data": {CONF_STOP_ID: "NSR:StopPlace:1"},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.entur_public_transport.async_get_stop_place",
+        side_effect=EnturApiError,
+    ):
+        await _async_migrate_subentry_display_data(hass, entry)
+
+    subentry = entry.subentries["stop-subentry"]
+    assert subentry.title == "🚏 Existing stop · all routes"
+    assert subentry.data == {CONF_STOP_ID: "NSR:StopPlace:1"}
 
 
 def test_combine_line_whitelist_parses_manual_multiline_ids() -> None:
