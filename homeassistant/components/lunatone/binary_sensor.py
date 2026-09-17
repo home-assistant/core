@@ -64,7 +64,6 @@ class LunatoneDALIScanStatus(
         """Initialize a Lunatone DALI scan status."""
         super().__init__(coordinator)
 
-        self._config_entry_unique_id = config_entry_unique_id
         self._line = line
 
         device_unique_id = config_entry_unique_id
