@@ -205,8 +205,8 @@ def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Selec
         .where(
             (States.last_updated_ts == States.last_changed_ts)
             | States.last_changed_ts.is_(None)
-            | (States.attributes_id != OLD_STATE.attributes_id)
-            | (States.attributes != OLD_STATE.attributes)
+            | States.attributes_id.is_distinct_from(OLD_STATE.attributes_id)
+            | States.attributes.is_distinct_from(OLD_STATE.attributes)
         )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
