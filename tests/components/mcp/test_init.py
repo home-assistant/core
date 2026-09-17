@@ -347,9 +347,9 @@ async def test_call_tool(
         ),
         create_llm_context(),
     )
-    assert result == {
-        "content": [{"text": "User was born in February", "type": "text"}]
-    }
+    assert result == llm.ToolResult(
+        data={"content": [{"text": "User was born in February", "type": "text"}]}
+    )
 
 
 async def test_call_tool_fails(
