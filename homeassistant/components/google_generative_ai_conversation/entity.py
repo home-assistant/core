@@ -271,7 +271,7 @@ def _create_google_tool_response_parts(
     return [
         Part.from_function_response(
             name=tool_result.tool_name,
-            response=_validate_tool_results(tool_result.tool_result),
+            response=_validate_tool_results(tool_result.result.data),
         )
         for tool_result in parts
     ]
