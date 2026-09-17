@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'email': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'spas': list([
+      dict({
+        'errors': list([
+        ]),
+        'reminders': list([
+          dict({
+            'name': 'MyFilter',
+            'remaining_days': 2,
+            'snoozed': False,
+          }),
+        ]),
+        'status': dict({
+          'blowoutCycle': 'INACTIVE',
+          'cleanupCycle': 'INACTIVE',
+          'flowSwitch': 'OPEN',
+          'heatMode': 'AUTO',
+          'heater': 'ON',
+          'lights': list([
+          ]),
+          'online': True,
+          'ozone': 'OFF',
+          'primaryFiltration': dict({
+            'cycle': 1,
+            'duration': 4,
+            'lastUpdated': '2021-01-20T11:38:57.014Z',
+            'mode': 'NORMAL',
+            'startHour': 2,
+            'status': 'INACTIVE',
+          }),
+          'pumps': list([
+          ]),
+          'secondaryFiltration': dict({
+            'lastUpdated': '2020-07-09T19:39:52.961Z',
+            'mode': 'AWAY',
+            'status': 'INACTIVE',
+          }),
+          'sensors': list([
+          ]),
+          'setTemperature': 39,
+          'state': 'NORMAL',
+          'uv': 'OFF',
+          'water': dict({
+            'temperature': 38,
+          }),
+        }),
+      }),
+    ]),
+  })
+# ---
