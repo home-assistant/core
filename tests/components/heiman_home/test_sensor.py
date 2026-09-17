@@ -38,6 +38,11 @@ async def _async_setup_entry(hass: HomeAssistant, mock_coordinator: MagicMock) -
     mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
     mock_coordinator.async_init_mqtt_client = AsyncMock(return_value=None)
 
+    # A MagicMock whose async methods are AsyncMocks, so awaited calls
+    # such as session.async_ensure_token_valid() resolve properly.
+    mock_session = MagicMock()
+    mock_session.async_ensure_token_valid = AsyncMock(return_value=None)
+
     with (
         patch(
             "homeassistant.components.heiman_home.async_get_config_entry_implementation",
@@ -46,7 +51,7 @@ async def _async_setup_entry(hass: HomeAssistant, mock_coordinator: MagicMock) -
         ),
         patch(
             "homeassistant.components.heiman_home.OAuth2Session",
-            return_value=MagicMock(),
+            return_value=mock_session,
         ),
         patch(
             "homeassistant.components.heiman_home.HeimanDataUpdateCoordinator",
@@ -1192,7 +1197,7 @@ async def test_sensor_skip_scan_on_no_structure_change(
     # Track listener calls
     listener_callbacks: list = []
 
-    def mock_add_listener(callback):
+    def mock_add_listener(callback, context=None):
         listener_callbacks.append(callback)
         return lambda: None
 
