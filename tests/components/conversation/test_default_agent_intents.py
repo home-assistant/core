@@ -512,10 +512,8 @@ async def test_climate_turn_on_off(
     assert call.data == {"entity_id": [entity_id]}
 
 
-async def test_climate_set_fan_mode(
-    hass: HomeAssistant,
-    init_components,
-) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_climate_set_fan_mode(hass: HomeAssistant) -> None:
     """Test setting the fan mode of a climate device by name."""
     await climate_intent.async_setup_intents(hass)
 
