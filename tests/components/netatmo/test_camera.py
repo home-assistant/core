@@ -1091,21 +1091,39 @@ async def test_camera_image_raises_exception(
 async def test_camera_initial_setup_and_images(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     camera_type: str,
     camera_id: str,
     camera_entity: str,
     expected_motion_detection: bool | None,
 ) -> None:
-    """Test camera initial state and valid snapshot retrieval."""
+    """Test camera initial state and snapshot retrieval."""
     FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
+
+    # Repeatedly used variables for the test and initial value from fixture
+    # Use nonexistent ID to prevent matching during initial setup
+    polling_cycles = 11
+    polling_delta = timedelta(seconds=30)
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"alim_status": 2},
+    }
 
     fake_post_hits = 0
 
-    async def fake_post(*args: Any, **kwargs: Any):
-        """Fake error during requesting backend data."""
+    async def fake_camera_post(*args: Any, **kwargs: Any):
+        """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(hass, *args, **kwargs)
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
 
     with (
         patch(
@@ -1119,7 +1137,7 @@ async def test_camera_initial_setup_and_images(
             "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_webhook.return_value = "https://example.com"
@@ -1141,6 +1159,28 @@ async def test_camera_initial_setup_and_images(
         assert result is not None
         assert result.content_type == "image/jpeg"
         assert result.content == FAKE_IMG
+        assert mock_auth.return_value.async_get_image.call_count == 1
+
+        # Change mocked status to test early unavailability of image fetch
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        mock_state["attributes"] = {
+            "alim_status": 1,
+        }
+
+        # Trigger some polling cycle to let status change be picked up
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+        # State checks after status change
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
+
+        # Validate image fetch raises exception
+        with pytest.raises(Exception) as excinfo:
+            await camera.async_get_image(hass, camera_entity)
+
+        assert excinfo.value.args == ("Camera is off",)
 
 
 @pytest.mark.parametrize(
