@@ -154,6 +154,14 @@ class ToolInput:
     external: bool = False
 
 
+@dataclass(slots=True)
+class ToolResult:
+    """Result of a tool call."""
+
+    data: JsonObjectType
+    error: bool = False
+
+
 class Tool:
     """LLM Tool base class."""
 
@@ -164,8 +172,12 @@ class Tool:
     @abstractmethod
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
-        """Call the tool."""
+    ) -> ToolResult | JsonObjectType:
+        """Call the tool.
+
+        Returning a plain JSON object is deprecated and will be removed in
+        Home Assistant 2027.11. It is read as a successful ToolResult.
+        """
         raise NotImplementedError
 
     @override
@@ -184,7 +196,7 @@ class APIInstance:
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
 
-    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
+    async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""
         from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationTraceEventType,
@@ -202,7 +214,10 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        return await tool.async_call(self.api.hass, tool_input, self.llm_context)
+        result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
+        if isinstance(result, ToolResult):
+            return result
+        return ToolResult(data=result)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -331,7 +346,7 @@ class NamespacedTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult | JsonObjectType:
         """Handle the intent."""
         return await self.tool.async_call(
             hass,

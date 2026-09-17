@@ -62,27 +62,30 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'data': dict({
+            'failed': list([
+            ]),
+            'success': list([
+            ]),
+          }),
+          'response_type': 'action_done',
+          'speech': dict({
+            'plain': dict({
+              'extra_data': None,
+              'speech': '12:00 PM',
+            }),
+          }),
+          'speech_slots': dict({
+            'time': datetime.time(12, 0),
+          }),
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'HassGetCurrentTime',
-      'tool_result': dict({
-        'data': dict({
-          'failed': list([
-          ]),
-          'success': list([
-          ]),
-        }),
-        'response_type': 'action_done',
-        'speech': dict({
-          'plain': dict({
-            'extra_data': None,
-            'speech': '12:00 PM',
-          }),
-        }),
-        'speech_slots': dict({
-          'time': datetime.time(12, 0),
-        }),
-      }),
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -138,10 +141,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -164,10 +170,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value2',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
-      'tool_result': 'value2',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',
@@ -281,10 +290,13 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'value1',
     }),
     dict({
       'agent_id': 'conversation.openai_conversation',

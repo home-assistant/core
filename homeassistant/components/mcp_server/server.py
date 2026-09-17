@@ -147,12 +147,12 @@ async def create_server(
         tool_response = await llm_api.async_call_tool(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
-        if not tool_response.get("success"):
-            raise HomeAssistantError(cast(str, tool_response["error"]))
+        if not tool_response.data.get("success"):
+            raise HomeAssistantError(cast(str, tool_response.data["error"]))
 
         return [
             ReadResourceContents(
-                content=cast(str, tool_response["result"]),
+                content=cast(str, tool_response.data["result"]),
                 mime_type=SNAPSHOT_RESOURCE_MIME_TYPE,
             )
         ]
@@ -177,7 +177,7 @@ async def create_server(
         return [
             types.TextContent(
                 type="text",
-                text=json.dumps(tool_response, ensure_ascii=False),
+                text=json.dumps(tool_response.data, ensure_ascii=False),
             )
         ]
 

@@ -902,7 +902,9 @@ async def test_mcp_tool_call_unicode(
     mock_api.api.name = "Assist"
     mock_api.tools = []
     mock_api.custom_serializer = None
-    mock_api.async_call_tool.return_value = {"message": "这是一个测试"}
+    mock_api.async_call_tool.return_value = llm.ToolResult(
+        data={"message": "这是一个测试"}
+    )
 
     # We need to ensure when the server calls llm.async_get_api, it gets our mock
     # async_get_api is awaited, so we need an AsyncMock
