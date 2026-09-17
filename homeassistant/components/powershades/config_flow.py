@@ -4,12 +4,12 @@ import ipaddress
 import logging
 from typing import Any, override
 
+import probatio
 from pyowershades import (
     DiscoveredDevice,
     PowerShadesTimeoutError,
     async_get_device_info,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -83,9 +83,9 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("device"): selector.SelectSelector(
+                    probatio.Required("device"): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=options,
                             translation_key="device",
@@ -115,7 +115,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
