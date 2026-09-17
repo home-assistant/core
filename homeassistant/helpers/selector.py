@@ -2385,23 +2385,23 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
     @staticmethod
     def _valid_state_class(option: list[str]) -> list[str]:
         """Validate state class and raise if invalid."""
-        vol.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(option)
+        probatio.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(option)
         return option
 
     @staticmethod
     def _valid_device_class(option: str) -> str:
         """Validate device class and raise if invalid."""
-        vol.In(_enum_options(Platform.SENSOR, "SensorDeviceClass"))(option)
+        probatio.In(_enum_options(Platform.SENSOR, "SensorDeviceClass"))(option)
         return option
 
-    CONFIG_SCHEMA = vol.All(
+    CONFIG_SCHEMA = probatio.All(
         make_selector_config_schema(
             {
-                vol.Optional("device_classes"): vol.Any(
-                    None, vol.All(cv.ensure_list, [_valid_device_class])
+                probatio.Optional("device_classes"): probatio.Any(
+                    None, probatio.All(cv.ensure_list, [_valid_device_class])
                 ),
-                vol.Optional("state_classes"): vol.Any(
-                    None, vol.All(cv.ensure_list, [_valid_state_class])
+                probatio.Optional("state_classes"): probatio.Any(
+                    None, probatio.All(cv.ensure_list, [_valid_state_class])
                 ),
             },
         ),
@@ -2446,9 +2446,9 @@ class UnitOfMeasurementSelector(Selector[UnitOfMeasurementSelectorConfig]):
         if valid_units_set is None:
             # If there is no device class or state class units limitation,
             # any (custom) unit is accepted
-            unit = vol.Any(None, str)(data)
+            unit = probatio.Any(None, str)(data)
             return unit
 
-        units_schema = vol.In(valid_units_set)
+        units_schema = probatio.In(valid_units_set)
         unit = units_schema(data)
         return unit
