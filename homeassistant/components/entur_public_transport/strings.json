@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an Entur stop",
+        "description": "Enter an Entur stop ID, for example NSR:StopPlace:548 or NSR:Quay:48550.",
+        "data": {
+          "stop_id": "Stop ID"
+        }
+      }
+    },
+    "error": {
+      "invalid_stop_id": "Enter a valid Entur stop ID starting with NSR:StopPlace: or NSR:Quay:."
+    },
+    "abort": {
+      "already_configured": "This stop is already configured."
+    }
+  }
+}
