@@ -30,7 +30,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DEVICE_INFO_INTERVAL, DOMAIN
 from .models import ZentralyConfigEntry, ZentralyData, ZentralyDevice
 from .platforms import get_device_platforms
 
@@ -132,7 +132,7 @@ def _register_device_info_polling(
         async_track_time_interval(
             hass,
             _async_periodic_device_info_refresh,
-            SCAN_INTERVAL,
+            DEVICE_INFO_INTERVAL,
         )
     )
 

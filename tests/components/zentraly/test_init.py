@@ -361,6 +361,9 @@ async def test_device_info_periodic_refresh(
         now = dt_util.utcnow()
         async_fire_time_changed(hass, now + timedelta(minutes=5))
         await hass.async_block_till_done()
+        read_info.assert_not_awaited()
+        async_fire_time_changed(hass, now + timedelta(hours=24))
+        await hass.async_block_till_done()
         read_info.assert_awaited_once_with()
         registered = device_registry.async_get_device_by_identifier(
             (DOMAIN, PARENT_DEVICE_ID), entry.entry_id
@@ -368,7 +371,7 @@ async def test_device_info_periodic_refresh(
         assert registered.sw_version == "1.0"
         assert registered.hw_version == "2.0"
         assert await hass.config_entries.async_unload(entry.entry_id)
-        async_fire_time_changed(hass, now + timedelta(minutes=10))
+        async_fire_time_changed(hass, now + timedelta(hours=48))
         await hass.async_block_till_done()
         read_info.assert_awaited_once_with()
 
@@ -413,3 +416,53 @@ async def test_partial_device_info_after_restart(
     updated = device_registry.async_get(registered.id)
     assert updated.sw_version == firmware
     assert updated.hw_version == hardware
+
+
+async def test_climate_periodic_refresh_lifecycle(hass: HomeAssistant) -> None:
+    """Refresh climate every five minutes and cancel polling when unloading."""
+    entry = _parent_entry()
+    entry.add_to_hass(hass)
+    api = MagicMock(spec=ZentralyApi)
+    api.device_id = PARENT_DEVICE_ID
+    api.host = HOST
+    api.port = PORT
+    api.connected = True
+    api.async_validate_password.return_value = PARENT_MAC
+    climate_api = MagicMock(spec=ZentralyClimateApi)
+    commands = get_device_commands(DeviceModel.ZTTIN)
+    climate_api.configuration = commands.climate_configuration
+    climate_api.supports.side_effect = lambda capability: (
+        capability in commands.capabilities
+    )
+    climate_api.async_get_humidity.return_value = 45.0
+    climate_api.async_get_current_temperature.return_value = 19.0
+    climate_api.async_get_target_temperature.return_value = 21.0
+    climate_api.async_get_operation_mode.return_value = ClimateOperationMode.MANUAL
+    climate_api.async_get_heat_demand.return_value = False
+    climate_api.async_set_target_temperature.return_value = True
+    climate_api.async_set_operation_mode.return_value = True
+    with (
+        patch(
+            "homeassistant.components.zentraly.get_device_platforms",
+            return_value=[Platform.CLIMATE],
+        ),
+        patch("homeassistant.components.zentraly.ZentralyApi", return_value=api),
+        patch(
+            "homeassistant.components.zentraly.climate.ZentralyClimateApi",
+            return_value=climate_api,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        climate_api.async_get_current_temperature.reset_mock()
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now + timedelta(minutes=4))
+        await hass.async_block_till_done()
+        climate_api.async_get_current_temperature.assert_not_awaited()
+        async_fire_time_changed(hass, now + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        climate_api.async_get_current_temperature.assert_awaited_once_with()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        async_fire_time_changed(hass, now + timedelta(minutes=10))
+        await hass.async_block_till_done()
+        climate_api.async_get_current_temperature.assert_awaited_once_with()
