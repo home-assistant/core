@@ -230,11 +230,11 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
         "NSR:StopPlace:1",
         "NSR:StopPlace:2",
     ]
-    assert [entity.device_info.identifiers for entity in entities] == [
+    assert [entity.device_info["identifiers"] for entity in entities] == [
         {(DOMAIN, "NSR:StopPlace:1")},
         {(DOMAIN, "NSR:StopPlace:2")},
     ]
-    assert [entity.device_info.name for entity in entities] == [
+    assert [entity.device_info["name"] for entity in entities] == [
         "Entur NSR:StopPlace:1",
         "Entur NSR:StopPlace:2",
     ]
