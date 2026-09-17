@@ -779,6 +779,39 @@ async def test_closure_cover_garage_door(
     assert state
     assert state.state == CoverState.CLOSING
 
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen.value},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPENING
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kStopped.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallCurrentState.attribute_id,
+        # OverallCurrentState reported, but its position field is unset - not
+        # the same as the attribute being entirely absent (allow_none_value).
+        {0: None},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
 async def test_closure_cover_venetian_blinds(
