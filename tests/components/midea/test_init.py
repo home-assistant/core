@@ -6,7 +6,11 @@ from unittest.mock import patch
 from midealocal.const import DeviceType, ProtocolVersion
 import pytest
 
-from homeassistant.components.midea.const import CONF_SN, DOMAIN
+from homeassistant.components.midea.const import (
+    CONF_POWER_ANALYSIS_METHOD,
+    CONF_SN,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -112,6 +116,28 @@ async def test_async_setup_entry_paths(
     ):
         await hass.config_entries.async_setup(entry2.entry_id)
     assert entry2.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_async_setup_entry_passes_power_analysis_customize(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup passes the selected power analysis method via customize JSON."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=ENTRY_DATA,
+        options={CONF_POWER_ANALYSIS_METHOD: 12},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=DummyDevice(DeviceType.AC),
+    ) as device_selector:
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert device_selector.call_args.args[10] == '{"power_analysis_method": 12}'
 
 
 async def test_setup_entry_not_ready_on_connect_failure(
