@@ -30,13 +30,13 @@ async def test_unload_entry(
 
 async def test_registry_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     load_int: ConfigEntry,
     hass_ws_client: WebSocketGenerator,
     unit_count: int,
 ) -> None:
     """Test being able to remove a disconnected device."""
     entry_id = load_int.entry_id
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     live_id = "L1.100"
     dead_id = "L2.200"
 

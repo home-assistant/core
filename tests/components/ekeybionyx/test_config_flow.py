@@ -250,6 +250,7 @@ async def test_no_available_webhooks(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@patch("homeassistant.components.ekeybionyx.config_flow.DELETION_POLL_INTERVAL", 0)
 async def test_cleanup(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

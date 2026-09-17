@@ -37,9 +37,15 @@ async def test_flow(
         side_effect=[first_con, second_con],
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: host},
+            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: host},
         )
         await hass.async_block_till_done()
     assert result["type"] == exp_type
@@ -58,9 +64,15 @@ async def test_existing(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: host},
+            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: host},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -85,9 +97,15 @@ async def test_existing_abort_update(hass: HomeAssistant) -> None:
         mock_dyn_dev().configure.assert_called_once()
         assert mock_dyn_dev().configure.mock_calls[0][1][0]["port"] == port1
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: host, CONF_PORT: port2},
+            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: host, CONF_PORT: port2},
         )
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 1
@@ -106,9 +124,15 @@ async def test_two_entries(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: host2},
+            dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: host2},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].state is ConfigEntryState.LOADED

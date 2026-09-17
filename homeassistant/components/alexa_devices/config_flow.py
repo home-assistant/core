@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
@@ -10,7 +11,8 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-import voluptuous as vol
+from aioamazondevices.structures import AmazonSaveDataConfig
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -20,23 +22,23 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
-STEP_RECONFIGURE = vol.Schema(
+STEP_RECONFIGURE = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CODE): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
     }
 )
 
@@ -49,6 +51,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        save_data=AmazonSaveDataConfig(
+            path=Path(hass.config.path(DOMAIN)),
+        ),
     )
 
     return await api.login.login_mode_interactive(data[CONF_CODE])

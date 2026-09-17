@@ -558,11 +558,11 @@ async def test_async_remove_helper_devices(
         identifiers=helper_identifiers,
     )
     # Both are splits of the same pre-migration device, sharing its id
-    device_registry.devices[source_split.id] = attr.evolve(
+    device_registry._devices[source_split.id] = attr.evolve(
         source_split,
         composite_device_id=composite_id,
     )
-    device_registry.devices[helper_split.id] = attr.evolve(
+    device_registry._devices[helper_split.id] = attr.evolve(
         helper_split,
         composite_device_id=composite_id,
         has_composite_identifiers=helper_has_composite_identifiers,
