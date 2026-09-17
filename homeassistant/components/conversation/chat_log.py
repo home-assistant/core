@@ -309,6 +309,7 @@ class ToolResultContent:
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
             "result": asdict(self.result),
+            "tool_result": self.result.data,
             "created": self.created,
         }
 

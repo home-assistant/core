@@ -497,6 +497,7 @@
           'role': 'tool_result',
           'tool_call_id': 'test_tool_id',
           'tool_name': 'test_tool',
+          'tool_result': 'Test response',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
