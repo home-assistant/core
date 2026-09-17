@@ -293,6 +293,8 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
     assert entry.subentries["stop-subentry"].data == {
         CONF_STOP_ID: new_place.stop_id,
         CONF_WHITELIST_LINES: [new_route.line_id],
+        "route_labels": {"RUT:Line:1": "1 · bus · RUT"},
+        "stop_place_types": ["busStation"],
     }
     assert (
         entry.subentries["stop-subentry"].title
