@@ -14,22 +14,54 @@ from homeassistant.core import HomeAssistant, callback
 from .const import FlowType
 
 
+class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
+    """Typed flow context for repairs flow."""
+
+    issue_id: str
+
+
 class RepairsFlowResult(
-    data_entry_flow.FlowResult[data_entry_flow.FlowContext, str], total=False
+    data_entry_flow.FlowResult[
+        RepairsFlowContext,
+        str,
+    ],
+    total=False,
 ):
-    """Typed result dict for repair flow."""
+    """Typed result dict for repairs flow."""
 
     next_flow: tuple[FlowType, str]
     result: ConfigEntry | None
 
 
 class RepairsFlow(
-    data_entry_flow.FlowHandler[data_entry_flow.FlowContext, RepairsFlowResult, str]
+    data_entry_flow.FlowHandler[
+        RepairsFlowContext,
+        RepairsFlowResult,
+        str,
+    ]
 ):
     """Handle a flow for fixing an issue."""
 
-    issue_id: str
     data: dict[str, str | int | float | None] | None
+    _issue_id: str
+
+    @property
+    def issue_id(self) -> str:
+        """Return the flow's issue_id."""
+        if "issue_id" in self.context:
+            return self.context["issue_id"]
+        # Avoid breaking changes in legacy custom integrations that may access
+        # this property prior to the flow manager applying the context in async_create_flow.
+        return self._issue_id
+
+    @issue_id.setter
+    def issue_id(self, issue_id: str) -> None:
+        """Allow legacy implementations to set issue_id.
+
+        Setter is retained to avoid breaking changes in custom integrations that may set issue_id in a RepairFlow
+        prior to the flow manager applying the context.
+        """
+        self._issue_id = issue_id
 
     @override
     @callback
