@@ -1897,8 +1897,9 @@
     "entur_public_transport": {
       "name": "Entur",
       "integration_type": "service",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "envertech_evt800": {
       "name": "ENVERTECH EVT800",
