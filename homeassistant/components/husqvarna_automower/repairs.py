@@ -23,21 +23,17 @@ class MigrationRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Retry the migration after confirmation."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="confirm", data_schema=probatio.Schema({})
-            )
+        if user_input is not None:
+            entry_id = self.data.get("entry_id") if self.data else None
+            if isinstance(entry_id, str):
+                await self.hass.config_entries.async_retry_migration(entry_id)
+                entry = self.hass.config_entries.async_get_known_entry(entry_id)
+                if entry.state is not ConfigEntryState.MIGRATION_ERROR:
+                    return self.async_create_entry(data={})
 
-        entry_id = self.data.get("entry_id") if self.data else None
-        if not isinstance(entry_id, str):
-            return self.async_abort(reason="retry_failed")
-
-        await self.hass.config_entries.async_retry_migration(entry_id)
-        entry = self.hass.config_entries.async_get_known_entry(entry_id)
-        if entry.state is ConfigEntryState.MIGRATION_ERROR:
-            return self.async_abort(reason="retry_failed")
-
-        return self.async_create_entry(data={})
+        return self.async_show_form(
+            step_id="confirm", data_schema=probatio.Schema({})
+        )
 
 
 async def async_create_fix_flow(
