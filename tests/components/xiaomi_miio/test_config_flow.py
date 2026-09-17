@@ -1170,3 +1170,72 @@ async def test_zeroconf_repeater_success(hass: HomeAssistant) -> None:
         # the same value as TEST_MAC.
         CONF_MAC: TEST_MAC,
     }
+
+
+async def test_config_flow_repeater_missing_mac(hass: HomeAssistant) -> None:
+    """Test that a repeater entry is rejected when the probe found no MAC."""
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await _step_to_connect(hass)
+
+        # The probe failed, so no MAC was discovered; choosing the
+        # repeater model must not create an entry without a unique ID.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MODEL: TEST_REPEATER_MODEL},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
+    """Test that a wrong token submitted during reauth is rejected."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=error,
+    ):
+        result = await config_entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "cloud"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {const.CONF_MANUAL: True},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "manual"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "wrong_token"}

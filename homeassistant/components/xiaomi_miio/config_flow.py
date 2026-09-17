@@ -370,8 +370,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await connect_device_class.async_connect_device(self.host, self.token)
         except AuthException:
-            if self.model is None:
-                errors["base"] = "wrong_token"
+            errors["base"] = "wrong_token"
         except SetupException:
             if self.model is None:
                 errors["base"] = "cannot_connect"
@@ -432,6 +431,14 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             for device_model in MODELS_ALL_DEVICES:
                 if self.model.startswith(device_model):
                     flow_type = CONF_DEVICE
+
+        # The entry is keyed by the repeater MAC, which the probe did not
+        # provide when it failed.
+        if flow_type == CONF_WIFI_REPEATER and self.mac is None:
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
+            )
 
         if flow_type is not None:
             return self.async_create_entry(

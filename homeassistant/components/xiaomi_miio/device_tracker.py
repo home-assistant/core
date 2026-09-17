@@ -114,6 +114,9 @@ class XiaomiMiioRepeaterDevice(ScannerEntity):
         self._attr_mac_address = mac
         self._attr_ip_address: str | None = None
         self._connected = False
+        # add_to_platform_start runs before async_added_to_hass and reads
+        # is_connected/ip_address for connected-device discovery.
+        self.async_update_state()
 
     @property
     @override
@@ -157,9 +160,6 @@ class XiaomiMiioRepeaterDevice(ScannerEntity):
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
-        self.async_update_state()
-        # The coordinator keeps the last successful station list on failed
-        # refreshes, so entities hold their state until the next success.
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_on_demand_update)
         )

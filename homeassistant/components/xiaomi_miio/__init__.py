@@ -222,6 +222,8 @@ def _async_update_data_default(hass, device):
         try:
             return await _async_fetch_data()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex
 
     return update
@@ -314,6 +316,8 @@ def _async_update_data_vacuum(
         try:
             return await execute_update()
         except DeviceException as ex:
+            if isinstance(ex.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex
 
     return update_async

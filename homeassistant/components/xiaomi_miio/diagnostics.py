@@ -34,7 +34,9 @@ async def async_get_config_entry_diagnostics(
     if config_entry.data[CONF_FLOW_TYPE] == CONF_WIFI_REPEATER:
         # WifiRepeaterStatus wraps the raw station list in .data.
         if (data := config_entry.runtime_data.device_coordinator.data) is not None:
-            diagnostics_data["coordinator_data"] = data.data
+            diagnostics_data["coordinator_data"] = async_redact_data(
+                data.data, TO_REDACT | {"ip"}
+            )
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         coordinator = config_entry.runtime_data.device_coordinator
         if isinstance(coordinator.data, dict):

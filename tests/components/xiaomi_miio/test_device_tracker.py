@@ -407,8 +407,8 @@ async def test_diagnostics(
     assert diagnostics["coordinator_data"] == {
         "sta": {"count": 2, "access_policy": 0},
         "mat": [
-            {"mac": STATION_1_MAC, "ip": STATION_1_IP, "last_time": 12345},
-            {"mac": STATION_2_MAC, "ip": STATION_2_IP, "last_time": 67890},
+            {"mac": REDACTED, "ip": REDACTED, "last_time": 12345},
+            {"mac": REDACTED, "ip": REDACTED, "last_time": 67890},
         ],
         "access_list": {"mac": ""},
     }
@@ -460,10 +460,11 @@ async def test_entities_disabled_without_registry_device(
     entity_registry: er.EntityRegistry,
     mock_repeater: MagicMock,
 ) -> None:
-    """Test that station entities are disabled when the mac is unknown.
+    """Test that station entities are disabled when the mac is unregistered.
 
-    Scanner entities are only enabled when the mac address is known to
-    the device registry (or the device is connected on first add).
+    Scanner entities are disabled by default unless the mac address is
+    registered in the device registry; being connected at add time does
+    not enable them.
     """
     entry = await setup_repeater(hass)
 
