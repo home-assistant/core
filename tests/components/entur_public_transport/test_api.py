@@ -92,6 +92,20 @@ async def test_search_stop_places_rejects_invalid_response(
         await async_search_stop_places(hass, "Bergen")
 
 
+async def test_search_stop_places_rejects_invalid_json(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
+    """Test that invalid JSON from Entur is treated as an API error."""
+    aioclient_mock.get(
+        GEOCODER_AUTOCOMPLETE_URL,
+        text="not valid JSON",
+        headers={"Content-Type": "application/json"},
+    )
+
+    with pytest.raises(EnturApiError):
+        await async_search_stop_places(hass, "Bergen")
+
+
 async def test_get_stop_place(
     aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
 ) -> None:

@@ -194,7 +194,7 @@ async def async_search_stop_places(
         ) as response:
             response.raise_for_status()
             payload: Any = await response.json()
-    except (ClientError, TimeoutError) as err:
+    except (ClientError, TimeoutError, ValueError) as err:
         raise EnturApiError from err
 
     return _parse_stop_places(payload)
@@ -211,7 +211,7 @@ async def async_get_stop_place(hass: HomeAssistant, stop_id: str) -> EnturStopPl
         ) as response:
             response.raise_for_status()
             payload: Any = await response.json()
-    except (ClientError, TimeoutError) as err:
+    except (ClientError, TimeoutError, ValueError) as err:
         raise EnturApiError from err
 
     places = _parse_stop_places(payload)
@@ -243,7 +243,7 @@ async def async_get_stop_routes(
         ) as response:
             response.raise_for_status()
             payload: Any = await response.json()
-    except (ClientError, TimeoutError) as err:
+    except (ClientError, TimeoutError, ValueError) as err:
         raise EnturApiError from err
 
     return _parse_stop_routes(payload)
@@ -268,7 +268,7 @@ async def async_get_stop_quays(
         ) as response:
             response.raise_for_status()
             payload: Any = await response.json()
-    except (ClientError, TimeoutError) as err:
+    except (ClientError, TimeoutError, ValueError) as err:
         raise EnturApiError from err
 
     return _parse_stop_quays(payload)
