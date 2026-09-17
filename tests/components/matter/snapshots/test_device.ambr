@@ -176,17 +176,32 @@
   dict({
     '00000000000004D2-0000000000000459-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-0000000000000459-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'select.dewenwils_3_zone_transformer_endpoint_1_power_on_behavior': 'Power-on behavior',
+            'switch.dewenwils_3_zone_transformer_endpoint_1': None,
+          }),
+          'name': 'Endpoint 1',
+        }),
+        '00000000000004D2-0000000000000459-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'select.dewenwils_3_zone_transformer_endpoint_2_power_on_behavior': 'Power-on behavior',
+            'switch.dewenwils_3_zone_transformer_endpoint_2': None,
+          }),
+          'name': 'Endpoint 2',
+        }),
+        '00000000000004D2-0000000000000459-MatterNodeDevice-3': dict({
+          'entities': dict({
+            'select.dewenwils_3_zone_transformer_endpoint_3_power_on_behavior': 'Power-on behavior',
+            'switch.dewenwils_3_zone_transformer_endpoint_3': None,
+          }),
+          'name': 'Endpoint 3',
+        }),
       }),
       'entities': dict({
-        'select.dewenwils_3_zone_transformer_power_on_behavior_1': 'Power-on behavior (1)',
-        'select.dewenwils_3_zone_transformer_power_on_behavior_2': 'Power-on behavior (2)',
-        'select.dewenwils_3_zone_transformer_power_on_behavior_3': 'Power-on behavior (3)',
         'sensor.dewenwils_3_zone_transformer_reboot_count': 'Reboot count',
         'sensor.dewenwils_3_zone_transformer_uptime': 'Uptime',
         'sensor.dewenwils_3_zone_transformer_wi_fi_rssi': 'Wi-Fi RSSI',
-        'switch.dewenwils_3_zone_transformer_switch_1': 'Switch (1)',
-        'switch.dewenwils_3_zone_transformer_switch_2': 'Switch (2)',
-        'switch.dewenwils_3_zone_transformer_switch_3': 'Switch (3)',
         'update.dewenwils_3_zone_transformer_firmware': 'Firmware',
       }),
       'name': 'DEWENWILS 3 -Zone Transformer',
@@ -234,27 +249,37 @@
   dict({
     '00000000000004D2-00000000000000C7-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-00000000000000C7-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'button.eve_energy_20ecn4101_top_identify': 'Identify',
+            'select.eve_energy_20ecn4101_top_power_on_behavior': 'Power-on behavior',
+            'sensor.eve_energy_20ecn4101_top_current': 'Current',
+            'sensor.eve_energy_20ecn4101_top_energy': 'Energy',
+            'sensor.eve_energy_20ecn4101_top_power': 'Power',
+            'sensor.eve_energy_20ecn4101_top_voltage': 'Voltage',
+            'switch.eve_energy_20ecn4101_top': None,
+            'switch.eve_energy_20ecn4101_top_child_lock': 'Child lock',
+          }),
+          'name': 'top',
+        }),
+        '00000000000004D2-00000000000000C7-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'button.eve_energy_20ecn4101_bottom_identify': 'Identify',
+            'select.eve_energy_20ecn4101_bottom_power_on_behavior': 'Power-on behavior',
+            'switch.eve_energy_20ecn4101_bottom': None,
+          }),
+          'name': 'bottom',
+        }),
       }),
       'entities': dict({
         'binary_sensor.eve_energy_20ecn4101_hardware_faults': 'Hardware faults',
         'binary_sensor.eve_energy_20ecn4101_network_faults': 'Network faults',
         'binary_sensor.eve_energy_20ecn4101_radio_faults': 'Radio faults',
-        'button.eve_energy_20ecn4101_identify_bottom': 'Identify (bottom)',
-        'button.eve_energy_20ecn4101_identify_top': 'Identify (top)',
-        'select.eve_energy_20ecn4101_power_on_behavior_bottom': 'Power-on behavior (bottom)',
-        'select.eve_energy_20ecn4101_power_on_behavior_top': 'Power-on behavior (top)',
-        'sensor.eve_energy_20ecn4101_current_top': 'Current (top)',
-        'sensor.eve_energy_20ecn4101_energy_top': 'Energy (top)',
-        'sensor.eve_energy_20ecn4101_power_top': 'Power (top)',
         'sensor.eve_energy_20ecn4101_reboot_count': 'Reboot count',
         'sensor.eve_energy_20ecn4101_thread_channel': 'Thread channel',
         'sensor.eve_energy_20ecn4101_thread_network_name': 'Thread network name',
         'sensor.eve_energy_20ecn4101_thread_routing_role': 'Thread routing role',
         'sensor.eve_energy_20ecn4101_uptime': 'Uptime',
-        'sensor.eve_energy_20ecn4101_voltage_top': 'Voltage (top)',
-        'switch.eve_energy_20ecn4101_child_lock_top': 'Child lock (top)',
-        'switch.eve_energy_20ecn4101_switch_bottom': 'Switch (bottom)',
-        'switch.eve_energy_20ecn4101_switch_top': 'Switch (top)',
         'update.eve_energy_20ecn4101_firmware': 'Firmware',
       }),
       'name': 'Eve Energy 20ECN4101',
@@ -380,6 +405,38 @@
   dict({
     '00000000000004D2-0000000000000446-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-0000000000000446-MatterNodeDevice-41': dict({
+          'entities': dict({
+            'button.kitchen_switch_endpoint_41_identify': 'Identify',
+            'select.kitchen_switch_endpoint_41_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_endpoint_41': None,
+          }),
+          'name': 'Endpoint 41',
+        }),
+        '00000000000004D2-0000000000000446-MatterNodeDevice-42': dict({
+          'entities': dict({
+            'button.kitchen_switch_endpoint_42_identify': 'Identify',
+            'select.kitchen_switch_endpoint_42_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_endpoint_42': None,
+          }),
+          'name': 'Endpoint 42',
+        }),
+        '00000000000004D2-0000000000000446-MatterNodeDevice-43': dict({
+          'entities': dict({
+            'button.kitchen_switch_endpoint_43_identify': 'Identify',
+            'select.kitchen_switch_endpoint_43_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_endpoint_43': None,
+          }),
+          'name': 'Endpoint 43',
+        }),
+        '00000000000004D2-0000000000000446-MatterNodeDevice-44': dict({
+          'entities': dict({
+            'button.kitchen_switch_endpoint_44_identify': 'Identify',
+            'select.kitchen_switch_endpoint_44_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_endpoint_44': None,
+          }),
+          'name': 'Endpoint 44',
+        }),
       }),
       'entities': dict({
         'button.kitchen_switch_identify_21': 'Identify (21)',
@@ -390,18 +447,10 @@
         'button.kitchen_switch_identify_32': 'Identify (32)',
         'button.kitchen_switch_identify_33': 'Identify (33)',
         'button.kitchen_switch_identify_34': 'Identify (34)',
-        'button.kitchen_switch_identify_41': 'Identify (41)',
-        'button.kitchen_switch_identify_42': 'Identify (42)',
-        'button.kitchen_switch_identify_43': 'Identify (43)',
-        'button.kitchen_switch_identify_44': 'Identify (44)',
         'event.kitchen_switch_button_31': 'Button (31)',
         'event.kitchen_switch_button_32': 'Button (32)',
         'event.kitchen_switch_button_33': 'Button (33)',
         'event.kitchen_switch_button_34': 'Button (34)',
-        'select.kitchen_switch_power_on_behavior_41': 'Power-on behavior (41)',
-        'select.kitchen_switch_power_on_behavior_42': 'Power-on behavior (42)',
-        'select.kitchen_switch_power_on_behavior_43': 'Power-on behavior (43)',
-        'select.kitchen_switch_power_on_behavior_44': 'Power-on behavior (44)',
         'sensor.kitchen_switch_boot_reason': 'Boot reason',
         'sensor.kitchen_switch_current_switch_position_31': 'Current switch position (31)',
         'sensor.kitchen_switch_current_switch_position_32': 'Current switch position (32)',
@@ -410,10 +459,6 @@
         'sensor.kitchen_switch_reboot_count': 'Reboot count',
         'sensor.kitchen_switch_uptime': 'Uptime',
         'sensor.kitchen_switch_wi_fi_rssi': 'Wi-Fi RSSI',
-        'switch.kitchen_switch_switch_41': 'Switch (41)',
-        'switch.kitchen_switch_switch_42': 'Switch (42)',
-        'switch.kitchen_switch_switch_43': 'Switch (43)',
-        'switch.kitchen_switch_switch_44': 'Switch (44)',
       }),
       'name': 'Kitchen Switch',
       'via_device': None,
@@ -608,15 +653,25 @@
   dict({
     '00000000000004D2-000000000000008A-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-000000000000008A-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'select.tapo_smart_wi_fi_outlet_endpoint_1_power_on_behavior': 'Power-on behavior',
+            'switch.tapo_smart_wi_fi_outlet_endpoint_1': None,
+          }),
+          'name': 'Endpoint 1',
+        }),
+        '00000000000004D2-000000000000008A-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'select.tapo_smart_wi_fi_outlet_endpoint_2_power_on_behavior': 'Power-on behavior',
+            'switch.tapo_smart_wi_fi_outlet_endpoint_2': None,
+          }),
+          'name': 'Endpoint 2',
+        }),
       }),
       'entities': dict({
-        'select.tapo_smart_wi_fi_outlet_power_on_behavior_1': 'Power-on behavior (1)',
-        'select.tapo_smart_wi_fi_outlet_power_on_behavior_2': 'Power-on behavior (2)',
         'sensor.tapo_smart_wi_fi_outlet_boot_reason': 'Boot reason',
         'sensor.tapo_smart_wi_fi_outlet_reboot_count': 'Reboot count',
         'sensor.tapo_smart_wi_fi_outlet_uptime': 'Uptime',
-        'switch.tapo_smart_wi_fi_outlet_switch_1': 'Switch (1)',
-        'switch.tapo_smart_wi_fi_outlet_switch_2': 'Switch (2)',
         'update.tapo_smart_wi_fi_outlet_firmware': 'Firmware',
       }),
       'name': 'Tapo Smart Wi-Fi Outlet',
@@ -651,14 +706,50 @@
   dict({
     '00000000000004D2-0000000000000437-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-0000000000000437-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_1_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_1': None,
+          }),
+          'name': 'Endpoint 1',
+        }),
+        '00000000000004D2-0000000000000437-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_2_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_2': None,
+          }),
+          'name': 'Endpoint 2',
+        }),
+        '00000000000004D2-0000000000000437-MatterNodeDevice-3': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_3_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_3': None,
+          }),
+          'name': 'Endpoint 3',
+        }),
+        '00000000000004D2-0000000000000437-MatterNodeDevice-4': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_4_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_4': None,
+          }),
+          'name': 'Endpoint 4',
+        }),
+        '00000000000004D2-0000000000000437-MatterNodeDevice-5': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_5_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_5': None,
+          }),
+          'name': 'Endpoint 5',
+        }),
+        '00000000000004D2-0000000000000437-MatterNodeDevice-6': dict({
+          'entities': dict({
+            'select.smart_wi_fi_power_strip_endpoint_6_power_on_behavior': 'Power-on behavior',
+            'switch.smart_wi_fi_power_strip_endpoint_6': None,
+          }),
+          'name': 'Endpoint 6',
+        }),
       }),
       'entities': dict({
-        'select.smart_wi_fi_power_strip_power_on_behavior_1': 'Power-on behavior (1)',
-        'select.smart_wi_fi_power_strip_power_on_behavior_2': 'Power-on behavior (2)',
-        'select.smart_wi_fi_power_strip_power_on_behavior_3': 'Power-on behavior (3)',
-        'select.smart_wi_fi_power_strip_power_on_behavior_4': 'Power-on behavior (4)',
-        'select.smart_wi_fi_power_strip_power_on_behavior_5': 'Power-on behavior (5)',
-        'select.smart_wi_fi_power_strip_power_on_behavior_6': 'Power-on behavior (6)',
         'sensor.smart_wi_fi_power_strip_boot_reason': 'Boot reason',
         'sensor.smart_wi_fi_power_strip_effective_current_10': 'Effective current (10)',
         'sensor.smart_wi_fi_power_strip_effective_current_11': 'Effective current (11)',
@@ -692,12 +783,6 @@
         'sensor.smart_wi_fi_power_strip_power_9': 'Power (9)',
         'sensor.smart_wi_fi_power_strip_reboot_count': 'Reboot count',
         'sensor.smart_wi_fi_power_strip_uptime': 'Uptime',
-        'switch.smart_wi_fi_power_strip_switch_1': 'Switch (1)',
-        'switch.smart_wi_fi_power_strip_switch_2': 'Switch (2)',
-        'switch.smart_wi_fi_power_strip_switch_3': 'Switch (3)',
-        'switch.smart_wi_fi_power_strip_switch_4': 'Switch (4)',
-        'switch.smart_wi_fi_power_strip_switch_5': 'Switch (5)',
-        'switch.smart_wi_fi_power_strip_switch_6': 'Switch (6)',
         'update.smart_wi_fi_power_strip_firmware': 'Firmware',
       }),
       'name': 'Smart Wi-Fi Power Strip',
@@ -709,13 +794,23 @@
   dict({
     '00000000000004D2-000000000000040A-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-000000000000040A-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'switch.smart_outdoor_plug_1': None,
+          }),
+          'name': '1',
+        }),
+        '00000000000004D2-000000000000040A-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'switch.smart_outdoor_plug_2': None,
+          }),
+          'name': '2',
+        }),
       }),
       'entities': dict({
         'sensor.smart_outdoor_plug_boot_reason': 'Boot reason',
         'sensor.smart_outdoor_plug_reboot_count': 'Reboot count',
         'sensor.smart_outdoor_plug_uptime': 'Uptime',
-        'switch.smart_outdoor_plug_switch_1': 'Switch (1)',
-        'switch.smart_outdoor_plug_switch_2': 'Switch (2)',
         'update.smart_outdoor_plug_firmware': 'Firmware',
       }),
       'name': 'Smart Outdoor Plug',

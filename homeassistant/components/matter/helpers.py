@@ -4,6 +4,18 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from matter_server.client.models.device_types import (
+    ColorTemperatureLight,
+    DimmableLight,
+    DimmablePlugInUnit,
+    ExtendedColorLight,
+    MountedDimmableLoadControl,
+    MountedOnOffControl,
+    OnOffLight,
+    OnOffPlugInUnit,
+    WindowCovering,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -13,11 +25,31 @@ from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
     from matter_ble_proxy import MatterBleProxy
+    from matter_server.client.models.device_types import DeviceType
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
     from .models import MatterEntityInfo
+
+
+# Application (output) device types that each represent an independent physical
+# sub-unit of a node. When a node exposes the same one of these on more than one
+# endpoint (e.g. the sockets of a multi-socket plug), each such endpoint becomes
+# its own child device instead of collapsing onto the node device with a numeric
+# entity name suffix. Stateless controls (Generic Switch) and utility endpoints
+# (Power Source, Electrical Sensor, ...) are deliberately excluded.
+CHILD_DEVICE_TYPES: set[type[DeviceType]] = {
+    ColorTemperatureLight,
+    DimmableLight,
+    DimmablePlugInUnit,
+    ExtendedColorLight,
+    MountedDimmableLoadControl,
+    MountedOnOffControl,
+    OnOffLight,
+    OnOffPlugInUnit,
+    WindowCovering,
+}
 
 
 class MissingNode(HomeAssistantError):
@@ -134,6 +166,58 @@ def get_entity_unique_id(
     )
 
 
+def get_child_device_id(
+    server_info: ServerInfoMessage,
+    endpoint: MatterEndpoint,
+) -> str:
+    """Return HA device_id for the child device of the given MatterEndpoint.
+
+    Only meaningful for endpoints that satisfy `endpoint_requires_child_device`,
+    which map to the node device, so `get_device_id` returns the node device id
+    (no endpoint suffix) and the child device id carries the endpoint index exactly
+    once. For any other endpoint it only ever serves as a guaranteed-miss lookup
+    key and never names a real device.
+    """
+    return f"{get_device_id(server_info, endpoint)}-{endpoint.endpoint_id}"
+
+
+def _endpoint_maps_to_node_device(endpoint: MatterEndpoint) -> bool:
+    """Return if the endpoint's entities collapse onto the node (parent) device.
+
+    False for the root endpoint, bridged endpoints (already separate HA devices)
+    and composed-part endpoints (collapsed onto their compose parent device). Only
+    these node-device endpoints can collide with, or be split off from, each other.
+    """
+    node = endpoint.node
+    return not (
+        node.is_bridge_device
+        or endpoint.endpoint_id == 0
+        or endpoint.is_bridged_device
+        or node.get_compose_parent(endpoint.endpoint_id) is not None
+    )
+
+
+def endpoint_requires_child_device(endpoint: MatterEndpoint) -> bool:
+    """Return if the endpoint should be represented as its own child device.
+
+    True for an endpoint that maps to the node device and exposes an application
+    device type (see CHILD_DEVICE_TYPES) also present on a sibling endpoint that
+    maps to the same node device, e.g. one socket of a multi-socket plug. Every
+    entity of such an endpoint is then placed on its own child device.
+    """
+    if not _endpoint_maps_to_node_device(endpoint):
+        return False
+    splittable_types = CHILD_DEVICE_TYPES & endpoint.device_types
+    if not splittable_types:
+        return False
+    return any(
+        other.endpoint_id != endpoint.endpoint_id
+        and splittable_types & other.device_types
+        and _endpoint_maps_to_node_device(other)
+        for other in endpoint.node.endpoints.values()
+    )
+
+
 def get_node_device_identifier(
     server_info: ServerInfoMessage, node_id: int
 ) -> tuple[str, str]:
@@ -150,7 +234,7 @@ def get_node_device_identifier(
 def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode | None:
     """Get node id from ha device id."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(ha_device_id, include_child_devices=False)
+    device = dev_reg.async_get(ha_device_id)
     if device is None:
         raise MissingNode(f"Invalid device ID: {ha_device_id}")
     return get_node_from_device_entry(hass, device)
@@ -188,7 +272,11 @@ def get_node_from_device_entry(
             node
             for node in matter_client.get_nodes()
             for endpoint in node.endpoints.values()
-            if get_device_id(server_info, endpoint) == device_id
+            if device_id
+            in (
+                get_device_id(server_info, endpoint),
+                get_child_device_id(server_info, endpoint),
+            )
         ),
         None,
     )

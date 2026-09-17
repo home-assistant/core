@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
-from homeassistant.components.matter.helpers import get_device_id
+from homeassistant.components.matter.helpers import get_child_device_id, get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -34,6 +34,16 @@ def fire_endpoint_event(
         if call.kwargs["event_filter"] == event
     )
     callback(event, {"node_id": node.node_id, "endpoint_id": endpoint_id})
+
+
+def fire_node_removed_event(matter_client: MagicMock, node: MatterNode) -> None:
+    """Fire a node removed event for a node."""
+    callback = next(
+        call.kwargs["callback"]
+        for call in matter_client.subscribe_events.call_args_list
+        if call.kwargs["event_filter"] == EventType.NODE_REMOVED
+    )
+    callback(EventType.NODE_REMOVED, node.node_id)
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -89,6 +99,110 @@ async def test_device_registry_single_node_device_alt(
     # test serial id NOT present as additional identifier
     assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
     assert entry.serial_number is None
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_devices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a multi-socket plug splits into a parent and per-socket child devices.
+
+    The Eve Energy dual outlet exposes two On/Off Plug-in Unit endpoints (labeled
+    ``top`` and ``bottom``). Each becomes its own child device of the node device,
+    and its socket switch entity is placed on the child, not on the parent.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert {child.name for child in children} == {"top", "bottom"}
+    children_by_name = {child.name: child for child in children}
+
+    for name, endpoint_id, switch_entity_id in (
+        ("top", 1, "switch.eve_energy_20ecn4101_top"),
+        ("bottom", 2, "switch.eve_energy_20ecn4101_bottom"),
+    ):
+        child = children_by_name[name]
+        assert child.parent_device_id == parent.id
+        child_device_id = get_child_device_id(
+            matter_client.server_info, matter_node.endpoints[endpoint_id]
+        )
+        assert (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}") in child.identifiers
+        # The socket switch entity lives on the child device, not the parent.
+        switch_entry = entity_registry.async_get(switch_entity_id)
+        assert switch_entry is not None
+        assert switch_entry.device_id == child.id
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_device_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a split endpoint removes only its child device."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert len(dr.async_entries_for_parent_device(device_registry, parent.id)) == 2
+
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 1)
+
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert {child.name for child in children} == {"bottom"}
+    # The parent node device is untouched.
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier_for(matter_client, matter_node, 0), entry_id
+        )
+        is not None
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_node_removed_removes_child_devices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing the node removes the node device and all its child devices."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert len(dr.async_entries_for_parent_device(device_registry, parent.id)) == 2
+
+    fire_node_removed_event(matter_client, matter_node)
+
+    # The node device and both of its child devices are gone.
+    assert (
+        device_registry.async_get_device_by_identifier(
+            identifier_for(matter_client, matter_node, 0), entry_id
+        )
+        is None
+    )
+    for endpoint_id in (1, 2):
+        child_device_id = get_child_device_id(
+            matter_client.server_info, matter_node.endpoints[endpoint_id]
+        )
+        assert (
+            device_registry.async_get_child_device_by_identifier(
+                (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}"), entry_id
+            )
+            is None
+        )
 
 
 @pytest.mark.usefixtures("matter_node")

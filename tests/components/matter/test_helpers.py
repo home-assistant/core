@@ -8,13 +8,43 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
+    endpoint_requires_child_device,
     get_device_id,
     get_node_from_device_entry,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .common import setup_integration_with_node_fixture
+from .common import create_node_from_fixture, setup_integration_with_node_fixture
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "endpoint_id", "expected"),
+    [
+        # Root endpoint always maps to the node (parent) device.
+        ("eve_energy_20ecn4101", 0, False),
+        # Each socket of the dual-socket plug (same device type) splits off.
+        ("eve_energy_20ecn4101", 1, True),
+        ("eve_energy_20ecn4101", 2, True),
+        # Endpoints sharing a primary attribute but of different device types are
+        # the same physical unit, so they are not split.
+        ("inovelli_vtm31", 1, False),
+        # Generic Switch (button) endpoints are not split.
+        ("haojai_switch", 1, False),
+        # A nested composed endpoint collapses onto its compose parent device.
+        ("silabs_refrigerator", 2, False),
+        # A bridge's endpoints are never split into child devices; their bridged
+        # devices are already separate HA devices.
+        ("mock_composed_bridge", 3, False),
+    ],
+)
+def test_endpoint_requires_child_device(
+    node_fixture: str, endpoint_id: int, expected: bool
+) -> None:
+    """Test which endpoints are represented as their own child device."""
+    node = create_node_from_fixture(node_fixture)
+
+    assert endpoint_requires_child_device(node.endpoints[endpoint_id]) is expected
 
 
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
