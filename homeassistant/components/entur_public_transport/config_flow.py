@@ -28,6 +28,7 @@ from .api import (
     EnturQuay,
     EnturRoute,
     EnturStopPlace,
+    async_get_stop_place,
     async_get_stop_quays,
     async_get_stop_routes,
     async_search_stop_places,
@@ -42,6 +43,7 @@ from .const import (
     CONF_PLATFORM_MODE,
     CONF_QUAY_IDS,
     CONF_QUERY,
+    CONF_RECONFIGURE_ACTION,
     CONF_ROUTE_LABELS,
     CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
@@ -55,6 +57,8 @@ from .const import (
     PLATFORM_MODE_ALL,
     PLATFORM_MODE_SELECTED,
     PLATFORM_MODE_STOP_PLACE,
+    RECONFIGURE_ACTION_EDIT,
+    RECONFIGURE_ACTION_REPLACE,
     STOP_PLACE_METADATA_VERSION,
     SUBENTRY_TYPE_STOP_PLACE,
 )
@@ -474,7 +478,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Reconfigure an existing stop place."""
+        """Show the current configuration and choose a maintenance action."""
         self._existing_line_whitelist = list(
             self._get_reconfigure_subentry().data.get(CONF_WHITELIST_LINES, [])
         )
@@ -491,7 +495,92 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self._existing_show_on_map = self._get_reconfigure_subentry().data.get(
             CONF_SHOW_ON_MAP, False
         )
-        return await self._async_step_search("reconfigure", user_input)
+        if user_input is not None:
+            if user_input[CONF_RECONFIGURE_ACTION] == RECONFIGURE_ACTION_REPLACE:
+                return await self.async_step_replace_stop()
+            return await self._async_step_edit_current_stop()
+
+        return self._show_reconfigure_form()
+
+    async def async_step_replace_stop(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Search for a replacement stop place."""
+        return await self._async_step_search("replace_stop", user_input)
+
+    async def _async_step_edit_current_stop(self) -> SubentryFlowResult:
+        """Load the existing stop place directly for maintenance."""
+        if not self._existing_stop_id:
+            return self.async_abort(reason="invalid_selection")
+
+        try:
+            self._selected_place = await async_get_stop_place(
+                self.hass, self._existing_stop_id
+            )
+        except EnturApiError:
+            return self._show_reconfigure_form(errors={"base": "cannot_connect"})
+
+        self._selected_platform_mode = self._existing_platform_mode
+        self._selected_quay_ids = self._existing_quay_ids
+        self._selected_show_on_map = self._existing_show_on_map
+        self._route_error = False
+        self._quay_error = False
+        try:
+            self._routes = await async_get_stop_routes(
+                self.hass, self._selected_place.stop_id
+            )
+        except EnturApiError:
+            self._route_error = True
+        try:
+            self._quays = await async_get_stop_quays(
+                self.hass, self._selected_place.stop_id
+            )
+        except EnturApiError:
+            self._quay_error = True
+        return await self.async_step_select_routes()
+
+    def _show_reconfigure_form(
+        self, errors: dict[str, str] | None = None
+    ) -> SubentryFlowResult:
+        """Show a readable summary of the current stop configuration."""
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_RECONFIGURE_ACTION,
+                        default=RECONFIGURE_ACTION_EDIT,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                {
+                                    "value": RECONFIGURE_ACTION_EDIT,
+                                    "label": "Edit this stop place",
+                                },
+                                {
+                                    "value": RECONFIGURE_ACTION_REPLACE,
+                                    "label": "Replace stop place",
+                                },
+                            ]
+                        )
+                    )
+                }
+            ),
+            description_placeholders={
+                "name": self._get_reconfigure_subentry().data.get(
+                    CONF_STOP_PLACE_NAME,
+                    self._get_reconfigure_subentry().title,
+                ),
+                "routes": _configured_route_summary(
+                    self._existing_line_whitelist, self._existing_route_labels
+                ),
+                "platforms": _configured_platform_summary(
+                    self._existing_platform_mode, self._existing_quay_ids
+                ),
+                "show_on_map": "shown" if self._existing_show_on_map else "hidden",
+            },
+            errors=errors or {},
+        )
 
     async def _async_step_search(
         self, step_id: str, user_input: dict[str, Any] | None
@@ -770,6 +859,24 @@ def _platform_status(
     if quay_error:
         return "The platform list could not be loaded. Choose the whole stop place or all active platforms."
     return "Select at least one platform."
+
+
+def _configured_route_summary(line_ids: list[str], route_labels: dict[str, str]) -> str:
+    """Return the stored route filter in a readable form."""
+    if not line_ids:
+        return "All routes"
+    return ", ".join(
+        route_labels.get(line_id, line_id_label(line_id)) for line_id in line_ids
+    )
+
+
+def _configured_platform_summary(mode: str, quay_ids: list[str]) -> str:
+    """Return the stored platform selection in a readable form."""
+    if mode == PLATFORM_MODE_STOP_PLACE:
+        return "Whole stop place"
+    if mode == PLATFORM_MODE_SELECTED:
+        return f"{len(quay_ids)} selected platform(s)"
+    return "All active platforms"
 
 
 def _route_labels(

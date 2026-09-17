@@ -8,25 +8,14 @@
       "cannot_connect": "Unable to search Entur right now. Try again later.",
       "invalid_selection": "The selected stop place is no longer available. Start the search again.",
       "no_results": "No stop places were found. Try a broader search or another spelling.",
-      "query_too_short": "Enter at least two characters to search for a stop place."
-      ,"select_platform": "Select at least one platform, or choose a different platform detail level."
+      "query_too_short": "Enter at least two characters to search for a stop place.",
+      "select_platform": "Select at least one platform, or choose a different platform detail level."
     },
     "step": {
       "confirm": {
         "data": {},
         "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\nPlatform detail: {platform_status}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
         "title": "Confirm the stop place"
-      },
-      "select_routes": {
-        "data": {
-          "line_whitelist": "Routes from Entur",
-          "manual_line_whitelist": "Additional Entur line IDs"
-        },
-        "data_description": {
-          "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
-        },
-        "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
-        "title": "Choose routes for this stop place"
       },
       "select_platforms": {
         "data": {
@@ -40,6 +29,17 @@
         },
         "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
         "title": "Choose platform detail"
+      },
+      "select_routes": {
+        "data": {
+          "line_whitelist": "Routes from Entur",
+          "manual_line_whitelist": "Additional Entur line IDs"
+        },
+        "data_description": {
+          "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
+        },
+        "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
+        "title": "Choose routes for this stop place"
       },
       "select_stop": {
         "data": {
@@ -84,19 +84,21 @@
           "title": "Confirm the stop place"
         },
         "reconfigure": {
-          "description": "Search for the new stop place by name.",
-          "title": "Update an Entur stop place"
-        },
-        "select_routes": {
           "data": {
-            "line_whitelist": "Routes from Entur",
-            "manual_line_whitelist": "Additional Entur line IDs"
+            "reconfigure_action": "Maintenance action"
+          },
+          "description": "Current stop place: **{name}**\n\nRoutes: {routes}\n\nPlatform detail: {platforms}\n\nMap: {show_on_map}\n\nChoose **Edit this stop place** to add or remove routes, platforms, and the map setting. Choose **Replace stop place** only when the monitored location itself should change. To remove the whole stop place, use its three-dot menu in the integration view.",
+          "title": "Maintain an Entur stop place"
+        },
+        "replace_stop": {
+          "data": {
+            "query": "Stop place name"
           },
           "data_description": {
-            "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
+            "query": "Enter at least two characters, then choose the replacement stop place."
           },
-          "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
-          "title": "Choose routes for this stop place"
+          "description": "Search for the replacement stop place by name.",
+          "title": "Replace an Entur stop place"
         },
         "select_platforms": {
           "data": {
@@ -110,6 +112,17 @@
           },
           "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
           "title": "Choose platform detail"
+        },
+        "select_routes": {
+          "data": {
+            "line_whitelist": "Routes from Entur",
+            "manual_line_whitelist": "Additional Entur line IDs"
+          },
+          "data_description": {
+            "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
+          },
+          "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
+          "title": "Choose routes for this stop place"
         },
         "select_stop": {
           "data": {

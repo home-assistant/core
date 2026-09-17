@@ -14,6 +14,7 @@ ENTUR_STOP_PLACE_URL = "https://entur.no/nearby-stop-place-detail?id={}"
 CONF_STOP_IDS = "stop_ids"
 CONF_STOP_ID = "stop_id"
 CONF_QUERY = "query"
+CONF_RECONFIGURE_ACTION = "reconfigure_action"
 CONF_MANUAL_WHITELIST_LINES = "manual_line_whitelist"
 CONF_PLATFORM_MODE = "platform_mode"
 CONF_QUAY_IDS = "quay_ids"
@@ -30,11 +31,14 @@ CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "Entur"
 DEFAULT_ICON_KEY = "bus"
-STOP_PLACE_METADATA_VERSION = 3
+STOP_PLACE_METADATA_VERSION = 4
 
 PLATFORM_MODE_STOP_PLACE = "stop_place"
 PLATFORM_MODE_ALL = "all"
 PLATFORM_MODE_SELECTED = "selected"
+
+RECONFIGURE_ACTION_EDIT = "edit"
+RECONFIGURE_ACTION_REPLACE = "replace"
 
 ICONS = {
     "air": "mdi:airplane",

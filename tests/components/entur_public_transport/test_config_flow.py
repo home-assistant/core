@@ -22,6 +22,7 @@ from homeassistant.components.entur_public_transport.const import (
     CONF_PLATFORM_MODE,
     CONF_QUAY_IDS,
     CONF_QUERY,
+    CONF_RECONFIGURE_ACTION,
     CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
     CONF_STOP_IDS,
@@ -31,6 +32,8 @@ from homeassistant.components.entur_public_transport.const import (
     PLATFORM_MODE_ALL,
     PLATFORM_MODE_SELECTED,
     PLATFORM_MODE_STOP_PLACE,
+    RECONFIGURE_ACTION_EDIT,
+    RECONFIGURE_ACTION_REPLACE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME
@@ -152,7 +155,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             "SKY:Line:2": "2 SKY (2-SKY)",
         },
         "stop_place_types": ["busStation", "railStation"],
-        "stop_place_metadata_version": 3,
+        "stop_place_metadata_version": 4,
     }
 
 
@@ -387,6 +390,13 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, "stop-subentry")
         assert result["step_id"] == "reconfigure"
+        assert result["description_placeholders"]["routes"] == "9 RUT (9-RUT)"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_REPLACE},
+        )
+        assert result["step_id"] == "replace_stop"
 
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], user_input={CONF_QUERY: "Bergen"}
@@ -420,12 +430,114 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         CONF_SHOW_ON_MAP: False,
         "route_labels": {"RUT:Line:1": "1 RUT (1-RUT)"},
         "stop_place_types": ["busStation"],
-        "stop_place_metadata_version": 3,
+        "stop_place_metadata_version": 4,
     }
     assert (
         entry.subentries["stop-subentry"].title
         == "🚌 Bergen busstasjon · 1 RUT (1-RUT)"
     )
+
+
+async def test_subentry_reconfigure_edits_routes_on_current_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test maintaining routes and map visibility without searching again."""
+    place = EnturStopPlace(
+        stop_id="NSR:StopPlace:548",
+        name="Bergen busstasjon",
+        display_name="Bergen busstasjon, Bergen",
+        locality="Bergen",
+        transport_modes=("bus",),
+        role="parent",
+        stop_place_types=("busStation",),
+    )
+    route = EnturRoute(
+        line_id="RUT:Line:1",
+        public_code="1",
+        transport_mode="bus",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Entur",
+            CONF_STOP_IDS: [],
+            CONF_EXPAND_PLATFORMS: True,
+            CONF_SHOW_ON_MAP: False,
+            CONF_WHITELIST_LINES: [],
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Bergen busstasjon",
+                "unique_id": place.stop_id,
+                "data": {
+                    CONF_STOP_ID: place.stop_id,
+                    CONF_STOP_PLACE_NAME: place.name,
+                    CONF_WHITELIST_LINES: [route.line_id],
+                    "route_labels": {route.line_id: "1 RUT (1-RUT)"},
+                    CONF_PLATFORM_MODE: PLATFORM_MODE_ALL,
+                    CONF_QUAY_IDS: [],
+                    CONF_SHOW_ON_MAP: True,
+                },
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_place",
+            return_value=place,
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            return_value=(route,),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
+            return_value=(),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, "stop-subentry")
+        assert result["description_placeholders"] == {
+            "name": place.name,
+            "routes": "1 RUT (1-RUT)",
+            "platforms": "All active platforms",
+            "show_on_map": "shown",
+        }
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_EDIT},
+        )
+        assert result["step_id"] == "select_routes"
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_WHITELIST_LINES: [],
+                CONF_MANUAL_WHITELIST_LINES: "",
+            },
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PLATFORM_MODE: PLATFORM_MODE_STOP_PLACE,
+                CONF_SHOW_ON_MAP: False,
+            },
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["reason"] == "reconfigure_successful"
+    data = entry.subentries["stop-subentry"].data
+    assert data[CONF_STOP_ID] == place.stop_id
+    assert data[CONF_WHITELIST_LINES] == []
+    assert data[CONF_PLATFORM_MODE] == PLATFORM_MODE_STOP_PLACE
+    assert data[CONF_SHOW_ON_MAP] is False
 
 
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:
@@ -569,7 +681,7 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
     assert subentry.title == "🚏 Hønefoss sentrum · 101 BRA (4_6101-BRA)"
     assert subentry.data["route_labels"] == {"BRA:Line:4_6101": "101 BRA (4_6101-BRA)"}
     assert subentry.data["stop_place_types"] == ["onstreetBus"]
-    assert subentry.data["stop_place_metadata_version"] == 3
+    assert subentry.data["stop_place_metadata_version"] == 4
     assert subentry.data[CONF_PLATFORM_MODE] == PLATFORM_MODE_ALL
     assert subentry.data[CONF_QUAY_IDS] == []
     assert subentry.data[CONF_STOP_PLACE_NAME] == "Hønefoss sentrum"
