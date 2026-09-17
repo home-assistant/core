@@ -327,8 +327,8 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             run_variables={"position": position},
             context=self._context,
         )
-        self._attr_current_cover_position = position
         if self._attr_assumed_state:
+            self._attr_current_cover_position = position
             self.async_write_ha_state()
 
     async def _set_tilt_position(self, position: int) -> None:
