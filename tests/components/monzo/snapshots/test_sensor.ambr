@@ -5,7 +5,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -63,7 +63,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -121,7 +121,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -179,7 +179,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -237,7 +237,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -295,7 +295,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
@@ -353,7 +353,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': : dict({
+    'capabilities': dict({
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
