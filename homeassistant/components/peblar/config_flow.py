@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiohttp import CookieJar
 from peblar import Peblar, PeblarAuthenticationError, PeblarConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -62,12 +62,12 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST)
                     ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -113,12 +113,12 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=host): TextSelector(
+                    probatio.Required(CONF_HOST, default=host): TextSelector(
                         TextSelectorConfig(autocomplete="off")
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -181,9 +181,9 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -235,9 +235,9 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

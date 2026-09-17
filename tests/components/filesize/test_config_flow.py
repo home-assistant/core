@@ -50,7 +50,11 @@ async def test_unique_path(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_FILE_PATH: test_file}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FILE_PATH: test_file},
     )
 
     assert result.get("type") is FlowResultType.ABORT

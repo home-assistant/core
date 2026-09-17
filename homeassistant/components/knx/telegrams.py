@@ -372,6 +372,10 @@ class Telegrams:
         if telegram.decoded_data is not None:
             transcoder = telegram.decoded_data.transcoder
             value = _serializable_decoded_data(telegram.decoded_data.value)
+        elif ga_info is not None:
+            # Telegrams that carry no decodable payload - GroupValueRead and
+            # undecoded DataSecure telegrams - still report the projects DPT.
+            transcoder = ga_info.transcoder
 
         return TelegramDict(
             data_secure=telegram.data_secure,

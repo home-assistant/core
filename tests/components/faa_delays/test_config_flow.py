@@ -59,7 +59,15 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     MockConfigEntry(domain=DOMAIN, unique_id="test", data=conf).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=conf,
     )
 
     assert result["type"] is FlowResultType.ABORT
