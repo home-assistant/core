@@ -563,8 +563,8 @@
   },
   "issues": {
     "migrate_could_not_auth": {
-      "description": "SAF",
-      "title": "The {title} YAML configuration is being removed"
+      "description": "Please retry authentication.",
+      "title": "The {title} could not authenticate."
     }
   },
   "selector": {
