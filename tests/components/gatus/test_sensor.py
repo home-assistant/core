@@ -255,3 +255,38 @@ async def test_sensor_dynamic_add_endpoint(
     state = hass.states.get("sensor.new_service_response_time")
     assert state is not None
     assert state.state == "15.0"
+
+
+async def test_sensor_readded_endpoint(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a removed endpoint can be successfully re-added and has its sensor entity recreated."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.core_backend_service_response_time") is not None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = []
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_registry.async_remove("sensor.core_backend_service_response_time")
+    assert hass.states.get("sensor.core_backend_service_response_time") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group="Core",
+            results=[Result(success=True, status=200, duration=15000000)],
+        )
+    ]
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.core_backend_service_response_time") is not None
