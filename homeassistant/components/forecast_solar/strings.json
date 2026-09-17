@@ -4,7 +4,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
-      "fixed_location": {
+      "plane": {
         "data": {
           "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
           "azimuth_sensor": "Azimuth sensor",
@@ -15,34 +15,16 @@
           "modules_power": "Total Watt peak power of your solar modules"
         },
         "data_description": {
-          "azimuth": "Ignored when an azimuth sensor is selected.",
-          "azimuth_sensor": "Sensor reporting this plane's azimuth in degrees. Overrides the fixed azimuth.",
-          "declination": "Ignored when a declination sensor is selected.",
-          "declination_sensor": "Sensor reporting this plane's declination in degrees. Overrides the fixed declination."
-        },
-        "description": "Fill in the coordinates of your solar panels and their data. Please refer to the documentation if a field is unclear."
-      },
-      "home_location": {
-        "data": {
-          "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth%]",
-          "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth_sensor%]",
-          "declination": "[%key:component::forecast_solar::config::step::fixed_location::data::declination%]",
-          "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::declination_sensor%]",
-          "modules_power": "[%key:component::forecast_solar::config::step::fixed_location::data::modules_power%]"
-        },
-        "data_description": {
-          "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth%]",
-          "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth_sensor%]",
-          "declination": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination%]",
-          "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination_sensor%]"
+          "azimuth_sensor": "Sensor reporting the azimuth in degrees, from 0 to 360 or -180 to 180.",
+          "declination_sensor": "Sensor reporting the declination in degrees, from 0 to 90."
         },
         "description": "Fill in the data of your solar panels. Please refer to the documentation if a field is unclear."
       },
       "reconfigure": {
         "description": "Choose how the location of your solar panels is determined.",
         "menu_options": {
-          "reconfigure_fixed_location": "Use fixed coordinates",
-          "reconfigure_home_location": "Follow the Home Assistant location"
+          "reconfigure_fixed_location": "[%key:component::forecast_solar::selector::location::options::fixed%]",
+          "reconfigure_home_location": "[%key:component::forecast_solar::selector::location::options::home%]"
         }
       },
       "reconfigure_fixed_location": {
@@ -53,11 +35,12 @@
         "description": "Enter the coordinates of your solar panels."
       },
       "user": {
-        "description": "Choose how the location of your solar panels is determined. Following the Home Assistant location keeps the forecast in sync with a home that moves, such as a camper or a boat.",
-        "menu_options": {
-          "fixed_location": "Use fixed coordinates",
-          "home_location": "Follow the Home Assistant location"
-        }
+        "data": {
+          "azimuth_source": "Azimuth",
+          "declination_source": "Declination",
+          "location": "Location"
+        },
+        "description": "Choose where the location and the panel angles come from. The next step only asks for what you choose here."
       }
     }
   },
@@ -72,35 +55,45 @@
         "user": "Add plane"
       },
       "step": {
-        "reconfigure": {
+        "plane": {
           "data": {
-            "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth%]",
-            "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth_sensor%]",
-            "declination": "[%key:component::forecast_solar::config::step::fixed_location::data::declination%]",
-            "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::declination_sensor%]",
-            "modules_power": "[%key:component::forecast_solar::config::step::fixed_location::data::modules_power%]"
+            "azimuth": "[%key:component::forecast_solar::config::step::plane::data::azimuth%]",
+            "azimuth_sensor": "[%key:component::forecast_solar::config::step::plane::data::azimuth_sensor%]",
+            "declination": "[%key:component::forecast_solar::config::step::plane::data::declination%]",
+            "declination_sensor": "[%key:component::forecast_solar::config::step::plane::data::declination_sensor%]",
+            "modules_power": "[%key:component::forecast_solar::config::step::plane::data::modules_power%]"
           },
           "data_description": {
-            "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth%]",
-            "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth_sensor%]",
-            "declination": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination%]",
-            "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination_sensor%]"
+            "azimuth_sensor": "[%key:component::forecast_solar::config::step::plane::data_description::azimuth_sensor%]",
+            "declination_sensor": "[%key:component::forecast_solar::config::step::plane::data_description::declination_sensor%]"
+          },
+          "description": "[%key:component::forecast_solar::config::step::plane::description%]"
+        },
+        "reconfigure": {
+          "data": {
+            "azimuth_source": "[%key:component::forecast_solar::config::step::user::data::azimuth_source%]",
+            "declination_source": "[%key:component::forecast_solar::config::step::user::data::declination_source%]"
           },
           "description": "Edit the solar plane configuration."
         },
-        "user": {
+        "reconfigure_plane": {
           "data": {
-            "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth%]",
-            "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::azimuth_sensor%]",
-            "declination": "[%key:component::forecast_solar::config::step::fixed_location::data::declination%]",
-            "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data::declination_sensor%]",
-            "modules_power": "[%key:component::forecast_solar::config::step::fixed_location::data::modules_power%]"
+            "azimuth": "[%key:component::forecast_solar::config::step::plane::data::azimuth%]",
+            "azimuth_sensor": "[%key:component::forecast_solar::config::step::plane::data::azimuth_sensor%]",
+            "declination": "[%key:component::forecast_solar::config::step::plane::data::declination%]",
+            "declination_sensor": "[%key:component::forecast_solar::config::step::plane::data::declination_sensor%]",
+            "modules_power": "[%key:component::forecast_solar::config::step::plane::data::modules_power%]"
           },
           "data_description": {
-            "azimuth": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth%]",
-            "azimuth_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::azimuth_sensor%]",
-            "declination": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination%]",
-            "declination_sensor": "[%key:component::forecast_solar::config::step::fixed_location::data_description::declination_sensor%]"
+            "azimuth_sensor": "[%key:component::forecast_solar::config::step::plane::data_description::azimuth_sensor%]",
+            "declination_sensor": "[%key:component::forecast_solar::config::step::plane::data_description::declination_sensor%]"
+          },
+          "description": "[%key:component::forecast_solar::config_subentries::plane::step::reconfigure::description%]"
+        },
+        "user": {
+          "data": {
+            "azimuth_source": "[%key:component::forecast_solar::config::step::user::data::azimuth_source%]",
+            "declination_source": "[%key:component::forecast_solar::config::step::user::data::declination_source%]"
           },
           "description": "Add a solar plane. Multiple planes are supported with a Forecast.Solar API subscription."
         }
@@ -179,10 +172,28 @@
     }
   },
   "selector": {
+    "azimuth_source": {
+      "options": {
+        "fixed": "Enter a fixed direction",
+        "sensor": "Read the direction from a sensor, such as a compass"
+      }
+    },
+    "declination_source": {
+      "options": {
+        "fixed": "Enter a fixed tilt",
+        "sensor": "Read the tilt from a sensor"
+      }
+    },
     "forecast_resolution": {
       "options": {
         "hourly": "Aggregated to whole hours",
         "raw": "Native (15-minute or hourly, depending on account)"
+      }
+    },
+    "location": {
+      "options": {
+        "fixed": "Enter fixed coordinates",
+        "home": "Follow the Home Assistant location, for homes that move such as campers or boats"
       }
     }
   },
