@@ -110,7 +110,7 @@ async def test_get_stop_place(aioclient_mock, hass: HomeAssistant) -> None:
     assert place.stop_place_types == ("busStation",)
     method, url, _, headers = aioclient_mock.mock_calls[0]
     assert method == "GET"
-    assert str(url) == f"{GEOCODER_PLACE_URL}?ids=NSR%3AStopPlace%3A548&lang=no"
+    assert str(url) == f"{GEOCODER_PLACE_URL}?ids=NSR:StopPlace:548&lang=no"
     assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 
