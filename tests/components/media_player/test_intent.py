@@ -883,8 +883,9 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize("media_class_value", ["album", "radio"])
 async def test_search_and_play_media_player_intent_with_media_class(
-    hass: HomeAssistant,
+    hass: HomeAssistant, media_class_value: str
 ) -> None:
     """Test HassMediaSearchAndPlay intent with media_class parameter."""
     await media_player_intent.async_setup_intents(hass)
@@ -920,7 +921,10 @@ async def test_search_and_play_media_player_intent_with_media_class(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
-        {"search_query": {"value": "test album"}, "media_class": {"value": "album"}},
+        {
+            "search_query": {"value": "test album"},
+            "media_class": {"value": media_class_value},
+        },
     )
     await hass.async_block_till_done()
 
@@ -938,7 +942,7 @@ async def test_search_and_play_media_player_intent_with_media_class(
     assert search_call.data == {
         "entity_id": entity_id,
         "search_query": "test album",
-        "media_filter_classes": ["album"],
+        "media_filter_classes": [media_class_value],
     }
 
     assert len(play_calls) == 1

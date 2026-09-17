@@ -91,6 +91,7 @@ class MediaClass(StrEnum):
     MUSIC = "music"
     PLAYLIST = "playlist"
     PODCAST = "podcast"
+    RADIO = "radio"
     SEASON = "season"
     TRACK = "track"
     TV_SHOW = "tv_show"
