@@ -6,21 +6,18 @@ import logging
 from typing import Final
 
 import aiohttp
-from aiohttp.client_exceptions import ClientError
 import tibber
 
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -43,6 +40,89 @@ DISCONNECT_TIMEOUT: Final = 10
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _migrate_data_api_registry_entries(
+    hass: HomeAssistant,
+    entry: TibberConfigEntry,
+    coordinator: TibberDataAPICoordinator,
+    home_ids: set[str],
+) -> None:
+    """Migrate Data API registry entries to Tibber device IDs."""
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    legacy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ""), entry.entry_id
+    )
+    legacy_device_name = legacy_device.name if legacy_device else None
+
+    migrations: dict[str, tuple[str, str]] = {}
+    device_migrations: dict[str, set[str]] = {}
+    device_id_by_identifier = {home_id: home_id for home_id in home_ids}
+    for device in sorted(
+        coordinator.data.values(),
+        key=lambda device: (device.name != legacy_device_name, device.id),
+    ):
+        if (
+            legacy_device
+            and not device.external_id
+            and device.name == legacy_device_name
+        ):
+            device_id_by_identifier.setdefault("", device.id)
+        device_id_by_identifier[device.id] = device.id
+        if device.external_id:
+            device_id_by_identifier[device.external_id] = device.id
+        for sensor in device.sensors:
+            new_unique_id = f"{device.id}_{sensor.id}"
+            migration = (new_unique_id, device.id)
+            migrations[new_unique_id] = migration
+            if device.external_id:
+                migrations[f"{device.external_id}_{sensor.id}"] = migration
+            else:
+                # An empty external ID produced a legacy leading-underscore unique ID.
+                migrations.setdefault(f"_{sensor.id}", migration)
+
+    for entity_entry in entity_entries:
+        if not (registry_migration := migrations.get(entity_entry.unique_id)):
+            continue
+        new_unique_id, device_id = registry_migration
+        if entity_entry.device_id:
+            # Empty external IDs may have grouped multiple Tibber devices.
+            device_migrations.setdefault(entity_entry.device_id, set()).add(device_id)
+        if entity_entry.unique_id != new_unique_id:
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+
+    for registry_device in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if tibber_device_ids := device_migrations.get(registry_device.id):
+            tibber_device_id = min(
+                (
+                    coordinator.data[device_id].name != registry_device.name,
+                    device_id,
+                )
+                for device_id in tibber_device_ids
+            )[1]
+        else:
+            expected_device_ids = {
+                device_id_by_identifier[identifier]
+                for domain, identifier in registry_device.identifiers
+                if domain == DOMAIN and identifier in device_id_by_identifier
+            }
+            if len(expected_device_ids) != 1:
+                device_registry.async_remove_device(registry_device.id)
+                continue
+            tibber_device_id = expected_device_ids.pop()
+
+        identifiers = {(DOMAIN, tibber_device_id)}
+        if registry_device.identifiers != identifiers:
+            device_registry.async_update_device(
+                registry_device.id,
+                new_identifiers=identifiers,
+            )
 
 
 @dataclass
@@ -114,23 +194,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
             translation_key="data_api_reauth_required",
         )
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth session is not valid, reauthentication required"
-        ) from err
-    except (OAuth2TokenRequestError, ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     entry.runtime_data = TibberRuntimeData(
         session=session,
@@ -172,6 +239,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data.data_api_coordinator = coordinator
+    home_ids = {home.home_id for home in tibber_connection.get_homes(only_active=False)}
+    _migrate_data_api_registry_entries(hass, entry, coordinator, home_ids)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

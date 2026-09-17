@@ -26,6 +26,37 @@ EQUIVALENT_FUNCTIONS = (
 )
 
 
+def _display_name(names: list[str], index: int) -> str:
+    """Return the display name for an index.
+
+    The temescal name tables stopped being maintained when the library was
+    archived in 2023, so newer models report indices past the end of them.
+    Naming those keeps them selectable instead of silently dropping them.
+    """
+    if index < len(names):
+        return names[index]
+
+    return f"Unknown ({index})"
+
+
+def _offered_names(names: list[str], offered: list[int]) -> list[str]:
+    """Return the display names of the offered indices."""
+    return sorted(_display_name(names, index) for index in offered)
+
+
+def _index_for_name(names: list[str], offered: list[int], name: str) -> int:
+    """Return the index a display name refers to.
+
+    Indices the library cannot name are only known through the offered list, so
+    they are resolved from there; anything else resolves against the library.
+    """
+    for index in offered:
+        if _display_name(names, index) == name:
+            return index
+
+    return names.index(name)
+
+
 def _offered_equivalent(function: str, offered: list[int]) -> str | None:
     """Return an offered function from the same group as the given one."""
     group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
@@ -95,7 +126,8 @@ class LGDevice(MediaPlayerEntity):
         self._treble = 0
         self._device = None
         self._support_play_control = False
-        self._device_on = False
+        # Starts out matching the ON default of _attr_state, for the same reason
+        self._device_on = True
         self._stream_type = 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)}, name=host
@@ -236,27 +268,23 @@ class LGDevice(MediaPlayerEntity):
     @override
     def sound_mode(self):
         """Return the current sound mode."""
-        if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
+        if self._equaliser == -1:
             return None
-        return temescal.equalisers[self._equaliser]
+        return _display_name(temescal.equalisers, self._equaliser)
 
     @property
     @override
     def sound_mode_list(self):
         """Return the available sound modes."""
-        return sorted(
-            temescal.equalisers[equaliser]
-            for equaliser in self._equalisers
-            if equaliser < len(temescal.equalisers)
-        )
+        return _offered_names(temescal.equalisers, self._equalisers)
 
     @property
     @override
     def source(self):
         """Return the current input source."""
-        if self._function == -1 or self._function >= len(temescal.functions):
+        if self._function == -1:
             return None
-        function = temescal.functions[self._function]
+        function = _display_name(temescal.functions, self._function)
         if self._function in self._functions:
             return function
         return _offered_equivalent(function, self._functions) or function
@@ -265,11 +293,7 @@ class LGDevice(MediaPlayerEntity):
     @override
     def source_list(self):
         """List of available input sources."""
-        return sorted(
-            temescal.functions[function]
-            for function in self._functions
-            if function < len(temescal.functions)
-        )
+        return _offered_names(temescal.functions, self._functions)
 
     @override
     def set_volume_level(self, volume: float) -> None:
@@ -285,12 +309,16 @@ class LGDevice(MediaPlayerEntity):
     @override
     def select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.set_func(temescal.functions.index(source))
+        self._device.set_func(
+            _index_for_name(temescal.functions, self._functions, source)
+        )
 
     @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
-        self._device.set_eq(temescal.equalisers.index(sound_mode))
+        self._device.set_eq(
+            _index_for_name(temescal.equalisers, self._equalisers, sound_mode)
+        )
 
     @override
     def turn_on(self) -> None:

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.infrared import (
@@ -90,18 +90,18 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=self.config_entry.options | user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("section_1"): data_entry_flow.section(
-                    vol.Schema(
+                probatio.Required("section_1"): data_entry_flow.section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_BOOLEAN,
                                 default=self.config_entry.options.get(
                                     CONF_BOOLEAN, False
                                 ),
                             ): bool,
-                            vol.Optional(CONF_INT): cv.positive_int,
+                            probatio.Optional(CONF_INT): cv.positive_int,
                         }
                     ),
                     {"collapsed": False},
@@ -135,10 +135,10 @@ class SubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="add_sensor",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("state"): int,
+                    probatio.Required("name"): str,
+                    probatio.Required("state"): int,
                 }
             ),
         )
@@ -164,10 +164,10 @@ class SubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="reconfigure_sensor",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("state"): int,
+                    probatio.Required("name"): str,
+                    probatio.Required("state"): int,
                 }
             ),
         )
@@ -191,12 +191,12 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
         if not emitter_entities and not receiver_entities:
             return self.async_abort(reason="no_infrared_entities")
 
-        schema_dict: dict[vol.Marker, Any] = {
-            vol.Required("name"): str,
+        schema_dict: dict[probatio.Marker, Any] = {
+            probatio.Required("name"): str,
         }
 
         if emitter_entities:
-            schema_dict[vol.Optional(CONF_INFRARED_ENTITY_ID)] = EntitySelector(
+            schema_dict[probatio.Optional(CONF_INFRARED_ENTITY_ID)] = EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=emitter_entities,
@@ -204,7 +204,7 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         if receiver_entities:
-            schema_dict[vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID)] = (
+            schema_dict[probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID)] = (
                 EntitySelector(
                     EntitySelectorConfig(
                         domain=INFRARED_DOMAIN,
@@ -213,4 +213,6 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
                 )
             )
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(schema_dict))
+        return self.async_show_form(
+            step_id="user", data_schema=probatio.Schema(schema_dict)
+        )

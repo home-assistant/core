@@ -1,0 +1,14 @@
+{
+  "domain": "solaredge_modbus",
+  "name": "SolarEdge Modbus",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "dependencies": ["modbus", "usb"],
+  "documentation": "https://www.home-assistant.io/integrations/solaredge_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["modbus_connection", "solaredged", "tmodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["solaredged==0.2.3"],
+  "zeroconf": ["_solaredge-modbus._tcp.local."]
+}

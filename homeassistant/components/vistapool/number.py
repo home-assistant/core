@@ -57,6 +57,7 @@ NUMBER_DESCRIPTIONS: tuple[VistapoolNumberEntityDescription, ...] = (
     VistapoolNumberEntityDescription(
         key="redox_setpoint",
         translation_key="redox_setpoint",
+        device_class=NumberDeviceClass.VOLTAGE,
         entity_category=EntityCategory.CONFIG,
         native_min_value=500,
         native_max_value=800,
