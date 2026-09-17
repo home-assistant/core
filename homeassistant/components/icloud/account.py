@@ -272,8 +272,11 @@ class IcloudAccount:
         # Gets devices infos
         devices = list(api_devices)
         new_device = False
+        first_status: dict[str, Any] | None = None
         for device in devices:
             status = device.status(DEVICE_STATUS_SET)
+            if first_status is None:
+                first_status = status
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
 
@@ -309,8 +312,11 @@ class IcloudAccount:
                 new_device = True
 
         if (
-            devices
-            and DEVICE_STATUS_CODES.get(devices[0][DEVICE_STATUS]) == "pending"
+            # status() reports every requested field, using None for the ones
+            # iCloud left out; indexing the payload directly would raise here
+            # instead, and during setup that is before any timer is armed.
+            first_status is not None
+            and DEVICE_STATUS_CODES.get(first_status[DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
         ):
             _LOGGER.debug("Pending devices, trying again in 15s")
@@ -329,14 +335,22 @@ class IcloudAccount:
     def _ask_to_authenticate(self, err: Exception) -> None:
         """Ask the user to log in again after iCloud rejected the session.
 
-        The session is only kept when there is a code to send through it. An
-        authentication status on an API response is not that case: it says the
-        session itself has to be established again, and one that has just been
-        rejected cannot carry a code.
+        The session is only kept when the reauth flow can actually use it.
+        That is what api.requires_2fa says: the flow reads exactly that
+        property to decide whether to open code entry. A challenge raised by a
+        request pyicloud does not route through authenticate() never sets it,
+        so keeping that session would send the flow past code entry with a
+        code still outstanding; dropping it asks for the password instead, and
+        the login that follows re-issues the challenge with requires_2fa set.
+
+        An authentication status on an API response is never that case either:
+        it says the session itself has to be established again, and one that
+        has just been rejected cannot carry a code.
         """
-        if not isinstance(err, PyiCloudAPIResponseException) and (
-            isinstance(err, PyiCloud2FARequiredException)
-            or (self.api is not None and self.api.requires_2fa)
+        if (
+            not isinstance(err, PyiCloudAPIResponseException)
+            and self.api is not None
+            and self.api.requires_2fa
         ):
             # Keep the session: the reauth flow reuses it to validate the code,
             # and async_step_reauth sends a None api back to the password form
