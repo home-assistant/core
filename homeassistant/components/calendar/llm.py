@@ -10,9 +10,14 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    LLMContext,
+    Tool,
+    ToolInput,
+    ToolResult,
+)
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonObjectType
 
 from . import SERVICE_GET_EVENTS
 from .const import DOMAIN
@@ -40,7 +45,7 @@ class CalendarGetEventsTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Query a calendar."""
         data = self.parameters(tool_input.tool_args)
         result = intent.async_match_targets(
@@ -52,7 +57,7 @@ class CalendarGetEventsTool(Tool):
             ),
         )
         if not result.is_match:
-            return {"success": False, "error": "Calendar not found"}
+            return ToolResult(data={"error": "Calendar not found"}, error=True)
 
         entity_id = result.states[0].entity_id
         if data["range"] == "today":
@@ -82,7 +87,7 @@ class CalendarGetEventsTool(Tool):
             for event in cast(dict, service_result)[entity_id]["events"]
         ]
 
-        return {"success": True, "result": events}
+        return ToolResult(data={"result": events})
 
 
 @callback
