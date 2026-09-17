@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -36,22 +36,24 @@ class TimePattern:
             if isinstance(value, str) and value.startswith("/"):
                 number = int(value[1:])
                 if number == 0:
-                    raise vol.Invalid(f"must be a value between 1 and {self.maximum}")
+                    raise probatio.Invalid(
+                        f"must be a value between 1 and {self.maximum}"
+                    )
             else:
                 value = number = int(value)
 
             if not (0 <= number <= self.maximum):
-                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+                raise probatio.Invalid(f"must be a value between 0 and {self.maximum}")
         except ValueError as err:
-            raise vol.Invalid("invalid time_pattern value") from err
+            raise probatio.Invalid("invalid time_pattern value") from err
 
         return value  # type: ignore[no-any-return]
 
 
-TRIGGER_SCHEMA = vol.All(
+TRIGGER_SCHEMA = probatio.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): "time_pattern",
+            probatio.Required(CONF_PLATFORM): "time_pattern",
             CONF_HOURS: TimePattern(maximum=23),
             CONF_MINUTES: TimePattern(maximum=59),
             CONF_SECONDS: TimePattern(maximum=59),

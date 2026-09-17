@@ -54,6 +54,7 @@ SUPPORTED_EFFECTS = {
         "diy5",
         "diy6",
     ],
+    LEDIrDeviceType.GENERIC_10_KEY: ["candle", "light"],
 }
 
 

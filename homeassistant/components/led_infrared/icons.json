@@ -34,6 +34,18 @@
       "timer": {
         "default": "mdi:timer"
       },
+      "timer_2h": {
+        "default": "mdi:timer"
+      },
+      "timer_4h": {
+        "default": "mdi:timer"
+      },
+      "timer_6h": {
+        "default": "mdi:timer"
+      },
+      "timer_8h": {
+        "default": "mdi:timer"
+      },
       "white_brightness_100": {
         "default": "mdi:lightbulb-on"
       },
@@ -72,6 +84,7 @@
               "aqua": "mdi:palette",
               "auto": "mdi:auto-mode",
               "blue": "mdi:palette",
+              "candle": "mdi:candle",
               "cyan": "mdi:palette",
               "dark_cyan": "mdi:palette",
               "deep_blue": "mdi:palette",
@@ -91,6 +104,7 @@
               "jump3": "mdi:dots-circle",
               "jump7": "mdi:dots-circle",
               "lavender_blush": "mdi:palette",
+              "light": "mdi:lightbulb-on",
               "light_cyan": "mdi:palette",
               "light_green": "mdi:palette",
               "magenta": "mdi:palette",

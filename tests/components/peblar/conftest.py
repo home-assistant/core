@@ -1,9 +1,9 @@
 """Fixtures for the Peblar integration tests."""
 
+import asyncio
 from collections.abc import Generator
 from contextlib import nullcontext
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from peblar import (
     PeblarEVInterface,
@@ -19,7 +19,7 @@ from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -53,8 +53,8 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     and the user configuration.
     """
     overrides = getattr(request, "param", {})
-    system_information = json.loads(load_fixture("system_information.json", DOMAIN))
-    user_configuration = json.loads(load_fixture("user_configuration.json", DOMAIN))
+    system_information = load_json_object_fixture("system_information.json", DOMAIN)
+    user_configuration = load_json_object_fixture("user_configuration.json", DOMAIN)
     for key, value in overrides.items():
         if key in system_information:
             system_information[key] = value
@@ -80,6 +80,15 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         peblar.system_information.return_value = PeblarSystemInformation.from_dict(
             system_information
         )
+
+        # The event stream parks here until the entry unloads, the way a
+        # real one waits on the charger rather than returning.
+        async def _listen_until_cancelled() -> None:
+            await asyncio.Event().wait()
+
+        websocket = AsyncMock()
+        websocket.listen.side_effect = _listen_until_cancelled
+        peblar.websocket.return_value = websocket
 
         api = peblar.rest_api.return_value
         api.ev_interface.return_value = PeblarEVInterface.from_json(

@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
@@ -31,7 +30,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers import selector
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import VolDictType
 
 from ..const import (
@@ -55,7 +53,11 @@ from ..const import (
     SelectConf,
 )
 from ..dpt import get_supported_dpts, raw_payload_length
-from ..validation import validate_number_attributes, validate_sensor_attributes
+from ..validation import (
+    entity_category_validator,
+    validate_number_attributes,
+    validate_sensor_attributes,
+)
 from .const import (
     CONF_ALWAYS_CALLBACK,
     CONF_COLOR,
@@ -141,30 +143,33 @@ from .knx_selector import (
     SyncStateSelector,
 )
 
-BASE_ENTITY_SCHEMA = probatio.All(
-    {
-        probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
-        probatio.Optional(CONF_DEVICE_INFO, default=None): probatio.Maybe(str),
-        probatio.Optional(CONF_ENTITY_CATEGORY, default=None): probatio.Any(
-            ENTITY_CATEGORIES_SCHEMA, probatio.SetTo(None)
+
+def base_entity_schema(platform: Platform) -> probatio.All:
+    """Return the base entity schema for a platform."""
+    return probatio.All(
+        {
+            probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
+            probatio.Optional(CONF_DEVICE_INFO, default=None): probatio.Maybe(str),
+            probatio.Optional(
+                CONF_ENTITY_CATEGORY, default=None
+            ): entity_category_validator(platform),
+        },
+        probatio.Any(
+            probatio.Schema(
+                {
+                    probatio.Required(CONF_NAME): probatio.All(str, probatio.IsTrue()),
+                },
+                extra=probatio.ALLOW_EXTRA,
+            ),
+            probatio.Schema(
+                {
+                    probatio.Required(CONF_DEVICE_INFO): str,
+                },
+                extra=probatio.ALLOW_EXTRA,
+            ),
+            msg="One of `Device` or `Name` is required",
         ),
-    },
-    probatio.Any(
-        probatio.Schema(
-            {
-                probatio.Required(CONF_NAME): probatio.All(str, probatio.IsTrue()),
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        probatio.Schema(
-            {
-                probatio.Required(CONF_DEVICE_INFO): str,
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        msg="One of `Device` or `Name` is required",
-    ),
-)
+    )
 
 
 BINARY_SENSOR_KNX_SCHEMA = probatio.Schema(
@@ -955,13 +960,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     sort=True,
                 )
             ),
-            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(SensorStateClass),
-                    translation_key="component.knx.selector.sensor_state_class",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
+            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.StateClassSelector(),
             probatio.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
             probatio.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
                 allow_false=True
@@ -1052,7 +1051,9 @@ ENTITY_STORE_DATA_SCHEMA = probatio.All(
                 {
                     probatio.Required(CONF_DATA): probatio.Schema(
                         {
-                            probatio.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+                            probatio.Required(CONF_ENTITY): base_entity_schema(
+                                platform
+                            ),
                             probatio.Required(DOMAIN): knx_schema,
                         },
                         extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit

@@ -201,7 +201,8 @@ async def test_turn_on_refused_while_another_quickmode_runs(
 
 def activate_quickmode(mock_vicare: MockPyViCare, device: int, quickmode: str) -> None:
     """Mark a quickmode as active in the fixture data of a mocked device."""
-    for feature in mock_vicare.devices[device].service._test_data["data"]:
+    config = mock_vicare.devices[device]
+    for feature in config.service._features[config.device_id]:
         if feature["feature"] == f"ventilation.quickmodes.{quickmode}":
             feature["properties"]["active"]["value"] = True
             return
