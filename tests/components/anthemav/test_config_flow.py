@@ -5,7 +5,9 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
+import pytest
 
+from homeassistant.components.anthemav.config_flow import connect_device
 from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -162,6 +164,34 @@ async def test_form_reconnect_timeout_closes_connection(
     # Connection.create() already succeeded before reconnect() timed out —
     # connect_device() must close it itself, since the caller's own avr
     # never gets assigned when the helper raises.
+    mock_anthemav.close.assert_called_once()
+
+
+async def test_connect_device_cancelled_closes_connection(
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test the AVR is closed if connect_device() is cancelled after connecting."""
+    reached_device_init = asyncio.Event()
+
+    async def _hang_after_reached(*args: Any, **kwargs: Any) -> None:
+        reached_device_init.set()
+        await asyncio.sleep(3600)
+
+    with patch.object(
+        mock_anthemav.protocol,
+        "wait_for_device_initialised",
+        side_effect=_hang_after_reached,
+    ):
+        task = hass.async_create_task(
+            connect_device({"host": "1.1.1.1", "port": 14999})
+        )
+        await reached_device_init.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
     mock_anthemav.close.assert_called_once()
 
 

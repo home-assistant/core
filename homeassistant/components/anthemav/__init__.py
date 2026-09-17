@@ -46,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         async_dispatcher_send(hass, f"{ANTHEMAV_UPDATE_SIGNAL}_{entry.entry_id}")
 
     avr: anthemav.Connection | None = None
+    setup_ok = False
     try:
         # See CONNECT_TIMEOUT_SECONDS for why this needs a timeout.
         async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
@@ -57,21 +58,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
 
         # Wait for the zones to be initialised based on the model
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
+        setup_ok = True
     except TimeoutError as err:
         if avr is None:
             raise ConfigEntryNotReady(
                 f"Timed out connecting to Anthem AVR at "
                 f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
             ) from err
-        avr.close()
         raise ConfigEntryNotReady(
             f"Timed out waiting for device info from Anthem AVR at "
             f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         ) from err
     except (OSError, DeviceError) as err:
-        if avr is not None:
-            avr.close()
         raise ConfigEntryNotReady from err
+    finally:
+        # Covers every exit that isn't full success, including
+        # asyncio.CancelledError (a BaseException, so it isn't caught by
+        # the except clauses above) — e.g. the setup task getting cancelled
+        # while awaiting wait_for_device_initialised() after avr already
+        # connected. Without this, that connection is never closed since
+        # runtime_data was never set for async_unload_entry to find it.
+        if not setup_ok and avr is not None:
+            avr.close()
 
     entry.runtime_data = avr
 

@@ -39,6 +39,7 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
     # unreachable without an immediate refusal (e.g. powered off, no RST/ICMP)
     # leaves the underlying TCP connect with no timeout of its own.
     avr: Connection | None = None
+    connected = False
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
             avr = await anthemav.Connection.create(
@@ -48,14 +49,16 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
             )
             await avr.reconnect()
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
-    except Exception:
+        connected = True
+    finally:
         # avr was created but something after that failed (reconnect timed
-        # out, or the device didn't report its info in time) — the caller
-        # never gets a reference back on a raised exception, so it can't
-        # close this itself.
-        if avr is not None:
+        # out, device info timed out or raised DeviceError, or the task got
+        # cancelled) — the caller never gets a reference back when this
+        # raises, so it can't close this itself. `finally` (rather than
+        # `except Exception`) also covers asyncio.CancelledError, a
+        # BaseException that a plain `except Exception` would miss.
+        if not connected and avr is not None:
             avr.close()
-        raise
     return avr
 
 

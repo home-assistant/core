@@ -9,6 +9,7 @@ from anthemav.device_error import DeviceError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.anthemav import async_setup_entry
 from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -124,6 +125,36 @@ async def test_device_init_timeout_not_reported_as_connect_timeout(
         # not leaked, since runtime_data was never set (so async_unload_entry
         # never runs to close it for us).
         mock_anthemav.close.assert_called_once()
+
+
+async def test_setup_entry_cancelled_closes_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test the AVR is closed if setup is cancelled after connecting."""
+    reached_device_init = asyncio.Event()
+
+    async def _hang_after_reached(*args: Any, **kwargs: Any) -> None:
+        reached_device_init.set()
+        await asyncio.sleep(3600)
+
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch("anthemav.Connection.create", return_value=mock_anthemav),
+        patch.object(
+            mock_anthemav.protocol,
+            "wait_for_device_initialised",
+            side_effect=_hang_after_reached,
+        ),
+    ):
+        task = hass.async_create_task(async_setup_entry(hass, mock_config_entry))
+        await reached_device_init.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    mock_anthemav.close.assert_called_once()
 
 
 async def test_anthemav_dispatcher_signal(
