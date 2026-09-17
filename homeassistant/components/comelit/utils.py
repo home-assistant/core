@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -36,7 +36,7 @@ async def async_client_session(hass: HomeAssistant) -> ClientSession:
 
 
 def load_api_data(
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
     domain: Literal["climate", "humidifier"],
 ) -> list[Any]:
     """Load data from the API."""
@@ -54,7 +54,7 @@ async def cleanup_stale_entity(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entry_unique_id: str,
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
 ) -> None:
     """Cleanup stale entity."""
     entity_reg: er.EntityRegistry = er.async_get(hass)

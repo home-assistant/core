@@ -221,6 +221,10 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
             "manufacturer": "Lyngdorf",
         },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Steinway Lyngdorf",
+        },
     ],
     "nanoleaf": [
         {

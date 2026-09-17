@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import httpx
 from mcp import McpError
 from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -300,7 +300,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'query'")
+        probatio.Invalid, match=re.escape("required key not provided at 'query'")
     ):
         tool.parameters({})
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
@@ -309,7 +309,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'context'")
+        probatio.Invalid, match=re.escape("required key not provided at 'context'")
     ):
         tool.parameters({})
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {

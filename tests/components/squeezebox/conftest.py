@@ -333,12 +333,6 @@ async def mock_async_browse(
 
 
 @pytest.fixture
-def player() -> MagicMock:
-    """Return a mock player."""
-    return mock_pysqueezebox_player()
-
-
-@pytest.fixture
 def player_factory() -> MagicMock:
     """Return a factory for creating mock players."""
     return mock_pysqueezebox_player

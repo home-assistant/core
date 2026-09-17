@@ -669,6 +669,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "axle_energy": {
+      "name": "Axle Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "backblaze_b2": {
       "name": "Backblaze B2",
       "integration_type": "service",
@@ -755,6 +761,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "bitvis": {
+      "name": "Bitvis Power Hub",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "bizkaibus": {
       "name": "Bizkaibus",
@@ -1175,7 +1187,7 @@
       "iot_class": "local_push"
     },
     "command_line": {
-      "name": "Command Line",
+      "name": "Command line",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1300,6 +1312,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "de_dietrich": {
+      "name": "De Dietrich",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "deako": {
       "name": "Deako",
       "integration_type": "hub",
@@ -1383,7 +1401,7 @@
       "iot_class": "local_polling"
     },
     "device_sun_light_trigger": {
-      "name": "Presence-based Lights",
+      "name": "Presence-based lights",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
@@ -1438,8 +1456,8 @@
     },
     "discogs": {
       "name": "Discogs",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "discord": {
@@ -2249,7 +2267,7 @@
       "iot_class": "local_polling"
     },
     "folder_watcher": {
-      "name": "Folder Watcher",
+      "name": "Folder watcher",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3344,6 +3362,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "indi_allsky": {
+      "name": "INDI Allsky",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "indianamichiganpower": {
       "name": "Indiana Michigan Power",
       "integration_type": "virtual",
@@ -3950,7 +3974,7 @@
       "name": "Liebherr",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "lifx": {
       "name": "LIFX",
@@ -4063,7 +4087,7 @@
       "iot_class": "local_polling"
     },
     "local_file": {
-      "name": "Local File",
+      "name": "Local file",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4291,7 +4315,7 @@
       "iot_class": "local_polling"
     },
     "media_extractor": {
-      "name": "Media Extractor",
+      "name": "Media extractor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated",
@@ -4653,7 +4677,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "Manual MQTT Alarm Control Panel"
+          "name": "Manual MQTT alarm control panel"
         },
         "mqtt": {
           "integration_type": "service",
@@ -4677,7 +4701,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "MQTT Room Presence"
+          "name": "MQTT room presence"
         },
         "mqtt_statestream": {
           "integration_type": "hub",
@@ -4723,6 +4747,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "my_pv": {
+      "name": "my-PV",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "myneomitis": {
       "name": "MyNeomitis",
@@ -6062,9 +6092,10 @@
     },
     "rejseplanen": {
       "name": "Rejseplanen",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
@@ -6244,7 +6275,7 @@
       "iot_class": "cloud_polling"
     },
     "rss_feed_template": {
-      "name": "RSS Feed Template",
+      "name": "RSS feed template",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -7033,6 +7064,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "steinway_lyngdorf": {
+      "name": "Steinway & Lyngdorf",
+      "integration_type": "virtual",
+      "supported_by": "lyngdorf"
+    },
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
       "integration_type": "device",
@@ -7209,7 +7245,7 @@
       "iot_class": "local_push"
     },
     "systemmonitor": {
-      "name": "System Monitor",
+      "name": "System monitor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push",
@@ -8052,8 +8088,8 @@
     },
     "volkszaehler": {
       "name": "Volkszaehler",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "volumio": {
@@ -8207,6 +8243,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "willow": {
+      "name": "Willow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "wirelesstag": {
       "name": "Wireless Sensor Tags",
@@ -8552,6 +8594,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "zonneplan": {
+      "name": "Zonneplan",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "zooz": {
       "name": "Zooz",
       "iot_standards": [
@@ -8642,7 +8690,7 @@
       "iot_class": "local_push"
     },
     "manual": {
-      "name": "Manual Alarm Control Panel",
+      "name": "Manual alarm control panel",
       "integration_type": "helper",
       "config_flow": false,
       "iot_class": "calculated"

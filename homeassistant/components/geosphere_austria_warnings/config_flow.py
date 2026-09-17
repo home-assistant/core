@@ -2,13 +2,13 @@
 
 from typing import Any, override
 
+import probatio
 from pygeosphere_warnings import (
     GeoSphereMunicipalityNotFoundError,
     GeoSphereWarningsClient,
     GeoSphereWarningsError,
     Municipality,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -19,11 +19,11 @@ from homeassistant.helpers.selector import LocationSelector, LocationSelectorCon
 from .const import DOMAIN, LOGGER
 
 
-def _build_schema(hass: HomeAssistant) -> vol.Schema:
+def _build_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the user step schema defaulting to the Home Assistant location."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_LOCATION,
                 default={
                     CONF_LATITUDE: hass.config.latitude,
