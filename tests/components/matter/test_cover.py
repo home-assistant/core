@@ -17,8 +17,14 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.matter.cover import (
+    NAMESPACE_CLOSURE_PANEL,
     STATE_WRITE_DEBOUNCE_COOLDOWN,
+    ClosurePanelRole,
     _extract_struct_field,
+    _feature_supported,
+    _get_closure_panel_role,
+    _ha_position_to_percent100ths,
+    _percent100ths_to_ha_position,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -71,6 +77,110 @@ def test_extract_struct_field(
 ) -> None:
     """Test extracting a field from a Matter struct value in either representation."""
     assert _extract_struct_field(value, index, attr_name) == expected
+
+
+@pytest.mark.parametrize(
+    ("tag_list", "expected"),
+    [
+        pytest.param(None, None, id="none_tag_list"),
+        pytest.param([], None, id="empty_tag_list"),
+        pytest.param(
+            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 0}],
+            ClosurePanelRole.POSITION,
+            id="lift_tag",
+        ),
+        pytest.param(
+            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 1}],
+            ClosurePanelRole.TILT,
+            id="tilt_tag",
+        ),
+        pytest.param(
+            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 2}],
+            ClosurePanelRole.POSITION,
+            id="sliding_tag",
+        ),
+        pytest.param(
+            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 3}],
+            ClosurePanelRole.POSITION,
+            id="rotate_tag",
+        ),
+        pytest.param(
+            [{"1": NAMESPACE_CLOSURE_PANEL, "2": 99}],
+            None,
+            id="unrecognized_closure_panel_tag",
+        ),
+        pytest.param(
+            [{"1": 999, "2": 0}],
+            None,
+            id="tag_from_another_namespace_is_ignored",
+        ),
+        pytest.param(
+            [{"1": 999, "2": 0}, {"1": NAMESPACE_CLOSURE_PANEL, "2": 1}],
+            ClosurePanelRole.TILT,
+            id="skips_other_namespace_tag_then_matches",
+        ),
+    ],
+)
+def test_get_closure_panel_role(
+    tag_list: list[dict[str, int]] | None, expected: ClosurePanelRole | None
+) -> None:
+    """Test resolving a ClosurePanel child endpoint's functional role from its TagList."""
+    assert _get_closure_panel_role(tag_list) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, None, id="none_value"),
+        pytest.param(0, 100, id="matter_fully_open"),
+        pytest.param(10000, 0, id="matter_fully_closed"),
+        pytest.param(5000, 50, id="halfway"),
+        pytest.param(4999, 51, id="rounds_towards_open"),
+    ],
+)
+def test_percent100ths_to_ha_position(value: int | None, expected: int | None) -> None:
+    """Test converting a Matter percent100ths value to a HA 0-100 cover position."""
+    assert _percent100ths_to_ha_position(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("position", "expected"),
+    [
+        pytest.param(0, 10000, id="ha_closed"),
+        pytest.param(100, 0, id="ha_open"),
+        pytest.param(50, 5000, id="halfway"),
+        pytest.param(30, 7000, id="thirty_percent"),
+    ],
+)
+def test_ha_position_to_percent100ths(position: int, expected: int) -> None:
+    """Test converting a HA 0-100 cover position to a Matter percent100ths value."""
+    assert _ha_position_to_percent100ths(position) == expected
+
+
+@pytest.mark.parametrize(
+    ("feature_map", "feature", "expected"),
+    [
+        pytest.param(0b011, 0b001, True, id="feature_bit_set"),
+        pytest.param(0b010, 0b001, False, id="feature_bit_not_set"),
+        pytest.param(None, 0b001, False, id="feature_map_not_reported"),
+        pytest.param([], 0b001, False, id="feature_map_wrong_type"),
+    ],
+)
+def test_feature_supported(
+    feature_map: int | None, feature: int, expected: bool
+) -> None:
+    """Test checking whether an endpoint's FeatureMap contains a given feature bit."""
+    endpoint = MagicMock()
+    endpoint.get_attribute_value.return_value = feature_map
+    assert (
+        _feature_supported(
+            endpoint, clusters.ClosureDimension.Attributes.FeatureMap, feature
+        )
+        is expected
+    )
+    endpoint.get_attribute_value.assert_called_once_with(
+        None, clusters.ClosureDimension.Attributes.FeatureMap
+    )
 
 
 @pytest.mark.usefixtures("matter_devices")
