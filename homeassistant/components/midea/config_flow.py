@@ -910,6 +910,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
                 )
+                if not entry.update_listeners:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
 
         return self.async_abort(reason="no_devices_found")
