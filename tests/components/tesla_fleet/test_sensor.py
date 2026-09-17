@@ -9,11 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
+from homeassistant.components.tesla_fleet.const import ENERGY_HISTORY_FIELDS
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     VEHICLE_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -293,3 +294,99 @@ async def test_energy_history_invalid_first_period(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+def _history_with_values(values: dict[str, Any]) -> dict[str, Any]:
+    """Return overnight history with only the given fields in every period."""
+    history = deepcopy(ENERGY_HISTORY_OVERNIGHT)
+    history["response"]["time_series"] = [
+        {"timestamp": period["timestamp"], **values}
+        for period in history["response"]["time_series"]
+    ]
+    return history
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "history",
+    [
+        pytest.param(_history_with_values({}), id="no_fields"),
+        pytest.param(
+            _history_with_values(
+                {"total_home_usage": True, "grid_energy_imported": "1250"}
+            ),
+            id="only_non_numeric",
+        ),
+    ],
+)
+async def test_energy_history_no_readings_are_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    history: dict[str, Any],
+) -> None:
+    """Test history without any numeric reading reports unknown, not zero."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_energy_history.return_value = history
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_ids = [
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, normal_config_entry.entry_id
+        )
+        if entry.unique_id.rsplit("-", 1)[-1] in ENERGY_HISTORY_FIELDS
+    ]
+    assert len(entity_ids) == len(ENERGY_HISTORY_FIELDS)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "expected_state"),
+    [
+        pytest.param("sensor.energy_site_home_usage", "0.51", id="partly_non_numeric"),
+        pytest.param("sensor.energy_site_solar_generated", "0.0", id="all_non_numeric"),
+        pytest.param("sensor.energy_site_grid_imported", "5.1", id="numeric"),
+    ],
+)
+async def test_energy_history_non_numeric_values_skipped(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test non-numeric history values are skipped rather than summed."""
+
+    history = deepcopy(ENERGY_HISTORY_OVERNIGHT)
+    time_series = history["response"]["time_series"]
+    time_series[0]["total_home_usage"] = "250"
+    time_series[1]["total_home_usage"] = True
+    for period in time_series:
+        period["total_solar_generation"] = None
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_energy_history.return_value = history
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
