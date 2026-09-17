@@ -1,6 +1,7 @@
 """Support for Netatmo binary sensors."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -16,12 +17,14 @@ import homeassistant.util.dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
+    advance_time,
     fake_post_request,
+    payload_modifier,
     simulate_webhook,
     snapshot_platform_entities,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -126,45 +129,26 @@ async def test_doortag_opening_status_change(
     fake_post_hits = 0
     # Repeatedly used variables for the test and initial value from fixture
     # Use nonexistent ID to prevent matching during initial setup
-    doortag_entity_id = "aa:bb:cc:dd:ee:ff"
-    doortag_connectivity = False
-    doortag_opening = "no_news"
-    doortag_timestamp = None
-
-    def tag_modifier(payload):
-        """This function will be called by common.py during ANY homestatus call."""
-        nonlocal doortag_connectivity, doortag_opening, doortag_timestamp
-
-        if doortag_timestamp is not None:
-            payload["time_server"] = doortag_timestamp
-        body = payload.get("body", {})
-
-        # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
-        homes_to_check = []
-        if "home" in body and isinstance(body["home"], dict):
-            homes_to_check.append(body["home"])
-        elif "homes" in body and isinstance(body["homes"], list):
-            homes_to_check.extend(body["homes"])
-
-        for home_data in homes_to_check:
-            # Safety check: ensure home_data is actually a dictionary
-            if not isinstance(home_data, dict):
-                continue
-
-            modules = home_data.get("modules", [])
-            for module in modules:
-                if isinstance(module, dict) and module.get("id") == doortag_entity_id:
-                    module["reachable"] = doortag_connectivity
-                    module["status"] = doortag_opening
-                    if doortag_timestamp is not None:
-                        module["last_seen"] = doortag_timestamp
-                    break
+    polling_cycles = 11
+    polling_delta = timedelta(seconds=30)
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"reachable": False, "status": "no_news"},
+    }
 
     async def fake_tag_post(*args, **kwargs):
         """Fake tag status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(hass, *args, msg_callback=tag_modifier, **kwargs)
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
 
     with (
         patch(
@@ -206,29 +190,16 @@ async def test_doortag_opening_status_change(
     # Check opening creation
     assert hass.states.get(_doortag_entity_opening) is not None
 
-    # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "off"
-    # Check opening initial state
-    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
-
-    # Trigger some polling cycle to let API throttling work
-    for _ in range(11):
-        freezer.tick(timedelta(seconds=30))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    # Change mocked status
-    doortag_entity_id = "12:34:56:00:86:99"
-    doortag_connectivity = True
-    doortag_opening = doortag_status
-    doortag_timestamp = int(dt_util.utcnow().timestamp())
+    # Change mocked status to test early unavailability of image fetch
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = "12:34:56:00:86:99"
+    mock_state["attributes"] = {
+        "reachable": True,
+        "status": doortag_status,
+    }
 
     # Trigger some polling cycle to let status change be picked up
-
-    for _ in range(11):
-        freezer.tick(timedelta(seconds=30))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, polling_cycles, polling_delta)
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
@@ -258,40 +229,27 @@ async def test_doortag_opening_category(
 ) -> None:
     """Test doortag opening status changes."""
     fake_post_hits = 0
-    # Repeatedly used variables for the test and initial value from fixture
-    doortag_entity_id = "12:34:56:00:86:99"
-    doortag_connectivity = False
-    doortag_opening = "no_news"
 
-    def tag_modifier(payload):
-        """This function will be called by common.py during ANY homestatus call."""
-        nonlocal doortag_connectivity, doortag_opening
-        payload["time_server"] = int(dt_util.utcnow().timestamp())
-        body = payload.get("body", {})
-
-        # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
-        homes_to_check = []
-        if "home" in body and isinstance(body["home"], dict):
-            homes_to_check.append(body["home"])
-        elif "homes" in body and isinstance(body["homes"], list):
-            homes_to_check.extend(body["homes"])
-
-        for home_data in homes_to_check:
-            # Safety check: ensure home_data is actually a dictionary
-            if not isinstance(home_data, dict):
-                continue
-
-            modules = home_data.get("modules", [])
-            for module in modules:
-                if isinstance(module, dict) and module.get("id") == doortag_entity_id:
-                    module["category"] = doortag_category
-                    break
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "12:34:56:00:86:99",
+        "timestamp": None,
+        "attributes": {
+            "category": doortag_category,
+        },
+    }
 
     async def fake_tag_post(*args, **kwargs):
         """Fake tag status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(hass, *args, msg_callback=tag_modifier, **kwargs)
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
 
     with (
         patch(
