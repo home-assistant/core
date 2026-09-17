@@ -1009,7 +1009,7 @@ async def test_update_entity(
     }
 
 
-async def test_update_entity_area_without_name(
+async def test_update_entity_own_area_without_own_name(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,

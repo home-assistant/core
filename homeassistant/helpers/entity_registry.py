@@ -1228,7 +1228,7 @@ def _validate_item(
 
 
 @callback
-def _has_area_without_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
     """Return if an entity has an area of its own but no name of its own."""
     return (
         entry.area_id is not None
@@ -1703,6 +1703,9 @@ class EntityRegistry(BaseRegistry):
             platform=entity.platform,
             unique_id=entity.unique_id,
         )
+        ir.async_delete_issue(
+            self.hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entity)
+        )
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _EventEntityRegistryUpdatedData_CreateRemove(
@@ -2041,9 +2044,9 @@ class EntityRegistry(BaseRegistry):
         new = attr.evolve(old, **new_values)
 
         # Only user edits are rejected, integration updates surface as a repair issue
-        if ("area_id" in new_values or "name" in new_values) and _has_area_without_name(
-            self.hass, new
-        ):
+        if (
+            "area_id" in new_values or "name" in new_values
+        ) and _has_own_area_without_own_name(self.hass, new):
             raise ValueError(
                 "An entity without a name of its own cannot have an area of its own, "
                 "set the area on its device instead"
@@ -2219,7 +2222,7 @@ class EntityRegistry(BaseRegistry):
 
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
-        _async_setup_area_without_name_issues(self.hass, self)
+        _async_setup_own_area_without_own_name_issues(self.hass, self)
 
         data = await self._store.async_load()
         entities = EntityRegistryItems(self.hass)
@@ -2774,8 +2777,8 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 
 
-_AREA_WITHOUT_NAME_ISSUE = "entity_area_without_name"
-_AREA_WITHOUT_NAME_ISSUE_FIELDS = {
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE = "entity_own_area_without_own_name"
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS = {
     "area_id",
     "device_id",
     "entity_id",
@@ -2785,23 +2788,30 @@ _AREA_WITHOUT_NAME_ISSUE_FIELDS = {
 }
 
 
+def _own_area_without_own_name_issue_id(entry: RegistryEntry) -> str:
+    """Return the issue ID of an entry, keyed on its stable ID."""
+    return f"{_OWN_AREA_WITHOUT_OWN_NAME_ISSUE}_{entry.id}"
+
+
 @callback
-def _async_setup_area_without_name_issues(
+def _async_setup_own_area_without_own_name_issues(
     hass: HomeAssistant, registry: EntityRegistry
 ) -> None:
-    """Report entities with an area of their own but no name of their own."""
-    issue_entity_ids: set[str] = set()
+    """Report entities with an area of their own but no name of their own.
+
+    Removals are handled directly by the registry, since the remove event lacks
+    the entry ID.
+    """
 
     @callback
     def _async_create_issue(entry: RegistryEntry) -> None:
-        issue_entity_ids.add(entry.entity_id)
         ir.async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
-            f"{_AREA_WITHOUT_NAME_ISSUE}_{entry.entity_id}",
+            _own_area_without_own_name_issue_id(entry),
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=_AREA_WITHOUT_NAME_ISSUE,
+            translation_key=_OWN_AREA_WITHOUT_OWN_NAME_ISSUE,
             translation_placeholders={
                 "entity_id": entry.entity_id,
                 "entity_settings_url": (
@@ -2812,36 +2822,25 @@ def _async_setup_area_without_name_issues(
         )
 
     @callback
-    def _async_delete_issue(entity_id: str) -> None:
-        if entity_id not in issue_entity_ids:
-            return
-        issue_entity_ids.discard(entity_id)
-        ir.async_delete_issue(
-            hass, HOMEASSISTANT_DOMAIN, f"{_AREA_WITHOUT_NAME_ISSUE}_{entity_id}"
+    def _relevant_changes_filter(event_data: Mapping[str, Any]) -> bool:
+        if event_data["action"] == "create":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return not _OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS.isdisjoint(
+            event_data["changes"]
         )
 
     @callback
-    def _async_check_entry(entry: RegistryEntry) -> None:
-        if _has_area_without_name(hass, entry):
+    def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        if (entry := registry.async_get(event.data["entity_id"])) is None:
+            return
+        if _has_own_area_without_own_name(hass, entry):
             _async_create_issue(entry)
         else:
-            _async_delete_issue(entry.entity_id)
-
-    @callback
-    def _relevant_changes_filter(event_data: Mapping[str, Any]) -> bool:
-        if event_data["action"] != "update":
-            return True
-        return not _AREA_WITHOUT_NAME_ISSUE_FIELDS.isdisjoint(event_data["changes"])
-
-    @callback
-    def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
-        entity_id = event.data["entity_id"]
-        if event.data["action"] == "update" and "old_entity_id" in event.data:
-            _async_delete_issue(event.data["old_entity_id"])
-        if (entry := registry.async_get(entity_id)) is None:
-            _async_delete_issue(entity_id)
-        else:
-            _async_check_entry(entry)
+            ir.async_delete_issue(
+                hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entry)
+            )
 
     hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
@@ -2853,11 +2852,12 @@ def _async_setup_area_without_name_issues(
         return
 
     @callback
-    def _async_check_entries(_: Event) -> None:
+    def _async_create_issues(_: Event) -> None:
         for entry in registry.entities.values():
-            _async_check_entry(entry)
+            if _has_own_area_without_own_name(hass, entry):
+                _async_create_issue(entry)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_entries)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)
 
 
 async def async_migrate_entries(

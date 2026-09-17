@@ -2814,7 +2814,7 @@ async def test_update_entity(
         entry = updated_entry
 
 
-async def test_update_entity_area_without_name(
+async def test_update_entity_own_area_without_own_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -2892,7 +2892,7 @@ async def test_update_entity_area_without_name(
     assert entry.area_id == "kitchen"
 
 
-async def test_entity_area_without_name_issue(
+async def test_entity_own_area_without_own_name_issue(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -2915,7 +2915,7 @@ async def test_entity_area_without_name_issue(
         original_name="Light",
     )
     entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
-    issue_id = f"entity_area_without_name_{entry.entity_id}"
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
     assert issue_registry.async_get_issue("homeassistant", issue_id) is None
 
     # The integration dropping the name is not rejected but reported
@@ -2932,7 +2932,7 @@ async def test_entity_area_without_name_issue(
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
-    assert issue.translation_key == "entity_area_without_name"
+    assert issue.translation_key == "entity_own_area_without_own_name"
     assert issue.translation_placeholders == {
         "entity_id": entry.entity_id,
         "entity_settings_url": (
@@ -2941,13 +2941,15 @@ async def test_entity_area_without_name_issue(
         ),
     }
 
-    # The issue follows a rename
+    # A rename updates the issue and keeps its ignored state
+    issue_registry.async_ignore("homeassistant", issue_id, True)
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="light.renamed"
     )
-    assert issue_registry.async_get_issue("homeassistant", issue_id) is None
-    issue_id = "entity_area_without_name_light.renamed"
-    assert issue_registry.async_get_issue("homeassistant", issue_id) is not None
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert issue.translation_placeholders["entity_id"] == "light.renamed"
 
     # Removing the area resolves it
     entity_registry.async_update_entity(entry.entity_id, area_id=None)
@@ -2978,7 +2980,7 @@ async def test_entity_area_without_name_issue(
     assert issue_registry.async_get_issue("homeassistant", issue_id) is None
 
 
-async def test_entity_area_without_name_issue_on_start(
+async def test_entity_own_area_without_own_name_issue_on_start(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -3010,7 +3012,7 @@ async def test_entity_area_without_name_issue_on_start(
         has_entity_name=True,
         original_name=None,
     )
-    issue_id = f"entity_area_without_name_{entry.entity_id}"
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
     # The issue is not persistent, so a restart drops it
     issue_registry.async_delete("homeassistant", issue_id)
     assert issue_registry.async_get_issue("homeassistant", issue_id) is None
