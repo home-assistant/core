@@ -68,7 +68,7 @@ async def _async_migrate_subentry_display_data(
         route_labels = {line_id: line_id_label(line_id) for line_id in line_ids}
         try:
             place = await async_get_stop_place(hass, subentry.data["stop_id"])
-        except (EnturApiError, KeyError):
+        except EnturApiError, KeyError:
             place = None
 
         data = dict(subentry.data)
