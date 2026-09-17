@@ -1,0 +1,168 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_iont_charger": "The device at that address does not answer as an IONT charger. Check the address, and that Modbus TCP is enabled on the charger."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::iont::config::step::user::data_description::host%]",
+          "port": "[%key:component::iont::config::step::user::data_description::port%]"
+        },
+        "description": "Update how this charger is reached, for example after it moved to another address."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your IONT charger. Modbus TCP has to be enabled on the charger first, in its administration interface.",
+          "port": "The TCP port the charger listens on for Modbus requests. The default is 502."
+        },
+        "description": "Connect to your IONT charger over your local network to monitor and control charging."
+      }
+    }
+  },
+  "device": {
+    "connector": {
+      "name": "Connector {number}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "authorized_by": {
+        "name": "Authorized by",
+        "state": {
+          "auto": "Automatic",
+          "modbus": "Modbus",
+          "mqtt": "MQTT",
+          "not_charging": "Not charging",
+          "ocpp": "OCPP",
+          "remote": "Remote",
+          "rfid": "RFID",
+          "timer": "Timer"
+        }
+      },
+      "available_power": {
+        "name": "Available power"
+      },
+      "charger_breaker_current": {
+        "name": "Charger breaker current"
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging_1f": "Charging single-phase",
+          "charging_3f": "Charging three-phase",
+          "charging_dc": "Charging DC",
+          "charging_done": "Charging done",
+          "not_charging": "Not charging",
+          "paused": "[%key:common::state::paused%]"
+        }
+      },
+      "charging_strategy": {
+        "name": "Charging strategy",
+        "state": {
+          "boost": "Boost",
+          "eco": "Eco",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "frequency_l1": {
+        "name": "Frequency L1"
+      },
+      "frequency_l2": {
+        "name": "Frequency L2"
+      },
+      "frequency_l3": {
+        "name": "Frequency L3"
+      },
+      "last_session_energy": {
+        "name": "Last session energy"
+      },
+      "main_breaker_current": {
+        "name": "Main breaker current"
+      },
+      "power_limit": {
+        "name": "Power limit"
+      },
+      "power_limit_user": {
+        "name": "User power limit"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "auth_not_possible": "Authorization not possible",
+          "deactivated": "Deactivated",
+          "init": "Starting",
+          "maintenance": "Maintenance",
+          "operational": "Operational",
+          "out_of_order": "Out of order"
+        }
+      },
+      "temperature_ambient": {
+        "name": "Ambient temperature"
+      },
+      "temperature_inner": {
+        "name": "Inner temperature"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "vehicle_state": {
+        "name": "Vehicle state",
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "error": "[%key:common::state::error%]",
+          "needs_to_ventilate": "Needs ventilation",
+          "not_connected": "Not connected",
+          "wants_to_charge": "Ready to charge"
+        }
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the IONT charger: {error}"
+    },
+    "link_settings_in_use": {
+      "message": "The charger cannot be set up with these link settings: {error}"
+    },
+    "no_iont_charger": {
+      "message": "The configured Modbus device does not answer as an IONT charger."
+    }
+  }
+}
