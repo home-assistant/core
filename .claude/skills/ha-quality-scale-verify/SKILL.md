@@ -31,16 +31,22 @@ Examine `homeassistant/components/<domain>`:
 - the Python modules and `tests/components/<domain>` relevant to the rule
 
 Additional sources:
-- Integration docs: prefer the docs change in the PR (or its linked docs PR). Otherwise fetch `https://raw.githubusercontent.com/home-assistant/home-assistant.io/refs/heads/current/source/_integrations/<domain>.markdown` and treat it as possibly stale relative to a not-yet-merged tier bump.
+- Integration docs: resolve in this order — the docs change in the PR, then its linked docs PR, then the `next` branch, then the `current` branch of home-assistant.io (`https://raw.githubusercontent.com/home-assistant/home-assistant.io/refs/heads/<branch>/source/_integrations/<domain>.markdown`). Docs for a tier bump usually land on `next` or in a docs PR, so `current` alone is often stale. If a required `docs-*` section is not found in any of these, mark that rule **unverified — needs the docs PR linked**, not pass and not a hard fail.
 - PyPI package info: `https://pypi.org/pypi/<package>/json`
+
+## 3b. Determine which rules to verify
+- **If the change modifies the integration's `quality_scale` tier** (a tier bump — the `quality_scale` value in `manifest.json` changes), verify **every rule from Bronze up to and including the target tier**, from scratch. Do not trust the existing `done`/`exempt` marks or assume prior reviewers verified the lower tiers — re-run the checks and re-read the code for all of them. A tier bump is exactly where a lower-tier rule that was wrongly marked `done` (a docs section that was never written, a coverage gap) slips through, so the whole cumulative set is in scope.
+- **If the change does not move the tier** (e.g. it flips some rules to `done`, or adds an initial scorecard), verify every rule whose `quality_scale.yaml` status this change adds or sets to `done`/`exempt` (diff `quality_scale.yaml`), plus any rule the code changes touch. `todo` rules at or below the claimed tier are acknowledged gaps, not findings — but they mean a full tier claim is not yet met.
+- When only a single rule was requested, verify just that rule.
 
 ## 4. Run the checks (mandatory for executable rules)
 
 Set up the dev environment once (see the repo `CLAUDE.md`): run `script/setup`. If uv reports no download for the required Python, upgrade uv first (`pip install -U uv` from PyPI, since `astral.sh` may be blocked) and re-run `script/setup`.
 
-Match the PR's pinned tool versions before linting or testing — tool-version drift produces both false failures and false passes. Read the pins from the PR head:
-- `ruff` pin from `requirements_test_pre_commit.txt` (and `.pre-commit-config.yaml`); install it (`uv pip install "ruff==<pin>"`).
+Match the PR's pinned versions before linting or testing — version drift and missing packages produce both false failures and false passes. Read the pins from the PR head and install them:
+- `ruff` pin from `requirements_test_pre_commit.txt` (and `.pre-commit-config.yaml`); install it (`uv pip install "ruff==<pin>"`). hassfest calls `ruff format`, so install this before hassfest too.
 - `syrupy` pin from `requirements_test.txt`; install it before running snapshot tests.
+- the integration's own libraries from `manifest.json` `requirements` (`uv pip install "<pkg>==<pin>"`). A stale or missing library makes mypy and hassfest report errors that are not in the code. If an import fails (`ModuleNotFoundError`) or mypy flags library symbols, install the correct version and re-run — that is a build-environment gap, not a PR defect. Do not report a missing/mismatched dependency as a rule violation, and do not assume an unfamiliar imported package is a mistake: confirm it is really absent from the project's requirements before treating an import as broken.
 
 Map each rule to the check that actually proves it:
 
