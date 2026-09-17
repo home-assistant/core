@@ -259,12 +259,7 @@ async def test_event_listener_severity_escalation_logs_at_natural_level(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failure more severe than the ongoing outage stays visible.
-
-    A debug-level outage (connection errors) that escalates to an
-    unauthorized error must surface that escalation at its natural level,
-    not hide it at debug just because a failure was already in progress.
-    """
+    """Test a higher-severity failure remains visible during an outage."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
