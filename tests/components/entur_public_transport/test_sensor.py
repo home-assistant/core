@@ -1,0 +1,174 @@
+"""Tests for the Entur public transport sensor platform."""
+
+from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
+
+import probatio
+import pytest
+
+from homeassistant.components.entur_public_transport.sensor import (
+    PLATFORM_SCHEMA,
+    EnturPublicTransportSensor,
+    async_setup_platform,
+    due_in_minutes,
+)
+from homeassistant.core import HomeAssistant
+
+
+def test_platform_schema_defaults() -> None:
+    """Test the defaults used by the YAML platform configuration."""
+    config = PLATFORM_SCHEMA({"stop_ids": "NSR:StopPlace:1"})
+
+    assert config["stop_ids"] == ["NSR:StopPlace:1"]
+    assert config["expand_platforms"] is True
+    assert config["name"] == "Entur"
+    assert config["show_on_map"] is False
+    assert config["line_whitelist"] == []
+    assert config["omit_non_boarding"] is True
+    assert config["number_of_departures"] == 2
+
+
+def test_platform_schema_requires_stop_ids() -> None:
+    """Test that stop IDs are required by the YAML platform configuration."""
+    with pytest.raises(probatio.Invalid):
+        PLATFORM_SCHEMA({})
+
+
+def test_due_in_minutes() -> None:
+    """Test calculating the number of minutes until a departure."""
+    now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
+
+    with patch(
+        "homeassistant.components.entur_public_transport.sensor.dt_util.now",
+        return_value=now,
+    ):
+        assert due_in_minutes(now + timedelta(minutes=6, seconds=59)) == 6
+
+
+async def test_async_setup_platform_creates_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test that configured stops and quays become sensors."""
+    stop_info = {
+        "NSR:StopPlace:1": SimpleNamespace(name="Central station"),
+        "NSR:Quay:2": SimpleNamespace(name="Platform 2"),
+    }
+    api = Mock()
+    api.expand_all_quays = AsyncMock()
+    api.update = AsyncMock()
+    api.all_stop_places_quays.return_value = list(stop_info)
+    api.get_stop_info.side_effect = stop_info.__getitem__
+    add_entities = Mock()
+    client_session = Mock()
+
+    config = PLATFORM_SCHEMA(
+        {
+            "stop_ids": ["NSR:StopPlace:1", "NSR:Quay:2"],
+            "name": "Transport",
+            "expand_platforms": True,
+            "show_on_map": True,
+            "line_whitelist": ["RUT:Line:1"],
+            "omit_non_boarding": False,
+            "number_of_departures": 4,
+        }
+    )
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.EnturPublicTransportData",
+            return_value=api,
+        ) as data_class,
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.async_get_clientsession",
+            return_value=client_session,
+        ),
+    ):
+        await async_setup_platform(hass, config, add_entities)
+
+    data_class.assert_called_once()
+    client_name = data_class.call_args.args[0]
+    assert client_name.startswith("homeassistant-")
+    assert data_class.call_args.kwargs == {
+        "stops": ["NSR:StopPlace:1"],
+        "quays": ["NSR:Quay:2"],
+        "line_whitelist": ["RUT:Line:1"],
+        "omit_non_boarding": False,
+        "number_of_departures": 4,
+        "web_session": client_session,
+    }
+    api.expand_all_quays.assert_awaited_once()
+    api.update.assert_awaited_once()
+
+    entities = add_entities.call_args.args[0]
+    assert [entity.name for entity in entities] == [
+        "Transport Central station",
+        "Transport Platform 2",
+    ]
+    assert add_entities.call_args.args[1] is True
+
+
+async def test_sensor_update_sets_departure_attributes() -> None:
+    """Test that the first departures are exposed as sensor state attributes."""
+    now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
+    first_call = SimpleNamespace(
+        expected_departure_time=now + timedelta(minutes=5),
+        front_display="1 City centre",
+        line_id="RUT:Line:1",
+        is_realtime=True,
+        delay_in_min=1,
+        transport_mode="bus",
+    )
+    second_call = SimpleNamespace(
+        expected_departure_time=now + timedelta(minutes=20),
+        front_display="1 City centre",
+        line_id="RUT:Line:1",
+        is_realtime=False,
+        delay_in_min=0,
+        transport_mode="bus",
+    )
+    third_call = SimpleNamespace(
+        expected_departure_time=now + timedelta(minutes=30),
+        front_display="2 Airport",
+        line_id="RUT:Line:2",
+        is_realtime=False,
+        delay_in_min=0,
+        transport_mode="bus",
+    )
+    api = Mock()
+    api.async_update = AsyncMock()
+    api.get_stop_info.return_value = SimpleNamespace(
+        latitude=59.91,
+        longitude=10.75,
+        estimated_calls=[first_call, second_call, third_call],
+    )
+    sensor = EnturPublicTransportSensor(
+        api, "Transport Central station", "NSR:StopPlace:1", True
+    )
+
+    with patch(
+        "homeassistant.components.entur_public_transport.sensor.dt_util.now",
+        return_value=now,
+    ):
+        await sensor.async_update()
+
+    assert sensor.native_value == 5
+    assert sensor.icon == "mdi:bus"
+    assert sensor.extra_state_attributes == {
+        "stop_id": "NSR:StopPlace:1",
+        "latitude": 59.91,
+        "longitude": 10.75,
+        "route": "1 City centre",
+        "route_id": "RUT:Line:1",
+        "due_at": "12:05",
+        "real_time": True,
+        "delay": 1,
+        "next_route": "1 City centre",
+        "next_route_id": "RUT:Line:1",
+        "next_due_at": "12:20",
+        "next_due_in": "20 min",
+        "next_real_time": False,
+        "next_delay": 0,
+        "departure_#3": "ca. 12:30 2 Airport",
+    }
+    api.async_update.assert_awaited_once()
