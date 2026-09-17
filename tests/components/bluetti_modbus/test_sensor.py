@@ -1,6 +1,7 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
 from bluetti_modbus_lib.devices.getter import get_device
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetti_modbus.const import (
@@ -31,6 +32,7 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

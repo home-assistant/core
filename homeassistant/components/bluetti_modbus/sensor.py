@@ -302,6 +302,9 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        # Reads a permanent 0 on Balco260 hardware; BLUETTI confirmed the
+        # register isn't supported on this device.
+        entity_registry_enabled_default=False,
     ),
     BluettiModbusSensorEntityDescription(
         key="b_cell_count",
