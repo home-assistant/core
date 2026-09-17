@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.entur_public_transport import (
-    _migrate_subentry_display_data,
+    _async_migrate_subentry_display_data,
 )
 from homeassistant.components.entur_public_transport.api import (
     EnturApiError,
@@ -384,7 +384,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     }
 
 
-def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None:
+async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None:
     """Test that older subentries show their existing route filter."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -412,9 +412,21 @@ def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    _migrate_subentry_display_data(hass, entry)
+    with patch(
+        "homeassistant.components.entur_public_transport.async_get_stop_place",
+        return_value=EnturStopPlace(
+            stop_id="NSR:StopPlace:1",
+            name="Hønefoss sentrum",
+            display_name="Hønefoss sentrum, Hønefoss",
+            locality="Hønefoss",
+            transport_modes=("bus",),
+            role="standalone",
+            stop_place_types=("onstreetBus",),
+        ),
+    ):
+        await _async_migrate_subentry_display_data(hass, entry)
 
     subentry = entry.subentries["stop-subentry"]
     assert subentry.title == "🚏 Hønefoss sentrum · 101 · BRA"
     assert subentry.data["route_labels"] == {"BRA:Line:101": "101 · BRA"}
-    assert subentry.data["stop_place_types"] == []
+    assert subentry.data["stop_place_types"] == ["onstreetBus"]

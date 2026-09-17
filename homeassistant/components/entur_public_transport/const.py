@@ -7,6 +7,7 @@ DOMAIN = "entur_public_transport"
 API_CLIENT_NAME = "homeassistant-{}"
 ENTUR_CLIENT_NAME = "homeassistant-entur-public-transport"
 GEOCODER_AUTOCOMPLETE_URL = "https://api.entur.io/geocoder/v3/autocomplete"
+GEOCODER_PLACE_URL = "https://api.entur.io/geocoder/v3/place"
 JOURNEY_PLANNER_URL = "https://api.entur.io/journey-planner/v3/graphql"
 ENTUR_STOP_PLACE_URL = "https://entur.no/nearby-stop-place-detail?id={}"
 

@@ -13,6 +13,7 @@ from .const import (
     ENTUR_CLIENT_NAME,
     ENTUR_STOP_PLACE_URL,
     GEOCODER_AUTOCOMPLETE_URL,
+    GEOCODER_PLACE_URL,
     JOURNEY_PLANNER_URL,
     STOP_PLACE_TYPE_ICONS,
 )
@@ -143,6 +144,29 @@ async def async_search_stop_places(
         raise EnturApiError from err
 
     return _parse_stop_places(payload)
+
+
+async def async_get_stop_place(
+    hass: HomeAssistant, stop_id: str
+) -> EnturStopPlace:
+    """Return one stop place from the Geocoder by its canonical ID."""
+    session = async_get_clientsession(hass)
+    try:
+        async with session.get(
+            GEOCODER_PLACE_URL,
+            params={"ids": stop_id, "lang": "no"},
+            headers={"ET-Client-Name": ENTUR_CLIENT_NAME},
+        ) as response:
+            response.raise_for_status()
+            payload: Any = await response.json()
+    except (ClientError, TimeoutError) as err:
+        raise EnturApiError from err
+
+    places = _parse_stop_places(payload)
+    try:
+        return next(place for place in places if place.stop_id == stop_id)
+    except StopIteration as err:
+        raise EnturApiError from err
 
 
 async def async_get_stop_routes(

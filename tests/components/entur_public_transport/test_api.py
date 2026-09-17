@@ -7,11 +7,13 @@ from homeassistant.components.entur_public_transport.api import (
     STOP_PLACE_LINES_QUERY,
     EnturApiError,
     async_get_stop_routes,
+    async_get_stop_place,
     async_search_stop_places,
 )
 from homeassistant.components.entur_public_transport.const import (
     ENTUR_CLIENT_NAME,
     GEOCODER_AUTOCOMPLETE_URL,
+    GEOCODER_PLACE_URL,
     JOURNEY_PLANNER_URL,
 )
 from homeassistant.core import HomeAssistant
@@ -82,6 +84,34 @@ async def test_search_stop_places_rejects_invalid_response(
 
     with pytest.raises(EnturApiError):
         await async_search_stop_places(hass, "Bergen")
+
+
+async def test_get_stop_place(aioclient_mock, hass: HomeAssistant) -> None:
+    """Test loading one stop place by its canonical ID."""
+    aioclient_mock.get(
+        GEOCODER_PLACE_URL,
+        json={
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "id": "NSR:StopPlace:548",
+                        "names": {"default": "Bergen busstasjon"},
+                        "stopPlaceTypes": ["busStation"],
+                    },
+                }
+            ]
+        },
+    )
+
+    place = await async_get_stop_place(hass, "NSR:StopPlace:548")
+
+    assert place.name == "Bergen busstasjon"
+    assert place.stop_place_types == ("busStation",)
+    method, url, _, headers = aioclient_mock.mock_calls[0]
+    assert method == "GET"
+    assert str(url) == f"{GEOCODER_PLACE_URL}?ids=NSR%3AStopPlace%3A548&lang=no"
+    assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 
 async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
