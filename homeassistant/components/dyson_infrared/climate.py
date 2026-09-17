@@ -256,6 +256,8 @@ class DysonInfraredHeaterCooler(
             if self._attr_hvac_mode is HVACMode.OFF:
                 await self._async_send_am09_action(DysonAm09Code.POWER)
                 if needs_mode_select:
+                    self._attr_hvac_mode = self._last_active_mode
+                    self.async_write_ha_state()
                     await asyncio.sleep(self._step_delay)
             # COOL_ON toggles between cool and heat, and HEAT_UP only selects
             # heat while the unit is cooling, so a mode select is sent solely
