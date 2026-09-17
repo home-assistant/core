@@ -36,12 +36,7 @@ YAML_CONFIG = {
     }
 }
 
-SETUP_CONNECTION_ERRORS: list[Exception] = [
-    XiaomiConnectionError(),
-    XiaomiTimeoutError(),
-]
-
-REFRESH_CONNECTION_ERRORS: list[Exception] = [
+CONNECTION_ERRORS: list[Exception] = [
     XiaomiConnectionError(),
     XiaomiTimeoutError(),
 ]
@@ -64,7 +59,7 @@ async def test_unload_entry(
 @pytest.mark.usefixtures("mock_xiaomi_client")
 @pytest.mark.parametrize(
     "error",
-    SETUP_CONNECTION_ERRORS,
+    CONNECTION_ERRORS,
     ids=["connection_error", "timeout"],
 )
 async def test_setup_entry_cannot_connect(
@@ -75,6 +70,29 @@ async def test_setup_entry_cannot_connect(
 ) -> None:
     """Test setup fails with ConfigEntryNotReady on connection error."""
     mock_xiaomi_client.login.side_effect = error
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_xiaomi_client")
+@pytest.mark.parametrize(
+    "error",
+    CONNECTION_ERRORS,
+    ids=["connection_error", "timeout"],
+)
+async def test_setup_entry_first_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test a failed first refresh after a successful login retries setup."""
+    mock_xiaomi_client.login.return_value = "token"
+    mock_xiaomi_client.get_device_list.side_effect = error
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -106,7 +124,7 @@ async def test_setup_entry_invalid_auth(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
 @pytest.mark.parametrize(
     "error",
-    REFRESH_CONNECTION_ERRORS,
+    CONNECTION_ERRORS,
     ids=["connection_error", "timeout"],
 )
 async def test_refresh_cannot_connect(

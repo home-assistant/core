@@ -166,6 +166,10 @@ async def test_reauth_flow(
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "host": mock_config_entry.data[CONF_HOST],
+        "name": mock_config_entry.title,
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=REAUTH_INPUT
@@ -201,6 +205,10 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": base_error}
+    assert result["description_placeholders"] == {
+        "host": mock_config_entry.data[CONF_HOST],
+        "name": mock_config_entry.title,
+    }
 
     mock_xiaomi_client.login.configure_mock(side_effect=None, return_value=None)
     result = await hass.config_entries.flow.async_configure(

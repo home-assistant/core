@@ -71,6 +71,47 @@ async def test_device_tracker_data_shape(
     assert state.attributes["tracking_type"] == "connection"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_legacy_string_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+) -> None:
+    """Test a legacy payload with a plain string IP is handled."""
+    legacy_device = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "192.168.0.50")
+    legacy_device["ip"] = "192.168.0.50"
+    mock_xiaomi_client.get_device_list.return_value = [legacy_device]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.attributes["ip"] == "192.168.0.50"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_without_ip_record(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_xiaomi_client: MagicMock,
+) -> None:
+    """Test a device without usable IP records still gets an entity."""
+    device = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "")
+    device["ip"] = []
+    mock_xiaomi_client.get_device_list.return_value = [device]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert "ip" not in state.attributes
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_xiaomi_client")
 async def test_device_tracker_two_entries_same_mac(
     hass: HomeAssistant,

@@ -86,6 +86,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_DATA_SCHEMA,
+                description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             )
 
         errors: dict[str, str] = {}
@@ -105,6 +106,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

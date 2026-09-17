@@ -19,7 +19,8 @@
         "data_description": {
           "password": "The password to log in to the Xiaomi Mi router.",
           "username": "The username to log in to the Xiaomi Mi router."
-        }
+        },
+        "description": "Please enter the current credentials of the admin account of your Xiaomi Mi router at `{host}`."
       },
       "user": {
         "data": {
