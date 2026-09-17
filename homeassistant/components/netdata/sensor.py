@@ -5,7 +5,7 @@ from typing import override
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -38,21 +38,23 @@ DEFAULT_PORT = 19999
 
 DEFAULT_ICON = "mdi:desktop-classic"
 
-RESOURCE_SCHEMA = vol.Any(
+RESOURCE_SCHEMA = probatio.Any(
     {
-        vol.Required(CONF_DATA_GROUP): cv.string,
-        vol.Required(CONF_ELEMENT): cv.string,
-        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
+        probatio.Required(CONF_DATA_GROUP): cv.string,
+        probatio.Required(CONF_ELEMENT): cv.string,
+        probatio.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+        probatio.Optional(CONF_INVERT, default=False): cv.boolean,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_RESOURCES): probatio.Schema(
+            {cv.string: RESOURCE_SCHEMA}
+        ),
     }
 )
 

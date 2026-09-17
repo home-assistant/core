@@ -1,10 +1,250 @@
 """bosch_shc session fixtures."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import MagicMock, create_autospec, patch
 
+from boschshcpy import (
+    BatteryLevelService,
+    PowerSwitchService,
+    SHCBatteryDevice,
+    SHCLightSwitchBSM,
+    SHCMicromoduleBlinds,
+    SHCMicromoduleRelay,
+    SHCShutterControl,
+    SHCThermostat,
+    ShutterControlService,
+    ThermostatService,
+)
 import pytest
+
+from homeassistant.components.bosch_shc.const import (
+    CONF_SSL_CERTIFICATE,
+    CONF_SSL_KEY,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
 def bosch_shc_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock bosch_shc config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_SSL_CERTIFICATE: "cert",
+            CONF_SSL_KEY: "key",
+        },
+        unique_id="test-mac",
+    )
+
+
+# Keep in sync with binary_sensor.py's device_helper buckets — a bucket
+# missing here breaks the mock_session fixture.
+_EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
+    bucket: []
+    for bucket in (
+        "camera_360",
+        "camera_eyes",
+        "light_switches_bsm",
+        "micromodule_blinds",
+        "micromodule_dimmers",
+        "micromodule_impulse_relays",
+        "micromodule_light_attached",
+        "micromodule_relays",
+        "micromodule_shutter_controls",
+        "motion_detectors",
+        "roomthermostats",
+        "shutter_contacts",
+        "shutter_contacts2",
+        "shutter_controls",
+        "smart_plugs",
+        "smart_plugs_compact",
+        "smoke_detectors",
+        "thermostats",
+        "twinguards",
+        "universal_switches",
+        "wallthermostats",
+        "water_leakage_detectors",
+    )
+}
+
+
+@pytest.fixture
+def device_buckets(request: pytest.FixtureRequest) -> dict[str, list[Any]]:
+    """device_helper buckets for the mock session.
+
+    Empty by default; a test overrides specific buckets via
+    ``@pytest.mark.parametrize("device_buckets", [{...}], indirect=True)``.
+    """
+    overrides: dict[str, list[Any]] = getattr(request, "param", {})
+    return {**_EMPTY_DEVICE_BUCKETS, **overrides}
+
+
+@pytest.fixture
+def mock_session(device_buckets: dict[str, list[Any]]) -> Generator[MagicMock]:
+    """Mock SHCSession, patched in for the duration of the test."""
+    session = MagicMock()
+    session.information.unique_id = "test-mac"
+    session.information.updateState.name = "UP_TO_DATE"
+    session.information.version = "2.0"
+    session.device_helper = SimpleNamespace(**device_buckets)
+    with patch("homeassistant.components.bosch_shc.SHCSession", return_value=session):
+        yield session
+
+
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the bosch_shc integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def battery_only_device(
+    device_id: str = "hdm:HomeMaticIP:motion1",
+    name: str = "Motion",
+    device_services: list[Any] | None = None,
+) -> SHCBatteryDevice:
+    """Build a minimal device double for the motion_detectors bucket.
+
+    motion_detectors only ever backs a single BatterySensor entity (unlike
+    shutter_contacts, which backs both a ShutterContactSensor and a
+    BatterySensor for the same device) — the single-entity shape keeps these
+    entity.py tests free of a second entity's subscribe/unsubscribe calls.
+    """
+    device = create_autospec(SHCBatteryDevice, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.batterylevel = BatteryLevelService.State.OK
+    device.device_services = device_services or []
+    device.manufacturer = "Bosch"
+    device.device_model = "MD"
+    device.status = "AVAILABLE"
+    device.deleted = False
+    return device
+
+
+def shutter_control_device(
+    device_id: str = "hdm:ZigBee:shutter1",
+    name: str = "Shutter",
+    device_model: str = "BBL",
+    level: float = 1.0,
+    operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+) -> SHCShutterControl:
+    """Build a minimal device double for the shutter_controls/micromodule_shutter_controls buckets."""
+    device = create_autospec(SHCShutterControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = device_model
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.level = level
+    device.operation_state = operation_state
+    return device
+
+
+def micromodule_blinds_device(
+    device_id: str = "hdm:ZigBee:blinds1",
+    name: str = "Blinds",
+    level: float = 1.0,
+    current_angle: float = 0.0,
+    operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+) -> SHCMicromoduleBlinds:
+    """Build a minimal device double for the micromodule_blinds bucket."""
+    device = create_autospec(SHCMicromoduleBlinds, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_BLINDS"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.level = level
+    device.current_angle = current_angle
+    device.operation_state = operation_state
+    return device
+
+
+def thermostat_device(
+    device_id: str = "hdm:ZigBee:thermostat1",
+    name: str = "Thermostat",
+    child_lock: ThermostatService.State = ThermostatService.State.OFF,
+) -> SHCThermostat:
+    """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
+    device = create_autospec(SHCThermostat, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TRV"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.child_lock = child_lock
+    return device
+
+
+def micromodule_relay_device(
+    device_id: str = "hdm:ZigBee:relay1",
+    name: str = "Relay",
+    child_lock: bool = False,
+) -> SHCMicromoduleRelay:
+    """Build a minimal device double for the micromodule_relays bucket."""
+    device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_RELAY"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.child_lock = child_lock
+    return device
+
+
+def light_switch_bsm_device(
+    device_id: str = "hdm:ZigBee:lightswitch1",
+    name: str = "Light switch",
+    child_lock: bool = False,
+) -> SHCLightSwitchBSM:
+    """Build a minimal device double for the light_switches_bsm bucket.
+
+    Backs both the primary "lightswitch" switch and the new child-lock
+    switch, so a unique_id collision between the two would surface here.
+    """
+    device = create_autospec(SHCLightSwitchBSM, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "LIGHT_SWITCH_BSM"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
+    device.child_lock = child_lock
+    return device

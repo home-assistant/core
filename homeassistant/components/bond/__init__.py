@@ -128,7 +128,7 @@ def _async_remove_old_device_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove bond config entry from a device."""
     data = config_entry.runtime_data

@@ -158,9 +158,15 @@ async def test_abort_if_already_setup(
 
     # Should fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -182,9 +188,15 @@ async def test_ignored_entry_does_not_cause_error(
 
     # Should not fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -238,9 +250,14 @@ async def test_api_key_errors(
         CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
     )
 
     assert result.get("type") is FlowResultType.FORM

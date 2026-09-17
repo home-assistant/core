@@ -12,8 +12,8 @@ from typing import Final, final, override
 
 from aiohttp import hdrs, web
 import httpx
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -70,7 +70,7 @@ FRAME_BOUNDARY = "frame-boundary"
 FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
 LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
-IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
+IMAGE_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.string}
 
 MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
     b"\x89PNG": "image/png",
@@ -203,7 +203,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None
-    _attr_image_url: str | None | UndefinedType = UNDEFINED
+    _attr_image_url: str | UndefinedType | None = UNDEFINED
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
     _cached_image: Image | None = None
@@ -233,7 +233,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_image_last_updated
 
     @cached_property
-    def image_url(self) -> str | None | UndefinedType:
+    def image_url(self) -> str | UndefinedType | None:
         """Return URL of image."""
         return self._attr_image_url
 

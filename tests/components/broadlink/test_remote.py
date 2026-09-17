@@ -46,8 +46,8 @@ async def test_remote_setup_works(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
@@ -71,8 +71,8 @@ async def test_remote_send_command(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
@@ -114,8 +114,8 @@ async def test_remote_availability(
     device = get_device("Garage")
     mock_setup = await device.setup_entry(hass)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     remote = next(entry for entry in entries if entry.domain == Platform.REMOTE)
@@ -154,8 +154,8 @@ async def test_remote_turn_off_turn_on(
     for device in map(get_device, REMOTE_DEVICES):
         mock_setup = await device.setup_entry(hass)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
         )
         entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]

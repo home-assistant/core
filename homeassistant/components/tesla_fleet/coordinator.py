@@ -1,6 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any, override
@@ -32,7 +32,14 @@ from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
-VEHICLE_WAIT = timedelta(minutes=15)
+VEHICLE_WAIT_SECONDS = 900
+VEHICLE_WAIT = timedelta(seconds=VEHICLE_WAIT_SECONDS)
+VEHICLE_STUCK_SECONDS = 1200
+
+# Kept well under Home Assistant's stage-2 setup budget (SLOW_SETUP_MAX_WAIT, 300s)
+# so a sleeping vehicle raises ConfigEntryNotReady and the entry retries instead of
+# being cancelled into a non-retried setup error.
+VEHICLE_FIRST_REFRESH_TIMEOUT = 60
 
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
@@ -112,7 +119,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: TeslaFleetConfigEntry
     updated_once: bool
     pre2021: bool
-    last_active: datetime
+    last_active: float
     endpoints: list[VehicleDataEndpoint]
 
     def __init__(
@@ -134,7 +141,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = flatten(product)
         self.updated_once = False
-        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        self.last_active = time()
         self.endpoints = (
             ENDPOINTS
             if location
@@ -144,6 +151,8 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
+
+        self.update_interval = VEHICLE_INTERVAL
 
         try:
             # Check if the vehicle is awake using a free API call
@@ -159,11 +168,16 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
-        except RateLimited:
-            LOGGER.warning(
-                "%s rate limited, will skip refresh",
-                self.name,
-            )
+        except RateLimited as e:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    after,
+                )
+                self.update_interval = timedelta(seconds=int(after))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
@@ -172,8 +186,6 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-
-        self.update_interval = VEHICLE_INTERVAL
 
         self.updated_once = True
 
@@ -185,13 +197,13 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 or data["vehicle_state"].get("sentry_mode")
             ):
                 # Vehicle is active, reset timer
-                self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+                self.last_active = time()
             else:
-                elapsed = datetime.now() - self.last_active  # pylint: disable=home-assistant-enforce-naive-now
-                if elapsed > timedelta(minutes=20):
+                elapsed = time() - self.last_active
+                if elapsed > VEHICLE_STUCK_SECONDS:
                     # Vehicle didn't sleep, try again in 15 minutes
-                    self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
-                elif elapsed > timedelta(minutes=15):
+                    self.last_active = time()
+                elif elapsed > VEHICLE_WAIT_SECONDS:
                     # Let vehicle go to sleep now
                     self.update_interval = VEHICLE_WAIT
 
@@ -231,13 +243,13 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.live_status())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
@@ -313,13 +325,13 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
@@ -394,13 +406,13 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if isinstance(e.data, dict) and (after := e.data.get("after")):
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=int(after))
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data

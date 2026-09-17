@@ -7,10 +7,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .conftest import PSN_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -124,6 +127,31 @@ async def test_platform(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_psnawpapi", "mock_token")
+async def test_media_player_via_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the media player device is linked to the account device via_device."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, PSN_ID), config_entry.entry_id
+    )
+    assert account_device is not None
+
+    media_player_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{PSN_ID}_PS5"), config_entry.entry_id
+    )
+    assert media_player_device is not None
+    assert media_player_device.via_device_id == account_device.id
 
 
 @pytest.mark.parametrize(

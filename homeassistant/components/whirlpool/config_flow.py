@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError
-import voluptuous as vol
+import probatio
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import AccountLockedError as WhirlpoolAccountLocked, Auth
 from whirlpool.backendselector import BackendSelector
@@ -20,19 +20,19 @@ from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION): vol.In(list(REGIONS_CONF_MAP)),
-        vol.Required(CONF_BRAND): vol.In(list(BRANDS_CONF_MAP)),
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_REGION): probatio.In(list(REGIONS_CONF_MAP)),
+        probatio.Required(CONF_BRAND): probatio.In(list(BRANDS_CONF_MAP)),
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_BRAND): vol.In(list(BRANDS_CONF_MAP)),
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_BRAND): probatio.In(list(BRANDS_CONF_MAP)),
     }
 )
 
@@ -66,7 +66,9 @@ async def authenticate(
 
     if check_appliances_exist:
         appliances_manager = AppliancesManager(backend_selector, auth, session)
-        await appliances_manager.fetch_appliances()
+        if not await appliances_manager.connect():
+            return "cannot_connect"
+        await appliances_manager.disconnect()
 
         if (
             not appliances_manager.aircons
