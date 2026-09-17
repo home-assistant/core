@@ -7,7 +7,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from aiopowerwall import (
+    PowerwallAuthenticationError,
+    PowerwallClient,
+    PowerwallEnergySite,
+    PowerwallError,
+)
+from aiopowerwall.authorized_clients import (
+    AuthorizedClient as PowerwallAuthorizedClient,
+)
 from bleak.exc import BleakError
 import probatio
 from tesla_fleet_api.const import (
@@ -445,6 +453,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
         self._energy_site: TeslemetryEnergySite | None = None
+        self._local_energy_site: PowerwallEnergySite | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
@@ -524,6 +533,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
+        if isinstance(energy_data.api, EnergySiteRouter):
+            self._local_energy_site = cast(PowerwallEnergySite, energy_data.api.primary)
         if abort := await self._prepare_energy_site(_cloud_energy_site(energy_data)):
             return abort
         return await self._async_begin_pairing()
@@ -622,24 +633,41 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
 
-    async def _find_authorized_client(self) -> AuthorizedClient | None:
+    async def _find_authorized_client(
+        self,
+    ) -> AuthorizedClient | PowerwallAuthorizedClient | None:
         """Return our RSA key's authorized-client entry on the gateway, or None."""
+        return next(
+            (
+                client
+                for client in await self._list_authorized_clients()
+                if client.public_key == self._public_key_b64
+            ),
+            None,
+        )
+
+    async def _list_authorized_clients(
+        self,
+    ) -> list[AuthorizedClient] | list[PowerwallAuthorizedClient]:
+        """Return the gateway's authorized clients, read locally when paired."""
         if TYPE_CHECKING:
             assert self._energy_site is not None
+        if self._local_energy_site is not None:
+            try:
+                local = await self._local_energy_site.find_authorized_clients()
+            except PowerwallError as err:
+                # Stale stored credentials fail locally; the cloud does not use them.
+                LOGGER.debug("Local find_authorized_clients failed: %s", err)
+                self._local_energy_site = None
+            else:
+                return local.clients
         try:
             result = await self._energy_site.find_authorized_clients()
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
             raise PowerwallLookupError from err
-        return next(
-            (
-                client
-                for client in result.clients
-                if client.public_key == self._public_key_b64
-            ),
-            None,
-        )
+        return result.clients
 
     async def _verify_local_gateway(self, host: str, password: str) -> None:
         """Prove the LAN connection and the RSA key against the gateway."""
