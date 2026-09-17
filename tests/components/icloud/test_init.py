@@ -682,6 +682,57 @@ async def test_reauth_login_challenged_asks_for_a_code(
     assert result["step_id"] == "verification_code"
 
 
+async def test_reauth_login_challenged_by_status_asks_for_a_code(
+    hass: HomeAssistant, service_auth_required: Mock
+) -> None:
+    """Test that a challenge carried by a status asks for the code as well.
+
+    The login is only handed a dedicated exception for a 409 whose body is the
+    hsa2 JSON pyicloud looks for. The same challenge on any other body arrives
+    as the status on a plain response, and it is still a session to send a
+    code through rather than a failure to report.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+    challenged_api = MagicMock()
+    challenged_api.requires_2fa = False
+    challenged_api.requires_2sa = False
+    challenged_api.authenticate.side_effect = PyiCloudAPIResponseException(
+        "Authentication required for Account.", AppleAuthError.TWO_FACTOR_REQUIRED
+    )
+
+    def build_service(*args, **kwargs):
+        """Reject the stored session, challenge the fresh login."""
+        if kwargs.get("authenticate", True):
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return challenged_api
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=build_service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+
+    # The challenged session is kept rather than reported as a failure.
+    challenged_api.session.clear_persistence.assert_called_once()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+
+
 async def test_reauth_rejects_a_wrong_password(
     hass: HomeAssistant, service_auth_required: Mock
 ) -> None:

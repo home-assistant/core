@@ -21,7 +21,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
-from .account import is_auth_error
+from .account import is_2fa_status, is_auth_error
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
@@ -173,6 +173,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         except PyiCloud2FARequiredException:
             # The login got as far as a challenge, which is a session to send
             # a code through rather than a failure to report.
+            return api, True
+        except PyiCloudAPIResponseException as err:
+            # The same challenge, carried by the status because the body was
+            # not the hsa2 JSON the dedicated exception is raised for.
+            if not is_2fa_status(err):
+                raise
             return api, True
         return api, False
 
