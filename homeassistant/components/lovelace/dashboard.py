@@ -198,7 +198,9 @@ class LovelaceYAML(LovelaceConfig):
         self.path = hass.config.path(
             config[CONF_FILENAME] if config else LOVELACE_CONFIG_FILE
         )
-        self._cache: tuple[dict[str, Any], float, json_fragment] | None = None
+        self._cache: (
+            tuple[dict[str, Any], float, json_fragment, frozenset[str]] | None
+        ) = None
 
     @property
     @override
@@ -246,9 +248,8 @@ class LovelaceYAML(LovelaceConfig):
         """Load the actual config."""
         # Check for a cached version of the config
         if not force and self._cache is not None:
-            config, last_update, json = self._cache
-            modtime = os.path.getmtime(self.path)
-            if config and last_update > modtime:
+            config, last_update, json, referenced_files = self._cache
+            if config and not _any_file_modified_since(referenced_files, last_update):
                 return False, config, json
 
         is_updated = self._cache is not None
@@ -261,8 +262,46 @@ class LovelaceYAML(LovelaceConfig):
             raise ConfigNotFound from None
 
         json = cached_json_fragment(config)
-        self._cache = (config, time.time(), json)
+        self._cache = (config, time.time(), json, _referenced_files(config, self.path))
         return is_updated, config, json
+
+
+def _collect_config_files(value: Any, files: set[str]) -> None:
+    """Recursively collect the YAML files a loaded config was built from.
+
+    Nodes produced by the YAML loader carry the file they originated from in
+    ``__config_file__``, so walking the config recovers every file pulled in by
+    an ``!include``.
+    """
+    if (config_file := getattr(value, "__config_file__", None)) is not None:
+        files.add(config_file)
+
+    if isinstance(value, dict):
+        for key, val in value.items():
+            _collect_config_files(key, files)
+            _collect_config_files(val, files)
+    elif isinstance(value, list):
+        for val in value:
+            _collect_config_files(val, files)
+
+
+def _referenced_files(config: dict[str, Any], path: str) -> frozenset[str]:
+    """Return the files the config was built from, including the root file."""
+    files: set[str] = {path}
+    _collect_config_files(config, files)
+    return frozenset(files)
+
+
+def _any_file_modified_since(files: frozenset[str], last_update: float) -> bool:
+    """Return if any of the files changed since the config was cached."""
+    for file in files:
+        try:
+            if os.path.getmtime(file) >= last_update:
+                return True
+        except OSError:
+            # The file vanished or became unreadable; reload to surface it.
+            return True
+    return False
 
 
 def _config_info(mode: str, config: dict[str, Any]) -> dict[str, Any]:
