@@ -447,6 +447,16 @@ def _read_file_as_bytesio_mock(file_path):
     return _file
 
 
+@pytest.fixture
+def allowlist_tmp_path(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Allow download_file to write into the temporary directory."""
+    hass.config.allowlist_external_dirs = {
+        *hass.config.allowlist_external_dirs,
+        tmp_path.resolve().as_posix(),
+    }
+    return tmp_path
+
+
 async def _run_download_file_service_with_mocks(
     hass: HomeAssistant,
     schema_request: dict[str, Any],
@@ -2317,6 +2327,7 @@ async def test_download_file_no_custom_dir(
         ),
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_custom_dir(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2364,6 +2375,7 @@ async def test_download_file_custom_dir(
     _assert_download_file_response(response, expected_path)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_directory_created_successfully(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2411,6 +2423,7 @@ async def test_download_file_directory_created_successfully(
     _assert_download_file_response(response, expected_path)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_bot_failed_to_get_file(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2448,6 +2461,7 @@ async def test_download_file_when_bot_failed_to_get_file(
     assert "failed to get file" in str(err.value)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_empty_file_path(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2490,6 +2504,7 @@ async def test_download_file_when_empty_file_path(
         TelegramError,
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_error_when_downloading(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2593,6 +2608,7 @@ async def test_download_file_rejects_invalid_directory_path(
         "windows\\style.txt",
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_rejects_invalid_file_name(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2685,3 +2701,93 @@ async def test_send_media_group(
             }
         ]
     }
+
+
+@pytest.mark.parametrize(
+    "subdirectory",
+    ["outside", "nested/deeper"],
+)
+async def test_download_file_rejects_directory_outside_allowlist(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    subdirectory: str,
+) -> None:
+    """Test download_file rejects an absolute path outside the allowlist."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # tmp_path is deliberately not allowlisted here.
+    directory = tmp_path / subdirectory
+    target = directory / "payload.jpg"
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory.as_posix(),
+                ATTR_FILE_NAME: "payload.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "allowlist_external_dirs_error"
+    get_file_mock.assert_not_called()
+    # Nothing reached the disk and no directory was created on the way.
+    assert not target.exists()
+    assert not directory.exists()
+
+
+async def test_download_file_rejects_symlink_out_of_allowlist(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download_file rejects a symlink leaving the allowlist."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    hass.config.allowlist_external_dirs = {allowed.resolve().as_posix()}
+
+    # A path that passes a plain string check but resolves out of the allowlist.
+    escape = allowed / "escape"
+    escape.symlink_to(outside, target_is_directory=True)
+    target = outside / "payload.jpg"
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: escape.as_posix(),
+                ATTR_FILE_NAME: "payload.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "allowlist_external_dirs_error"
+    get_file_mock.assert_not_called()
+    assert not target.exists()
