@@ -143,5 +143,20 @@
         }
       }
     }
+  },
+  "selector": {
+    "platform_mode": {
+      "options": {
+        "all": "All active platforms",
+        "selected": "Selected platforms",
+        "stop_place": "Stop place only"
+      }
+    },
+    "reconfigure_action": {
+      "options": {
+        "edit": "Edit this stop place",
+        "replace": "Replace stop place"
+      }
+    }
   }
 }

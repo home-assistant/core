@@ -20,8 +20,12 @@ from homeassistant.components.entur_public_transport.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_search_stop_places(aioclient_mock, hass: HomeAssistant) -> None:
+
+async def test_search_stop_places(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test parsing a Geocoder v3 stop place response."""
     aioclient_mock.get(
         GEOCODER_AUTOCOMPLETE_URL,
@@ -79,7 +83,7 @@ async def test_search_stop_places(aioclient_mock, hass: HomeAssistant) -> None:
 
 
 async def test_search_stop_places_rejects_invalid_response(
-    aioclient_mock, hass: HomeAssistant
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
 ) -> None:
     """Test that malformed API responses are not silently accepted."""
     aioclient_mock.get(GEOCODER_AUTOCOMPLETE_URL, json={"unexpected": []})
@@ -88,7 +92,9 @@ async def test_search_stop_places_rejects_invalid_response(
         await async_search_stop_places(hass, "Bergen")
 
 
-async def test_get_stop_place(aioclient_mock, hass: HomeAssistant) -> None:
+async def test_get_stop_place(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test loading one stop place by its canonical ID."""
     aioclient_mock.get(
         GEOCODER_PLACE_URL,
@@ -116,7 +122,9 @@ async def test_get_stop_place(aioclient_mock, hass: HomeAssistant) -> None:
     assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 
-async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
+async def test_get_stop_routes(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test retrieving and deduplicating routes for one stop place."""
     aioclient_mock.post(
         JOURNEY_PLANNER_URL,
@@ -187,7 +195,9 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
     assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 
-async def test_get_stop_quays(aioclient_mock, hass: HomeAssistant) -> None:
+async def test_get_stop_quays(
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
+) -> None:
     """Test retrieving active platforms for one stop place."""
     aioclient_mock.post(
         JOURNEY_PLANNER_URL,
@@ -233,7 +243,7 @@ async def test_get_stop_quays(aioclient_mock, hass: HomeAssistant) -> None:
 
 
 async def test_search_stop_places_handles_http_error(
-    aioclient_mock, hass: HomeAssistant
+    aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
 ) -> None:
     """Test that an HTTP error is exposed as an integration API error."""
     aioclient_mock.get(GEOCODER_AUTOCOMPLETE_URL, status=503)

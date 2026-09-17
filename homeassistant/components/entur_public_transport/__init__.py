@@ -1,10 +1,8 @@
 """Component for integrating entur public transport."""
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .api import (
     EnturApiError,
@@ -17,38 +15,16 @@ from .const import (
     CONF_PLATFORM_MODE,
     CONF_QUAY_IDS,
     CONF_ROUTE_LABELS,
-    CONF_SHOW_ON_MAP,
     CONF_STOP_PLACE_METADATA_VERSION,
     CONF_STOP_PLACE_NAME,
     CONF_STOP_PLACE_TYPES,
     CONF_WHITELIST_LINES,
-    DOMAIN,
     PLATFORM_MODE_ALL,
     STOP_PLACE_METADATA_VERSION,
     SUBENTRY_TYPE_STOP_PLACE,
 )
 
 PLATFORMS = (Platform.SENSOR,)
-CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Entur integration."""
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    for sensor_config in config.get("sensor", []):
-        if sensor_config.get("platform") != DOMAIN:
-            continue
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=dict(sensor_config),
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

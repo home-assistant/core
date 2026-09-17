@@ -370,9 +370,10 @@ def _parse_stop_routes(payload: Any) -> tuple[EnturRoute, ...]:
             public_code = line.get("publicCode")
             name = line.get("name")
             transport_mode = line.get("transportMode")
-            if not all(
-                isinstance(value, str)
-                for value in (line_id, public_code, transport_mode)
+            if (
+                not isinstance(line_id, str)
+                or not isinstance(public_code, str)
+                or not isinstance(transport_mode, str)
             ):
                 continue
             if not isinstance(name, str):

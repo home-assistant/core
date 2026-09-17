@@ -14,6 +14,9 @@ from homeassistant.components.entur_public_transport.api import (
     EnturRoute,
     EnturStopPlace,
 )
+from homeassistant.components.entur_public_transport.config_flow import (
+    _combine_line_whitelist,
+)
 from homeassistant.components.entur_public_transport.const import (
     CONF_EXPAND_PLATFORMS,
     CONF_MANUAL_WHITELIST_LINES,
@@ -23,7 +26,6 @@ from homeassistant.components.entur_public_transport.const import (
     CONF_QUAY_IDS,
     CONF_QUERY,
     CONF_RECONFIGURE_ACTION,
-    CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
     CONF_STOP_IDS,
     CONF_STOP_PLACE_NAME,
@@ -36,7 +38,7 @@ from homeassistant.components.entur_public_transport.const import (
     RECONFIGURE_ACTION_REPLACE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
@@ -686,3 +688,11 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
     assert subentry.data[CONF_QUAY_IDS] == []
     assert subentry.data[CONF_STOP_PLACE_NAME] == "Hønefoss sentrum"
     assert subentry.data[CONF_SHOW_ON_MAP] is False
+
+
+def test_combine_line_whitelist_parses_manual_multiline_ids() -> None:
+    """Test manual line IDs are split, merged, and deduplicated."""
+    assert _combine_line_whitelist(
+        ["RUT:Line:1"],
+        "SKY:Line:2" + chr(10) + "GOA:Line:3, RUT:Line:1",
+    ) == ["RUT:Line:1", "SKY:Line:2", "GOA:Line:3"]

@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     FlowType,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -45,7 +45,6 @@ from .const import (
     CONF_QUERY,
     CONF_RECONFIGURE_ACTION,
     CONF_ROUTE_LABELS,
-    CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
     CONF_STOP_IDS,
     CONF_STOP_PLACE_METADATA_VERSION,
@@ -85,12 +84,14 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentries supported by Entur."""
         return {SUBENTRY_TYPE_STOP_PLACE: EnturStopPlaceSubentryFlow}
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start the first stop place subentry after UI setup."""
         if self.source != SOURCE_USER or self._selected_place is None:
@@ -321,7 +322,9 @@ def _combine_line_whitelist(
     selected_line_ids: list[str], manual_line_ids: str
 ) -> list[str]:
     """Combine API-selected and manually entered line IDs."""
-    return _parse_line_whitelist([*selected_line_ids, manual_line_ids])
+    return _parse_line_whitelist(
+        [*selected_line_ids, *manual_line_ids.replace(",", chr(10)).splitlines()]
+    )
 
 
 def _route_schema(
@@ -373,13 +376,11 @@ def _platform_schema(
 ) -> probatio.Schema:
     """Build the platform detail selector for a stop place."""
     options = [
-        {"value": PLATFORM_MODE_STOP_PLACE, "label": "Stop place only"},
-        {"value": PLATFORM_MODE_ALL, "label": "All active platforms"},
+        PLATFORM_MODE_STOP_PLACE,
+        PLATFORM_MODE_ALL,
     ]
     if quays:
-        options.append(
-            {"value": PLATFORM_MODE_SELECTED, "label": "Selected platform(s)"}
-        )
+        options.append(PLATFORM_MODE_SELECTED)
 
     schema: dict[Any, Any] = {
         probatio.Required(CONF_PLATFORM_MODE, default=selected_mode): SelectSelector(
@@ -553,14 +554,8 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                {
-                                    "value": RECONFIGURE_ACTION_EDIT,
-                                    "label": "Edit this stop place",
-                                },
-                                {
-                                    "value": RECONFIGURE_ACTION_REPLACE,
-                                    "label": "Replace stop place",
-                                },
+                                RECONFIGURE_ACTION_EDIT,
+                                RECONFIGURE_ACTION_REPLACE,
                             ]
                         )
                     )

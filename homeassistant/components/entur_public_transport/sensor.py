@@ -1,11 +1,11 @@
 """Real-time information about public transport departures in Norway."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from random import randint
-from typing import override
+from typing import Any, override
 
 from enturclient import EnturPublicTransportData
 import probatio
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -124,7 +124,7 @@ async def async_setup_entry(
 
 async def _async_setup(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: Mapping[str, Any],
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
     subentries: Iterable[ConfigSubentry] = (),
 ) -> None:
@@ -183,19 +183,26 @@ async def _async_setup(
     async_add_entities(entities, True)
 
 
+def _string_values(value: Any) -> tuple[str, ...]:
+    """Return string values stored in a config entry or subentry."""
+    if not isinstance(value, (list, tuple)):
+        return ()
+    return tuple(item for item in value if isinstance(item, str))
+
+
 def _stop_configurations(
-    config: ConfigType, subentries: Iterable[ConfigSubentry]
+    config: Mapping[str, Any], subentries: Iterable[ConfigSubentry]
 ) -> list[EnturStopConfiguration]:
     """Return sensor groups for legacy YAML and UI configuration."""
     configurations: list[EnturStopConfiguration] = []
-    if stop_ids := config.get(CONF_STOP_IDS, []):
+    if stop_ids := _string_values(config.get(CONF_STOP_IDS)):
         configurations.append(
             EnturStopConfiguration(
                 stops=tuple(stop_id for stop_id in stop_ids if "StopPlace" in stop_id),
                 quays=tuple(stop_id for stop_id in stop_ids if "Quay" in stop_id),
-                line_whitelist=tuple(config.get(CONF_WHITELIST_LINES, [])),
-                expand_platforms=config[CONF_EXPAND_PLATFORMS],
-                show_on_map=config[CONF_SHOW_ON_MAP],
+                line_whitelist=_string_values(config.get(CONF_WHITELIST_LINES)),
+                expand_platforms=bool(config[CONF_EXPAND_PLATFORMS]),
+                show_on_map=bool(config[CONF_SHOW_ON_MAP]),
                 device_stop_id=stop_ids[0] if len(stop_ids) == 1 else None,
             )
         )
@@ -208,8 +215,10 @@ def _stop_configurations(
             continue
 
         stop_id = subentry.data[CONF_STOP_ID]
+        if not isinstance(stop_id, str):
+            continue
         mode = subentry.data.get(CONF_PLATFORM_MODE, PLATFORM_MODE_ALL)
-        quay_ids = tuple(subentry.data.get(CONF_QUAY_IDS, []))
+        quay_ids = _string_values(subentry.data.get(CONF_QUAY_IDS))
         if mode == PLATFORM_MODE_SELECTED and quay_ids:
             stops = ()
             quays = quay_ids
@@ -224,9 +233,9 @@ def _stop_configurations(
             EnturStopConfiguration(
                 stops=stops,
                 quays=quays,
-                line_whitelist=tuple(subentry.data.get(CONF_WHITELIST_LINES, [])),
+                line_whitelist=_string_values(subentry.data.get(CONF_WHITELIST_LINES)),
                 expand_platforms=expand_platforms,
-                show_on_map=subentry.data.get(CONF_SHOW_ON_MAP, False),
+                show_on_map=bool(subentry.data.get(CONF_SHOW_ON_MAP, False)),
                 device_stop_id=stop_id,
                 device_stop_name=(
                     stop_place_name if isinstance(stop_place_name, str) else None
