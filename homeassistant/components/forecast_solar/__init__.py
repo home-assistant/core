@@ -14,6 +14,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import plane_title
 from .const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
@@ -152,12 +153,9 @@ def _async_track_sensor_renames(
                 if subentry.data.get(key) == old_entity_id
             }
             if renamed:
-                # Friendly names survive a rename; only entity ID labels go stale.
-                title = subentry.title.replace(
-                    f"{old_entity_id} (sensor)", f"{new_entity_id} (sensor)"
-                )
+                data = subentry.data | renamed
                 hass.config_entries.async_update_subentry(
-                    entry, subentry, data=subentry.data | renamed, title=title
+                    entry, subentry, data=data, title=plane_title(hass, data)
                 )
 
     return async_track_entity_registry_updated_event(

@@ -299,10 +299,18 @@ async def test_coordinator_multi_plane_initialization(
     assert planes[0].kwp == 3.0  # 3000 / 1000
 
 
+@pytest.mark.parametrize(
+    "title",
+    [
+        pytest.param("30° / sensor.roof_azimuth (sensor) / 5100W", id="entity_id"),
+        pytest.param("30° / roof azimuth (sensor) / 5100W", id="sensor_name"),
+    ],
+)
 @pytest.mark.usefixtures("mock_forecast_solar")
 async def test_plane_follows_renamed_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    title: str,
 ) -> None:
     """Test a plane's sensor reference follows the sensor when it is renamed."""
     entity_registry.async_get_or_create(
@@ -325,8 +333,7 @@ async def test_plane_follows_renamed_sensor(
                 },
                 subentry_id="plane_1",
                 subentry_type=SUBENTRY_TYPE_PLANE,
-                # Saved while the sensor had no state, so the title shows its entity ID.
-                title="30° / sensor.roof_azimuth (sensor) / 5100W",
+                title=title,
                 unique_id=None,
             ),
         ],

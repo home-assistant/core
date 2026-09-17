@@ -177,7 +177,7 @@ def _angle_label(
     return f"{state.name if state else entity_id} (sensor)"
 
 
-def _plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
+def plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
     """Build a plane subentry title from its declination/azimuth/power."""
     declination = _angle_label(hass, data, CONF_DECLINATION, CONF_DECLINATION_SENSOR)
     azimuth = _angle_label(hass, data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
@@ -240,7 +240,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     {
                         "subentry_type": SUBENTRY_TYPE_PLANE,
                         "data": plane_data,
-                        "title": _plane_title(self.hass, plane_data),
+                        "title": plane_title(self.hass, plane_data),
                         "unique_id": None,
                     },
                 ],
@@ -435,7 +435,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             plane_data = _plane_data(user_input)
             return self.async_create_entry(
-                title=_plane_title(self.hass, plane_data), data=plane_data
+                title=plane_title(self.hass, plane_data), data=plane_data
             )
 
         return self.async_show_form(
@@ -469,7 +469,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             entry = self._get_entry()
             plane_data = _plane_data(user_input)
-            title = _plane_title(self.hass, plane_data)
+            title = plane_title(self.hass, plane_data)
             if (
                 self._async_update(entry, subentry, data=plane_data, title=title)
                 and not entry.update_listeners
