@@ -6,7 +6,7 @@ from aioesphomeapi.model import SerialProxyPortType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
@@ -18,10 +18,12 @@ TYPE = "type"
 ENTRY_ID = "entry_id"
 DEVICE_ID = "device_id"
 
+ZWAVE_JS_DOMAIN = "zwave_js"
+
 _UNAVAILABLE_CAPABILITIES: dict[str, Any] = {
     "available": False,
     "bluetooth_proxy": {"supported": False},
-    "zwave_proxy": {"supported": False, "home_id": 0},
+    "zwave_proxy": {"supported": False, "home_id": 0, "config_entry_id": None},
     "serial_proxies": [],
 }
 
@@ -44,6 +46,19 @@ def _is_main_esphome_device(device: dr.DeviceEntry, mac_address: str | None) -> 
         dr.CONNECTION_NETWORK_MAC,
         dr.format_mac(mac_address),
     ) in device.connections
+
+
+def _zwave_js_config_entry_id(hass: HomeAssistant, home_id: int) -> str | None:
+    """Return the entry ID of the zwave_js entry whose unique ID is this home ID."""
+    if not home_id:
+        return None
+    home_id_str = str(home_id)
+    for entry in hass.config_entries.async_entries(ZWAVE_JS_DOMAIN):
+        if entry.disabled_by is not None or entry.source == SOURCE_IGNORE:
+            continue
+        if str(entry.unique_id) == home_id_str:
+            return entry.entry_id
+    return None
 
 
 def _serial_port_type_name(port_type: SerialProxyPortType | int | None) -> str | None:
@@ -148,6 +163,7 @@ def get_device_capabilities(
         return
 
     entry_data = entry.runtime_data
+    home_id = device_info.zwave_home_id or 0
     connection.send_result(
         msg["id"],
         {
@@ -161,7 +177,8 @@ def get_device_capabilities(
             },
             "zwave_proxy": {
                 "supported": bool(device_info.zwave_proxy_feature_flags),
-                "home_id": device_info.zwave_home_id or 0,
+                "home_id": home_id,
+                "config_entry_id": _zwave_js_config_entry_id(hass, home_id),
             },
             "serial_proxies": [
                 {

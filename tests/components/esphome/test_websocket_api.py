@@ -2,10 +2,12 @@
 
 from aioesphomeapi import APIClient
 from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType, SubDeviceInfo
+import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.serial_proxy import build_url
 from homeassistant.components.esphome.websocket_api import DEVICE_ID, ENTRY_ID, TYPE
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -91,6 +93,7 @@ async def test_get_device_capabilities(
         "zwave_proxy": {
             "supported": True,
             "home_id": 1234567890,
+            "config_entry_id": None,
         },
         "serial_proxies": [
             {
@@ -232,7 +235,11 @@ async def test_get_device_capabilities_unavailable(
     assert response["result"] == {
         "available": False,
         "bluetooth_proxy": {"supported": True},
-        "zwave_proxy": {"supported": True, "home_id": 1234567890},
+        "zwave_proxy": {
+            "supported": True,
+            "home_id": 1234567890,
+            "config_entry_id": None,
+        },
         "serial_proxies": [],
     }
 
@@ -264,6 +271,141 @@ async def test_get_device_capabilities_no_device_info(
         "zwave_proxy": {
             "supported": False,
             "home_id": 0,
+            "config_entry_id": None,
         },
         "serial_proxies": [],
+    }
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("1234567890", id="string_unique_id"),
+        pytest.param(1234567890, id="legacy_int_unique_id"),
+    ],
+)
+async def test_get_device_capabilities_zwave_js_configured(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    unique_id: str | int,
+) -> None:
+    """Test zwave_js unique_id matching the advertised home ID."""
+    zwave_entry = MockConfigEntry(
+        domain="zwave_js",
+        unique_id=unique_id,
+        source=SOURCE_USER,
+        title="Z-Wave",
+    )
+    zwave_entry.add_to_hass(hass)
+    mock_client.connected_address = "192.168.1.2"
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "zwave_proxy_feature_flags": 1,
+            "zwave_home_id": 1234567890,
+        },
+    )
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_capabilities",
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"]["zwave_proxy"] == {
+        "supported": True,
+        "home_id": 1234567890,
+        "config_entry_id": zwave_entry.entry_id,
+    }
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "source", "disabled_by"),
+    [
+        pytest.param("999", SOURCE_USER, None, id="other_network"),
+        pytest.param(
+            "1234567890",
+            SOURCE_USER,
+            ConfigEntryDisabler.USER,
+            id="disabled",
+        ),
+        pytest.param("1234567890", SOURCE_IGNORE, None, id="ignored"),
+    ],
+)
+async def test_get_device_capabilities_zwave_js_not_configured(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+    unique_id: str,
+    source: str,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test unmatched, disabled, and ignored zwave_js entries are not configured."""
+    MockConfigEntry(
+        domain="zwave_js",
+        unique_id=unique_id,
+        source=source,
+        disabled_by=disabled_by,
+        title="Z-Wave",
+    ).add_to_hass(hass)
+    mock_client.connected_address = "192.168.1.2"
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "zwave_proxy_feature_flags": 1,
+            "zwave_home_id": 1234567890,
+        },
+    )
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_capabilities",
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"]["zwave_proxy"]["config_entry_id"] is None
+
+
+async def test_get_device_capabilities_zwave_home_id_zero_ignores_unique_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test home_id 0 does not match a zwave_js unique_id of 0."""
+    MockConfigEntry(domain="zwave_js", unique_id="0", title="Z-Wave").add_to_hass(hass)
+    mock_client.connected_address = "192.168.1.2"
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "zwave_proxy_feature_flags": 1,
+            "zwave_home_id": 0,
+        },
+    )
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_capabilities",
+            DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+        }
+    )
+    response = await websocket_client.receive_json()
+    assert response["success"] is True
+    assert response["result"]["zwave_proxy"] == {
+        "supported": True,
+        "home_id": 0,
+        "config_entry_id": None,
     }
