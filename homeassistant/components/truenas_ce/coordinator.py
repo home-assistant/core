@@ -554,14 +554,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.get_rsync,
             self.get_snapshottask,
             self.get_scrub,
-            # get_app_stats reads self.ds["app"] (written by get_app) to decide
-            # whether to prune the app_stats cache. Both run concurrently in
-            # the same gather below with no ordering guarantee between them,
-            # so get_app_stats may see this cycle's fresh ds["app"] or the
-            # previous cycle's snapshot depending on scheduling -- harmless
-            # (it self-corrects next poll), but worth knowing before relying
-            # on same-cycle freshness here.
-            self.get_app,
             self.get_app_stats,
             self.get_alerts,
             self.get_certificates,
@@ -609,6 +601,13 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_key="system_info_unavailable",
                     translation_placeholders={"host": self.host},
                 )
+
+            # Must run before get_app_stats (in the gather below): it reads
+            # self.ds["app"] to decide what to prune/process, so it needs
+            # this cycle's fresh app list rather than racing get_app for it
+            # (which, on the initial refresh, starts empty and would make
+            # get_app_stats take its early-return path a poll too early).
+            await _run_job(self.get_app)
 
             await asyncio.gather(*(_run_job(job) for job in jobs))
 

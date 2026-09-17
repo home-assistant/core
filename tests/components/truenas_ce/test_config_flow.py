@@ -73,6 +73,7 @@ def _mock_guess_ip() -> Iterator[None]:
 def _mock_connection_ok() -> Iterator[None]:
     with (
         patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
+        patch(f"{_API_PATH}.query", AsyncMock(return_value=None)),
         patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
     ):
         yield
@@ -138,15 +139,7 @@ async def test_user_flow_creates_entry_with_system_id_as_unique_id(
 
 
 async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> None:
-    """A second entry for the same box (different host) must not be created.
-
-    The user-flow host-uniqueness guard alone would miss this, since the new
-    entry uses a different host; the system_id-based unique_id check must
-    catch it instead. The existing entry's host is folded onto the new one
-    (see ``test_zeroconf_flow_updates_matched_entry_host_after_user_authenticates``
-    for the equivalent zeroconf-triggered case), since re-adding it here only
-    succeeded because the user supplied a real, working API key for it.
-    """
+    """A second entry for the same box (different host) aborts, folding the host onto the existing entry."""
     existing = MockConfigEntry(
         domain=DOMAIN,
         data=_user_input(**{CONF_HOST: "old-host.example.com"}),

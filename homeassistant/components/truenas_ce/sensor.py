@@ -264,7 +264,7 @@ def _discover_standard_sensor(
 
 
 class TrueNASSensor(TrueNASEntity, SensorEntity):
-    """Define an TrueNAS sensor."""
+    """Define a TrueNAS sensor."""
 
     entity_description: TrueNASSensorEntityDescription
 
@@ -362,7 +362,7 @@ class TrueNASDiskSensor(TrueNASSensor):
 
 
 class TrueNASUptimeSensor(TrueNASSensor):
-    """Define an TrueNAS Uptime sensor."""
+    """Define a TrueNAS Uptime sensor."""
 
     @property
     @override
@@ -383,7 +383,7 @@ class TrueNASAlertSensor(TrueNASSensor):
 
 
 class TrueNASDatasetSensor(TrueNASSensor):
-    """Define an TrueNAS Dataset sensor."""
+    """Define a TrueNAS Dataset sensor."""
 
 
 class TrueNASRsyncSensor(TrueNASSensor):
@@ -493,7 +493,7 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
 
 
 class TrueNASCloudsyncSensor(TrueNASSensor):
-    """Define an TrueNAS Cloudsync sensor."""
+    """Define a TrueNAS Cloudsync sensor."""
 
 
 class TrueNASAppStatsSensor(TrueNASEntity, RestoreSensor):
