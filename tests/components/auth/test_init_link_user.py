@@ -13,7 +13,10 @@ from tests.typing import ClientSessionGenerator
 
 
 async def async_get_code(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    code_challenge: str | None = None,
+    code_challenge_method: str | None = None,
 ) -> dict[str, Any]:
     """Return authorization code for link user tests."""
     config = [
@@ -39,15 +42,18 @@ async def async_get_code(
     access_token = hass.auth.async_create_access_token(refresh_token)
 
     # Now authenticate with the 2nd flow
-    resp = await client.post(
-        "/auth/login_flow",
-        json={
-            "client_id": CLIENT_ID,
-            "handler": ["insecure_example", "2nd auth"],
-            "redirect_uri": CLIENT_REDIRECT_URI,
-            "type": "link_user",
-        },
-    )
+    flow_payload: dict[str, Any] = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", "2nd auth"],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+        "type": "link_user",
+    }
+    if code_challenge is not None:
+        flow_payload["code_challenge"] = code_challenge
+    if code_challenge_method is not None:
+        flow_payload["code_challenge_method"] = code_challenge_method
+
+    resp = await client.post("/auth/login_flow", json=flow_payload)
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
@@ -193,3 +199,27 @@ async def test_link_user_already_linked_other_user(
     # The credential was not added because it saw that it was already linked
     assert len(info["user"].credentials) == 0
     assert len(another_user.credentials) == 0
+
+
+async def test_link_user_rejects_pkce_code(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test linking a user rejects codes issued with PKCE code_challenge."""
+    info = await async_get_code(
+        hass,
+        aiohttp_client,
+        code_challenge="E9Melhoa2OwvFrGMTJguCH5rtx647b100_bCcqqqqqq",
+        code_challenge_method="S256",
+    )
+    client = info["client"]
+    code = info["code"]
+
+    resp = await client.post(
+        "/auth/link_user",
+        json={"client_id": CLIENT_ID, "code": code},
+        headers={"authorization": f"Bearer {info['access_token']}"},
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["message"] == "Invalid code"
+    assert len(info["user"].credentials) == 0
