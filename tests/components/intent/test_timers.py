@@ -1526,6 +1526,61 @@ async def test_start_timer_with_conversation_command(
         assert mock_converse.call_args.args[1] == test_command
 
 
+@pytest.mark.parametrize(
+    ("error_code", "expect_warning"),
+    [
+        pytest.param(None, False, id="command_succeeded"),
+        pytest.param(
+            intent.IntentResponseErrorCode.NO_VALID_TARGETS, True, id="command_failed"
+        ),
+    ],
+)
+async def test_start_timer_conversation_command_result_logged(
+    hass: HomeAssistant,
+    init_components,
+    caplog: pytest.LogCaptureFixture,
+    error_code: intent.IntentResponseErrorCode | None,
+    expect_warning: bool,
+) -> None:
+    """Test that a delayed command which fails is logged.
+
+    Nothing listens to the response of a delayed command, so an error is
+    otherwise invisible.
+    """
+    test_command = "turn on the lights"
+    error_text = "Sorry, I am not aware of any device called lights"
+
+    response = intent.IntentResponse(language=hass.config.language)
+    if error_code is not None:
+        response.async_set_error(error_code, error_text)
+
+    with patch(
+        "homeassistant.components.conversation.async_converse",
+        return_value=conversation.ConversationResult(response=response),
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "seconds": {"value": 0},
+                "conversation_command": {"value": test_command},
+            },
+            device_id="test_device",
+            conversation_agent_id="test_agent",
+        )
+
+        assert result.response_type is intent.IntentResponseType.ACTION_DONE
+
+        # Wait for the delayed command to run
+        await hass.async_block_till_done()
+
+    assert ("Delayed command failed" in caplog.text) is expect_warning
+    if expect_warning:
+        assert test_command in caplog.text
+        assert error_text in caplog.text
+
+
 async def test_start_timer_with_sentence_trigger_validation(
     hass: HomeAssistant, init_components
 ) -> None:
