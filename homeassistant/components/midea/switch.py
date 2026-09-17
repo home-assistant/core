@@ -109,6 +109,11 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         translation_key="night_light",
         models=[DeviceType.CC],
     ),
+    MideaSwitchEntityDescription(
+        key="ai_switch",
+        translation_key="ai_switch",
+        models=[DeviceType.DC],
+    ),
 ]
 
 

@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import Final
 
+import probatio
+
 DOMAIN: Final = "cover"
 
 ATTR_CURRENT_POSITION = "current_position"
@@ -68,3 +70,6 @@ class CoverDeviceClass(StrEnum):
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
