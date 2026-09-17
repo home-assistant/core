@@ -1,6 +1,6 @@
 """Tests for the Heiman Home sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
 
@@ -19,8 +19,42 @@ def _get_platform_entities(hass: HomeAssistant) -> list:
     return [
         entity
         for entity_platform in async_get_platforms(hass, DOMAIN)
+        if entity_platform.domain == "sensor"
         for entity in entity_platform.entities.values()
     ]
+
+
+async def _async_setup_entry(hass: HomeAssistant, mock_coordinator: MagicMock) -> None:
+    """Load a Heiman Home config entry backed by the given mock coordinator.
+
+    The integration is loaded through the public config entries API so the
+    sensor platform runs its real setup path. Patching the coordinator class
+    makes the integration adopt the test's mock coordinator, which avoids any
+    network, OAuth or MQTT traffic.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
+
+    mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
+    mock_coordinator.async_init_mqtt_client = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.heiman_home.OAuth2Session",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.heiman_home.HeimanDataUpdateCoordinator",
+            return_value=mock_coordinator,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 async def test_sensor_setup(hass: HomeAssistant, setup_credentials: None) -> None:
@@ -89,14 +123,9 @@ async def test_sensor_entity_creation(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -537,14 +566,9 @@ async def test_sensor_entity_creation_with_multiple_properties(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -586,14 +610,9 @@ async def test_sensor_entity_creation_no_readable_properties(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -945,14 +964,9 @@ async def test_sensor_creation_readable_without_entity_marker(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -1023,14 +1037,9 @@ async def test_sensor_creation_skips_non_sensor_entities(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -1131,14 +1140,9 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
     mock_coordinator.get_device.return_value = mock_device
     mock_coordinator.async_add_listener = MagicMock()
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
@@ -1194,15 +1198,10 @@ async def test_sensor_skip_scan_on_no_structure_change(
 
     mock_coordinator.async_add_listener = mock_add_listener
 
-    # Create a mock config entry and set runtime_data
-    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
-    entry.add_to_hass(hass)
-    entry.runtime_data = mock_coordinator
-
-    # Set up the sensor platform through the public config entries API;
-    # this will create initial sensors
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-    await hass.async_block_till_done()
+    # Load the entry through the public config entries API; the patched
+    # coordinator class makes the integration adopt our mock coordinator.
+    # Setup creates the initial sensors.
+    await _async_setup_entry(hass, mock_coordinator)
 
     # Collect the entities created by the platform
     added_entities = _get_platform_entities(hass)
