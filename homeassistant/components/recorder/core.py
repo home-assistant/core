@@ -896,8 +896,21 @@ class Recorder(threading.Thread):
             if task.commit_before:
                 self._commit_event_session_or_retry()
             task.run(self)
-        except exc.DatabaseError as err:
-            if self._handle_database_error(err, setup_run=True):
+        except (exc.InterfaceError, exc.DatabaseError) as err:
+            if isinstance(err, exc.DatabaseError) and self._handle_database_error(
+                err, setup_run=True
+            ):
+                return
+            # InterfaceError is a DBAPIError, not a DatabaseError.
+            if isinstance(
+                err, (exc.InterfaceError, exc.OperationalError, exc.InternalError)
+            ):
+                if self.hass.is_stopping:
+                    # Do not open a new session against a database we are about
+                    # to stop using; _end_session would then retry commits.
+                    self._abort_reconnect_for_shutdown()
+                    return
+                self._reconnect_database()
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
@@ -1263,6 +1276,7 @@ class Recorder(threading.Thread):
 
     def _close_event_session(self) -> None:
         """Close the event session."""
+        self._event_session_has_pending_writes = False
         self.states_manager.reset()
         self.state_attributes_manager.reset()
         self.event_data_manager.reset()
@@ -1270,19 +1284,135 @@ class Recorder(threading.Thread):
         self.states_meta_manager.reset()
         self.statistics_meta_manager.reset()
 
-        if not self.event_session:
-            return
-
-        try:
-            self.event_session.rollback()
-            self.event_session.close()
-        except SQLAlchemyError:
-            _LOGGER.exception("Error while rolling back and closing the event session")
+        if self.event_session:
+            try:
+                self.event_session.rollback()
+                self.event_session.close()
+            except SQLAlchemyError:
+                _LOGGER.exception(
+                    "Error while rolling back and closing the event session"
+                )
+            self.event_session = None
+        if self._get_session is not None:
+            session_factory = cast("scoped_session[Session]", self._get_session)
+            try:
+                session_factory.remove()
+            except SQLAlchemyError:
+                # close() already failed; still discard the thread-local Session.
+                session_factory.registry.clear()
 
     def _reopen_event_session(self) -> None:
         """Rollback the event session and reopen it after a failure."""
         self._close_event_session()
         self._open_event_session()
+
+    def _uses_persistent_database(self) -> bool:
+        """Return True if disposing the engine will not drop the database."""
+        return (
+            self.db_url != SQLITE_URL_PREFIX
+            and ":memory:" not in self.db_url
+            and "mode=memory" not in self.db_url
+        )
+
+    def _reconnect_disposes_engine(self) -> bool:
+        """Return True if reconnect should dispose and recreate the engine.
+
+        File SQLite must not re-run `_setup_connection()`: that path calls
+        `validate_or_move_away_sqlite_database()`, which treats lock errors as
+        corruption and can rename a healthy database to `.corrupt.*`.
+        """
+        return self._uses_persistent_database() and not self._using_file_sqlite
+
+    def _abort_reconnect_for_shutdown(self) -> None:
+        """Stop the recorder without opening a session against a dead database."""
+        self._close_event_session()
+        self.stop_requested = True
+
+    def _restore_connection_tied_caches(self) -> None:
+        """Reload connection-tied caches after the database is reachable again."""
+        with session_scope(session=self.get_session(), read_only=True) as session:
+            self.states_manager.load_from_db(session)
+            self.statistics_meta_manager.load(session)
+        self._open_event_session()
+
+    def _wait_for_reconnect_retry(self) -> None:
+        """Sleep between reconnect attempts, aborting when Home Assistant is stopping."""
+        remaining: float = self.db_retry_wait
+        # Slice the wait so shutdown is noticed without a full db_retry_wait delay.
+        slice_seconds = 0.5
+        while remaining > 0 and not self.hass.is_stopping:
+            slept = min(slice_seconds, remaining)
+            time.sleep(slept)
+            remaining -= slept
+
+    def _reconnect_database(self) -> None:
+        """Reconnect after a mid-session connection failure.
+
+        Startup uses a finite retry budget so a missing or misconfigured
+        database does not block Home Assistant forever. After the recorder
+        has already been running, keep retrying until the database is
+        reachable again or Home Assistant is stopping.
+        """
+        self._close_event_session()
+        dispose_engine = self._reconnect_disposes_engine()
+        if dispose_engine:
+            self._close_connection()
+
+        _LOGGER.warning(
+            "Recorder database connection lost; retrying until it is restored "
+            "or Home Assistant stops"
+        )
+
+        logged_exception = False
+        while not self.hass.is_stopping:
+            try:
+                if self.engine is None:
+                    self._setup_connection()
+                    if not migration.initialize_database(self.get_session):
+                        self._close_connection()
+                        self._wait_for_reconnect_retry()
+                        continue
+                self._restore_connection_tied_caches()
+            except UnsupportedDialect:
+                _LOGGER.exception("Unsupported database dialect during reconnect")
+                self._abort_reconnect_for_shutdown()
+                return
+            except Exception as err:
+                if not logged_exception:
+                    _LOGGER.exception(
+                        "Error during database reconnection: (retrying in %s seconds)",
+                        self.db_retry_wait,
+                    )
+                    logged_exception = True
+                else:
+                    _LOGGER.error(
+                        "Error during database reconnection: %s (retrying in %s seconds)",
+                        err,
+                        self.db_retry_wait,
+                    )
+                self._close_event_session()
+                if dispose_engine:
+                    self._close_connection()
+                self._wait_for_reconnect_retry()
+            else:
+                self._finish_reconnect_attempt()
+                return
+
+        # Shutting down before the database came back. Leave event_session
+        # closed so _end_session does not retry commits against a dead DB,
+        # and stop the queue so later tasks cannot touch a None session.
+        self._abort_reconnect_for_shutdown()
+
+    def _finish_reconnect_attempt(self) -> None:
+        """Keep a restored session only if Home Assistant is still running."""
+        if self.hass.is_stopping:
+            self._abort_reconnect_for_shutdown()
+            return
+        _LOGGER.warning("Recorder database connection restored")
+        if not self._event_listener:
+            # Same as live migration: a long outage can trip the backlog
+            # watcher and stop the listener; recording would stay off.
+            self.hass.add_job(self.async_initialize)
 
     def _open_event_session(self) -> None:
         """Open the event session."""
