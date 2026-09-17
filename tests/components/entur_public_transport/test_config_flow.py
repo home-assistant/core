@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.entur_public_transport.api import (
     EnturApiError,
     EnturRoute,
@@ -23,7 +25,7 @@ from homeassistant.components.entur_public_transport.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -324,12 +326,13 @@ async def test_user_flow_rejects_invalid_selection(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_QUERY: "Bergen"}
         )
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_STOP_ID: "NSR:StopPlace:999"}
-        )
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_STOP_ID: "NSR:StopPlace:999"}
+            )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_selection"}
+    assert result["step_id"] == "select_stop"
 
 
 async def test_import_flow(hass: HomeAssistant) -> None:

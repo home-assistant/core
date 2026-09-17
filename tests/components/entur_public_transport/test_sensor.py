@@ -20,7 +20,9 @@ from homeassistant.core import HomeAssistant
 
 def test_platform_schema_defaults() -> None:
     """Test the defaults used by the YAML platform configuration."""
-    config = PLATFORM_SCHEMA({"stop_ids": "NSR:StopPlace:1"})
+    config = PLATFORM_SCHEMA(
+        {"platform": "entur_public_transport", "stop_ids": "NSR:StopPlace:1"}
+    )
 
     assert config["stop_ids"] == ["NSR:StopPlace:1"]
     assert config["expand_platforms"] is True
@@ -34,7 +36,7 @@ def test_platform_schema_defaults() -> None:
 def test_platform_schema_requires_stop_ids() -> None:
     """Test that stop IDs are required by the YAML platform configuration."""
     with pytest.raises(probatio.Invalid):
-        PLATFORM_SCHEMA({})
+        PLATFORM_SCHEMA({"platform": "entur_public_transport"})
 
 
 def test_due_in_minutes() -> None:
@@ -66,6 +68,7 @@ async def test_async_setup_platform_creates_entities(
 
     config = PLATFORM_SCHEMA(
         {
+            "platform": "entur_public_transport",
             "stop_ids": ["NSR:StopPlace:1", "NSR:Quay:2"],
             "name": "Transport",
             "expand_platforms": True,
@@ -114,6 +117,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
     """Test that each UI stop keeps its own route whitelist."""
     config = PLATFORM_SCHEMA(
         {
+            "platform": "entur_public_transport",
             "stop_ids": [],
             "line_whitelist": [],
         }
@@ -145,6 +149,7 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
     """Test that existing YAML stops remain independent from UI stops."""
     config = PLATFORM_SCHEMA(
         {
+            "platform": "entur_public_transport",
             "stop_ids": ["NSR:StopPlace:legacy"],
             "line_whitelist": ["RUT:Line:legacy"],
         }
@@ -169,7 +174,9 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
     hass: HomeAssistant,
 ) -> None:
     """Test that each subentry gets an Entur client with its own filter."""
-    config = PLATFORM_SCHEMA({"stop_ids": []})
+    config = PLATFORM_SCHEMA(
+        {"platform": "entur_public_transport", "stop_ids": []}
+    )
     subentries = [
         SimpleNamespace(
             subentry_type="stop_place",

@@ -63,7 +63,7 @@ async def test_search_stop_places(aioclient_mock, hass: HomeAssistant) -> None:
     )
 
     method, url, _, headers = aioclient_mock.mock_calls[0]
-    assert method == "get"
+    assert method == "GET"
     assert str(url) == (
         f"{GEOCODER_AUTOCOMPLETE_URL}?q=Bergen&lang=no&limit=10&layers=stopPlace&"
         "multimodal=parent"
@@ -139,7 +139,7 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
     assert routes[0].selection_label == "1 · bus · RUT"
 
     method, _, request, headers = aioclient_mock.mock_calls[0]
-    assert method == "post"
+    assert method == "POST"
     assert request["query"] == STOP_PLACE_LINES_QUERY
     assert request["variables"] == {
         "stopPlaceId": "NSR:StopPlace:548",
