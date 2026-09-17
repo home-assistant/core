@@ -53,6 +53,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -113,6 +114,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     dpcode: DPCode | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
+    child_device_key: str | None = None
 
 
 def _phase_sensors(
@@ -128,6 +130,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}electriccurrent",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_current",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.CURRENT,
@@ -137,6 +140,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}power",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_power",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.POWER,
@@ -146,6 +150,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}voltage",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_voltage",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.VOLTAGE,
@@ -155,6 +160,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}reactivepower",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_reactive_power",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.REACTIVE_POWER,
@@ -164,6 +170,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}apparentpower",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_apparent_power",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.APPARENT_POWER,
@@ -173,6 +180,7 @@ def _phase_sensors(
         TuyaSensorEntityDescription(
             key=f"{dpcode}powerfactor",
             dpcode=dpcode,
+            child_device_key=str(dpcode),
             translation_key="phase_power_factor",
             translation_placeholders={"phase": phase},
             device_class=SensorDeviceClass.POWER_FACTOR,
@@ -1914,8 +1922,35 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
+                device_registry = dr.async_get(hass)
+                parent = device_registry.async_get_device_by_identifier(
+                    ("tuya", device.id), entry.entry_id
+                )
+                child_device_keys: set[str] = set()
+                if parent is not None:
+                    for description in descriptions:
+                        if description.child_device_key is None:
+                            continue
+                        key = description.child_device_key
+                        if key in child_device_keys:
+                            continue
+                        device_registry.async_get_or_create_child(
+                            config_entry_id=entry.entry_id,
+                            identifiers={("tuya", f"{device.id}_{key}")},
+                            name=f"{device.name} {key}",
+                            parent_device_id=parent.id,
+                        )
+                        child_device_keys.add(key)
                 entities.extend(
-                    TuyaSensorEntity(device, manager, description, definition)
+                    TuyaSensorEntity(
+                        device,
+                        manager,
+                        description,
+                        definition,
+                        parent.id
+                        if description.child_device_key in child_device_keys
+                        else None,
+                    )
                     for description in descriptions
                     if (
                         definition := get_default_definition(
@@ -1946,9 +1981,19 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
         definition: SensorDefinition,
+        child_device_id: str | None = None,
     ) -> None:
         """Init Tuya sensor."""
-        super().__init__(device, device_manager, description)
+        device_info = None
+        if child_device_id is not None:
+            device_info = {
+                "identifiers": {
+                    ("tuya", f"{device.id}_{description.child_device_key}")
+                },
+                "name": f"{device.name} {description.child_device_key}",
+                "via_device_id": child_device_id,
+            }
+        super().__init__(device, device_manager, description, device_info)
         self._dpcode_wrapper = definition.sensor_wrapper
 
         if description.suggested_unit_of_measurement is None:
