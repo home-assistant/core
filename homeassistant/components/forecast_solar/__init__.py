@@ -1,6 +1,7 @@
 """The Forecast.Solar integration."""
 
 from types import MappingProxyType
+from typing import Any
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -211,18 +212,54 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(_async_reload_on_forecast_change(hass, entry))
     entry.async_on_unload(_async_track_sensor_renames(hass, entry))
     entry.async_on_unload(_async_track_sensor_states(hass, entry))
 
     return True
 
 
-async def _async_update_listener(
+def _forecast_inputs(entry: ForecastSolarConfigEntry) -> tuple[Any, ...]:
+    """Return the entry values the forecast is built from."""
+    return (
+        dict(entry.data),
+        dict(entry.options),
+        [
+            dict(subentry.data)
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+        ],
+    )
+
+
+@callback
+def _async_reload_on_forecast_change(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> None:
-    """Handle config entry updates (options or subentry changes)."""
-    hass.config_entries.async_schedule_reload(entry.entry_id)
+) -> CALLBACK_TYPE:
+    """Reload on option and plane changes, but not on a title-only update."""
+    inputs = _forecast_inputs(entry)
+    reloading = False
+
+    async def _async_reload() -> None:
+        nonlocal reloading
+        try:
+            await hass.config_entries.async_reload(entry.entry_id)
+        finally:
+            # A reload that failed to unload leaves this listener in place.
+            reloading = False
+
+    async def _async_entry_updated(
+        hass: HomeAssistant, entry: ForecastSolarConfigEntry
+    ) -> None:
+        nonlocal reloading
+        # Renaming a sensor updates every plane reading it; one reload covers them all.
+        if not reloading and _forecast_inputs(entry) != inputs:
+            reloading = True
+            entry.async_cancel_retry_setup()
+            hass.async_create_task(
+                _async_reload(), f"forecast_solar reload {entry.entry_id}"
+            )
+
+    return entry.add_update_listener(_async_entry_updated)
 
 
 async def async_unload_entry(

@@ -1,5 +1,6 @@
 """Tests for the Forecast.Solar integration."""
 
+import asyncio
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError, Plane
@@ -297,6 +298,75 @@ async def test_coordinator_multi_plane_initialization(
     assert planes[0].declination == 45
     assert planes[0].azimuth == 90  # 270 - 180
     assert planes[0].kwp == 3.0  # 3000 / 1000
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_forecast_changes_reload_once_title_changes_do_not(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a title-only update doesn't reload, and one rename reloads once."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+    hass.states.async_set(
+        "sensor.roof_azimuth",
+        "100",
+        {"unit_of_measurement": "°", "friendly_name": "Roof angle"},
+    )
+    plane_data = {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+        CONF_MODULES_POWER: 5100,
+    }
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
+        options={CONF_API_KEY: "abcdef1234567890"},
+        subentries_data=[
+            ConfigSubentryData(
+                data=dict(plane_data),
+                subentry_id=f"plane_{index}",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / Roof angle (sensor) / 5100W",
+                unique_id=None,
+            )
+            for index in range(2)
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def _reload(entry_id: str) -> bool:
+        # Suspends like a real reload, which unloads platforms before setting up again.
+        await asyncio.sleep(0)
+        return True
+
+    # Patched so the listener stays registered, as it is until a reload unloads it.
+    with patch.object(
+        hass.config_entries, "async_reload", side_effect=_reload
+    ) as mock_reload:
+        # A friendly name is only a label; the forecast inputs are unchanged.
+        hass.states.async_set(
+            "sensor.roof_azimuth",
+            "100",
+            {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
+        )
+        await hass.async_block_till_done()
+
+        mock_reload.assert_not_called()
+
+        # Both planes read the renamed sensor, but a single reload covers them.
+        entity_registry.async_update_entity(
+            "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
