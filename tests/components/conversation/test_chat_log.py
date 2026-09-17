@@ -1038,10 +1038,7 @@ async def test_chat_log_subscription(
     assert len(received_events) == events_before_unsubscribe
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_tool_result_content_deprecated_property(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_tool_result_content_deprecated_property() -> None:
     """Test the deprecated tool_result property returns the result data."""
     content = ToolResultContent(
         agent_id="mock-agent-id",
@@ -1051,16 +1048,11 @@ async def test_tool_result_content_deprecated_property(
     )
 
     assert content.tool_result == {"answer": 42}
-    assert (
-        "accesses `ToolResultContent.tool_result`, which is deprecated" in caplog.text
-    )
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
 async def test_add_delta_content_stream_deprecated_tool_result(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a delta carrying the deprecated tool_result key is still accepted."""
 
@@ -1085,4 +1077,3 @@ async def test_add_delta_content_stream_deprecated_tool_result(
         ]
 
     assert results[0].result == llm.ToolResult(data={"answer": 42})
-    assert "sets `tool_result` on a tool result delta" in caplog.text

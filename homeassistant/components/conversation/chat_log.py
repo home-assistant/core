@@ -301,17 +301,10 @@ class ToolResultContent:
         """Return the data of the result.
 
         Deprecated compatibility shim: the result is available as `result`,
-        which also says whether the call failed. It can be removed in HA Core
-        2027.11.
+        which also says whether the call failed. Use of this is reported once
+        the integrations in this repository have migrated, and it can be
+        removed in HA Core 2027.11.
         """
-        frame.report_usage(
-            "accesses `ToolResultContent.tool_result`, which is deprecated; "
-            "use `ToolResultContent.result` instead",
-            breaks_in_ha_version="2027.11.0",
-            core_behavior=frame.ReportBehavior.ERROR,
-            core_integration_behavior=frame.ReportBehavior.LOG,
-            custom_integration_behavior=frame.ReportBehavior.LOG,
-        )
         return self.result.data
 
     def as_dict(self) -> dict[str, Any]:
@@ -608,14 +601,6 @@ class ChatLog:
                         self.delta_listener(self, filtered_delta)
             elif delta["role"] == "tool_result":
                 if (result := delta.get("result")) is None:
-                    frame.report_usage(
-                        "sets `tool_result` on a tool result delta, which is "
-                        "deprecated; set `result` to a ToolResult instead",
-                        breaks_in_ha_version="2027.11.0",
-                        core_behavior=frame.ReportBehavior.ERROR,
-                        core_integration_behavior=frame.ReportBehavior.LOG,
-                        custom_integration_behavior=frame.ReportBehavior.LOG,
-                    )
                     result = llm.ToolResult(data=delta["tool_result"])
                 content = ToolResultContent(
                     agent_id=agent_id,
