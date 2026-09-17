@@ -443,8 +443,6 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
 
     subentry = entry.subentries["stop-subentry"]
     assert subentry.title == "🚏 Hønefoss sentrum · 101 BRA (4_6101-BRA)"
-    assert subentry.data["route_labels"] == {
-        "BRA:Line:4_6101": "101 BRA (4_6101-BRA)"
-    }
+    assert subentry.data["route_labels"] == {"BRA:Line:4_6101": "101 BRA (4_6101-BRA)"}
     assert subentry.data["stop_place_types"] == ["onstreetBus"]
     assert subentry.data["stop_place_metadata_version"] == 2

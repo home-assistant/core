@@ -114,9 +114,9 @@ class EnturRoute:
             if name_code:
                 public_code = name_code
         operator = self.operator_code
-        route_label = " ".join(
-            part for part in (public_code, operator) if part
-        ) or self.line_id
+        route_label = (
+            " ".join(part for part in (public_code, operator) if part) or self.line_id
+        )
         if self.technical_id != self.line_id:
             route_label += f" ({self.technical_id})"
         return route_label
