@@ -2567,74 +2567,63 @@ async def test_reconfigure_pair_step_skips_failed_local_lookup(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize(
-    ("clients", "step_id", "registers"),
-    [
-        pytest.param(
-            [
-                _local_client("some-other-key", "VERIFIED"),
-                _local_client(PUBLIC_KEY_B64, "VERIFIED"),
-            ],
-            "credentials",
-            False,
-            id="verified",
-        ),
-        pytest.param(
-            [_local_client(PUBLIC_KEY_B64, "PENDING_VERIFICATION")],
-            "pair",
-            False,
-            id="pending",
-        ),
-        pytest.param(
-            [_local_client(PUBLIC_KEY_B64, "PENDING_VERIFICATION_TIMEOUT")],
-            "pair",
-            True,
-            id="timed_out",
-        ),
-        pytest.param(
-            [_local_client("some-other-key", "VERIFIED")],
-            "pair",
-            True,
-            id="not_registered",
-        ),
-    ],
-)
 async def test_reconfigure_reads_authorized_clients_locally(
     hass: HomeAssistant,
     mock_local_authorized_clients: AsyncMock,
-    clients: list[dict[str, Any]],
-    step_id: str,
-    registers: bool,
 ) -> None:
-    """A paired site's key state is read from the gateway, not the cloud."""
+    """A paired site's verified key is confirmed on the gateway, not the cloud.
+
+    The local read is signed with our key, so only a verified key can succeed;
+    any other key state is rejected locally and covered by the cloud fallback.
+    """
     entry = await _setup_paired_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
     mock_local_authorized_clients.side_effect = None
     mock_local_authorized_clients.return_value = {
-        "clients": clients,
+        "clients": [
+            _local_client("some-other-key", "VERIFIED"),
+            _local_client(PUBLIC_KEY_B64, "VERIFIED"),
+        ],
         "enable_line_switch_off": False,
     }
 
     cloud_lookup = AsyncMock(return_value=_empty_clients())
-    add_client = AsyncMock(return_value={})
-    with (
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-            new=cloud_lookup,
-        ),
-        patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
-            new=add_client,
-        ),
+    with patch(
+        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+        new=cloud_lookup,
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == step_id
+    assert result["step_id"] == "credentials"
     mock_local_authorized_clients.assert_awaited_once()
     cloud_lookup.assert_not_awaited()
-    # Registration still goes through the cloud, the only path that can add a key.
-    assert add_client.await_count == int(registers)
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_cloud_only_site_skips_local_lookup(
+    hass: HomeAssistant,
+    mock_local_authorized_clients: AsyncMock,
+) -> None:
+    """A site whose local control failed at setup is looked up only in the cloud."""
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    energy_data = entry.runtime_data.energysites[0]
+    # Setup falls back to the bare cloud api when the local router cannot be built.
+    energy_data.api = energy_data.api.secondary
+
+    cloud_lookup = AsyncMock(
+        return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+    )
+    with patch(
+        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+        new=cloud_lookup,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["step_id"] == "credentials"
+    cloud_lookup.assert_awaited_once()
+    mock_local_authorized_clients.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
