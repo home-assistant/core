@@ -15,6 +15,7 @@ from homeassistant.components.entur_public_transport.api import (
     EnturStopPlace,
 )
 from homeassistant.components.entur_public_transport.config_flow import (
+    _async_reconcile_subentry_entities,
     _combine_line_whitelist,
 )
 from homeassistant.components.entur_public_transport.const import (
@@ -41,6 +42,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -540,6 +542,90 @@ async def test_subentry_reconfigure_edits_routes_on_current_stop(
     assert data[CONF_WHITELIST_LINES] == []
     assert data[CONF_PLATFORM_MODE] == PLATFORM_MODE_STOP_PLACE
     assert data[CONF_SHOW_ON_MAP] is False
+
+
+async def test_reconfigure_removes_replaced_stop_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test replacing a stop clears its entities from the registry."""
+    old_stop_id = "NSR:StopPlace:1"
+    new_stop_id = "NSR:StopPlace:2"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Old stop",
+                "unique_id": old_stop_id,
+                "data": {CONF_STOP_ID: old_stop_id},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_stop_id,
+        config_entry=entry,
+        config_subentry_id="stop-subentry",
+    )
+
+    _async_reconcile_subentry_entities(
+        hass,
+        entry,
+        entry.subentries["stop-subentry"],
+        new_stop_id,
+        PLATFORM_MODE_STOP_PLACE,
+        [],
+    )
+
+    assert registry.async_get_entity_id("sensor", DOMAIN, old_stop_id) is None
+
+
+async def test_reconfigure_removes_deselected_platform_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing platform selection keeps only selected platform entities."""
+    stop_id = "NSR:StopPlace:1"
+    selected_quay_id = "NSR:Quay:1"
+    removed_quay_id = "NSR:Quay:2"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Stop",
+                "unique_id": stop_id,
+                "data": {CONF_STOP_ID: stop_id},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    for unique_id in (stop_id, selected_quay_id, removed_quay_id):
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            unique_id,
+            config_entry=entry,
+            config_subentry_id="stop-subentry",
+        )
+
+    _async_reconcile_subentry_entities(
+        hass,
+        entry,
+        entry.subentries["stop-subentry"],
+        stop_id,
+        PLATFORM_MODE_SELECTED,
+        [selected_quay_id],
+    )
+
+    assert registry.async_get_entity_id("sensor", DOMAIN, stop_id) is None
+    assert registry.async_get_entity_id("sensor", DOMAIN, selected_quay_id) is not None
+    assert registry.async_get_entity_id("sensor", DOMAIN, removed_quay_id) is None
 
 
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:

@@ -10,12 +10,14 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentry,
     ConfigSubentryFlow,
     FlowType,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -744,6 +746,14 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 CONF_STOP_PLACE_METADATA_VERSION: STOP_PLACE_METADATA_VERSION,
             }
             if self.source == SOURCE_RECONFIGURE:
+                _async_reconcile_subentry_entities(
+                    self.hass,
+                    entry,
+                    self._get_reconfigure_subentry(),
+                    self._selected_place.stop_id,
+                    self._selected_platform_mode,
+                    self._selected_quay_ids,
+                )
                 return self.async_update_and_abort(
                     entry,
                     self._get_reconfigure_subentry(),
@@ -885,6 +895,47 @@ def _route_labels(
         line_id: route_labels.get(line_id, labels.get(line_id, line_id_label(line_id)))
         for line_id in line_ids
     }
+
+
+@callback
+def _async_reconcile_subentry_entities(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    subentry: ConfigSubentry,
+    stop_id: str,
+    platform_mode: str,
+    quay_ids: list[str],
+) -> None:
+    """Remove registry entries no longer created by a reconfigured stop place."""
+    entity_registry = er.async_get(hass)
+    old_stop_id = subentry.data.get(CONF_STOP_ID)
+    if old_stop_id != stop_id:
+        entity_registry.async_clear_config_subentry(
+            entry.entry_id, subentry.subentry_id
+        )
+        dr.async_get(hass).async_clear_config_subentry(
+            entry.entry_id, subentry.subentry_id, DOMAIN
+        )
+        return
+
+    # When all platforms are selected, the set is determined by Entur during setup.
+    # Keep the existing platform entries; setup will add the current set after reload.
+    if platform_mode == PLATFORM_MODE_ALL:
+        return
+
+    expected_unique_ids = (
+        set(quay_ids)
+        if platform_mode == PLATFORM_MODE_SELECTED and quay_ids
+        else {stop_id}
+    )
+    for registry_entry in entity_registry.entities.get_entries_for_config_entry_id(
+        entry.entry_id
+    ):
+        if (
+            registry_entry.config_subentry_id == subentry.subentry_id
+            and registry_entry.unique_id not in expected_unique_ids
+        ):
+            entity_registry.async_remove(registry_entry.entity_id)
 
 
 def _stop_is_configured(
