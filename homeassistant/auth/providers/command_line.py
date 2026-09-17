@@ -140,7 +140,11 @@ class CommandLineAuthProvider(AuthProvider):
             name=meta.get("name") or None,
             is_active=True,
             group=meta.get("group"),
-            local_only=(meta["local_only"] == "true" if "local_only" in meta else None),
+            local_only=(
+                meta["local_only"] == "true"
+                if meta.get("local_only") in ("true", "false")
+                else None
+            ),
         )
 
 
