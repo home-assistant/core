@@ -226,6 +226,9 @@
       "leak_water_protection_value": {
         "name": "Leak water protection value"
       },
+      "salt_setting": {
+        "name": "Salt setting"
+      },
       "seat_temp_level": {
         "name": "Seat temperature level"
       },
@@ -674,6 +677,9 @@
       }
     },
     "switch": {
+      "ai_switch": {
+        "name": "AI switch"
+      },
       "anion": {
         "name": "Anion"
       },

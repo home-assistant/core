@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import UnitOfTime, UnitOfVolume
+from homeassistant.const import UnitOfMass, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -92,6 +92,16 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         native_max_value=2550,
         native_step=50,
         native_unit_of_measurement=UnitOfVolume.LITERS,
+    ),
+    MideaNumberEntityDescription(
+        key="salt_setting",
+        translation_key="salt_setting",
+        models=[DeviceType.ED],
+        device_class=NumberDeviceClass.WEIGHT,
+        native_min_value=0,
+        native_max_value=255,
+        native_step=1,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
     ),
     MideaNumberEntityDescription(
         key="heating_level",

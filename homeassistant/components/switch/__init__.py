@@ -1,11 +1,9 @@
 """Component to interface with switches that can be controlled remotely."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import override
 
-import probatio
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DEVICE_CLASSES_SCHEMA, DOMAIN, SwitchDeviceClass  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,16 +33,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-class SwitchDeviceClass(StrEnum):
-    """Device class for switches."""
-
-    OUTLET = "outlet"
-    SWITCH = "switch"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
-
 
 # mypy: disallow-any-generics
 
