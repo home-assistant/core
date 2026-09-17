@@ -25,18 +25,18 @@ from homeassistant.config import _get_annotation, find_annotation
 from homeassistant.core import HomeAssistant
 from homeassistant.util.yaml.objects import NodeDictClass
 
-CONFIG_DIR = os.path.join(
-    os.path.dirname(__file__), "fixtures", "core", "config", "annotations", "basic"
-)
+from .common import get_fixture_path
+
+CONFIG_DIR = str(get_fixture_path("core/config/annotations/basic"))
 CONFIGURATION_YAML = os.path.join(CONFIG_DIR, "configuration.yaml")
 INCLUDED_YAML = os.path.join(CONFIG_DIR, "included.yaml")
 
 CONTAINER_XFAIL = pytest.mark.xfail(
     strict=True,
     reason=(
-        "probatio's mapping and sequence engines rebuild the container and carry "
-        "only __probatio_annotations__, while annotatedyaml records the location "
-        "in the __config_file__/__line__ slots, which nothing copies."
+        "probatio's mapping and sequence engines rebuild the container as a fresh "
+        "instance of the input's class, so the __config_file__/__line__ slots "
+        "annotatedyaml set on the original are never copied."
     ),
 )
 
@@ -48,12 +48,14 @@ CONTAINER_XFAIL = pytest.mark.xfail(
 def probatio_compile_policy(request: pytest.FixtureRequest) -> Generator[None]:
     """Run the test against the interpreted and the generated validator.
 
-    probatio validates a schema either by walking it interpreted or by running a
-    validator it generates for that shape, and the two rebuild containers through
-    separate code paths. The default AUTO policy uses both: interpreted until the
-    schema proves hot, generated afterwards. OFF and ON pin those two states
-    directly, so both paths are covered without depending on how many calls AUTO
-    takes to switch, which probatio treats as an internal detail and does not
+    The generated validator bails back to the interpreted engine for anything
+    that is not exactly a dict or a list, so a node class takes the same
+    interpreted rebuild under either policy today. Running both is what guards
+    that bail-out: if generated code ever handled dict subclasses inline without
+    copying the slots, only the generated case would move.
+
+    OFF and ON are pinned rather than the AUTO default because AUTO switches from
+    one to the other after a call count probatio keeps internal and does not
     export.
     """
     original = get_compile_policy()

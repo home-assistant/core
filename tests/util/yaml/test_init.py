@@ -23,16 +23,9 @@ from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import loader as yaml_loader
 from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass
 
-from tests.common import extract_stack_to_frame
+from tests.common import extract_stack_to_frame, get_fixture_path
 
-INCLUDE_DIRS_FIXTURE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "fixtures",
-    "core",
-    "config",
-    "annotations",
-    "include_dirs",
-)
+INCLUDE_DIRS_FIXTURE = str(get_fixture_path("core/config/annotations/include_dirs"))
 INCLUDE_DIRS_CONFIG = os.path.join(INCLUDE_DIRS_FIXTURE, "configuration.yaml")
 
 
