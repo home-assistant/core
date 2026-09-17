@@ -1,0 +1,7 @@
+{
+  "key_type": "rsa",
+  "common_name": "localhost",
+  "serial_number": 7874321003742461406579059977821094820997430651,
+  "not_valid_before": "2020-01-01T00:00:00Z",
+  "not_valid_after": "2120-01-01T00:00:00Z"
+}

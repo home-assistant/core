@@ -1,0 +1,7 @@
+{
+  "key_type": "ec",
+  "common_name": "localhost",
+  "serial_number": 451906666328137919614239063310537737806236443453,
+  "not_valid_before": "2020-01-01T00:00:00Z",
+  "not_valid_after": "2120-01-01T00:00:00Z"
+}
