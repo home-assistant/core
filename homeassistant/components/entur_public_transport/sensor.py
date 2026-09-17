@@ -1,6 +1,7 @@
 """Real-time information about public transport departures in Norway."""
 
 from collections.abc import Iterable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from random import randint
 from typing import override
@@ -136,10 +137,8 @@ async def _async_setup(
         proxy = EnturProxy(data)
         device_name = None
         if device_stop_id:
-            try:
+            with suppress(AttributeError, KeyError):
                 device_name = f"{name} {data.get_stop_info(device_stop_id).name}"
-            except (AttributeError, KeyError):
-                pass
 
         for place in data.all_stop_places_quays():
             try:

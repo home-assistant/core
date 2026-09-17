@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import probatio
 import pytest
 
+from homeassistant.components.entur_public_transport.const import DOMAIN
 from homeassistant.components.entur_public_transport.sensor import (
     PLATFORM_SCHEMA,
     EnturPublicTransportSensor,
