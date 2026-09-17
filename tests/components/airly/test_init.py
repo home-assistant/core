@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
-from homeassistant.components.airly.const import DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.components.airly.coordinator import set_update_interval
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -36,6 +36,36 @@ async def test_async_setup_entry(
     state = hass.states.get("sensor.home_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+    assert state.state == "4.37"
+
+
+async def test_async_setup_entry_with_nearest(
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+) -> None:
+    """Test a successful setup entry with nearest station."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="12.3-45.6",
+        data={
+            CONF_API_KEY: "foo",
+            CONF_LATITUDE: 12.3,
+            CONF_LONGITUDE: 45.6,
+            CONF_USE_NEAREST: True,
+        },
+    )
+
+    await init_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_airly_client.create_measurements_session_nearest.assert_called_once_with(
+        12.3, 45.6, max_distance_km=5
+    )
+    mock_airly_client.create_measurements_session_point.assert_not_called()
+
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state is not None
     assert state.state == "4.37"
 
 
