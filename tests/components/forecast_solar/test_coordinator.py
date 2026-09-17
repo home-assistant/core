@@ -1,10 +1,12 @@
 """Test the Forecast.Solar coordinator."""
 
+import asyncio
 import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -19,8 +21,9 @@ from homeassistant.components.forecast_solar.const import (
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 AZIMUTH_SENSOR = "sensor.roof_azimuth"
 DECLINATION_SENSOR = "sensor.roof_declination"
@@ -201,6 +204,47 @@ async def test_planes_sharing_sensor_request_one_refresh(
         await hass.async_block_till_done()
 
     request_refresh.assert_called_once()
+
+
+async def test_coordinator_recovery_refreshes_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test sensor changes during a recovery refresh don't queue another API call."""
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    hass.states.async_set(AZIMUTH_SENSOR, "unavailable", DEGREES)
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    estimate_calls = mock_forecast_solar.estimate.call_count
+
+    api_call_done = asyncio.Event()
+
+    async def _estimate() -> MagicMock:
+        await api_call_done.wait()
+        return mock_forecast_solar.estimate.return_value
+
+    mock_forecast_solar.estimate.side_effect = _estimate
+
+    # A compass keeps changing while the refresh its recovery started is in flight.
+    hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
+    await asyncio.sleep(0)
+    hass.states.async_set(AZIMUTH_SENSOR, "210", DEGREES)
+    api_call_done.set()
+    await hass.async_block_till_done()
+
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    assert mock_forecast_solar.estimate.call_count == estimate_calls + 1
 
 
 async def test_coordinator_api_failure_waits_for_schedule(

@@ -115,6 +115,15 @@ def _async_track_sensor_states(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
     """Follow a plane sensor's name, and retry an update that failed on it."""
+    refreshing = False
+
+    async def _async_refresh() -> None:
+        nonlocal refreshing
+        refreshing = True
+        try:
+            await entry.runtime_data.async_request_refresh()
+        finally:
+            refreshing = False
 
     @callback
     def _async_sensor_changed(event: Event[EventStateChangedData]) -> None:
@@ -132,10 +141,14 @@ def _async_track_sensor_states(
         coordinator = entry.runtime_data
         # Only sensor failures retry early; healthy updates and API failures keep
         # their schedule, so a fast-changing sensor can't spend the rate limit.
-        if not coordinator.last_update_success and isinstance(
-            coordinator.last_exception, SensorUpdateFailed
+        # A refresh in flight still reports the failure it is retrying, so without
+        # this guard every further change would queue another API call.
+        if (
+            not refreshing
+            and not coordinator.last_update_success
+            and isinstance(coordinator.last_exception, SensorUpdateFailed)
         ):
-            entry.async_create_task(hass, coordinator.async_request_refresh())
+            entry.async_create_task(hass, _async_refresh())
 
     return async_track_state_change_event(
         hass, _sensor_entity_ids(entry), _async_sensor_changed
