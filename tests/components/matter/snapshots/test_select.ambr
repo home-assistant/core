@@ -432,7 +432,7 @@
     'state': 'Auto Mop & Vacuum',
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_bottom-entry]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_bottom_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -453,7 +453,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_bottom',
+    'entity_id': 'select.eve_energy_20ecn4101_bottom_power_on_behavior',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -461,12 +461,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (bottom)',
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (bottom)',
+    'original_name': 'Power-on behavior',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -476,10 +476,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_bottom-state]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_bottom_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bottom Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -488,14 +488,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_bottom',
+    'entity_id': 'select.eve_energy_20ecn4101_bottom_power_on_behavior',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_top-entry]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_top_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -516,7 +516,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_top',
+    'entity_id': 'select.eve_energy_20ecn4101_top_power_on_behavior',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -524,12 +524,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on behavior (top)',
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior (top)',
+    'original_name': 'Power-on behavior',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -539,10 +539,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_top-state]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_top_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -551,7 +551,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_top',
+    'entity_id': 'select.eve_energy_20ecn4101_top_power_on_behavior',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

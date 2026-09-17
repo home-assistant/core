@@ -38,27 +38,37 @@
   dict({
     '00000000000004D2-00000000000000C7-MatterNodeDevice': dict({
       'children': dict({
+        '00000000000004D2-00000000000000C7-MatterNodeDevice-1': dict({
+          'entities': dict({
+            'button.eve_energy_20ecn4101_top_identify': 'Identify',
+            'select.eve_energy_20ecn4101_top_power_on_behavior': 'Power-on behavior',
+            'sensor.eve_energy_20ecn4101_top_current': 'Current',
+            'sensor.eve_energy_20ecn4101_top_energy': 'Energy',
+            'sensor.eve_energy_20ecn4101_top_power': 'Power',
+            'sensor.eve_energy_20ecn4101_top_voltage': 'Voltage',
+            'switch.eve_energy_20ecn4101_top': None,
+            'switch.eve_energy_20ecn4101_top_child_lock': 'Child lock',
+          }),
+          'name': 'top',
+        }),
+        '00000000000004D2-00000000000000C7-MatterNodeDevice-2': dict({
+          'entities': dict({
+            'button.eve_energy_20ecn4101_bottom_identify': 'Identify',
+            'select.eve_energy_20ecn4101_bottom_power_on_behavior': 'Power-on behavior',
+            'switch.eve_energy_20ecn4101_bottom': None,
+          }),
+          'name': 'bottom',
+        }),
       }),
       'entities': dict({
         'binary_sensor.eve_energy_20ecn4101_hardware_faults': 'Hardware faults',
         'binary_sensor.eve_energy_20ecn4101_network_faults': 'Network faults',
         'binary_sensor.eve_energy_20ecn4101_radio_faults': 'Radio faults',
-        'button.eve_energy_20ecn4101_identify_bottom': 'Identify (bottom)',
-        'button.eve_energy_20ecn4101_identify_top': 'Identify (top)',
-        'select.eve_energy_20ecn4101_power_on_behavior_bottom': 'Power-on behavior (bottom)',
-        'select.eve_energy_20ecn4101_power_on_behavior_top': 'Power-on behavior (top)',
-        'sensor.eve_energy_20ecn4101_current_top': 'Current (top)',
-        'sensor.eve_energy_20ecn4101_energy_top': 'Energy (top)',
-        'sensor.eve_energy_20ecn4101_power_top': 'Power (top)',
         'sensor.eve_energy_20ecn4101_reboot_count': 'Reboot count',
         'sensor.eve_energy_20ecn4101_thread_channel': 'Thread channel',
         'sensor.eve_energy_20ecn4101_thread_network_name': 'Thread network name',
         'sensor.eve_energy_20ecn4101_thread_routing_role': 'Thread routing role',
         'sensor.eve_energy_20ecn4101_uptime': 'Uptime',
-        'sensor.eve_energy_20ecn4101_voltage_top': 'Voltage (top)',
-        'switch.eve_energy_20ecn4101_child_lock_top': 'Child lock (top)',
-        'switch.eve_energy_20ecn4101_switch_bottom': 'Switch (bottom)',
-        'switch.eve_energy_20ecn4101_switch_top': 'Switch (top)',
         'update.eve_energy_20ecn4101_firmware': 'Firmware',
       }),
       'name': 'Eve Energy 20ECN4101',
