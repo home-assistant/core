@@ -174,9 +174,7 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
     hass: HomeAssistant,
 ) -> None:
     """Test that each subentry gets an Entur client with its own filter."""
-    config = PLATFORM_SCHEMA(
-        {"platform": "entur_public_transport", "stop_ids": []}
-    )
+    config = PLATFORM_SCHEMA({"platform": "entur_public_transport", "stop_ids": []})
     subentries = [
         SimpleNamespace(
             subentry_type="stop_place",
