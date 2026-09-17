@@ -1,6 +1,8 @@
 """Test Matter covers."""
 
 from math import floor
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -14,7 +16,10 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.matter.cover import STATE_WRITE_DEBOUNCE_COOLDOWN
+from homeassistant.components.matter.cover import (
+    STATE_WRITE_DEBOUNCE_COOLDOWN,
+    _extract_struct_field,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,6 +48,29 @@ async def trigger_subscription_callback_debounced(
     freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("value", "index", "attr_name", "expected"),
+    [
+        pytest.param(None, 0, "position", None, id="none_value"),
+        pytest.param({0: 30}, 0, "position", 30, id="dict_int_key"),
+        pytest.param({"0": 30}, 0, "position", 30, id="dict_str_key"),
+        pytest.param({0: 0}, 0, "position", 0, id="dict_int_key_falsy_value"),
+        pytest.param({1: 30}, 0, "position", None, id="dict_missing_key"),
+        pytest.param(
+            SimpleNamespace(position=30), 0, "position", 30, id="object_attribute"
+        ),
+        pytest.param(
+            SimpleNamespace(), 0, "position", None, id="object_missing_attribute"
+        ),
+    ],
+)
+def test_extract_struct_field(
+    value: Any, index: int, attr_name: str, expected: Any
+) -> None:
+    """Test extracting a field from a Matter struct value in either representation."""
+    assert _extract_struct_field(value, index, attr_name) == expected
 
 
 @pytest.mark.usefixtures("matter_devices")
