@@ -62,6 +62,7 @@ safe-outputs:
   create-pull-request-review-comment:
     max: 15
     target: "${{ needs.prepare.outputs.pr_number }}"
+    commit-id: "${{ needs.prepare.outputs.head_sha }}"
   needs:
     - prepare
 jobs:
