@@ -10,6 +10,7 @@ from zentraly import (
     ClimateOperationMode,
     DeviceModel,
     ZentralyClimateApi,
+    ZentralyConnectionError,
     get_device_commands,
 )
 
@@ -222,3 +223,44 @@ async def test_periodic_refresh_during_reconnect(
         await entity._async_periodic_refresh(dt_util.utcnow())
         await hass.async_block_till_done()
         assert refresh.await_count == 2
+
+
+@pytest.mark.parametrize("error", [ZentralyConnectionError, asyncio.CancelledError])
+async def test_failed_refresh_cleans_up_reads(
+    platform_device: MagicMock, error: type[BaseException]
+) -> None:
+    """Do not leave sibling reads active after failure or cancellation."""
+    api = MagicMock(spec=ZentralyClimateApi)
+    api.configuration = get_device_commands(DeviceModel.ZTTIN).climate_configuration
+    api.supports.side_effect = {
+        ClimateCapability.LOCAL_TEMPERATURE,
+        ClimateCapability.TARGET_TEMPERATURE,
+    }.__contains__
+    started = asyncio.Event()
+    release = asyncio.Event()
+    cleaned_up = asyncio.Event()
+
+    async def failing_read() -> float:
+        await started.wait()
+        raise error()
+
+    async def pending_read() -> float:
+        started.set()
+        try:
+            await release.wait()
+        finally:
+            await asyncio.sleep(0)
+            cleaned_up.set()
+        return 21.0
+
+    api.async_get_current_temperature.side_effect = failing_read
+    api.async_get_target_temperature.side_effect = pending_read
+    entity = ZentralyClimate(platform_device, climate_api=api)
+    try:
+        with pytest.raises(error):
+            await entity.async_update()
+        assert cleaned_up.is_set()
+    finally:
+        release.set()
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)

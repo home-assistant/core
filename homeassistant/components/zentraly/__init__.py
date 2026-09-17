@@ -1,10 +1,12 @@
 """The Zentraly integration."""
 
+import asyncio
 from datetime import datetime
 import logging
 
 from zentraly import (
     ZentralyApi,
+    ZentralyApiError,
     ZentralyAuthenticationError,
     ZentralyConnectionError,
     get_device_commands,
@@ -19,7 +21,7 @@ from homeassistant.const import (
     CONF_PORT,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -74,7 +76,13 @@ async def _async_refresh_device_info(
     if not device.connected:
         return
 
-    info = await device.async_get_device_info()
+    try:
+        info = await device.async_get_device_info()
+    except ZentralyApiError:
+        _LOGGER.debug(
+            "Unable to refresh Zentraly device information for %s", device.device_id
+        )
+        return
     firmware_version = info.firmware_version
     hardware_version = info.hardware_version
 
@@ -117,24 +125,39 @@ def _register_device_info_polling(
     if not device.supports_device_info:
         return
 
-    async def _async_periodic_device_info_refresh(
-        now: datetime,
-    ) -> None:
-        """Periodically refresh Zentraly device information."""
+    refresh_task: asyncio.Task[None] | None = None
 
-        await _async_refresh_device_info(
-            device,
-            device_registry,
-            registry_device_id,
+    @callback
+    def _async_schedule_device_info_refresh(now: datetime | None = None) -> None:
+        """Schedule one metadata read, owned by the config entry."""
+        nonlocal refresh_task
+        if not device.connected or (
+            refresh_task is not None and not refresh_task.done()
+        ):
+            return
+        refresh_task = entry.async_create_background_task(
+            hass,
+            _async_refresh_device_info(device, device_registry, registry_device_id),
+            f"Refresh Zentraly device information: {device.device_id}",
         )
 
+    @callback
+    def _async_connection_changed(connected: bool) -> None:
+        """Refresh metadata after a connection is established."""
+        if connected:
+            _async_schedule_device_info_refresh()
+
+    entry.async_on_unload(
+        device.add_connection_state_listener(_async_connection_changed)
+    )
     entry.async_on_unload(
         async_track_time_interval(
             hass,
-            _async_periodic_device_info_refresh,
+            _async_schedule_device_info_refresh,
             DEVICE_INFO_INTERVAL,
         )
     )
+    _async_schedule_device_info_refresh()
 
 
 async def async_setup_entry(

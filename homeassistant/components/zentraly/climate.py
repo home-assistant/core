@@ -271,7 +271,13 @@ class ZentralyClimate(ClimateEntity):
         ]
 
         if tasks:
-            await asyncio.gather(*tasks)
+            try:
+                await asyncio.gather(*tasks)
+            finally:
+                for task in tasks:
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
 
         if current_temperature_task is not None:
             current_temperature = current_temperature_task.result()
