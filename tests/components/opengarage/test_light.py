@@ -195,7 +195,7 @@ async def test_light_empty_result_requires_confirmed_state(
     mock_opengarage.update_state.reset_mock()
     mock_opengarage.update_state.return_value["light"] = reported
 
-    with pytest.raises(HomeAssistantError, match="device is unavailable"):
+    with pytest.raises(HomeAssistantError, match="Unable to confirm the requested"):
         await hass.services.async_call(
             light.DOMAIN,
             light.SERVICE_TURN_ON,
@@ -232,7 +232,7 @@ async def test_light_noop_cannot_use_cached_confirmation(
     mock_opengarage.update_state.reset_mock()
     mock_opengarage.update_state.return_value = response
 
-    with pytest.raises(HomeAssistantError, match="device is unavailable"):
+    with pytest.raises(HomeAssistantError, match="Unable to confirm the requested"):
         await hass.services.async_call(
             light.DOMAIN,
             light.SERVICE_TURN_ON,

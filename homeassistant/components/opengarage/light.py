@@ -100,7 +100,7 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
                 return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="light_control_unavailable",
+                translation_key="light_control_state_not_confirmed",
             )
 
         raise HomeAssistantError(
