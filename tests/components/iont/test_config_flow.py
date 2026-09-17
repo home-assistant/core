@@ -1,11 +1,8 @@
 """Tests for the IONT config flow."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from modbus_connection import ModbusTimeoutError, ModbusUnit
+from modbus_connection import ModbusTimeoutError
 from modbus_connection.encode import encode_int
 from modbus_connection.mock import MockModbusUnit
 import pytest
@@ -93,13 +90,9 @@ async def test_user_flow_cannot_connect(
 
 async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
     """A device already held over other link settings cannot be probed."""
-
-    @asynccontextmanager
-    async def refuse(
-        hass: HomeAssistant, params: Any, unit_id: int
-    ) -> AsyncIterator[ModbusUnit]:
-        raise HomeAssistantError("in use")
-        yield  # pragma: no cover
+    refuse = MagicMock()
+    refuse.return_value.__aenter__ = AsyncMock(side_effect=HomeAssistantError("in use"))
+    refuse.return_value.__aexit__ = AsyncMock(return_value=False)
 
     flow_id = await _start_user_flow(hass)
     with patch(
