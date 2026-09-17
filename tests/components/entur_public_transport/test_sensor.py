@@ -141,6 +141,30 @@ def test_subentries_keep_route_filters_per_stop() -> None:
     ]
 
 
+def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
+    """Test that existing YAML stops remain independent from UI stops."""
+    config = PLATFORM_SCHEMA(
+        {
+            "stop_ids": ["NSR:StopPlace:legacy"],
+            "line_whitelist": ["RUT:Line:legacy"],
+        }
+    )
+    subentries = [
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:ui",
+                "line_whitelist": ["SKY:Line:ui"],
+            },
+        )
+    ]
+
+    assert _stop_configurations(config, subentries) == [
+        (["NSR:StopPlace:legacy"], ["RUT:Line:legacy"]),
+        (["NSR:StopPlace:ui"], ["SKY:Line:ui"]),
+    ]
+
+
 async def test_async_setup_entry_applies_route_filter_per_stop(
     hass: HomeAssistant,
 ) -> None:
