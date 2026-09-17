@@ -3,9 +3,9 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pyvlx import PyVLX, PyVLXException
 from pyvlx.discovery import sanitize_hostname
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
@@ -16,10 +16,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -119,9 +119,9 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,
@@ -220,9 +220,9 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,
