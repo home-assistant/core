@@ -418,7 +418,14 @@ async def test_partial_device_info_after_restart(
     assert updated.hw_version == hardware
 
 
-async def test_climate_periodic_refresh_lifecycle(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "initial_read",
+    [19.0, ZentralyConnectionError()],
+    ids=["success", "connection-error"],
+)
+async def test_climate_periodic_refresh_lifecycle(
+    hass: HomeAssistant, initial_read: float | ZentralyConnectionError
+) -> None:
     """Refresh climate every five minutes and cancel polling when unloading."""
     entry = _parent_entry()
     entry.add_to_hass(hass)
@@ -435,7 +442,7 @@ async def test_climate_periodic_refresh_lifecycle(hass: HomeAssistant) -> None:
         capability in commands.capabilities
     )
     climate_api.async_get_humidity.return_value = 45.0
-    climate_api.async_get_current_temperature.return_value = 19.0
+    climate_api.async_get_current_temperature.side_effect = [initial_read, 19.0]
     climate_api.async_get_target_temperature.return_value = 21.0
     climate_api.async_get_operation_mode.return_value = ClimateOperationMode.MANUAL
     climate_api.async_get_heat_demand.return_value = False
@@ -454,6 +461,8 @@ async def test_climate_periodic_refresh_lifecycle(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert len(hass.states.async_all("climate")) == 1
         climate_api.async_get_current_temperature.reset_mock()
         now = dt_util.utcnow()
         async_fire_time_changed(hass, now + timedelta(minutes=4))
@@ -466,3 +475,28 @@ async def test_climate_periodic_refresh_lifecycle(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, now + timedelta(minutes=10))
         await hass.async_block_till_done()
         climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
+async def test_setup_failure_disconnects(hass: HomeAssistant) -> None:
+    """Close the connection when platform setup fails after connecting."""
+    entry = _parent_entry()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.zentraly.ZentralyApi.async_validate_password",
+            return_value=PARENT_MAC,
+        ),
+        patch("homeassistant.components.zentraly.ZentralyApi.async_connect"),
+        patch(
+            "homeassistant.components.zentraly.ZentralyApi.async_disconnect"
+        ) as disconnect,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=ConfigEntryError("Platform setup failed"),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.SETUP_ERROR
+        disconnect.assert_awaited_once_with()

@@ -48,7 +48,6 @@ async def async_setup_entry(
     if parent_entities:
         async_add_entities(
             parent_entities,
-            True,
         )
 
 
@@ -115,6 +114,8 @@ class ZentralyClimate(ClimateEntity):
                 SCAN_INTERVAL,
             )
         )
+
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def _async_periodic_refresh(
         self,

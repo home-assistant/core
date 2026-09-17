@@ -196,6 +196,7 @@ async def async_setup_entry(
 
     # Connection failures are retried inside the library's background task.
     await api.async_connect()
+    entry.async_on_unload(api.async_disconnect)
 
     entry.runtime_data = runtime_data
 
@@ -230,12 +231,7 @@ async def async_unload_entry(
 
     platforms = [Platform.CLIMATE]
 
-    unloaded = await hass.config_entries.async_unload_platforms(
+    return await hass.config_entries.async_unload_platforms(
         entry,
         platforms,
     )
-
-    if unloaded:
-        await entry.runtime_data.api.async_disconnect()
-
-    return unloaded
