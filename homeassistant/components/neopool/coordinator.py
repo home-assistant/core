@@ -36,8 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _FILT_TIMERS = ("filtration1", "filtration2", "filtration3")
 
-# Config option gating each aux and light timer block. Base and second-subtimer
-# aux blocks share the same option; the b subtimer additionally needs context.
+# Config option gating each aux and light timer block.
 _TIMER_OPTIONS: dict[str, str] = {
     "relay_aux1": CONF_USE_AUX1,
     "relay_aux1b": CONF_USE_AUX1,
@@ -80,8 +79,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Serializes masked read-modify-write across siblings sharing a register.
         self.masked_write_lock = asyncio.Lock()
         # One lock per timer block serializes the library's read-modify-write
-        # across the block's start/stop sibling entities, which share a register
-        # set. Distinct blocks keep distinct locks, so they still write freely.
+        # across the block's start/stop sibling entities, which share a register.
         self._timer_write_locks: defaultdict[str, asyncio.Lock] = defaultdict(
             asyncio.Lock
         )
@@ -156,9 +154,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the timer block names to poll.
 
         Base aux and light blocks poll on their config option. The second aux
-        subtimer and filtration blocks additionally require an active context,
-        so they poll only while one of their entities is enabled. A context is
-        the block name registered by a time entity.
+        subtimer and filtration blocks additionally require an active context
+        (the block name registered by an enabled time entity).
         """
         options = self.config_entry.options
         active = {ctx for ctx in self.async_contexts() if isinstance(ctx, str)}
@@ -170,9 +167,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 continue
             if not options.get(option_key, False):
                 continue
-            # Base blocks stay option-gated so the aux switch / light entity
-            # keep their enable state for the write guard; the b subtimer
-            # (time only) also needs an active context.
+            # The b subtimer (time only) also needs an active context.
             if key.endswith("b") and key not in active:
                 continue
             # Light GPIO invalid: the light entity gates the same, so
