@@ -299,6 +299,51 @@ async def test_coordinator_multi_plane_initialization(
     assert planes[0].kwp == 3.0  # 3000 / 1000
 
 
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_plane_follows_sensor_friendly_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a plane's title follows the friendly name of the sensor it reads."""
+    hass.states.async_set(
+        "sensor.roof_azimuth",
+        "100",
+        {"unit_of_measurement": "°", "friendly_name": "Roof angle"},
+    )
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="plane_1",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / Roof angle (sensor) / 5100W",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.roof_azimuth",
+        "100",
+        {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
+    )
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.title == "30° / Camper angle (sensor) / 5100W"
+
+
 @pytest.mark.parametrize(
     "title",
     [

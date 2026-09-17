@@ -111,13 +111,24 @@ def _sensor_entity_ids(entry: ForecastSolarConfigEntry) -> set[str]:
 
 
 @callback
-def _async_refresh_on_sensor_change(
+def _async_track_sensor_states(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
-    """Retry an update that failed on a sensor as soon as a plane sensor changes."""
+    """Follow a plane sensor's name, and retry an update that failed on it."""
 
     @callback
     def _async_sensor_changed(event: Event[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        # A plane titled after its sensor follows the sensor's friendly name.
+        if old_state and new_state and old_state.name != new_state.name:
+            entity_id = event.data["entity_id"]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
+                if entity_id in (subentry.data.get(key) for key in _SENSOR_KEYS):
+                    hass.config_entries.async_update_subentry(
+                        entry, subentry, title=plane_title(hass, subentry.data)
+                    )
+
         coordinator = entry.runtime_data
         # Only sensor failures retry early; healthy updates and API failures keep
         # their schedule, so a fast-changing sensor can't spend the rate limit.
@@ -189,7 +200,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(_async_track_sensor_renames(hass, entry))
-    entry.async_on_unload(_async_refresh_on_sensor_change(hass, entry))
+    entry.async_on_unload(_async_track_sensor_states(hass, entry))
 
     return True
 
