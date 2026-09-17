@@ -267,6 +267,34 @@ async def test_user_flow_timeout_error_maps_to_ha_error(hass: HomeAssistant) -> 
     assert result["errors"] == {CONF_HOST: ERR_TIMEOUT}
 
 
+async def test_user_flow_disconnects_when_connection_test_raises(
+    hass: HomeAssistant,
+) -> None:
+    """An unexpected exception from connection_test() must not leak the socket.
+
+    _validate_connection() previously only disconnected on the happy path;
+    an exception propagating out of connection_test() itself (rather than
+    the already-handled False-return case) skipped disconnect() and left
+    the WebSocket open.
+    """
+    disconnect = AsyncMock(return_value=None)
+    with (
+        patch(
+            f"{_API_PATH}.connection_test",
+            AsyncMock(side_effect=RuntimeError("boom")),
+        ),
+        patch(f"{_API_PATH}.disconnect", disconnect),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        with pytest.raises(RuntimeError, match="boom"):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], _user_input()
+            )
+    disconnect.assert_awaited_once()
+
+
 # ---------------------------
 #   zeroconf step
 # ---------------------------

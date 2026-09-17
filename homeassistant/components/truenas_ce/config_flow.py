@@ -233,16 +233,24 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return
 
-        conn, errorcode = await api.connection_test()
-        if conn:
-            system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
-            if system_id:
-                config[CONF_SYSTEM_ID] = system_id
-            if not config.get(CONF_NAME):
-                config[CONF_NAME] = await _async_get_hostname(
-                    api, config.get(CONF_HOST, "")
-                )
-        await _async_safe_disconnect(api)
+        conn = False
+        errorcode = ""
+        try:
+            conn, errorcode = await api.connection_test()
+            if conn:
+                system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
+                if system_id:
+                    config[CONF_SYSTEM_ID] = system_id
+                if not config.get(CONF_NAME):
+                    config[CONF_NAME] = await _async_get_hostname(
+                        api, config.get(CONF_HOST, "")
+                    )
+        finally:
+            # connection_test() can propagate a non-TrueNASError (e.g. a bug
+            # inside aiotruenas itself); disconnecting here too, not just on
+            # the happy path, ensures an already-open WebSocket is never
+            # leaked when that happens.
+            await _async_safe_disconnect(api)
 
         if not conn:
             ha_error = _map_error_to_ha(errorcode)

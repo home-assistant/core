@@ -373,12 +373,13 @@ class TrueNASAPI:
                 subscription_id, event_timeout=event_timeout
             )
             if events:
-                _LOGGER.debug(
-                    "TrueNAS %s get_subscription_events drained %d events: %s",
-                    self._host,
-                    len(events),
-                    _summarize_payload(events),
-                )
+                if _LOGGER.isEnabledFor(DEBUG):
+                    _LOGGER.debug(
+                        "TrueNAS %s get_subscription_events drained %d events: %s",
+                        self._host,
+                        len(events),
+                        _summarize_payload(events),
+                    )
                 return events, "", False
             if not await self._client.is_subscribed(subscription_id):
                 # No exception was raised -- the client drains a disconnect's
