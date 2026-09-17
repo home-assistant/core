@@ -1,5 +1,6 @@
 """Tests for script.quality_scale_review.rules."""
 
+from collections.abc import Callable
 import json
 from typing import Any
 
@@ -9,6 +10,8 @@ from script.quality_scale_review import rules
 from script.quality_scale_review.models import RuleDoc
 
 _TOKEN = "test-token"
+
+type InstallGraphql = Callable[[dict[str, Any]], None]
 
 
 def _graphql_payload(
@@ -29,7 +32,7 @@ def _entry(name: str, text: str) -> dict[str, Any]:
 
 
 @pytest.fixture
-def install_graphql(monkeypatch: pytest.MonkeyPatch) -> Any:
+def install_graphql(monkeypatch: pytest.MonkeyPatch) -> InstallGraphql:
     """Return a factory installing a canned response for the GraphQL query."""
 
     def install(payload: dict[str, Any]) -> None:
@@ -42,7 +45,9 @@ def install_graphql(monkeypatch: pytest.MonkeyPatch) -> Any:
     return install
 
 
-def test_fetch_docs_reads_the_tiers_and_the_rule_pages(install_graphql: Any) -> None:
+def test_fetch_docs_reads_the_tiers_and_the_rule_pages(
+    install_graphql: InstallGraphql,
+) -> None:
     """Every tier and every markdown page of the rules directory is collected."""
     install_graphql(
         _graphql_payload(
@@ -70,7 +75,7 @@ def test_fetch_docs_reads_the_tiers_and_the_rule_pages(install_graphql: Any) -> 
 
 
 def test_fetch_docs_accepts_a_tier_entry_that_is_an_object(
-    install_graphql: Any,
+    install_graphql: InstallGraphql,
 ) -> None:
     """A tier entry may name the rule directly or carry it in an `id` field."""
     install_graphql(
@@ -89,7 +94,7 @@ def test_fetch_docs_accepts_a_tier_entry_that_is_an_object(
 
 
 def test_fetch_docs_ignores_entries_that_are_not_markdown(
-    install_graphql: Any,
+    install_graphql: InstallGraphql,
 ) -> None:
     """Non-markdown entries of the rules directory are not rule pages."""
     install_graphql(
