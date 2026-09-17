@@ -2748,7 +2748,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[mock_closure_covering_lift][button.mock_closure_covering_lift_identify-entry]
+# name: test_buttons[mock_closure_roof_window][button.mock_closure_roof_window_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2762,7 +2762,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_closure_covering_lift_identify',
+    'entity_id': 'button.mock_closure_roof_window_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2781,18 +2781,18 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000048-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000047-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[mock_closure_covering_lift][button.mock_closure_covering_lift_identify-state]
+# name: test_buttons[mock_closure_roof_window][button.mock_closure_roof_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Closure Covering Lift Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Closure Roof Window Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.mock_closure_covering_lift_identify',
+    'entity_id': 'button.mock_closure_roof_window_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
