@@ -225,3 +225,33 @@ async def test_sensor_missing_dns_rcode(
 
     state = hass.states.get("sensor.backend_service_dns_response_code")
     assert state is None
+
+
+async def test_sensor_dynamic_add_endpoint(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that new endpoint sensors are dynamically created on coordinator update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.new_service_response_time") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        *mock_gatus_client.get_endpoints_statuses.return_value,
+        EndpointStatus(
+            key="new_service",
+            name="New Service",
+            group=None,
+            results=[Result(success=True, status=200, duration=15000000)],
+        ),
+    ]
+
+    freezer.tick(300)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.new_service_response_time")
+    assert state is not None
+    assert state.state == "15.0"
