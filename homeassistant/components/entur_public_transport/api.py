@@ -146,9 +146,7 @@ async def async_search_stop_places(
     return _parse_stop_places(payload)
 
 
-async def async_get_stop_place(
-    hass: HomeAssistant, stop_id: str
-) -> EnturStopPlace:
+async def async_get_stop_place(hass: HomeAssistant, stop_id: str) -> EnturStopPlace:
     """Return one stop place from the Geocoder by its canonical ID."""
     session = async_get_clientsession(hass)
     try:
