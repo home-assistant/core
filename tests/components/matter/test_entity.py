@@ -102,37 +102,36 @@ async def test_multi_endpoint_entity_translation_key(
 
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
-async def test_label_modified_entity_translation_key(
+async def test_label_modified_endpoint_child_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that label-modified entities have a translation key and a label postfix.
+    """Test endpoints labeled via Matter labels become named child devices.
 
-    When a device uses Matter labels to differentiate endpoints,
-    the entity name gets the label as a postfix. The translation key
-    must still always be set for translations.
+    The Eve Energy dual outlet exposes two On/Off Plug-in Unit endpoints labeled
+    ``top`` and ``bottom``. Each becomes its own child device named after the
+    label, and its switch entity gets a clean name (no numeric/label postfix)
+    while still carrying the translation key for state attribute translations.
     """
     # Top outlet
-    entry_top = entity_registry.async_get("switch.eve_energy_20ecn4101_switch_top")
+    entry_top = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
     assert entry_top is not None
     assert entry_top.translation_key == "switch"
-    assert entry_top.original_name == "Switch (top)"
+    assert entry_top.original_name is None
 
-    state_top = hass.states.get("switch.eve_energy_20ecn4101_switch_top")
+    state_top = hass.states.get("switch.eve_energy_20ecn4101_top")
     assert state_top is not None
-    assert state_top.name == "Eve Energy 20ECN4101 Switch (top)"
+    assert state_top.name == "top"
 
     # Bottom outlet
-    entry_bottom = entity_registry.async_get(
-        "switch.eve_energy_20ecn4101_switch_bottom"
-    )
+    entry_bottom = entity_registry.async_get("switch.eve_energy_20ecn4101_bottom")
     assert entry_bottom is not None
     assert entry_bottom.translation_key == "switch"
-    assert entry_bottom.original_name == "Switch (bottom)"
+    assert entry_bottom.original_name is None
 
-    state_bottom = hass.states.get("switch.eve_energy_20ecn4101_switch_bottom")
+    state_bottom = hass.states.get("switch.eve_energy_20ecn4101_bottom")
     assert state_bottom is not None
-    assert state_bottom.name == "Eve Energy 20ECN4101 Switch (bottom)"
+    assert state_bottom.name == "bottom"
 
 
 @pytest.mark.usefixtures("matter_node")

@@ -16,6 +16,7 @@ from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
 from .helpers import (
     MatterConfigEntry,
+    get_child_device_id,
     get_device_endpoint,
     get_device_id,
     get_discovery_key,
@@ -105,6 +106,17 @@ class MatterAdapter:
             if get_device_endpoint(endpoint) != endpoint:
                 # A composed device is represented by a single HA device, which is
                 # only removed once its compose parent endpoint is removed.
+                return
+            # An endpoint split into its own child device is removed on its own,
+            # without touching the node (parent) device.
+            child_identifier = (
+                DOMAIN,
+                f"{ID_TYPE_DEVICE_ID}_{get_child_device_id(server_info, endpoint)}",
+            )
+            if child_device := device_registry.async_get_child_device_by_identifier(
+                child_identifier, self.config_entry.entry_id
+            ):
+                device_registry.async_remove_device(child_device.id)
                 return
             node_device_id = get_device_id(server_info, endpoint)
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")

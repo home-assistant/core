@@ -5844,7 +5844,7 @@
     'state': '0',
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_on_level_1-entry]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5859,11 +5859,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_on_level_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_on_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5871,12 +5871,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'On level (1)',
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'On level (1)',
+    'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5886,83 +5886,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_on_level_1-state]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light On level (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 On level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_on_level_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_on_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_on_level_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_on_level_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level (2)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-2-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_on_level_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light On level (2)',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_on_level_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_color_temperature_1-entry]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_power_on_color_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5977,11 +5918,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_color_temperature_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_power_on_color_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5989,12 +5930,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on color temperature (1)',
+    'object_id_base': 'Power-on color temperature',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on color temperature (1)',
+    'original_name': 'Power-on color temperature',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6004,10 +5945,10 @@
     'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_color_temperature_1-state]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_power_on_color_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on color temperature (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Power-on color temperature',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 6535,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -6015,74 +5956,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_color_temperature_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_power_on_color_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_color_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6535,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_color_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power-on color temperature (2)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Power-on color temperature (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_on_color_temperature',
-    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-2-power_on_color_temperature-768-16400',
-    'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
-  })
-# ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_color_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on color temperature (2)',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6535,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_color_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_level_1-entry]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_power_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6097,11 +5978,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_level_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_power_on_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6109,12 +5990,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on level (1)',
+    'object_id_base': 'Power-on level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on level (1)',
+    'original_name': 'Power-on level',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6124,24 +6005,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_level_1-state]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_1_power_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on level (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Power-on level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_level_1',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_1_power_on_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_level_2-entry]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6156,11 +6037,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_level_2',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_on_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6168,12 +6049,131 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power-on level (2)',
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on level (2)',
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-2-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 On level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_power_on_color_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_power_on_color_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on color temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on color temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_on_color_temperature',
+    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-2-power_on_color_temperature-768-16400',
+    'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
+  })
+# ---
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_power_on_color_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Power-on color temperature',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6535,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_power_on_color_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_power_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-2')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_power_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on level',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6183,17 +6183,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_power_on_level_2-state]
+# name: test_numbers[nanoleaf_nl77k1][number.multicolor_ceiling_light_endpoint_2_power_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on level (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Power-on level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.multicolor_ceiling_light_power_on_level_2',
+    'entity_id': 'number.multicolor_ceiling_light_endpoint_2_power_on_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
