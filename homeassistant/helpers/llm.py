@@ -25,6 +25,7 @@ from . import (
     config_validation as cv,
     device_registry as dr,
     floor_registry as fr,
+    frame,
     intent,
     selector,
     service,
@@ -213,6 +214,14 @@ class APIInstance:
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
             return result
+        frame.report_usage(
+            "returns a JSON object from a tool, which is deprecated; return a "
+            "ToolResult instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+        )
         return ToolResult(data=result)
 
 
