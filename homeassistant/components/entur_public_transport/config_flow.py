@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -76,6 +77,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         self._selected_route_labels: dict[str, str] = {}
         self._selected_platform_mode = PLATFORM_MODE_STOP_PLACE
         self._selected_quay_ids: list[str] = []
+        self._selected_show_on_map = False
 
     @classmethod
     @callback
@@ -103,6 +105,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ROUTE_LABELS: self._selected_route_labels,
                 CONF_PLATFORM_MODE: self._selected_platform_mode,
                 CONF_QUAY_IDS: self._selected_quay_ids,
+                CONF_SHOW_ON_MAP: self._selected_show_on_map,
             },
         )
         result["next_flow"] = (
@@ -225,6 +228,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._selected_platform_mode = mode
                 self._selected_quay_ids = quay_ids
+                self._selected_show_on_map = user_input.get(CONF_SHOW_ON_MAP, False)
                 return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -233,6 +237,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._quays,
                 self._selected_platform_mode,
                 self._selected_quay_ids,
+                self._selected_show_on_map,
             ),
             errors=errors,
             description_placeholders={
@@ -360,6 +365,7 @@ def _platform_schema(
     quays: tuple[EnturQuay, ...],
     selected_mode: str,
     selected_quay_ids: list[str],
+    show_on_map: bool,
 ) -> probatio.Schema:
     """Build the platform detail selector for a stop place."""
     options = [
@@ -374,7 +380,8 @@ def _platform_schema(
     schema: dict[Any, Any] = {
         probatio.Required(CONF_PLATFORM_MODE, default=selected_mode): SelectSelector(
             SelectSelectorConfig(options=options)
-        )
+        ),
+        probatio.Optional(CONF_SHOW_ON_MAP, default=show_on_map): BooleanSelector(),
     }
     if quays:
         available_quay_ids = {quay.quay_id for quay in quays}
@@ -435,11 +442,13 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self._selected_route_labels: dict[str, str] = {}
         self._selected_platform_mode = PLATFORM_MODE_STOP_PLACE
         self._selected_quay_ids: list[str] = []
+        self._selected_show_on_map = False
         self._existing_line_whitelist: list[str] = []
         self._existing_route_labels: dict[str, str] = {}
         self._existing_stop_id: str | None = None
         self._existing_platform_mode = PLATFORM_MODE_ALL
         self._existing_quay_ids: list[str] = []
+        self._existing_show_on_map = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -457,6 +466,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 CONF_PLATFORM_MODE, PLATFORM_MODE_STOP_PLACE
             )
             self._selected_quay_ids = list(user_input.get(CONF_QUAY_IDS, []))
+            self._selected_show_on_map = user_input.get(CONF_SHOW_ON_MAP, False)
             return await self.async_step_confirm()
 
         return await self._async_step_search("user", user_input)
@@ -477,6 +487,9 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         )
         self._existing_quay_ids = list(
             self._get_reconfigure_subentry().data.get(CONF_QUAY_IDS, [])
+        )
+        self._existing_show_on_map = self._get_reconfigure_subentry().data.get(
+            CONF_SHOW_ON_MAP, False
         )
         return await self._async_step_search("reconfigure", user_input)
 
@@ -526,9 +539,11 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 if self._selected_place.stop_id == self._existing_stop_id:
                     self._selected_platform_mode = self._existing_platform_mode
                     self._selected_quay_ids = self._existing_quay_ids
+                    self._selected_show_on_map = self._existing_show_on_map
                 else:
                     self._selected_platform_mode = PLATFORM_MODE_STOP_PLACE
                     self._selected_quay_ids = []
+                    self._selected_show_on_map = False
                 try:
                     self._routes = await async_get_stop_routes(
                         self.hass, self._selected_place.stop_id
@@ -591,6 +606,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             else:
                 self._selected_platform_mode = mode
                 self._selected_quay_ids = quay_ids
+                self._selected_show_on_map = user_input.get(CONF_SHOW_ON_MAP, False)
                 return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -599,6 +615,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 self._quays,
                 self._selected_platform_mode,
                 self._selected_quay_ids,
+                self._selected_show_on_map,
             ),
             errors=errors,
             description_placeholders={
@@ -639,6 +656,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 CONF_ROUTE_LABELS: self._selected_route_labels,
                 CONF_PLATFORM_MODE: self._selected_platform_mode,
                 CONF_QUAY_IDS: self._selected_quay_ids,
+                CONF_SHOW_ON_MAP: self._selected_show_on_map,
                 CONF_STOP_PLACE_TYPES: list(self._selected_place.stop_place_types),
                 CONF_STOP_PLACE_METADATA_VERSION: STOP_PLACE_METADATA_VERSION,
             }

@@ -75,6 +75,7 @@ class EnturStopConfiguration:
     quays: tuple[str, ...]
     line_whitelist: tuple[str, ...]
     expand_platforms: bool
+    show_on_map: bool
     device_stop_id: str | None = None
     device_stop_name: str | None = None
 
@@ -130,7 +131,6 @@ async def _async_setup(
     """Set up Entur sensors from configuration."""
 
     name = config[CONF_NAME]
-    show_on_map = config[CONF_SHOW_ON_MAP]
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
@@ -174,7 +174,7 @@ async def _async_setup(
                     proxy,
                     given_name,
                     place,
-                    show_on_map,
+                    stop_config.show_on_map,
                     stop_config.device_stop_id,
                     device_name,
                 )
@@ -195,6 +195,7 @@ def _stop_configurations(
                 quays=tuple(stop_id for stop_id in stop_ids if "Quay" in stop_id),
                 line_whitelist=tuple(config.get(CONF_WHITELIST_LINES, [])),
                 expand_platforms=config[CONF_EXPAND_PLATFORMS],
+                show_on_map=config[CONF_SHOW_ON_MAP],
                 device_stop_id=stop_ids[0] if len(stop_ids) == 1 else None,
             )
         )
@@ -225,6 +226,7 @@ def _stop_configurations(
                 quays=quays,
                 line_whitelist=tuple(subentry.data.get(CONF_WHITELIST_LINES, [])),
                 expand_platforms=expand_platforms,
+                show_on_map=subentry.data.get(CONF_SHOW_ON_MAP, False),
                 device_stop_id=stop_id,
                 device_stop_name=(
                     stop_place_name if isinstance(stop_place_name, str) else None

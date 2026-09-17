@@ -17,6 +17,7 @@ from .const import (
     CONF_PLATFORM_MODE,
     CONF_QUAY_IDS,
     CONF_ROUTE_LABELS,
+    CONF_SHOW_ON_MAP,
     CONF_STOP_PLACE_METADATA_VERSION,
     CONF_STOP_PLACE_NAME,
     CONF_STOP_PLACE_TYPES,
@@ -99,6 +100,7 @@ async def _async_migrate_subentry_display_data(
         )
         data.setdefault(CONF_PLATFORM_MODE, PLATFORM_MODE_ALL)
         data.setdefault(CONF_QUAY_IDS, [])
+        data.setdefault(CONF_SHOW_ON_MAP, False)
         if place:
             data.setdefault(CONF_STOP_PLACE_NAME, place.name)
         if place and routes_loaded:

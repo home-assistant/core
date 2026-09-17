@@ -156,6 +156,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
             quays=(),
             line_whitelist=("RUT:Line:1",),
             expand_platforms=True,
+            show_on_map=False,
             device_stop_id="NSR:StopPlace:1",
         ),
         EnturStopConfiguration(
@@ -163,6 +164,7 @@ def test_subentries_keep_route_filters_per_stop() -> None:
             quays=(),
             line_whitelist=("SKY:Line:2",),
             expand_platforms=True,
+            show_on_map=False,
             device_stop_id="NSR:StopPlace:2",
         ),
     ]
@@ -193,6 +195,7 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
             quays=(),
             line_whitelist=("RUT:Line:legacy",),
             expand_platforms=True,
+            show_on_map=False,
             device_stop_id="NSR:StopPlace:legacy",
         ),
         EnturStopConfiguration(
@@ -200,6 +203,7 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
             quays=(),
             line_whitelist=("SKY:Line:ui",),
             expand_platforms=True,
+            show_on_map=False,
             device_stop_id="NSR:StopPlace:ui",
         ),
     ]
@@ -231,6 +235,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
                 "stop_place_name": "Bus terminal",
                 "platform_mode": PLATFORM_MODE_SELECTED,
                 "quay_ids": ["NSR:Quay:20"],
+                "show_on_map": True,
                 "line_whitelist": ["RUT:Line:1"],
             },
         ),
@@ -242,6 +247,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
             quays=(),
             line_whitelist=(),
             expand_platforms=False,
+            show_on_map=False,
             device_stop_id="NSR:StopPlace:1",
             device_stop_name="Central station",
         ),
@@ -250,6 +256,7 @@ def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
             quays=("NSR:Quay:20",),
             line_whitelist=("RUT:Line:1",),
             expand_platforms=False,
+            show_on_map=True,
             device_stop_id="NSR:StopPlace:2",
             device_stop_name="Bus terminal",
         ),

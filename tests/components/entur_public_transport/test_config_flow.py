@@ -146,6 +146,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         CONF_WHITELIST_LINES: [route.line_id, "SKY:Line:2"],
         CONF_PLATFORM_MODE: PLATFORM_MODE_STOP_PLACE,
         CONF_QUAY_IDS: [],
+        CONF_SHOW_ON_MAP: False,
         "route_labels": {
             "RUT:Line:1": "1 RUT (1-RUT)",
             "SKY:Line:2": "2 SKY (2-SKY)",
@@ -309,6 +310,7 @@ async def test_subentry_flow_can_select_one_platform(hass: HomeAssistant) -> Non
             user_input={
                 CONF_PLATFORM_MODE: PLATFORM_MODE_SELECTED,
                 CONF_QUAY_IDS: [quay.quay_id],
+                CONF_SHOW_ON_MAP: True,
             },
         )
         assert result["step_id"] == "confirm"
@@ -321,6 +323,7 @@ async def test_subentry_flow_can_select_one_platform(hass: HomeAssistant) -> Non
     assert subentry.data[CONF_PLATFORM_MODE] == PLATFORM_MODE_SELECTED
     assert subentry.data[CONF_QUAY_IDS] == [quay.quay_id]
     assert subentry.data[CONF_STOP_PLACE_NAME] == place.name
+    assert subentry.data[CONF_SHOW_ON_MAP] is True
 
 
 async def test_subentry_reconfigure_updates_stop_and_routes(
@@ -414,6 +417,7 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         CONF_WHITELIST_LINES: [new_route.line_id],
         CONF_PLATFORM_MODE: PLATFORM_MODE_STOP_PLACE,
         CONF_QUAY_IDS: [],
+        CONF_SHOW_ON_MAP: False,
         "route_labels": {"RUT:Line:1": "1 RUT (1-RUT)"},
         "stop_place_types": ["busStation"],
         "stop_place_metadata_version": 3,
@@ -569,3 +573,4 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
     assert subentry.data[CONF_PLATFORM_MODE] == PLATFORM_MODE_ALL
     assert subentry.data[CONF_QUAY_IDS] == []
     assert subentry.data[CONF_STOP_PLACE_NAME] == "Hønefoss sentrum"
+    assert subentry.data[CONF_SHOW_ON_MAP] is False

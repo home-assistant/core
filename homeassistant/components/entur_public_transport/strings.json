@@ -31,10 +31,12 @@
       "select_platforms": {
         "data": {
           "platform_mode": "Platform detail",
-          "quay_ids": "Platforms"
+          "quay_ids": "Platforms",
+          "show_on_map": "Show on map"
         },
         "data_description": {
-          "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms."
+          "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms.",
+          "show_on_map": "Add latitude and longitude to the created sensor or sensors so they can be used in Home Assistant maps."
         },
         "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
         "title": "Choose platform detail"
@@ -99,10 +101,12 @@
         "select_platforms": {
           "data": {
             "platform_mode": "Platform detail",
-            "quay_ids": "Platforms"
+            "quay_ids": "Platforms",
+            "show_on_map": "Show on map"
           },
           "data_description": {
-            "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms."
+            "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms.",
+            "show_on_map": "Add latitude and longitude to the created sensor or sensors so they can be used in Home Assistant maps."
           },
           "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
           "title": "Choose platform detail"
