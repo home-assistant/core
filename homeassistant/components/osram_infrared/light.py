@@ -9,6 +9,7 @@ from infrared_protocols.commands.nec import NECCommand
 from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
+    async_subscribe_receiver,
 )
 from homeassistant.components.light import (
     ATTR_EFFECT,
@@ -19,9 +20,17 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import color as color_util
 
 from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID
@@ -274,6 +283,50 @@ class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
         super().__init__(entry, emitter_entity_id)
 
         self._infrared_receiver_entity_id = receiver_entity_id
+
+    @override
+    @callback
+    def _async_track_availability(
+        self,
+        infrared_entity_id: str,
+    ) -> CALLBACK_TYPE:
+        """Track infrared availability.
+
+        Light availability is controlled exclusively by the emitter. Receiver
+        availability only controls the receiver signal subscription.
+        """
+        if infrared_entity_id != self._infrared_receiver_entity_id:
+            return super()._async_track_availability(infrared_entity_id)
+
+        @callback
+        def receiver_state_changed(
+            event: Event[EventStateChangedData],
+        ) -> None:
+            self._async_update_receiver_subscription()
+
+        return async_track_state_change_event(
+            self.hass,
+            [infrared_entity_id],
+            receiver_state_changed,
+        )
+
+    @override
+    @callback
+    def _async_update_receiver_subscription(self) -> None:
+        """Update the receiver subscription without changing light availability."""
+        receiver_state = self.hass.states.get(self._infrared_receiver_entity_id)
+        receiver_available = (
+            receiver_state is not None and receiver_state.state != STATE_UNAVAILABLE
+        )
+
+        if not receiver_available:
+            self._async_unsubscribe_receiver()
+        elif self._remove_signal_subscription is None:
+            self._remove_signal_subscription = async_subscribe_receiver(
+                self.hass,
+                self._infrared_receiver_entity_id,
+                self._handle_signal,
+            )
 
     @override
     @callback
