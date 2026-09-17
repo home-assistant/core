@@ -1130,6 +1130,13 @@ async def test_ups_battery_pool_sensors(
 
     assert hass.states.get(f"sensor.{device_name}_battery_level").state == "95"
 
+    updated_device_data["vbms_table"].pop("battpool")
+    mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"sensor.{device_name}_battery_level") is None
+    assert entity_registry.async_get(f"sensor.{device_name}_battery_level") is None
+
 
 @pytest.mark.parametrize(
     "device_payload",

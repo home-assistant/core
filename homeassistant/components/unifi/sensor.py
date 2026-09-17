@@ -213,11 +213,9 @@ def async_device_battery_pool_supported_fn(
 @callback
 def async_device_battery_pool_value_fn(
     field: str, hub: UnifiHub, device: Device
-) -> float | int | None:
+) -> float | int:
     """Retrieve a battery pool field."""
-    if battery_pool := device.battery_pool:
-        return cast(float | int | None, battery_pool.get(field))
-    return None
+    return cast(dict[str, float | int], device.battery_pool)[field]
 
 
 @callback
