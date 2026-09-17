@@ -97,6 +97,10 @@ async def test_config_entry_not_ready_when_connect_hangs(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert (
+            mock_config_entry.reason
+            == "Timed out connecting to Anthem AVR at 1.1.1.1:14999"
+        )
 
 
 async def test_device_init_timeout_not_reported_as_connect_timeout(
