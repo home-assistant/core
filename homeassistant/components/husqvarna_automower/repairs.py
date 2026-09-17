@@ -1,11 +1,11 @@
 """Repairs for the Husqvarna Automower integration."""
 
+import probatio
+
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN
 
 ISSUE_ID_PREFIX = "migrate_could_not_auth_"
 
@@ -24,7 +24,9 @@ class MigrationRepairFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Retry the migration after confirmation."""
         if user_input is None:
-            return self.async_show_form(step_id="confirm", data_schema={})
+            return self.async_show_form(
+                step_id="confirm", data_schema=probatio.Schema({})
+            )
 
         entry_id = self.data.get("entry_id") if self.data else None
         if not isinstance(entry_id, str):
@@ -47,4 +49,4 @@ async def async_create_fix_flow(
     if issue_id.startswith(ISSUE_ID_PREFIX):
         return MigrationRepairFlow()
 
-    raise ValueError(f"Unknown issue ID: {issue_id}")
+    return ConfirmRepairFlow()
