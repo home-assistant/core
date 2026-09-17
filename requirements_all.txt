@@ -1614,7 +1614,7 @@ medcom-ble==0.1.1
 melnor-bluetooth==0.0.25
 
 # homeassistant.components.meross
-meross-ble==0.2.0
+meross-ble==0.2.2
 
 # homeassistant.components.message_bird
 messagebird==1.2.1
