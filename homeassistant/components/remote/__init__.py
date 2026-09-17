@@ -2,10 +2,9 @@
 
 from collections.abc import Iterable
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
 import probatio
 from propcache.api import cached_property
@@ -25,11 +24,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import RemoteEntityStateAttribute
+from .const import DOMAIN, RemoteEntityFeature, RemoteEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "remote"
 DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
@@ -57,14 +55,6 @@ SERVICE_SYNC = "sync"
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
-
-
-class RemoteEntityFeature(IntFlag):
-    """Supported features of the remote entity."""
-
-    LEARN_COMMAND = 1
-    DELETE_COMMAND = 2
-    ACTIVITY = 4
 
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
