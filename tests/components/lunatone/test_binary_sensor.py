@@ -94,7 +94,6 @@ async def test_line_scan_status_off_when_line_data_is_missing(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the Lunatone DALI scan status value update."""
     mock_lunatone_scan.data.lines = []
