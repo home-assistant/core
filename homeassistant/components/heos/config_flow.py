@@ -256,11 +256,8 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="single_instance_allowed")
 
-        # Nothing to reconfigure while connected to the configured host. The host
-        # list a discovered device reports is incomplete when players have just
-        # rejoined the network, which would otherwise move the entry to the
-        # discovered host and reload it, removing the entities of the players that
-        # are momentarily missing.
+        # The host list a discovered device reports is unreliable while players are
+        # rejoining the network, so don't act on it while connected.
         if (
             entry
             and entry.state is ConfigEntryState.LOADED
