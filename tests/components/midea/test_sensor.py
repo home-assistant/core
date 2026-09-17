@@ -7,14 +7,16 @@ from freezegun.api import FrozenDateTimeFactory
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
-from midealocal.devices.db import DeviceAttributes as DBAttributes
+from midealocal.devices.ca import MideaCADevice
+from midealocal.devices.db import DeviceAttributes as DBAttributes, MideaDBDevice
 from midealocal.devices.e8 import DeviceAttributes as E8Attributes
-from midealocal.devices.ea import DeviceAttributes as EAAttributes
-from midealocal.devices.ec import DeviceAttributes as ECAttributes
+from midealocal.devices.ea import DeviceAttributes as EAAttributes, MideaEADevice
+from midealocal.devices.ec import DeviceAttributes as ECAttributes, MideaECDevice
 from midealocal.devices.ed import DeviceAttributes as EDAttributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.midea.sensor import SENSOR_ENTITIES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -206,7 +208,7 @@ async def test_sensor_state_update(
             ACAttributes.mode: 1,
             ACAttributes.target_temperature: 22.0,
             ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.indoor_humidity: 0,
+            ACAttributes.indoor_humidity: 45,
             ACAttributes.full_dust: False,
             ACAttributes.outdoor_temperature: "unknown",
         },
@@ -242,9 +244,9 @@ async def test_sensor_state_update(
     ]
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == "45"
 
-    await set_device_attribute(device, ACAttributes.indoor_humidity, 255)
+    await set_device_attribute(device, ACAttributes.indoor_humidity, None)
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
@@ -283,3 +285,34 @@ async def test_time_remaining_sensor_as_timestamp(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_options"),
+    [
+        pytest.param(DeviceType.DB, MideaDBDevice.mode_options(), id="db"),
+        pytest.param(DeviceType.EA, MideaEADevice.mode_options(), id="ea"),
+        pytest.param(DeviceType.EC, MideaECDevice.mode_options(), id="ec"),
+    ],
+)
+def test_mode_options_match_library(
+    model: DeviceType,
+    expected_options: list[str],
+) -> None:
+    """Guard against drift between the hardcoded mode options and midealocal's tables."""
+    description = next(
+        description
+        for description in SENSOR_ENTITIES
+        if description.key == "mode" and description.models == [model]
+    )
+    assert description.options == expected_options
+
+
+def test_variable_mode_options_match_library() -> None:
+    """Guard against drift between the hardcoded variable_mode options and midealocal's table."""
+    description = next(
+        description
+        for description in SENSOR_ENTITIES
+        if description.key == "variable_mode"
+    )
+    assert description.options == MideaCADevice.mode_options()

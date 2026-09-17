@@ -1437,8 +1437,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev
 /tests/components/picnic/ @corneyl @codesalatdev
-/homeassistant/components/picotts/ @rooggiieerr
-/tests/components/picotts/ @rooggiieerr
+/homeassistant/components/picotts/ @rrooggiieerr
+/tests/components/picotts/ @rrooggiieerr
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
