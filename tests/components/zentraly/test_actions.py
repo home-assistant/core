@@ -1,10 +1,7 @@
 """Tests for action failure categories and translated errors."""
 
-from typing import Any
-
 import pytest
 from zentraly import (
-    NumberCapability,
     ZentralyApiError,
     ZentralyCommandRejectedError,
     ZentralyConnectionBusyError,
@@ -12,7 +9,6 @@ from zentraly import (
     ZentralyInvalidResponseError,
     ZentralyValidationError,
 )
-from zentraly.commands.base import ActionCommandExecutor, ZentralyDeviceCommands
 
 from homeassistant.components.zentraly.actions import translate_action_errors
 from homeassistant.core import HomeAssistant
@@ -83,27 +79,3 @@ async def test_exception_translations(hass: HomeAssistant) -> None:
         ].format(device_id="ZTTIN0100000001")
         == "Unable to connect to Zentraly device ZTTIN0100000001."
     )
-
-
-class SimpleTimerCommands(ZentralyDeviceCommands):
-    """Test model with a timer and no power or operation-mode capability."""
-
-    capabilities = frozenset({NumberCapability.TIMER})
-
-    def build_read_timer(self, rid: int, mac: str) -> dict[str, Any]:
-        """Build this model's timer query."""
-        return {"cmd": "readAttr", "rid": rid, "mac": mac}
-
-    def parse_timer_response(
-        self, response: dict[str, Any], expected_rid: int
-    ) -> float:
-        """Read this model's timer value."""
-        return float(response["minutes"])
-
-    async def async_set_timer(
-        self, mac: str, value: float, execute: ActionCommandExecutor
-    ) -> None:
-        """Set a timer with a single model-specific command."""
-        await execute(
-            lambda rid: {"cmd": "zclCmd", "rid": rid, "mac": mac, "minutes": value}
-        )

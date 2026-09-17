@@ -137,8 +137,6 @@ class ZentralyClimate(ClimateEntity):
     ) -> None:
         """Handle Zentraly connection-state changes."""
 
-        self._attr_available = connected
-
         if not connected:
             self.async_write_ha_state()
             return
@@ -226,8 +224,6 @@ class ZentralyClimate(ClimateEntity):
 
     async def async_update(self) -> None:
         """Update climate state from the Zentraly device."""
-
-        self._attr_available = self._device.connected
 
         if not self._device.connected:
             return
