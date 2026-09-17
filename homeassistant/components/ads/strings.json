@@ -36,6 +36,10 @@
     }
   },
   "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring the {integration_title} connection using YAML is being removed. Your existing connection configuration has been imported into the UI automatically.\n\nRemove the `{domain}` key from your configuration.yaml file and restart Home Assistant to fix this issue. Entities configured with `platform: {domain}` are not affected by this change and keep working.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring {integration_title} using YAML is being removed. While importing your YAML configuration, Home Assistant could not connect to the ADS device. Fix the connection settings and restart Home Assistant to try again, or remove the `{domain}` key from your configuration and set up the integration in the UI. Your ADS entities defined in YAML keep working once the connection is set up.",
       "title": "The {integration_title} YAML configuration import failed"

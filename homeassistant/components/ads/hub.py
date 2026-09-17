@@ -5,6 +5,7 @@ import ctypes
 import logging
 import struct
 import threading
+from typing import TYPE_CHECKING
 
 import pyads
 
@@ -13,6 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .entity import AdsEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +35,11 @@ class AdsHub:
         self._client.open()
 
         # All ADS devices are registered here
-        self._devices = []
+        self._devices: list[AdsEntity] = []
         self._notification_items = {}
         self._lock = threading.Lock()
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self):
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
@@ -51,12 +55,18 @@ class AdsHub:
                 )
             except pyads.ADSError as err:
                 _LOGGER.error(err)
+        self._notification_items.clear()
         try:
             self._client.close()
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    def register_device(self, device):
+        # Entities cache this hub instance directly, so mark them unavailable
+        # here rather than leaving them stuck showing stale data after reload.
+        for device in self._devices:
+            device.mark_unavailable()
+
+    def register_device(self, device: AdsEntity) -> None:
         """Register a new device."""
         self._devices.append(device)
 

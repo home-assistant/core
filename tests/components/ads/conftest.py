@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components.ads.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 
-from tests.common import MockConfigEntry
+from .const import AMS_NET_ID
 
-AMS_NET_ID = "192.168.1.10.1.1"
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -24,9 +24,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_pyads_connection() -> Generator[MagicMock]:
-    """Mock the pyads connection."""
+    """Mock the pyads Connection class."""
     with patch("pyads.Connection", autospec=True) as mock_connection:
-        yield mock_connection.return_value
+        yield mock_connection
 
 
 @pytest.fixture

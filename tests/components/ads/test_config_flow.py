@@ -1,5 +1,6 @@
 """Test the ADS config flow."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 import pyads
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import AMS_NET_ID
+from .const import AMS_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -40,23 +41,37 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
+CONNECT_ERRORS = [
+    pytest.param(
+        lambda mock: setattr(
+            mock.return_value.read_state, "side_effect", pyads.ADSError(text="timeout")
+        ),
+        "cannot_connect",
+        id="ads_error",
+    ),
+    pytest.param(
+        lambda mock: setattr(mock, "side_effect", ValueError("no valid netid")),
+        "invalid_net_id",
+        id="invalid_net_id",
+    ),
+    pytest.param(
+        lambda mock: setattr(mock.return_value.read_state, "side_effect", RuntimeError),
+        "unknown",
+        id="unknown",
+    ),
+]
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        pytest.param(pyads.ADSError(text="timeout"), "cannot_connect", id="ads_error"),
-        pytest.param(ValueError, "invalid_net_id", id="invalid_net_id"),
-        pytest.param(RuntimeError, "unknown", id="unknown"),
-    ],
-)
+@pytest.mark.parametrize(("configure_mock", "error"), CONNECT_ERRORS)
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
-    side_effect: Exception,
+    configure_mock: Callable[[MagicMock], None],
     error: str,
 ) -> None:
     """Test the user flow recovers from errors."""
-    mock_pyads_connection.read_state.side_effect = side_effect
+    configure_mock(mock_pyads_connection)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -67,7 +82,8 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_pyads_connection.read_state.side_effect = None
+    mock_pyads_connection.side_effect = None
+    mock_pyads_connection.return_value.read_state.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
@@ -100,23 +116,16 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "reason"),
-    [
-        pytest.param(pyads.ADSError(text="timeout"), "cannot_connect", id="ads_error"),
-        pytest.param(ValueError, "invalid_net_id", id="invalid_net_id"),
-        pytest.param(RuntimeError, "unknown", id="unknown"),
-    ],
-)
+@pytest.mark.parametrize(("configure_mock", "reason"), CONNECT_ERRORS)
 async def test_import_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_pyads_connection: MagicMock,
-    side_effect: Exception,
+    configure_mock: Callable[[MagicMock], None],
     reason: str,
 ) -> None:
     """Test the import flow aborts on errors."""
-    mock_pyads_connection.read_state.side_effect = side_effect
+    configure_mock(mock_pyads_connection)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
@@ -124,3 +133,47 @@ async def test_import_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     mock_setup_entry.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pyads_connection")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the ADS connection."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    new_input = {**USER_INPUT, CONF_PORT: 852}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], new_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == new_input
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+) -> None:
+    """Test the reconfigure flow recovers from connection errors."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+    mock_pyads_connection.return_value.read_state.side_effect = pyads.ADSError(
+        text="timeout"
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_PORT: 852}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_config_entry.data == original_data

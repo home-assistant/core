@@ -6,7 +6,11 @@ from typing import Any, override
 import probatio
 import pyads
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
@@ -62,18 +66,32 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if (error := await self._async_validate(user_input)) is None:
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data=user_input
+                    )
                 return self.async_create_entry(
                     title=user_input[CONF_DEVICE], data=user_input
                 )
             errors["base"] = error
 
+        suggested_values = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = dict(self._get_reconfigure_entry().data)
+
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the ADS connection."""
+        return await self.async_step_user(user_input)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import the ADS connection from configuration.yaml."""

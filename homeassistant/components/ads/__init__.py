@@ -10,12 +10,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    HomeAssistant,
-    ServiceCall,
-)
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -134,8 +129,8 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
 
     async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        "deprecated_yaml",
         breaks_in_ha_version="2027.4.0",
         is_fixable=False,
         issue_domain=DOMAIN,
@@ -165,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
     """Set up ADS from a config entry."""
     try:
         hub = await hass.async_add_executor_job(_connect, entry)
-    except pyads.ADSError as err:
+    except (pyads.ADSError, RuntimeError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

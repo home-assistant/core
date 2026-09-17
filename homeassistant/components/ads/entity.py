@@ -27,6 +27,7 @@ class AdsEntity(Entity):
         self._event: asyncio.Event | None = None
         self._attr_unique_id = ads_var
         self._attr_name = name
+        ads_hub.register_device(self)
 
     async def async_initialize_device(
         self,
@@ -69,3 +70,9 @@ class AdsEntity(Entity):
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
         return self._state_dict[STATE_KEY_STATE] is not None
+
+    def mark_unavailable(self) -> None:
+        """Mark the entity unavailable after its hub connection is closed."""
+        self._state_dict[STATE_KEY_STATE] = None
+        if self.hass is not None:
+            self.schedule_update_ha_state()
