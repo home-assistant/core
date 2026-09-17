@@ -1,6 +1,7 @@
 """Receive signals from a keyboard and use it as a remote control."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import logging
 import os
@@ -13,7 +14,13 @@ if TYPE_CHECKING:
     from evdev import InputDevice
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+)
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.start import async_at_start
@@ -196,6 +203,7 @@ class KeyboardRemoteManager:
         self._inotify: Inotify | None = None
         self._watcher: Any = None
         self._monitor_task: asyncio.Task | None = None
+        self._stop_listener: CALLBACK_TYPE | None = None
         self._started = False
 
     async def async_start(self) -> None:
@@ -205,6 +213,12 @@ class KeyboardRemoteManager:
                 return
 
             _LOGGER.debug("Start monitoring")
+
+            # Config entries are not unloaded when Home Assistant stops, so
+            # without this the devices are never ungrabbed on shutdown.
+            self._stop_listener = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
+            )
 
             self._inotify = Inotify()
             self._watcher = self._inotify.add_watch(
@@ -220,6 +234,11 @@ class KeyboardRemoteManager:
             )
             self._started = True
 
+    async def _async_handle_hass_stop(self, event: Event) -> None:
+        """Tear down when Home Assistant stops."""
+        self._stop_listener = None
+        await self.async_stop()
+
     async def async_stop(self) -> None:
         """Stop the inotify watcher and all device handlers."""
         async with self._lock:
@@ -227,6 +246,10 @@ class KeyboardRemoteManager:
                 return
 
             _LOGGER.debug("Cleanup on shutdown")
+
+            if self._stop_listener is not None:
+                self._stop_listener()
+                self._stop_listener = None
 
             if self._inotify and self._watcher:
                 self._inotify.rm_watch(self._watcher)
@@ -254,9 +277,23 @@ class KeyboardRemoteManager:
 
             self._started = False
 
+    async def _async_release_failed_handler(self, handler: DeviceHandler) -> None:
+        """Free a handler whose device stopped being readable.
+
+        The handler stays registered so a later device event can rebind it.
+        """
+        for descriptor in [
+            desc
+            for desc, active in self._active_handlers_by_descriptor.items()
+            if active is handler
+        ]:
+            del self._active_handlers_by_descriptor[descriptor]
+        await handler.async_device_stop_monitoring()
+
     def register_handler(self, entry_id: str, handler: DeviceHandler) -> None:
         """Register a DeviceHandler for a config entry."""
         self._handlers[entry_id] = handler
+        handler.set_monitor_failure_callback(self._async_release_failed_handler)
         # If already started, check if this handler's device is connected
         if self._started:
             self.hass.async_create_task(self._async_check_handler(handler))
@@ -360,7 +397,8 @@ class KeyboardRemoteManager:
 
         start_tasks: set[asyncio.Task] = set()
         for descriptor, dev, handler in matches:
-            self._active_handlers_by_descriptor[descriptor] = handler
+            if not self._claim_descriptor(descriptor, dev, handler):
+                continue
             start_tasks.add(
                 self.hass.async_create_task(handler.async_device_start_monitoring(dev))
             )
@@ -482,6 +520,15 @@ class DeviceHandler:
         self._monitor_task: asyncio.Task | None = None
         self.dev: InputDevice | None = None
         self._descriptor: str | None = None
+        self._on_monitor_failure: (
+            Callable[[DeviceHandler], Coroutine[Any, Any, None]] | None
+        ) = None
+
+    def set_monitor_failure_callback(
+        self, callback: Callable[[DeviceHandler], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Set what the manager should run if this device stops being readable."""
+        self._on_monitor_failure = callback
 
     @property
     def is_monitoring(self) -> bool:
@@ -687,10 +734,22 @@ class DeviceHandler:
                     ):
                         repeat_tasks[event.code].cancel()
                         del repeat_tasks[event.code]
-        except OSError, asyncio.CancelledError:
-            # Cancel key repeat tasks
-            for task in repeat_tasks.values():
-                task.cancel()
+        except asyncio.CancelledError:
+            await self._async_cancel_repeats(repeat_tasks)
+        except OSError as err:
+            await self._async_cancel_repeats(repeat_tasks)
+            _LOGGER.debug("Stopped reading %s: %s", dev.name, err)
+            if self._on_monitor_failure is not None:
+                # Run the teardown outside this task: it awaits this task, and
+                # awaiting itself from within would deadlock.
+                self.hass.async_create_task(self._on_monitor_failure(self))
 
-            if repeat_tasks:
-                await asyncio.wait(repeat_tasks.values())
+    async def _async_cancel_repeats(
+        self, repeat_tasks: dict[int, asyncio.Task]
+    ) -> None:
+        """Cancel any outstanding emulated key hold tasks."""
+        for task in repeat_tasks.values():
+            task.cancel()
+
+        if repeat_tasks:
+            await asyncio.wait(repeat_tasks.values())

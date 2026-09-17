@@ -31,6 +31,7 @@ from homeassistant.components.keyboard_remote.const import (
     MATCH_DEVICE_PATH,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -730,12 +731,46 @@ async def test_monitor_input_oserror_cancels_repeat_tasks(
 
     mock_input_device.async_read_loop.return_value = _key_then_oserror()
 
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
+
     await handler.async_device_start_monitoring(mock_input_device)
     await hass.async_block_till_done()
 
-    # Monitor task should complete without raising
-    assert handler._monitor_task is not None
-    assert handler._monitor_task.done()
+    # The handler is released rather than left looking like it is still
+    # monitoring, so a later device event can rebind it
+    assert handler._monitor_task is None
+    assert handler.is_monitoring is False
+    assert FAKE_DEVICE_REAL_PATH not in manager._active_handlers_by_descriptor
+    mock_input_device.close.assert_called_once()
+
+
+async def test_devices_are_released_on_hass_stop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test shutdown ungrabs and closes devices.
+
+    Config entries are not unloaded when Home Assistant stops, so without a
+    stop listener the monitor task is cancelled with the device still grabbed.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    handler = list(manager._handlers.values())[0]
+    await handler.async_device_start_monitoring(mock_input_device)
+    manager._active_handlers_by_descriptor[FAKE_DEVICE_REAL_PATH] = handler
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_input_device.ungrab.assert_called_once()
+    mock_input_device.close.assert_called_once()
+    assert not manager._active_handlers_by_descriptor
 
 
 # --- KeyboardRemoteManager tests ---
