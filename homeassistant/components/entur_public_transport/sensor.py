@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -52,6 +53,7 @@ from .const import (
     CONF_WHITELIST_LINES,
     DEFAULT_ICON_KEY,
     DEFAULT_NAME,
+    DOMAIN,
     ICONS,
     SUBENTRY_TYPE_STOP_PLACE,
 )
@@ -114,6 +116,7 @@ async def _async_setup(
 
     entities = []
     for stop_ids, line_whitelist in _stop_configurations(config, subentries):
+        device_stop_id = stop_ids[0] if len(stop_ids) == 1 else None
         stops = [stop_id for stop_id in stop_ids if "StopPlace" in stop_id]
         quays = [stop_id for stop_id in stop_ids if "Quay" in stop_id]
         data = EnturPublicTransportData(
@@ -131,6 +134,12 @@ async def _async_setup(
         await data.update()
 
         proxy = EnturProxy(data)
+        device_name = None
+        if device_stop_id:
+            try:
+                device_name = f"{name} {data.get_stop_info(device_stop_id).name}"
+            except (AttributeError, KeyError):
+                pass
 
         for place in data.all_stop_places_quays():
             try:
@@ -139,7 +148,14 @@ async def _async_setup(
                 given_name = f"{name} {place}"
 
             entities.append(
-                EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
+                EnturPublicTransportSensor(
+                    proxy,
+                    given_name,
+                    place,
+                    show_on_map,
+                    device_stop_id,
+                    device_name,
+                )
             )
 
     async_add_entities(entities, True)
@@ -191,13 +207,25 @@ class EnturPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by entur.org under NLOD"
 
     def __init__(
-        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
+        self,
+        api: EnturProxy,
+        name: str,
+        stop: str,
+        show_on_map: bool,
+        device_stop_id: str | None = None,
+        device_name: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
+        self._attr_unique_id = stop
+        if device_stop_id and device_name:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_stop_id)},
+                name=device_name,
+            )
         self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
         self._attributes: dict[str, str] = {}

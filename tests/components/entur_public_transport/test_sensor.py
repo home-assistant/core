@@ -16,6 +16,7 @@ from homeassistant.components.entur_public_transport.sensor import (
     due_in_minutes,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.components.entur_public_transport.const import DOMAIN
 
 
 def test_platform_schema_defaults() -> None:
@@ -110,6 +111,11 @@ async def test_async_setup_platform_creates_entities(
         "Transport Central station",
         "Transport Platform 2",
     ]
+    assert [entity.unique_id for entity in entities] == [
+        "NSR:StopPlace:1",
+        "NSR:Quay:2",
+    ]
+    assert [entity.device_info for entity in entities] == [None, None]
     assert add_entities.call_args.args[1] is True
 
 
@@ -202,6 +208,7 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
         api.all_stop_places_quays.return_value = [stop_id]
         api.get_stop_info.return_value = SimpleNamespace(name=stop_id)
 
+    add_entities = Mock()
     with (
         patch(
             "homeassistant.components.entur_public_transport.sensor.EnturPublicTransportData",
@@ -212,11 +219,24 @@ async def test_async_setup_entry_applies_route_filter_per_stop(
             return_value=Mock(),
         ),
     ):
-        await _async_setup(hass, config, Mock(), subentries)
+        await _async_setup(hass, config, add_entities, subentries)
 
     assert [call.kwargs["line_whitelist"] for call in data_class.call_args_list] == [
         ["RUT:Line:1"],
         ["SKY:Line:2"],
+    ]
+    entities = add_entities.call_args.args[0]
+    assert [entity.unique_id for entity in entities] == [
+        "NSR:StopPlace:1",
+        "NSR:StopPlace:2",
+    ]
+    assert [entity.device_info.identifiers for entity in entities] == [
+        {(DOMAIN, "NSR:StopPlace:1")},
+        {(DOMAIN, "NSR:StopPlace:2")},
+    ]
+    assert [entity.device_info.name for entity in entities] == [
+        "Entur NSR:StopPlace:1",
+        "Entur NSR:StopPlace:2",
     ]
 
 
