@@ -412,7 +412,6 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
 # --- Options flow tests ---
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -447,7 +446,6 @@ async def test_options_flow(
     }
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_shows_device_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

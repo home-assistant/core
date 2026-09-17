@@ -5,7 +5,6 @@ from contextlib import suppress
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncinotify import Mask
-import pytest
 
 from homeassistant.components.keyboard_remote import (
     KeyboardRemoteManager,
@@ -47,31 +46,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_capture_events
-
-
-@pytest.fixture(autouse=True)
-def mock_inotify():
-    """Mock inotify to prevent real filesystem access."""
-    with patch(
-        "homeassistant.components.keyboard_remote.Inotify",
-    ) as mock_cls:
-        mock_instance = MagicMock()
-        # Make async iteration raise StopAsyncIteration immediately
-        mock_instance.__aiter__ = MagicMock(return_value=mock_instance)
-        mock_instance.__anext__ = AsyncMock(side_effect=StopAsyncIteration)
-        mock_cls.return_value = mock_instance
-        yield mock_instance
-
-
-@pytest.fixture(autouse=True)
-def mock_list_devices():
-    """Mock evdev list_devices to return empty list."""
-    with patch(
-        "evdev.list_devices",
-        return_value=[],
-    ):
-        yield
-
 
 # --- Setup / unload tests ---
 
@@ -1227,6 +1201,12 @@ async def test_monitor_devices_cancelled(
         async def __anext__(self):
             started.set()
             await asyncio.sleep(999)  # block until cancelled
+
+        def rm_watch(self, watch):
+            """Accept teardown, which runs when the entry unloads."""
+
+        def close(self):
+            """Accept teardown, which runs when the entry unloads."""
 
     manager._inotify = BlockingInotify()
 

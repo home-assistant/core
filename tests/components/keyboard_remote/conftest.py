@@ -103,6 +103,30 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_inotify():
+    """Mock inotify to prevent real filesystem access."""
+    with patch(
+        "homeassistant.components.keyboard_remote.Inotify",
+    ) as mock_cls:
+        mock_instance = MagicMock()
+        # Make async iteration raise StopAsyncIteration immediately
+        mock_instance.__aiter__ = MagicMock(return_value=mock_instance)
+        mock_instance.__anext__ = AsyncMock(side_effect=StopAsyncIteration)
+        mock_cls.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture(autouse=True)
+def mock_list_devices():
+    """Mock evdev list_devices to return empty list."""
+    with patch(
+        "evdev.list_devices",
+        return_value=[],
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
