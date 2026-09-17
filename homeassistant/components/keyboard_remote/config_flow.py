@@ -253,6 +253,28 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_abort(reason="cannot_identify_device")
 
+        # An earlier import of this same YAML block may have run while no by-id
+        # symlink existed and fallen back to the raw descriptor or name as its
+        # unique ID. Adopt that entry rather than creating a second one.
+        legacy_ids = {
+            value
+            for value in (
+                import_data.get("device_descriptor"),
+                import_data.get("device_name"),
+            )
+            if value and value != unique_id
+        }
+        for entry in self._async_current_entries():
+            if entry.unique_id not in legacy_ids:
+                continue
+            updated_data = dict(entry.data)
+            if device_path:
+                updated_data[CONF_DEVICE_PATH] = device_path
+            self.hass.config_entries.async_update_entry(
+                entry, unique_id=unique_id, data=updated_data
+            )
+            return self.async_abort(reason="already_configured")
+
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 

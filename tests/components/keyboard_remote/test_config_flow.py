@@ -318,6 +318,57 @@ async def test_import_name_only_discards_transient_path(hass: HomeAssistant) -> 
     assert result["data"][CONF_DEVICE_NAME] == FAKE_DEVICE_NAME
 
 
+@pytest.mark.parametrize(
+    ("import_data", "legacy_unique_id"),
+    [
+        pytest.param(
+            {"device_descriptor": FAKE_DEVICE_REAL_PATH},
+            FAKE_DEVICE_REAL_PATH,
+            id="descriptor",
+        ),
+        pytest.param(
+            {"device_name": FAKE_DEVICE_NAME},
+            FAKE_DEVICE_NAME,
+            id="name",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_adopts_entry_created_before_by_id_existed(
+    hass: HomeAssistant,
+    import_data: dict[str, str],
+    legacy_unique_id: str,
+) -> None:
+    """Test a re-import migrates the earlier entry instead of duplicating it.
+
+    The first import can run before udev has created the by-id symlink, which
+    leaves the entry keyed by the raw descriptor or name. Once the symlink
+    exists the same YAML resolves to the by-id basename.
+    """
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=legacy_unique_id,
+        data={CONF_DEVICE_PATH: legacy_unique_id, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+    )
+    existing.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.keyboard_remote.config_flow._resolve_yaml_device",
+        return_value=(FAKE_DEVICE_PATH, FAKE_DEVICE_NAME, FAKE_BY_ID_BASENAME),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=import_data,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert existing.unique_id == FAKE_BY_ID_BASENAME
+    assert existing.data[CONF_DEVICE_PATH] == FAKE_DEVICE_PATH
+
+
 async def test_import_cannot_identify(hass: HomeAssistant) -> None:
     """Test YAML import aborts when device cannot be identified."""
     with patch(
