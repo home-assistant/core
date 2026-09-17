@@ -83,7 +83,7 @@ _AUTH_REQUIRED_STATUSES = frozenset(
 )
 
 
-def _is_auth_error(err: PyiCloudAPIResponseException) -> bool:
+def is_auth_error(err: PyiCloudAPIResponseException) -> bool:
     """Return True if the account has to authenticate again to recover."""
     return isinstance(err.code, int) and err.code in _AUTH_REQUIRED_STATUSES
 
@@ -99,7 +99,7 @@ def _is_auth_failure(err: BaseException) -> bool:
         ),
     ):
         return True
-    return isinstance(err, PyiCloudAPIResponseException) and _is_auth_error(err)
+    return isinstance(err, PyiCloudAPIResponseException) and is_auth_error(err)
 
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
@@ -154,7 +154,7 @@ class IcloudAccount:
         try:
             self._setup()
         except PyiCloudAPIResponseException as err:
-            if not _is_auth_error(err):
+            if not is_auth_error(err):
                 raise
             self._ask_to_authenticate(err)
         except (
@@ -505,7 +505,7 @@ class IcloudAccount:
                 self.api.authenticate()
                 self.update_devices()
             except PyiCloudAPIResponseException as err:
-                if not _is_auth_error(err):
+                if not is_auth_error(err):
                     # Not an authentication failure. Hand it to the transient
                     # handling below so it keeps being retried, rather than
                     # parking the account for credentials that are not at fault.
