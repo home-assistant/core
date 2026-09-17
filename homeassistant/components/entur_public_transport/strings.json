@@ -2,18 +2,37 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add an Entur stop",
-        "description": "Enter an Entur stop ID, for example NSR:StopPlace:548 or NSR:Quay:48550.",
+        "title": "Find an Entur stop place",
+        "description": "Search by name. Results are stop places, such as stations, terminals, and transport hubs. Individual platforms are intentionally not shown in this step.",
         "data": {
-          "stop_id": "Stop ID"
+          "query": "Stop place name"
+        },
+        "data_description": {
+          "query": "Enter at least two characters, for example Oslo S or Nationaltheatret."
         }
+      },
+      "select_stop": {
+        "title": "Select a stop place",
+        "description": "Choose the stop place that matches your location. The result includes locality and transport modes to help distinguish similarly named stops.",
+        "data": {
+          "stop_id": "Stop place"
+        }
+      },
+      "confirm": {
+        "title": "Confirm the stop place",
+        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type: {role}\n\nTransport modes: {transport_modes}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
+        "data": {}
       }
     },
     "error": {
-      "invalid_stop_id": "Enter a valid Entur stop ID starting with NSR:StopPlace: or NSR:Quay:."
+      "query_too_short": "Enter at least two characters to search for a stop place.",
+      "cannot_connect": "Unable to search Entur right now. Try again later.",
+      "no_results": "No stop places were found. Try a broader search or another spelling.",
+      "invalid_selection": "The selected stop place is no longer available. Start the search again."
     },
     "abort": {
-      "already_configured": "This stop is already configured."
+      "already_configured": "This stop place is already configured.",
+      "invalid_selection": "The selected stop place could not be confirmed."
     }
   }
 }

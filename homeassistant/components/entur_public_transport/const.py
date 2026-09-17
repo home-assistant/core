@@ -5,9 +5,13 @@ from datetime import timedelta
 DOMAIN = "entur_public_transport"
 
 API_CLIENT_NAME = "homeassistant-{}"
+ENTUR_CLIENT_NAME = "homeassistant-entur-public-transport"
+GEOCODER_AUTOCOMPLETE_URL = "https://api.entur.io/geocoder/v3/autocomplete"
+ENTUR_STOP_PLACE_URL = "https://entur.no/nearby-stop-place-detail?id={}"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_STOP_ID = "stop_id"
+CONF_QUERY = "query"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
 CONF_WHITELIST_LINES = "line_whitelist"
 CONF_OMIT_NON_BOARDING = "omit_non_boarding"

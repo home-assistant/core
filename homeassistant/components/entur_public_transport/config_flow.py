@@ -6,12 +6,18 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+)
 
+from .api import EnturApiError, EnturStopPlace, async_search_stop_places
 from .const import (
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
+    CONF_QUERY,
     CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
     CONF_STOP_IDS,
@@ -26,6 +32,11 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._places: tuple[EnturStopPlace, ...] = ()
+        self._selected_place: EnturStopPlace | None = None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -34,22 +45,96 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            stop_id = user_input[CONF_STOP_ID].strip()
-            if not _is_valid_stop_id(stop_id):
-                errors["base"] = "invalid_stop_id"
+            query = user_input[CONF_QUERY].strip()
+            if len(query) < 2:
+                errors["base"] = "query_too_short"
             else:
-                self._async_abort_entries_match({CONF_STOP_IDS: [stop_id]})
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data=_entry_data([stop_id]),
-                )
+                try:
+                    self._places = await async_search_stop_places(self.hass, query)
+                except EnturApiError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    if not self._places:
+                        errors["base"] = "no_results"
+                    else:
+                        return await self.async_step_select_stop()
 
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_STOP_ID): TextSelector()}
+                {probatio.Required(CONF_QUERY): TextSelector()}
             ),
             errors=errors,
+        )
+
+    @override
+    async def async_step_select_stop(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user select a stop place from the search results."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            stop_id = user_input[CONF_STOP_ID]
+            self._selected_place = next(
+                (place for place in self._places if place.stop_id == stop_id), None
+            )
+            if self._selected_place is None:
+                errors["base"] = "invalid_selection"
+            else:
+                return await self.async_step_confirm()
+
+        return self.async_show_form(
+            step_id="select_stop",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_STOP_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                {"value": place.stop_id, "label": place.selection_label}
+                                for place in self._places
+                            ]
+                        )
+                    )
+                }
+            ),
+            errors=errors,
+        )
+
+    @override
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the selected stop place before creating the entry."""
+        if self._selected_place is None:
+            return self.async_abort(reason="invalid_selection")
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_STOP_IDS: [self._selected_place.stop_id]}
+            )
+            return self.async_create_entry(
+                title=DEFAULT_NAME,
+                data=_entry_data([self._selected_place.stop_id]),
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=probatio.Schema({}),
+            description_placeholders={
+                "name": self._selected_place.name,
+                "display_name": self._selected_place.display_name,
+                "locality": self._selected_place.locality or "Unknown",
+                "transport_modes": ", ".join(self._selected_place.transport_modes)
+                or "Unknown",
+                "stop_id": self._selected_place.stop_id,
+                "role": (
+                    "transport hub"
+                    if self._selected_place.role == "parent"
+                    else "standalone stop place"
+                ),
+                "entur_url": self._selected_place.entur_url,
+            },
         )
 
     @override
@@ -78,11 +163,3 @@ def _entry_data(stop_ids: list[str]) -> dict[str, Any]:
         CONF_OMIT_NON_BOARDING: True,
         CONF_NUMBER_OF_DEPARTURES: 2,
     }
-
-
-def _is_valid_stop_id(stop_id: str) -> bool:
-    """Return whether a stop ID is supported by the integration."""
-    return any(
-        stop_id.startswith(prefix) and stop_id.removeprefix(prefix).isdigit()
-        for prefix in ("NSR:StopPlace:", "NSR:Quay:")
-    )
