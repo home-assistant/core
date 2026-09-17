@@ -546,18 +546,34 @@ async def test_unload_returns_false_when_platforms_unload_fails(
     )
     entry.add_to_hass(hass)
 
-    # Mock async_unload_platforms with an awaitable that returns False
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        new=AsyncMock(return_value=False),
+    # Set up the entry first so it reaches the LOADED state
+    with (
+        patch(
+            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
     ):
-        unload_ok = await hass.config_entries.async_unload_platforms(entry, [])
-        assert unload_ok is False
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-        # Test unload through the public config_entries API
-        # Since async_unload_platforms returns False, unload should return False
+    # Make the integration's unload hook report failure; the public
+    # config_entries.async_unload API must then return False.
+    with patch(
+        "homeassistant.components.heiman_home.async_unload_entry",
+        new_callable=AsyncMock,
+        return_value=False,
+    ):
         unload_result = await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
         assert unload_result is False
 
 

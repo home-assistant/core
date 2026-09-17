@@ -5,15 +5,22 @@ from unittest.mock import MagicMock, patch
 from heimanconnect import DeviceProperty, HeimanDevice
 
 from homeassistant.components.heiman_home.const import DOMAIN
-from homeassistant.components.heiman_home.sensor import (
-    HeimanSensorEntity,
-    async_setup_entry,
-)
+from homeassistant.components.heiman_home.sensor import HeimanSensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from tests.common import MockConfigEntry
+
+
+def _get_platform_entities(hass: HomeAssistant) -> list:
+    """Return the sensor entities created for the Heiman Home platforms."""
+    return [
+        entity
+        for entity_platform in async_get_platforms(hass, DOMAIN)
+        for entity in entity_platform.entities.values()
+    ]
 
 
 async def test_sensor_setup(hass: HomeAssistant, setup_credentials: None) -> None:
@@ -84,17 +91,15 @@ async def test_sensor_entity_creation(
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Check that sensor entity was created
     assert len(added_entities) == 1
@@ -534,17 +539,15 @@ async def test_sensor_entity_creation_with_multiple_properties(
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Check that only readable properties with entity="sensor" were created
     assert len(added_entities) == 3
@@ -585,17 +588,15 @@ async def test_sensor_entity_creation_no_readable_properties(
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # No sensors should be created
     assert len(added_entities) == 0
@@ -946,17 +947,15 @@ async def test_sensor_creation_readable_without_entity_marker(
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Check that sensors were created for properties without entity marker
     assert len(added_entities) == 2
@@ -1026,17 +1025,15 @@ async def test_sensor_creation_skips_non_sensor_entities(
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Check that only sensor entity was created (switch and binary_sensor skipped)
     assert len(added_entities) == 1
@@ -1136,17 +1133,15 @@ async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Only the numeric temperature property should create a sensor
     # Bool, list, and dict properties should be filtered out
@@ -1191,37 +1186,37 @@ async def test_sensor_skip_scan_on_no_structure_change(
     mock_coordinator.get_device.return_value = mock_device
 
     # Track listener calls
-    listener_callback = None
+    listener_callbacks: list = []
 
     def mock_add_listener(callback):
-        nonlocal listener_callback
-        listener_callback = callback
+        listener_callbacks.append(callback)
         return lambda: None
 
     mock_coordinator.async_add_listener = mock_add_listener
 
     # Create a mock config entry and set runtime_data
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.add_to_hass(hass)
     entry.runtime_data = mock_coordinator
 
-    # Mock async_add_entities callback
-    added_entities = []
-
-    def async_add_entities(entities):
-        added_entities.extend(entities)
-
-    # Call sensor setup directly - this will create initial sensors
-    await async_setup_entry(hass, entry, async_add_entities)
+    # Set up the sensor platform through the public config entries API;
+    # this will create initial sensors
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     await hass.async_block_till_done()
+
+    # Collect the entities created by the platform
+    added_entities = _get_platform_entities(hass)
 
     # Verify initial sensor was created
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-1_temperature"
 
-    # Now trigger the listener again without changing structure
-    # This should return early due to no structure change
-    assert listener_callback is not None
-    listener_callback()  # This should return early without creating new entities
+    # Trigger the first registered listener (the setup scan listener) again
+    # without changing the structure. It should return early without creating
+    # new entities.
+    assert listener_callbacks
+    listener_callbacks[0]()
+    await hass.async_block_till_done()
 
     # Verify no new entities were created (structure didn't change)
-    assert len(added_entities) == 1
+    assert len(_get_platform_entities(hass)) == 1
