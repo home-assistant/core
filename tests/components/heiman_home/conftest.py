@@ -4,7 +4,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tests.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -14,6 +13,7 @@ from homeassistant.components.heiman_home import const as heiman_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 
 __all__ = [
     "MockConfigEntry",
