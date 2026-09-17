@@ -48,7 +48,7 @@ class XiaomiClient:
             )
         except requests.exceptions.Timeout as err:
             raise XiaomiTimeoutError from err
-        except requests.exceptions.ConnectionError as err:
+        except requests.exceptions.RequestException as err:
             raise XiaomiConnectionError from err
 
         if res.status_code == HTTPStatus.UNAUTHORIZED:
@@ -89,7 +89,7 @@ class XiaomiClient:
             res = requests.get(url, timeout=LIST_TIMEOUT)
         except requests.exceptions.Timeout as err:
             raise XiaomiTimeoutError from err
-        except requests.exceptions.ConnectionError as err:
+        except requests.exceptions.RequestException as err:
             raise XiaomiConnectionError from err
 
         if res.status_code == HTTPStatus.UNAUTHORIZED:
