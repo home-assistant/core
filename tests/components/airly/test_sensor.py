@@ -63,6 +63,7 @@ async def test_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_airly_client: MagicMock,
+    exception: Exception,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly.
 
@@ -75,9 +76,7 @@ async def test_availability(
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "68.35"
 
-    mock_airly_client.create_measurements_session_point.return_value.update.side_effect = AirlyError(
-        HTTPStatus.NOT_FOUND, {"message": "Not found"}
-    )
+    mock_airly_client.create_measurements_session_point.return_value.update.side_effect = exception
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
@@ -105,7 +104,8 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, mock_config_entry)
 
-    call_count = mock_airly_client.create_measurements_session_point.call_count
+    measurements = mock_airly_client.create_measurements_session_point.return_value
+    call_count = measurements.update.call_count
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -114,6 +114,4 @@ async def test_manual_update_entity(
         blocking=True,
     )
 
-    assert (
-        mock_airly_client.create_measurements_session_point.call_count == call_count + 1
-    )
+    assert measurements.update.call_count == call_count + 1

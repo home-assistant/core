@@ -108,7 +108,9 @@ async def test_update_interval(
     instances = 1
 
     create_measurements = mock_airly_client.create_measurements_session_point
+    update_measurements = create_measurements.return_value.update
     assert create_measurements.call_count == 1
+    assert update_measurements.call_count == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
 
@@ -117,8 +119,11 @@ async def test_update_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # call_count should increase by one because we have one instance configured
-    assert create_measurements.call_count == 2
+    # update should be called once more because we have one instance configured.
+    # The measurements session is created once per entry, so create is not
+    # called again on refresh.
+    assert create_measurements.call_count == 1
+    assert update_measurements.call_count == 2
 
     # Now we add the second Airly instance
     entry = MockConfigEntry(
@@ -135,7 +140,8 @@ async def test_update_interval(
     await init_integration(hass, entry)
     instances = 2
 
-    assert create_measurements.call_count == 3
+    assert create_measurements.call_count == 2
+    assert update_measurements.call_count == 3
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert entry.state is ConfigEntryState.LOADED
 
@@ -144,8 +150,10 @@ async def test_update_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # call_count should increase by two because we have two instances configured
-    assert create_measurements.call_count == 5
+    # update should be called once more per instance because we have two
+    # instances configured
+    assert create_measurements.call_count == 2
+    assert update_measurements.call_count == 5
 
 
 @pytest.mark.usefixtures("mock_airly_client")
