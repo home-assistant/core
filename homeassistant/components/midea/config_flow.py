@@ -942,6 +942,16 @@ class MideaOptionsFlow(OptionsFlow):
                 **self._config_entry.options,
                 CONF_POWER_ANALYSIS_METHOD: analysis_method,
             }
+            if (
+                not self._config_entry.update_listeners
+                and self.hass.config_entries.async_get_entry(
+                    self._config_entry.entry_id
+                )
+            ):
+                self.hass.loop.call_soon(
+                    self.hass.config_entries.async_schedule_reload,
+                    self._config_entry.entry_id,
+                )
             return self.async_create_entry(title="", data=new_options)
 
         current = str(self._config_entry.options.get(CONF_POWER_ANALYSIS_METHOD, 1))

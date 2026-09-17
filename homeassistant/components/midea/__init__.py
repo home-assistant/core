@@ -52,6 +52,7 @@ _PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 
+
 def _build_customize(data: Mapping[str, Any], options: Mapping[str, Any]) -> str:
     """Build per-device customize JSON for midea-local."""
     if data.get(CONF_TYPE) != DeviceType.AC:

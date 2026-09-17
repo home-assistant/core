@@ -2646,6 +2646,28 @@ async def test_ac_options_flow_accepts_power_analysis_method_12(
     assert result["data"][CONF_POWER_ANALYSIS_METHOD] == 12
 
 
+async def test_ac_options_flow_schedules_reload_without_update_listener(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test options flow schedules reload when entry has no update listener."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_POWER_ANALYSIS_METHOD: "12"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_schedule_reload.assert_called_once_with(config_entry.entry_id)
+
+
 async def test_ac_options_flow_rejects_invalid_power_analysis_method(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
