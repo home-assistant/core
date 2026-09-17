@@ -14,9 +14,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_GROUP
+from .const import CONF_GROUP, DOMAIN
 from .coordinator import SMADataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     """Unload a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"modbus_not_enabled_{entry.entry_id}")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

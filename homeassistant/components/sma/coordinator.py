@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -119,11 +120,25 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             self._sma_modbus_connected = True
         except (SmaConnectionException, SmaTimeoutException) as err:
             _LOGGER.debug("SMA Modbus connection failed: %s", err)
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"modbus_not_enabled_{self.config_entry.entry_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="modbus_not_enabled",
+                translation_placeholders={"name": self.config_entry.title},
+                learn_more_url="https://www.home-assistant.io/integrations/sma/",
+            )
             return
         except SmaSunSpecException as err:
             _LOGGER.debug("SMA Modbus SunSpec discovery failed: %s", err)
             return
         else:
+            # Clean-up the Modbus not enabled issue if it exists
+            ir.async_delete_issue(
+                self.hass, DOMAIN, f"modbus_not_enabled_{self.config_entry.entry_id}"
+            )
             await self.async_request_refresh()
 
     @override
