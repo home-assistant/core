@@ -172,7 +172,7 @@ async def test_device_tracker_reconnect(
     assert state.state == STATE_NOT_HOME
 
     # The phone reconnects with a new IP address.
-    phone = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", "1", "192.168.31.42")
+    phone = _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "192.168.31.42")
     mock_xiaomi_client.get_device_list.return_value = [phone]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

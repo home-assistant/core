@@ -61,12 +61,16 @@ class XiaomiClient:
             raise XiaomiConnectionError(
                 "Failed to parse response from mi router"
             ) from err
-        try:
-            self.token = result["token"]
-        except KeyError as err:
+        if not isinstance(result, dict):
+            raise XiaomiConnectionError(
+                f"Invalid login response from mi router: {result}"
+            )
+        token = result.get("token")
+        if not isinstance(token, str) or not token:
             raise XiaomiAuthError(
-                f"Xiaomi login did not return a token, response was: {result}"
-            ) from err
+                f"Xiaomi login did not return a valid token, response was: {result}"
+            )
+        self.token = token
 
     def get_device_list(self) -> list[dict[str, Any]]:
         """Return the device list, refreshing the token once on auth failure."""
@@ -104,6 +108,10 @@ class XiaomiClient:
             raise XiaomiConnectionError(
                 "Failed to parse response from mi router"
             ) from err
+        if not isinstance(result, dict):
+            raise XiaomiConnectionError(
+                f"Invalid device list response from mi router: {result}"
+            )
         try:
             xiaomi_code = result["code"]
         except KeyError as err:
@@ -116,8 +124,13 @@ class XiaomiClient:
                 f"Receive wrong Xiaomi code {xiaomi_code}, expected 0"
             )
         try:
-            return result["list"]
+            device_list = result["list"]
         except KeyError as err:
             raise XiaomiConnectionError(
                 f"No list in response from mi router: {result}"
             ) from err
+        if not isinstance(device_list, list):
+            raise XiaomiConnectionError(
+                f"Invalid list in response from mi router: {result}"
+            )
+        return [device for device in device_list if isinstance(device, dict)]

@@ -12,26 +12,26 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from tests.common import MockConfigEntry
 
 
-def _create_device(mac: str | None, name: str, online: str, ip: str) -> dict[str, Any]:
+def _create_device(mac: str | None, name: str, online: int, ip: str) -> dict[str, Any]:
     """Create a device entry as returned by the Xiaomi router API."""
-    device: dict[str, Any] = {"name": name, "online": online, "ip": ip}
+    device: dict[str, Any] = {"name": name, "online": online, "ip": [{"ip": ip}]}
     if mac is not None:
         device["mac"] = mac
     return device
 
 
 MOCK_DEVICE_LIST: list[dict[str, Any]] = [
-    _create_device("AA:BB:CC:DD:EE:FF", "my-phone", "1", "192.168.31.10"),
-    _create_device("11:22:33:44:55:66", "my-laptop", "1", "192.168.31.11"),
+    _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "192.168.31.10"),
+    _create_device("11:22:33:44:55:66", "my-laptop", 1, "192.168.31.11"),
     # Offline device: must not produce an entity.
-    _create_device("22:33:44:55:66:77", "my-tablet", "0", "192.168.31.12"),
+    _create_device("22:33:44:55:66:77", "my-tablet", 0, "192.168.31.12"),
     # Dual-stack duplicate of my-phone (IPv6): must be deduplicated.
-    _create_device("AA:BB:CC:DD:EE:FF", "my-phone", "1", "2001:db8::10"),
+    _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "2001:db8::10"),
     # No MAC address: must be skipped.
-    _create_device(None, "no-mac", "1", "192.168.31.13"),
+    _create_device(None, "no-mac", 1, "192.168.31.13"),
 ]
 
-LATE_DEVICE = _create_device("33:44:55:66:77:88", "my-desktop", "1", "192.168.31.20")
+LATE_DEVICE = _create_device("33:44:55:66:77:88", "my-desktop", 1, "192.168.31.20")
 
 
 @pytest.fixture

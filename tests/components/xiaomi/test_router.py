@@ -22,14 +22,14 @@ DEVICE_LIST: list[dict[str, Any]] = [
     {
         "mac": "AA:BB:CC:DD:EE:FF",
         "name": "my-phone",
-        "online": "1",
-        "ip": "192.168.31.10",
+        "online": 1,
+        "ip": [{"ip": "192.168.31.10"}],
     },
     {
         "mac": "11:22:33:44:55:66",
         "name": "my-laptop",
-        "online": "0",
-        "ip": "192.168.31.11",
+        "online": 0,
+        "ip": [{"ip": "192.168.31.11"}],
     },
 ]
 
@@ -47,7 +47,9 @@ LOGIN_FAILURES: list[tuple[dict[str, Any], type[Exception]]] = [
     ({"status_code": HTTPStatus.UNAUTHORIZED}, XiaomiAuthError),
     ({"status_code": HTTPStatus.INTERNAL_SERVER_ERROR}, XiaomiConnectionError),
     ({"text": "not json"}, XiaomiConnectionError),
+    ({"json": ["token"]}, XiaomiConnectionError),
     ({"json": {"code": 1008}}, XiaomiAuthError),
+    ({"json": {"token": None}}, XiaomiAuthError),
 ]
 
 
@@ -73,7 +75,9 @@ def test_login_success(requests_mock: requests_mock.Mocker) -> None:
         "http_401",
         "http_500",
         "invalid_json",
+        "json_array",
         "no_token",
+        "null_token",
     ],
 )
 def test_login_failure(
@@ -158,6 +162,8 @@ LIST_FAILURES: list[tuple[dict[str, Any], type[Exception]]] = [
     ({"text": "not json"}, XiaomiConnectionError),
     ({"json": {}}, XiaomiConnectionError),
     ({"json": {"code": 0}}, XiaomiConnectionError),
+    ({"json": [0, 1]}, XiaomiConnectionError),
+    ({"json": {"code": 0, "list": "nope"}}, XiaomiConnectionError),
 ]
 
 
@@ -171,6 +177,8 @@ LIST_FAILURES: list[tuple[dict[str, Any], type[Exception]]] = [
         "invalid_json",
         "missing_code",
         "missing_list",
+        "json_array",
+        "list_not_a_list",
     ],
 )
 def test_get_device_list_failure(
@@ -188,3 +196,16 @@ def test_get_device_list_failure(
 
     # Connection-class failures must not trigger a re-login.
     assert all(req.method == "GET" for req in requests_mock.request_history)
+
+
+def test_get_device_list_filters_non_dict_entries(
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test malformed entries are dropped instead of escaping the client."""
+    requests_mock.get(
+        LIST_URL_TOK1,
+        json={"code": 0, "list": [DEVICE_LIST[0], "junk", None]},
+    )
+
+    client = _client("tok1")
+    assert client.get_device_list() == [DEVICE_LIST[0]]

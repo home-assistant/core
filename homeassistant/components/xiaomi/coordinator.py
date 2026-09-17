@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Xiaomi integration."""
 
 import logging
-from typing import TypedDict, override
+from typing import Any, TypedDict, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -18,6 +18,25 @@ from .router import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_online(online: Any) -> bool:
+    """Return true if the router reports the device as online."""
+    try:
+        return int(online) == 1
+    except TypeError, ValueError:
+        return False
+
+
+def _extract_ip(ip_value: Any) -> str | None:
+    """Extract the first IP address from the router's IP record list."""
+    if isinstance(ip_value, str):
+        return ip_value
+    if isinstance(ip_value, list):
+        for record in ip_value:
+            if isinstance(record, dict) and isinstance(record.get("ip"), str):
+                return record["ip"]
+    return None
 
 
 class XiaomiDeviceInfo(TypedDict, total=False):
@@ -71,10 +90,16 @@ class XiaomiCoordinator(DataUpdateCoordinator[dict[str, XiaomiDeviceInfo]]):
         devices: dict[str, XiaomiDeviceInfo] = {}
         for device in result:
             mac = device.get("mac")
-            if mac and mac not in devices and int(device.get("online", "0")) == 1:
-                device_info: XiaomiDeviceInfo = {}
-                for key in ("name", "ip"):
-                    if key in device:
-                        device_info[key] = device[key]
-                devices[mac] = device_info
+            if (
+                not isinstance(mac, str)
+                or mac in devices
+                or not _is_online(device.get("online"))
+            ):
+                continue
+            device_info: XiaomiDeviceInfo = {}
+            if isinstance(name := device.get("name"), str):
+                device_info["name"] = name
+            if ip := _extract_ip(device.get("ip")):
+                device_info["ip"] = ip
+            devices[mac] = device_info
         return devices
