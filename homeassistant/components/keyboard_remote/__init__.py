@@ -396,6 +396,29 @@ class KeyboardRemoteManager:
             return None
         return (best[1], best[2])
 
+    def _claim_descriptor(
+        self, descriptor: str, dev: InputDevice, handler: DeviceHandler
+    ) -> bool:
+        """Assign a descriptor to a handler, or close the device and refuse.
+
+        Callers reach here after an executor job that yielded to the event
+        loop, so the entry may have unloaded, another task may have taken the
+        descriptor, and the handler may already have a device. Starting a
+        second descriptor on a monitoring handler is the damaging case: the
+        extra mapping makes a later DELETE of that node stop the device the
+        handler is really reading from.
+        """
+        if (
+            self._handlers.get(handler.entry.entry_id) is not handler
+            or descriptor in self._active_handlers_by_descriptor
+            or handler.is_monitoring
+        ):
+            dev.close()
+            return False
+
+        self._active_handlers_by_descriptor[descriptor] = handler
+        return True
+
     async def _async_check_handler(self, handler: DeviceHandler) -> None:
         """Check if a newly registered handler's device is currently connected."""
         handlers = list(self._handlers.values())
@@ -405,8 +428,8 @@ class KeyboardRemoteManager:
         )
         if result is not None:
             descriptor, dev = result
-            self._active_handlers_by_descriptor[descriptor] = handler
-            await handler.async_device_start_monitoring(dev)
+            if self._claim_descriptor(descriptor, dev, handler):
+                await handler.async_device_start_monitoring(dev)
 
     async def _async_monitor_devices(self) -> None:
         """Monitor /dev/input/ for device add/remove events via inotify."""
@@ -440,8 +463,9 @@ class KeyboardRemoteManager:
                     if result[0] is None or result[1] is None:
                         continue
                     dev, handler = result[0], result[1]
+                    if not self._claim_descriptor(descriptor, dev, handler):
+                        continue
                     _LOGGER.debug("adding: %s", descriptor)
-                    self._active_handlers_by_descriptor[descriptor] = handler
                     await handler.async_device_start_monitoring(dev)
         except asyncio.CancelledError:
             _LOGGER.debug("Monitoring canceled")
@@ -458,6 +482,11 @@ class DeviceHandler:
         self._monitor_task: asyncio.Task | None = None
         self.dev: InputDevice | None = None
         self._descriptor: str | None = None
+
+    @property
+    def is_monitoring(self) -> bool:
+        """Whether this handler already has a device to read from."""
+        return self._monitor_task is not None
 
     @property
     def _device_path(self) -> str | None:
@@ -527,8 +556,16 @@ class DeviceHandler:
         if yaml_descriptor and os.path.realpath(yaml_descriptor) == real_path:
             return MATCH_YAML_DESCRIPTOR
 
-        # Check by device name
-        if self._device_name_config and dev.name == self._device_name_config:
+        # Check by device name, but only for entries that have nothing better.
+        # An entry configured with a path keeps that identity even while the
+        # node is missing, because a composite keyboard reports the same name
+        # on every node it exposes and a sibling would be the wrong device.
+        if (
+            not device_path
+            and not yaml_descriptor
+            and self._device_name_config
+            and dev.name == self._device_name_config
+        ):
             return MATCH_DEVICE_NAME
 
         return None
