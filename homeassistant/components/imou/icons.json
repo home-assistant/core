@@ -63,14 +63,14 @@
       "header_detect": {
         "default": "mdi:run"
       },
+      "light": {
+        "default": "mdi:lightbulb-on"
+      },
       "linkage_siren": {
         "default": "mdi:bell-alert"
       },
       "linkage_white_light": {
         "default": "mdi:alarm-light"
-      },
-      "light": {
-        "default": "mdi:lightbulb-on"
       },
       "motion_detect": {
         "default": "mdi:motion-sensor"
@@ -84,11 +84,11 @@
       "smart_track": {
         "default": "mdi:target-account"
       },
-      "wide_dynamic": {
-        "default": "mdi:hdr"
-      },
       "white_light": {
         "default": "mdi:light-flood-down"
+      },
+      "wide_dynamic": {
+        "default": "mdi:hdr"
       }
     }
   }
