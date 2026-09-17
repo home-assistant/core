@@ -119,7 +119,7 @@ async def test_device_init_timeout_not_reported_as_connect_timeout(
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
         assert (
             mock_config_entry.reason
-            != "Timed out connecting to Anthem AVR at 1.1.1.1:14999"
+            == "Timed out waiting for device info from Anthem AVR at 1.1.1.1:14999"
         )
         # The connection succeeded before this failure — it must be closed,
         # not leaked, since runtime_data was never set (so async_unload_entry
