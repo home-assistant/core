@@ -145,6 +145,35 @@ async def test_polling_platform_init_failed(
     assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_polling_platform_init_failed_does_not_log_token(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a connection failure does not put the bot token in the log."""
+    api_key = mock_polling_config_entry.data[CONF_API_KEY]
+    # The Telegram API URL embeds the bot token, and library errors quote it.
+    error = NetworkError(
+        "httpx.HTTPStatusError: Client error '401 Unauthorized' for url "
+        f"'https://api.telegram.org/bot{api_key}/getMe'"
+    )
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me", side_effect=error
+    ):
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Home Assistant strips the trailing period from translated messages.
+    assert mock_polling_config_entry.reason == "Could not connect to Telegram"
+
+    # Nothing at any level may carry the token: not the info line, not the
+    # traceback config entry setup logs, not the library's own debug output.
+    assert api_key not in caplog.text
+
+
 @pytest.mark.parametrize(
     ("service", "input"),
     [
