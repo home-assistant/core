@@ -47,6 +47,27 @@ class BadChimeDoorbell:
         return False
 
 
+class ChimeCapabilityLostDoorbell:
+    """Doorbell whose chime enabled-state read raises after setup."""
+
+    family = "doorbots"
+    id = 987654322
+    device_api_id = 987654322
+    device_id = "aa:bb:cc:dd:ee:00"
+    name = "Chime Capability Lost Doorbell"
+    model = "doorbots"
+    existing_doorbell_type = "Mechanical"
+
+    @property
+    def existing_doorbell_type_enabled(self) -> bool:
+        """Mimic ring_doorbell raising when the chime type becomes unknown."""
+        raise KeyError(3)
+
+    def has_capability(self, capability: RingCapability) -> bool:
+        """Return False for all capabilities."""
+        return False
+
+
 @pytest.fixture
 def create_deprecated_siren_entity(
     hass: HomeAssistant,
@@ -204,3 +225,17 @@ async def test_switch_setup_succeeds_with_unknown_chime_type(
     assert hass.states.get("switch.front_siren")
     assert hass.states.get("switch.front_motion_detection")
     assert not hass.states.get("switch.bad_chime_doorbell_in_home_chime")
+
+
+@pytest.mark.usefixtures("mock_ring_client", "create_deprecated_siren_entity")
+async def test_in_home_chime_off_when_type_becomes_unknown(
+    hass: HomeAssistant, mock_ring_devices: Any
+) -> None:
+    """Test that an in-home chime switch reads as off when its type becomes unknown."""
+    mock_ring_devices.all_devices.append(ChimeCapabilityLostDoorbell())
+
+    await setup_platform(hass, Platform.SWITCH)
+
+    state = hass.states.get("switch.chime_capability_lost_doorbell_in_home_chime")
+    assert state
+    assert state.state == STATE_OFF
