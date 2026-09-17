@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
     EntityStateAttribute,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -36,7 +37,7 @@ from .const import (
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
             CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE
         ): probatio.Coerce(SourceType),
     },
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.DEVICE_TRACKER).schema)
 PLATFORM_SCHEMA_MODERN = probatio.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
 

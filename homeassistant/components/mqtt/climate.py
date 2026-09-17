@@ -41,6 +41,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -122,7 +123,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -347,7 +348,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.CLIMATE).schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,

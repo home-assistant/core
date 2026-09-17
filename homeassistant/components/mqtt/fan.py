@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_STATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -84,7 +85,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_publish_topic, valid_subscribe_topic
 
 PARALLEL_UPDATES = 0
@@ -172,7 +173,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ): cv.string,
         probatio.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.FAN).schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,

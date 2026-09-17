@@ -15,7 +15,12 @@ from homeassistant.components.event import (
     EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,7 +39,7 @@ from .models import (
     PayloadSentinel,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +64,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         probatio.Optional(CONF_NAME): probatio.Any(None, cv.string),
         probatio.Required(CONF_EVENT_TYPES): probatio.All(cv.ensure_list, [cv.string]),
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.EVENT).schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,

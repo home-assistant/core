@@ -13,7 +13,6 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
     MAX_LENGTH_STATE_STATE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -27,6 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     template,
 )
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -341,23 +341,20 @@ def valid_entity_categories(platform: str) -> tuple[EntityCategory, ...]:
     return tuple(sorted(valid_categories))
 
 
-def validate_entity_category(platform: str) -> Callable[[ConfigType], ConfigType]:
+def entity_category_validator(platform: str) -> Callable[[Any], EntityCategory]:
     """Return a validator for the entity category of a platform."""
+    valid_categories = valid_entity_categories(platform)
 
-    def validate(config: ConfigType) -> ConfigType:
+    def validate(value: Any) -> EntityCategory:
         """Validate the entity category is supported by the platform."""
-        entity_category: EntityCategory | None = config.get(CONF_ENTITY_CATEGORY)
-        if entity_category is None:
-            return config
-        valid_categories = valid_entity_categories(platform)
+        entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
         if entity_category not in valid_categories:
             _options = ", ".join(sorted(valid_categories))
             raise probatio.Invalid(
                 f"Entity category '{entity_category}' is not supported by the"
-                f" {platform} platform. Valid options are: {_options}",
-                path=[CONF_ENTITY_CATEGORY],
+                f" {platform} platform. Valid options are: {_options}"
             )
-        return config
+        return entity_category
 
     return validate
 

@@ -12,7 +12,12 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,7 +30,7 @@ from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +62,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         probatio.Optional(CONF_TITLE): cv.string,
     },
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.UPDATE).schema)
 
 
 DISCOVERY_SCHEMA = probatio.All(

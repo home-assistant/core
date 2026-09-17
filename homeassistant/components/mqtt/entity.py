@@ -130,7 +130,6 @@ from .util import (
     async_cleanup_device_registry,
     learn_more_url,
     mqtt_config_entry_enabled,
-    validate_entity_category,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,12 +257,6 @@ def async_setup_entity_entry_helper(  # noqa: C901
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
-    # entity categories are not supported by all platforms
-    _validate_entity_category = validate_entity_category(domain)
-    discovery_schema = probatio.All(discovery_schema, _validate_entity_category)
-    platform_schema_modern = probatio.All(
-        platform_schema_modern, _validate_entity_category
-    )
 
     @callback
     def _async_migrate_subentry(
@@ -1593,7 +1586,6 @@ class MqttEntity(
         """Handle updated discovery message."""
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
-            validate_entity_category(self._entity_id_format.split(".")[0])(config)
         except probatio.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return

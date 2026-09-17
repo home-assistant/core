@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_STATE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -65,7 +66,7 @@ from ..models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
+from ..schemas import mqtt_entity_common_schema
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -109,7 +110,7 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
             probatio.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
     )
-    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+    .extend(mqtt_entity_common_schema(Platform.LIGHT).schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 

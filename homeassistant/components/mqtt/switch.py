@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -43,7 +44,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 
 PARALLEL_UPDATES = 0
 
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.SWITCH).schema)
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
