@@ -53,7 +53,7 @@ async def test_form_errors(
     side_effect: Exception,
     error_key: str,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test errors during input validation are handled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
