@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
 import pytest
@@ -172,6 +172,35 @@ async def test_coordinator_update_fails_until_sensor_recovers(
     assert coordinator.last_update_success is True
     assert coordinator.forecast.azimuth == 200 - 180
     assert mock_forecast_solar.estimate.call_count == estimate_calls + 1
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_planes_sharing_sensor_request_one_refresh(
+    hass: HomeAssistant,
+) -> None:
+    """Test a sensor shared by planes requests a single refresh when it recovers."""
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    entry = _config_entry(
+        AZIMUTH_SENSOR_PLANE,
+        AZIMUTH_SENSOR_PLANE,
+        entry_data=FIXED_LOCATION,
+        options={CONF_API_KEY: "abcdef1234567890"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    hass.states.async_set(AZIMUTH_SENSOR, "unavailable", DEGREES)
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+
+    # Mocked so the update stays failed, as it would while a real API call is pending.
+    with patch.object(coordinator, "async_request_refresh") as request_refresh:
+        hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
+        await hass.async_block_till_done()
+
+    request_refresh.assert_called_once()
 
 
 async def test_coordinator_api_failure_waits_for_schedule(

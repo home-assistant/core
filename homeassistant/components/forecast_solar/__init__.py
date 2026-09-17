@@ -98,14 +98,15 @@ async def async_migrate_entry(
 _SENSOR_KEYS = (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR)
 
 
-def _sensor_entity_ids(entry: ForecastSolarConfigEntry) -> list[str]:
+def _sensor_entity_ids(entry: ForecastSolarConfigEntry) -> set[str]:
     """Return the entity IDs of every sensor the entry's planes read."""
-    return [
+    # Deduplicated: the event trackers call the listener once per listed ID.
+    return {
         entity_id
         for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
         for key in _SENSOR_KEYS
         if (entity_id := subentry.data.get(key))
-    ]
+    }
 
 
 @callback
