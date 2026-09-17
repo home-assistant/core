@@ -966,9 +966,10 @@ async def test_chat_log_subscription(
         assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
         tool_result_event = received_events[-1][2]["content"]
         assert tool_result_event["tool_name"] == "test_tool"
-        assert (
-            tool_result_event["tool_result"] == "Tool execution completed successfully"
-        )
+        assert tool_result_event["result"] == {
+            "data": "Tool execution completed successfully",
+            "error": False,
+        }
 
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(

@@ -490,11 +490,13 @@
         'chat_log_delta': dict({
           'agent_id': 'test-agent',
           'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-          'error': False,
+          'result': dict({
+            'data': 'Test response',
+            'error': False,
+          }),
           'role': 'tool_result',
           'tool_call_id': 'test_tool_id',
           'tool_name': 'test_tool',
-          'tool_result': 'Test response',
         }),
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
