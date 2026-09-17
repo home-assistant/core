@@ -9,6 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 from .api import (
     EnturApiError,
     async_get_stop_place,
+    async_get_stop_routes,
     format_stop_place_title,
     line_id_label,
 )
@@ -72,13 +73,27 @@ async def _async_migrate_subentry_display_data(
         except EnturApiError, KeyError:
             place = None
 
+        routes_loaded = not line_ids
+        if line_ids:
+            try:
+                routes = await async_get_stop_routes(hass, subentry.data["stop_id"])
+            except EnturApiError:
+                routes = ()
+            else:
+                routes_loaded = True
+                route_labels.update(
+                    {route.line_id: route.selection_label for route in routes}
+                )
+
         data = dict(subentry.data)
-        data.setdefault(CONF_ROUTE_LABELS, route_labels)
+        data[CONF_ROUTE_LABELS] = {
+            line_id: route_labels[line_id] for line_id in line_ids
+        }
         data.setdefault(
             CONF_STOP_PLACE_TYPES,
             list(place.stop_place_types) if place else [],
         )
-        if place:
+        if place and routes_loaded:
             data[CONF_STOP_PLACE_METADATA_VERSION] = STOP_PLACE_METADATA_VERSION
         hass.config_entries.async_update_subentry(
             entry,

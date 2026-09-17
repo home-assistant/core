@@ -117,16 +117,16 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert subentry_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.title == "🚌 🚆 Bergen busstasjon · 1 · bus · RUT, 2 · SKY"
+    assert subentry.title == "🚌 🚆 Bergen busstasjon · 1 RUT (1-RUT), 2 SKY (2-SKY)"
     assert subentry.data == {
         CONF_STOP_ID: place.stop_id,
         CONF_WHITELIST_LINES: [route.line_id, "SKY:Line:2"],
         "route_labels": {
-            "RUT:Line:1": "1 · bus · RUT",
-            "SKY:Line:2": "2 · SKY",
+            "RUT:Line:1": "1 RUT (1-RUT)",
+            "SKY:Line:2": "2 SKY (2-SKY)",
         },
         "stop_place_types": ["busStation", "railStation"],
-        "stop_place_metadata_version": 1,
+        "stop_place_metadata_version": 2,
     }
 
 
@@ -294,13 +294,13 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
     assert entry.subentries["stop-subentry"].data == {
         CONF_STOP_ID: new_place.stop_id,
         CONF_WHITELIST_LINES: [new_route.line_id],
-        "route_labels": {"RUT:Line:1": "1 · bus · RUT"},
+        "route_labels": {"RUT:Line:1": "1 RUT (1-RUT)"},
         "stop_place_types": ["busStation"],
-        "stop_place_metadata_version": 1,
+        "stop_place_metadata_version": 2,
     }
     assert (
         entry.subentries["stop-subentry"].title
-        == "🚌 Bergen busstasjon · 1 · bus · RUT"
+        == "🚌 Bergen busstasjon · 1 RUT (1-RUT)"
     )
 
 
@@ -407,29 +407,44 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
                 "unique_id": "NSR:StopPlace:1",
                 "data": {
                     CONF_STOP_ID: "NSR:StopPlace:1",
-                    CONF_WHITELIST_LINES: ["BRA:Line:101"],
+                    CONF_WHITELIST_LINES: ["BRA:Line:4_6101"],
                 },
             }
         ],
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.entur_public_transport.async_get_stop_place",
-        return_value=EnturStopPlace(
-            stop_id="NSR:StopPlace:1",
-            name="Hønefoss sentrum",
-            display_name="Hønefoss sentrum, Hønefoss",
-            locality="Hønefoss",
-            transport_modes=("bus",),
-            role="standalone",
-            stop_place_types=("onstreetBus",),
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.async_get_stop_place",
+            return_value=EnturStopPlace(
+                stop_id="NSR:StopPlace:1",
+                name="Hønefoss sentrum",
+                display_name="Hønefoss sentrum, Hønefoss",
+                locality="Hønefoss",
+                transport_modes=("bus",),
+                role="standalone",
+                stop_place_types=("onstreetBus",),
+            ),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.async_get_stop_routes",
+            return_value=(
+                EnturRoute(
+                    line_id="BRA:Line:4_6101",
+                    public_code="4_6101",
+                    name="101 Drammen-Vikersund/Hønefoss",
+                    transport_mode="bus",
+                ),
+            ),
         ),
     ):
         await _async_migrate_subentry_display_data(hass, entry)
 
     subentry = entry.subentries["stop-subentry"]
-    assert subentry.title == "🚏 Hønefoss sentrum · 101 · BRA"
-    assert subentry.data["route_labels"] == {"BRA:Line:101": "101 · BRA"}
+    assert subentry.title == "🚏 Hønefoss sentrum · 101 BRA (4_6101-BRA)"
+    assert subentry.data["route_labels"] == {
+        "BRA:Line:4_6101": "101 BRA (4_6101-BRA)"
+    }
     assert subentry.data["stop_place_types"] == ["onstreetBus"]
-    assert subentry.data["stop_place_metadata_version"] == 1
+    assert subentry.data["stop_place_metadata_version"] == 2

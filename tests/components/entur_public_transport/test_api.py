@@ -127,8 +127,9 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
                                 "serviceJourney": {
                                     "journeyPattern": {
                                         "line": {
-                                            "id": "RUT:Line:1",
-                                            "publicCode": "1",
+                                            "id": "BRA:Line:4_6200",
+                                            "publicCode": "4_6200",
+                                            "name": "200 Hønefoss-Oslo",
                                             "transportMode": "bus",
                                         }
                                     }
@@ -138,8 +139,9 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
                                 "serviceJourney": {
                                     "journeyPattern": {
                                         "line": {
-                                            "id": "RUT:Line:1",
-                                            "publicCode": "1",
+                                            "id": "BRA:Line:4_6200",
+                                            "publicCode": "4_6200",
+                                            "name": "200 Hønefoss-Oslo",
                                             "transportMode": "bus",
                                         }
                                     }
@@ -149,9 +151,10 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
                                 "serviceJourney": {
                                     "journeyPattern": {
                                         "line": {
-                                            "id": "RUT:Line:2",
-                                            "publicCode": "2",
-                                            "transportMode": "bus",
+                                            "id": "GOA:Line:50",
+                                            "publicCode": "F5",
+                                            "name": "Sørtoget region",
+                                            "transportMode": "rail",
                                         }
                                     }
                                 }
@@ -166,10 +169,11 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
     routes = await async_get_stop_routes(hass, "NSR:StopPlace:548")
 
     assert [(route.line_id, route.public_code) for route in routes] == [
-        ("RUT:Line:1", "1"),
-        ("RUT:Line:2", "2"),
+        ("BRA:Line:4_6200", "4_6200"),
+        ("GOA:Line:50", "F5"),
     ]
-    assert routes[0].selection_label == "1 · bus · RUT"
+    assert routes[0].selection_label == "200 BRA (4_6200-BRA)"
+    assert routes[1].selection_label == "F5 GOA (50-GOA)"
 
     method, _, request, headers = aioclient_mock.mock_calls[0]
     assert method == "POST"

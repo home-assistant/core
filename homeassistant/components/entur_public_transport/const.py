@@ -27,7 +27,7 @@ CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "Entur"
 DEFAULT_ICON_KEY = "bus"
-STOP_PLACE_METADATA_VERSION = 1
+STOP_PLACE_METADATA_VERSION = 2
 
 ICONS = {
     "air": "mdi:airplane",

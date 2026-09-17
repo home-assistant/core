@@ -27,6 +27,7 @@ query StopPlaceLines($stopPlaceId: String!, $numberOfDepartures: Int!) {
           line {
             id
             publicCode
+            name
             transportMode
           }
         }
@@ -88,19 +89,44 @@ class EnturRoute:
     line_id: str
     public_code: str
     transport_mode: str
+    name: str | None = None
+
+    @property
+    def operator_code(self) -> str:
+        """Return the operator/authority code from the Entur line ID."""
+        authority, separator, _ = self.line_id.partition(":Line:")
+        return authority if separator else ""
+
+    @property
+    def technical_id(self) -> str:
+        """Return the line ID in a compact, user-readable form."""
+        authority, separator, line_code = self.line_id.partition(":Line:")
+        if not separator:
+            return self.line_id
+        return f"{line_code}-{authority}"
 
     @property
     def selection_label(self) -> str:
         """Return a user-friendly route label."""
-        operator = self.line_id.split(":Line:", 1)[0]
-        return f"{self.public_code} · {self.transport_mode} · {operator}"
+        public_code = self.public_code
+        if "_" in public_code and self.name:
+            name_code = self.name.split(maxsplit=1)[0]
+            if name_code:
+                public_code = name_code
+        operator = self.operator_code
+        route_label = " ".join(
+            part for part in (public_code, operator) if part
+        ) or self.line_id
+        if self.technical_id != self.line_id:
+            route_label += f" ({self.technical_id})"
+        return route_label
 
 
 def line_id_label(line_id: str) -> str:
     """Return a useful fallback label for a manually entered line ID."""
-    authority, separator, public_code = line_id.partition(":Line:")
+    authority, separator, line_code = line_id.partition(":Line:")
     if separator:
-        return f"{public_code} · {authority}"
+        return f"{line_code} {authority} ({line_code}-{authority})"
     return line_id
 
 
@@ -289,17 +315,21 @@ def _parse_stop_routes(payload: Any) -> tuple[EnturRoute, ...]:
                 continue
             line_id = line.get("id")
             public_code = line.get("publicCode")
+            name = line.get("name")
             transport_mode = line.get("transportMode")
             if not all(
                 isinstance(value, str)
                 for value in (line_id, public_code, transport_mode)
             ):
                 continue
+            if not isinstance(name, str):
+                name = None
             routes.setdefault(
                 line_id,
                 EnturRoute(
                     line_id=line_id,
                     public_code=public_code,
+                    name=name,
                     transport_mode=transport_mode,
                 ),
             )
