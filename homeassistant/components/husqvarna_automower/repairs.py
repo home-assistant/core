@@ -2,8 +2,11 @@
 
 import probatio
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -15,13 +18,13 @@ class MigrationRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm(user_input)
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Retry the migration after confirmation."""
         if user_input is not None:
             entry_id = self.data.get("entry_id") if self.data else None
@@ -31,9 +34,7 @@ class MigrationRepairFlow(RepairsFlow):
                 if entry.state is not ConfigEntryState.MIGRATION_ERROR:
                     return self.async_create_entry(data={})
 
-        return self.async_show_form(
-            step_id="confirm", data_schema=probatio.Schema({})
-        )
+        return self.async_show_form(step_id="confirm", data_schema=probatio.Schema({}))
 
 
 async def async_create_fix_flow(
