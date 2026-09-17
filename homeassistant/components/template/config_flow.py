@@ -557,10 +557,6 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
-        if template_type == Platform.LIGHT:
-            tcv.requires_option(CONF_LEVEL, CONF_LEVEL_ACTION)(user_input)
-            tcv.requires_option(CONF_HS, CONF_HS_ACTION)(user_input)
-            tcv.requires_option(CONF_TEMPERATURE, CONF_TEMPERATURE_ACTION)(user_input)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input

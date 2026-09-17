@@ -136,13 +136,6 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
 
 _LIGHT_VALIDATION = (
     tcv.inclusive_group("effect", CONF_EFFECT, CONF_EFFECT_LIST, CONF_EFFECT_ACTION),
-    tcv.requires_option(CONF_HS, CONF_HS_ACTION),
-    tcv.requires_option(CONF_LEVEL, CONF_LEVEL_ACTION),
-    tcv.requires_option(CONF_RGB, CONF_RGB_ACTION),
-    tcv.requires_option(CONF_RGBW, CONF_RGBW_ACTION),
-    tcv.requires_option(CONF_RGBWW, CONF_RGBWW_ACTION),
-    tcv.requires_option(CONF_TEMPERATURE, CONF_TEMPERATURE_ACTION),
-    tcv.requires_option(CONF_XY, CONF_XY_ACTION),
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
