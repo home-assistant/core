@@ -15,8 +15,8 @@ from homeassistant.helpers.llm import (
     LLMContext,
     Tool,
     ToolInput,
+    ToolResult,
 )
-from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, TodoServices
 from .intent import (
@@ -61,7 +61,7 @@ class TodoGetItemsTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Query a to-do list."""
         data = self.parameters(tool_input.tool_args)
         result = intent.async_match_targets(
@@ -73,7 +73,7 @@ class TodoGetItemsTool(Tool):
             ),
         )
         if not result.is_match:
-            return {"success": False, "error": "To-do list not found"}
+            return ToolResult(data={"error": "To-do list not found"}, error=True)
         entity_id = result.states[0].entity_id
         service_data: dict[str, Any] = {"entity_id": entity_id}
         status = data["status"]
@@ -89,9 +89,9 @@ class TodoGetItemsTool(Tool):
             return_response=True,
         )
         if not service_result:
-            return {"success": False, "error": "To-do list not found"}
+            return ToolResult(data={"error": "To-do list not found"}, error=True)
         items = cast(dict, service_result)[entity_id]["items"]
-        return {"success": True, "result": items}
+        return ToolResult(data={"result": items})
 
 
 @callback
