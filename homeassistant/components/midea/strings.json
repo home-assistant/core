@@ -775,8 +775,8 @@
         "1": "BCD (Default)",
         "2": "Binary",
         "3": "Mixed",
-        "101": "BCD Energy + Binary Power",
-        "12": "Binary (1/10 scale)"
+        "12": "Binary (1/10 scale)",
+        "101": "BCD Energy + Binary Power"
       }
     }
   }
