@@ -9,7 +9,6 @@ from homeassistant.helpers.typing import ConfigType
 from .api import format_stop_place_title, line_id_label
 from .const import (
     CONF_ROUTE_LABELS,
-    CONF_STOP_ID,
     CONF_STOP_PLACE_TYPES,
     CONF_WHITELIST_LINES,
     DOMAIN,
