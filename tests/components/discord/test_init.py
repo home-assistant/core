@@ -1,9 +1,15 @@
 """Test the Discord integration setup."""
 
+from unittest.mock import patch
+
 import nextcord
 
-from homeassistant.components.discord.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.discord.const import (
+    CONF_TARGET_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_TARGET,
+)
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -27,6 +33,34 @@ async def test_setup_and_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_add_subentry_reloads(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test adding a subentry reloads the entry so a new entity appears."""
+    entry = create_entry(hass, with_subentry=True)
+    await setup_integration(hass, entry)
+
+    assert len(entity_registry.entities) == 1
+
+    with (
+        patch("homeassistant.components.discord.nextcord.Client.login"),
+        patch("homeassistant.components.discord.nextcord.Client.close"),
+    ):
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                unique_id="9876543210",
+                data={CONF_TARGET_ID: "9876543210"},
+                subentry_type=SUBENTRY_TYPE_TARGET,
+                title="alerts",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get("notify.alerts") is not None
 
 
 async def test_setup_auth_failed(hass: HomeAssistant) -> None:
@@ -64,7 +98,7 @@ async def test_notify_entity_created(
 
     entity_entry = entity_registry.async_get(f"notify.{TARGET_NAME}")
     assert entity_entry is not None
-    assert entity_entry.unique_id == f"{entry.entry_id}_{int(TARGET)}"
+    assert entity_entry.unique_id == f"{entry.entry_id}_{TARGET}"
     assert entity_entry.config_subentry_id == subentry_id
 
     bot_device = device_registry.async_get_device_by_identifier(
@@ -72,8 +106,8 @@ async def test_notify_entity_created(
     )
     assert bot_device is not None
 
-    channel_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{entry.entry_id}_{int(TARGET)}"), entry.entry_id
+    target_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry.entry_id}_{TARGET}"), entry.entry_id
     )
-    assert channel_device is not None
-    assert channel_device.via_device_id == bot_device.id
+    assert target_device is not None
+    assert target_device.via_device_id == bot_device.id

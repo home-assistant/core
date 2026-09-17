@@ -217,12 +217,28 @@ async def test_subentry_flow_target(hass: HomeAssistant) -> None:
     with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_TARGET_ID: int(TARGET)},
+            user_input={CONF_TARGET_ID: TARGET},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TARGET_NAME
-    assert result["data"] == {CONF_TARGET_ID: int(TARGET)}
+    assert result["data"] == {CONF_TARGET_ID: TARGET}
     assert result["unique_id"] == TARGET
+
+
+async def test_subentry_flow_invalid_target(hass: HomeAssistant) -> None:
+    """Test a non-numeric target ID is rejected before contacting Discord."""
+    entry = create_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_TARGET),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_TARGET_ID: "not-a-number"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_target"}
 
 
 async def test_subentry_flow_user_fallback(hass: HomeAssistant) -> None:
@@ -244,7 +260,7 @@ async def test_subentry_flow_user_fallback(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_TARGET_ID: int(TARGET)},
+            user_input={CONF_TARGET_ID: TARGET},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "some_user"
@@ -260,7 +276,7 @@ async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TARGET_ID: int(TARGET)},
+        user_input={CONF_TARGET_ID: TARGET},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -305,7 +321,7 @@ async def test_subentry_flow_errors(
         login.side_effect = login_side_effect
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_TARGET_ID: int(TARGET)},
+            user_input={CONF_TARGET_ID: TARGET},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
@@ -315,8 +331,8 @@ async def test_subentry_flow_errors(
     with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_TARGET_ID: int(TARGET)},
+            user_input={CONF_TARGET_ID: TARGET},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TARGET_NAME
-    assert result["data"] == {CONF_TARGET_ID: int(TARGET)}
+    assert result["data"] == {CONF_TARGET_ID: TARGET}

@@ -13,6 +13,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import TARGET_NAME, create_entry, setup_integration
 from .conftest import CONTENT, MESSAGE, TARGET, URL_ATTACHMENT
@@ -132,10 +133,8 @@ async def test_notify_entity_send_message(hass: HomeAssistant) -> None:
     channel.send.assert_awaited_once_with(MESSAGE)
 
 
-async def test_notify_entity_target_not_found(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test the notify entity logs a warning for an unknown target."""
+async def test_notify_entity_target_not_found(hass: HomeAssistant) -> None:
+    """Test the notify entity raises an error for an unknown target."""
     entry = create_entry(hass, with_subentry=True)
     await setup_integration(hass, entry)
 
@@ -152,6 +151,7 @@ async def test_notify_entity_target_not_found(
             new=AsyncMock(side_effect=not_found),
         ),
         patch("homeassistant.components.discord.notify.nextcord.Client.close"),
+        pytest.raises(HomeAssistantError, match=f"Target not found for ID: {TARGET}"),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
@@ -160,13 +160,9 @@ async def test_notify_entity_target_not_found(
             blocking=True,
         )
 
-    assert f"Target not found for ID: {TARGET}" in caplog.text
 
-
-async def test_notify_entity_communication_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test the notify entity logs a warning when sending fails."""
+async def test_notify_entity_communication_error(hass: HomeAssistant) -> None:
+    """Test the notify entity raises an error when sending fails."""
     entry = create_entry(hass, with_subentry=True)
     await setup_integration(hass, entry)
 
@@ -180,6 +176,7 @@ async def test_notify_entity_communication_error(
             new=AsyncMock(return_value=channel),
         ),
         patch("homeassistant.components.discord.notify.nextcord.Client.close"),
+        pytest.raises(HomeAssistantError, match="Error sending message to Discord"),
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
@@ -187,5 +184,3 @@ async def test_notify_entity_communication_error(
             {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
-
-    assert "Communication error" in caplog.text

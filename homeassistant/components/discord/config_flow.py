@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.selector import TextSelector
 
 from .const import CONF_TARGET_ID, DOMAIN, SUBENTRY_TYPE_TARGET, URL_PLACEHOLDER
 
@@ -24,9 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 
-TARGET_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_TARGET_ID): probatio.Coerce(int)}
-)
+# Discord IDs are unsigned 64-bit snowflakes that exceed JavaScript's safe
+# integer range, so they are kept as strings and only cast to int at the
+# nextcord API boundary.
+TARGET_SCHEMA = probatio.Schema({probatio.Required(CONF_TARGET_ID): TextSelector()})
 
 
 class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -56,9 +58,8 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if info and (entry := await self.async_set_unique_id(str(info.id))):
-                return self.async_update_reload_and_abort(
-                    entry, data=entry.data | user_input
-                )
+                # The update listener owns reload scheduling.
+                return self.async_update_and_abort(entry, data=entry.data | user_input)
             if error:
                 errors["base"] = error
 
@@ -111,7 +112,7 @@ class TargetSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             target_id = user_input[CONF_TARGET_ID]
             for subentry in entry.subentries.values():
-                if subentry.unique_id == str(target_id):
+                if subentry.unique_id == target_id:
                     return self.async_abort(reason="already_configured")
 
             error, name = await _async_try_target(entry.data[CONF_API_TOKEN], target_id)
@@ -121,7 +122,7 @@ class TargetSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_create_entry(
                     title=name,
                     data={CONF_TARGET_ID: target_id},
-                    unique_id=str(target_id),
+                    unique_id=target_id,
                 )
 
         return self.async_show_form(
@@ -146,16 +147,21 @@ async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo |
     return None, info
 
 
-async def _async_try_target(token: str, target_id: int) -> tuple[str | None, str]:
+async def _async_try_target(token: str, target_id: str) -> tuple[str | None, str]:
     """Try resolving a Discord target, returning an error or its name."""
+    try:
+        target = int(target_id)
+    except ValueError:
+        return "invalid_target", ""
+
     discord_bot = nextcord.Client()
     try:
         await discord_bot.login(token)
         try:
-            channel = await discord_bot.fetch_channel(target_id)
+            channel = await discord_bot.fetch_channel(target)
             name = getattr(channel, "name", None)
         except nextcord.NotFound:
-            name = (await discord_bot.fetch_user(target_id)).name
+            name = (await discord_bot.fetch_user(target)).name
     except nextcord.LoginFailure:
         return "invalid_auth", ""
     except nextcord.NotFound:
@@ -167,4 +173,4 @@ async def _async_try_target(token: str, target_id: int) -> tuple[str | None, str
         return "unknown", ""
     finally:
         await discord_bot.close()
-    return None, name or str(target_id)
+    return None, name or target_id

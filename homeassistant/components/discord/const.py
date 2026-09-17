@@ -7,6 +7,7 @@ from homeassistant.const import CONF_URL
 DEFAULT_NAME = "Discord"
 DOMAIN: Final = "discord"
 
+CONF_ENTRY: Final = "entry"
 CONF_TARGET_ID: Final = "target_id"
 SUBENTRY_TYPE_TARGET: Final = "target"
 

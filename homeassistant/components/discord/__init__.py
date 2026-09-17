@@ -14,7 +14,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import CONF_ENTRY, DATA_HASS_CONFIG, DOMAIN
 
 type DiscordConfigEntry = ConfigEntry[None]
 
@@ -44,14 +44,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscordConfigEntry) -> b
         await discord_bot.close()
 
     # Legacy notify service, kept for backwards compatibility with automations
-    # relying on embeds and attachments passed through the service data.
+    # relying on embeds and attachments passed through the service data. The entry
+    # is passed so the service can unregister itself on unload.
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, Platform.NOTIFY, DOMAIN, dict(entry.data), hass.data[DATA_HASS_CONFIG]
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {**entry.data, CONF_ENTRY: entry},
+            hass.data[DATA_HASS_CONFIG],
         )
     )
 
-    # Create the shared bot device before the platforms are set up, so per-channel
+    # Create the shared bot device before the platforms are set up, so per-target
     # devices can resolve it as their via_device.
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, **bot_device_info(entry)
@@ -59,7 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscordConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: DiscordConfigEntry
+) -> None:
+    """Reload the entry when its data or subentries change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DiscordConfigEntry) -> bool:

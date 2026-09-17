@@ -36,7 +36,7 @@ def create_entry(hass: HomeAssistant, with_subentry: bool = False) -> MockConfig
         subentries_data = [
             ConfigSubentryData(
                 unique_id=TARGET,
-                data={CONF_TARGET_ID: int(TARGET)},
+                data={CONF_TARGET_ID: TARGET},
                 subentry_type=SUBENTRY_TYPE_TARGET,
                 title=TARGET_NAME,
             )

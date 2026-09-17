@@ -32,6 +32,7 @@
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "invalid_target": "The target ID must be a number",
         "target_not_found": "Target not found",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
@@ -49,6 +50,14 @@
           "title": "Add target"
         }
       }
+    }
+  },
+  "exceptions": {
+    "send_failed": {
+      "message": "Error sending message to Discord: {error}"
+    },
+    "target_not_found": {
+      "message": "Target not found for ID: {target}"
     }
   }
 }
