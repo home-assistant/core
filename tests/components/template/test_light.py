@@ -2404,3 +2404,112 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_LIGHT.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("config", [ON_OFF_ACTIONS])
+@pytest.mark.parametrize(
+    ("extra_config", "required_action"),
+    [
+        ({"hs": "{{ (40, 50) }}"}, "set_hs"),
+        ({"level": "{{ (40, 50) }}"}, "set_level"),
+        ({"rgb": "{{ (160, 78, 192) }}"}, "set_rgb"),
+        ({"rgbw": "{{ (160, 78, 192, 25) }}"}, "set_rgbw"),
+        ({"rgbww": "{{ (160, 78, 192, 25, 50) }}"}, "set_rgbww"),
+        ({"temperature": "{{ 250 }}"}, "set_temperature"),
+        ({"xy": "{{ (0.2, 0.5) }}"}, "set_xy"),
+    ],
+)
+async def test_templates_require_actions(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    extra_config: ConfigType,
+    required_action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test templates require actions."""
+    platform = TEST_LIGHT
+    await setup_entity(hass, platform, style, 0, config, extra_config=extra_config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        f"Invalid config for 'template': Required option: '{required_action}' is missing for option"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {**SET_EFFECT_ACTION, **ON_OFF_ACTIONS},
+        {"effect_list": "{{ ['off', 'low', 'medium', 'high'] }}", **ON_OFF_ACTIONS},
+    ],
+)
+async def test_bad_effect_configuration(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a bad effect group configuration."""
+    platform = TEST_LIGHT
+    await setup_entity(hass, platform, style, 0, config)
+    assert len(hass.states.async_all(platform.domain)) == 0
+    assert (
+        "Invalid config for 'template': Some required option(s) are missing from inclusive group 'effect', expected missing options"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "effect_list": "{{ ['off', 'disco', 'rainbow'] }}",
+                **SET_EFFECT_ACTION,
+                **ON_OFF_ACTIONS,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("off", "off"),
+        ("disco", "disco"),
+        ("rainbow", "rainbow"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_optimistic_effect(
+    hass: HomeAssistant,
+    mode: str,
+    expected: Any,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic effect."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await _call_and_assert_action(
+        hass, calls, SERVICE_TURN_ON, {"effect": mode}, {"effect": mode}, "set_effect"
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.attributes.get("effect") == expected
