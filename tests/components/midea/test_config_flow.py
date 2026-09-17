@@ -2668,6 +2668,31 @@ async def test_ac_options_flow_schedules_reload_without_update_listener(
     mock_schedule_reload.assert_called_once_with(config_entry.entry_id)
 
 
+async def test_ac_options_flow_does_not_schedule_reload_for_unchanged_options(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test options flow does not schedule reload when options are unchanged."""
+    config_entry = mock_config_entry(default_ac_device())
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_POWER_ANALYSIS_METHOD: 12}
+    )
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_POWER_ANALYSIS_METHOD: "12"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_schedule_reload.assert_not_called()
+
+
 async def test_ac_options_flow_rejects_invalid_power_analysis_method(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],

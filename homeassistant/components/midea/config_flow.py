@@ -943,7 +943,8 @@ class MideaOptionsFlow(OptionsFlow):
                 CONF_POWER_ANALYSIS_METHOD: analysis_method,
             }
             if (
-                not self._config_entry.update_listeners
+                new_options != self._config_entry.options
+                and not self._config_entry.update_listeners
                 and self.hass.config_entries.async_get_entry(
                     self._config_entry.entry_id
                 )
