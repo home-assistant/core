@@ -31,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .utils import MockUFPFixture, init_entry
 
@@ -416,15 +415,7 @@ async def test_public_only_relay_channels_resignaled_after_reconnect(
     public_bootstrap = ufp_public_only.api.public_bootstrap
     public_bootstrap.relays = {relay.id: relay}
     await setup_public_only()
-
-    signaled_relays: list[Relay] = []
-    ufp_public_only.entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            ufp_public_only.entry.runtime_data.relay_signal,
-            signaled_relays.append,
-        )
-    )
+    assert hass.states.get(BINARY_SENSOR_ENTITY_ID) is None
 
     async def resync_public_bootstrap() -> Mock:
         relay.inputs = [_make_input()]
@@ -436,8 +427,9 @@ async def test_public_only_relay_channels_resignaled_after_reconnect(
     ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
-    assert signaled_relays == [relay]
-    assert [relay_input.id for relay_input in signaled_relays[0].inputs] == [INPUT_ID]
+    state = hass.states.get(BINARY_SENSOR_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
