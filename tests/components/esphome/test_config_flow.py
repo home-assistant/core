@@ -9,7 +9,9 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     BluetoothProxyFeature,
+    ConnectionClosedEvent,
     DeviceInfo,
+    DisconnectReason,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
@@ -410,6 +412,45 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
     }
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_provisioning_closed(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test user step when the device closed its provisioning window."""
+
+    def _provisioning_closed() -> None:
+        mock_client.add_connection_closed_callback.call_args[0][0](
+            ConnectionClosedEvent(
+                expected_disconnect=True,
+                reason=DisconnectReason.PROVISIONING_CLOSED,
+            )
+        )
+        raise APIConnectionError
+
+    mock_client.device_info.side_effect = _provisioning_closed
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "provisioning_closed"}
+
+    # Power cycling the device reopens the provisioning window
+    mock_client.device_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")

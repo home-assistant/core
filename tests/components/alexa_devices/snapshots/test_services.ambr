@@ -49,6 +49,8 @@
         }),
         'notifications_supported': True,
         'online': True,
+        'parent_clusters': dict({
+        }),
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -69,6 +71,7 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'voice_control_supported': True,
       }),
       'Alexa.Joke.Play',
     ),
@@ -126,6 +129,8 @@
         }),
         'notifications_supported': True,
         'online': True,
+        'parent_clusters': dict({
+        }),
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -146,6 +151,7 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'voice_control_supported': True,
       }),
       'bell_02',
     ),
@@ -203,6 +209,8 @@
         }),
         'notifications_supported': True,
         'online': True,
+        'parent_clusters': dict({
+        }),
         'sensors': dict({
           'dnd': dict({
             'error': False,
@@ -223,6 +231,7 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'voice_control_supported': True,
       }),
       'Play B.B.C. radio on TuneIn',
     ),

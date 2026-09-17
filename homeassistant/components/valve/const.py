@@ -1,8 +1,11 @@
 """Constants for the Valve entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import Final
 
-DOMAIN = "valve"
+import probatio
+
+DOMAIN: Final = "valve"
 
 
 class ValveEntityStateAttribute(StrEnum):
@@ -36,3 +39,6 @@ class ValveState(StrEnum):
     CLOSING = "closing"
     CLOSED = "closed"
     OPEN = "open"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ValveDeviceClass))

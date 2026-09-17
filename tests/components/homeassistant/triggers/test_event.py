@@ -300,7 +300,7 @@ async def test_if_fires_on_event_with_nested_data(
 ) -> None:
     """Test the firing of events with nested data.
 
-    This test exercises the slow path of using vol.Schema to validate
+    This test exercises the slow path of using probatio.Schema to validate
     matching event data.
     """
     assert await async_setup_component(
@@ -463,7 +463,7 @@ async def test_if_fires_on_multiple_user_ids(
 ) -> None:
     """Test the firing of event when the trigger has multiple user ids.
 
-    This test exercises the slow path of using vol.Schema to validate
+    This test exercises the slow path of using probatio.Schema to validate
     matching event context.
     """
     assert await async_setup_component(
@@ -598,8 +598,8 @@ async def test_state_reported_event(
     assert len(service_calls) == 0
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Can't "
-        "listen to state_reported in event trigger for dictionary value @ "
-        "data['event_type']. Got None" in caplog.text
+        "listen to state_reported in event trigger at 'event_type'. Got None"
+        in caplog.text
     )
 
 
@@ -657,13 +657,13 @@ def split_devices(
         identifiers={("itg2", "1")},
         name="Split device 2",
     )
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=COMPOSITE_ID
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=COMPOSITE_ID
     )
-    return device_registry.devices[device_1.id], device_registry.devices[device_2.id]
+    return device_registry._devices[device_1.id], device_registry._devices[device_2.id]
 
 
 _EVENT_TRIGGER = {

@@ -19,6 +19,15 @@ from tests.common import MockConfigEntry, load_fixture, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(name="mock_asyncio_sleep", autouse=True)
+async def mock_asyncio_sleep() -> AsyncGenerator[None]:
+    """Mock asyncio.sleep to avoid actual sleeping during tests."""
+    with patch(
+        "pynordpool.asyncio.sleep",
+    ):
+        yield
+
+
 @pytest.fixture(name="load_platforms")
 async def patch_platform_constant() -> list[Platform]:
     """Return list of platforms to load."""

@@ -5,7 +5,7 @@ from http import HTTPStatus
 from typing import Any, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.permissions.const import POLICY_EDIT
@@ -22,6 +22,7 @@ from homeassistant.helpers.data_entry_flow import (
 
 from .const import DOMAIN
 from .issue_handler import RepairsFlowManager
+from .models import RepairsFlowResult
 
 
 @callback
@@ -38,9 +39,9 @@ def async_setup(hass: HomeAssistant) -> None:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/get_issue_data",
-        vol.Required("domain"): str,
-        vol.Required("issue_id"): str,
+        probatio.Required("type"): "repairs/get_issue_data",
+        probatio.Required("domain"): str,
+        probatio.Required("issue_id"): str,
     }
 )
 def ws_get_issue_data(
@@ -61,10 +62,10 @@ def ws_get_issue_data(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/ignore_issue",
-        vol.Required("domain"): str,
-        vol.Required("issue_id"): str,
-        vol.Required("ignore"): bool,
+        probatio.Required("type"): "repairs/ignore_issue",
+        probatio.Required("domain"): str,
+        probatio.Required("issue_id"): str,
+        probatio.Required("ignore"): bool,
     }
 )
 def ws_ignore_issue(
@@ -78,7 +79,7 @@ def ws_ignore_issue(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/list_issues",
+        probatio.Required("type"): "repairs/list_issues",
     }
 )
 @callback
@@ -109,11 +110,11 @@ def ws_list_issues(
 
 
 def _prepare_repairs_flow_result_json(
-    result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+    result: RepairsFlowResult,
+    prepare_result_json: Callable[[RepairsFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to serializable JSON dict."""
-    entry: ConfigEntry | None = result.pop("result", None)  # type: ignore[typeddict-item]
+    entry: ConfigEntry | None = result.pop("result", None)
     data = prepare_result_json(result)
     if entry is not None:
         # Overwrite the ConfigEntry object with its json representation for frontend.
@@ -121,7 +122,7 @@ def _prepare_repairs_flow_result_json(
     return data
 
 
-class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowResult]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -129,12 +130,12 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
 
     @require_admin(permission=POLICY_EDIT)
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): str,
-                vol.Required("issue_id"): str,
+                probatio.Required("handler"): str,
+                probatio.Required("issue_id"): str,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @override
@@ -143,7 +144,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
@@ -159,14 +160,14 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         return self.json(self._prepare_result_json(result))
 
     @override
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
 
 
-class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
+class RepairsFlowResourceView(
+    FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
+):
     """View to interact with the option flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
@@ -192,8 +193,6 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         return result
 
     @override
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)

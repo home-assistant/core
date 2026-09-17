@@ -2,18 +2,26 @@
 
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.const import MODEL_CAMERA
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    DeviceConnectionTimeoutError,
+    HttpCallError,
+    InvalidAuthError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
     DATA_COMPONENT,
+    DOMAIN as CAMERA_DOMAIN,
     CameraState,
     get_camera_from_entity_id,
 )
-from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
+from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -22,9 +30,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_MAC, init_integration, patch_platforms
+from . import MOCK_MAC, init_integration, patch_platforms, register_entity
 
 from tests.common import snapshot_platform
 
@@ -96,11 +105,85 @@ async def test_camera_use_stream_for_stills(
     hass: HomeAssistant,
     mock_camera_rpc_device: Mock,
 ) -> None:
-    """Test use_stream_for_stills returns True (still images from the RTSP stream)."""
+    """Test use_stream_for_stills returns False (still images from HTTP snapshot)."""
     await init_integration(hass, 3, model=MODEL_CAMERA)
 
     camera = get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
-    assert camera.use_stream_for_stills is True
+    assert camera.use_stream_for_stills is False
+
+
+async def test_camera_image(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+) -> None:
+    """Test async_camera_image returns snapshot from the device."""
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    camera = get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
+    mock_camera_rpc_device.camera_get_image = AsyncMock(return_value=b"fake-image")
+
+    assert await camera.async_camera_image() == b"fake-image"
+    assert mock_camera_rpc_device.camera_get_image.call_count == 1
+    assert mock_camera_rpc_device.camera_get_image.call_args[0] == (0,)
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            DeviceConnectionTimeoutError,
+            "Device communication error occurred for Test name",
+        ),
+        (
+            DeviceConnectionError,
+            "Device communication error occurred for Test name",
+        ),
+        (
+            HttpCallError(500, "Server error"),
+            "HTTP call error occurred for Test name",
+        ),
+    ],
+)
+async def test_camera_image_exc(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test camera snapshot with exception."""
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    camera = get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
+    mock_camera_rpc_device.camera_get_image = AsyncMock(side_effect=exception)
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await camera.async_camera_image()
+
+
+async def test_camera_image_reauth_error(
+    hass: HomeAssistant, mock_camera_rpc_device: Mock
+) -> None:
+    """Test camera snapshot with authentication error starts reauth."""
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    camera = get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
+    mock_camera_rpc_device.camera_get_image = AsyncMock(
+        side_effect=InvalidAuthError(401)
+    )
+
+    assert await camera.async_camera_image() is None
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
 
 
 async def test_camera_stream_source(
@@ -191,3 +274,43 @@ async def test_camera_properties_when_device_not_initialized(
 
     assert camera.is_on is False
     assert camera.available is False
+
+
+async def test_camera_not_created_when_rtsp_disabled(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test camera entities are not created when RTSP is disabled."""
+    new_config = deepcopy(mock_camera_rpc_device.config)
+    new_config["camera:0"]["rtsp"]["enable"] = False
+    monkeypatch.setattr(mock_camera_rpc_device, "config", new_config)
+
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    assert hass.states.get(CAMERA_ENTITY_ID) is None
+    assert entity_registry.async_get(CAMERA_ENTITY_ID) is None
+
+
+async def test_rpc_camera_removal_when_rtsp_disabled(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC camera is removed due to removal_condition when RTSP disabled."""
+    entity_id = register_entity(
+        hass, CAMERA_DOMAIN, "test_name_stream_0", "camera:0-stream_0"
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+
+    new_config = deepcopy(mock_camera_rpc_device.config)
+    new_config["camera:0"]["rtsp"]["enable"] = False
+    monkeypatch.setattr(mock_camera_rpc_device, "config", new_config)
+
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    assert entity_registry.async_get(entity_id) is None
+    assert hass.states.get(entity_id) is None

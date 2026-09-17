@@ -12,17 +12,12 @@ from kiosker import (
     IPAuthenticationError,
     TLSVerificationError,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    selector,
-)
+from homeassistant.helpers import config_validation as cv, selector, service
 
 from .const import (
     ATTR_BACKGROUND,
@@ -38,37 +33,39 @@ from .const import (
     ATTR_VISIBLE,
     DOMAIN,
 )
-from .coordinator import KioskerDataUpdateCoordinator
+from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
-NAVIGATE_URL_SCHEMA = vol.Schema(
+NAVIGATE_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_URL): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_URL): str,
     }
 )
 
-SET_BLACKOUT_SCHEMA = vol.Schema(
+SET_BLACKOUT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
-        vol.Optional(ATTR_TEXT): str,
-        vol.Optional(ATTR_BACKGROUND, default=[0, 0, 0]): selector.ColorRGBSelector(),
-        vol.Optional(
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Optional(ATTR_VISIBLE, default=True): cv.boolean,
+        probatio.Optional(ATTR_TEXT): str,
+        probatio.Optional(
+            ATTR_BACKGROUND, default=[0, 0, 0]
+        ): selector.ColorRGBSelector(),
+        probatio.Optional(
             ATTR_FOREGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
-        vol.Optional(ATTR_ICON): str,
-        vol.Optional(ATTR_EXPIRE, default=60): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100000)
+        probatio.Optional(ATTR_ICON): str,
+        probatio.Optional(ATTR_EXPIRE, default=60): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=100000)
         ),
-        vol.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
-        vol.Optional(
+        probatio.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
+        probatio.Optional(
             ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
-        vol.Optional(
+        probatio.Optional(
             ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]
         ): selector.ColorRGBSelector(),
-        vol.Optional(ATTR_BUTTON_TEXT): str,
-        vol.Optional(ATTR_SOUND): str,
+        probatio.Optional(ATTR_BUTTON_TEXT): str,
+        probatio.Optional(ATTR_SOUND): str,
     }
 )
 
@@ -106,19 +103,11 @@ async def _get_coordinator(
     call: ServiceCall,
 ) -> KioskerDataUpdateCoordinator:
     """Get the coordinator for the targeted device."""
-    registry = dr.async_get(call.hass)
-    device_id: str = call.data[ATTR_DEVICE_ID]
-    device = registry.async_get(device_id)
-
-    if device:
-        for entry_id in device.config_entries:
-            entry = call.hass.config_entries.async_get_entry(entry_id)
-            if entry and entry.domain == DOMAIN:
-                if entry.state is not ConfigEntryState.LOADED:
-                    raise HomeAssistantError(f"{entry.title} is not loaded")
-                return entry.runtime_data
-
-    raise ServiceValidationError(f"No {DOMAIN} devices found in targeted selection")
+    config_entry: KioskerConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+    )
+    return config_entry.runtime_data
 
 
 def _rgb_to_hex(rgb: list[int]) -> str:
