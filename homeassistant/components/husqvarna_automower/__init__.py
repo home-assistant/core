@@ -5,7 +5,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -58,11 +58,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) 
         )
         try:
             data = await automower_api.get_status()
-        except AuthError:
+        except AuthError as exc:
             entry.async_start_reauth(hass)
-            return False
-        except ApiError:
-            return False
+            raise ConfigEntryAuthFailed from exc
+        except ApiError as exc:
+            raise ConfigEntryNotReady from exc
 
         entity_registry = er.async_get(hass)
         for mower_id, mower_data in data.items():
