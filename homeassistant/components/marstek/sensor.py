@@ -14,6 +14,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -93,6 +94,13 @@ SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MarstekSensorEntityDescription(
+        key="total_pv_energy",
+        translation_key="total_pv_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     MarstekSensorEntityDescription(
         key="device_mode",

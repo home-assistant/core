@@ -130,6 +130,9 @@
       },
       "pv4_voltage": {
         "name": "PV4 voltage"
+      },
+      "total_pv_energy": {
+        "name": "Lifetime PV energy"
       }
     }
   },

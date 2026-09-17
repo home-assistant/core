@@ -23,6 +23,7 @@ PV1_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_power"
 PV1_STATE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_state"
 PV1_VOLTAGE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_voltage"
 PV2_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv2_power"
+TOTAL_PV_ENERGY_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_lifetime_pv_energy"
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> State:
@@ -118,6 +119,7 @@ async def test_missing_sensor_fields_do_not_fallback(
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, DEVICE_MODE_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, BATTERY_STATUS_ENTITY_ID).state == STATE_UNKNOWN
+    assert _get_state(hass, TOTAL_PV_ENERGY_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, PV1_POWER_ENTITY_ID).state == "500"
     assert _get_state(hass, PV1_VOLTAGE_ENTITY_ID).state == STATE_UNKNOWN
     assert _get_state(hass, PV2_POWER_ENTITY_ID).state == STATE_UNKNOWN
@@ -143,3 +145,4 @@ async def test_sensor_uses_normalized_status_values(
     assert _get_state(hass, DEVICE_MODE_ENTITY_ID).state == "auto"
     assert _get_state(hass, BATTERY_STATUS_ENTITY_ID).state == "selling"
     assert _get_state(hass, PV1_STATE_ENTITY_ID).state == "standby"
+    assert _get_state(hass, TOTAL_PV_ENERGY_ENTITY_ID).state == "2810"

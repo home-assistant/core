@@ -40,6 +40,7 @@ MOCK_DEVICE_STATUS = MarstekDeviceStatus(
     battery_power=1300,
     device_mode="manual",
     battery_status="charging",
+    total_pv_energy=2810,
     pv1_power=500,
     pv1_voltage=48,
     pv1_current=10,
