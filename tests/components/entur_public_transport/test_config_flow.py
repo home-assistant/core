@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.components.entur_public_transport.api import (
     EnturApiError,
+    EnturRoute,
     EnturStopPlace,
 )
 from homeassistant.components.entur_public_transport.const import (
@@ -18,10 +19,12 @@ from homeassistant.components.entur_public_transport.const import (
     CONF_WHITELIST_LINES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:
@@ -34,11 +37,22 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         transport_modes=("bus", "rail"),
         role="parent",
     )
+    route = EnturRoute(
+        line_id="RUT:Line:1",
+        public_code="1",
+        transport_mode="bus",
+    )
 
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
-        return_value=(place,),
-    ) as search:
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+            return_value=(place,),
+        ) as search,
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            return_value=(route,),
+        ) as get_routes,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -53,6 +67,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_STOP_ID: place.stop_id}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_routes"
+        get_routes.assert_awaited_once_with(hass, place.stop_id)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_WHITELIST_LINES: [route.line_id]},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
@@ -70,12 +92,25 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Entur"
     assert result["data"] == {
         CONF_NAME: "Entur",
-        CONF_STOP_IDS: ["NSR:StopPlace:548"],
+        CONF_STOP_IDS: [],
         CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
         CONF_NUMBER_OF_DEPARTURES: 2,
+    }
+    assert result["next_flow"][0] is FlowType.CONFIG_SUBENTRIES_FLOW
+
+    subentry_result = await hass.config_entries.subentries.async_configure(
+        result["next_flow"][1], user_input={}
+    )
+    assert subentry_result["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.title == place.name
+    assert subentry.data == {
+        CONF_STOP_ID: place.stop_id,
+        CONF_WHITELIST_LINES: [route.line_id],
     }
 
 
@@ -109,6 +144,86 @@ async def test_user_flow_handles_no_results(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_results"}
+
+
+async def test_subentry_reconfigure_updates_stop_and_routes(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing a stop place and its per-stop route filter."""
+    old_stop_id = "NSR:StopPlace:1"
+    new_place = EnturStopPlace(
+        stop_id="NSR:StopPlace:548",
+        name="Bergen busstasjon",
+        display_name="Bergen busstasjon, Bergen",
+        locality="Bergen",
+        transport_modes=("bus",),
+        role="parent",
+    )
+    new_route = EnturRoute(
+        line_id="RUT:Line:1",
+        public_code="1",
+        transport_mode="bus",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Entur",
+            CONF_STOP_IDS: [],
+            CONF_EXPAND_PLATFORMS: True,
+            CONF_SHOW_ON_MAP: False,
+            CONF_WHITELIST_LINES: [],
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Old stop",
+                "unique_id": old_stop_id,
+                "data": {
+                    CONF_STOP_ID: old_stop_id,
+                    CONF_WHITELIST_LINES: ["RUT:Line:9"],
+                },
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+            return_value=(new_place,),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            return_value=(new_route,),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, "stop-subentry")
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_QUERY: "Bergen"}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_STOP_ID: new_place.stop_id}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_WHITELIST_LINES: [new_route.line_id]},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries["stop-subentry"].data == {
+        CONF_STOP_ID: new_place.stop_id,
+        CONF_WHITELIST_LINES: [new_route.line_id],
+    }
+    assert entry.subentries["stop-subentry"].title == new_place.name
 
 
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:

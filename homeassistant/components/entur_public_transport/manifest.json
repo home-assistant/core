@@ -3,6 +3,7 @@
   "name": "Entur",
   "codeowners": ["@hfurubotten", "@SanderBlom"],
   "config_flow": true,
+  "single_config_entry": true,
   "documentation": "https://www.home-assistant.io/integrations/entur_public_transport",
   "integration_type": "service",
   "iot_class": "cloud_polling",

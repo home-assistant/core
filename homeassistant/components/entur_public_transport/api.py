@@ -9,7 +9,30 @@ from aiohttp import ClientError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ENTUR_CLIENT_NAME, ENTUR_STOP_PLACE_URL, GEOCODER_AUTOCOMPLETE_URL
+from .const import (
+    ENTUR_CLIENT_NAME,
+    ENTUR_STOP_PLACE_URL,
+    GEOCODER_AUTOCOMPLETE_URL,
+    JOURNEY_PLANNER_URL,
+)
+
+STOP_PLACE_LINES_QUERY = """
+query StopPlaceLines($stopPlaceId: String!, $numberOfDepartures: Int!) {
+  stopPlaces(ids: [$stopPlaceId]) {
+    estimatedCalls(numberOfDepartures: $numberOfDepartures) {
+      serviceJourney {
+        journeyPattern {
+          line {
+            id
+            publicCode
+            transportMode
+          }
+        }
+      }
+    }
+  }
+}
+"""
 
 
 class EnturApiError(Exception):
@@ -46,6 +69,21 @@ class EnturStopPlace:
         return ENTUR_STOP_PLACE_URL.format(quote(self.stop_id, safe=""))
 
 
+@dataclass(frozen=True, slots=True)
+class EnturRoute:
+    """A route serving an Entur stop place."""
+
+    line_id: str
+    public_code: str
+    transport_mode: str
+
+    @property
+    def selection_label(self) -> str:
+        """Return a user-friendly route label."""
+        operator = self.line_id.split(":Line:", 1)[0]
+        return f"{self.public_code} · {self.transport_mode} · {operator}"
+
+
 async def async_search_stop_places(
     hass: HomeAssistant, query: str
 ) -> tuple[EnturStopPlace, ...]:
@@ -69,6 +107,34 @@ async def async_search_stop_places(
         raise EnturApiError from err
 
     return _parse_stop_places(payload)
+
+
+async def async_get_stop_routes(
+    hass: HomeAssistant, stop_id: str
+) -> tuple[EnturRoute, ...]:
+    """Return routes currently serving a stop place."""
+    session = async_get_clientsession(hass)
+    try:
+        async with session.post(
+            JOURNEY_PLANNER_URL,
+            json={
+                "query": STOP_PLACE_LINES_QUERY,
+                "variables": {
+                    "stopPlaceId": stop_id,
+                    "numberOfDepartures": 50,
+                },
+            },
+            headers={
+                "Content-Type": "application/json",
+                "ET-Client-Name": ENTUR_CLIENT_NAME,
+            },
+        ) as response:
+            response.raise_for_status()
+            payload: Any = await response.json()
+    except (ClientError, TimeoutError) as err:
+        raise EnturApiError from err
+
+    return _parse_stop_routes(payload)
 
 
 def _parse_stop_places(payload: Any) -> tuple[EnturStopPlace, ...]:
@@ -126,3 +192,50 @@ def _parse_stop_places(payload: Any) -> tuple[EnturStopPlace, ...]:
         )
 
     return tuple(places)
+
+
+def _parse_stop_routes(payload: Any) -> tuple[EnturRoute, ...]:
+    """Parse routes from a Journey Planner response."""
+    if not isinstance(payload, dict) or payload.get("errors"):
+        raise EnturApiError
+
+    data = payload.get("data")
+    stop_places = data.get("stopPlaces") if isinstance(data, dict) else None
+    if not isinstance(stop_places, list):
+        raise EnturApiError
+
+    routes: dict[str, EnturRoute] = {}
+    for stop_place in stop_places:
+        if not isinstance(stop_place, dict):
+            continue
+        calls = stop_place.get("estimatedCalls")
+        if not isinstance(calls, list):
+            continue
+        for call in calls:
+            if not isinstance(call, dict):
+                continue
+            journey = call.get("serviceJourney")
+            pattern = (
+                journey.get("journeyPattern") if isinstance(journey, dict) else None
+            )
+            line = pattern.get("line") if isinstance(pattern, dict) else None
+            if not isinstance(line, dict):
+                continue
+            line_id = line.get("id")
+            public_code = line.get("publicCode")
+            transport_mode = line.get("transportMode")
+            if not all(
+                isinstance(value, str)
+                for value in (line_id, public_code, transport_mode)
+            ):
+                continue
+            routes.setdefault(
+                line_id,
+                EnturRoute(
+                    line_id=line_id,
+                    public_code=public_code,
+                    transport_mode=transport_mode,
+                ),
+            )
+
+    return tuple(routes.values())

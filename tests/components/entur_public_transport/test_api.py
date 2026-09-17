@@ -4,12 +4,15 @@ from aiohttp import ClientResponseError
 import pytest
 
 from homeassistant.components.entur_public_transport.api import (
+    STOP_PLACE_LINES_QUERY,
     EnturApiError,
+    async_get_stop_routes,
     async_search_stop_places,
 )
 from homeassistant.components.entur_public_transport.const import (
     ENTUR_CLIENT_NAME,
     GEOCODER_AUTOCOMPLETE_URL,
+    JOURNEY_PLANNER_URL,
 )
 from homeassistant.core import HomeAssistant
 
@@ -76,6 +79,73 @@ async def test_search_stop_places_rejects_invalid_response(
 
     with pytest.raises(EnturApiError):
         await async_search_stop_places(hass, "Bergen")
+
+
+async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
+    """Test retrieving and deduplicating routes for one stop place."""
+    aioclient_mock.post(
+        JOURNEY_PLANNER_URL,
+        json={
+            "data": {
+                "stopPlaces": [
+                    {
+                        "estimatedCalls": [
+                            {
+                                "serviceJourney": {
+                                    "journeyPattern": {
+                                        "line": {
+                                            "id": "RUT:Line:1",
+                                            "publicCode": "1",
+                                            "transportMode": "bus",
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "serviceJourney": {
+                                    "journeyPattern": {
+                                        "line": {
+                                            "id": "RUT:Line:1",
+                                            "publicCode": "1",
+                                            "transportMode": "bus",
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "serviceJourney": {
+                                    "journeyPattern": {
+                                        "line": {
+                                            "id": "RUT:Line:2",
+                                            "publicCode": "2",
+                                            "transportMode": "bus",
+                                        }
+                                    }
+                                }
+                            },
+                        ]
+                    }
+                ]
+            }
+        },
+    )
+
+    routes = await async_get_stop_routes(hass, "NSR:StopPlace:548")
+
+    assert [(route.line_id, route.public_code) for route in routes] == [
+        ("RUT:Line:1", "1"),
+        ("RUT:Line:2", "2"),
+    ]
+    assert routes[0].selection_label == "1 · bus · RUT"
+
+    method, _, request, headers = aioclient_mock.mock_calls[0]
+    assert method == "post"
+    assert request["query"] == STOP_PLACE_LINES_QUERY
+    assert request["variables"] == {
+        "stopPlaceId": "NSR:StopPlace:548",
+        "numberOfDepartures": 50,
+    }
+    assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 
 async def test_search_stop_places_handles_http_error(

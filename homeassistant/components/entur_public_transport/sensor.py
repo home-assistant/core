@@ -1,5 +1,6 @@
 """Real-time information about public transport departures in Norway."""
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from random import randint
 from typing import override
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -46,11 +47,13 @@ from .const import (
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
+    CONF_STOP_ID,
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
     DEFAULT_ICON_KEY,
     DEFAULT_NAME,
     ICONS,
+    SUBENTRY_TYPE_STOP_PLACE,
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -92,55 +95,74 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Entur sensors from a config entry."""
-    await _async_setup(hass, entry.data, async_add_entities)
+    await _async_setup(hass, entry.data, async_add_entities, entry.subentries.values())
 
 
 async def _async_setup(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    subentries: Iterable[ConfigSubentry] = (),
 ) -> None:
     """Set up Entur sensors from configuration."""
 
     expand = config[CONF_EXPAND_PLATFORMS]
-    line_whitelist = config[CONF_WHITELIST_LINES]
     name = config[CONF_NAME]
     show_on_map = config[CONF_SHOW_ON_MAP]
-    stop_ids = config[CONF_STOP_IDS]
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
-    stops = [s for s in stop_ids if "StopPlace" in s]
-    quays = [s for s in stop_ids if "Quay" in s]
-
-    data = EnturPublicTransportData(
-        API_CLIENT_NAME.format(str(randint(100000, 999999))),
-        stops=stops,
-        quays=quays,
-        line_whitelist=line_whitelist,
-        omit_non_boarding=omit_non_boarding,
-        number_of_departures=number_of_departures,
-        web_session=async_get_clientsession(hass),
-    )
-
-    if expand:
-        await data.expand_all_quays()
-    await data.update()
-
-    proxy = EnturProxy(data)
-
     entities = []
-    for place in data.all_stop_places_quays():
-        try:
-            given_name = f"{name} {data.get_stop_info(place).name}"
-        except KeyError:
-            given_name = f"{name} {place}"
-
-        entities.append(
-            EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
+    for stop_ids, line_whitelist in _stop_configurations(config, subentries):
+        stops = [stop_id for stop_id in stop_ids if "StopPlace" in stop_id]
+        quays = [stop_id for stop_id in stop_ids if "Quay" in stop_id]
+        data = EnturPublicTransportData(
+            API_CLIENT_NAME.format(str(randint(100000, 999999))),
+            stops=stops,
+            quays=quays,
+            line_whitelist=line_whitelist,
+            omit_non_boarding=omit_non_boarding,
+            number_of_departures=number_of_departures,
+            web_session=async_get_clientsession(hass),
         )
 
+        if expand:
+            await data.expand_all_quays()
+        await data.update()
+
+        proxy = EnturProxy(data)
+
+        for place in data.all_stop_places_quays():
+            try:
+                given_name = f"{name} {data.get_stop_info(place).name}"
+            except KeyError:
+                given_name = f"{name} {place}"
+
+            entities.append(
+                EnturPublicTransportSensor(proxy, given_name, place, show_on_map)
+            )
+
     async_add_entities(entities, True)
+
+
+def _stop_configurations(
+    config: ConfigType, subentries: Iterable[ConfigSubentry]
+) -> list[tuple[list[str], list[str]]]:
+    """Return stop IDs and line filters for legacy and UI configuration."""
+    configurations = []
+    if stop_ids := config.get(CONF_STOP_IDS, []):
+        configurations.append((stop_ids, config.get(CONF_WHITELIST_LINES, [])))
+
+    configurations.extend(
+        (
+            [subentry.data[CONF_STOP_ID]],
+            subentry.data.get(CONF_WHITELIST_LINES, []),
+        )
+        for subentry in subentries
+        if subentry.subentry_type == SUBENTRY_TYPE_STOP_PLACE
+        and CONF_STOP_ID in subentry.data
+    )
+    return configurations
 
 
 class EnturProxy:

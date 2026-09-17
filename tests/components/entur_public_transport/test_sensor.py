@@ -10,6 +10,8 @@ import pytest
 from homeassistant.components.entur_public_transport.sensor import (
     PLATFORM_SCHEMA,
     EnturPublicTransportSensor,
+    _async_setup,
+    _stop_configurations,
     async_setup_platform,
     due_in_minutes,
 )
@@ -106,6 +108,87 @@ async def test_async_setup_platform_creates_entities(
         "Transport Platform 2",
     ]
     assert add_entities.call_args.args[1] is True
+
+
+def test_subentries_keep_route_filters_per_stop() -> None:
+    """Test that each UI stop keeps its own route whitelist."""
+    config = PLATFORM_SCHEMA(
+        {
+            "stop_ids": [],
+            "line_whitelist": [],
+        }
+    )
+    subentries = [
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:1",
+                "line_whitelist": ["RUT:Line:1"],
+            },
+        ),
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:2",
+                "line_whitelist": ["SKY:Line:2"],
+            },
+        ),
+    ]
+
+    assert _stop_configurations(config, subentries) == [
+        (["NSR:StopPlace:1"], ["RUT:Line:1"]),
+        (["NSR:StopPlace:2"], ["SKY:Line:2"]),
+    ]
+
+
+async def test_async_setup_entry_applies_route_filter_per_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test that each subentry gets an Entur client with its own filter."""
+    config = PLATFORM_SCHEMA({"stop_ids": []})
+    subentries = [
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:1",
+                "line_whitelist": ["RUT:Line:1"],
+            },
+        ),
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:2",
+                "line_whitelist": ["SKY:Line:2"],
+            },
+        ),
+    ]
+    first_api = Mock()
+    second_api = Mock()
+    for api, stop_id in (
+        (first_api, "NSR:StopPlace:1"),
+        (second_api, "NSR:StopPlace:2"),
+    ):
+        api.expand_all_quays = AsyncMock()
+        api.update = AsyncMock()
+        api.all_stop_places_quays.return_value = [stop_id]
+        api.get_stop_info.return_value = SimpleNamespace(name=stop_id)
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.EnturPublicTransportData",
+            side_effect=[first_api, second_api],
+        ) as data_class,
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.async_get_clientsession",
+            return_value=Mock(),
+        ),
+    ):
+        await _async_setup(hass, config, Mock(), subentries)
+
+    assert [call.kwargs["line_whitelist"] for call in data_class.call_args_list] == [
+        ["RUT:Line:1"],
+        ["SKY:Line:2"],
+    ]
 
 
 async def test_sensor_update_sets_departure_attributes() -> None:
