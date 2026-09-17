@@ -33,6 +33,7 @@ from .const import (
     CONF_SUBTYPE,
     DOMAIN,
     LOGGER,
+    POWER_ANALYSIS_METHOD_VALUES,
 )
 from .entity import MideaConfigEntry
 
@@ -51,7 +52,6 @@ _PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 
-
 def _build_customize(data: Mapping[str, Any], options: Mapping[str, Any]) -> str:
     """Build per-device customize JSON for midea-local."""
     if data.get(CONF_TYPE) != DeviceType.AC:
@@ -62,7 +62,7 @@ def _build_customize(data: Mapping[str, Any], options: Mapping[str, Any]) -> str
         return ""
 
     try:
-        return json.dumps({CONF_POWER_ANALYSIS_METHOD: int(analysis_method)})
+        analysis_method = int(analysis_method)
     except TypeError, ValueError:
         LOGGER.warning(
             "Ignoring invalid %s option: %r",
@@ -70,6 +70,14 @@ def _build_customize(data: Mapping[str, Any], options: Mapping[str, Any]) -> str
             analysis_method,
         )
         return ""
+    if analysis_method not in POWER_ANALYSIS_METHOD_VALUES:
+        LOGGER.warning(
+            "Ignoring invalid %s option: %r",
+            CONF_POWER_ANALYSIS_METHOD,
+            analysis_method,
+        )
+        return ""
+    return json.dumps({CONF_POWER_ANALYSIS_METHOD: analysis_method})
 
 
 def _create_device(

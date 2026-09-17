@@ -2625,7 +2625,7 @@ async def test_ac_options_flow_shows_power_analysis_methods(
     )
     assert power_method_key.default() == "1"
     selector = schema.schema[power_method_key]
-    assert selector.config["options"] == ["1", "2", "3", "101", "12"]
+    assert selector.config["options"] == ["1", "2", "3", "12", "101"]
 
 
 async def test_ac_options_flow_accepts_power_analysis_method_12(

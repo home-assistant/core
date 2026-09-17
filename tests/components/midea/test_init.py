@@ -169,14 +169,16 @@ async def test_options_update_reloads_entry_and_applies_customize(
     assert device_selector.call_args_list[1].args[10] == '{"power_analysis_method": 12}'
 
 
+@pytest.mark.parametrize("analysis_method", ["invalid", 999])
 async def test_async_setup_entry_ignores_invalid_power_analysis_customize(
     hass: HomeAssistant,
+    analysis_method: int | str,
 ) -> None:
     """Test setup ignores invalid power analysis method options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_DATA,
-        options={CONF_POWER_ANALYSIS_METHOD: "invalid"},
+        options={CONF_POWER_ANALYSIS_METHOD: analysis_method},
         minor_version=2,
     )
     entry.add_to_hass(hass)

@@ -49,6 +49,7 @@ from .const import (
     CONF_SUBTYPE,
     DOMAIN,
     LOGGER,
+    POWER_ANALYSIS_METHOD_OPTIONS,
 )
 from .device_catalog import MIDEA_DEVICE_NAMES
 from .entity import MideaConfigEntry
@@ -953,7 +954,7 @@ class MideaOptionsFlow(OptionsFlow):
                         default=current,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["1", "2", "3", "101", "12"],
+                            options=list(POWER_ANALYSIS_METHOD_OPTIONS),
                             translation_key="power_analysis_method",
                             mode=SelectSelectorMode.DROPDOWN,
                         )

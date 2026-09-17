@@ -14,6 +14,10 @@ CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
 CONF_SN = "sn"
 CONF_POWER_ANALYSIS_METHOD = "power_analysis_method"
+POWER_ANALYSIS_METHOD_OPTIONS: tuple[str, ...] = ("1", "2", "3", "12", "101")
+POWER_ANALYSIS_METHOD_VALUES: frozenset[int] = frozenset(
+    int(method) for method in POWER_ANALYSIS_METHOD_OPTIONS
+)
 
 PRESET_MODE_NONE = "none"
 
