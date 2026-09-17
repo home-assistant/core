@@ -13,11 +13,19 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityDescription,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import DiscordConfigEntry
+from .const import CONF_CHANNEL_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +55,22 @@ async def async_get_service(
     if discovery_info is None:
         return None
     return DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: DiscordConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Discord notification entities from subentries."""
+    bot_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [DiscordNotifyEntity(config_entry, subentry, bot_device_id)],
+            config_subentry_id=subentry_id,
+        )
 
 
 class DiscordNotificationService(BaseNotificationService):
@@ -198,3 +222,53 @@ class DiscordNotificationService(BaseNotificationService):
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()
+
+
+class DiscordNotifyEntity(NotifyEntity):
+    """Representation of a Discord notification entity for a single channel."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    entity_description = NotifyEntityDescription(key="send_message")
+
+    def __init__(
+        self,
+        config_entry: DiscordConfigEntry,
+        subentry: ConfigSubentry,
+        bot_device_id: str,
+    ) -> None:
+        """Initialize the notification entity."""
+        self._token = config_entry.data[CONF_API_TOKEN]
+        self._channel_id = subentry.data[CONF_CHANNEL_ID]
+        self._attr_unique_id = f"{config_entry.entry_id}_{self._channel_id}"
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{self._channel_id}")},
+            entry_type=dr.DeviceEntryType.SERVICE,
+            manufacturer="Discord",
+            name=subentry.title,
+            via_device_id=bot_device_id,
+        )
+
+    @override
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to the configured Discord channel."""
+        nextcord.VoiceClient.warn_nacl = False
+        discord_bot = nextcord.Client()
+        await discord_bot.login(self._token)
+        try:
+            try:
+                channel = cast(
+                    Messageable, await discord_bot.fetch_channel(self._channel_id)
+                )
+            except nextcord.NotFound:
+                try:
+                    channel = await discord_bot.fetch_user(self._channel_id)
+                except nextcord.NotFound:
+                    _LOGGER.warning("Channel not found for ID: %s", self._channel_id)
+                    return
+            await channel.send(message)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except (nextcord.HTTPException, nextcord.NotFound) as error:
+            _LOGGER.warning("Communication error: %s", error)
+        finally:
+            await discord_bot.close()
