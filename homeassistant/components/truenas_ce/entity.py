@@ -432,7 +432,22 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         data_path = self.entity_description.data_path
         if data_path and self.coordinator.is_data_path_failing(data_path):
             return False
-        return super().available and bool(self._data)
+        return super().available and (
+            bool(self._data) or self._data_missing_is_available()
+        )
+
+    def _data_missing_is_available(self) -> bool:
+        """Hook: return True to stay available despite empty ``self._data``.
+
+        Default False preserves the "empty data means unavailable" contract
+        above for every entity (in particular, a deleted disk/dataset/VM/
+        pool/app still goes unavailable immediately). Overridden only by
+        entities that restore a placeholder value across the startup window
+        before their first real data arrives -- see
+        ``TrueNASAppStatsSensor`` -- and even then only until that entity's
+        own ``_refresh_data`` observes real data for the first time.
+        """
+        return False
 
     def _core_name_translation_key(self) -> str | None:
         """Return Entity._name_translation_key, degrading gracefully.

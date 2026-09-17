@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Hashable
 from datetime import datetime, timedelta
+import hashlib
 import logging
 import re
 from typing import Any, override
@@ -39,6 +40,75 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# hass.data[DOMAIN] key for the cross-instance _connection_failing marker; see
+# TrueNASCoordinator._set_connection_failing.
+_DATA_CONNECTION_FAILING = "connection_failing_by_entry"
+
+
+def _connection_fingerprint(config_entry: ConfigEntry) -> str:
+    """Fingerprint the connection-identifying parts of config_entry.data.
+
+    Stored alongside the persisted _connection_failing marker (see
+    _seed_connection_failing) so the marker self-invalidates when the user
+    reconfigures the entry to a different host/API key, instead of relying
+    on the marker being explicitly cleared. That reliance would be broken:
+    Home Assistant's own ConfigEntry.async_unload returns early WITHOUT
+    calling this integration's async_unload_entry whenever the entry isn't
+    currently ConfigEntryState.LOADED -- which is exactly the state
+    (SETUP_RETRY) a reconfigure-while-unreachable happens from, so
+    clear_persisted_connection_failing would never run for the one case
+    this whole mechanism is meant to protect. The API key is hashed rather
+    than stored so it isn't duplicated in hass.data in recoverable form.
+    CONF_VERIFY_SSL is included alongside host/API key: it changes how the
+    connection is actually established, so flipping it while the host stays
+    unreachable should also get a fresh ERROR diagnostic rather than
+    silently inheriting the previous setting's dedup state.
+    """
+    raw = (
+        f"{config_entry.data[CONF_HOST]}|{config_entry.data[CONF_API_KEY]}"
+        f"|{config_entry.data[CONF_VERIFY_SSL]}"
+    )
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _seed_connection_failing(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> str | None:
+    """Read the persisted connection-failure marker for config_entry, if any.
+
+    Returns the last-seen TrueNAS ERR_* code, so a coordinator recreated by a
+    Home Assistant setup retry not only remembers *that* it was failing (see
+    TrueNASCoordinator._connection_failing) but *why* (see
+    TrueNASCoordinator._connection_failing_error) -- letting it re-log ERROR
+    once if the failure reason changes mid-outage, instead of silently
+    freezing on whatever error was first seen. Returns None both when never
+    failing and when the persisted marker's fingerprint no longer matches
+    config_entry's current host/API key -- see _connection_fingerprint --
+    since that means the previous failure was against a different,
+    now-irrelevant target. A genuine HA restart also sees None, since
+    hass.data is wiped with the process.
+    """
+    by_entry = hass.data.get(DOMAIN, {}).get(_DATA_CONNECTION_FAILING, {})
+    marker = by_entry.get(config_entry.entry_id)
+    if marker is None or marker[0] != _connection_fingerprint(config_entry):
+        return None
+    return marker[1]  # type: ignore[no-any-return]
+
+
+def clear_persisted_connection_failing(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop entry_id's persisted _connection_failing marker, if any.
+
+    Best-effort hygiene call from async_unload_entry, for the entries it
+    does run for (unloading a currently-LOADED entry): frees the marker a
+    little sooner than waiting for the next successful reconnect or an HA
+    restart. NOT relied upon for correctness -- see _connection_fingerprint
+    for why a reconfigure away from a stuck SETUP_RETRY entry bypasses
+    async_unload_entry entirely, and is instead handled by the fingerprint
+    check in _seed_connection_failing.
+    """
+    hass.data.get(DOMAIN, {}).get(_DATA_CONNECTION_FAILING, {}).pop(entry_id, None)
+
 
 # TrueNAS reporting (netdata) API method name used by get_systemstats().
 _NETDATA_GRAPH = "reporting.netdata_graph"
@@ -262,11 +332,25 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # entity-unavailable/log-when-unavailable; see _note_job_outcome.
         self._job_failing: dict[str, bool] = {}
 
-        # Whether the last _async_ensure_connected attempt failed, deduped
-        # the same way so a persistently unreachable host (e.g. deliberately
+        # The ERR_* code of the last failed _async_ensure_connected attempt,
+        # deduped so a persistently unreachable host (e.g. deliberately
         # powered off via truenas_ce.system_shutdown) logs one ERROR instead
-        # of one every 60s poll -- see issue #145.
-        self._connection_failing = False
+        # of one every 60s poll -- see issue #145. Seeded from hass.data
+        # instead of always None: a failed first refresh raises
+        # ConfigEntryNotReady, which makes Home Assistant retry setup with a
+        # brand-new TrueNASCoordinator instance -- without this, the
+        # in-memory state can never survive that recreation and every retry
+        # re-logs a fresh ERROR, forever, every ~10 min (the setup-retry
+        # backoff cap). hass.data persists across that recreation (only
+        # reset by an actual HA restart, where one fresh ERROR is correct)
+        # -- see _set_connection_failing.
+        self._connection_failing_error: str | None = _seed_connection_failing(
+            hass, config_entry
+        )
+        # Derived from the error above rather than a second seeded field: a
+        # persisted failure always carries the ERR_* code that caused it, so
+        # "was failing" and "has a remembered error" are the same fact.
+        self._connection_failing: bool = self._connection_failing_error is not None
 
         self._is_virtual = False
         self._version_major: int = 0
@@ -343,16 +427,23 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         For the common case where api.connect() returns False (e.g. TrueNAS
         unreachable), deduped like _note_job_outcome/self._job_failing: a
-        persistently unreachable host (e.g. deliberately powered off via
-        truenas_ce.system_shutdown, see #145) logs one ERROR instead of one
-        every 60s poll, plus an INFO line once the connection recovers.
-        quiet is threaded into api.connect() on repeat failures so its own
-        ERROR-level traceback is deduped too, not just the shorter follow-up
-        line below. An unexpected exception from api.connect() itself
-        (rather than a normal False return) bypasses this dedup and relies
-        on the DataUpdateCoordinator's own success/failure-transition
-        logging instead -- that path is rare enough not to warrant its own
-        bookkeeping here.
+        persistently unreachable host logs one ERROR instead of one every
+        60s poll, plus an INFO line once the connection recovers. If the
+        ERR_* code changes while still failing (e.g. the host comes back
+        only far enough to fail TLS instead of refusing the connection
+        outright), one fresh ERROR is logged for that change too, instead of
+        silently staying pinned to whichever code was first seen -- see
+        _connection_failing_error. This dedup state is seeded from hass.data
+        in __init__ and mirrored back on every change (see
+        _set_connection_failing), so it survives a coordinator recreated by
+        a Home Assistant setup retry instead of re-logging a fresh ERROR
+        every ~10 minutes forever. quiet is threaded into api.connect() on
+        repeat failures so its own ERROR-level traceback is deduped too, not
+        just the shorter follow-up line below. An unexpected exception from
+        api.connect() itself (rather than a normal False return) bypasses
+        this dedup and relies on the DataUpdateCoordinator's own
+        success/failure-transition logging instead -- that path is rare
+        enough not to warrant its own bookkeeping here.
         """
         if self.api.connected():
             self._note_connection_recovered()
@@ -380,13 +471,27 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"host": self.host},
             )
         if self._connection_failing:
-            _LOGGER.debug(
-                "TrueNAS connection still failing (error code: %s)",
-                self.api.error,
-            )
+            if self.api.error != self._connection_failing_error:
+                # The persisted marker survives coordinator recreation (see
+                # _set_connection_failing), so without this, a failure whose
+                # cause changes mid-outage (e.g. connection_refused turning
+                # into certificate_verify_failed) would stay silently pinned
+                # to DEBUG at the *first* error code for the rest of the
+                # outage instead of surfacing the new one.
+                _LOGGER.error(
+                    "TrueNAS connection failure changed (error code: %s -> %s)",
+                    self._connection_failing_error,
+                    self.api.error,
+                )
+                self._set_connection_failing(True, self.api.error)
+            else:
+                _LOGGER.debug(
+                    "TrueNAS connection still failing (error code: %s)",
+                    self.api.error,
+                )
         else:
             _LOGGER.error("TrueNAS connection failed (error code: %s)", self.api.error)
-            self._connection_failing = True
+            self._set_connection_failing(True, self.api.error)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="connection_error",
@@ -396,11 +501,39 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    def _set_connection_failing(self, value: bool, error: str | None = None) -> None:
+        """Set _connection_failing/_connection_failing_error and mirror into hass.data.
+
+        The mirror is what lets the dedup -- and the last known ERR_* code,
+        see _connection_failing_error -- survive a TrueNASCoordinator
+        recreated by a Home Assistant setup retry -- see _connection_failing.
+        Keyed by config_entry.entry_id so multiple TrueNAS instances don't
+        share dedup state, and validated against a fingerprint of the
+        current host/API key (see _connection_fingerprint) so a later
+        reconfigure to a different target can't be misread as still-failing.
+        Cleared entirely on recovery rather than left as a stale entry,
+        keeping hass.data free of long-lived clutter for entries that never
+        fail again. ``error`` is required whenever ``value`` is True -- see
+        the call sites in _async_ensure_connected.
+        """
+        self._connection_failing = value
+        self._connection_failing_error = error if value else None
+        by_entry = self.hass.data.setdefault(DOMAIN, {}).setdefault(
+            _DATA_CONNECTION_FAILING, {}
+        )
+        if value:
+            by_entry[self.config_entry.entry_id] = (
+                _connection_fingerprint(self.config_entry),
+                error,
+            )
+        else:
+            by_entry.pop(self.config_entry.entry_id, None)
+
     def _note_connection_recovered(self) -> None:
         """Log recovery once and clear the dedup flag; see _async_ensure_connected."""
         if self._connection_failing:
             _LOGGER.info("TrueNAS connection recovered")
-            self._connection_failing = False
+            self._set_connection_failing(False)
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -1467,6 +1600,26 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if isinstance(name, str) and name:
                     current_app_names.add(name)
         return current_app_names
+
+    def get_known_app_names(self) -> set[str]:
+        """Return currently-known app names, or empty if containers aren't monitored.
+
+        Sourced from ``ds["app"]`` (populated synchronously every poll via
+        ``get_app()``) rather than ``ds["app_stats"]``, which needs TrueNAS's
+        mandatory post-(re)subscribe warm-up wait before its first event (see
+        ``start_app_stats``). Used by sensor.py's ``_discover_app_stats`` to
+        create the standard (non-network) app_stats sensors immediately
+        instead of waiting out that gap, so ``TrueNASAppStatsSensor``'s
+        restore-on-restart fallback has an entity to attach to during it.
+        Explicitly re-checks ``MONITOR_GROUP_CONTAINERS`` here rather than
+        relying on ``ds["app_stats"]`` being empty for a disabled group --
+        unlike ``ds["app_stats"]``, ``ds["app"]`` is never gated on that
+        option (see ``get_app``), so skipping this check would leak app_stats
+        sensors for a group the user explicitly disabled.
+        """
+        if not self._is_group_monitored(MONITOR_GROUP_CONTAINERS):
+            return set()
+        return self._collect_current_app_names()
 
     def _prune_stale_app_stats(self, current_app_names: set[str]) -> None:
         """Remove cached app_stats entries whose app no longer exists.

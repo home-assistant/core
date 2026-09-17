@@ -69,6 +69,17 @@ def make_coordinator(
         error=api_error,
         scheme=api_scheme,
     )
+
+    def _known_app_names() -> set[str]:
+        """Mirror TrueNASCoordinator.get_known_app_names()'s ds["app"] sourcing."""
+        names: set[str] = set()
+        for vals in ds.get("app", {}).values():
+            if isinstance(vals, dict):
+                name = vals.get("name") or vals.get("app_name")
+                if isinstance(name, str) and name:
+                    names.add(name)
+        return names
+
     return SimpleNamespace(
         data=ds,
         ds=ds,
@@ -87,4 +98,5 @@ def make_coordinator(
         async_request_refresh=AsyncMock(),
         supports_update_run=MagicMock(return_value=True),
         is_data_path_failing=MagicMock(return_value=False),
+        get_known_app_names=MagicMock(side_effect=_known_app_names),
     )

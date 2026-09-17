@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.sensor import SensorExtraStoredData
 from homeassistant.components.truenas_ce import sensor as sensor_mod
 from homeassistant.components.truenas_ce.const import CONF_DATA_UNIT
 from homeassistant.components.truenas_ce.sensor import (
@@ -210,7 +211,9 @@ def test_maybe_discover_app_stats_sensor_routes_standard_key() -> None:
 
 def test_discover_app_stats_adds_new_entities_via_callback() -> None:
     """New app-stats entities are discovered and passed to the add_entities callback."""
-    coord = make_coordinator(data={"app_stats": {"plex": {"cpu": 1}}})
+    coord = make_coordinator(
+        data={"app": {"plex": {"name": "plex"}}, "app_stats": {"plex": {"cpu": 1}}}
+    )
     platform = SimpleNamespace(entities={})
     add_entities = MagicMock()
     with patch.object(
@@ -234,6 +237,35 @@ def test_discover_app_stats_no_entities_skips_callback() -> None:
     add_entities = MagicMock()
     _discover_app_stats(platform, coord, add_entities)
     add_entities.assert_not_called()
+
+
+def test_discover_app_stats_eagerly_creates_standard_sensors_before_first_event() -> (
+    None
+):
+    """The 4 standard (non-network) app_stats sensors must exist immediately.
+
+    Created from ``ds["app"]``/``get_known_app_names()`` even while
+    ``app_stats`` is still empty (the restart warm-up gap) -- otherwise
+    ``TrueNASAppStatsSensor``'s restore-on-restart fallback has no entity to
+    attach to. Network sensors stay purely data-driven and must NOT be
+    eagerly created here, since interface names aren't known yet.
+    """
+    coord = make_coordinator(data={"app": {"plex": {"name": "plex"}}, "app_stats": {}})
+    platform = SimpleNamespace(entities={})
+    add_entities = MagicMock()
+    _discover_app_stats(platform, coord, add_entities)
+    add_entities.assert_called_once()
+    created = add_entities.call_args.args[0]
+    assert len(created) == 4
+    assert all(entity._uid == "plex" for entity in created)
+    assert all(entity._data == {} for entity in created)
+    keys = {entity.entity_description.key for entity in created}
+    assert keys == {
+        "app_stats_cpu",
+        "app_stats_memory",
+        "app_stats_blkio_read",
+        "app_stats_blkio_write",
+    }
 
 
 # ---------------------------
@@ -708,3 +740,154 @@ def test_app_stats_extra_state_attributes_no_data_returns_attribution_only() -> 
     sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
     attrs = sensor.extra_state_attributes
     assert "app_name" not in attrs
+
+
+# ---------------------------
+#   TrueNASAppStatsSensor -- restore-on-restart fallback
+# ---------------------------
+async def test_app_stats_seed_restored_value_when_no_data() -> None:
+    """No live app_stats data yet stages a restored value as current state.
+
+    E.g. right after a restart, before TrueNAS's mandatory post-subscribe
+    warm-up interval has elapsed -- the entity is available despite the
+    still-empty ``_data``.
+    """
+    coordinator = make_coordinator(data={"app_stats": {}})
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor.async_get_last_sensor_data = AsyncMock(
+        return_value=SensorExtraStoredData(12.5, "%")
+    )
+    await sensor._seed_restored_value_if_needed()
+    assert sensor._awaiting_first_app_stats_event is True
+    assert sensor.native_value == 12.5
+    assert sensor.available is True
+
+
+async def test_app_stats_seed_restored_value_skipped_when_data_present() -> None:
+    """A restart after the first event already arrived must not overwrite it.
+
+    Also covers a reload of an already-running entity -- the whole point is
+    only to bridge the startup gap with a stale restored value.
+    """
+    coordinator = make_coordinator(
+        data={"app_stats": {"plex": {"app_name": "Plex", "cpu": 12.5}}}
+    )
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor.async_get_last_sensor_data = AsyncMock()
+    await sensor._seed_restored_value_if_needed()
+    sensor.async_get_last_sensor_data.assert_not_awaited()
+    assert sensor._awaiting_first_app_stats_event is False
+    assert sensor.native_value == 12.5
+
+
+async def test_app_stats_seed_restored_value_skipped_for_network_sensor() -> None:
+    """Network (rx/tx) sensors stay purely data-driven, no restore fallback.
+
+    Unlike standard sensors, a still-empty interface reading after a restart
+    is expected to report unavailable.
+    """
+    coordinator = make_coordinator(data={"app_stats": {}})
+    sensor = TrueNASAppStatsSensor(coordinator, _net_desc(), "plex::eth0")
+    sensor.async_get_last_sensor_data = AsyncMock(
+        return_value=SensorExtraStoredData(12.5, "KiB/s")
+    )
+    await sensor._seed_restored_value_if_needed()
+    sensor.async_get_last_sensor_data.assert_not_awaited()
+    assert sensor._awaiting_first_app_stats_event is False
+    assert sensor.native_value is None
+
+
+async def test_app_stats_seed_restored_value_noop_when_nothing_stored() -> None:
+    """A brand-new app with no prior recorder history has nothing to restore.
+
+    Falls back to today's existing "unavailable until first event" behavior.
+    """
+    coordinator = make_coordinator(data={"app_stats": {}})
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor.async_get_last_sensor_data = AsyncMock(return_value=None)
+    await sensor._seed_restored_value_if_needed()
+    assert sensor._awaiting_first_app_stats_event is False
+    assert sensor.native_value is None
+    assert sensor.available is False
+
+
+async def test_app_stats_restored_flag_cleared_once_real_data_arrives() -> None:
+    """The moment a real app.stats event lands, the restored placeholder drops.
+
+    So a genuinely removed app still goes unavailable normally afterwards
+    instead of showing a frozen value forever.
+    """
+    coordinator = make_coordinator(data={"app_stats": {}})
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor._restored_native_value = 9.9
+    sensor._awaiting_first_app_stats_event = True
+
+    coordinator.data["app_stats"]["plex"] = {"app_name": "Plex", "cpu": 42.0}
+    sensor._refresh_data()
+
+    assert sensor._awaiting_first_app_stats_event is False
+    assert sensor.native_value == 42.0
+
+
+async def test_app_stats_restored_flag_survives_refresh_while_still_empty() -> None:
+    """A poll cycle still inside the warm-up window must not clear the flag.
+
+    As long as the app is still known (see get_known_app_names()).
+    """
+    coordinator = make_coordinator(
+        data={"app": {"plex": {"name": "plex"}}, "app_stats": {}}
+    )
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor._restored_native_value = 9.9
+    sensor._awaiting_first_app_stats_event = True
+
+    sensor._refresh_data()
+
+    assert sensor._awaiting_first_app_stats_event is True
+    assert sensor.native_value == 9.9
+
+
+async def test_app_stats_restored_flag_cleared_when_app_no_longer_known() -> None:
+    """The restored placeholder is dropped if the app disappears too early.
+
+    If the app disappears from ds["app"] before its first real app.stats
+    event ever arrives, the placeholder must be dropped -- otherwise it would
+    report a frozen "available" value forever (nothing else ever clears the
+    flag in that case, since _data never becomes truthy again).
+    """
+    coordinator = make_coordinator(data={"app": {}, "app_stats": {}})
+    sensor = TrueNASAppStatsSensor(coordinator, _app_stats_desc(), "plex")
+    sensor._restored_native_value = 9.9
+    sensor._awaiting_first_app_stats_event = True
+
+    sensor._refresh_data()
+
+    assert sensor._awaiting_first_app_stats_event is False
+    assert sensor.native_value is None
+
+
+async def test_app_stats_network_restored_flag_survives_refresh_while_still_empty() -> (
+    None
+):
+    """Defensive regression guard for a network sensor with the flag set.
+
+    Network sensors never get ``_awaiting_first_app_stats_event`` set to True
+    via the normal seeding path (see
+    test_app_stats_seed_restored_value_skipped_for_network_sensor), but
+    _refresh_data() must still behave correctly if the flag were ever set by
+    some other means -- the composite network uid ("plex::eth0") must be
+    resolved back to its base app name ("plex") before checking
+    get_known_app_names(), not compared to it directly.
+    """
+    coordinator = make_coordinator(
+        data={"app": {"plex": {"name": "plex"}}, "app_stats": {}}
+    )
+    sensor = TrueNASAppStatsSensor(coordinator, _net_desc(), "plex::eth0")
+    sensor._restored_native_value = 9.9
+    sensor._awaiting_first_app_stats_event = True
+
+    sensor._refresh_data()
+
+    assert sensor._awaiting_first_app_stats_event is True
+    assert sensor.native_value == 9.9
+    assert sensor.available is True

@@ -12,6 +12,7 @@ for real instead of being bypassed via ``__new__``.
 from __future__ import annotations
 
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -1463,6 +1464,246 @@ async def test_async_ensure_connected_succeeds(coordinator: TrueNASCoordinator) 
     coord.api.connected = MagicMock(return_value=False)
     coord.api.connect = AsyncMock(return_value=True)
     await coord._async_ensure_connected()  # must not raise
+
+
+async def test_async_ensure_connected_relogs_error_when_failure_reason_changes(
+    coordinator: TrueNASCoordinator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failure cause change mid-outage must re-log ERROR once.
+
+    It must not stay silently pinned to DEBUG for whatever error code was
+    first seen -- the dedup marker persists the ERR_* code itself (see
+    _connection_failing_error), not just a bare failing/not-failing bool, so
+    this must be re-detected even without a recovery in between.
+    """
+    coord = coordinator
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=False)
+    coord.api.connect = AsyncMock(return_value=False)
+    coord.api.error = "ERR_LOST_QUERY"
+    coord.host = "truenas.local"
+
+    with caplog.at_level("DEBUG", logger=coordinator_module.__name__):
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_ensure_connected()
+        assert coord._connection_failing_error == "ERR_LOST_QUERY"
+
+        # Same cause again: still deduped to DEBUG, no new ERROR.
+        caplog.clear()
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_ensure_connected()
+        assert not any(r.levelname == "ERROR" for r in caplog.records)
+
+        # Cause changes without ever recovering in between.
+        caplog.clear()
+        coord.api.error = "ERR_LOST_LOGIN"
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_ensure_connected()
+        assert any(
+            r.levelname == "ERROR" and "failure changed" in r.message
+            for r in caplog.records
+        )
+        assert coord._connection_failing is True
+        assert coord._connection_failing_error == "ERR_LOST_LOGIN"
+        # Must actually go through the setter (re-persisting into hass.data),
+        # not just reassign the in-memory attribute -- otherwise a later
+        # setup-retry recreation would seed the stale pre-change code again.
+        assert (
+            coordinator_module._seed_connection_failing(coord.hass, coord.config_entry)
+            == "ERR_LOST_LOGIN"
+        )
+
+        # The new cause is now itself deduped to DEBUG on repeat.
+        caplog.clear()
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord._async_ensure_connected()
+        assert not any(r.levelname == "ERROR" for r in caplog.records)
+
+
+async def test_connection_failing_survives_coordinator_recreation(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Dedup (and the seeded ERR_* code) must survive a setup-retry recreation.
+
+    A setup retry recreates the coordinator (see async_setup_entry), which
+    would otherwise reset _connection_failing to False and re-log a fresh
+    ERROR every ~10 minutes (the setup-retry backoff cap) while TrueNAS stays
+    down. The hass.data mirror written by _set_connection_failing must let a
+    *second*, freshly-constructed coordinator instance for the same config
+    entry pick the dedup back up (via TrueNASCoordinator.__init__'s own
+    seeding, exercised here for real) and actually behave like a repeat
+    failure (DEBUG, not ERROR).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "TrueNAS",
+            CONF_HOST: "truenas.local",
+            CONF_API_KEY: "api-key",
+            CONF_VERIFY_SSL: True,
+        },
+        entry_id="e1",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(api_module, "TrueNASClient", return_value=mock_client):
+        coord = TrueNASCoordinator(hass, entry)
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=False)
+    coord.api.connect = AsyncMock(return_value=False)
+    coord.api.error = "ERR_LOST_QUERY"
+    coord.host = "truenas.local"
+
+    with pytest.raises(coordinator_module.UpdateFailed):
+        await coord._async_ensure_connected()
+    assert coord._connection_failing is True
+
+    with patch.object(api_module, "TrueNASClient", return_value=mock_client):
+        coord2 = TrueNASCoordinator(hass, entry)
+    # Seeded straight from __init__, before any reconnect attempt on coord2.
+    assert coord2._connection_failing is True
+    assert coord2._connection_failing_error == "ERR_LOST_QUERY"
+    coord2.api = MagicMock()
+    coord2.api.connected = MagicMock(return_value=False)
+    coord2.api.connect = AsyncMock(return_value=False)
+    coord2.api.error = "ERR_LOST_QUERY"
+    coord2.host = "truenas.local"
+
+    caplog.clear()
+    with caplog.at_level("DEBUG", logger=coordinator_module.__name__):
+        with pytest.raises(coordinator_module.UpdateFailed):
+            await coord2._async_ensure_connected()
+        assert not any(r.levelname == "ERROR" for r in caplog.records)
+        assert any(
+            r.levelname == "DEBUG" and "still failing" in r.message
+            for r in caplog.records
+        )
+        coord2.api.connect.assert_awaited_with(quiet=True)
+
+    # Recovery on either instance clears the persisted marker too.
+    coord2.api.connected = MagicMock(return_value=True)
+    await coord2._async_ensure_connected()  # must not raise
+    assert coord2._connection_failing is False
+    assert coordinator_module._seed_connection_failing(hass, entry) is None
+
+
+def _config_entry_stub(
+    *,
+    entry_id: str = "entry1",
+    host: str = "truenas.local",
+    api_key: str = "key1",
+    verify_ssl: bool = True,
+) -> SimpleNamespace:
+    """Bare stand-in for a ConfigEntry, for the pure hass.data helpers below."""
+    return SimpleNamespace(
+        entry_id=entry_id,
+        data={CONF_HOST: host, CONF_API_KEY: api_key, CONF_VERIFY_SSL: verify_ssl},
+    )
+
+
+def test_seed_connection_failing_defaults_to_none() -> None:
+    """No persisted marker means a freshly seeded coordinator starts clean."""
+    hass = SimpleNamespace(data={})
+    entry = _config_entry_stub()
+    assert coordinator_module._seed_connection_failing(hass, entry) is None
+
+
+def test_seed_connection_failing_reads_persisted_marker() -> None:
+    """A persisted marker is returned only for the matching entry_id."""
+    entry = _config_entry_stub()
+    other_entry = _config_entry_stub(entry_id="other-entry")
+    hass = SimpleNamespace(
+        data={
+            DOMAIN: {
+                coordinator_module._DATA_CONNECTION_FAILING: {
+                    "entry1": (
+                        coordinator_module._connection_fingerprint(entry),
+                        "ERR_LOST_QUERY",
+                    )
+                }
+            }
+        }
+    )
+    assert coordinator_module._seed_connection_failing(hass, entry) == "ERR_LOST_QUERY"
+    assert coordinator_module._seed_connection_failing(hass, other_entry) is None
+
+
+def test_seed_connection_failing_ignores_marker_for_different_target() -> None:
+    """A marker left by a since-reconfigured host/API key must not carry over.
+
+    Reproduces the #145 follow-up's critical gap: reconfiguring away from a
+    config entry stuck in Home Assistant's SETUP_RETRY state never calls
+    async_unload_entry (see clear_persisted_connection_failing's docstring),
+    so the marker can only be neutralized here, by fingerprint mismatch, not
+    by being explicitly cleared.
+    """
+    entry = _config_entry_stub()
+    hass = SimpleNamespace(
+        data={
+            DOMAIN: {
+                coordinator_module._DATA_CONNECTION_FAILING: {
+                    "entry1": (
+                        coordinator_module._connection_fingerprint(entry),
+                        "ERR_LOST_QUERY",
+                    )
+                }
+            }
+        }
+    )
+    reconfigured_entry = _config_entry_stub(host="truenas-new.local")
+    assert coordinator_module._seed_connection_failing(hass, reconfigured_entry) is None
+
+
+def test_seed_connection_failing_ignores_marker_for_changed_verify_ssl() -> None:
+    """A reconfigure that only flips CONF_VERIFY_SSL must also invalidate the marker.
+
+    CONF_VERIFY_SSL is set via the same reconfigure flow as host/API key and
+    changes how the connection is actually established, so it belongs in the
+    fingerprint alongside them -- otherwise the first failure after such a
+    reconfigure stays wrongly deduped to DEBUG instead of producing a fresh
+    ERROR diagnostic.
+    """
+    entry = _config_entry_stub(verify_ssl=True)
+    hass = SimpleNamespace(
+        data={
+            DOMAIN: {
+                coordinator_module._DATA_CONNECTION_FAILING: {
+                    "entry1": (
+                        coordinator_module._connection_fingerprint(entry),
+                        "ERR_LOST_QUERY",
+                    )
+                }
+            }
+        }
+    )
+    reconfigured_entry = _config_entry_stub(verify_ssl=False)
+    assert coordinator_module._seed_connection_failing(hass, reconfigured_entry) is None
+
+
+def test_clear_persisted_connection_failing_removes_entry() -> None:
+    """Clearing removes only the target entry's marker, leaving others intact."""
+    hass = SimpleNamespace(
+        data={
+            DOMAIN: {
+                coordinator_module._DATA_CONNECTION_FAILING: {
+                    "entry1": ("fingerprint1", "ERR_LOST_QUERY"),
+                    "entry2": ("fingerprint2", "ERR_LOST_LOGIN"),
+                }
+            }
+        }
+    )
+    coordinator_module.clear_persisted_connection_failing(hass, "entry1")
+    by_entry = hass.data[DOMAIN][coordinator_module._DATA_CONNECTION_FAILING]
+    assert by_entry == {"entry2": ("fingerprint2", "ERR_LOST_LOGIN")}
+
+
+def test_clear_persisted_connection_failing_noop_when_absent() -> None:
+    """Clearing a marker that was never set is a no-op, not an error."""
+    hass = SimpleNamespace(data={})
+    coordinator_module.clear_persisted_connection_failing(hass, "entry1")  # no raise
 
 
 # ---------------------------
@@ -3128,6 +3369,34 @@ def test_collect_current_app_names_uses_identifier(
     coord = coordinator
     coord.ds = {"app": {"a": {"name": "app1"}, "b": "not-a-dict"}}
     assert coord._collect_current_app_names() == {"app1"}
+
+
+def test_get_known_app_names_returns_names_when_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """A monitored Containers group returns the app names from ds["app"]."""
+    coord = coordinator
+    coord.ds = {"app": {"a": {"name": "plex"}}}
+    coord.config_entry = MagicMock()
+    coord.config_entry.options = {CONF_MONITORED_GROUPS: [MONITOR_GROUP_CONTAINERS]}
+    assert coord.get_known_app_names() == {"plex"}
+
+
+def test_get_known_app_names_empty_when_containers_not_monitored(
+    coordinator: TrueNASCoordinator,
+) -> None:
+    """Regression guard: a disabled Containers group must yield no app names.
+
+    Unlike get_app_stats(), get_app() (populating ds["app"]) has no
+    monitor-group gate of its own -- get_known_app_names() must re-check
+    MONITOR_GROUP_CONTAINERS itself, or a disabled "Containers" group would
+    leak eagerly-discovered app_stats sensors.
+    """
+    coord = coordinator
+    coord.ds = {"app": {"a": {"name": "plex"}}}
+    coord.config_entry = MagicMock()
+    coord.config_entry.options = {CONF_MONITORED_GROUPS: []}
+    assert coord.get_known_app_names() == set()
 
 
 def test_prune_stale_app_stats_removes_missing_entries(

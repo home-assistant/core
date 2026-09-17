@@ -766,6 +766,30 @@ def test_available_keyless_entity_populated_data_path_is_available() -> None:
     assert entity.available is True
 
 
+def test_data_missing_is_available_hook_defaults_false() -> None:
+    """The hook must default to False so ``bool(self._data)`` alone governs.
+
+    Every entity that doesn't override it -- e.g. a deleted disk/dataset/VM/
+    pool/app stays unavailable immediately. Only TrueNASAppStatsSensor
+    overrides this, for its restore-on-restart fallback (see tests/test_sensor.py).
+    """
+    desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
+    entity = _make_entity(data={}, description=desc)
+    assert entity._data_missing_is_available() is False
+    assert entity.available is False
+
+
+def test_data_missing_is_available_hook_override_reenables_availability() -> None:
+    """A subclass opting into the hook stays available despite empty data.
+
+    This is the mechanism TrueNASAppStatsSensor's restore fallback relies on.
+    """
+    desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
+    entity = _make_entity(data={}, description=desc)
+    entity._data_missing_is_available = lambda: True
+    assert entity.available is True
+
+
 def test_available_referenced_entity_empty_uid_data_is_unavailable() -> None:
     """A referenced entity with an empty uid sub-dict goes unavailable."""
     entity = _make_entity(uid="d1", data={}, description=_REF_DESC)

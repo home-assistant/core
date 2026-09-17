@@ -21,6 +21,7 @@ from homeassistant.components.truenas_ce import (
     _migrate_description,
     _reset_entity_unit,
     _reset_stale_forced_unit,
+    coordinator as coordinator_module,
 )
 from homeassistant.components.truenas_ce.const import DOMAIN
 from homeassistant.components.truenas_ce.helper import GB_SCALED_UNITS, scaled_data_unit
@@ -416,6 +417,34 @@ async def test_async_unload_entry_stops_coordinator_on_success(
     coordinator.stop_app_stats.assert_awaited_once()
     coordinator.api.close.assert_awaited_once()
     assert not hasattr(entry, "runtime_data")
+
+
+async def test_async_unload_entry_clears_persisted_connection_failing(
+    hass: HomeAssistant,
+) -> None:
+    """Unloading a LOADED entry frees its persisted _connection_failing marker.
+
+    This is the best-effort hygiene path only: it covers reload/removal of an
+    entry that is actually LOADED. It does not cover a reconfigure of an entry
+    stuck in SETUP_RETRY -- Home Assistant's ConfigEntry.async_unload skips
+    async_unload_entry entirely in that state, so that case is instead handled
+    by the fingerprint check in coordinator._seed_connection_failing.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+    marker_key = coordinator_module._DATA_CONNECTION_FAILING
+    hass.data.setdefault(DOMAIN, {})[marker_key] = {
+        "e1": ("fingerprint-e1", "ERR_LOST_QUERY"),
+        "other-entry": ("fp-2", "ERR_LOST_LOGIN"),
+    }
+
+    with patch.object(init_module, "get_truenas_coordinator", return_value=None):
+        result = await hass.config_entries.async_unload(entry.entry_id)
+
+    assert result is True
+    assert hass.data[DOMAIN][marker_key] == {"other-entry": ("fp-2", "ERR_LOST_LOGIN")}
 
 
 async def test_async_unload_entry_noop_when_platform_unload_fails(

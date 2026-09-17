@@ -17,7 +17,12 @@ from .const import (
     PLATFORMS,
     SIGNAL_UPDATE_SENSORS,
 )
-from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
+from .coordinator import (
+    TrueNASConfigEntry,
+    TrueNASCoordinator,
+    clear_persisted_connection_failing,
+    get_truenas_coordinator,
+)
 from .entity import format_unique_id, register_system_device, resolve_entry_identity
 from .helper import GB_SCALED_UNITS, scaled_data_unit
 from .sensor_types import SENSOR_TYPES, TrueNASSensorEntityDescription
@@ -212,5 +217,6 @@ async def async_unload_entry(
             await coordinator.api.close()
         if hasattr(config_entry, "runtime_data"):
             del config_entry.runtime_data
+        clear_persisted_connection_failing(hass, config_entry.entry_id)
 
     return unload_ok
