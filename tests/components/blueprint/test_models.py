@@ -23,7 +23,7 @@ SUBSTITUTE_XFAIL = pytest.mark.xfail(
     strict=True,
     reason=(
         "annotatedyaml's substitute (input.py:51,54) rebuilds containers with "
-        "comprehensions, so the node class and the __config_file__/__line__  slots"
+        "comprehensions, so the node class and the __config_file__/__line__ slots "
         "are both dropped"
     ),
 )

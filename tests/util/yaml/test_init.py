@@ -399,10 +399,9 @@ def test_include_dir_merge_named_recursive(mock_walk: Mock) -> None:
             marks=pytest.mark.xfail(
                 strict=True,
                 reason=(
-                    "_include_dir_list_yaml (annotatedyaml 1.0.2 loader.py:312-323) "
-                    "returns a bare list comprehension and never calls "
-                    "_add_reference, unlike the three sibling include_dir tags; "
-                    "needs the loader.py fix planned for annotatedyaml 1.1.0"
+                    "annotatedyaml _include_dir_list_yaml returns a bare list "
+                    "comprehension and never calls _add_reference, unlike the "
+                    "three sibling include_dir tags"
                 ),
             ),
             id="include_dir_list",

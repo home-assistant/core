@@ -266,6 +266,7 @@ async def test_rebuilding_validator_loses_the_annotation(
         ),
     ],
 )
+@pytest.mark.usefixtures("probatio_compile_policy")
 async def test_find_annotation_after_validation(
     annotated_config: dict, path: list[str | int], expected: tuple[str, int]
 ) -> None:
