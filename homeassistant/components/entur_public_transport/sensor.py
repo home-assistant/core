@@ -219,6 +219,8 @@ def _stop_configurations(
             continue
         mode = subentry.data.get(CONF_PLATFORM_MODE, PLATFORM_MODE_ALL)
         quay_ids = _string_values(subentry.data.get(CONF_QUAY_IDS))
+        stops: tuple[str, ...]
+        quays: tuple[str, ...]
         if mode == PLATFORM_MODE_SELECTED and quay_ids:
             stops = ()
             quays = quay_ids

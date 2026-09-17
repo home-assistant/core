@@ -18,6 +18,7 @@ from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -149,7 +150,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @override
     async def async_step_select_stop(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -185,7 +185,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_STOP_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                {"value": place.stop_id, "label": place.selection_label}
+                                _selection_option(place.stop_id, place.selection_label)
                                 for place in self._places
                             ]
                         )
@@ -195,7 +195,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @override
     async def async_step_select_routes(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -255,7 +254,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @override
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -284,7 +282,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    @override
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import an Entur platform configuration from YAML."""
         data = dict(import_data)
@@ -327,6 +324,11 @@ def _combine_line_whitelist(
     )
 
 
+def _selection_option(value: str, label: str) -> SelectOptionDict:
+    """Return a correctly typed selector option."""
+    return {"value": value, "label": label}
+
+
 def _route_schema(
     routes: tuple[EnturRoute, ...],
     selected_line_whitelist: list[str] | None = None,
@@ -354,10 +356,7 @@ def _route_schema(
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        {
-                            "value": route.line_id,
-                            "label": route.selection_label,
-                        }
+                        _selection_option(route.line_id, route.selection_label)
                         for route in routes
                     ],
                     multiple=True,
@@ -402,7 +401,7 @@ def _platform_schema(
         ] = SelectSelector(
             SelectSelectorConfig(
                 options=[
-                    {"value": quay.quay_id, "label": quay.selection_label}
+                    _selection_option(quay.quay_id, quay.selection_label)
                     for quay in quays
                 ],
                 multiple=True,
@@ -793,7 +792,7 @@ def _stop_selector_schema(
             probatio.Required(CONF_STOP_ID): SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        {"value": place.stop_id, "label": place.selection_label}
+                        _selection_option(place.stop_id, place.selection_label)
                         for place in places
                     ]
                 )
