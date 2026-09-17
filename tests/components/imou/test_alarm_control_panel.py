@@ -35,6 +35,7 @@ ALARM_PANEL = {
     PARAM_VALUE_TYPE: "int",
 }
 
+
 def alarm_mock_devices() -> list[ImouHaDevice]:
     """Return a device list with an arming panel."""
     device = create_online_device("d1", "Gateway", button_keys=())
@@ -126,9 +127,7 @@ async def test_arm_home_propagates_api_error(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """An API error while arming raises a translated error."""
-    mock_imou_ha_device_manager.async_set_alarm_mode.side_effect = ImouException(
-        "fail"
-    )
+    mock_imou_ha_device_manager.async_set_alarm_mode.side_effect = ImouException("fail")
     entity_id = hass.states.async_all(ALARM_DOMAIN)[0].entity_id
 
     with pytest.raises(HomeAssistantError, match="Imou rejected the arming change"):
