@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusTlsParams
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
@@ -79,9 +79,7 @@ async def test_form_conflicting_link_settings(hass: HomeAssistant) -> None:
     async_get_unit(
         hass,
         other_entry,
-        ModbusTcpParams(
-            host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT], framer="rtu"
-        ),
+        ModbusTlsParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT]),
         UNIT_ID,
     )
 
