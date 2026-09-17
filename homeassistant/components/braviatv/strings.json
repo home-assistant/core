@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
-      "not_bravia_device": "The device is not a Bravia TV.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "not_bravia_device": "The device is not a Bravia TV."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -15,9 +15,9 @@ from huawei_lte_api.exceptions import (
     ResponseErrorException,
 )
 from huawei_lte_api.Session import GetResponseType
+import probatio
 from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -85,23 +85,23 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_URL,
                         default=user_input.get(CONF_URL, self.url or ""),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(
                             CONF_VERIFY_SSL,
                             False,
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
                     ): str,
                 }
@@ -119,12 +119,12 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
                     ): str,
                 }
@@ -386,29 +386,29 @@ class HuaweiLteOptionsFlow(OptionsFlow):
                 ]
             return self.async_create_entry(title="", data=data)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
                 # Name field is no longer allowed in config flow schemas
                 # pylint: disable-next=home-assistant-config-flow-name-field
-                vol.Optional(
+                probatio.Optional(
                     CONF_NAME,
                     default=self.config_entry.options.get(
                         CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME
                     ),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_RECIPIENT,
                     default=", ".join(
                         self.config_entry.options.get(CONF_RECIPIENT, [])
                     ),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TRACK_WIRED_CLIENTS,
                     default=self.config_entry.options.get(
                         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_UNAUTHENTICATED_MODE,
                     default=self.config_entry.options.get(
                         CONF_UNAUTHENTICATED_MODE, DEFAULT_UNAUTHENTICATED_MODE

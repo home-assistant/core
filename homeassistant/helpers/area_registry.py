@@ -14,7 +14,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr
-from .json import json_bytes, json_fragment
+from .json import cached_json_fragment, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
@@ -87,22 +87,20 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON representation of this AreaEntry."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": list(self.aliases),
-                    "area_id": self.id,
-                    "floor_id": self.floor_id,
-                    "humidity_entity_id": self.humidity_entity_id,
-                    "icon": self.icon,
-                    "labels": list(self.labels),
-                    "name": self.name,
-                    "picture": self.picture,
-                    "temperature_entity_id": self.temperature_entity_id,
-                    "created_at": self.created_at.timestamp(),
-                    "modified_at": self.modified_at.timestamp(),
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": list(self.aliases),
+                "area_id": self.id,
+                "floor_id": self.floor_id,
+                "humidity_entity_id": self.humidity_entity_id,
+                "icon": self.icon,
+                "labels": list(self.labels),
+                "name": self.name,
+                "picture": self.picture,
+                "temperature_entity_id": self.temperature_entity_id,
+                "created_at": self.created_at.timestamp(),
+                "modified_at": self.modified_at.timestamp(),
+            }
         )
 
 

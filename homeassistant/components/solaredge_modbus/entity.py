@@ -8,13 +8,25 @@ stores as the config entry unique ID.
 
 from typing import TYPE_CHECKING, override
 
-from solaredged import Battery, Meter, SolarEdge
+from solaredged import (
+    Battery,
+    ExportControl,
+    Meter,
+    PowerControl,
+    SolarEdge,
+    StorageControl,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SUBSYSTEM_INVERTER
+from .const import (
+    DOMAIN,
+    SUBSYSTEM_INVERTER,
+    SUBSYSTEM_POWER_CONTROL,
+    SUBSYSTEM_SITE_CONTROL,
+)
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
     SolarEdgeModbusDataUpdateCoordinator,
@@ -39,6 +51,21 @@ def inverter_name(model: str | None) -> str:
     if (commercial := inverter_model(model)) is None:
         return "SolarEdge inverter"
     return f"SolarEdge {commercial}"
+
+
+# The control blocks that host entities. Advanced power control is polled but
+# has none, so adding entities for it means widening this and the sub-system it
+# maps to below.
+type ControlComponent = ExportControl | PowerControl | StorageControl
+
+
+def _control_subsystem(component: ControlComponent) -> str:
+    """Return the sub-system a control block's poll is reported under."""
+    if isinstance(component, PowerControl):
+        return SUBSYSTEM_POWER_CONTROL
+    # Export control's read spans storage control, so the library reads the two
+    # as one pooled block and reports them together.
+    return SUBSYSTEM_SITE_CONTROL
 
 
 def attachment_identity(component: Battery | Meter, index: int) -> str:
@@ -81,7 +108,7 @@ class SolarEdgeModbusEntity(CoordinatorEntity[SolarEdgeModbusDataUpdateCoordinat
         key_prefix: str = "",
     ) -> None:
         """Initialize a SolarEdge Modbus entity."""
-        super().__init__(coordinator=entry.runtime_data.readings)
+        super().__init__(coordinator=entry.runtime_data.coordinator_for(subsystem))
         self.entity_description = description
         self._subsystem = subsystem
 
@@ -110,11 +137,10 @@ class SolarEdgeModbusInverterEntity(SolarEdgeModbusEntity):
         *,
         entry: SolarEdgeModbusConfigEntry,
         description: EntityDescription,
+        subsystem: str = SUBSYSTEM_INVERTER,
     ) -> None:
         """Initialize a SolarEdge Modbus inverter entity."""
-        super().__init__(
-            entry=entry, subsystem=SUBSYSTEM_INVERTER, description=description
-        )
+        super().__init__(entry=entry, subsystem=subsystem, description=description)
         self._attr_device_info = entry.runtime_data.device_info
 
 
@@ -183,3 +209,28 @@ class SolarEdgeModbusBatteryEntity(SolarEdgeModbusEntity):
             serial_number=battery.serial_number or None,
             via_device_id=entry.runtime_data.inverter_device_id,
         )
+
+
+class SolarEdgeModbusControlEntity[ComponentT: ControlComponent](
+    SolarEdgeModbusInverterEntity
+):
+    """Defines a SolarEdge Modbus entity for a writable control block.
+
+    The library refreshes the component instances in place on every poll, so
+    the entity holds on to its control component directly.
+    """
+
+    def __init__(
+        self,
+        *,
+        entry: SolarEdgeModbusConfigEntry,
+        description: EntityDescription,
+        component: ComponentT,
+    ) -> None:
+        """Initialize a SolarEdge Modbus control entity."""
+        super().__init__(
+            entry=entry,
+            subsystem=_control_subsystem(component),
+            description=description,
+        )
+        self._component = component

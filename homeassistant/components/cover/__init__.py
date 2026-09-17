@@ -6,8 +6,8 @@ import functools as ft
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -38,6 +39,7 @@ from .const import (
     ATTR_POSITION,
     ATTR_SPEED,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     INTENT_CLOSE_COVER,
     INTENT_OPEN_COVER,
@@ -57,7 +59,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
+
 DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
 
 # mypy: disallow-any-generics
@@ -91,6 +93,9 @@ __all__ = [
 ]
 
 
+@deprecated_function(
+    "hass.states.is_state(entity_id, 'closed')", breaks_in_ha_version="2027.10"
+)
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(entity_id, CoverState.CLOSED)
@@ -106,14 +111,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_OPEN_COVER,
-        {vol.Optional(ATTR_SPEED): cv.string},
+        {probatio.Optional(ATTR_SPEED): cv.string},
         "async_handle_open_cover",
         [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
         SERVICE_CLOSE_COVER,
-        {vol.Optional(ATTR_SPEED): cv.string},
+        {probatio.Optional(ATTR_SPEED): cv.string},
         "async_handle_close_cover",
         [CoverEntityFeature.CLOSE],
     )
@@ -121,10 +126,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_COVER_POSITION,
         {
-            vol.Required(ATTR_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_POSITION): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(ATTR_SPEED): cv.string,
+            probatio.Optional(ATTR_SPEED): cv.string,
         },
         "async_handle_set_cover_position",
         [CoverEntityFeature.SET_POSITION],
@@ -165,8 +170,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_COVER_TILT_POSITION,
         {
-            vol.Required(ATTR_TILT_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_TILT_POSITION): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         "async_set_cover_tilt_position",

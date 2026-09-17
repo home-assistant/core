@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -86,7 +86,6 @@ async def test_light_service_calls(
 ) -> None:
     """Test light turn on/off service calls."""
     entity_id = "light.test_fridge_presentation_light"
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -99,9 +98,6 @@ async def test_light_service_calls(
         device_id="test_device_id",
         target=expected_target,
     )
-
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -131,7 +127,7 @@ async def test_light_failure(
 async def test_light_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test light entity behavior when control is removed."""
     entity_id = "light.test_fridge_presentation_light"
@@ -145,9 +141,7 @@ async def test_light_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -167,13 +161,13 @@ async def test_light_when_control_missing(
 async def test_light_state_updates(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
     value: int | None,
     max_value: int,
     expected_state: str,
     expected_brightness: int | None,
 ) -> None:
-    """Test light entity state after coordinator update."""
+    """Test light entity state after a stream update."""
     entity_id = "light.test_fridge_presentation_light"
 
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
@@ -188,9 +182,7 @@ async def test_light_state_updates(
         ],
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_push()
 
     state = hass.states.get(entity_id)
     assert state is not None

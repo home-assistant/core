@@ -125,13 +125,23 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         coordinator.data after a successful REST call gives entities instant
         feedback; the next snapshot from Firestore overwrites it harmlessly.
         """
-        keys = value_path.split(".")
-        target: dict[str, Any] = self.data
-        for key in keys[:-1]:
-            child = target.get(key)
-            if not isinstance(child, dict):
-                child = {}
-                target[key] = child
-            target = child
-        target[keys[-1]] = value
+        self.apply_optimistic_values({value_path: value})
+
+    def apply_optimistic_values(self, updates: dict[str, Any]) -> None:
+        """Reflect several just-written values as a single update.
+
+        Applying them one at a time would publish a state where only part
+        of the write has landed, which entities derived from more than one
+        path briefly read as a different value.
+        """
+        for value_path, value in updates.items():
+            keys = value_path.split(".")
+            target: dict[str, Any] = self.data
+            for key in keys[:-1]:
+                child = target.get(key)
+                if not isinstance(child, dict):
+                    child = {}
+                    target[key] = child
+                target = child
+            target[keys[-1]] = value
         self.async_set_updated_data(self.data)
