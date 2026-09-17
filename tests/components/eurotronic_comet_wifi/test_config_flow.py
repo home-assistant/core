@@ -10,6 +10,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import COMMAND_TOPIC_REQUEST, MAC
@@ -89,6 +90,30 @@ async def test_form_invalid_mac(
     # Nothing was sent to the thermostat.
     published_topics = [call.args[0] for call in mqtt_mock.async_publish.mock_calls]
     assert not [topic for topic in published_topics if topic.startswith("01/")]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MAC: MAC}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mqtt_mock", "device")
+async def test_form_mqtt_error(hass: HomeAssistant) -> None:
+    """Test an MQTT error is reported as cannot connect, and the flow recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.mqtt.async_subscribe",
+        side_effect=HomeAssistantError("MQTT is not connected"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_MAC: MAC}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_MAC: MAC}
