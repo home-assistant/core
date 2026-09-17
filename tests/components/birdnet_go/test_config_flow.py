@@ -47,7 +47,7 @@ async def test_flow_user_success(
         CONF_SSL: False,
     }
     assert isinstance(result["data"][CONF_PORT], int)
-    assert result["result"].unique_id == "192.168.1.100:8080"
+    assert result["result"].unique_id is None
 
 
 async def test_flow_user_ipv6(
@@ -75,7 +75,7 @@ async def test_flow_user_ipv6(
         CONF_PORT: 8080,
         CONF_SSL: False,
     }
-    assert result["result"].unique_id == "2001:db8::1:8080"
+    assert result["result"].unique_id is None
 
 
 async def test_flow_user_port_normalization(
@@ -259,8 +259,11 @@ async def test_flow_user_already_configured(
     mock_birdnet_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test aborting when unique ID is already configured."""
+    """Test aborting when unique host/port combination is already configured."""
     mock_config_entry.add_to_hass(hass)
+    mock_birdnet_client.get_kpis.side_effect = BirdNetGoConnectionError(
+        "Host unreachable"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -276,6 +279,7 @@ async def test_flow_user_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_birdnet_client.get_kpis.assert_not_called()
 
 
 async def test_flow_user_url_canonicalization_already_configured(
@@ -283,7 +287,7 @@ async def test_flow_user_url_canonicalization_already_configured(
     mock_birdnet_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test aborting when a full URL resolves to an already configured unique ID."""
+    """Test aborting when a full URL resolves to an already configured host/port."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -300,6 +304,7 @@ async def test_flow_user_url_canonicalization_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_birdnet_client.get_kpis.assert_not_called()
 
 
 async def test_flow_user_ipv6_canonicalization_already_configured(
@@ -310,7 +315,6 @@ async def test_flow_user_ipv6_canonicalization_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="BirdNET-Go (2001:db8::1:8080)",
-        unique_id="2001:db8::1:8080",
         data={
             CONF_HOST: "2001:db8::1",
             CONF_PORT: 8080,
@@ -333,3 +337,4 @@ async def test_flow_user_ipv6_canonicalization_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_birdnet_client.get_kpis.assert_not_called()

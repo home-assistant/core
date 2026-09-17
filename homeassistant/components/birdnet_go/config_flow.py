@@ -68,31 +68,32 @@ class BirdNetGoConfigFlow(ConfigFlow, domain=DOMAIN):
                     use_ssl=raw_ssl,
                     session=session,
                 )
-                await client.get_kpis()
             except ValueError:
                 errors["base"] = "cannot_connect"
-            except BirdNetGoAuthenticationError:
-                errors["base"] = "auth_not_supported"
-            except BirdNetGoConnectionError, BirdNetGoTimeoutError:
-                errors["base"] = "cannot_connect"
-            except BirdNetGoError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception during BirdNET-Go setup")
-                errors["base"] = "unknown"
             else:
-                if not errors:
-                    host = client.host
-                    port = client.port
-                    use_ssl = client.use_ssl
-                    user_input[CONF_HOST] = host
-                    user_input[CONF_PORT] = port
-                    user_input[CONF_SSL] = use_ssl
+                host = client.host
+                port = client.port
+                use_ssl = client.use_ssl
+                user_input[CONF_HOST] = host
+                user_input[CONF_PORT] = port
+                user_input[CONF_SSL] = use_ssl
 
-                    unique_id = f"{host}:{port}"
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
 
+                try:
+                    await client.get_kpis()
+                except BirdNetGoAuthenticationError:
+                    errors["base"] = "auth_not_supported"
+                except (
+                    BirdNetGoConnectionError,
+                    BirdNetGoTimeoutError,
+                    BirdNetGoError,
+                ):
+                    errors["base"] = "cannot_connect"
+                except Exception:  # noqa: BLE001
+                    LOGGER.exception("Unexpected exception during BirdNET-Go setup")
+                    errors["base"] = "unknown"
+                else:
                     title = f"{DEFAULT_NAME} ({host}:{port})"
                     return self.async_create_entry(title=title, data=user_input)
 
