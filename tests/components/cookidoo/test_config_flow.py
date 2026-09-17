@@ -42,12 +42,66 @@ MOCK_DATA_LANGUAGE_STEP = {
 }
 
 MOCK_TOKEN = asdict(AUTH_DATA)
+ROTATED_AUTH_DATA = CookidooAuthData(
+    access_token="rotated-access-token",
+    refresh_token="rotated-refresh-token",
+    expires_at=1763000000.0,
+)
 
 
-async def test_flow_user_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
+def _tokens_from_the_login(
+    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
 ) -> None:
-    """Test we get the user flow and create entry with success."""
+    """Leave the tokens the login hands over in place."""
+
+
+def _tokens_rotated_during_validation(
+    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
+) -> None:
+    """Emulate a validation request refreshing the access token."""
+
+    async def _rotate(*args: Any, **kwargs: Any) -> list:
+        notify(ROTATED_AUTH_DATA)
+        return []
+
+    client.get_additional_items.side_effect = _rotate
+
+
+def _no_tokens_from_the_login(
+    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
+) -> None:
+    """Emulate a token response that carries no refresh token."""
+    client.login.side_effect = None
+
+
+@pytest.mark.parametrize(
+    ("arrange_client", "expected_token"),
+    [
+        pytest.param(_tokens_from_the_login, MOCK_TOKEN, id="tokens_from_the_login"),
+        pytest.param(
+            _tokens_rotated_during_validation,
+            asdict(ROTATED_AUTH_DATA),
+            id="tokens_rotated_during_validation",
+        ),
+        pytest.param(_no_tokens_from_the_login, {}, id="no_tokens_from_the_login"),
+    ],
+)
+async def test_flow_user_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_cookidoo_client: AsyncMock,
+    notify_auth_data_update: Callable[[CookidooAuthData], None],
+    arrange_client: Callable[[AsyncMock, Callable[[CookidooAuthData], None]], None],
+    expected_token: dict[str, Any],
+) -> None:
+    """Test we get the user flow and create entry with success.
+
+    The entry is created with whatever tokens the validation ended up holding:
+    the ones the login handed over, the ones a later request rotated them into,
+    or none at all.
+    """
+    arrange_client(mock_cookidoo_client, notify_auth_data_update)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -73,45 +127,9 @@ async def test_flow_user_success(
     assert result["data"] == {
         **MOCK_DATA_USER_STEP,
         **MOCK_DATA_LANGUAGE_STEP,
-        CONF_TOKEN: MOCK_TOKEN,
+        CONF_TOKEN: expected_token,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_flow_user_stores_token_rotated_during_validation(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_cookidoo_client: AsyncMock,
-    notify_auth_data_update: Callable[[CookidooAuthData], None],
-) -> None:
-    """Test the entry is created with the tokens of the last validation request."""
-    rotated = CookidooAuthData(
-        access_token="rotated-access-token",
-        refresh_token="rotated-refresh-token",
-        expires_at=1763000000.0,
-    )
-
-    async def _rotate(*args: Any, **kwargs: Any) -> list:
-        # A request can transparently refresh and rotate the refresh token
-        notify_auth_data_update(rotated)
-        return []
-
-    mock_cookidoo_client.get_additional_items.side_effect = _rotate
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_DATA_USER_STEP,
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_DATA_LANGUAGE_STEP,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_TOKEN] == asdict(rotated)
 
 
 async def test_flow_reauth_drops_tokens_of_a_failed_attempt(
@@ -150,33 +168,6 @@ async def test_flow_reauth_drops_tokens_of_a_failed_attempt(
 
     assert result["reason"] == "reauth_successful"
     assert cookidoo_config_entry.data[CONF_TOKEN] == {}
-
-
-async def test_flow_user_login_without_tokens(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cookidoo_client: AsyncMock
-) -> None:
-    """Test the entry is still created when the login yields no tokens.
-
-    The library only hands us an auth data when the token response carries a
-    refresh token, and it tolerates one that does not.
-    """
-    mock_cookidoo_client.login.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_DATA_USER_STEP,
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_DATA_LANGUAGE_STEP,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    # Nothing to restore, so the coordinator logs in with the credentials
-    assert result["data"][CONF_TOKEN] == {}
 
 
 @pytest.mark.parametrize(

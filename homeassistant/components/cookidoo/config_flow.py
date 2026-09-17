@@ -221,11 +221,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _save_token(self, auth_data: CookidooAuthData) -> None:
-        """Keep the tokens the library hands us during the validation requests.
-
-        Any of them can refresh the access token, which rotates the refresh
-        token with it, so the entry has to be created with the last pair.
-        """
+        """Keep the tokens the library hands us during the validation requests."""
         self.token = asdict(auth_data)
 
     async def validate_input(

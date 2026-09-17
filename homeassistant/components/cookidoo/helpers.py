@@ -57,12 +57,7 @@ async def cookidoo_from_config_entry(
 
     @callback
     def save_auth_data(auth_data: CookidooAuthData) -> None:
-        """Store the tokens, so a restart does not need a new login.
-
-        The library notifies us whenever they change, which is on every login
-        and on every refresh, including the one a request performs on its own
-        once the access token has expired, as that rotates the refresh token.
-        """
+        """Store the tokens, so a restart does not need a new login."""
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_TOKEN: asdict(auth_data)}
         )
