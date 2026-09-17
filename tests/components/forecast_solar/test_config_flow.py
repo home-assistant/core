@@ -557,7 +557,6 @@ async def test_subentry_flow_reconfigure_plane(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    # The sources start from what the plane stores.
     assert _suggested(result, "declination_source") == "fixed"
     assert _suggested(result, "azimuth_source") == "fixed"
 
@@ -587,7 +586,6 @@ async def test_subentry_flow_reconfigure_plane(
     plane_subentries = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
     assert len(plane_subentries) == 1
     subentry = plane_subentries[0]
-    # The fixed azimuth is not kept once a sensor provides it.
     assert subentry.data == {
         CONF_DECLINATION: 50,
         CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
