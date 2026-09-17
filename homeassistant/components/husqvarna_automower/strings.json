@@ -552,7 +552,7 @@
       "message": "Could not connect"
     },
     "migrate_could_not_auth": {
-      "message": "Authentication during migration of the config entry was not successfull"
+      "message": "Authentication during migration of the config entry was not successful"
     },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
