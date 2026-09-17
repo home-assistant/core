@@ -9,6 +9,7 @@ from homeassistant.components.gree_infrared.const import (
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
 )
+from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -19,6 +20,7 @@ from tests.components.infrared import (
     EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
     RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
 )
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -109,6 +111,34 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_user_flow_receiver_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the flow aborts when the receiver is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.data[DATA_COMPONENT].async_add_entities(
+        [MockInfraredEmitterEntity("second_ir_emitter", "Second IR emitter")]
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.second_ir_emitter",
+            CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
     )
