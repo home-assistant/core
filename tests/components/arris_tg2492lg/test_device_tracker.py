@@ -66,6 +66,34 @@ async def test_device_tracker_data_shape(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
+async def test_device_tracker_restores_offline_tracker_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect_box: MagicMock,
+) -> None:
+    """A registered tracker is restored after reload while its client stays offline."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The client is still away after the restart.
+    mock_connect_box.async_get_connected_devices.return_value = []
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
 async def test_device_tracker_two_entries_same_mac(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

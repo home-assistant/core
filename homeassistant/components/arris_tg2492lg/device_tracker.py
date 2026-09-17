@@ -6,6 +6,7 @@ from arris_tg2492lg import Device
 import probatio
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
@@ -14,7 +15,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -89,9 +90,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for the Arris TG2492LG component."""
     coordinator = entry.runtime_data
+    registry = er.async_get(hass)
 
     tracked_devices: set[str] = set()
 
+    @callback
     def _async_add_new_entities() -> None:
         """Add entities for newly discovered devices."""
         entities = []
@@ -102,7 +105,28 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
+    @callback
+    def _async_restore_entities() -> None:
+        """Restore trackers for clients absent from the initial scan."""
+        prefix = f"{entry.entry_id}_"
+        entities = []
+        for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+            if not entity_entry.unique_id:
+                continue
+            if (
+                entity_entry.platform == DOMAIN
+                and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+                and (mac := entity_entry.unique_id.removeprefix(prefix))
+                != entity_entry.unique_id
+                and mac not in tracked_devices
+            ):
+                tracked_devices.add(mac)
+                entities.append(ArrisScannerEntity(coordinator, mac, None))
+        if entities:
+            async_add_entities(entities)
+
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    _async_restore_entities()
     _async_add_new_entities()
 
 
@@ -115,7 +139,7 @@ class ArrisScannerEntity(CoordinatorEntity[ArrisCoordinator], ScannerEntity):
         self,
         coordinator: ArrisCoordinator,
         mac: str,
-        device: Device,
+        device: Device | None,
     ) -> None:
         """Initialize the scanner entity."""
         super().__init__(coordinator)
@@ -124,9 +148,22 @@ class ArrisScannerEntity(CoordinatorEntity[ArrisCoordinator], ScannerEntity):
         # multiple configured routers.
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
+        if device is None:
+            # Restored from the entity registry while the client is offline.
+            self._attr_name = mac
+            return
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
         self._attr_name = device.hostname or mac
+
+    @property
+    @override
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        # The legacy YAML scanner tracked devices by default.
+        if self.coordinator.config_entry.source == SOURCE_IMPORT:
+            return True
+        return super().entity_registry_enabled_default
 
     @property
     @override

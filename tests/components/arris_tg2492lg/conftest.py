@@ -76,6 +76,16 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[None]:
+    """Ensure arris_tg2492lg tracker entities are enabled in the registry."""
+    with patch(
+        "homeassistant.components.arris_tg2492lg.device_tracker.ArrisScannerEntity.entity_registry_enabled_default",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_connect_box() -> Generator[MagicMock]:
     """Return a mock ConnectBox router client."""
     with (

@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import http_error
@@ -180,6 +180,28 @@ async def test_refresh_invalid_auth(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_connect_box", "mock_device_tracker_conf")
+async def test_yaml_import_tracks_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Trackers for YAML-imported entries are enabled by default, like the legacy scanner."""
+    assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert {entity_entry.unique_id for entity_entry in entity_entries} == {
+        f"{entry.entry_id}_AA:BB:CC:DD:EE:FF",
+        f"{entry.entry_id}_11:22:33:44:55:66",
+    }
+    assert all(entity_entry.disabled_by is None for entity_entry in entity_entries)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
+    assert state is not None
+    assert state.state == STATE_HOME
 
 
 @pytest.mark.usefixtures("mock_connect_box", "mock_device_tracker_conf")
