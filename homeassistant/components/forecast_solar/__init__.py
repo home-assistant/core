@@ -10,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.event import (
     EventStateChangedData,
-    async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -43,6 +42,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Forecast.Solar integration."""
     async_setup_services(hass)
+    _async_track_sensor_renames(hass)
     return True
 
 
@@ -154,10 +154,13 @@ def _async_track_sensor_states(
 
 
 @callback
-def _async_track_sensor_renames(
-    hass: HomeAssistant, entry: ForecastSolarConfigEntry
-) -> CALLBACK_TYPE:
-    """Keep a plane's sensor reference pointing at the sensor when it is renamed."""
+def _async_track_sensor_renames(hass: HomeAssistant) -> None:
+    """Keep the planes' sensor references pointing at their sensors when renamed.
+
+    Tracked for the integration, not per entry: an entry whose sensor is unreadable
+    sits in SETUP_RETRY with its own listeners torn down, and a rename during that
+    window is what leaves it pointing at an entity ID that never comes back.
+    """
 
     @callback
     def _async_sensor_renamed(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
@@ -168,21 +171,20 @@ def _async_track_sensor_renames(
             return
 
         new_entity_id = event.data["entity_id"]
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
-            renamed = {
-                key: new_entity_id
-                for key in _SENSOR_KEYS
-                if subentry.data.get(key) == old_entity_id
-            }
-            if renamed:
-                data = subentry.data | renamed
-                hass.config_entries.async_update_subentry(
-                    entry, subentry, data=data, title=plane_title(hass, data)
-                )
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
+                renamed = {
+                    key: new_entity_id
+                    for key in _SENSOR_KEYS
+                    if subentry.data.get(key) == old_entity_id
+                }
+                if renamed:
+                    data = subentry.data | renamed
+                    hass.config_entries.async_update_subentry(
+                        entry, subentry, data=data, title=plane_title(hass, data)
+                    )
 
-    return async_track_entity_registry_updated_event(
-        hass, _sensor_entity_ids(entry), _async_sensor_renamed
-    )
+    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _async_sensor_renamed)
 
 
 async def async_setup_entry(
@@ -216,7 +218,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(_async_reload_on_forecast_change(hass, entry))
-    entry.async_on_unload(_async_track_sensor_renames(hass, entry))
     entry.async_on_unload(_async_track_sensor_states(hass, entry))
 
     return True

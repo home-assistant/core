@@ -491,3 +491,49 @@ async def test_plane_follows_renamed_sensor(
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.title == "30° / Camper angle (sensor) / 5100W"
+
+
+@pytest.mark.usefixtures("mock_forecast_solar")
+async def test_plane_follows_renamed_sensor_during_setup_retry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a rename is followed while the entry is retrying on an unreadable sensor."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
+
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="plane_1",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / sensor.roof_azimuth (sensor) / 5100W",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    # The sensor has no state, so the first refresh fails and the entry retries.
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    entity_registry.async_update_entity(
+        "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
+    )
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
