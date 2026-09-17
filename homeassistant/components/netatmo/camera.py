@@ -218,10 +218,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
 
-        # Return None when the camera cannot provide a live snapshot,
-        # to prevent unnecessary API calls and errors in the logs
-        if not self.available or not self.is_on:
-            return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
         except (
@@ -317,9 +313,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
-        # Return None when the camera cannot provide a live stream.
-        if not self.is_on or not self.available:
-            return None
 
         if self.device.is_local:
             await self.device.async_update_camera_urls()
