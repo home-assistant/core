@@ -141,6 +141,34 @@ async def test_async_setup_entry_passes_power_analysis_customize(
     assert device_selector.call_args.args[10] == '{"power_analysis_method": 12}'
 
 
+async def test_options_update_reloads_entry_and_applies_customize(
+    hass: HomeAssistant,
+) -> None:
+    """Test options update reloads entry and rebuilds device customize payload."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=ENTRY_DATA,
+        options={CONF_POWER_ANALYSIS_METHOD: 3},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        side_effect=[DummyDevice(DeviceType.AC), DummyDevice(DeviceType.AC)],
+    ) as device_selector:
+        await hass.config_entries.async_setup(entry.entry_id)
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_POWER_ANALYSIS_METHOD: 12}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert device_selector.call_count == 2
+    assert device_selector.call_args_list[0].args[10] == '{"power_analysis_method": 3}'
+    assert device_selector.call_args_list[1].args[10] == '{"power_analysis_method": 12}'
+
+
 async def test_async_setup_entry_ignores_invalid_power_analysis_customize(
     hass: HomeAssistant,
 ) -> None:
