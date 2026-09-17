@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +22,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): WS_TYPE_APPKEY,
+        probatio.Required("type"): WS_TYPE_APPKEY,
     }
 )
 @websocket_api.async_response
