@@ -30,6 +30,10 @@ from .const import (
 type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
 
 
+class SensorUpdateFailed(UpdateFailed):
+    """Raised when a plane sensor can't be read, before the API is called."""
+
+
 def _resolve_location(
     hass: HomeAssistant, data: Mapping[str, Any]
 ) -> tuple[float, float]:
@@ -108,9 +112,9 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
     def _sensor_value(
         self, entity_id: str, min_value: float, max_value: float
     ) -> float:
-        """Return a sensor's numeric value, raising UpdateFailed if it can't be used."""
+        """Return a sensor's numeric value, raising if it can't be used."""
         if (sensor := self.hass.states.get(entity_id)) is None:
-            raise UpdateFailed(
+            raise SensorUpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="sensor_not_found",
                 translation_placeholders={"entity_id": entity_id},
@@ -121,7 +125,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         except ValueError:
             value = None
         if value is None or not min_value <= value <= max_value:
-            raise UpdateFailed(
+            raise SensorUpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="sensor_invalid",
                 translation_placeholders={

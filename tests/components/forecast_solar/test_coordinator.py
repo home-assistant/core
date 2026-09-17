@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from unittest.mock import MagicMock
 
+from forecast_solar import ForecastSolarConnectionError
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -170,6 +171,30 @@ async def test_coordinator_update_fails_until_sensor_recovers(
     assert coordinator.last_update_success is True
     assert coordinator.forecast.azimuth == 200 - 180
     assert mock_forecast_solar.estimate.call_count == estimate_calls + 1
+
+
+async def test_coordinator_api_failure_waits_for_schedule(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test sensor changes don't retry an update that failed at the API."""
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    mock_forecast_solar.estimate.side_effect = ForecastSolarConnectionError
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    estimate_calls = mock_forecast_solar.estimate.call_count
+
+    # A compass on a moving vehicle changes constantly; that must not spend the rate limit.
+    hass.states.async_set(AZIMUTH_SENSOR, "110", DEGREES)
+    await hass.async_block_till_done()
+
+    assert mock_forecast_solar.estimate.call_count == estimate_calls
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")

@@ -30,7 +30,11 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
-from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
+from .coordinator import (
+    ForecastSolarConfigEntry,
+    ForecastSolarDataUpdateCoordinator,
+    SensorUpdateFailed,
+)
 from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
@@ -108,13 +112,17 @@ def _sensor_entity_ids(entry: ForecastSolarConfigEntry) -> list[str]:
 def _async_refresh_on_sensor_change(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
-    """Retry a failed update as soon as one of the plane sensors changes."""
+    """Retry an update that failed on a sensor as soon as a plane sensor changes."""
 
     @callback
     def _async_sensor_changed(event: Event[EventStateChangedData]) -> None:
-        # Healthy updates keep their schedule, so sensor changes don't cost API calls.
-        if not entry.runtime_data.last_update_success:
-            entry.async_create_task(hass, entry.runtime_data.async_request_refresh())
+        coordinator = entry.runtime_data
+        # Only sensor failures retry early; healthy updates and API failures keep
+        # their schedule, so a fast-changing sensor can't spend the rate limit.
+        if not coordinator.last_update_success and isinstance(
+            coordinator.last_exception, SensorUpdateFailed
+        ):
+            entry.async_create_task(hass, coordinator.async_request_refresh())
 
     return async_track_state_change_event(
         hass, _sensor_entity_ids(entry), _async_sensor_changed
