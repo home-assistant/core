@@ -67,9 +67,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: All entities represent monitored services and should be enabled by default.
-  entity-translations:
-    status: exempt
-    comment: Entity names are dynamically provided by the Gatus service.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
