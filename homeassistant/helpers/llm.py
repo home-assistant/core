@@ -173,11 +173,7 @@ class Tool:
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> ToolResult | JsonObjectType:
-        """Call the tool.
-
-        Returning a plain JSON object is deprecated and will be removed in
-        Home Assistant 2027.11. It is read as a successful ToolResult.
-        """
+        """Call the tool."""
         raise NotImplementedError
 
     @override

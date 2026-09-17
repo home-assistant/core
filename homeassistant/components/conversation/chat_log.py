@@ -298,13 +298,7 @@ class ToolResultContent:
 
     @property
     def tool_result(self) -> JsonObjectType:
-        """Return the data of the result.
-
-        Deprecated compatibility shim: the result is available as `result`,
-        which also says whether the call failed. Use of this is reported once
-        the integrations in this repository have migrated, and it can be
-        removed in HA Core 2027.11.
-        """
+        """Return the data of the result."""
         return self.result.data
 
     def as_dict(self) -> dict[str, Any]:
@@ -341,7 +335,6 @@ class ToolResultContentDeltaDict(TypedDict, total=False):
     tool_name: str
     result: llm.ToolResult
     tool_result: JsonObjectType
-    """Deprecated, use result. Can be removed in HA Core 2027.11."""
 
 
 @dataclass
