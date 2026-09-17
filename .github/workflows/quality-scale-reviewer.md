@@ -209,6 +209,8 @@ steps:
         git checkout "${BASE_SHA}" -- "${path}" 2>/dev/null || true
       done
       rm -f .mcp.json
+      # Only the skill from the frontmatter is in scope for the agent.
+      find .claude/skills -mindepth 1 -maxdepth 1 ! -name ha-quality-scale-verify -exec rm -rf {} +
 timeout-minutes: 30
 ---
 
@@ -229,8 +231,7 @@ that the integration satisfies the rule, or that the exemption is justified.
 If it does not, post a comment on the changed line of `quality_scale.yaml`
 that sets the status, explaining why the rule is not satisfied.
 
-Apply the `ha-quality-scale-verify` skill to every rule you verify. Only this
-skill is in scope; ignore other skills in the repository and do not give
+Apply the `ha-quality-scale-verify` skill to every rule you verify. Do not give
 general code-quality feedback.
 
 ## Pre-fetched data
