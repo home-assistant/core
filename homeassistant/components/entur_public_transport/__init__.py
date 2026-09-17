@@ -14,11 +14,15 @@ from .api import (
     line_id_label,
 )
 from .const import (
+    CONF_PLATFORM_MODE,
+    CONF_QUAY_IDS,
     CONF_ROUTE_LABELS,
     CONF_STOP_PLACE_METADATA_VERSION,
+    CONF_STOP_PLACE_NAME,
     CONF_STOP_PLACE_TYPES,
     CONF_WHITELIST_LINES,
     DOMAIN,
+    PLATFORM_MODE_ALL,
     STOP_PLACE_METADATA_VERSION,
     SUBENTRY_TYPE_STOP_PLACE,
 )
@@ -93,6 +97,10 @@ async def _async_migrate_subentry_display_data(
             CONF_STOP_PLACE_TYPES,
             list(place.stop_place_types) if place else [],
         )
+        data.setdefault(CONF_PLATFORM_MODE, PLATFORM_MODE_ALL)
+        data.setdefault(CONF_QUAY_IDS, [])
+        if place:
+            data.setdefault(CONF_STOP_PLACE_NAME, place.name)
         if place and routes_loaded:
             data[CONF_STOP_PLACE_METADATA_VERSION] = STOP_PLACE_METADATA_VERSION
         hass.config_entries.async_update_subentry(

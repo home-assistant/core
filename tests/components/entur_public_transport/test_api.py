@@ -5,8 +5,10 @@ import pytest
 
 from homeassistant.components.entur_public_transport.api import (
     STOP_PLACE_LINES_QUERY,
+    STOP_PLACE_QUAYS_QUERY,
     EnturApiError,
     async_get_stop_place,
+    async_get_stop_quays,
     async_get_stop_routes,
     async_search_stop_places,
 )
@@ -182,6 +184,51 @@ async def test_get_stop_routes(aioclient_mock, hass: HomeAssistant) -> None:
         "stopPlaceId": "NSR:StopPlace:548",
         "numberOfDepartures": 50,
     }
+    assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
+
+
+async def test_get_stop_quays(aioclient_mock, hass: HomeAssistant) -> None:
+    """Test retrieving active platforms for one stop place."""
+    aioclient_mock.post(
+        JOURNEY_PLANNER_URL,
+        json={
+            "data": {
+                "stopPlaces": [
+                    {
+                        "quays": [
+                            {
+                                "id": "NSR:Quay:29625",
+                                "name": "Hønefoss sentrum",
+                                "publicCode": "A",
+                            },
+                            {
+                                "id": "NSR:Quay:29626",
+                                "name": "Hønefoss sentrum",
+                                "publicCode": "B",
+                            },
+                            {
+                                "id": "NSR:Quay:29625",
+                                "name": "Hønefoss sentrum",
+                                "publicCode": "A",
+                            },
+                        ]
+                    }
+                ]
+            }
+        },
+    )
+
+    quays = await async_get_stop_quays(hass, "NSR:StopPlace:16961")
+
+    assert [(quay.quay_id, quay.selection_label) for quay in quays] == [
+        ("NSR:Quay:29625", "A · Hønefoss sentrum"),
+        ("NSR:Quay:29626", "B · Hønefoss sentrum"),
+    ]
+
+    method, _, request, headers = aioclient_mock.mock_calls[0]
+    assert method == "POST"
+    assert request["query"] == STOP_PLACE_QUAYS_QUERY
+    assert request["variables"] == {"stopPlaceId": "NSR:StopPlace:16961"}
     assert headers["ET-Client-Name"] == ENTUR_CLIENT_NAME
 
 

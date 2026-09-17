@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from random import randint
 from typing import override
@@ -49,15 +50,34 @@ from .const import (
     CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
+    CONF_PLATFORM_MODE,
+    CONF_QUAY_IDS,
     CONF_STOP_ID,
     CONF_STOP_IDS,
+    CONF_STOP_PLACE_NAME,
     CONF_WHITELIST_LINES,
     DEFAULT_ICON_KEY,
     DEFAULT_NAME,
     DOMAIN,
     ICONS,
+    PLATFORM_MODE_ALL,
+    PLATFORM_MODE_SELECTED,
+    PLATFORM_MODE_STOP_PLACE,
     SUBENTRY_TYPE_STOP_PLACE,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class EnturStopConfiguration:
+    """One logical group of Entur sensors to create."""
+
+    stops: tuple[str, ...]
+    quays: tuple[str, ...]
+    line_whitelist: tuple[str, ...]
+    expand_platforms: bool
+    device_stop_id: str | None = None
+    device_stop_name: str | None = None
+
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -109,36 +129,39 @@ async def _async_setup(
 ) -> None:
     """Set up Entur sensors from configuration."""
 
-    expand = config[CONF_EXPAND_PLATFORMS]
     name = config[CONF_NAME]
     show_on_map = config[CONF_SHOW_ON_MAP]
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
     entities = []
-    for stop_ids, line_whitelist in _stop_configurations(config, subentries):
-        device_stop_id = stop_ids[0] if len(stop_ids) == 1 else None
-        stops = [stop_id for stop_id in stop_ids if "StopPlace" in stop_id]
-        quays = [stop_id for stop_id in stop_ids if "Quay" in stop_id]
+    for stop_config in _stop_configurations(config, subentries):
         data = EnturPublicTransportData(
             API_CLIENT_NAME.format(str(randint(100000, 999999))),
-            stops=stops,
-            quays=quays,
-            line_whitelist=line_whitelist,
+            stops=list(stop_config.stops),
+            quays=list(stop_config.quays),
+            line_whitelist=list(stop_config.line_whitelist),
             omit_non_boarding=omit_non_boarding,
             number_of_departures=number_of_departures,
             web_session=async_get_clientsession(hass),
         )
 
-        if expand:
+        if stop_config.expand_platforms:
             await data.expand_all_quays()
         await data.update()
 
         proxy = EnturProxy(data)
         device_name = None
-        if device_stop_id:
+        if stop_config.device_stop_id:
+            device_name = (
+                f"{name} {stop_config.device_stop_name}"
+                if stop_config.device_stop_name
+                else None
+            )
             with suppress(AttributeError, KeyError):
-                device_name = f"{name} {data.get_stop_info(device_stop_id).name}"
+                device_name = device_name or (
+                    f"{name} {data.get_stop_info(stop_config.device_stop_id).name}"
+                )
 
         for place in data.all_stop_places_quays():
             try:
@@ -152,7 +175,7 @@ async def _async_setup(
                     given_name,
                     place,
                     show_on_map,
-                    device_stop_id,
+                    stop_config.device_stop_id,
                     device_name,
                 )
             )
@@ -162,21 +185,52 @@ async def _async_setup(
 
 def _stop_configurations(
     config: ConfigType, subentries: Iterable[ConfigSubentry]
-) -> list[tuple[list[str], list[str]]]:
-    """Return stop IDs and line filters for legacy and UI configuration."""
-    configurations = []
+) -> list[EnturStopConfiguration]:
+    """Return sensor groups for legacy YAML and UI configuration."""
+    configurations: list[EnturStopConfiguration] = []
     if stop_ids := config.get(CONF_STOP_IDS, []):
-        configurations.append((stop_ids, config.get(CONF_WHITELIST_LINES, [])))
-
-    configurations.extend(
-        (
-            [subentry.data[CONF_STOP_ID]],
-            subentry.data.get(CONF_WHITELIST_LINES, []),
+        configurations.append(
+            EnturStopConfiguration(
+                stops=tuple(stop_id for stop_id in stop_ids if "StopPlace" in stop_id),
+                quays=tuple(stop_id for stop_id in stop_ids if "Quay" in stop_id),
+                line_whitelist=tuple(config.get(CONF_WHITELIST_LINES, [])),
+                expand_platforms=config[CONF_EXPAND_PLATFORMS],
+                device_stop_id=stop_ids[0] if len(stop_ids) == 1 else None,
+            )
         )
-        for subentry in subentries
-        if subentry.subentry_type == SUBENTRY_TYPE_STOP_PLACE
-        and CONF_STOP_ID in subentry.data
-    )
+
+    for subentry in subentries:
+        if (
+            subentry.subentry_type != SUBENTRY_TYPE_STOP_PLACE
+            or CONF_STOP_ID not in subentry.data
+        ):
+            continue
+
+        stop_id = subentry.data[CONF_STOP_ID]
+        mode = subentry.data.get(CONF_PLATFORM_MODE, PLATFORM_MODE_ALL)
+        quay_ids = tuple(subentry.data.get(CONF_QUAY_IDS, []))
+        if mode == PLATFORM_MODE_SELECTED and quay_ids:
+            stops = ()
+            quays = quay_ids
+            expand_platforms = False
+        else:
+            stops = (stop_id,)
+            quays = ()
+            expand_platforms = mode != PLATFORM_MODE_STOP_PLACE
+
+        stop_place_name = subentry.data.get(CONF_STOP_PLACE_NAME)
+        configurations.append(
+            EnturStopConfiguration(
+                stops=stops,
+                quays=quays,
+                line_whitelist=tuple(subentry.data.get(CONF_WHITELIST_LINES, [])),
+                expand_platforms=expand_platforms,
+                device_stop_id=stop_id,
+                device_stop_name=(
+                    stop_place_name if isinstance(stop_place_name, str) else None
+                ),
+            )
+        )
     return configurations
 
 

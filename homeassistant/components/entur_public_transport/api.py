@@ -37,6 +37,18 @@ query StopPlaceLines($stopPlaceId: String!, $numberOfDepartures: Int!) {
 }
 """
 
+STOP_PLACE_QUAYS_QUERY = """
+query StopPlaceQuays($stopPlaceId: String!) {
+  stopPlaces(ids: [$stopPlaceId]) {
+    quays(filterByInUse: true) {
+      id
+      name
+      publicCode
+    }
+  }
+}
+"""
+
 
 class EnturApiError(Exception):
     """Raised when the Entur API cannot be queried or parsed."""
@@ -120,6 +132,22 @@ class EnturRoute:
         if self.technical_id != self.line_id:
             route_label += f" ({self.technical_id})"
         return route_label
+
+
+@dataclass(frozen=True, slots=True)
+class EnturQuay:
+    """A quay/platform belonging to an Entur stop place."""
+
+    quay_id: str
+    name: str
+    public_code: str | None
+
+    @property
+    def selection_label(self) -> str:
+        """Return a concise label for the platform selector."""
+        if self.public_code:
+            return f"{self.public_code} · {self.name}"
+        return self.name
 
 
 def line_id_label(line_id: str) -> str:
@@ -219,6 +247,31 @@ async def async_get_stop_routes(
         raise EnturApiError from err
 
     return _parse_stop_routes(payload)
+
+
+async def async_get_stop_quays(
+    hass: HomeAssistant, stop_id: str
+) -> tuple[EnturQuay, ...]:
+    """Return active quays/platforms belonging to a stop place."""
+    session = async_get_clientsession(hass)
+    try:
+        async with session.post(
+            JOURNEY_PLANNER_URL,
+            json={
+                "query": STOP_PLACE_QUAYS_QUERY,
+                "variables": {"stopPlaceId": stop_id},
+            },
+            headers={
+                "Content-Type": "application/json",
+                "ET-Client-Name": ENTUR_CLIENT_NAME,
+            },
+        ) as response:
+            response.raise_for_status()
+            payload: Any = await response.json()
+    except (ClientError, TimeoutError) as err:
+        raise EnturApiError from err
+
+    return _parse_stop_quays(payload)
 
 
 def _parse_stop_places(payload: Any) -> tuple[EnturStopPlace, ...]:
@@ -335,3 +388,42 @@ def _parse_stop_routes(payload: Any) -> tuple[EnturRoute, ...]:
             )
 
     return tuple(routes.values())
+
+
+def _parse_stop_quays(payload: Any) -> tuple[EnturQuay, ...]:
+    """Parse active quays from a Journey Planner response."""
+    if not isinstance(payload, dict) or payload.get("errors"):
+        raise EnturApiError
+
+    data = payload.get("data")
+    stop_places = data.get("stopPlaces") if isinstance(data, dict) else None
+    if not isinstance(stop_places, list):
+        raise EnturApiError
+
+    quays: dict[str, EnturQuay] = {}
+    for stop_place in stop_places:
+        if not isinstance(stop_place, dict):
+            continue
+        values = stop_place.get("quays")
+        if not isinstance(values, list):
+            continue
+        for quay in values:
+            if not isinstance(quay, dict):
+                continue
+            quay_id = quay.get("id")
+            name = quay.get("name")
+            public_code = quay.get("publicCode")
+            if not isinstance(quay_id, str) or not isinstance(name, str):
+                continue
+            if not isinstance(public_code, str):
+                public_code = None
+            quays.setdefault(
+                quay_id,
+                EnturQuay(
+                    quay_id=quay_id,
+                    name=name,
+                    public_code=public_code,
+                ),
+            )
+
+    return tuple(quays.values())

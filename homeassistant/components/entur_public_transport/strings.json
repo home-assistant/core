@@ -9,11 +9,12 @@
       "invalid_selection": "The selected stop place is no longer available. Start the search again.",
       "no_results": "No stop places were found. Try a broader search or another spelling.",
       "query_too_short": "Enter at least two characters to search for a stop place."
+      ,"select_platform": "Select at least one platform, or choose a different platform detail level."
     },
     "step": {
       "confirm": {
         "data": {},
-        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
+        "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\nPlatform detail: {platform_status}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to add it to Home Assistant.",
         "title": "Confirm the stop place"
       },
       "select_routes": {
@@ -26,6 +27,17 @@
         },
         "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
         "title": "Choose routes for this stop place"
+      },
+      "select_platforms": {
+        "data": {
+          "platform_mode": "Platform detail",
+          "quay_ids": "Platforms"
+        },
+        "data_description": {
+          "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms."
+        },
+        "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
+        "title": "Choose platform detail"
       },
       "select_stop": {
         "data": {
@@ -57,7 +69,8 @@
         "cannot_connect": "Unable to search Entur right now. Try again later.",
         "invalid_selection": "The selected stop place is no longer available. Start the search again.",
         "no_results": "No stop places were found. Try a broader search or another spelling.",
-        "query_too_short": "Enter at least two characters to search for a stop place."
+        "query_too_short": "Enter at least two characters to search for a stop place.",
+        "select_platform": "Select at least one platform, or choose a different platform detail level."
       },
       "initiate_flow": {
         "user": "Add a stop place"
@@ -65,7 +78,7 @@
       "step": {
         "confirm": {
           "data": {},
-          "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
+          "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type(s): {stop_place_types}\n\nStop place role: {role}\n\nTransport modes: {transport_modes}\n\nPlatform detail: {platform_status}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
           "title": "Confirm the stop place"
         },
         "reconfigure": {
@@ -82,6 +95,17 @@
           },
           "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
           "title": "Choose routes for this stop place"
+        },
+        "select_platforms": {
+          "data": {
+            "platform_mode": "Platform detail",
+            "quay_ids": "Platforms"
+          },
+          "data_description": {
+            "quay_ids": "Used only when Selected platform(s) is chosen. You may select one or several platforms."
+          },
+          "description": "Choose how much detail this stop place should create. The recommended default creates one sensor for the whole stop place.\n\n{platform_status}",
+          "title": "Choose platform detail"
         },
         "select_stop": {
           "data": {

@@ -7,10 +7,15 @@ from unittest.mock import AsyncMock, Mock, patch
 import probatio
 import pytest
 
-from homeassistant.components.entur_public_transport.const import DOMAIN
+from homeassistant.components.entur_public_transport.const import (
+    DOMAIN,
+    PLATFORM_MODE_SELECTED,
+    PLATFORM_MODE_STOP_PLACE,
+)
 from homeassistant.components.entur_public_transport.sensor import (
     PLATFORM_SCHEMA,
     EnturPublicTransportSensor,
+    EnturStopConfiguration,
     _async_setup,
     _stop_configurations,
     async_setup_platform,
@@ -146,8 +151,20 @@ def test_subentries_keep_route_filters_per_stop() -> None:
     ]
 
     assert _stop_configurations(config, subentries) == [
-        (["NSR:StopPlace:1"], ["RUT:Line:1"]),
-        (["NSR:StopPlace:2"], ["SKY:Line:2"]),
+        EnturStopConfiguration(
+            stops=("NSR:StopPlace:1",),
+            quays=(),
+            line_whitelist=("RUT:Line:1",),
+            expand_platforms=True,
+            device_stop_id="NSR:StopPlace:1",
+        ),
+        EnturStopConfiguration(
+            stops=("NSR:StopPlace:2",),
+            quays=(),
+            line_whitelist=("SKY:Line:2",),
+            expand_platforms=True,
+            device_stop_id="NSR:StopPlace:2",
+        ),
     ]
 
 
@@ -171,8 +188,71 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
     ]
 
     assert _stop_configurations(config, subentries) == [
-        (["NSR:StopPlace:legacy"], ["RUT:Line:legacy"]),
-        (["NSR:StopPlace:ui"], ["SKY:Line:ui"]),
+        EnturStopConfiguration(
+            stops=("NSR:StopPlace:legacy",),
+            quays=(),
+            line_whitelist=("RUT:Line:legacy",),
+            expand_platforms=True,
+            device_stop_id="NSR:StopPlace:legacy",
+        ),
+        EnturStopConfiguration(
+            stops=("NSR:StopPlace:ui",),
+            quays=(),
+            line_whitelist=("SKY:Line:ui",),
+            expand_platforms=True,
+            device_stop_id="NSR:StopPlace:ui",
+        ),
+    ]
+
+
+def test_ui_subentry_platform_modes_select_requested_sensors() -> None:
+    """Test whole-stop and explicit-platform UI configurations."""
+    config = PLATFORM_SCHEMA(
+        {
+            "platform": "entur_public_transport",
+            "stop_ids": [],
+            "line_whitelist": [],
+        }
+    )
+    subentries = [
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:1",
+                "stop_place_name": "Central station",
+                "platform_mode": PLATFORM_MODE_STOP_PLACE,
+                "line_whitelist": [],
+            },
+        ),
+        SimpleNamespace(
+            subentry_type="stop_place",
+            data={
+                "stop_id": "NSR:StopPlace:2",
+                "stop_place_name": "Bus terminal",
+                "platform_mode": PLATFORM_MODE_SELECTED,
+                "quay_ids": ["NSR:Quay:20"],
+                "line_whitelist": ["RUT:Line:1"],
+            },
+        ),
+    ]
+
+    assert _stop_configurations(config, subentries) == [
+        EnturStopConfiguration(
+            stops=("NSR:StopPlace:1",),
+            quays=(),
+            line_whitelist=(),
+            expand_platforms=False,
+            device_stop_id="NSR:StopPlace:1",
+            device_stop_name="Central station",
+        ),
+        EnturStopConfiguration(
+            stops=(),
+            quays=("NSR:Quay:20",),
+            line_whitelist=("RUT:Line:1",),
+            expand_platforms=False,
+            device_stop_id="NSR:StopPlace:2",
+            device_stop_name="Bus terminal",
+        ),
     ]
 
 
