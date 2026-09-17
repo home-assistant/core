@@ -26,12 +26,9 @@ from .const import (
     LOGGER,
     SUBENTRY_TYPE_PLANE,
 )
+from .plane import sensor_angle
 
 type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
-
-
-class SensorUpdateFailed(UpdateFailed):
-    """Raised when a plane sensor can't be read, before the API is called."""
 
 
 def _resolve_location(
@@ -109,45 +106,12 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             planes=self.planes,
         )
 
-    def _sensor_value(
-        self, entity_id: str, min_value: float, max_value: float
-    ) -> float:
-        """Return a sensor's numeric value, raising if it can't be used."""
-        if (sensor := self.hass.states.get(entity_id)) is None:
-            raise SensorUpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="sensor_no_state",
-                translation_placeholders={"entity_id": entity_id},
-            )
-
-        try:
-            value = float(sensor.state)
-        except ValueError:
-            value = None
-        if value is None or not min_value <= value <= max_value:
-            raise SensorUpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="sensor_invalid",
-                translation_placeholders={
-                    "entity_id": entity_id,
-                    "state": sensor.state,
-                    "min": str(min_value),
-                    "max": str(max_value),
-                },
-            )
-        return value
-
     def _resolve_angle(
-        self,
-        data: Mapping[str, Any],
-        value_key: str,
-        sensor_key: str,
-        min_value: float,
-        max_value: float,
+        self, data: Mapping[str, Any], value_key: str, sensor_key: str
     ) -> float:
         """Resolve a plane angle from its sensor if it has one, else its fixed value."""
         if (entity_id := data.get(sensor_key)) is not None:
-            return self._sensor_value(entity_id, min_value, max_value)
+            return sensor_angle(self.hass, entity_id, sensor_key)
         return cast(float, data[value_key])
 
     def _plane_angles(self, data: Mapping[str, Any]) -> tuple[float, float]:
@@ -158,11 +122,9 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         is normalised rather than rejected.
         """
         declination = self._resolve_angle(
-            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR, 0, 90
+            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR
         )
-        azimuth = self._resolve_angle(
-            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -180, 360
-        )
+        azimuth = self._resolve_angle(data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
         return declination, azimuth % 360 - 180
 
     def _refresh_plane_angles(self) -> None:

@@ -476,4 +476,18 @@ async def test_plane_follows_renamed_sensor(
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
+    # A rename leaves no state behind, so the title falls back to the new entity ID.
     assert subentry.title == "30° / sensor.camper_azimuth (sensor) / 5100W"
+
+    hass.states.async_set(
+        "sensor.camper_azimuth",
+        "100",
+        {"unit_of_measurement": "°", "friendly_name": "Camper angle"},
+    )
+    # The reload the rename triggered failed while the new ID had no state; in
+    # production the entry's setup retry runs this once the sensor is readable.
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
+    assert subentry.title == "30° / Camper angle (sensor) / 5100W"

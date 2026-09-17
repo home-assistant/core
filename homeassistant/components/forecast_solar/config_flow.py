@@ -15,7 +15,13 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -36,6 +42,7 @@ from .const import (
     MAX_PLANES,
     SUBENTRY_TYPE_PLANE,
 )
+from .plane import SensorUpdateFailed, plane_title, sensor_angle
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
@@ -144,6 +151,25 @@ def _plane_schema(sources: Mapping[str, str]) -> probatio.Schema:
     )
 
 
+def _sensor_errors(
+    hass: HomeAssistant, plane_data: Mapping[str, Any]
+) -> dict[str, str]:
+    """Return a form error per selected sensor that can't be read as an angle."""
+    errors: dict[str, str] = {}
+    for sensor_key in (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR):
+        if (entity_id := plane_data.get(sensor_key)) is None:
+            continue
+        # A sensor that is merely unavailable is accepted; it is read on every update.
+        state = hass.states.get(entity_id)
+        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            continue
+        try:
+            sensor_angle(hass, entity_id, sensor_key)
+        except SensorUpdateFailed:
+            errors[sensor_key] = "sensor_unusable"
+    return errors
+
+
 def _sources(data: Mapping[str, Any]) -> dict[str, str]:
     """Return the angle sources a stored plane uses."""
     return {
@@ -165,23 +191,6 @@ def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
         )
         if key in user_input
     }
-
-
-def _angle_label(
-    hass: HomeAssistant, data: Mapping[str, Any], value_key: str, sensor_key: str
-) -> str:
-    """Label a plane angle by its sensor's name, or by its fixed value."""
-    if (entity_id := data.get(sensor_key)) is None:
-        return f"{data[value_key]}°"
-    state = hass.states.get(entity_id)
-    return f"{state.name if state else entity_id} (sensor)"
-
-
-def plane_title(hass: HomeAssistant, data: Mapping[str, Any]) -> str:
-    """Build a plane subentry title from its declination/azimuth/power."""
-    declination = _angle_label(hass, data, CONF_DECLINATION, CONF_DECLINATION_SENSOR)
-    azimuth = _angle_label(hass, data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR)
-    return f"{declination} / {azimuth} / {data[CONF_MODULES_POWER]}W"
 
 
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -225,26 +234,28 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask only for the values the chosen sources need."""
         fixed_location = self._choices[_LOCATION] == _FIXED
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             plane_data = _plane_data(user_input)
-            return self.async_create_entry(
-                title="",
-                data={
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                }
-                if fixed_location
-                else {},
-                subentries=[
-                    {
-                        "subentry_type": SUBENTRY_TYPE_PLANE,
-                        "data": plane_data,
-                        "title": plane_title(self.hass, plane_data),
-                        "unique_id": None,
-                    },
-                ],
-            )
+            if not (errors := _sensor_errors(self.hass, plane_data)):
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_LATITUDE: user_input[CONF_LATITUDE],
+                        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    }
+                    if fixed_location
+                    else {},
+                    subentries=[
+                        {
+                            "subentry_type": SUBENTRY_TYPE_PLANE,
+                            "data": plane_data,
+                            "title": plane_title(self.hass, plane_data),
+                            "unique_id": None,
+                        },
+                    ],
+                )
 
         schema = _plane_schema(self._choices)
         suggested_values: dict[str, Any] = dict(_PLANE_DEFAULTS)
@@ -256,7 +267,10 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         return self.async_show_form(
             step_id="plane",
-            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
+            data_schema=self.add_suggested_values_to_schema(
+                schema, suggested_values | (user_input or {})
+            ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -432,17 +446,21 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Ask only for the values the chosen sources need."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             plane_data = _plane_data(user_input)
-            return self.async_create_entry(
-                title=plane_title(self.hass, plane_data), data=plane_data
-            )
+            if not (errors := _sensor_errors(self.hass, plane_data)):
+                return self.async_create_entry(
+                    title=plane_title(self.hass, plane_data), data=plane_data
+                )
 
         return self.async_show_form(
             step_id="plane",
             data_schema=self.add_suggested_values_to_schema(
-                _plane_schema(self._sources), _PLANE_DEFAULTS
+                _plane_schema(self._sources), _PLANE_DEFAULTS | (user_input or {})
             ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(
@@ -465,21 +483,25 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Edit the values the chosen sources need."""
         subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            entry = self._get_entry()
             plane_data = _plane_data(user_input)
-            title = plane_title(self.hass, plane_data)
-            if (
-                self._async_update(entry, subentry, data=plane_data, title=title)
-                and not entry.update_listeners
-            ):
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
-            return self.async_abort(reason="reconfigure_successful")
+            if not (errors := _sensor_errors(self.hass, plane_data)):
+                entry = self._get_entry()
+                title = plane_title(self.hass, plane_data)
+                if (
+                    self._async_update(entry, subentry, data=plane_data, title=title)
+                    and not entry.update_listeners
+                ):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
             step_id="reconfigure_plane",
             data_schema=self.add_suggested_values_to_schema(
-                _plane_schema(self._sources), {**_PLANE_DEFAULTS, **subentry.data}
+                _plane_schema(self._sources),
+                {**_PLANE_DEFAULTS, **subentry.data, **(user_input or {})},
             ),
+            errors=errors,
         )

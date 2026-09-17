@@ -3,6 +3,9 @@
     "abort": {
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
+    "error": {
+      "sensor_unusable": "The selected sensor doesn't report a usable angle. Pick a sensor with a numeric state in the range the form describes."
+    },
     "step": {
       "plane": {
         "data": {
@@ -51,6 +54,9 @@
         "max_planes": "You can add a maximum of 4 planes."
       },
       "entry_type": "Plane",
+      "error": {
+        "sensor_unusable": "[%key:component::forecast_solar::config::error::sensor_unusable%]"
+      },
       "initiate_flow": {
         "user": "Add plane"
       },

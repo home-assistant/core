@@ -15,7 +15,6 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import plane_title
 from .const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
@@ -32,11 +31,8 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
-from .coordinator import (
-    ForecastSolarConfigEntry,
-    ForecastSolarDataUpdateCoordinator,
-    SensorUpdateFailed,
-)
+from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
+from .plane import SensorUpdateFailed, plane_title
 from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
@@ -130,8 +126,9 @@ def _async_track_sensor_states(
     def _async_sensor_changed(event: Event[EventStateChangedData]) -> None:
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
-        # A plane titled after its sensor follows the sensor's friendly name.
-        if old_state and new_state and old_state.name != new_state.name:
+        # A plane titled after its sensor follows the sensor's name. A renamed sensor
+        # has no state under its new entity ID yet, so its first state titles it too.
+        if new_state and (old_state is None or old_state.name != new_state.name):
             entity_id = event.data["entity_id"]
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
                 if entity_id in (subentry.data.get(key) for key in _SENSOR_KEYS):
@@ -210,6 +207,12 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
+    # A rename resolves its plane's title only once the sensor has a state again.
+    for subentry in plane_subentries:
+        hass.config_entries.async_update_subentry(
+            entry, subentry, title=plane_title(hass, subentry.data)
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(_async_reload_on_forecast_change(hass, entry))
@@ -254,7 +257,6 @@ def _async_reload_on_forecast_change(
         # Renaming a sensor updates every plane reading it; one reload covers them all.
         if not reloading and _forecast_inputs(entry) != inputs:
             reloading = True
-            entry.async_cancel_retry_setup()
             hass.async_create_task(
                 _async_reload(), f"forecast_solar reload {entry.entry_id}"
             )

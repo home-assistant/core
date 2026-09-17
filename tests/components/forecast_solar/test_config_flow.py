@@ -699,6 +699,59 @@ async def test_subentry_flow_reconfigure_plane_not_loaded(
     assert subentry.title == "50° / 200° / 6000W"
 
 
+@pytest.mark.parametrize(
+    ("state", "attributes"),
+    [
+        pytest.param("north", {"unit_of_measurement": "°"}, id="not_a_number"),
+        pytest.param("400", {"unit_of_measurement": "°"}, id="out_of_range"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_subentry_flow_rejects_unusable_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    state: str,
+    attributes: dict[str, Any],
+) -> None:
+    """Test a sensor that can't be read as an angle is refused by the form."""
+    hass.states.async_set("sensor.roof_azimuth", state, attributes)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"declination_source": "fixed", "azimuth_source": "sensor"},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_AZIMUTH_SENSOR: "sensor_unusable"}
+    # The submitted values are offered again, so only the sensor needs fixing.
+    assert _suggested(result, CONF_MODULES_POWER) == 5100
+
+    hass.states.async_set("sensor.roof_azimuth", "200", {"unit_of_measurement": "°"})
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
+            CONF_MODULES_POWER: 5100,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_reconfigure_keeps_sensor_without_state(
     hass: HomeAssistant,
