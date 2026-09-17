@@ -102,13 +102,14 @@ async def test_coordinator_normalises_compass_azimuth(hass: HomeAssistant) -> No
 @pytest.mark.parametrize(
     ("states", "translation_key"),
     [
-        pytest.param({}, "sensor_not_found", id="missing"),
+        pytest.param({}, "sensor_no_state", id="no_state"),
         pytest.param(
             {AZIMUTH_SENSOR: "unavailable"}, "sensor_invalid", id="unavailable"
         ),
         pytest.param({AZIMUTH_SENSOR: "unknown"}, "sensor_invalid", id="unknown"),
         pytest.param({AZIMUTH_SENSOR: "north"}, "sensor_invalid", id="not_a_number"),
-        pytest.param({AZIMUTH_SENSOR: "500"}, "sensor_invalid", id="out_of_range"),
+        pytest.param({AZIMUTH_SENSOR: "500"}, "sensor_invalid", id="above_range"),
+        pytest.param({AZIMUTH_SENSOR: "-200"}, "sensor_invalid", id="below_range"),
     ],
 )
 @pytest.mark.usefixtures("mock_forecast_solar")

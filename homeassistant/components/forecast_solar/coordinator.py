@@ -116,7 +116,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         if (sensor := self.hass.states.get(entity_id)) is None:
             raise SensorUpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="sensor_not_found",
+                translation_key="sensor_no_state",
                 translation_placeholders={"entity_id": entity_id},
             )
 
@@ -154,14 +154,14 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         """Resolve a plane's declination and azimuth.
 
         UI stores azimuth 0-360 (0=North); the API expects -180..180 (0=South).
-        A sensor may use any convention, e.g. a compass reporting -180..180,
-        so its reading is normalised rather than rejected.
+        A sensor may report 0..360 or -180..180 (e.g. a compass), so its reading
+        is normalised rather than rejected.
         """
         declination = self._resolve_angle(
             data, CONF_DECLINATION, CONF_DECLINATION_SENSOR, 0, 90
         )
         azimuth = self._resolve_angle(
-            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -360, 360
+            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -180, 360
         )
         return declination, azimuth % 360 - 180
 
