@@ -371,3 +371,45 @@ async def test_device_info_periodic_refresh(
         async_fire_time_changed(hass, now + timedelta(minutes=10))
         await hass.async_block_till_done()
         read_info.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    ("info", "firmware", "hardware"),
+    [
+        pytest.param(
+            ZentralyDeviceInfo(firmware_version="1.1"), "1.1", "2.0", id="firmware-only"
+        ),
+        pytest.param(
+            ZentralyDeviceInfo(hardware_version="2.1"), "1.0", "2.1", id="hardware-only"
+        ),
+        pytest.param(ZentralyDeviceInfo(), "1.0", "2.0", id="no-readings"),
+    ],
+)
+async def test_partial_device_info_after_restart(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    info: ZentralyDeviceInfo,
+    firmware: str,
+    hardware: str,
+) -> None:
+    """A new runtime must retain persisted versions absent from its first reading."""
+    entry = _parent_entry()
+    entry.add_to_hass(hass)
+    api = MagicMock(spec=ZentralyApi)
+    api.connected = True
+    api.host = HOST
+    api.port = PORT
+    device = create_device(api, PARENT_DEVICE_ID, PARENT_MAC)
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **device.device_info,
+        sw_version="1.0",
+        hw_version="2.0",
+    )
+    assert device.firmware_version is None
+    assert device.hardware_version is None
+    with patch.object(type(device), "async_get_device_info", return_value=info):
+        await _async_refresh_device_info(device, device_registry, registered.id)
+    updated = device_registry.async_get(registered.id)
+    assert updated.sw_version == firmware
+    assert updated.hw_version == hardware

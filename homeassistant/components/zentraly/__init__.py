@@ -28,6 +28,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, SCAN_INTERVAL
 from .models import ZentralyConfigEntry, ZentralyData, ZentralyDevice
@@ -92,8 +93,8 @@ async def _async_refresh_device_info(
 
     device_registry.async_update_device(
         registry_device_id,
-        sw_version=device.firmware_version,
-        hw_version=device.hardware_version,
+        sw_version=firmware_version if firmware_version is not None else UNDEFINED,
+        hw_version=hardware_version if hardware_version is not None else UNDEFINED,
     )
 
     _LOGGER.debug(
@@ -193,6 +194,7 @@ async def async_setup_entry(
     runtime_data = ZentralyData(api=api, device=device)
     platforms = [Platform.CLIMATE]
 
+    # Connection failures are retried inside the library's background task.
     await api.async_connect()
 
     entry.runtime_data = runtime_data
