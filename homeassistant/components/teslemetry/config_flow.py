@@ -649,7 +649,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def _list_authorized_clients(
         self,
     ) -> list[AuthorizedClient] | list[PowerwallAuthorizedClient]:
-        """Return the gateway's authorized clients, read locally when paired."""
+        """Return the gateway's authorized clients, read locally when paired.
+
+        Callers compare state against tesla_fleet_api's AuthorizedClientState; the
+        local clients carry aiopowerwall's, and the two IntEnums share values.
+        """
         if TYPE_CHECKING:
             assert self._energy_site is not None
         if self._local_energy_site is not None:

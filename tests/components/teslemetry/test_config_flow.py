@@ -2627,6 +2627,38 @@ async def test_reconfigure_cloud_only_site_skips_local_lookup(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
+async def test_reconfigure_registers_key_via_cloud_not_local_gateway(
+    hass: HomeAssistant,
+    mock_local_authorized_clients: AsyncMock,
+) -> None:
+    """Registering an unknown key goes to the cloud site, not the local gateway.
+
+    A paired site's api is a local-first router and the local backend also offers
+    add_authorized_client, so a registration that was not unwrapped to the cloud
+    secondary would silently be routed to the Powerwall.
+    """
+    entry = await _setup_paired_account(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    energy_data = entry.runtime_data.energysites[0]
+    # An empty local read means our key is not registered yet.
+    mock_local_authorized_clients.side_effect = None
+    mock_local_authorized_clients.return_value = {"clients": []}
+
+    cloud_add = AsyncMock(return_value={})
+    local_add = AsyncMock(return_value={})
+    with (
+        patch.object(energy_data.api.secondary, "add_authorized_client", cloud_add),
+        patch.object(energy_data.api.primary, "add_authorized_client", local_add),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    cloud_add.assert_awaited_once()
+    local_add.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
 async def test_reconfigure_local_unrecognized_state_aborts(
     hass: HomeAssistant,
     mock_local_authorized_clients: AsyncMock,
