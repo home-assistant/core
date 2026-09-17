@@ -16,7 +16,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 ACTION_TYPES = {"turn_on", "turn_off"}
 

@@ -124,6 +124,11 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         models=[DeviceType.CC],
         entity_category=EntityCategory.CONFIG,
     ),
+    MideaSwitchEntityDescription(
+        key="ai_switch",
+        translation_key="ai_switch",
+        models=[DeviceType.DC],
+    ),
 ]
 
 

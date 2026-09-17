@@ -247,6 +247,7 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
         {"state_class": "total_increasing"},  # invalid for temperature DPT
         {"unit_of_measurement": "invalid"},
         {"device_class": "energy", "unit_of_measurement": "invalid"},
+        {"entity_category": "config"},  # sensors can not be added as config entities
     ],
 )
 async def test_sensor_yaml_attribute_validation(
@@ -255,7 +256,7 @@ async def test_sensor_yaml_attribute_validation(
     knx: KNXTestKit,
     attribute_config: dict[str, Any],
 ) -> None:
-    """Test creating a sensor with invalid unit, state_class or device_class."""
+    """Test creating a sensor with invalid attributes."""
     with caplog.at_level(logging.ERROR):
         await knx.setup_integration(
             {
