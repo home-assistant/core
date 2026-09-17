@@ -20,9 +20,13 @@
       },
       "select_routes": {
         "title": "Choose routes for this stop place",
-        "description": "Select one or more routes to show for this stop place. Leave the selection empty to show all routes.",
+        "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
         "data": {
-          "line_whitelist": "Routes"
+          "line_whitelist": "Routes from Entur",
+          "manual_line_whitelist": "Additional Entur line IDs"
+        },
+        "data_description": {
+          "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
         }
       },
       "confirm": {
@@ -69,20 +73,19 @@
         },
         "select_routes": {
           "title": "Choose routes for this stop place",
-          "description": "Select one or more routes to show for this stop place. Leave the selection empty to show all routes.",
+          "description": "Select routes returned by Entur, and optionally add exact Entur line IDs manually. Leave both fields empty to show all routes.",
           "data": {
-            "line_whitelist": "Routes"
+            "line_whitelist": "Routes from Entur",
+            "manual_line_whitelist": "Additional Entur line IDs"
+          },
+          "data_description": {
+            "manual_line_whitelist": "Optional: enter one exact Entur line ID per line, for example RUT:Line:1. Manual IDs are combined with the selected routes."
           }
         },
         "confirm": {
           "title": "Confirm the stop place",
           "description": "You selected **{name}** ({display_name}) in {locality}.\n\nStop place type: {role}\n\nTransport modes: {transport_modes}\n\n{route_status}\n\nEntur ID: `{stop_id}`\n\n[Open this stop place in Entur to verify your selection]({entur_url})\n\nSelect **Submit** to save this stop place.",
-          "data": {
-            "line_whitelist": "Line IDs"
-          },
-          "data_description": {
-            "line_whitelist": "Optional fallback: enter one Entur line ID per line, or leave empty to show all routes."
-          }
+          "data": {}
         }
       },
       "error": {

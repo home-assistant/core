@@ -31,6 +31,7 @@ from .api import (
 )
 from .const import (
     CONF_EXPAND_PLATFORMS,
+    CONF_MANUAL_WHITELIST_LINES,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_QUERY,
@@ -139,9 +140,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except EnturApiError:
                     self._route_error = True
-                if self._routes:
-                    return await self.async_step_select_routes()
-                return await self.async_step_confirm()
+                return await self.async_step_select_routes()
 
         return self.async_show_form(
             step_id="select_stop",
@@ -169,27 +168,15 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_selection")
 
         if user_input is not None:
-            self._selected_line_whitelist = user_input.get(CONF_WHITELIST_LINES, [])
+            self._selected_line_whitelist = _combine_line_whitelist(
+                user_input.get(CONF_WHITELIST_LINES, []),
+                user_input.get(CONF_MANUAL_WHITELIST_LINES, ""),
+            )
             return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="select_routes",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(CONF_WHITELIST_LINES, default=[]): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                {
-                                    "value": route.line_id,
-                                    "label": route.selection_label,
-                                }
-                                for route in self._routes
-                            ],
-                            multiple=True,
-                        )
-                    )
-                }
-            ),
+            data_schema=_route_schema(self._routes),
         )
 
     @override
@@ -201,10 +188,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_selection")
 
         if user_input is not None:
-            if not self._routes:
-                self._selected_line_whitelist = _parse_line_whitelist(
-                    user_input.get(CONF_WHITELIST_LINES, "")
-                )
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data=_entry_data([]),
@@ -212,7 +195,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=_confirm_schema(not self._routes),
+            data_schema=_confirm_schema(),
             description_placeholders=_place_description(
                 self._selected_place,
                 route_status=_route_status(self._routes, self._route_error),
@@ -253,6 +236,54 @@ def _parse_line_whitelist(value: str | list[str]) -> list[str]:
     return list(dict.fromkeys(line.strip() for line in values if line.strip()))
 
 
+def _combine_line_whitelist(
+    selected_line_ids: list[str], manual_line_ids: str
+) -> list[str]:
+    """Combine API-selected and manually entered line IDs."""
+    return _parse_line_whitelist([*selected_line_ids, manual_line_ids])
+
+
+def _route_schema(
+    routes: tuple[EnturRoute, ...],
+    selected_line_whitelist: list[str] | None = None,
+) -> probatio.Schema:
+    """Build the route selection form, including manual line IDs."""
+    available_line_ids = {route.line_id for route in routes}
+    selected_line_ids = selected_line_whitelist or []
+    manual_line_ids = [
+        line_id for line_id in selected_line_ids if line_id not in available_line_ids
+    ]
+    schema: dict[Any, Any] = {
+        probatio.Optional(
+            CONF_MANUAL_WHITELIST_LINES, default="\n".join(manual_line_ids)
+        ): TextSelector({"multiline": True})
+    }
+    if routes:
+        schema = {
+            probatio.Optional(
+                CONF_WHITELIST_LINES,
+                default=[
+                    line_id
+                    for line_id in selected_line_ids
+                    if line_id in available_line_ids
+                ],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        {
+                            "value": route.line_id,
+                            "label": route.selection_label,
+                        }
+                        for route in routes
+                    ],
+                    multiple=True,
+                )
+            ),
+            **schema,
+        }
+    return probatio.Schema(schema)
+
+
 class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
     """Handle adding and reconfiguring one Entur stop place."""
 
@@ -263,7 +294,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self._route_error = False
         self._selected_place: EnturStopPlace | None = None
         self._selected_line_whitelist: list[str] = []
-        self._initial_setup = False
+        self._existing_line_whitelist: list[str] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -276,7 +307,6 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             self._selected_place = place
             self._routes = tuple(user_input.get("routes", ()))
             self._selected_line_whitelist = user_input.get(CONF_WHITELIST_LINES, [])
-            self._initial_setup = True
             return await self.async_step_confirm()
 
         return await self._async_step_search("user", user_input)
@@ -285,6 +315,9 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Reconfigure an existing stop place."""
+        self._existing_line_whitelist = list(
+            self._get_reconfigure_subentry().data.get(CONF_WHITELIST_LINES, [])
+        )
         return await self._async_step_search("reconfigure", user_input)
 
     async def _async_step_search(
@@ -336,9 +369,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                     )
                 except EnturApiError:
                     self._route_error = True
-                if self._routes:
-                    return await self.async_step_select_routes()
-                return await self.async_step_confirm()
+                return await self.async_step_select_routes()
 
         return self.async_show_form(
             step_id="select_stop",
@@ -354,26 +385,17 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             return self.async_abort(reason="invalid_selection")
 
         if user_input is not None:
-            self._selected_line_whitelist = user_input.get(CONF_WHITELIST_LINES, [])
+            self._selected_line_whitelist = _combine_line_whitelist(
+                user_input.get(CONF_WHITELIST_LINES, []),
+                user_input.get(CONF_MANUAL_WHITELIST_LINES, ""),
+            )
             return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="select_routes",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(CONF_WHITELIST_LINES, default=[]): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                {
-                                    "value": route.line_id,
-                                    "label": route.selection_label,
-                                }
-                                for route in self._routes
-                            ],
-                            multiple=True,
-                        )
-                    )
-                }
+            data_schema=_route_schema(
+                self._routes,
+                selected_line_whitelist=self._existing_line_whitelist,
             ),
         )
 
@@ -386,10 +408,6 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
 
         if user_input is not None:
             line_whitelist = self._selected_line_whitelist
-            if not self._routes and not self._initial_setup:
-                line_whitelist = _parse_line_whitelist(
-                    user_input.get(CONF_WHITELIST_LINES, "")
-                )
             entry = self._get_entry()
             if _stop_is_configured(
                 entry,
@@ -422,7 +440,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=_confirm_schema(not self._routes and not self._initial_setup),
+            data_schema=_confirm_schema(),
             description_placeholders=_place_description(
                 self._selected_place,
                 route_status=_route_status(self._routes, self._route_error),
@@ -448,26 +466,18 @@ def _stop_selector_schema(
     )
 
 
-def _confirm_schema(include_manual_line_ids: bool) -> probatio.Schema:
+def _confirm_schema() -> probatio.Schema:
     """Build the confirmation schema."""
-    if not include_manual_line_ids:
-        return probatio.Schema({})
-    return probatio.Schema(
-        {
-            probatio.Optional(CONF_WHITELIST_LINES, default=""): TextSelector(
-                {"multiline": True}
-            )
-        }
-    )
+    return probatio.Schema({})
 
 
 def _route_status(routes: tuple[EnturRoute, ...], route_error: bool) -> str:
     """Return a user-facing route loading status."""
     if routes:
-        return "Choose the routes you want to show for this stop place."
+        return "Choose routes from Entur or add exact Entur line IDs manually. Leave both empty to show all routes."
     if route_error:
-        return "The route list could not be loaded. Leave the filter empty to show all routes, or enter line IDs manually."
-    return "No routes were returned. Leave the filter empty to show all routes, or enter line IDs manually."
+        return "The route list could not be loaded. Leave the filter empty to show all routes, or enter exact Entur line IDs manually."
+    return "No routes were returned. Leave the filter empty to show all routes, or enter exact Entur line IDs manually."
 
 
 def _place_description(place: EnturStopPlace, route_status: str) -> dict[str, str]:

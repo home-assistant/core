@@ -10,6 +10,7 @@ from homeassistant.components.entur_public_transport.api import (
 )
 from homeassistant.components.entur_public_transport.const import (
     CONF_EXPAND_PLATFORMS,
+    CONF_MANUAL_WHITELIST_LINES,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_QUERY,
@@ -74,7 +75,10 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_WHITELIST_LINES: [route.line_id]},
+            user_input={
+                CONF_WHITELIST_LINES: [route.line_id],
+                CONF_MANUAL_WHITELIST_LINES: "SKY:Line:2",
+            },
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
@@ -110,7 +114,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert subentry.title == place.name
     assert subentry.data == {
         CONF_STOP_ID: place.stop_id,
-        CONF_WHITELIST_LINES: [route.line_id],
+        CONF_WHITELIST_LINES: [route.line_id, "SKY:Line:2"],
     }
 
 
@@ -126,6 +130,57 @@ async def test_user_flow_rejects_short_query(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "query_too_short"}
+
+
+async def test_user_flow_accepts_manual_route_without_api_routes(
+    hass: HomeAssistant,
+) -> None:
+    """Test adding a manual line ID when route discovery is empty."""
+    place = EnturStopPlace(
+        stop_id="NSR:StopPlace:548",
+        name="Bergen busstasjon",
+        display_name="Bergen busstasjon, Bergen",
+        locality="Bergen",
+        transport_modes=("bus",),
+        role="parent",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+            return_value=(place,),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            return_value=(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_QUERY: "Bergen"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_STOP_ID: place.stop_id}
+        )
+        assert result["step_id"] == "select_routes"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_MANUAL_WHITELIST_LINES: "SKY:Line:2"},
+        )
+        assert result["step_id"] == "confirm"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    subentry_result = await hass.config_entries.subentries.async_configure(
+        result["next_flow"][1], user_input={}
+    )
+    assert subentry_result["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data[CONF_WHITELIST_LINES] == ["SKY:Line:2"]
 
 
 async def test_user_flow_handles_no_results(hass: HomeAssistant) -> None:
@@ -211,7 +266,10 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_WHITELIST_LINES: [new_route.line_id]},
+            user_input={
+                CONF_WHITELIST_LINES: [new_route.line_id],
+                CONF_MANUAL_WHITELIST_LINES: "",
+            },
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], user_input={}
