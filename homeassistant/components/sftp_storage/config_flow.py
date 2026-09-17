@@ -8,7 +8,7 @@ from typing import Any, cast, override
 from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,18 +34,18 @@ from .const import (
     LOGGER,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=22): int,
-        vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=22): int,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
+        probatio.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
             FileSelectorConfig(accept="*")
         ),
-        vol.Required(CONF_BACKUP_LOCATION): str,
+        probatio.Required(CONF_BACKUP_LOCATION): str,
     }
 )
 
