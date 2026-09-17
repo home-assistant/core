@@ -4,10 +4,14 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from skoda_public_api.api_layer.exceptions import OpenApiError
+from skoda_public_api.api_layer.exceptions import (
+    OpenApiAuthenticationError,
+    OpenApiError,
+)
 from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -52,6 +56,10 @@ class SkodaUpdateCoordinator(DataUpdateCoordinator[SkodaState]):
                 vin=self.vin,
                 vehicle_response=vehicle_openapi_resp,
             )
+        except OpenApiAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed for VIN {self.vin}. API key may be invalid or expired: {err}"
+            ) from err
         except OpenApiError as err:
             raise UpdateFailed(
                 f"Error communicating with Škoda API for VIN {self.vin}: {err}"

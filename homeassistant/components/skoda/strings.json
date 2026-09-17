@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This vehicle is already configured."
+      "already_configured": "This vehicle is already configured.",
+      "reauth_successful": "Re-authentication was successful."
     },
     "error": {
       "access_forbidden": "Access to this vehicle is forbidden.",
@@ -15,6 +16,16 @@
       "vehicle_not_found": "No vehicle found with this VIN."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API-Key"
+        },
+        "data_description": {
+          "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home."
+        },
+        "description": "Your API key for this vehicle is no longer valid. Enter a new one to reconnect.",
+        "title": "Reauthenticate Škoda Connect"
+      },
       "user": {
         "data": {
           "api_key": "API-Key",
