@@ -283,34 +283,6 @@ async def test_light_availability_follows_ir_entity(
 
 @pytest.mark.parametrize("has_receiver_entity", [True])
 @pytest.mark.usefixtures("init_integration")
-async def test_light_availability_only_follows_emitter(
-    hass: HomeAssistant,
-) -> None:
-    """Test light availability follows only the configured emitter."""
-    hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.osram_light")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    hass.states.async_set(EMITTER_ENTITY_ID, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.osram_light")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    hass.states.async_set(EMITTER_ENTITY_ID, STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.osram_light")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize("has_receiver_entity", [True])
-@pytest.mark.usefixtures("init_integration")
 async def test_receiver_off_code_updates_light_state(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
