@@ -349,12 +349,8 @@ class AuthManager:
                         else:
                             updates["group_ids"] = [info.group]
 
-                    # local_only is optional in provider output and may be coerced
-                    # to a bool by providers; use the provider hook to avoid
-                    # clobbering the current value when that field was not supplied.
                     if (
                         info.local_only is not None
-                        and auth_provider.should_update_local_only(credentials)
                         and info.local_only != user.local_only
                     ):
                         updates["local_only"] = info.local_only

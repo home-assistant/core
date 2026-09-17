@@ -234,11 +234,23 @@ async def test_existing_user_missing_local_only_preserves_existing_value(
         group_ids=["system-users"],
         local_only=True,
     )
-    with patch.object(
-        manager, "async_update_user", wraps=manager.async_update_user
-    ) as mock_update:
-        await provider.async_validate_login("good-user", "good-pass")
-        provider._user_meta["good-user"].pop("local_only", None)
+    with (
+        patch.object(
+            manager, "async_update_user", wraps=manager.async_update_user
+        ) as mock_update,
+        patch.object(
+            provider,
+            "async_user_meta_for_credentials",
+            new=AsyncMock(
+                return_value=auth_models.UserMeta(
+                    name=None,
+                    is_active=True,
+                    group=None,
+                    local_only=None,
+                )
+            ),
+        ),
+    ):
         updated_user = await manager.async_get_or_create_user(credentials)
 
     assert mock_update.call_count == 0
@@ -276,7 +288,6 @@ async def test_existing_user_invalid_group_does_not_block_login(
                 )
             ),
         ),
-        patch.object(provider, "should_update_local_only", return_value=True),
     ):
         updated_user = await manager.async_get_or_create_user(credentials)
 
@@ -311,6 +322,48 @@ async def test_existing_user_empty_name_preserves_existing_value(
     assert updated_user.name == "Legacy Name"
     assert updated_user.groups[0].id == "system-admin"
     assert updated_user.local_only
+
+
+async def test_new_user_empty_group_is_rejected(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test empty group metadata does not grant the administrator group."""
+    provider.config[command_line.CONF_ARGS] = ["--with-empty-name"]
+    provider.config[command_line.CONF_META] = True
+
+    await provider.async_validate_login("good-user", "good-pass")
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "good-user", "password": "good-pass"}
+    )
+
+    with pytest.raises(ValueError, match="Invalid group specified"):
+        await manager.async_get_or_create_user(credentials)
+
+
+async def test_new_user_missing_local_only_defaults_to_false(
+    manager: AuthManager,
+    provider: command_line.CommandLineAuthProvider,
+) -> None:
+    """Test omitted local_only metadata keeps the default value for new users."""
+    provider.config[command_line.CONF_META] = True
+    credentials = provider.async_create_credentials({"username": "good-user"})
+
+    with patch.object(
+        provider,
+        "async_user_meta_for_credentials",
+        new=AsyncMock(
+            return_value=auth_models.UserMeta(
+                name="Bob",
+                is_active=True,
+                group="system-users",
+                local_only=None,
+            )
+        ),
+    ):
+        user = await manager.async_get_or_create_user(credentials)
+
+    assert not user.local_only
 
 
 async def test_existing_system_generated_user_does_not_sync_meta(

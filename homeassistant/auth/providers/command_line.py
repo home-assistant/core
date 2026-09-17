@@ -9,7 +9,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.const import CONF_COMMAND
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
@@ -65,17 +64,6 @@ class CommandLineAuthProvider(AuthProvider):
     def refresh_user_meta(self) -> bool:
         """Return whether user metadata should be refreshed at login."""
         return bool(self.config[CONF_META])
-
-    @callback
-    @override
-    def should_update_local_only(self, credentials: Credentials) -> bool:
-        """Return whether local_only should be refreshed for credentials.
-
-        This relies on async_validate_login storing metadata in _user_meta for
-        the username before async_get_or_create_user calls this hook.
-        """
-        meta = self._user_meta.get(credentials.data["username"], {})
-        return "local_only" in meta
 
     @override
     async def async_login_flow(
@@ -151,8 +139,8 @@ class CommandLineAuthProvider(AuthProvider):
         return UserMeta(
             name=meta.get("name") or None,
             is_active=True,
-            group=meta.get("group") or None,
-            local_only=meta.get("local_only") == "true",
+            group=meta.get("group"),
+            local_only=(meta["local_only"] == "true" if "local_only" in meta else None),
         )
 
 
