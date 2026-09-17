@@ -244,7 +244,15 @@ async def test_sensor_dynamic_add_endpoint(
             key="new_service",
             name="New Service",
             group=None,
-            results=[Result(success=True, status=200, duration=15000000)],
+            results=[
+                Result(
+                    success=True,
+                    status=200,
+                    duration=15000000,
+                    certificate_expiration=7776000000000000,
+                    dns_rcode="NOERROR",
+                )
+            ],
         ),
     ]
 
@@ -255,3 +263,7 @@ async def test_sensor_dynamic_add_endpoint(
     state = hass.states.get("sensor.new_service_response_time")
     assert state is not None
     assert state.state == "15.0"
+    assert hass.states.get("sensor.new_service_status_code") is not None
+    assert hass.states.get("sensor.new_service_last_event") is not None
+    assert hass.states.get("sensor.new_service_certificate_expiration") is not None
+    assert hass.states.get("sensor.new_service_dns_response_code") is not None
