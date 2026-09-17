@@ -100,7 +100,7 @@ class FujitsuIrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle emitter, receiver and mode selection."""
         if not async_get_emitters(self.hass):
-            return self.async_abort(reason="no_infrared_entities")
+            return self.async_abort(reason="no_infrared_emitters")
 
         if user_input is not None:
             emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
