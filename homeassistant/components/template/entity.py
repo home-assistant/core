@@ -219,13 +219,9 @@ class AbstractTemplateEntity(Entity):
                 self._assumed_attributes[option] = attr
             return
 
-        optimistic_override: bool | None = self._config.get(optimistic_option)
-        if optimistic_override is None:
-            if option not in self._config:
-                self._assumed_attributes[option] = attr
-            return
-
-        if optimistic_override:
+        if (optimistic_override := self._config.get(optimistic_option)) or (
+            not optimistic_override and option not in self._config
+        ):
             self._assumed_attributes[option] = attr
 
     def update_assumed_attribute(self, option: str, value: Any) -> bool:

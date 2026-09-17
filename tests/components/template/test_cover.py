@@ -773,7 +773,10 @@ async def test_non_optimistic_template_with_optimistic_state(
 
 @pytest.mark.parametrize(
     ("count", "position_template", "config"),
-    [(1, "{{ 100 }}", SET_COVER_TILT_POSITION)],
+    [
+        (1, "{{ 100 }}", SET_COVER_TILT_POSITION),
+        (1, "{{ 100 }}", {"tilt_optimistic": False, **SET_COVER_TILT_POSITION}),
+    ],
 )
 @pytest.mark.parametrize(
     "style",
@@ -822,7 +825,7 @@ async def test_set_tilt_position_optimistic(
                 "tilt_optimistic": True,
                 **SET_COVER_TILT_POSITION,
             },
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
