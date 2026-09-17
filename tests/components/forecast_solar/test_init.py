@@ -320,7 +320,6 @@ async def test_plane_follows_renamed_sensor(
             ConfigSubentryData(
                 data={
                     CONF_DECLINATION: 30,
-                    CONF_AZIMUTH: 190,
                     CONF_AZIMUTH_SENSOR: "sensor.roof_azimuth",
                     CONF_MODULES_POWER: 5100,
                 },
@@ -335,23 +334,21 @@ async def test_plane_follows_renamed_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # A change that is not a rename leaves the reference alone.
+    # Changes that are not a rename leave the reference alone.
     entity_registry.async_update_entity("sensor.roof_azimuth", name="Roof angle")
+    entity_registry.async_remove("sensor.roof_azimuth")
+    hass.states.async_remove("sensor.roof_azimuth")
     await hass.async_block_till_done()
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
     assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.roof_azimuth"
 
+    entity_registry.async_get_or_create(
+        "sensor", "test", "azimuth", suggested_object_id="roof_azimuth"
+    )
     entity_registry.async_update_entity(
         "sensor.roof_azimuth", new_entity_id="sensor.camper_azimuth"
     )
-    await hass.async_block_till_done()
-
-    subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]
-    assert subentry.data[CONF_AZIMUTH_SENSOR] == "sensor.camper_azimuth"
-
-    # Removal is not a rename either; the coordinator falls back to the fixed angle.
-    entity_registry.async_remove("sensor.camper_azimuth")
     await hass.async_block_till_done()
 
     subentry = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)[0]

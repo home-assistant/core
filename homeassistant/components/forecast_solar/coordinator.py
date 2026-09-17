@@ -7,13 +7,7 @@ from typing import Any, cast, override
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -58,7 +52,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         """Initialize the Forecast.Solar coordinator."""
         # Our option flow may cause it to be an empty string,
         # this if statement is here to catch that.
-        api_key = entry.options.get(CONF_API_KEY) or None
+        self._api_key = entry.options.get(CONF_API_KEY) or None
 
         # Free account have a resolution of 1 hour, using that as the default
         # update interval. Using a higher value for accounts with an API key.
@@ -68,10 +62,14 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=30)
-            if api_key is not None
+            if self._api_key is not None
             else timedelta(hours=1),
         )
 
+    @override
+    async def _async_setup(self) -> None:
+        """Build the client; an unreadable sensor raises and retries the setup."""
+        entry = self.config_entry
         if (
             inverter_size := entry.options.get(CONF_INVERTER_SIZE)
         ) is not None and inverter_size > 0:
@@ -80,7 +78,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         main_plane, *extra_planes = entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
 
         declination, azimuth = self._plane_angles(main_plane.data)
-        latitude, longitude = _resolve_location(hass, entry.data)
+        latitude, longitude = _resolve_location(self.hass, entry.data)
 
         self.planes = []
         for subentry in extra_planes:
@@ -94,8 +92,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             )
 
         self.forecast = ForecastSolar(
-            api_key=api_key,
-            session=async_get_clientsession(hass),
+            api_key=self._api_key,
+            session=async_get_clientsession(self.hass),
             latitude=latitude,
             longitude=longitude,
             declination=declination,
@@ -108,32 +106,32 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         )
 
     def _sensor_value(
-        self, entity_id: str, min_value: float, max_value: float, name: str
-    ) -> float | None:
-        """Return a sensor's numeric value, or None if it cannot be used."""
-        sensor = self.hass.states.get(entity_id)
+        self, entity_id: str, min_value: float, max_value: float
+    ) -> float:
+        """Return a sensor's numeric value, raising UpdateFailed if it can't be used."""
+        if (sensor := self.hass.states.get(entity_id)) is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="sensor_not_found",
+                translation_placeholders={"entity_id": entity_id},
+            )
 
-        if sensor is None:
-            error = "is not available"
-        elif sensor.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            error = f"has an invalid state: {sensor.state}"
-        else:
-            try:
-                value = float(sensor.state)
-            except ValueError:
-                error = f"is not a number: {sensor.state}"
-            else:
-                if min_value <= value <= max_value:
-                    return value
-                error = f"reports {value:.3f}, outside [{min_value}, {max_value}]"
-
-        LOGGER.warning(
-            "%s sensor '%s' %s; falling back to the configured angle",
-            name,
-            entity_id,
-            error,
-        )
-        return None
+        try:
+            value = float(sensor.state)
+        except ValueError:
+            value = None
+        if value is None or not min_value <= value <= max_value:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="sensor_invalid",
+                translation_placeholders={
+                    "entity_id": entity_id,
+                    "state": sensor.state,
+                    "min": str(min_value),
+                    "max": str(max_value),
+                },
+            )
+        return value
 
     def _resolve_angle(
         self,
@@ -142,13 +140,10 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         sensor_key: str,
         min_value: float,
         max_value: float,
-        name: str,
     ) -> float:
-        """Resolve a plane angle from its sensor, or its configured fixed value."""
-        if (entity_id := data.get(sensor_key)) and (
-            value := self._sensor_value(entity_id, min_value, max_value, name)
-        ) is not None:
-            return value
+        """Resolve a plane angle from its sensor if it has one, else its fixed value."""
+        if (entity_id := data.get(sensor_key)) is not None:
+            return self._sensor_value(entity_id, min_value, max_value)
         return cast(float, data[value_key])
 
     def _plane_angles(self, data: Mapping[str, Any]) -> tuple[float, float]:
@@ -159,10 +154,10 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         so its reading is normalised rather than rejected.
         """
         declination = self._resolve_angle(
-            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR, 0, 90, "Declination"
+            data, CONF_DECLINATION, CONF_DECLINATION_SENSOR, 0, 90
         )
         azimuth = self._resolve_angle(
-            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -360, 360, "Azimuth"
+            data, CONF_AZIMUTH, CONF_AZIMUTH_SENSOR, -360, 360
         )
         return declination, azimuth % 360 - 180
 

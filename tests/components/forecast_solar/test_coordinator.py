@@ -1,6 +1,7 @@
 """Test the Forecast.Solar coordinator."""
 
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,7 +14,7 @@ from homeassistant.components.forecast_solar.const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
@@ -54,7 +55,6 @@ def _config_entry(
 
 AZIMUTH_SENSOR_PLANE = {
     CONF_DECLINATION: 30,
-    CONF_AZIMUTH: 190,
     CONF_AZIMUTH_SENSOR: AZIMUTH_SENSOR,
     CONF_MODULES_POWER: 5100,
 }
@@ -98,63 +98,67 @@ async def test_coordinator_normalises_compass_azimuth(hass: HomeAssistant) -> No
 
 
 @pytest.mark.parametrize(
-    "state",
+    ("states", "translation_key"),
     [
-        pytest.param("unavailable", id="unavailable"),
-        pytest.param("unknown", id="unknown"),
-        pytest.param("north", id="not_a_number"),
-        pytest.param("500", id="out_of_range"),
+        pytest.param({}, "sensor_not_found", id="missing"),
+        pytest.param(
+            {AZIMUTH_SENSOR: "unavailable"}, "sensor_invalid", id="unavailable"
+        ),
+        pytest.param({AZIMUTH_SENSOR: "unknown"}, "sensor_invalid", id="unknown"),
+        pytest.param({AZIMUTH_SENSOR: "north"}, "sensor_invalid", id="not_a_number"),
+        pytest.param({AZIMUTH_SENSOR: "500"}, "sensor_invalid", id="out_of_range"),
     ],
 )
 @pytest.mark.usefixtures("mock_forecast_solar")
-async def test_coordinator_falls_back_to_configured_azimuth(
+async def test_coordinator_setup_retries_on_unusable_sensor(
     hass: HomeAssistant,
-    state: str,
+    states: dict[str, str],
+    translation_key: str,
 ) -> None:
-    """Test an unusable sensor falls back to the configured angle, keeping the entry up."""
-    hass.states.async_set(AZIMUTH_SENSOR, state, DEGREES)
+    """Test an unusable sensor retries setup with a translated reason."""
+    for entity_id, state in states.items():
+        hass.states.async_set(entity_id, state, DEGREES)
     entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
     entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = entry.runtime_data
-    assert coordinator.last_update_success is True
-    assert coordinator.forecast.azimuth == 190 - 180
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == translation_key
 
 
-@pytest.mark.usefixtures("mock_forecast_solar")
-async def test_coordinator_falls_back_when_sensor_entity_missing(
+async def test_coordinator_update_fails_until_sensor_recovers(
     hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
 ) -> None:
-    """Test a sensor that does not exist falls back to the configured angle."""
-    entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.runtime_data.forecast.azimuth == 190 - 180
-
-
-@pytest.mark.usefixtures("mock_forecast_solar")
-async def test_coordinator_recovers_when_sensor_returns(hass: HomeAssistant) -> None:
-    """Test a recovered sensor is picked up again on the next update."""
-    hass.states.async_set(AZIMUTH_SENSOR, "unavailable", DEGREES)
+    """Test a failing sensor fails updates, and its recovery refreshes right away."""
+    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
     entry = _config_entry(AZIMUTH_SENSOR_PLANE, entry_data=FIXED_LOCATION)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     coordinator = entry.runtime_data
-    assert coordinator.forecast.azimuth == 190 - 180
+    estimate_calls = mock_forecast_solar.estimate.call_count
 
-    hass.states.async_set(AZIMUTH_SENSOR, "100", DEGREES)
+    # While updates succeed, a sensor change waits for the schedule.
+    hass.states.async_set(AZIMUTH_SENSOR, "unavailable", DEGREES)
+    await hass.async_block_till_done()
+    assert mock_forecast_solar.estimate.call_count == estimate_calls
+
     await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    assert coordinator.last_exception.translation_key == "sensor_invalid"
+    # The sensor was rejected before calling the API.
+    assert mock_forecast_solar.estimate.call_count == estimate_calls
+
+    hass.states.async_set(AZIMUTH_SENSOR, "200", DEGREES)
     await hass.async_block_till_done()
 
-    assert coordinator.forecast.azimuth == 100 - 180
+    assert coordinator.last_update_success is True
+    assert coordinator.forecast.azimuth == 200 - 180
+    assert mock_forecast_solar.estimate.call_count == estimate_calls + 1
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
@@ -165,7 +169,6 @@ async def test_coordinator_resolves_declination_sensor_on_setup(
     hass.states.async_set(DECLINATION_SENSOR, "42", DEGREES)
     entry = _config_entry(
         {
-            CONF_DECLINATION: 30,
             CONF_DECLINATION_SENSOR: DECLINATION_SENSOR,
             CONF_AZIMUTH: 190,
             CONF_MODULES_POWER: 5100,
@@ -189,9 +192,7 @@ async def test_coordinator_resolves_extra_plane_sensors_on_setup(
     entry = _config_entry(
         {CONF_DECLINATION: 30, CONF_AZIMUTH: 190, CONF_MODULES_POWER: 5100},
         {
-            CONF_DECLINATION: 45,
             CONF_DECLINATION_SENSOR: "sensor.extra_declination",
-            CONF_AZIMUTH: 270,
             CONF_AZIMUTH_SENSOR: "sensor.extra_azimuth",
             CONF_MODULES_POWER: 3000,
         },

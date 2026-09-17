@@ -153,6 +153,12 @@
     },
     "no_plane": {
       "message": "No plane configured, cannot set up Forecast.Solar"
+    },
+    "sensor_invalid": {
+      "message": "Sensor {entity_id} reports {state}, but a number between {min} and {max} is needed"
+    },
+    "sensor_not_found": {
+      "message": "Sensor {entity_id} does not exist"
     }
   },
   "options": {

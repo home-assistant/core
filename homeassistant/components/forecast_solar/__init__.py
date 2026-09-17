@@ -7,7 +7,11 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -87,18 +91,41 @@ async def async_migrate_entry(
     return True
 
 
+_SENSOR_KEYS = (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR)
+
+
+def _sensor_entity_ids(entry: ForecastSolarConfigEntry) -> list[str]:
+    """Return the entity IDs of every sensor the entry's planes read."""
+    return [
+        entity_id
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
+        for key in _SENSOR_KEYS
+        if (entity_id := subentry.data.get(key))
+    ]
+
+
+@callback
+def _async_refresh_on_sensor_change(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> CALLBACK_TYPE:
+    """Retry a failed update as soon as one of the plane sensors changes."""
+
+    @callback
+    def _async_sensor_changed(event: Event[EventStateChangedData]) -> None:
+        # Healthy updates keep their schedule, so sensor changes don't cost API calls.
+        if not entry.runtime_data.last_update_success:
+            entry.async_create_task(hass, entry.runtime_data.async_request_refresh())
+
+    return async_track_state_change_event(
+        hass, _sensor_entity_ids(entry), _async_sensor_changed
+    )
+
+
 @callback
 def _async_track_sensor_renames(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> CALLBACK_TYPE:
     """Keep a plane's sensor reference pointing at the sensor when it is renamed."""
-    sensor_keys = (CONF_DECLINATION_SENSOR, CONF_AZIMUTH_SENSOR)
-    entity_ids = [
-        entity_id
-        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE)
-        for key in sensor_keys
-        if (entity_id := subentry.data.get(key))
-    ]
 
     @callback
     def _async_sensor_renamed(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
@@ -112,7 +139,7 @@ def _async_track_sensor_renames(
         for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PLANE):
             renamed = {
                 key: new_entity_id
-                for key in sensor_keys
+                for key in _SENSOR_KEYS
                 if subentry.data.get(key) == old_entity_id
             }
             if renamed:
@@ -121,7 +148,7 @@ def _async_track_sensor_renames(
                 )
 
     return async_track_entity_registry_updated_event(
-        hass, entity_ids, _async_sensor_renamed
+        hass, _sensor_entity_ids(entry), _async_sensor_renamed
     )
 
 
@@ -151,6 +178,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(_async_track_sensor_renames(hass, entry))
+    entry.async_on_unload(_async_refresh_on_sensor_change(hass, entry))
 
     return True
 
