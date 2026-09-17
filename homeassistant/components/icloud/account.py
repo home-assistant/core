@@ -65,13 +65,14 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# Most authentication rejections arrive as a plain PyiCloudAPIResponseException
-# carrying the HTTP status in .code, so the status is what has to be inspected
-# rather than the exception type.
+# pyicloud only raises PyiCloud2FARequiredException for a 409 whose body is JSON
+# with authType == "hsa2". Every other authentication rejection falls through to
+# Session._raise_error(), which raises a plain PyiCloudAPIResponseException
+# carrying the HTTP status in .code, so the status is what has to be inspected.
 #
-# GENERAL_AUTH_ERROR (500) is left out on purpose: pyicloud groups it with the
+# GENERAL_AUTH_ERROR (500) is excluded on purpose: pyicloud groups it with the
 # authentication statuses, but a 500 is just as likely to be a transient iCloud
-# failure, and asking the user to log in again for those would be wrong.
+# failure, and those have to keep being retried rather than parked for the user.
 _AUTH_REQUIRED_STATUSES = frozenset(
     {
         AppleAuthError.TWO_FACTOR_REQUIRED,
