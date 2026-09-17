@@ -878,6 +878,46 @@ async def test_closure_cover_shutter(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_shutter"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            # Same panel as test_closure_cover_shutter, but with Positioning
+            # dropped from its FeatureMap while MotionLatching stays: Matter
+            # permits a ClosureDimension panel to support MotionLatching
+            # without Positioning (a latch-only panel, e.g. a simple door
+            # that only locks/unlocks and has no continuous opening amount).
+            "2/261/65532": (
+                clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching
+                | clusters.ClosureDimension.Bitmaps.Feature.kTranslation
+                | clusters.ClosureDimension.Bitmaps.Feature.kSpeed
+            )
+        }
+    ],
+)
+async def test_closure_cover_latch_only_panel_excluded(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+) -> None:
+    """A latch-only ClosurePanel (MotionLatching, no Positioning) exposes no position.
+
+    Such a panel must not be surfaced as the POSITION (or TILT) role: doing
+    so would advertise SET_POSITION and send a non-conformant `position`
+    field via SetTarget to a panel that doesn't support Positioning.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert "current_position" not in state.attributes
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+    )
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
 async def test_closure_cover_tilt_only(
     hass: HomeAssistant,
