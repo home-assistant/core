@@ -15,8 +15,10 @@ from .api import (
 from .const import (
     CONF_ROUTE_LABELS,
     CONF_STOP_PLACE_TYPES,
+    CONF_STOP_PLACE_METADATA_VERSION,
     CONF_WHITELIST_LINES,
     DOMAIN,
+    STOP_PLACE_METADATA_VERSION,
     SUBENTRY_TYPE_STOP_PLACE,
 )
 
@@ -58,9 +60,8 @@ async def _async_migrate_subentry_display_data(
     for subentry in entry.subentries.values():
         if subentry.subentry_type != SUBENTRY_TYPE_STOP_PLACE:
             continue
-        if (
-            CONF_ROUTE_LABELS in subentry.data
-            and CONF_STOP_PLACE_TYPES in subentry.data
+        if subentry.data.get(CONF_STOP_PLACE_METADATA_VERSION) == (
+            STOP_PLACE_METADATA_VERSION
         ):
             continue
 
@@ -77,6 +78,8 @@ async def _async_migrate_subentry_display_data(
             CONF_STOP_PLACE_TYPES,
             list(place.stop_place_types) if place else [],
         )
+        if place:
+            data[CONF_STOP_PLACE_METADATA_VERSION] = STOP_PLACE_METADATA_VERSION
         hass.config_entries.async_update_subentry(
             entry,
             subentry,

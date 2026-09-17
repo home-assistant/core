@@ -126,6 +126,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             "SKY:Line:2": "2 · SKY",
         },
         "stop_place_types": ["busStation", "railStation"],
+        "stop_place_metadata_version": 1,
     }
 
 
@@ -295,6 +296,7 @@ async def test_subentry_reconfigure_updates_stop_and_routes(
         CONF_WHITELIST_LINES: [new_route.line_id],
         "route_labels": {"RUT:Line:1": "1 · bus · RUT"},
         "stop_place_types": ["busStation"],
+        "stop_place_metadata_version": 1,
     }
     assert (
         entry.subentries["stop-subentry"].title
@@ -430,3 +432,4 @@ async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None
     assert subentry.title == "🚏 Hønefoss sentrum · 101 · BRA"
     assert subentry.data["route_labels"] == {"BRA:Line:101": "101 · BRA"}
     assert subentry.data["stop_place_types"] == ["onstreetBus"]
+    assert subentry.data["stop_place_metadata_version"] == 1

@@ -40,12 +40,14 @@ from .const import (
     CONF_ROUTE_LABELS,
     CONF_SHOW_ON_MAP,
     CONF_STOP_ID,
+    CONF_STOP_PLACE_METADATA_VERSION,
     CONF_STOP_IDS,
     CONF_STOP_PLACE_TYPES,
     CONF_WHITELIST_LINES,
     DEFAULT_NAME,
     DOMAIN,
     SUBENTRY_TYPE_STOP_PLACE,
+    STOP_PLACE_METADATA_VERSION,
 )
 
 
@@ -445,6 +447,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 CONF_WHITELIST_LINES: line_whitelist,
                 CONF_ROUTE_LABELS: self._selected_route_labels,
                 CONF_STOP_PLACE_TYPES: list(self._selected_place.stop_place_types),
+                CONF_STOP_PLACE_METADATA_VERSION: STOP_PLACE_METADATA_VERSION,
             }
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_and_abort(

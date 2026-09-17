@@ -16,6 +16,7 @@ CONF_STOP_ID = "stop_id"
 CONF_QUERY = "query"
 CONF_MANUAL_WHITELIST_LINES = "manual_line_whitelist"
 CONF_ROUTE_LABELS = "route_labels"
+CONF_STOP_PLACE_METADATA_VERSION = "stop_place_metadata_version"
 CONF_STOP_PLACE_TYPES = "stop_place_types"
 SUBENTRY_TYPE_STOP_PLACE = "stop_place"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
@@ -26,6 +27,7 @@ CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "Entur"
 DEFAULT_ICON_KEY = "bus"
+STOP_PLACE_METADATA_VERSION = 1
 
 ICONS = {
     "air": "mdi:airplane",
