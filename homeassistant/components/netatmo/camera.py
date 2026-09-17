@@ -328,7 +328,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         if self.device.reachable is True:
             self.device.mark_reachable()
-        else:
+        elif self.device.reachable is False:
             self.device.mark_unreachable()
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
