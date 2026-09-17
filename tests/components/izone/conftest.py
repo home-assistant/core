@@ -215,10 +215,7 @@ def patch_discovered_controllers(
     async def _discover_by_host(
         hass: HomeAssistant, host: str
     ) -> ControllerEndpoint | None:
-        for endpoint in endpoints.values():
-            if endpoint.host == host:
-                return endpoint
-        return None
+        return next((ep for ep in endpoints.values() if ep.host == host), None)
 
     mock_discover_all = AsyncMock(side_effect=_discover_all)
     mock_scan = AsyncMock(side_effect=_scan)

@@ -1494,6 +1494,34 @@ async def test_user_manual_host_yaml_excluded_stays_on_form(
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_manual_host_yaml_excluded_ignored_uid_stays_on_form(
+    hass: HomeAssistant,
+) -> None:
+    """YAML exclude wins over Ignore replacement, matching other discovery paths."""
+    await async_load_yaml_exclude(hass, "000000001")
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    ).add_to_hass(hass)
+    controller = create_mock_controller("000000001", "192.0.2.55")
+
+    with patch_discovered_controllers(controller):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await async_choose_manual_host(hass, result)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.55"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    assert result["errors"] == {"base": "no_devices_found"}
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_user_manual_host_ignored_uid_confirms_without_unique_id(
     hass: HomeAssistant,
 ) -> None:

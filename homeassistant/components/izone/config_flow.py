@@ -33,7 +33,7 @@ SELECTED_CONTROLLER_UID = "selected_controller_uid"
 # Wait after IASD for ASPort replies (matches pizone discover_all wait).
 USER_SCAN_WAIT_SECONDS = SCAN_TIMEOUT
 
-STEP_MANUAL_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_MANUAL_HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 @dataclass(frozen=True, slots=True)
@@ -416,6 +416,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values={CONF_HOST: host},
             )
 
+        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
+            return self._async_show_manual_host_form(
+                errors={"base": "no_devices_found"},
+                suggested_values={CONF_HOST: host},
+            )
+
         existing = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, endpoint.uid
         )
@@ -426,12 +432,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_confirm()
             return self._async_show_manual_host_form(
                 errors={"base": "already_configured"},
-                suggested_values={CONF_HOST: host},
-            )
-
-        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self._async_show_manual_host_form(
-                errors={"base": "no_devices_found"},
                 suggested_values={CONF_HOST: host},
             )
 
