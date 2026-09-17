@@ -4,7 +4,6 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.marstek.const import (
@@ -37,7 +36,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-def _data_schema(result: config_entries.ConfigFlowResult) -> vol.Schema:
+def _data_schema(result: config_entries.ConfigFlowResult) -> config_entries.vol.Schema:
     """Return the data schema from a flow result."""
     data_schema = result["data_schema"]
     assert data_schema is not None
