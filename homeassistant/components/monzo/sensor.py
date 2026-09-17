@@ -52,7 +52,6 @@ ACCOUNT_SENSORS = (
         value_fn=lambda data: abs(data["balance"]["spend_today"]) / 100,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL,
     ),
 )
 
