@@ -36,6 +36,15 @@ ALARM_PANEL_DESCRIPTION = AlarmControlPanelEntityDescription(
 )
 
 
+def _device_has_alarm_panel(device: ImouHaDevice) -> bool:
+    """Return whether the device exposes a usable arming panel."""
+    panel = device.alarm_control_panel
+    if panel is None:
+        return False
+    supported = panel.get(PARAM_SUPPORTED, [])
+    return isinstance(supported, list) and bool(supported)
+
+
 def _iter_alarm_control_panels(
     coordinator: ImouDataUpdateCoordinator,
 ) -> list[tuple[AlarmControlPanelEntityDescription, ImouHaDevice]]:
@@ -43,7 +52,7 @@ def _iter_alarm_control_panels(
     return [
         (ALARM_PANEL_DESCRIPTION, device)
         for device in coordinator.devices
-        if device.alarm_control_panel is not None
+        if _device_has_alarm_panel(device)
     ]
 
 

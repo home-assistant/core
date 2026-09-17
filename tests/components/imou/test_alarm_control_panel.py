@@ -43,6 +43,13 @@ def alarm_mock_devices() -> list[ImouHaDevice]:
     return [device]
 
 
+def alarm_panel_without_modes_devices() -> list[ImouHaDevice]:
+    """Return a device whose panel lists no supported modes."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_SUPPORTED: []}
+    return [device]
+
+
 @pytest.mark.parametrize("platforms", [[Platform.ALARM_CONTROL_PANEL]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [alarm_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
@@ -177,3 +184,13 @@ async def test_alarm_state_from_device(
     """Alarm state reflects the device panel mode."""
     entity_id = hass.states.async_all(ALARM_DOMAIN)[0].entity_id
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+
+@pytest.mark.parametrize("platforms", [[Platform.ALARM_CONTROL_PANEL]], indirect=True)
+@pytest.mark.parametrize(
+    "imou_mock_devices", [alarm_panel_without_modes_devices], indirect=True
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_skips_panel_without_supported_modes(hass: HomeAssistant) -> None:
+    """Devices with an empty supported-mode list do not get an arming entity."""
+    assert not hass.states.async_all(ALARM_DOMAIN)
