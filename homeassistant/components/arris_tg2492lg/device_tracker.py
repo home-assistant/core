@@ -121,7 +121,9 @@ async def async_setup_entry(
                 and mac not in tracked_devices
             ):
                 tracked_devices.add(mac)
-                entities.append(ArrisScannerEntity(coordinator, mac, None))
+                entities.append(
+                    ArrisScannerEntity(coordinator, mac, coordinator.data.get(mac))
+                )
         if entities:
             async_add_entities(entities)
 

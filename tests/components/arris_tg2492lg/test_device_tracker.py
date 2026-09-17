@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from arris_tg2492lg import Device
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -66,12 +67,22 @@ async def test_device_tracker_data_shape(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
-async def test_device_tracker_restores_offline_tracker_on_reload(
+@pytest.mark.parametrize(
+    ("connected_devices", "expected_state", "expected_hostname"),
+    [
+        pytest.param([], STATE_NOT_HOME, None, id="client_away"),
+        pytest.param(MOCK_DEVICES, STATE_HOME, "my-phone", id="client_connected"),
+    ],
+)
+async def test_device_tracker_restores_tracker_on_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connect_box: MagicMock,
+    connected_devices: list[Device],
+    expected_state: str,
+    expected_hostname: str | None,
 ) -> None:
-    """A registered tracker is restored after reload while its client stays offline."""
+    """A registered tracker is restored after reload, online or offline."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -83,14 +94,14 @@ async def test_device_tracker_restores_offline_tracker_on_reload(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The client is still away after the restart.
-    mock_connect_box.async_get_connected_devices.return_value = []
+    mock_connect_box.async_get_connected_devices.return_value = connected_devices
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.my_phone")
     assert state is not None
-    assert state.state == STATE_NOT_HOME
+    assert state.state == expected_state
+    assert state.attributes.get("host_name") == expected_hostname
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_connect_box")
