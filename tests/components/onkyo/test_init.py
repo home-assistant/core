@@ -5,9 +5,12 @@ from unittest.mock import AsyncMock
 
 from aioonkyo import ReceiverInfo, Status
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.onkyo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import RECEIVER_INFO, mock_discovery, setup_integration
 
@@ -28,6 +31,41 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the receiver device."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, RECEIVER_INFO.identifier), mock_config_entry.entry_id
+    )
+    assert device == snapshot
+
+
+@pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.parametrize("initial_messages", [[]])
+async def test_device_without_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the device is created before the receiver reports any of its zones."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, RECEIVER_INFO.identifier), mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize(

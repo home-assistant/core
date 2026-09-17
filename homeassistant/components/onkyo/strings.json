@@ -50,6 +50,60 @@
       }
     }
   },
+  "entity": {
+    "media_player": {
+      "zone2": {
+        "name": "Zone 2"
+      },
+      "zone3": {
+        "name": "Zone 3"
+      },
+      "zone4": {
+        "name": "Zone 4"
+      }
+    },
+    "switch": {
+      "mute_center": {
+        "name": "Mute center"
+      },
+      "mute_front_left": {
+        "name": "Mute front left"
+      },
+      "mute_front_right": {
+        "name": "Mute front right"
+      },
+      "mute_height_1_left": {
+        "name": "Mute height 1 left"
+      },
+      "mute_height_1_right": {
+        "name": "Mute height 1 right"
+      },
+      "mute_height_2_left": {
+        "name": "Mute height 2 left"
+      },
+      "mute_height_2_right": {
+        "name": "Mute height 2 right"
+      },
+      "mute_subwoofer": {
+        "name": "Mute subwoofer"
+      },
+      "mute_subwoofer_2": {
+        "name": "Mute subwoofer 2"
+      },
+      "mute_surround_back_left": {
+        "name": "Mute surround back left"
+      },
+      "mute_surround_back_right": {
+        "name": "Mute surround back right"
+      },
+      "mute_surround_left": {
+        "name": "Mute surround left"
+      },
+      "mute_surround_right": {
+        "name": "Mute surround right"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the receiver at {host}."

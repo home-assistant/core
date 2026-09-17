@@ -46,7 +46,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery: done
   discovery-update-info: done
@@ -64,7 +64,7 @@ rules:
   entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: done
-  entity-translations: todo
+  entity-translations: done
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done

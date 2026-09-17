@@ -30,12 +30,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100',
+    'original_name': None,
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -108,17 +108,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Zone 2',
+    'object_id_base': 'Zone 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Zone 2',
+    'original_name': 'Zone 2',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 69516>,
-    'translation_key': None,
+    'translation_key': 'zone2',
     'unique_id': '0009B0123456_zone2',
     'unit_of_measurement': None,
   })
@@ -174,17 +174,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Zone 3',
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Zone 3',
+    'original_name': 'Zone 3',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 2944>,
-    'translation_key': None,
+    'translation_key': 'zone3',
     'unique_id': '0009B0123456_zone3',
     'unit_of_measurement': None,
   })
