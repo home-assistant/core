@@ -835,7 +835,7 @@ class MideaSensor(MideaEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
             if not isinstance(value, (int, float)) or value <= 0:
                 return None
-            # 30 seconds refresh is midea-local hardcoded
+            # round to the closest minute
             return (dt_util.utcnow() + timedelta(seconds=30)).replace(
                 second=0, microsecond=0
             ) + timedelta(minutes=value)
