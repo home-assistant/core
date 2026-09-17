@@ -129,14 +129,14 @@
       "header_detect": {
         "name": "Human detection"
       },
+      "light": {
+        "name": "Indicator light"
+      },
       "linkage_siren": {
         "name": "Alarm-linked siren"
       },
       "linkage_white_light": {
         "name": "Alarm-linked white light"
-      },
-      "light": {
-        "name": "Indicator light"
       },
       "motion_detect": {
         "name": "Motion detection"
@@ -153,11 +153,11 @@
       "switch": {
         "name": "Plug switch"
       },
-      "wide_dynamic": {
-        "name": "Wide dynamic range"
-      },
       "white_light": {
         "name": "White light"
+      },
+      "wide_dynamic": {
+        "name": "Wide dynamic range"
       }
     }
   },
