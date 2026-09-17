@@ -581,8 +581,10 @@ class DeviceHandler:
             return
 
         self.dev = dev
-        # Use the configured path for event data, falling back to device path
-        self._descriptor = self._device_path or self.dev.path
+        # Report the path the user configured. An imported YAML descriptor comes
+        # first so that automations matching the path from before the migration
+        # keep firing, even though the entry now resolves a by-id path too.
+        self._descriptor = self._device_descriptor or self._device_path or self.dev.path
 
         self._monitor_task = self.hass.async_create_task(self._async_monitor_input())
         self.hass.bus.async_fire(

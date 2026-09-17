@@ -419,6 +419,43 @@ async def test_device_start_monitoring_fires_connected_event(
     assert handler.dev is mock_input_device
 
 
+async def test_events_keep_the_imported_yaml_descriptor(
+    hass: HomeAssistant,
+    mock_input_device: MagicMock,
+) -> None:
+    """Test an imported YAML entry reports the descriptor it was configured with.
+
+    Automations written against the pre-migration path must keep matching, even
+    though the import also resolved a stable by-id path for the same device.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_BY_ID_BASENAME,
+        data={
+            CONF_DEVICE_PATH: FAKE_DEVICE_PATH,
+            CONF_DEVICE_NAME: FAKE_DEVICE_NAME,
+            CONF_DEVICE_DESCRIPTOR: FAKE_DEVICE_REAL_PATH,
+        },
+        options={
+            CONF_KEY_TYPES: ["key_up"],
+            CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
+            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
+            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    handler = hass.data[DOMAIN]._handlers[entry.entry_id]
+    events = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_CONNECTED)
+
+    await handler.async_device_start_monitoring(mock_input_device)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[CONF_DEVICE_DESCRIPTOR] == FAKE_DEVICE_REAL_PATH
+
+
 async def test_device_start_monitoring_idempotent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
