@@ -810,6 +810,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             elif device is None:
                 error = "invalid_device_id_for_ip"
             else:
+                if not entry.update_listeners:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
+                    )
                 return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
