@@ -100,14 +100,26 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
-            if not errors:
-                assert pyvlx is not None
-                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates=user_input,
-                )
+            self._async_abort_entries_match({CONF_HOST: host})
+            entry_was_loaded = reconfigure_entry.state is ConfigEntryState.LOADED
+            if entry_was_loaded and not await self.hass.config_entries.async_unload(
+                reconfigure_entry.entry_id
+            ):
+                errors["base"] = "unknown"
+            else:
+                pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
+                if not errors:
+                    assert pyvlx is not None
+                    self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates=user_input,
+                    )
+
+                if entry_was_loaded:
+                    await self.hass.config_entries.async_setup(
+                        reconfigure_entry.entry_id
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",
