@@ -1,5 +1,6 @@
 """Tests for the IONT sensor entities."""
 
+import math
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -145,7 +146,7 @@ async def test_total_energy_ignores_a_small_dip(
     assert hass.states.get(TOTAL_ENERGY_ENTITY).state == "1234.567"
 
     # A reading the charger has no value for is not a total either.
-    mock_modbus_unit.input[TOTAL_ENERGY_REGISTER] = encode_float32(float("nan"))
+    mock_modbus_unit.input[TOTAL_ENERGY_REGISTER] = encode_float32(math.nan)
     await _tick(hass, freezer)
     assert hass.states.get(TOTAL_ENERGY_ENTITY).state == "1234.567"
 
