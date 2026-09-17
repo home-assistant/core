@@ -17,7 +17,6 @@ from homeassistant.components.entur_public_transport.sensor import (
     due_in_minutes,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.components.entur_public_transport.const import DOMAIN
 
 
 def test_platform_schema_defaults() -> None:
