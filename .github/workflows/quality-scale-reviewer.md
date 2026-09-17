@@ -80,6 +80,7 @@ jobs:
     outputs:
       skip: ${{ steps.prepare.outputs.skip }}
       pr_number: ${{ steps.prepare.outputs.pr_number }}
+      head_sha: ${{ steps.prepare.outputs.head_sha }}
     steps:
       - name: Check out the default branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -145,6 +146,7 @@ jobs:
             echo "too_long=$(jq -r '.too_long' "${RESULTS}")"
             echo "skip_reason=$(jq -r '.skip_reason' "${RESULTS}")"
             echo "pr_number=${PR_NUMBER}"
+            echo "head_sha=$(jq -r '.head_sha' "${RESULTS}")"
           } >> "${GITHUB_OUTPUT}"
       - name: Comment that the pull request is too long to review
         if: steps.prepare.outputs.too_long == 'true'
@@ -184,11 +186,17 @@ steps:
   - name: Check out the pull request head
     env:
       PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+      HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
     run: |
       set -euo pipefail
       BASE_SHA=$(git rev-parse HEAD)
       git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
-      git checkout --detach FETCH_HEAD
+      # The prepared diff describes HEAD_SHA; a newer push is reviewed by its own run.
+      if [ "$(git rev-parse FETCH_HEAD)" != "${HEAD_SHA}" ]; then
+        echo "PR #${PR_NUMBER} head moved since preparation, aborting"
+        exit 1
+      fi
+      git checkout --detach "${HEAD_SHA}"
       # Agent configuration must come from the trusted default branch, not from the PR.
       # Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.
       git diff -z --name-only --no-renames "${BASE_SHA}" FETCH_HEAD -- '*.md' \
