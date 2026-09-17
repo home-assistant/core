@@ -1,25 +1,29 @@
 """Support for Automation Device Specification (ADS)."""
 
-import logging
-
 import probatio
 import pyads
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, DATA_ADS, DOMAIN, AdsType
-from .hub import AdsHub
-
-_LOGGER = logging.getLogger(__name__)
-
+from .const import CONF_ADS_VAR, DOMAIN, AdsType
+from .hub import AdsConfigEntry, AdsHub
 
 ADS_TYPEMAP = {
     AdsType.BOOL: pyads.PLCTYPE_BOOL,
@@ -70,47 +74,116 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
-    conf = config[DOMAIN]
-
-    net_id = conf[CONF_DEVICE]
-    ip_address = conf.get(CONF_IP_ADDRESS)
-    port = conf[CONF_PORT]
-
-    client = pyads.Connection(net_id, port, ip_address)
-
-    try:
-        ads = AdsHub(client)
-    except pyads.ADSError:
-        _LOGGER.error(
-            "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
-            net_id,
-            ip_address,
-            port,
-        )
-        return False
-
-    hass.data[DATA_ADS] = ads
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
-
-    def handle_write_data_by_name(call: ServiceCall) -> None:
+    async def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
+        entries: list[AdsConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="not_loaded"
+            )
+
         ads_var: str = call.data[CONF_ADS_VAR]
         ads_type: AdsType = call.data[CONF_ADS_TYPE]
         value: int = call.data[CONF_ADS_VALUE]
 
-        try:
-            ads.write_by_name(ads_var, value, ADS_TYPEMAP[ads_type])
-        except pyads.ADSError as err:
-            _LOGGER.error(err)
+        await hass.async_add_executor_job(
+            entries[0].runtime_data.write_by_name,
+            ads_var,
+            value,
+            ADS_TYPEMAP[ads_type],
+        )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_WRITE_DATA_BY_NAME,
         handle_write_data_by_name,
         schema=SCHEMA_SERVICE_WRITE_DATA_BY_NAME,
     )
 
+    if DOMAIN in config:
+        hass.async_create_task(_async_import(hass, config[DOMAIN]))
+
+    return True
+
+
+async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
+    """Import the YAML connection config and raise a deprecation issue."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "single_instance_allowed"
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
+        )
+        return
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
+    )
+
+
+def _connect(entry: AdsConfigEntry) -> AdsHub:
+    """Connect to the ADS device and verify it responds."""
+    client = pyads.Connection(
+        entry.data[CONF_DEVICE],
+        entry.data[CONF_PORT],
+        entry.data.get(CONF_IP_ADDRESS),
+    )
+    hub = AdsHub(client)
+    try:
+        client.read_state()
+    except pyads.ADSError:
+        hub.shutdown()
+        raise
+    return hub
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
+    """Set up ADS from a config entry."""
+    try:
+        hub = await hass.async_add_executor_job(_connect, entry)
+    except pyads.ADSError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+    entry.runtime_data = hub
+
+    async def _async_shutdown(event: Event) -> None:
+        await hass.async_add_executor_job(hub.shutdown)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
+    """Unload an ADS config entry."""
+    await hass.async_add_executor_job(entry.runtime_data.shutdown)
     return True

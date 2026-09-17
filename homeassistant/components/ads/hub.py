@@ -8,6 +8,12 @@ import threading
 
 import pyads
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
+
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 # Tuple to hold data needed for notification
@@ -72,7 +78,7 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
 
-    def add_device_notification(self, name, plc_datatype, callback):
+    def add_device_notification(self, name, plc_datatype, notification_callback):
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -87,7 +93,7 @@ class AdsHub:
             else:
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype, callback
+                    hnotify, huser, name, plc_datatype, notification_callback
                 )
 
                 _LOGGER.debug(
@@ -149,3 +155,15 @@ class AdsHub:
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
+
+
+type AdsConfigEntry = ConfigEntry[AdsHub]
+
+
+@callback
+def async_get_hub(hass: HomeAssistant) -> AdsHub:
+    """Return the hub of the loaded ADS config entry."""
+    entries: list[AdsConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise PlatformNotReady("ADS connection is not set up")
+    return entries[0].runtime_data
