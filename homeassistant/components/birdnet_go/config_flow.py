@@ -9,7 +9,7 @@ from aiobirdnetgo import (
     BirdNetGoError,
     BirdNetGoTimeoutError,
 )
-import voluptuous as vol
+import probatio as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
