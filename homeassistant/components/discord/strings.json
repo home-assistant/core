@@ -24,29 +24,29 @@
     }
   },
   "config_subentries": {
-    "channel": {
+    "target": {
       "abort": {
-        "already_configured": "This channel is already configured"
+        "already_configured": "This target is already configured"
       },
-      "entry_type": "Channel",
+      "entry_type": "Target",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "channel_not_found": "Channel not found",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "target_not_found": "Target not found",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
-        "user": "Add channel"
+        "user": "Add target"
       },
       "step": {
         "user": {
           "data": {
-            "channel_id": "Channel ID"
+            "target_id": "Target ID"
           },
           "data_description": {
-            "channel_id": "ID of the channel or user to send notifications to."
+            "target_id": "ID of the channel, user or DM to send notifications to."
           },
-          "title": "Add channel"
+          "title": "Add target"
         }
       }
     }

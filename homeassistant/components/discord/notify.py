@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DiscordConfigEntry
-from .const import CONF_CHANNEL_ID, DOMAIN
+from .const import CONF_TARGET_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ async def async_setup_entry(
     config_entry: DiscordConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Discord notification entities from subentries."""
+    """Set up the Discord notification entities from target subentries."""
     bot_device_id = dr.async_get_device_id_by_identifier(
         hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
     )
@@ -225,7 +225,7 @@ class DiscordNotificationService(BaseNotificationService):
 
 
 class DiscordNotifyEntity(NotifyEntity):
-    """Representation of a Discord notification entity for a single channel."""
+    """Representation of a Discord notification entity for a single target."""
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -239,10 +239,10 @@ class DiscordNotifyEntity(NotifyEntity):
     ) -> None:
         """Initialize the notification entity."""
         self._token = config_entry.data[CONF_API_TOKEN]
-        self._channel_id = subentry.data[CONF_CHANNEL_ID]
-        self._attr_unique_id = f"{config_entry.entry_id}_{self._channel_id}"
+        self._target_id = subentry.data[CONF_TARGET_ID]
+        self._attr_unique_id = f"{config_entry.entry_id}_{self._target_id}"
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{self._channel_id}")},
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{self._target_id}")},
             entry_type=dr.DeviceEntryType.SERVICE,
             manufacturer="Discord",
             name=subentry.title,
@@ -251,20 +251,20 @@ class DiscordNotifyEntity(NotifyEntity):
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message to the configured Discord channel."""
+        """Send a message to the configured Discord target."""
         nextcord.VoiceClient.warn_nacl = False
         discord_bot = nextcord.Client()
         await discord_bot.login(self._token)
         try:
             try:
                 channel = cast(
-                    Messageable, await discord_bot.fetch_channel(self._channel_id)
+                    Messageable, await discord_bot.fetch_channel(self._target_id)
                 )
             except nextcord.NotFound:
                 try:
-                    channel = await discord_bot.fetch_user(self._channel_id)
+                    channel = await discord_bot.fetch_user(self._target_id)
                 except nextcord.NotFound:
-                    _LOGGER.warning("Channel not found for ID: %s", self._channel_id)
+                    _LOGGER.warning("Target not found for ID: %s", self._target_id)
                     return
             await channel.send(message)
         # pylint: disable-next=home-assistant-action-swallowed-exception

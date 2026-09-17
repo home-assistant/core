@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import nextcord
 
 from homeassistant.components.discord.const import (
-    CONF_CHANNEL_ID,
+    CONF_TARGET_ID,
     DOMAIN,
-    SUBENTRY_TYPE_CHANNEL,
+    SUBENTRY_TYPE_TARGET,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 TOKEN = "abc123"
 NAME = "Discord Bot"
-CHANNEL_NAME = "general"
+TARGET_NAME = "general"
 
 CONF_INPUT = {CONF_API_TOKEN: TOKEN}
 
@@ -36,9 +36,9 @@ def create_entry(hass: HomeAssistant, with_subentry: bool = False) -> MockConfig
         subentries_data = [
             ConfigSubentryData(
                 unique_id=TARGET,
-                data={CONF_CHANNEL_ID: int(TARGET)},
-                subentry_type=SUBENTRY_TYPE_CHANNEL,
-                title=CHANNEL_NAME,
+                data={CONF_TARGET_ID: int(TARGET)},
+                subentry_type=SUBENTRY_TYPE_TARGET,
+                title=TARGET_NAME,
             )
         ]
     entry = MockConfigEntry(

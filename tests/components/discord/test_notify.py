@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from . import CHANNEL_NAME, create_entry, setup_integration
+from . import TARGET_NAME, create_entry, setup_integration
 from .conftest import CONTENT, MESSAGE, TARGET, URL_ATTACHMENT
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -125,17 +125,17 @@ async def test_notify_entity_send_message(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{CHANNEL_NAME}", "message": MESSAGE},
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
 
     channel.send.assert_awaited_once_with(MESSAGE)
 
 
-async def test_notify_entity_channel_not_found(
+async def test_notify_entity_target_not_found(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the notify entity logs a warning for an unknown channel."""
+    """Test the notify entity logs a warning for an unknown target."""
     entry = create_entry(hass, with_subentry=True)
     await setup_integration(hass, entry)
 
@@ -156,11 +156,11 @@ async def test_notify_entity_channel_not_found(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{CHANNEL_NAME}", "message": MESSAGE},
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
 
-    assert f"Channel not found for ID: {TARGET}" in caplog.text
+    assert f"Target not found for ID: {TARGET}" in caplog.text
 
 
 async def test_notify_entity_communication_error(
@@ -184,7 +184,7 @@ async def test_notify_entity_communication_error(
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{CHANNEL_NAME}", "message": MESSAGE},
+            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
 

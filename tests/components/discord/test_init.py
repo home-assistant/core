@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
-    CHANNEL_NAME,
+    TARGET_NAME,
     create_entry,
     mock_exception,
     patch_discord_login,
@@ -56,13 +56,13 @@ async def test_notify_entity_created(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a notify entity and its devices are created for a channel subentry."""
+    """Test a notify entity and its devices are created for a target subentry."""
     entry = create_entry(hass, with_subentry=True)
     await setup_integration(hass, entry)
 
     subentry_id = next(iter(entry.subentries))
 
-    entity_entry = entity_registry.async_get(f"notify.{CHANNEL_NAME}")
+    entity_entry = entity_registry.async_get(f"notify.{TARGET_NAME}")
     assert entity_entry is not None
     assert entity_entry.unique_id == f"{entry.entry_id}_{int(TARGET)}"
     assert entity_entry.config_subentry_id == subentry_id
