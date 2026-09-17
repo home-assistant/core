@@ -98,6 +98,33 @@ async def test_setup_retries_when_device_not_found(
     )
 
 
+async def test_setup_retries_on_incomplete_read(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup is retried when the device returns data without an address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    incomplete_device_info = deepcopy(WAVE_DEVICE_INFO)
+    incomplete_device_info.address = ""
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(incomplete_device_info),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert len(hass.states.async_all()) == 0
+
+
 async def test_no_migration_when_device_model_exists(
     hass: HomeAssistant,
 ) -> None:

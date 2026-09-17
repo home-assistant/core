@@ -3,8 +3,8 @@
 import logging
 from typing import TYPE_CHECKING
 
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 from wirelesstagpy import SensorTag, WirelessTags
 from wirelesstagpy.binaryevent import BinaryEvent
 from wirelesstagpy.exceptions import WirelessTagsException
@@ -39,16 +39,16 @@ NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 
 DEFAULT_ENTITY_NAMESPACE = "wirelesstag"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

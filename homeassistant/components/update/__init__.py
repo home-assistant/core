@@ -1,14 +1,13 @@
 """Component to allow for providing device or service updates."""
 
 from datetime import timedelta
-from enum import StrEnum
 from functools import lru_cache
 import logging
 from typing import Any, Final, final, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -40,9 +39,11 @@ from .const import (  # noqa: F401
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
+    UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
 )
@@ -54,15 +55,6 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(minutes=15)
-
-
-class UpdateDeviceClass(StrEnum):
-    """Device class for update."""
-
-    FIRMWARE = "firmware"
-
-
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 
 __all__ = [
@@ -96,8 +88,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_INSTALL,
         {
-            vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
+            probatio.Optional(ATTR_VERSION): cv.string,
+            probatio.Optional(ATTR_BACKUP, default=False): cv.boolean,
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
@@ -551,8 +543,8 @@ class UpdateEntity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "update/release_notes",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "update/release_notes",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
