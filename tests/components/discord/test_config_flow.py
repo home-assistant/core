@@ -298,7 +298,7 @@ async def test_subentry_flow_errors(
 
     with (
         patch_discord_login() as login,
-        _patch_fetch_channel(Mock(name=TARGET_NAME), side_effect=channel_side_effect),
+        _patch_fetch_channel(side_effect=channel_side_effect),
         _patch_fetch_user(side_effect=user_side_effect),
         _patch_close(),
     ):
@@ -309,3 +309,14 @@ async def test_subentry_flow_errors(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    channel = Mock()
+    channel.name = TARGET_NAME
+    with patch_discord_login(), _patch_fetch_channel(channel), _patch_close():
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_TARGET_ID: int(TARGET)},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TARGET_NAME
+    assert result["data"] == {CONF_TARGET_ID: int(TARGET)}
