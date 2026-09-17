@@ -104,6 +104,8 @@ class ImouAlarmControlPanel(ImouEntity, AlarmControlPanelEntity):
         if not panel:
             return None
         mode = panel.get(PARAM_STATE)
+        if not isinstance(mode, str):
+            return None
         mapped = _MODE_TO_STATE.get(mode)
         if mapped is None:
             _LOGGER.debug("Unknown alarm mode %r for %s", mode, self._device_key)
