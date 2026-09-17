@@ -6,8 +6,8 @@ import pytest
 from homeassistant.components.entur_public_transport.api import (
     STOP_PLACE_LINES_QUERY,
     EnturApiError,
-    async_get_stop_routes,
     async_get_stop_place,
+    async_get_stop_routes,
     async_search_stop_places,
 )
 from homeassistant.components.entur_public_transport.const import (
