@@ -26,13 +26,13 @@
         function_response=FunctionResponse(
           name='HassGetCurrentTime',
           response={
-            'error': False,
-            'result': {
+            'data': {
               'data': {<... 2 items at Max depth ...>},
               'response_type': 'action_done',
               'speech': {<... 1 item at Max depth ...>},
               'speech_slots': {<... 1 item at Max depth ...>}
-            }
+            },
+            'error': False
           }
         )
       ),
@@ -88,10 +88,10 @@
         function_response=FunctionResponse(
           name='test_tool',
           response={
-            'error': False,
-            'result': {
+            'data': {
               'result': 'Test response'
-            }
+            },
+            'error': False
           }
         )
       ),

@@ -269,7 +269,7 @@ async def test_function_call(
             "name": "test_tool",
             "parts": None,
             "response": {
-                "result": {"result": "Test response"},
+                "data": {"result": "Test response"},
                 "error": False,
             },
             "scheduling": None,
