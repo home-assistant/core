@@ -259,6 +259,8 @@ async def test_state_off_with_upcoming_alert_picks_soonest(
         pytest.param(
             datetime(2026, 2, 1, 0, 0, tzinfo=TZ_PARIS),
             datetime(2026, 5, 1, 0, 0, tzinfo=TZ_PARIS),
+            # MOCK_TCL_ALERTS[2] is inside this window but belongs to line 27,
+            # so it must not surface on the C3 calendar.
             ["Déviée dir. Cordeliers", "Fête de la Musique"],
             id="spans_both_alerts",
         ),
