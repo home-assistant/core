@@ -812,15 +812,7 @@ async def test_get_translations_still_has_title_without_translations_files(
 async def test_english_cache_populated_for_partial_batch_overlap(
     hass: HomeAssistant,
 ) -> None:
-    """Test a non-English batch caches English for every component in it.
-
-    Reproduces the bootstrap ordering behind issue #182470: a component is set
-    up (and cached in English) before the stored non-English language is
-    applied, then the full set of integrations is preloaded in that language.
-    The preload batch overlaps the already-English-cached component, but the
-    remaining components must still land in the English cache so
-    English-fallback lookups return the localized string, not the raw key.
-    """
+    """Test English caching when a non-English batch partially overlaps it."""
     integration_a = Mock(file_path=pathlib.Path(__file__))
     integration_a.name = "Component A"
     integration_b = Mock(file_path=pathlib.Path(__file__))
