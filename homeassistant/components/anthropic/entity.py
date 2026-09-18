@@ -306,7 +306,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": json_dumps(
                         {
-                            "result": content.result.data,
+                            "data": content.result.data,
                             "error": content.result.error,
                         }
                     ),
