@@ -82,6 +82,16 @@ async def test_select_option(
     """Test selecting options for select entities."""
     device_fixture.jets[1].speed_type = JetSpeedType.DUAL_SPEED
     device_fixture.jets[2].speed_type = JetSpeedType.SINGLE_SPEED
+
+    def _set_jet(jet_id: int, speed: JetSpeed) -> None:
+        device_fixture.jets[jet_id].speed = speed
+
+    def _set_heating_mode(mode: HeatingMode) -> None:
+        device_fixture.heater.heating_mode = mode
+
+    mock_hotspring.set_jet.side_effect = _set_jet
+    mock_hotspring.set_heating_mode.side_effect = _set_heating_mode
+
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SELECT])
 
     await hass.services.async_call(
@@ -92,6 +102,8 @@ async def test_select_option(
     )
 
     getattr(mock_hotspring, method_name).assert_called_once_with(*expected_args)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == option
 
 
 @pytest.mark.parametrize(
@@ -140,3 +152,17 @@ async def test_unsupported_entities_not_added(
 
     assert not entity_registry.async_is_registered(JET_1_ENTITY_ID)
     assert not entity_registry.async_is_registered(HEATING_MODE_ENTITY_ID)
+
+
+@pytest.mark.usefixtures("mock_hotspring")
+async def test_heating_mode_without_heatpump(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_fixture: Spa,
+) -> None:
+    """Test chill option is not present when heat pump is not installed."""
+    device_fixture.heater.heatpump_installed = False
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SELECT])
+
+    assert (state := hass.states.get(HEATING_MODE_ENTITY_ID))
+    assert "chill" not in state.attributes["options"]
