@@ -259,11 +259,13 @@ async def test_in_home_chime_toggle_errors_when_type_unreadable(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {"entity_id": state.entity_id},
             blocking=True,
         )
+    assert err.value.translation_key == "chime_type_unknown"
+    assert err.value.translation_domain == DOMAIN
     await hass.async_block_till_done()
