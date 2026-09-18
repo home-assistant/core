@@ -161,6 +161,36 @@ async def test_delete_unknown_user(
     assert result["error"]["code"] == "not_found"
 
 
+async def test_delete_owner(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the owner cannot be deleted."""
+    owner = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": owner.id})
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_delete_owner"
+    assert await hass.auth.async_get_user(owner.id) is owner
+
+
+async def test_delete_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that system generated users cannot be deleted."""
+    user = MockUser(id="abc", name="System", system_generated=True).add_to_hass(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": user.id})
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_modify_system_generated"
+    assert await hass.auth.async_get_user(user.id) is user
+
+
 async def test_delete(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:

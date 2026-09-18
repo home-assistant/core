@@ -71,9 +71,7 @@ rules:
     status: exempt
     comment: Entity names are dynamically provided by the Gatus service.
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Entities use the connectivity device class for their icon and define no custom icons.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
