@@ -695,12 +695,11 @@ async def test_mcp_tools_list_metadata(
     mcp_client: MCPClientFactory,
     hass_supervisor_access_token: str,
 ) -> None:
-    """Test the tools list advertises the tool title and annotations."""
+    """Test the tools list advertises the tool annotations."""
 
     class _AnnotatedTool(_StubTool):
         """Tool that declares it only reads."""
 
-        title = "Test tool"
         annotations = llm.ToolAnnotations(
             read_only=True, destructive=False, idempotent=True, open_world=False
         )
@@ -719,7 +718,6 @@ async def test_mcp_tools_list_metadata(
         result = await session.list_tools()
 
     tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
-    assert tool.title == "Test tool"
     assert tool.annotations == mcp.types.ToolAnnotations(
         readOnlyHint=True,
         destructiveHint=False,

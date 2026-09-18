@@ -180,7 +180,6 @@ class Tool:
     """LLM Tool base class."""
 
     name: str
-    title: str | None = None
     description: str | None = None
     parameters: probatio.Schema = probatio.Schema({})
     annotations: ToolAnnotations = ToolAnnotations()
@@ -352,7 +351,6 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
-        self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
         self.annotations = tool.annotations
