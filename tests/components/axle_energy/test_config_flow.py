@@ -36,7 +36,7 @@ async def test_user(hass: HomeAssistant) -> None:
     [
         (AxleAuthenticationError(), "invalid_auth"),
         (AxleConnectionError(), "cannot_connect"),
-        (AxleError(), "cannot_connect"),
+        (AxleError(), "cannot_retrieve"),
     ],
 )
 async def test_user_errors(
