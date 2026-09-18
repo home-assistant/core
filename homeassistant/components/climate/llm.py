@@ -18,8 +18,11 @@ from .const import DOMAIN, INTENT_SET_TEMPERATURE
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_SET_TEMPERATURE,)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_SET_TEMPERATURE: "Set temperature",
+}
 
 
 @callback
@@ -43,6 +46,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=LLM_INTENTS[handler.intent_type],
             integration=DOMAIN,
             annotations=LLM_ANNOTATIONS,
         )
