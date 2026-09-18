@@ -6,7 +6,7 @@
       'username': '**REDACTED**',
     }),
     'live_data': dict({
-      '11111111-1111-1111-1111-111111111111': dict({
+      'system_1': dict({
         'battery': dict({
           'applianceID': '**REDACTED**',
           'capacity': 10000,

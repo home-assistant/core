@@ -16,7 +16,12 @@ async def async_get_config_entry_diagnostics(
     entry: GridxConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a gridX config entry."""
+    # Key by position so the diagnostics do not expose the system UUIDs.
+    live_data = {
+        f"system_{index}": data
+        for index, data in enumerate(entry.runtime_data.data.values(), start=1)
+    }
     return {
         "config_entry": async_redact_data(dict(entry.data), TO_REDACT),
-        "live_data": async_redact_data(entry.runtime_data.data, TO_REDACT),
+        "live_data": async_redact_data(live_data, TO_REDACT),
     }
