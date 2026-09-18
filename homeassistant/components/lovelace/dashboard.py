@@ -1,6 +1,7 @@
 """Lovelace dashboard support."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 import logging
 import os
 from pathlib import Path
@@ -8,6 +9,7 @@ import time
 from typing import TYPE_CHECKING, Any, override
 
 import probatio
+import yaml
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_panel_exists
@@ -16,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
 from homeassistant.helpers.json import cached_json_fragment, json_fragment
-from homeassistant.util.yaml import Secrets, load_yaml_dict
+from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml_dict
 
 from .const import (
     CONF_ALLOW_SINGLE_WORD,
@@ -262,33 +264,79 @@ class LovelaceYAML(LovelaceConfig):
             raise ConfigNotFound from None
 
         json = cached_json_fragment(config)
-        self._cache = (config, time.time(), json, _referenced_files(config, self.path))
+        self._cache = (config, time.time(), json, _referenced_files(self.path))
         return is_updated, config, json
 
 
-def _collect_config_files(value: Any, files: set[str]) -> None:
-    """Recursively collect the YAML files a loaded config was built from.
+_INCLUDE_FILE_TAGS = frozenset({"!include"})
+_INCLUDE_DIR_TAGS = frozenset(
+    {
+        "!include_dir_list",
+        "!include_dir_merge_list",
+        "!include_dir_merge_named",
+        "!include_dir_named",
+    }
+)
 
-    Nodes produced by the YAML loader carry the file they originated from in
-    ``__config_file__``, so walking the config recovers every file pulled in by
-    an ``!include``.
+
+def _yaml_files_in(directory: str) -> Iterator[str]:
+    """Yield the YAML files an ``!include_dir_*`` tag would pull in."""
+    for root, dirs, filenames in os.walk(directory, topdown=True):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for basename in sorted(filenames):
+            if (
+                basename.startswith(".")
+                or not basename.endswith(".yaml")
+                or basename == SECRET_YAML
+            ):
+                continue
+            yield os.path.join(root, basename)
+
+
+def _scan_includes(node: yaml.nodes.Node, directory: str, files: set[str]) -> None:
+    """Walk a composed YAML node tree, following ``!include`` style tags."""
+    if isinstance(node, yaml.nodes.ScalarNode):
+        if node.tag in _INCLUDE_FILE_TAGS:
+            _collect_include_graph(os.path.join(directory, node.value), files)
+        elif node.tag in _INCLUDE_DIR_TAGS:
+            for filename in _yaml_files_in(os.path.join(directory, node.value)):
+                _collect_include_graph(filename, files)
+    elif isinstance(node, yaml.nodes.SequenceNode):
+        for child in node.value:
+            _scan_includes(child, directory, files)
+    elif isinstance(node, yaml.nodes.MappingNode):
+        for key, value in node.value:
+            _scan_includes(key, directory, files)
+            _scan_includes(value, directory, files)
+
+
+def _collect_include_graph(path: str, files: set[str]) -> None:
+    """Add a file and, recursively, everything it includes.
+
+    The file is composed rather than loaded, so no constructor runs and no
+    secret is resolved; only the tags are inspected. This does not rely on the
+    loaded values carrying ``__config_file__``, which scalars cannot do.
     """
-    if (config_file := getattr(value, "__config_file__", None)) is not None:
-        files.add(config_file)
+    if path in files:
+        return
+    files.add(path)
 
-    if isinstance(value, dict):
-        for key, val in value.items():
-            _collect_config_files(key, files)
-            _collect_config_files(val, files)
-    elif isinstance(value, list):
-        for val in value:
-            _collect_config_files(val, files)
+    try:
+        with open(path, encoding="utf-8") as config_file:
+            node = yaml.compose(config_file, Loader=yaml.SafeLoader)
+    except OSError, yaml.YAMLError:
+        # Unreadable or invalid: loading will raise separately, and the file is
+        # already tracked so a later fix to it still invalidates the cache.
+        return
+
+    if node is not None:
+        _scan_includes(node, os.path.dirname(path), files)
 
 
-def _referenced_files(config: dict[str, Any], path: str) -> frozenset[str]:
-    """Return the files the config was built from, including the root file."""
-    files: set[str] = {path}
-    _collect_config_files(config, files)
+def _referenced_files(path: str) -> frozenset[str]:
+    """Return the files a dashboard is built from, including the root file."""
+    files: set[str] = set()
+    _collect_include_graph(path, files)
     return frozenset(files)
 
 

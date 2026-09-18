@@ -1,6 +1,9 @@
 """Test the Lovelace initialization."""
 
+import asyncio
 from collections.abc import Generator
+import os
+from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -10,9 +13,9 @@ import pytest
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml.objects import NodeDictClass
 
 from tests.common import assert_setup_component, async_capture_events
 from tests.typing import WebSocketGenerator
@@ -363,140 +366,111 @@ async def test_lovelace_from_yaml(
     assert len(events) == 2
 
 
-async def test_lovelace_from_yaml_reloads_when_included_file_changes(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test a changed !include'd file invalidates the cached config.
+def _write(path: Path, content: str) -> None:
+    """Write a config file, making sure the mtime moves on."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
 
-    The dashboard file itself is untouched; only a file pulled in by an
-    ``!include`` changes. The nodes it produced carry ``__config_file__``, so
-    the cache must notice it.
+
+async def test_referenced_files_follows_real_includes(tmp_path: Path) -> None:
+    """Test the include graph is resolved from real files.
+
+    Uses the real loader tags rather than hand-built annotations, and covers a
+    scalar include, whose loaded value cannot carry ``__config_file__``.
     """
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    scalar = tmp_path / "lovelace" / "enabled.yaml"
+    in_dir = tmp_path / "views" / "power.yaml"
+    hidden = tmp_path / "views" / ".hidden.yaml"
 
-    client = await hass_ws_client(hass)
-    events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
+    _write(
+        root,
+        "views:\n  - !include lovelace/garage.yaml\nextra: !include_dir_list views\n",
+    )
+    _write(view, "title: Garage\npanel: !include enabled.yaml\n")
+    _write(scalar, "true\n")
+    _write(in_dir, "title: Power\n")
+    _write(hidden, "title: Hidden\n")
 
-    root_file = hass.config.path(const.LOVELACE_CONFIG_FILE)
-    included_file = hass.config.path("lovelace/included.yaml")
+    files = dashboard._referenced_files(str(root))
 
-    def make_config(title: str) -> dict[str, Any]:
-        """Build a config whose only view came from an included file."""
-        view = NodeDictClass({"title": title})
-        view.__config_file__ = included_file
-        return {"views": [view]}
-
-    # The root file never changes; only the included one does.
-    mtimes = {root_file: 0.0, included_file: 0.0}
-
-    with (
-        patch(
-            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-            return_value=make_config("original"),
-        ),
-        patch(
-            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-            side_effect=lambda path: mtimes[path],
-        ),
-    ):
-        await client.send_json_auto_id({"type": "lovelace/config"})
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["views"][0]["title"] == "original"
-    assert len(events) == 0
-
-    # Nothing changed on disk, so the cache must be used.
-    with (
-        patch(
-            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-            return_value=make_config("not used"),
-        ),
-        patch(
-            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-            side_effect=lambda path: mtimes[path],
-        ),
-    ):
-        await client.send_json_auto_id({"type": "lovelace/config"})
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["views"][0]["title"] == "original"
-    assert len(events) == 0
-
-    # Touch only the included file: the cache must be invalidated.
-    mtimes[included_file] = time.time() + 10
-
-    with (
-        patch(
-            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-            return_value=make_config("updated"),
-        ),
-        patch(
-            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-            side_effect=lambda path: mtimes[path],
-        ),
-    ):
-        await client.send_json_auto_id({"type": "lovelace/config"})
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["views"][0]["title"] == "updated"
-    assert len(events) == 1
+    assert str(root) in files
+    assert str(view) in files
+    assert str(scalar) in files, "a scalar !include must still be tracked"
+    assert str(in_dir) in files, "!include_dir_list contents must be tracked"
+    assert str(hidden) not in files, "dot files are skipped by the loader"
 
 
-async def test_lovelace_from_yaml_reloads_when_included_file_removed(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+@pytest.fixture
+def yaml_dashboard(hass: HomeAssistant, tmp_path: Path) -> dashboard.LovelaceYAML:
+    """Return a YAML dashboard backed by a real config directory."""
+    with patch.object(hass.config, "config_dir", str(tmp_path)):
+        yield dashboard.LovelaceYAML(hass, None, {"filename": "ui-lovelace.yaml"})
+
+
+async def test_yaml_dashboard_reloads_when_included_file_changes(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
-    """Test a deleted !include'd file invalidates the cached config."""
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
+    """Test editing an included file invalidates the cache.
 
-    client = await hass_ws_client(hass)
+    The dashboard file itself is never touched.
+    """
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
 
-    included_file = hass.config.path("lovelace/included.yaml")
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
 
-    def make_config(title: str) -> dict[str, Any]:
-        view = NodeDictClass({"title": title})
-        view.__config_file__ = included_file
-        return {"views": [view]}
+    root_mtime = root.stat().st_mtime
+    await asyncio.sleep(0.01)
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
 
-    def getmtime(path: str) -> float:
-        if path == included_file:
-            raise FileNotFoundError(path)
-        return 0.0
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
 
-    with (
-        patch(
-            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-            return_value=make_config("original"),
-        ),
-        patch(
-            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-            return_value=0.0,
-        ),
-    ):
-        await client.send_json_auto_id({"type": "lovelace/config"})
-        response = await client.receive_json()
 
-    assert response["success"]
-    assert response["result"]["views"][0]["title"] == "original"
+async def test_yaml_dashboard_reloads_when_scalar_include_changes(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a scalar !include is tracked even though it carries no annotation."""
+    root = tmp_path / "ui-lovelace.yaml"
+    flag = tmp_path / "flag.yaml"
+    _write(root, "views: []\npanel: !include flag.yaml\n")
+    _write(flag, "true\n")
 
-    # The included file is gone; reload rather than serving a stale config.
-    with (
-        patch(
-            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
-            return_value=make_config("updated"),
-        ),
-        patch(
-            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
-            side_effect=getmtime,
-        ),
-    ):
-        await client.send_json_auto_id({"type": "lovelace/config"})
-        response = await client.receive_json()
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["panel"] is True
 
-    assert response["success"]
-    assert response["result"]["views"][0]["title"] == "updated"
+    root_mtime = root.stat().st_mtime
+    _write(flag, "false\n")
+    os.utime(flag, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["panel"] is False
+
+
+async def test_yaml_dashboard_reloads_when_included_file_removed(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a removed included file forces a reload instead of serving a stale config."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    view.unlink()
+
+    with pytest.raises(HomeAssistantError):
+        yaml_dashboard._load_config(False)
 
 
 async def test_lovelace_from_yaml_creates_repair_issue(
