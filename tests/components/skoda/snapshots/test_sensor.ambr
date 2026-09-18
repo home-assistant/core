@@ -528,7 +528,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -568,6 +570,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Mileage',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:car-info',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
