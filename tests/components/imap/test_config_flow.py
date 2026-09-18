@@ -347,6 +347,87 @@ async def test_options_form(hass: HomeAssistant) -> None:
         assert entry.data[key] == value
 
 
+async def test_options_form_reset_template(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test resetting the custom_event_data_template option."""
+
+    # Set up an entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "email@email.com"
+    assert result2["data"] == MOCK_CONFIG
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    entry = result2["result"]
+
+    # Set the custom_event_data_template option via the options flow
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_config = MOCK_OPTIONS.copy()
+    new_config["custom_event_data_template"] = "{{ subject }}"
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = ("OK", [b""])
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            new_config,
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {}
+    for key, value in new_config.items():
+        assert entry.data[key] == value
+
+    assert "custom_event_data_template" in entry.data
+
+    # Reset custom_event_data_template option
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_config = MOCK_OPTIONS
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = ("OK", [b""])
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            new_config,
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {}
+    for key, value in new_config.items():
+        assert entry.data[key] == value
+
+    assert "custom_event_data_template" not in entry.data
+
+
 async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
     """Test we cannot change options if that would cause duplicates."""
 
