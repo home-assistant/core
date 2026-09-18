@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import Any, override
 
 from aiounifi.interfaces.sites import Sites
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -82,7 +82,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.reauth_schema: dict[vol.Marker, Any] = {}
+        self.reauth_schema: dict[probatio.Marker, Any] = {}
 
     @override
     async def async_step_user(
@@ -113,15 +113,15 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                if (
-                    self.source == SOURCE_REAUTH
-                    and (
+                if self.source == SOURCE_REAUTH:
+                    if (
                         (reauth_unique_id := self._get_reauth_entry().unique_id)
                         is not None
-                    )
-                    and reauth_unique_id in self.sites
-                ):
-                    return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
+                    ) and reauth_unique_id in self.sites:
+                        return await self.async_step_site(
+                            {CONF_SITE_ID: reauth_unique_id}
+                        )
+                    raise AbortFlow("unknown_site_id")
 
                 return await self.async_step_site()
 
@@ -131,13 +131,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             host = "unifi"
 
         data = self.reauth_schema or {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(
+            probatio.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Optional(
                 CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
             ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_VERIFY_SSL,
                 default=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             ): bool,
@@ -145,7 +145,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data),
+            data_schema=probatio.Schema(data),
             errors=errors,
         )
 
@@ -185,7 +185,9 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         site_names = {site.site_id: site.description for site in self.sites.values()}
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(site_names)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_SITE_ID): probatio.In(site_names)}
+            ),
         )
 
     async def async_step_reauth(
@@ -200,11 +202,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         self.reauth_schema = {
-            vol.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
+            probatio.Required(
+                CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
+            ): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
+            probatio.Required(
                 CONF_VERIFY_SSL, default=reauth_entry.data[CONF_VERIFY_SSL]
             ): bool,
         }
@@ -323,23 +327,23 @@ class UnifiOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACK_CLIENTS,
                         default=self.hub.config.option_track_clients,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.hub.config.option_track_devices,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
-                    vol.Required(CONF_MORE_OPTIONS): section(
-                        vol.Schema(
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
                             {
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_CLIENT_SOURCE,
                                     default=self.options.get(CONF_CLIENT_SOURCE, []),
                                 ): cv.multi_select(
@@ -350,40 +354,40 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                         )
                                     )
                                 ),
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_TRACK_WIRED_CLIENTS,
                                     default=self.hub.config.option_track_wired_clients,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_SSID_FILTER,
                                     default=selected_ssids_to_filter,
                                 ): cv.multi_select(ssid_filter),
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_DETECTION_TIME,
                                     default=int(
                                         self.hub.config.option_detection_time.total_seconds()
                                     ),
                                 ): int,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_IGNORE_WIRED_BUG,
                                     default=self.hub.config.option_ignore_wired_bug,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_IGNORE_LOCAL_MAC,
                                     default=self.hub.config.option_ignore_local_mac,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_DPI_RESTRICTIONS,
                                     default=self.options.get(
                                         CONF_DPI_RESTRICTIONS,
                                         DEFAULT_DPI_RESTRICTIONS,
                                     ),
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_ALLOW_BANDWIDTH_SENSORS,
                                     default=self.hub.config.option_allow_bandwidth_sensors,
                                 ): bool,
-                                vol.Optional(
+                                probatio.Optional(
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
                                 ): bool,

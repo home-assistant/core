@@ -50,6 +50,7 @@ APPLICATION_CREDENTIALS = [
     "volvo",
     "watts",
     "weheat",
+    "willow",
     "withings",
     "xbox",
     "yale",

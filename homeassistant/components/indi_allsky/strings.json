@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your INDI Allsky server.",
+          "port": "The port number of your INDI Allsky web server.",
+          "ssl": "Connect using SSL/HTTPS.",
+          "verify_ssl": "Verify the SSL certificate of the INDI Allsky server."
+        },
+        "description": "Enter the connection details for your INDI Allsky instance."
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with INDI Allsky API"
+    }
+  }
+}

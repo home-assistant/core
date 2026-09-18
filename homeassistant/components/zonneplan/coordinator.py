@@ -1,9 +1,11 @@
 """Coordinator for Zonneplan."""
 
+import asyncio
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyzonneplan import (
     Account,
@@ -18,6 +20,7 @@ from pyzonneplan.const import PriceChart
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -61,29 +64,36 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
         """Fetch data from the Zonneplan API."""
         try:
             account = await self.zonneplan.async_get_account()
-            electricity_prices: ConsumerPrices | None = None
-            gas_prices: ConsumerPrices | None = None
+            price_coroutines: dict[str, Coroutine[Any, Any, ConsumerPrices]] = {}
 
-            # Depending per contract, fetch the associated consumer prices
-            for connection in account.connections:
-                if (
-                    "electricity" in connection.market_segment
-                    if connection.market_segment is not None
-                    else False
-                ):
-                    electricity_prices = await self.zonneplan.async_get_consumer_prices(
+            if any(
+                connection.market_segment is not None
+                and "electricity" in connection.market_segment
+                for connection in account.connections
+            ):
+                price_coroutines["electricity"] = (
+                    self.zonneplan.async_get_consumer_prices(
                         PriceChart.ELECTRICITY_HOURLY
                     )
-                if (
-                    "gas" in connection.market_segment
-                    if connection.market_segment is not None
-                    else False
-                ):
-                    gas_prices = await self.zonneplan.async_get_consumer_prices(
-                        PriceChart.GAS_DAILY
-                    )
+                )
+            if any(
+                connection.market_segment is not None
+                and "gas" in connection.market_segment
+                for connection in account.connections
+            ):
+                price_coroutines["gas"] = self.zonneplan.async_get_consumer_prices(
+                    PriceChart.GAS_DAILY
+                )
+
+            prices = dict(
+                zip(
+                    price_coroutines,
+                    await asyncio.gather(*price_coroutines.values()),
+                    strict=True,
+                )
+            )
         except ZonneplanAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
@@ -110,6 +120,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
 
         return ZonneplanData(
             account=account,
-            electricity_prices=electricity_prices,
-            gas_prices=gas_prices,
+            electricity_prices=prices.get("electricity"),
+            gas_prices=prices.get("gas"),
         )

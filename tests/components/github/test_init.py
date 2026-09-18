@@ -112,7 +112,7 @@ async def test_minor_v1_v2_migration(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "test/repository")},
     )
-    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {None}
+    assert device_entry.config_subentry_id is None
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -126,6 +126,4 @@ async def test_minor_v1_v2_migration(
     assert subentry.unique_id == "test/repository"
 
     assert (device_entry := device_registry.async_get(device_entry.id))
-    assert device_entry.config_entries_subentries[mock_config_entry.entry_id] == {
-        subentry.subentry_id
-    }
+    assert device_entry.config_subentry_id == subentry.subentry_id

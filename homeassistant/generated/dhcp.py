@@ -652,6 +652,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "00D02D*",
     },
     {
+        "domain": "midea",
+        "registered_devices": True,
+    },
+    {
         "domain": "mitsubishi_comfort",
         "registered_devices": True,
     },
@@ -670,6 +674,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
+    },
+    {
+        "domain": "my_pv",
+        "registered_devices": True,
+    },
+    {
+        "domain": "my_pv",
+        "macaddress": "986D35C*",
     },
     {
         "domain": "mystrom",
