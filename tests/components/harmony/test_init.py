@@ -1,11 +1,18 @@
 """Test init of Logitch Harmony Hub integration."""
 
+import asyncio
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.harmony.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import FakeHarmonyClient
 from .const import (
     ENTITY_NILE_TV,
     ENTITY_PLAY_MUSIC,
@@ -85,3 +92,25 @@ async def test_unique_id_migration(
 
     select_activities = ent_reg.async_get(ENTITY_SELECT)
     assert select_activities.unique_id == f"{HUB_NAME}_activities"
+
+
+@pytest.mark.usefixtures("mock_hc")
+async def test_connect_timeout_retries_setup(
+    hass: HomeAssistant,
+    harmony_client: FakeHarmonyClient,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a hub that does not answer the connection does not hold up setup."""
+
+    async def _never_answers() -> bool:
+        await asyncio.Event().wait()
+        return True
+
+    harmony_client.connect = _never_answers
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.harmony.data.CONNECT_TIMEOUT", 0):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    harmony_client.close.assert_awaited_once()
