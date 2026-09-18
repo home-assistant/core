@@ -193,6 +193,48 @@ async def test_call_tool_result(
     assert await instance.async_call_tool(llm.ToolInput(tool.name, {})) == expected
 
 
+def test_tool_metadata_defaults() -> None:
+    """Test a tool that declares no metadata is taken to be unsafe."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    assert tool.title is None
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=False, destructive=True, idempotent=False, open_world=True
+    )
+
+
+def test_namespaced_tool_keeps_metadata() -> None:
+    """Test a namespaced tool carries the metadata of the tool it wraps."""
+
+    class MyTool(llm.Tool):
+        name = "test_tool"
+        title = "Test tool"
+        annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+        integration = "my_integration"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    tool = MyTool()
+    namespaced = llm.NamespacedTool("test_api", tool)
+
+    assert namespaced.name == "test_api__test_tool"
+    assert namespaced.title == tool.title
+    assert namespaced.annotations == tool.annotations
+    assert namespaced.integration == tool.integration
+
+
 @pytest.mark.parametrize("namespaced", [False, True])
 async def test_intent_tool_omits_blank_arguments(
     hass: HomeAssistant, llm_context: llm.LLMContext, namespaced: bool

@@ -162,12 +162,29 @@ class ToolResult:
     error: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class ToolAnnotations:
+    """Properties describing how a tool behaves.
+
+    The defaults describe the least safe case, so a tool that declares nothing
+    is taken to write, to be destructive, and to reach outside Home Assistant.
+    """
+
+    read_only: bool = False
+    destructive: bool = True
+    idempotent: bool = False
+    open_world: bool = True
+
+
 class Tool:
     """LLM Tool base class."""
 
     name: str
+    title: str | None = None
     description: str | None = None
     parameters: probatio.Schema = probatio.Schema({})
+    annotations: ToolAnnotations = ToolAnnotations()
+    integration: str | None = None
 
     @abstractmethod
     async def async_call(
@@ -335,8 +352,11 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
+        self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
+        self.annotations = tool.annotations
+        self.integration = tool.integration
         self.tool = tool
 
     @override
