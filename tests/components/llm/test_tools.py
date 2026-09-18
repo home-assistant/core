@@ -45,11 +45,9 @@ async def test_get_datetime_tool(hass: HomeAssistant) -> None:
 
     assert response == llm.ToolResult(
         data={
-            "result": {
-                "date": "2025-09-17",
-                "time": "13:00:00",
-                "timezone": "UTC",
-                "weekday": "Wednesday",
-            }
+            "date": "2025-09-17",
+            "time": "13:00:00",
+            "timezone": "UTC",
+            "weekday": "Wednesday",
         }
     )

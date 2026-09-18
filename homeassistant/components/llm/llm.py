@@ -27,12 +27,10 @@ class GetDateTimeTool(Tool):
 
         return ToolResult(
             data={
-                "result": {
-                    "date": now.strftime("%Y-%m-%d"),
-                    "time": now.strftime("%H:%M:%S"),
-                    "timezone": now.strftime("%Z"),
-                    "weekday": now.strftime("%A"),
-                }
+                "date": now.strftime("%Y-%m-%d"),
+                "time": now.strftime("%H:%M:%S"),
+                "timezone": now.strftime("%Z"),
+                "weekday": now.strftime("%A"),
             }
         )
 
