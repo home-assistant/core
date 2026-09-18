@@ -837,7 +837,7 @@ datapoint==0.12.1
 dbus-fast==5.0.22
 
 # homeassistant.components.debugpy
-debugpy==1.8.21
+debugpy==1.8.22
 
 # homeassistant.components.decora_wifi
 decora-wifi==1.4
