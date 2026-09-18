@@ -117,6 +117,20 @@ def test_wrong_units(payload: dict[str, Any], section: str) -> None:
         parse_weather(payload)
 
 
+@pytest.mark.parametrize(
+    "section",
+    [
+        pytest.param("forecastDaily", id="daily"),
+        pytest.param("forecastHourly", id="hourly"),
+    ],
+)
+def test_missing_temperature_unit(payload: dict[str, Any], section: str) -> None:
+    """Reject forecast temperatures without an explicit unit."""
+    del payload[section]["temperature"]["unit"]
+    with pytest.raises(XiaomiWeatherError, match="temperature unit"):
+        parse_weather(payload)
+
+
 def test_naive_timestamp(payload: dict[str, Any]) -> None:
     """Test naive timestamp."""
     payload["current"]["pubTime"] = "2026-09-08T12:00:00"
