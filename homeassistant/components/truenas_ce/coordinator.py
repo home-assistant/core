@@ -340,10 +340,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self._async_ensure_connected()
 
-        # This initial, reduced-scope PR ships only the system_info/interface
-        # sensors; the other domains (storage, apps, network services, ...)
-        # follow up as separate PRs once this minimal slice has landed -- see
-        # the PR discussion for the rationale.
+        # Only the system_info/interface domains are collected.
         jobs = [
             self.get_systemstats,
         ]
