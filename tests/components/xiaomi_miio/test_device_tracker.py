@@ -13,6 +13,10 @@ from homeassistant import config_entries
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.coordinator import UPDATE_INTERVAL
+from homeassistant.components.xiaomi_miio.device_tracker import (
+    XiaomiMiioRepeaterDevice,
+    add_entities,
+)
 from homeassistant.components.xiaomi_miio.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -304,6 +308,109 @@ async def test_coordinator_checksum_error_starts_reauth(
     assert len(in_progress) == 1
 
 
+async def test_coordinator_retry_checksum_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_device_registry_devices: dr.DeviceRegistry,
+    mock_repeater: MagicMock,
+) -> None:
+    """A checksum error on the retry refresh starts the reauth flow."""
+    entry = await setup_repeater(hass)
+
+    retry_error = DeviceException({})
+    retry_error.code = -9999
+    checksum_error = DeviceException({})
+    checksum_error.__cause__ = ChecksumError({})
+    mock_repeater.status = Mock(side_effect=[retry_error, checksum_error])
+
+    coordinator = entry.runtime_data.device_coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert mock_repeater.status.call_count == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    in_progress = hass.config_entries.flow.async_progress_by_handler(
+        const.DOMAIN, match_context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert len(in_progress) == 1
+
+
+async def test_setup_ignores_malformed_stations(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device_registry_devices: dr.DeviceRegistry,
+    mock_repeater: MagicMock,
+) -> None:
+    """Stations that are not dicts or miss a MAC address are skipped."""
+    mock_repeater.status = Mock(
+        return_value=WifiRepeaterStatus(
+            {
+                "sta": {"count": 3, "access_policy": 0},
+                "mat": [
+                    {"mac": STATION_1_MAC, "ip": STATION_1_IP, "last_time": 12345},
+                    {"ip": STATION_2_IP, "last_time": 67890},
+                    "not-a-dict",
+                ],
+                "access_list": {"mac": ""},
+            }
+        )
+    )
+
+    entry = await setup_repeater(hass)
+
+    entity_id = get_entity_id(hass, entity_registry, entry, STATION_1_MAC)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "home"
+    assert [
+        item.unique_id
+        for item in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if item.domain == "device_tracker"
+    ] == [f"{entry.entry_id}_{STATION_1_MAC}"]
+
+
+async def test_add_entities_without_station_info(
+    hass: HomeAssistant, mock_repeater: MagicMock
+) -> None:
+    """Adding tracker entities without a station list is a no-op."""
+    entry = await setup_repeater(hass)
+
+    added: list[XiaomiMiioRepeaterDevice] = []
+    add_entities(
+        entry.runtime_data.device_coordinator,
+        None,
+        added.extend,
+        {},
+    )
+
+    assert not added
+
+
+async def test_update_state_with_missing_or_malformed_stations(
+    hass: HomeAssistant,
+    mock_device_registry_devices: dr.DeviceRegistry,
+    mock_repeater: MagicMock,
+) -> None:
+    """The station state tolerates missing data and malformed stations."""
+    entry = await setup_repeater(hass)
+    coordinator = entry.runtime_data.device_coordinator
+
+    coordinator.data = None
+    entity = XiaomiMiioRepeaterDevice(coordinator, STATION_1_MAC)
+    entity.async_update_state()
+    assert not entity.is_connected
+
+    coordinator.data = WifiRepeaterStatus(
+        {
+            "sta": {"count": 2, "access_policy": 0},
+            "mat": ["not-a-dict", {"ip": STATION_1_IP, "last_time": 12345}],
+            "access_list": {"mac": ""},
+        }
+    )
+    entity.async_update_state()
+    assert not entity.is_connected
+
+
 async def test_setup_auth_error(hass: HomeAssistant, mock_repeater: MagicMock) -> None:
     """Test setup with a wrong token (checksum error) starts reauth."""
     error = DeviceException({})
@@ -371,13 +478,13 @@ async def test_restore_missing_station(
     assert state.state == "not_home"
 
 
-async def test_restore_skips_unscoped_unique_id(
+async def test_restore_skips_untracked_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_device_registry_devices: dr.DeviceRegistry,
     mock_repeater: MagicMock,
 ) -> None:
-    """Test that a tracker unique_id without the entry prefix is not restored."""
+    """Test that registry entries that are not station trackers are skipped."""
     entry = create_repeater_entry(hass)
     entry.add_to_hass(hass)
     # Pre-scoping unique_id format: the raw MAC without the entry prefix.
@@ -385,6 +492,12 @@ async def test_restore_skips_unscoped_unique_id(
         "device_tracker",
         const.DOMAIN,
         STATION_3_MAC,
+        config_entry=entry,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        const.DOMAIN,
+        f"{entry.entry_id}_sensor",
         config_entry=entry,
     )
     assert await hass.config_entries.async_setup(entry.entry_id)
