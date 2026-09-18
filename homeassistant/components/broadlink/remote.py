@@ -4,6 +4,7 @@ import asyncio
 from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Iterable
+from contextlib import suppress
 from datetime import timedelta
 from itertools import product
 import logging
@@ -421,11 +422,16 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
-                await device.async_request(device.api.cancel_sweep_frequency)
                 raise TimeoutError(
                     "No radiofrequency found within "
                     f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
+
+        except BroadlinkException, OSError:
+            # Leave the device out of sweep mode so later learning still works.
+            with suppress(BroadlinkException, OSError):
+                await device.async_request(device.api.cancel_sweep_frequency)
+            raise
 
         finally:
             persistent_notification.async_dismiss(

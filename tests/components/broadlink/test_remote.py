@@ -312,25 +312,46 @@ async def test_remote_learn_rf_command_realigns_packet(
 
 
 @pytest.mark.parametrize(
-    ("api_method", "side_effect", "frequency_result"),
+    (
+        "api_method",
+        "side_effect",
+        "frequency_result",
+        "learning_timeout",
+        "sweep_cancels",
+    ),
     [
         pytest.param(
             "sweep_frequency",
             CommandNotSupportedError(-4, "Command not supported"),
             (True, 433.92),
+            timedelta(seconds=30),
+            0,
             id="sweep_not_supported",
         ),
         pytest.param(
-            "find_rf_packet",
+            "check_frequency",
             CommandNotSupportedError(-4, "Command not supported"),
             (True, 433.92),
-            id="find_packet_not_supported",
+            timedelta(seconds=30),
+            1,
+            id="check_frequency_error",
         ),
         pytest.param(
             "check_frequency",
             None,
             (False, 0.0),
+            # Short enough for the test, long enough to poll at least once.
+            timedelta(milliseconds=10),
+            1,
             id="frequency_never_locks",
+        ),
+        pytest.param(
+            "find_rf_packet",
+            CommandNotSupportedError(-4, "Command not supported"),
+            (True, 433.92),
+            timedelta(seconds=30),
+            0,
+            id="find_packet_not_supported",
         ),
     ],
 )
@@ -343,6 +364,8 @@ async def test_remote_learn_rf_command_failure(
     api_method: str,
     side_effect: Exception | None,
     frequency_result: tuple[bool, float],
+    learning_timeout: timedelta,
+    sweep_cancels: int,
 ) -> None:
     """Test a failure while learning an RF command is reported to the caller."""
     device = get_device("Garage")
@@ -361,7 +384,7 @@ async def test_remote_learn_rf_command_failure(
     with (
         patch(
             "homeassistant.components.broadlink.remote.LEARNING_TIMEOUT",
-            timedelta(0),
+            learning_timeout,
         ),
         pytest.raises(HomeAssistantError, match="Failed to learn command light"),
     ):
@@ -377,6 +400,8 @@ async def test_remote_learn_rf_command_failure(
             blocking=True,
         )
 
+    assert getattr(mock_api, api_method).called
+    assert mock_api.cancel_sweep_frequency.call_count == sweep_cancels
     assert f"broadlink_remote_{device.mac}_codes" not in hass_storage
 
 
@@ -477,6 +502,11 @@ async def test_remote_send_command_failure(
             SERVICE_SEND_COMMAND,
             {"command": "b64:" + b64encode(RF_PACKET).decode()},
             id="send",
+        ),
+        pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(b"\xb1" + RF_PACKET[1:]).decode()},
+            id="send_rm4_packet",
         ),
         pytest.param(
             SERVICE_LEARN_COMMAND,
