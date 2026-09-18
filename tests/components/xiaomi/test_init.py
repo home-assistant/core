@@ -194,9 +194,10 @@ async def test_yaml_import(
     assert entries[0].data[CONF_USERNAME] == "admin"
     assert entries[0].data[CONF_PASSWORD] == "password"
 
-    issue = issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_device_tracker_yaml")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"host": "192.168.31.1"}
 
 
 @pytest.mark.usefixtures("mock_device_tracker_conf")

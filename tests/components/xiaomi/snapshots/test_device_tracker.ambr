@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_AA:BB:CC:DD:EE:FF',
+    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_aa:bb:cc:dd:ee:ff',
     'unit_of_measurement': None,
   })
 # ---
@@ -107,7 +107,7 @@
         'zone.home',
       ]),
       <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.31.10',
-      <ScannerEntityStateAttribute.MAC: 'mac'>: 'AA:BB:CC:DD:EE:FF',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: 'aa:bb:cc:dd:ee:ff',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),

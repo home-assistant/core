@@ -37,6 +37,10 @@
     }
   },
   "issues": {
+    "deprecated_device_tracker_yaml": {
+      "description": "The Xiaomi device tracker at `{host}` was configured via YAML. It has been imported as a Xiaomi integration entry in the UI.\n\nTo complete the migration, remove only the Xiaomi device tracker block from your `configuration.yaml` file (leave any Xiaomi `camera:` entries in place) and restart Home Assistant:\n\n```yaml\ndevice_tracker:\n  - platform: xiaomi\n```",
+      "title": "Xiaomi device tracker YAML configuration is deprecated"
+    },
     "yaml_import_cannot_connect": {
       "description": "The YAML configuration for Xiaomi at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML configuration import failed: cannot connect"

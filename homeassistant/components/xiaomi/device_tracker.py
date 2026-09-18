@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
@@ -68,16 +68,13 @@ async def async_setup_scanner(
 
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        "deprecated_device_tracker_yaml",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Xiaomi",
-        },
+        translation_key="deprecated_device_tracker_yaml",
+        translation_placeholders={"host": config[CONF_HOST]},
     )
 
     return True

@@ -29,13 +29,17 @@ def _is_online(online: Any) -> bool:
 
 
 def _extract_ip(ip_value: Any) -> str | None:
-    """Extract the first IP address from the router's IP record list."""
+    """Extract the first usable IP address from the router's IP record list."""
     if isinstance(ip_value, str):
-        return ip_value
+        return ip_value or None
     if isinstance(ip_value, list):
         for record in ip_value:
-            if isinstance(record, dict) and isinstance(record.get("ip"), str):
-                return record["ip"]
+            if (
+                isinstance(record, dict)
+                and isinstance(ip := record.get("ip"), str)
+                and ip
+            ):
+                return ip
     return None
 
 
@@ -93,9 +97,13 @@ class XiaomiCoordinator(DataUpdateCoordinator[dict[str, XiaomiDeviceInfo]]):
             if (
                 not isinstance(mac, str)
                 or not mac
-                or mac in devices
                 or not _is_online(device.get("online"))
             ):
+                continue
+            # MAC addresses are case-insensitive; normalize so a casing
+            # change between polls does not create a second entity.
+            mac = mac.lower()
+            if mac in devices:
                 continue
             device_info: XiaomiDeviceInfo = {}
             if isinstance(name := device.get("name"), str):
