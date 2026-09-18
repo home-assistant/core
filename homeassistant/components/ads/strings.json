@@ -16,11 +16,13 @@
         "data": {
           "device": "AMS NetID",
           "ip_address": "[%key:common::config_flow::data::ip%]",
+          "local_net_id": "Local AMS NetID",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "device": "The AMS NetID of the ADS device, for example `192.168.1.10.1.1`.",
           "ip_address": "The IP address of the ADS device. If left empty, it is derived from the AMS NetID.",
+          "local_net_id": "The AMS NetID Home Assistant should identify itself with, for example `192.168.1.50.1.1`. Leave empty to use the automatically generated NetID. Only supported when Home Assistant runs on Linux.",
           "port": "The AMS port of the PLC runtime, for example `851` for the first TwinCAT 3 runtime."
         },
         "description": "Set up the connection to your ADS device. Make sure a route to Home Assistant is configured on the device."

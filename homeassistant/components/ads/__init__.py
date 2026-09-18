@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, DOMAIN, AdsType
+from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DOMAIN, AdsType
 from .hub import AdsConfigEntry, AdsHub
 
 ADS_TYPEMAP = {
@@ -142,6 +142,12 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
 
 def _connect(entry: AdsConfigEntry) -> AdsHub:
     """Connect to the ADS device and verify it responds."""
+    if local_net_id := entry.data.get(CONF_LOCAL_NET_ID):
+        pyads.open_port()
+        try:
+            pyads.set_local_address(local_net_id)
+        finally:
+            pyads.close_port()
     client = pyads.Connection(
         entry.data[CONF_DEVICE],
         entry.data[CONF_PORT],

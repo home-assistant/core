@@ -7,6 +7,7 @@ DOMAIN = "ads"
 DEFAULT_PORT = 851
 
 CONF_ADS_VAR = "adsvar"
+CONF_LOCAL_NET_ID = "local_net_id"
 
 STATE_KEY_STATE = "state"
 
