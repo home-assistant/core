@@ -470,34 +470,49 @@ async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
     assert len(config["views"]) == 2
 
 
+@pytest.mark.parametrize("depth", [3, 5, 10])
 async def test_yaml_dashboard_reloads_on_nested_include(
-    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+    hass: HomeAssistant,
+    tmp_path: Path,
+    yaml_dashboard: dashboard.LovelaceYAML,
+    depth: int,
 ) -> None:
     """Test includes are followed through several levels of nesting."""
     root = tmp_path / "ui-lovelace.yaml"
-    one = tmp_path / "a" / "one.yaml"
-    two = tmp_path / "a" / "b" / "two.yaml"
-    three = tmp_path / "a" / "b" / "c" / "three.yaml"
 
-    # Each level is relative to the file that includes it, not to the root.
-    _write(root, "views: !include a/one.yaml\n")
-    _write(one, "- title: One\n  sub: !include b/two.yaml\n")
-    _write(two, "deep: !include c/three.yaml\n")
-    _write(three, "value: original\n")
+    # Each level lives one directory deeper and is included by a path relative
+    # to the file that includes it, not to the dashboard file.
+    levels = [
+        tmp_path.joinpath(*[f"level{i}" for i in range(1, n + 1)], f"{n}.yaml")
+        for n in range(1, depth + 1)
+    ]
+
+    _write(root, "views: !include level1/1.yaml\n")
+    for index, path in enumerate(levels[:-1], start=2):
+        _write(path, f"- title: Level\n  sub: !include level{index}/{index}.yaml\n")
+    _write(levels[-1], "value: original\n")
 
     files = dashboard._referenced_files(str(root))
-    assert {str(root), str(one), str(two), str(three)} <= files
+    assert {str(root), *(str(path) for path in levels)} <= files
+
+    def deepest(config: dict[str, Any]) -> Any:
+        """Walk down to the innermost included value."""
+        node: Any = config["views"]
+        while isinstance(node, list) or "value" not in node:
+            node = node[0]["sub"] if isinstance(node, list) else node
+        return node["value"]
 
     _, config, _ = yaml_dashboard._load_config(False)
-    assert config["views"][0]["sub"]["deep"]["value"] == "original"
+    assert deepest(config) == "original"
 
+    # Touch only the deepest file; the dashboard file is left alone.
     root_mtime = root.stat().st_mtime
-    _write(three, "value: updated\n")
-    os.utime(three, (root_mtime + 10, root_mtime + 10))
+    _write(levels[-1], "value: updated\n")
+    os.utime(levels[-1], (root_mtime + 10, root_mtime + 10))
     assert root.stat().st_mtime == root_mtime
 
     _, config, _ = yaml_dashboard._load_config(False)
-    assert config["views"][0]["sub"]["deep"]["value"] == "updated"
+    assert deepest(config) == "updated"
 
 
 async def test_yaml_dashboard_reloads_when_included_file_removed(
