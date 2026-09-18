@@ -201,7 +201,12 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json_dumps(content.result.data),
+                        output=json_dumps(
+                            {
+                                "result": content.result.data,
+                                "error": content.result.error,
+                            }
+                        ),
                     )
                 )
             continue
