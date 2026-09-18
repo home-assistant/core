@@ -23,8 +23,9 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -191,6 +192,42 @@ async def test_call_tool_deprecated_json_object(
 
     with pytest.raises(RuntimeError, match="returns a JSON object from a tool"):
         await instance.async_call_tool(llm.ToolInput(tool.name, {}))
+
+
+async def test_call_tool_deprecated_json_object_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration tool returning a JSON object is logged, not raised."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    class CustomTool(llm.Tool):
+        """Tool provided by a custom integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> JsonObjectType:
+            """Return a plain JSON object."""
+            return {"answer": 42}
+
+    # The tool call has returned by the time it is reported, so the domain is
+    # taken from the tool rather than the stack.
+    CustomTool.__module__ = "custom_components.my_custom.llm"
+    tool = CustomTool()
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert await instance.async_call_tool(
+        llm.ToolInput(tool.name, {})
+    ) == llm.ToolResult(data={"answer": 42})
+    assert "returns a JSON object from a tool" in caplog.text
 
 
 @pytest.mark.parametrize("namespaced", [False, True])
