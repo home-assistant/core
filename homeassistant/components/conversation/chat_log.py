@@ -20,7 +20,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
-from .const import ChatLogEventType
+from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
@@ -311,6 +311,7 @@ class ToolResultContent:
             core_behavior=frame.ReportBehavior.ERROR,
             core_integration_behavior=frame.ReportBehavior.ERROR,
             custom_integration_behavior=frame.ReportBehavior.LOG,
+            exclude_integrations={DOMAIN},
         )
         return self.result.data
 
@@ -615,6 +616,7 @@ class ChatLog:
                         core_behavior=frame.ReportBehavior.ERROR,
                         core_integration_behavior=frame.ReportBehavior.ERROR,
                         custom_integration_behavior=frame.ReportBehavior.LOG,
+                        exclude_integrations={DOMAIN},
                     )
                     result = llm.ToolResult(data=delta["tool_result"])
                 content = ToolResultContent(
