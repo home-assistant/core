@@ -19,8 +19,12 @@ from .intent import INTENT_LANW_MOWER_DOCK, INTENT_LANW_MOWER_START_MOWING
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_LANW_MOWER_DOCK, INTENT_LANW_MOWER_START_MOWING)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_LANW_MOWER_DOCK: "Dock lawn mower",
+    INTENT_LANW_MOWER_START_MOWING: "Start mowing",
+}
 
 
 @callback
@@ -44,6 +48,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=LLM_INTENTS[handler.intent_type],
             integration=DOMAIN,
             annotations=LLM_ANNOTATIONS,
         )
