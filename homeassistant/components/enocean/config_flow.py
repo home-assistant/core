@@ -4,7 +4,7 @@ import glob
 from typing import Any, override
 
 from enocean_async import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.components.usb import (
@@ -23,9 +23,9 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
-MANUAL_SCHEMA = vol.Schema(
+MANUAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): cv.string,
+        probatio.Required(CONF_DEVICE): cv.string,
     }
 )
 
@@ -135,9 +135,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="detect",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             options=devices,
                             translation_key="devices",

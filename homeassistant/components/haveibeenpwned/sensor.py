@@ -5,8 +5,8 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -33,8 +33,8 @@ URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_EMAIL): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_API_KEY): cv.string,
     }
 )
 

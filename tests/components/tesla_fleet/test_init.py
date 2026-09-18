@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -57,6 +58,8 @@ SETUP_ERRORS = [
     (OAuthExpired, ConfigEntryState.SETUP_ERROR),
     (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+    (ClientError, ConfigEntryState.SETUP_RETRY),
+    (TimeoutError, ConfigEntryState.SETUP_RETRY),
 ]
 
 RUNTIME_ERRORS = [InvalidToken, OAuthExpired, LoginRequired, TeslaFleetError]
@@ -87,7 +90,7 @@ async def test_init_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
-    side_effect: type[TeslaFleetError],
+    side_effect: type[Exception],
     state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
@@ -374,31 +377,102 @@ async def test_vehicle_refresh_ratelimited(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator refresh handles 429."""
+    """Test coordinator refresh handles 429 and backs off using the after hint."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    after_seconds = VEHICLE_INTERVAL_SECONDS + 10
+    mock_vehicle_data.side_effect = RateLimited({"after": str(after_seconds)})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_data.call_count == 2
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "77"
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Not yet past the after hint, must not call
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(timedelta(seconds=after_seconds - VEHICLE_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Exactly past the after hint, must call
+    assert mock_vehicle_data.call_count == 3
+
+
+async def test_vehicle_refresh_ratelimited_on_first_refresh(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test coordinator handles 429 on the first refresh, before any data exists."""
 
     mock_vehicle_data.side_effect = RateLimited(
-        {"after": VEHICLE_INTERVAL_SECONDS + 10}
+        {"after": str(VEHICLE_INTERVAL_SECONDS + 10)}
     )
     await setup_platform(hass, normal_config_entry)
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unknown"
 
-    mock_vehicle_data.reset_mock()
+
+async def test_vehicle_refresh_ratelimited_backoff_not_sticky(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_state: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the after backoff does not persist through an asleep refresh."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    after_seconds = VEHICLE_INTERVAL_SECONDS * 3
+    mock_vehicle_data.side_effect = RateLimited({"after": str(after_seconds)})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_state.call_count == 2
+    assert mock_vehicle_data.call_count == 2
+
+    # The vehicle falls asleep, so the next refresh returns before vehicle_data
+    mock_vehicle_state.return_value = VEHICLE_ASLEEP
+    freezer.tick(timedelta(seconds=after_seconds))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_vehicle_state.call_count == 3
+    assert mock_vehicle_data.call_count == 2
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.test_battery_level"))
-    assert state.state == "unknown"
+    # Back on the normal interval rather than the after backoff
+    assert mock_vehicle_state.call_count == 4
 
 
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="missing"),
+        # The library sets after to None when the Retry-After header is absent
+        pytest.param({"reset": None, "after": None}, id="none"),
+    ],
+)
 async def test_vehicle_refresh_ratelimited_no_after(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    data: dict[str, str | None],
 ) -> None:
     """Test coordinator refresh handles 429 without after."""
 
@@ -406,13 +480,15 @@ async def test_vehicle_refresh_ratelimited_no_after(
     # mock_vehicle_data called once during setup
     assert mock_vehicle_data.call_count == 1
 
-    mock_vehicle_data.side_effect = RateLimited({})
+    mock_vehicle_data.side_effect = RateLimited(data)
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Called again during refresh, failed with RateLimited
     assert mock_vehicle_data.call_count == 2
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "77"
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
@@ -770,7 +846,9 @@ async def test_energy_live_refresh_ratelimited(
 
     await setup_platform(hass, normal_config_entry)
 
-    mock_live_status.side_effect = RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10})
+    mock_live_status.side_effect = RateLimited(
+        {"after": str(ENERGY_INTERVAL_SECONDS + 10)}
+    )
     freezer.tick(ENERGY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -794,7 +872,7 @@ async def test_energy_live_refresh_ratelimited(
 @pytest.mark.parametrize(
     ("side_effect", "second_refresh_call_count", "third_refresh_call_count"),
     [
-        (RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}), 2, 3),
+        (RateLimited({"after": str(ENERGY_INTERVAL_SECONDS + 10)}), 2, 3),
         (RateLimited({}), 3, 4),
     ],
 )
@@ -844,7 +922,7 @@ async def test_energy_history_refresh_ratelimited(
     await setup_platform(hass, normal_config_entry)
 
     mock_energy_history.side_effect = RateLimited(
-        {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
+        {"after": str(int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10))}
     )
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
