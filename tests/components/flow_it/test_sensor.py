@@ -47,9 +47,17 @@ async def test_sensor_none_values(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(INDOOR_AIR_TEMPERATURE_ENTITY_ID)
-    assert state
-    assert state.state == STATE_UNKNOWN
+    for entity_id in (
+        INDOOR_AIR_TEMPERATURE_ENTITY_ID,
+        "sensor.001122334455_outdoor_air_temperature",
+        "sensor.001122334455_indoor_air_humidity",
+        "sensor.001122334455_outdoor_air_humidity",
+        "sensor.001122334455_indoor_air_pressure",
+        "sensor.001122334455_outdoor_air_pressure",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_sensor_update(
