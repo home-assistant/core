@@ -91,7 +91,7 @@ class TodoGetItemsTool(Tool):
         if not service_result:
             return ToolResult(data={"error": "To-do list not found"}, error=True)
         items = cast(dict, service_result)[entity_id]["items"]
-        return ToolResult(data={"result": items})
+        return ToolResult(data={"items": items})
 
 
 @callback

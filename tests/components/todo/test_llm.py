@@ -82,7 +82,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     assert calls[0].data == {"entity_id": [ENTITY_ID], "status": ["needs_action"]}
     assert result == llm.ToolResult(
         data={
-            "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}]
+            "items": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}]
         }
     )
 
