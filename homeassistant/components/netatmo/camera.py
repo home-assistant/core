@@ -168,10 +168,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
             if event_type == EVENT_TYPE_DISCONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning off and marking as unavailable",
+                    "Camera %s has received %s event, marking as unavailable",
                     data["camera_id"],
                     event_type,
                 )
+                if self.device_type != "NDB":
+                    self.device.monitoring = False
                 self.device.mark_unreachable()
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -182,7 +184,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self.device.monitoring = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning on and marking as available",
+                    "Camera %s has received %s event, marking as available",
                     data["camera_id"],
                     event_type,
                 )
@@ -296,8 +298,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        # Return early if camera is already on or unavailable (None).
-        if self.is_on is not False:
+        # Return early if camera is already on or unavailable (None) or uncapable to monitor.
+        if (
+            self.is_on is not False
+            or self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE
+        ):
             return
         try:
             await self.device.async_monitoring_on()
