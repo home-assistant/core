@@ -96,7 +96,7 @@ def _convert_content(
             role=MessageRole.TOOL.value,
             content=json_dumps(
                 {
-                    "result": chat_content.result.data,
+                    "data": chat_content.result.data,
                     "error": chat_content.result.error,
                 }
             ),
