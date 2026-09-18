@@ -1,7 +1,5 @@
 """Support for command line notification services."""
 
-import asyncio
-from contextlib import suppress
 from typing import Any, override
 
 from homeassistant.components.notify import (
@@ -14,7 +12,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER
-from .utils import create_platform_yaml_not_supported_issue, render_template_args
+from .utils import (
+    async_run_shell_command,
+    create_platform_yaml_not_supported_issue,
+    render_template_args,
+)
 
 
 async def async_get_service(
@@ -51,11 +53,17 @@ class CommandLineNotificationService(BaseNotificationService):
         LOGGER.debug("Running with message: %s", message)
 
         try:
-            proc = await asyncio.create_subprocess_shell(  # shell by design
-                command,
-                stdin=asyncio.subprocess.PIPE,
-                close_fds=False,  # required for posix_spawn
+            proc, _ = await async_run_shell_command(
+                command, self._timeout, stdin=message.encode()
             )
+        except TimeoutError as err:
+            # TimeoutError subclasses OSError, so it must be caught first.
+            LOGGER.debug("Timeout for command: %s", command)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_error",
+                translation_placeholders={"command": command},
+            ) from err
         except OSError as err:
             LOGGER.debug("Error trying to exec command: %s", command)
             raise HomeAssistantError(
@@ -63,34 +71,6 @@ class CommandLineNotificationService(BaseNotificationService):
                 translation_key="command_error",
                 translation_placeholders={"command": command, "error": str(err)},
             ) from err
-
-        try:
-            async with asyncio.timeout(self._timeout):
-                await proc.communicate(input=message.encode())
-        except TimeoutError as err:
-            LOGGER.debug("Timeout for command: %s", command)
-            with suppress(ProcessLookupError):
-                # The command may have exited between the timeout and the kill.
-                proc.kill()
-            if (stdin := proc.stdin) is not None and (
-                not stdin.is_closing() or stdin.transport.get_write_buffer_size()
-            ):
-                # A still connected stdin pipe keeps proc.wait() pending forever,
-                # see https://bugs.python.org/issue43884.
-                stdin.transport.abort()
-            await proc.wait()
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_error",
-                translation_placeholders={"command": command},
-            ) from err
-        except asyncio.CancelledError:
-            # Kill synchronously so the child isn't orphaned; the event loop
-            # reaps it without awaiting wait(), which cancellation would
-            # interrupt anyway.
-            with suppress(ProcessLookupError):
-                proc.kill()
-            raise
 
         if proc.returncode != 0:
             LOGGER.error(
