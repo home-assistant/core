@@ -1209,6 +1209,45 @@ async def test_unreachable_device_does_not_hold_startup(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+async def test_aborted_add_cancels_first_update(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an entity whose add is aborted does not run its first update later."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                    }
+                ],
+            }
+        ]
+    }
+    # the platform aborts the add when restoring the last state fails, which
+    # happens after the first update has been scheduled
+    with mock.patch(
+        "homeassistant.components.modbus.sensor.ModbusRegisterSensor.async_get_last_sensor_data",
+        side_effect=ValueError("restore failed"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    caplog.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
+    assert hass.states.get(entity_id) is None
+
+
 async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
     """Let the entities start waiting for the first connection."""
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
