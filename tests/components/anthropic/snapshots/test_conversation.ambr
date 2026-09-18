@@ -28,20 +28,23 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': list([
+          ]),
+          'return_code': 0,
+          'stderr': '',
+          'stdout': '''
+            3268
+  
+          ''',
+          'type': 'bash_code_execution_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'bash_code_execution',
-      'tool_result': dict({
-        'content': list([
-        ]),
-        'return_code': 0,
-        'stderr': '',
-        'stdout': '''
-          3268
-  
-        ''',
-        'type': 'bash_code_execution_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -133,13 +136,16 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'error_code': 'unavailable',
+          'type': 'bash_code_execution_tool_result_error',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'bash_code_execution',
-      'tool_result': dict({
-        'error_code': 'unavailable',
-        'type': 'bash_code_execution_tool_result_error',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -434,10 +440,13 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test response',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'toolu_0123456789AbCdEfGhIjKlM',
       'tool_name': 'test_tool',
-      'tool_result': 'Test response',
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1105,13 +1114,16 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'is_file_update': False,
+          'type': 'text_editor_code_execution_create_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'text_editor_code_execution',
-      'tool_result': dict({
-        'is_file_update': False,
-        'type': 'text_editor_code_execution_create_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1201,22 +1213,25 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'lines': list([
+            '-3268',
+            '\\ No newline at end of file',
+            '+8623',
+            '\\ No newline at end of file',
+          ]),
+          'new_lines': 1,
+          'new_start': 1,
+          'old_lines': 1,
+          'old_start': 1,
+          'type': 'text_editor_code_execution_str_replace_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'text_editor_code_execution',
-      'tool_result': dict({
-        'lines': list([
-          '-3268',
-          '\\ No newline at end of file',
-          '+8623',
-          '\\ No newline at end of file',
-        ]),
-        'new_lines': 1,
-        'new_start': 1,
-        'old_lines': 1,
-        'old_start': 1,
-        'type': 'text_editor_code_execution_str_replace_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1314,17 +1329,20 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': '8623',
+          'file_type': 'text',
+          'num_lines': 1,
+          'start_line': 1,
+          'total_lines': 1,
+          'type': 'text_editor_code_execution_view_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'text_editor_code_execution',
-      'tool_result': dict({
-        'content': '8623',
-        'file_type': 'text',
-        'num_lines': 1,
-        'start_line': 1,
-        'total_lines': 1,
-        'type': 'text_editor_code_execution_view_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1415,14 +1433,17 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'error_code': 'unavailable',
+          'error_message': 'Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)',
+          'type': 'text_editor_code_execution_tool_result_error',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'text_editor_code_execution',
-      'tool_result': dict({
-        'error_code': 'unavailable',
-        'error_message': 'Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)',
-        'type': 'text_editor_code_execution_tool_result_error',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1516,34 +1537,37 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'tool_references': list([
+            dict({
+              'tool_name': 'HassHumidifierSetpoint',
+              'type': 'tool_reference',
+            }),
+            dict({
+              'tool_name': 'HassHumidifierMode',
+              'type': 'tool_reference',
+            }),
+            dict({
+              'tool_name': 'HassClimateSetTemperature',
+              'type': 'tool_reference',
+            }),
+            dict({
+              'tool_name': 'HassFanSetSpeed',
+              'type': 'tool_reference',
+            }),
+            dict({
+              'tool_name': 'HassSetVolume',
+              'type': 'tool_reference',
+            }),
+          ]),
+          'type': 'tool_search_tool_search_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'tool_search',
-      'tool_result': dict({
-        'tool_references': list([
-          dict({
-            'tool_name': 'HassHumidifierSetpoint',
-            'type': 'tool_reference',
-          }),
-          dict({
-            'tool_name': 'HassHumidifierMode',
-            'type': 'tool_reference',
-          }),
-          dict({
-            'tool_name': 'HassClimateSetTemperature',
-            'type': 'tool_reference',
-          }),
-          dict({
-            'tool_name': 'HassFanSetSpeed',
-            'type': 'tool_reference',
-          }),
-          dict({
-            'tool_name': 'HassSetVolume',
-            'type': 'tool_reference',
-          }),
-        ]),
-        'type': 'tool_search_tool_search_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1667,13 +1691,16 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'error_code': 'too_many_requests',
+          'type': 'tool_search_tool_result_error',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'tool_search',
-      'tool_result': dict({
-        'error_code': 'too_many_requests',
-        'type': 'tool_search_tool_result_error',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -1796,29 +1823,32 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': dict({
+            'citations': None,
+            'source': dict({
+              'data': '''
+                Home Assistant new version is out!
+                Many new features.
+                Anthropic integration now supports web fetch tool.
+                Enjoy the release!
+              ''',
+              'media_type': 'text/plain',
+              'type': 'text',
+            }),
+            'title': 'Latest Home Assistant Release Notes',
+            'type': 'document',
+          }),
+          'retrieved_at': '2025-10-31T12:00:00.637242Z',
+          'type': 'web_fetch_result',
+          'url': 'https://www.home-assistant.io/latest-release-notes/',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'web_fetch',
-      'tool_result': dict({
-        'content': dict({
-          'citations': None,
-          'source': dict({
-            'data': '''
-              Home Assistant new version is out!
-              Many new features.
-              Anthropic integration now supports web fetch tool.
-              Enjoy the release!
-            ''',
-            'media_type': 'text/plain',
-            'type': 'text',
-          }),
-          'title': 'Latest Home Assistant Release Notes',
-          'type': 'document',
-        }),
-        'retrieved_at': '2025-10-31T12:00:00.637242Z',
-        'type': 'web_fetch_result',
-        'url': 'https://www.home-assistant.io/latest-release-notes/',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -2002,13 +2032,16 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'error_code': 'url_not_allowed',
+          'type': 'web_fetch_tool_result_error',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'web_fetch',
-      'tool_result': dict({
-        'error_code': 'url_not_allowed',
-        'type': 'web_fetch_tool_result_error',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -2098,27 +2131,30 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': '2 days ago',
+              'title': "Today's News - Example.com",
+              'type': 'web_search_result',
+              'url': 'https://www.example.com/todays-news',
+            }),
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Breaking News - NewsSite.com',
+              'type': 'web_search_result',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+          ]),
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'web_search',
-      'tool_result': dict({
-        'content': list([
-          dict({
-            'encrypted_content': 'ABCDEFG',
-            'page_age': '2 days ago',
-            'title': "Today's News - Example.com",
-            'type': 'web_search_result',
-            'url': 'https://www.example.com/todays-news',
-          }),
-          dict({
-            'encrypted_content': 'ABCDEFG',
-            'page_age': None,
-            'title': 'Breaking News - NewsSite.com',
-            'type': 'web_search_result',
-            'url': 'https://www.newssite.com/breaking-news',
-          }),
-        ]),
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -2358,42 +2394,48 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Press release: Nobel Prize in Chemistry 2025 - Example.com',
+              'type': 'web_search_result',
+              'url': 'https://www.example.com/prizes/chemistry/2025/press-release/',
+            }),
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Nobel Prize in Chemistry 2025 - NewsSite.com',
+              'type': 'web_search_result',
+              'url': 'https://www.newssite.com/prizes/chemistry/2025/summary/',
+            }),
+          ]),
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
       'tool_name': 'web_search',
-      'tool_result': dict({
-        'content': list([
-          dict({
-            'encrypted_content': 'ABCDEFG',
-            'page_age': None,
-            'title': 'Press release: Nobel Prize in Chemistry 2025 - Example.com',
-            'type': 'web_search_result',
-            'url': 'https://www.example.com/prizes/chemistry/2025/press-release/',
-          }),
-          dict({
-            'encrypted_content': 'ABCDEFG',
-            'page_age': None,
-            'title': 'Nobel Prize in Chemistry 2025 - NewsSite.com',
-            'type': 'web_search_result',
-            'url': 'https://www.newssite.com/prizes/chemistry/2025/summary/',
-          }),
-        ]),
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'content': list([
+          ]),
+          'encrypted_stdout': 'EuQJCioIDRgCIiRj',
+          'return_code': 0,
+          'stderr': '',
+          'type': 'encrypted_code_execution_result',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT',
       'tool_name': 'code_execution',
-      'tool_result': dict({
-        'content': list([
-        ]),
-        'encrypted_stdout': 'EuQJCioIDRgCIiRj',
-        'return_code': 0,
-        'stderr': '',
-        'type': 'encrypted_code_execution_result',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
@@ -2527,13 +2569,16 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': dict({
+          'error_code': 'too_many_requests',
+          'type': 'web_search_tool_result_error',
+        }),
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'web_search',
-      'tool_result': dict({
-        'error_code': 'too_many_requests',
-        'type': 'web_search_tool_result_error',
-      }),
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',

@@ -4,7 +4,7 @@ from collections.abc import ItemsView, Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -36,18 +36,20 @@ def _validate_event_types(value: Any) -> Any:
     """
     templates: list[template.Template] = value
     if any(tpl.is_static and tpl.template == EVENT_STATE_REPORTED for tpl in templates):
-        raise vol.Invalid(f"Can't listen to {EVENT_STATE_REPORTED} in event trigger")
+        raise probatio.Invalid(
+            f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
+        )
     return value
 
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "event",
-        vol.Required(CONF_EVENT_TYPE): vol.All(
+        probatio.Required(CONF_PLATFORM): "event",
+        probatio.Required(CONF_EVENT_TYPE): probatio.All(
             cv.ensure_list, [cv.template], _validate_event_types
         ),
-        vol.Optional(CONF_EVENT_DATA): vol.All(dict, cv.template_complex),
-        vol.Optional(CONF_EVENT_CONTEXT): vol.All(dict, cv.template_complex),
+        probatio.Optional(CONF_EVENT_DATA): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_EVENT_CONTEXT): probatio.All(dict, cv.template_complex),
     }
 )
 
@@ -106,7 +108,7 @@ def _log_composite_device_id_warning(
 
 def _schema_value(value: Any) -> Any:
     if isinstance(value, list):
-        return vol.In(value)
+        return probatio.In(value)
 
     return value
 
@@ -130,7 +132,7 @@ async def async_attach_trigger(
         raise HomeAssistantError(
             f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
         )
-    event_data_schema: vol.Schema | None = None
+    event_data_schema: probatio.Schema | None = None
     event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
@@ -139,23 +141,23 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
 
-        # For performance reasons, we want to avoid using a voluptuous schema here
+        # For performance reasons, we want to avoid using a probatio schema here
         # unless required. Thus, if possible, we try to use a simple items comparison
         # For that, we explicitly do not check for list like the context data below
         # since lists are a special case only used for context data, see test
         # test_event_data_with_list. Otherwise, we build a volutupus schema, see test
         # test_event_data_with_list_nested
         if any(isinstance(value, dict) for value in event_data.values()):
-            event_data_schema = vol.Schema(
+            event_data_schema = probatio.Schema(
                 event_data,
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
                 required=True,
             )
         else:
             # Use a simple items comparison if possible
             event_data_items = event_data.items()
 
-    event_context_schema: vol.Schema | None = None
+    event_context_schema: probatio.Schema | None = None
     event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
@@ -170,12 +172,12 @@ async def async_attach_trigger(
         # multiple user_id case without requiring expensive schema
         # validation.
         if any(isinstance(value, list) for value in event_context.values()):
-            event_context_schema = vol.Schema(
+            event_context_schema = probatio.Schema(
                 {
-                    vol.Required(key): _schema_value(value)
+                    probatio.Required(key): _schema_value(value)
                     for key, value in event_context.items()
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
             )
         else:
             # Use a simple items comparison if possible
@@ -196,7 +198,7 @@ async def async_attach_trigger(
             elif event_data_schema:
                 # Slow path for schema validation
                 event_data_schema(event_data)
-        except vol.Invalid:
+        except probatio.Invalid:
             # If event doesn't match, skip event
             return False
         return True
@@ -214,7 +216,7 @@ async def async_attach_trigger(
                 # Slow path for schema validation
                 # This is safe because we make a copy of the event context
                 event_context_schema(dict(event.context._as_dict))  # noqa: SLF001
-            except vol.Invalid:
+            except probatio.Invalid:
                 # If event doesn't match, skip event
                 return
 
