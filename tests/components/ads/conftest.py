@@ -1,6 +1,7 @@
 """Common fixtures for the ADS tests."""
 
 from collections.abc import Generator
+from typing import NamedTuple
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,6 +12,14 @@ from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from .const import AMS_NET_ID
 
 from tests.common import MockConfigEntry
+
+
+class MockPyadsLocalNetId(NamedTuple):
+    """Mocks for the pyads local AMS NetID functions."""
+
+    open_port: MagicMock
+    set_local_address: MagicMock
+    close_port: MagicMock
 
 
 @pytest.fixture
@@ -27,6 +36,19 @@ def mock_pyads_connection() -> Generator[MagicMock]:
     """Mock the pyads Connection class."""
     with patch("pyads.Connection", autospec=True) as mock_connection:
         yield mock_connection
+
+
+@pytest.fixture
+def mock_pyads_local_net_id() -> Generator[MockPyadsLocalNetId]:
+    """Mock the pyads local AMS NetID functions."""
+    with (
+        patch("pyads.open_port", autospec=True) as mock_open_port,
+        patch("pyads.set_local_address", autospec=True) as mock_set_local_address,
+        patch("pyads.close_port", autospec=True) as mock_close_port,
+    ):
+        yield MockPyadsLocalNetId(
+            mock_open_port, mock_set_local_address, mock_close_port
+        )
 
 
 @pytest.fixture

@@ -6,13 +6,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pyads
 import pytest
 
-from homeassistant.components.ads.const import DOMAIN
+from homeassistant.components.ads.const import CONF_LOCAL_NET_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import AMS_NET_ID
+from .conftest import MockPyadsLocalNetId
+from .const import AMS_NET_ID, LOCAL_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -39,6 +40,49 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == AMS_NET_ID
     assert result["data"] == USER_INPUT
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pyads_connection")
+async def test_user_flow_with_local_net_id(
+    hass: HomeAssistant, mock_pyads_local_net_id: MockPyadsLocalNetId
+) -> None:
+    """Test the user flow configures a local AMS NetID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_LOCAL_NET_ID: LOCAL_NET_ID}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_LOCAL_NET_ID] == LOCAL_NET_ID
+    mock_pyads_local_net_id.open_port.assert_called_once()
+    mock_pyads_local_net_id.set_local_address.assert_called_once_with(LOCAL_NET_ID)
+    mock_pyads_local_net_id.close_port.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_invalid_local_net_id(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test the user flow rejects an invalid local AMS NetID."""
+    mock_pyads_local_net_id.set_local_address.side_effect = ValueError(
+        "invalid AMS NetID"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_LOCAL_NET_ID: LOCAL_NET_ID}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_net_id"}
+    mock_pyads_local_net_id.close_port.assert_called_once()
+    mock_pyads_connection.assert_not_called()
 
 
 CONNECT_ERRORS = [

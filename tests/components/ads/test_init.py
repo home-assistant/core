@@ -11,7 +11,12 @@ from homeassistant.components.ads import (
     CONF_ADS_VALUE,
     SERVICE_WRITE_DATA_BY_NAME,
 )
-from homeassistant.components.ads.const import CONF_ADS_VAR, DOMAIN, AdsType
+from homeassistant.components.ads.const import (
+    CONF_ADS_VAR,
+    CONF_LOCAL_NET_ID,
+    DOMAIN,
+    AdsType,
+)
 from homeassistant.components.ads.hub import AdsHub
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
@@ -20,7 +25,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import AMS_NET_ID
+from .conftest import MockPyadsLocalNetId
+from .const import AMS_NET_ID, LOCAL_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -52,6 +58,32 @@ async def test_setup_and_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_pyads_connection.return_value.close.assert_called_once()
+
+
+async def test_setup_with_local_net_id(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test setting up the config entry with a local AMS NetID configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=AMS_NET_ID,
+        data={
+            CONF_DEVICE: AMS_NET_ID,
+            CONF_IP_ADDRESS: "192.168.1.10",
+            CONF_PORT: 851,
+            CONF_LOCAL_NET_ID: LOCAL_NET_ID,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_pyads_local_net_id.open_port.assert_called_once()
+    mock_pyads_local_net_id.set_local_address.assert_called_once_with(LOCAL_NET_ID)
+    mock_pyads_local_net_id.close_port.assert_called_once()
 
 
 async def test_setup_not_ready(
