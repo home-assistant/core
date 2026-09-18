@@ -23,12 +23,13 @@ from .intent import (
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (
-    INTENT_VACUUM_CLEAN_AREA,
-    INTENT_VACUUM_RETURN_TO_BASE,
-    INTENT_VACUUM_START,
-)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_VACUUM_CLEAN_AREA: "Clean area",
+    INTENT_VACUUM_RETURN_TO_BASE: "Return vacuum to base",
+    INTENT_VACUUM_START: "Start vacuum",
+}
 
 
 @callback
@@ -52,6 +53,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=LLM_INTENTS[handler.intent_type],
             integration=DOMAIN,
             annotations=LLM_ANNOTATIONS,
         )
