@@ -151,27 +151,109 @@ async def test_cloud_command_failure(
     assert hass.states.get("climate.living_room").state == "cool"
 
 
+@pytest.mark.parametrize(
+    ("error", "reauth_steps"),
+    [
+        pytest.param(DeviceConnectionError("unavailable"), [], id="connection"),
+        pytest.param(
+            AuthenticationError("expired"), ["reauth_confirm"], id="authentication"
+        ),
+    ],
+)
 async def test_mixed_account_cloud_outage(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
+    error: Exception,
+    reauth_steps: list[str],
 ) -> None:
     """A failed cloud poll does not prevent local devices from loading."""
     account, _ = mock_setup_integration
     account.discover_devices.return_value["CLOUD"] = replace(
         mock_device_info, serial="CLOUD", label="Bedroom", password="", mac=""
     )
-    account.get_device_details.side_effect = DeviceConnectionError("cloud unavailable")
+    account.get_device_details.side_effect = error
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("climate.living_room").state == "cool"
     assert hass.states.get("climate.bedroom").state == STATE_UNAVAILABLE
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert [
+        flow["step_id"] for flow in hass.config_entries.flow.async_progress(DOMAIN)
+    ] == reauth_steps
 
     account.get_device_details.side_effect = None
     await mock_config_entry.runtime_data["CLOUD"].async_refresh()
     assert hass.states.get("climate.bedroom").state == "cool"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_state", "reauth_steps"),
+    [
+        pytest.param(
+            DeviceConnectionError("unavailable"),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+            id="connection",
+        ),
+        pytest.param(
+            AuthenticationError("expired"),
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
+            id="authentication",
+        ),
+    ],
+)
+async def test_all_devices_fail_first_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: DeviceInfo,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+    error: Exception,
+    expected_state: ConfigEntryState,
+    reauth_steps: list[str],
+) -> None:
+    """An account with no working devices fails setup and prioritizes reauth."""
+    account, local = mock_setup_integration
+    account.discover_devices.return_value["CLOUD"] = replace(
+        mock_device_info, serial="CLOUD", label="Bedroom", password="", mac=""
+    )
+    local.update_status.return_value = False
+    account.get_device_details.side_effect = error
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is expected_state
+    assert [
+        flow["step_id"] for flow in hass.config_entries.flow.async_progress(DOMAIN)
+    ] == reauth_steps
+
+
+async def test_cloud_poll_authentication_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: DeviceInfo,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Authentication failure during polling starts reauth without unloading."""
+    mock_device_info.password = ""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_cloud_account.get_device_details.side_effect = AuthenticationError("expired")
+    await mock_config_entry.runtime_data[MOCK_SERIAL].async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.living_room").state == STATE_UNAVAILABLE
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_cloud_to_local_preserves_entity(

@@ -199,14 +199,19 @@ async def async_setup_entry(
         *(c.async_config_entry_first_refresh() for c in coordinators.values()),
         return_exceptions=True,
     )
+    failures: list[ConfigEntryNotReady | ConfigEntryAuthFailed] = []
+    auth_failure: ConfigEntryAuthFailed | None = None
     for result in results:
-        if isinstance(result, BaseException) and not isinstance(
-            result, ConfigEntryNotReady
-        ):
+        if isinstance(result, ConfigEntryAuthFailed):
+            auth_failure = result
+        if isinstance(result, (ConfigEntryNotReady, ConfigEntryAuthFailed)):
+            failures.append(result)
+        elif isinstance(result, BaseException):
             raise result
-    failures = [result for result in results if isinstance(result, ConfigEntryNotReady)]
     if failures and len(failures) == len(results):
-        raise failures[0]
+        raise auth_failure or failures[0]
+    if auth_failure:
+        entry.async_start_reauth(hass)
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
