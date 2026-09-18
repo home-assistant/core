@@ -25,10 +25,8 @@ from homeassistant.components.entur_public_transport.config_flow import (
     _place_description,
     _platform_schema,
     _platform_selection,
-    _platform_status,
     _route_labels,
     _route_schema,
-    _route_status,
     _selection_option,
     _stop_is_configured,
     _stop_selector_schema,
@@ -529,8 +527,8 @@ async def test_subentry_reconfigure_edits_routes_on_current_stop(
         assert result["description_placeholders"] == {
             "name": place.name,
             "routes": "1 RUT (1-RUT)",
-            "platforms": "All active platforms",
-            "show_on_map": "shown",
+            "platforms": "∞",
+            "show_on_map": "✓",
         }
 
         result = await hass.config_entries.subentries.async_configure(
@@ -874,47 +872,20 @@ def test_config_flow_helpers_cover_selection_and_fallbacks() -> None:
         },
         (quay,),
     ) == (PLATFORM_MODE_SELECTED, [quay.quay_id])
-    assert _route_status((route,), False).startswith("Choose routes")
-    assert _route_status((), True).startswith("The route list")
-    assert _route_status((), False).startswith("No routes")
-    assert _platform_status(PLATFORM_MODE_STOP_PLACE, [], (), False).startswith(
-        "One sensor for the whole"
-    )
-    assert _platform_status(PLATFORM_MODE_ALL, [], (), False).startswith(
-        "One sensor for the stop"
-    )
-    assert _platform_status(
-        PLATFORM_MODE_SELECTED, [quay.quay_id], (quay,), False
-    ).endswith("Central station.")
-    assert _platform_status(PLATFORM_MODE_SELECTED, [], (), True).startswith(
-        "The platform list"
-    )
-    assert (
-        _platform_status(PLATFORM_MODE_SELECTED, [], (), False)
-        == "Select at least one platform."
-    )
-    assert _configured_route_summary([], {}) == "All routes"
+    assert _configured_route_summary([], {}) == "—"
     assert _configured_route_summary(["MANUAL:Line:1"], {}) == "1 MANUAL (1-MANUAL)"
-    assert (
-        _configured_platform_summary(PLATFORM_MODE_STOP_PLACE, []) == "Whole stop place"
-    )
-    assert _configured_platform_summary(PLATFORM_MODE_SELECTED, [quay.quay_id]) == (
-        "1 selected platform(s)"
-    )
-    assert _configured_platform_summary(PLATFORM_MODE_ALL, []) == "All active platforms"
+    assert _configured_platform_summary(PLATFORM_MODE_STOP_PLACE, []) == "●"
+    assert _configured_platform_summary(PLATFORM_MODE_SELECTED, [quay.quay_id]) == "1"
+    assert _configured_platform_summary(PLATFORM_MODE_ALL, []) == "∞"
     assert _route_labels(
         [route.line_id, "MANUAL:Line:1"], (route,), {"MANUAL:Line:1": "Manual"}
     ) == {route.line_id: "1 RUT (1-RUT)", "MANUAL:Line:1": "Manual"}
-    assert _place_description(place, "Routes", "Platforms") == {
+    assert _place_description(place) == {
         "name": "Central station",
         "display_name": "Central station",
-        "locality": "Unknown",
-        "transport_modes": "Unknown",
-        "route_status": "Routes",
-        "platform_status": "Platforms",
+        "locality": "—",
+        "transport_modes": "—",
         "stop_id": "NSR:StopPlace:1",
-        "role": "transport hub",
-        "stop_place_types": "unknown",
         "entur_url": "https://entur.no/nearby-stop-place-detail?id=NSR%3AStopPlace%3A1",
     }
 
