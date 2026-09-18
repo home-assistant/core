@@ -155,17 +155,9 @@ class StationFlowHandler(ConfigSubentryFlow):
         """Add measuring station via station number."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = WAQIClient(session=async_get_clientsession(self.hass))
-            client.authenticate(self._get_entry().data[CONF_API_KEY])
-            station_number = user_input[CONF_STATION_NUMBER]
-            measuring_station, errors = await get_by_station_number(
-                client, abs(station_number)
+            measuring_station, errors = await self._async_get_measuring_station(
+                user_input[CONF_STATION_NUMBER]
             )
-            if not measuring_station:
-                measuring_station, _ = await get_by_station_number(
-                    client,
-                    abs(station_number) - station_number - station_number,
-                )
             if measuring_station:
                 return await self._async_create_entry(measuring_station)
         return self.async_show_form(
@@ -174,14 +166,87 @@ class StationFlowHandler(ConfigSubentryFlow):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure the measuring station number."""
+        errors: dict[str, str] = {}
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            measuring_station, errors = await self._async_get_measuring_station(
+                user_input[CONF_STATION_NUMBER]
+            )
+            if measuring_station:
+                station_id = str(measuring_station.station_id)
+                entry = self._get_entry()
+                if self._find_duplicate_subentry(
+                    station_id,
+                    exclude_entry_id=entry.entry_id,
+                    exclude_subentry_id=subentry.subentry_id,
+                ):
+                    return self.async_abort(reason="already_configured")
+                if (
+                    self._async_update(
+                        entry,
+                        subentry,
+                        title=measuring_station.city.name,
+                        data={CONF_STATION_NUMBER: measuring_station.station_id},
+                        unique_id=station_id,
+                    )
+                    and not entry.update_listeners
+                ):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_STATION_NUMBER): int}),
+                {CONF_STATION_NUMBER: subentry.data[CONF_STATION_NUMBER]},
+            ),
+            errors=errors,
+        )
+
+    async def _async_get_measuring_station(
+        self, station_number: int
+    ) -> tuple[WAQIAirQuality | None, dict[str, str]]:
+        """Look up a measuring station, also trying the mirrored sign."""
+        client = WAQIClient(session=async_get_clientsession(self.hass))
+        client.authenticate(self._get_entry().data[CONF_API_KEY])
+        measuring_station, errors = await get_by_station_number(
+            client, abs(station_number)
+        )
+        if not measuring_station:
+            measuring_station, _ = await get_by_station_number(
+                client,
+                abs(station_number) - station_number - station_number,
+            )
+        return measuring_station, errors
+
+    def _find_duplicate_subentry(
+        self,
+        station_id: str,
+        *,
+        exclude_entry_id: str | None = None,
+        exclude_subentry_id: str | None = None,
+    ) -> bool:
+        """Check if a station is already configured in another subentry."""
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            for subentry in entry.subentries.values():
+                if (
+                    entry.entry_id == exclude_entry_id
+                    and subentry.subentry_id == exclude_subentry_id
+                ):
+                    continue
+                if subentry.unique_id == station_id:
+                    return True
+        return False
+
     async def _async_create_entry(
         self, measuring_station: WAQIAirQuality
     ) -> SubentryFlowResult:
         station_id = str(measuring_station.station_id)
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            for subentry in entry.subentries.values():
-                if subentry.unique_id == station_id:
-                    return self.async_abort(reason="already_configured")
+        if self._find_duplicate_subentry(station_id):
+            return self.async_abort(reason="already_configured")
         return self.async_create_entry(
             title=measuring_station.city.name,
             data={

@@ -37,6 +37,15 @@
             "location": "The location to get the nearest measuring station from"
           }
         },
+        "reconfigure": {
+          "data": {
+            "station_number": "[%key:component::waqi::config_subentries::station::step::user::menu_options::station_number%]"
+          },
+          "data_description": {
+            "station_number": "[%key:component::waqi::config_subentries::station::step::station_number::data_description::station_number%]"
+          },
+          "description": "Update the measuring station number."
+        },
         "station_number": {
           "data": {
             "station_number": "[%key:component::waqi::config_subentries::station::step::user::menu_options::station_number%]"
