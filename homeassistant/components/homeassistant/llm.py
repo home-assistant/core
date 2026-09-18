@@ -22,9 +22,14 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    LLMContext,
+    Tool,
+    ToolInput,
+    ToolResult,
+)
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-from homeassistant.util.json import JsonObjectType
 
 from .exposed_entities import async_should_expose
 
@@ -247,13 +252,13 @@ class GetLiveContextTool(Tool):
         hass: HomeAssistant,
         tool_input: ToolInput,
         llm_context: LLMContext,
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Get the current state of exposed entities."""
         args = self.parameters(tool_input.tool_args)
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities:
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
+            return ToolResult(data={"error": NO_ENTITIES_PROMPT}, error=True)
 
         name_filter = args.get("name")
         area_filter = args.get("area")
@@ -290,12 +295,14 @@ class GetLiveContextTool(Tool):
             )
 
             if not match_result.is_match:
-                return {
-                    "success": False,
-                    "error": _live_context_match_error(
-                        match_result, name_filter, area_filter, domain_filter
-                    ),
-                }
+                return ToolResult(
+                    data={
+                        "error": _live_context_match_error(
+                            match_result, name_filter, area_filter, domain_filter
+                        )
+                    },
+                    error=True,
+                )
 
             matched_ids = {state.entity_id for state in match_result.states}
             entities = [
@@ -311,10 +318,7 @@ class GetLiveContextTool(Tool):
             " and the devices in this smart home:",
             yaml_util.dump(entities),
         ]
-        return {
-            "success": True,
-            "result": "\n".join(prompt),
-        }
+        return ToolResult(data={"result": "\n".join(prompt)})
 
 
 @callback

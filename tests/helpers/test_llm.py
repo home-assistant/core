@@ -821,10 +821,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="homeassistant__GetLiveContext", tool_args={})
     )
-    assert result.data == {
-        "success": True,
-        "result": exposed_entities_prompt,
-    }
+    assert result.data == {"result": exposed_entities_prompt}
 
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
@@ -1002,10 +999,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response.data == {
-        "success": True,
-        "result": {"drinks": 2},
-    }
+    assert response.data == {"result": {"drinks": 2}}
 
     # Test script with no response
     tool_input = llm.ToolInput(
@@ -1027,10 +1021,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response.data == {
-        "success": True,
-        "result": {},
-    }
+    assert response.data == {"result": {}}
 
     # Test reload script with new parameters
     config = {

@@ -147,7 +147,7 @@ async def create_server(
         tool_response = await llm_api.async_call_tool(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
-        if not tool_response.data.get("success"):
+        if tool_response.error:
             raise HomeAssistantError(cast(str, tool_response.data["error"]))
 
         return [
