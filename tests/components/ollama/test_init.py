@@ -249,10 +249,8 @@ async def test_migration_from_v1(
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
-    assert migrated_device.config_entries == {mock_config_entry.entry_id}
-    assert migrated_device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == mock_config_entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_multiple_urls(
@@ -359,8 +357,8 @@ async def test_migration_from_v1_with_multiple_urls(
             (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_same_urls(
@@ -462,10 +460,8 @@ async def test_migration_from_v1_with_same_urls(
             (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {mock_config_entry.entry_id}
-        assert dev.config_entries_subentries == {
-            mock_config_entry.entry_id: {subentry.subentry_id}
-        }
+        assert dev.config_entry_id == mock_config_entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -675,12 +671,8 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -801,10 +793,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -822,10 +812,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
@@ -1051,7 +1039,7 @@ async def test_migrate_entry_from_v3_2(
     conversation_device = attr.evolve(
         conversation_device, disabled_by=device_disabled_by
     )
-    device_registry.devices[conversation_device.id] = conversation_device
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

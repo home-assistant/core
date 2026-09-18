@@ -191,9 +191,7 @@ def async_uptime_value_changed_fn(
 @callback
 def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
-    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
-    # supports metering
-    return hub.api.outlets[obj_id].caps == 3
+    return hub.api.outlets[obj_id].has_metering is True
 
 
 @callback
@@ -265,7 +263,7 @@ def async_device_wan_latency_value_fn(
         # Checked by async_device_wan_latency_supported_fn
         assert target
 
-    return target.get("latency_average", 0)
+    return target.get("latency_average")
 
 
 @callback
@@ -644,6 +642,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,

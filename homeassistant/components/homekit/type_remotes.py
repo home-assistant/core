@@ -8,17 +8,16 @@ from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
-    ATTR_ACTIVITY_LIST,
-    ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
+    RemoteEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -93,7 +92,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         super().__init__(*args, category=category, **kwargs)
         state = self.hass.states.get(self.entity_id)
         assert state
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         self._reload_on_change_attrs.extend((source_list_key,))
         self._mapped_sources_list: list[str] = []
         self._mapped_sources: dict[str, str] = {}
@@ -224,8 +223,8 @@ class ActivityRemote(RemoteInputSelectAccessory):
         """Initialize a Activity Remote accessory object."""
         super().__init__(
             RemoteEntityFeature.ACTIVITY,
-            ATTR_CURRENT_ACTIVITY,
-            ATTR_ACTIVITY_LIST,
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY,
+            RemoteEntityStateAttribute.ACTIVITY_LIST,
             *args,
         )
         state = self.hass.states.get(self.entity_id)

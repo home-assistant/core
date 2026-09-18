@@ -23,6 +23,13 @@ from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
 
 
+async def get_tts_audio(hass: HomeAssistant) -> bytes:
+    """Get TTS audio from the Pico TTS entity."""
+    stream = tts.async_create_stream(hass, "tts.pico_tts_en_us", "en-US")
+    stream.async_set_message("Hello world")
+    return b"".join([chunk async for chunk in stream.async_stream_result()])
+
+
 def get_empty_wav() -> bytes:
     """Get bytes for empty WAV file."""
     with io.BytesIO() as wav_io:
@@ -142,12 +149,7 @@ async def test_get_tts_audio_subprocess_error(
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
-            ),
-        )
+        await get_tts_audio(hass)
 
     assert exc_info.value.translation_key == "returncode_error"
     assert exc_info.value.translation_placeholders == {"returncode": "1"}
@@ -165,12 +167,7 @@ async def test_get_tts_audio_timeout(
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
-            ),
-        )
+        await get_tts_audio(hass)
 
     assert exc_info.value.translation_key == "timeout_error"
 
@@ -190,11 +187,6 @@ async def test_get_tts_audio_file_read_error(
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.pico_tts_en_us", "en-US"
-            ),
-        )
+        await get_tts_audio(hass)
 
     assert exc_info.value.translation_key == "file_read_error"

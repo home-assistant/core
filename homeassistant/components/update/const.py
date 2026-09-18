@@ -3,6 +3,8 @@
 from enum import IntFlag, StrEnum
 from typing import Final
 
+import probatio
+
 DOMAIN: Final = "update"
 
 
@@ -46,3 +48,12 @@ ATTR_SKIPPED_VERSION: Final = "skipped_version"
 ATTR_TITLE: Final = "title"
 ATTR_UPDATE_PERCENTAGE: Final = "update_percentage"
 ATTR_VERSION: Final = "version"
+
+
+class UpdateDeviceClass(StrEnum):
+    """Device class for update."""
+
+    FIRMWARE = "firmware"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(UpdateDeviceClass))

@@ -161,15 +161,11 @@ def _resolve_referenced_devices(
 ) -> None:
     """Resolve targeted device ids into referenced device ids."""
     for device_id in device_ids:
-        if device_id in dev_reg.devices:
+        device = dev_reg.async_get(device_id)
+        if device is None:
+            selected.missing_devices.add(device_id)
             selected.referenced_devices.add(device_id)
-            selected.referenced_devices.update(
-                child_device.id
-                for child_device in dev_reg.child_devices.get_children_for_device_id(
-                    device_id
-                )
-            )
-        elif device_id in dev_reg.child_devices:
+        elif isinstance(device, dr.ChildDeviceEntry):
             selected.referenced_devices.add(device_id)
         elif split_devices := dev_reg.async_get_devices_for_composite_device_id(
             device_id
@@ -183,15 +179,18 @@ def _resolve_referenced_devices(
                 selected.referenced_devices.add(split_device.id)
                 selected.referenced_devices.update(
                     child_device.id
-                    for child_device in (
-                        dev_reg.child_devices.get_children_for_device_id(
-                            split_device.id
-                        )
+                    for child_device in dr.async_entries_for_parent_device(
+                        dev_reg, split_device.id
                     )
                 )
         else:
-            selected.missing_devices.add(device_id)
             selected.referenced_devices.add(device_id)
+            selected.referenced_devices.update(
+                child_device.id
+                for child_device in dr.async_entries_for_parent_device(
+                    dev_reg, device_id
+                )
+            )
 
 
 def async_extract_referenced_entity_ids(

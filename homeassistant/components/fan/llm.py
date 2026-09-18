@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
-from . import DOMAIN
+from .const import DOMAIN
 from .intent import INTENT_FAN_SET_SPEED
 
 # Intents owned by this integration that are exposed as LLM tools.
@@ -31,7 +31,7 @@ def async_get_tools(
         return None
 
     tools: list[Tool] = [
-        IntentTool(handler.intent_type, handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     ]

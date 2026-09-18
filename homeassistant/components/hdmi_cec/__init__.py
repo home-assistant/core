@@ -5,6 +5,7 @@ import logging
 import multiprocessing
 from typing import Any
 
+import probatio
 from pycec.cec import CecAdapter
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
@@ -19,7 +20,6 @@ from pycec.const import (
 )
 from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
-import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -67,33 +67,37 @@ ATTR_ON = "on"
 ATTR_OFF = "off"
 ATTR_TOGGLE = "toggle"
 
-_VOL_HEX = vol.Any(vol.Coerce(int), lambda x: int(x, 16))
+_VOL_HEX = probatio.Any(probatio.Coerce(int), lambda x: int(x, 16))
 
 SERVICE_SEND_COMMAND = "send_command"
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_CMD): _VOL_HEX,
-        vol.Optional(ATTR_SRC): _VOL_HEX,
-        vol.Optional(ATTR_DST): _VOL_HEX,
-        vol.Optional(ATTR_ATT): _VOL_HEX,
-        vol.Optional(ATTR_RAW): vol.Coerce(str),
+        probatio.Optional(ATTR_CMD): _VOL_HEX,
+        probatio.Optional(ATTR_SRC): _VOL_HEX,
+        probatio.Optional(ATTR_DST): _VOL_HEX,
+        probatio.Optional(ATTR_ATT): _VOL_HEX,
+        probatio.Optional(ATTR_RAW): probatio.Coerce(str),
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 SERVICE_VOLUME = "volume"
-SERVICE_VOLUME_SCHEMA = vol.Schema(
+SERVICE_VOLUME_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-        vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-        vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
+        probatio.Optional(CMD_UP): probatio.Any(
+            CMD_PRESS, CMD_RELEASE, probatio.Coerce(int)
+        ),
+        probatio.Optional(CMD_DOWN): probatio.Any(
+            CMD_PRESS, CMD_RELEASE, probatio.Coerce(int)
+        ),
+        probatio.Optional(CMD_MUTE): probatio.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 SERVICE_UPDATE_DEVICES = "update"
-SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({})}, extra=vol.PREVENT_EXTRA
+SERVICE_UPDATE_DEVICES_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({})}, extra=probatio.PREVENT_EXTRA
 )
 
 SERVICE_SELECT_DEVICE = "select_device"
@@ -101,9 +105,9 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-DEVICE_SCHEMA: vol.Schema = vol.Schema(
+DEVICE_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.All(cv.positive_int): vol.Any(
+        probatio.All(cv.positive_int): probatio.Any(
             # pylint: disable-next=unnecessary-lambda
             lambda devices: DEVICE_SCHEMA(devices),
             cv.string,
@@ -113,25 +117,26 @@ DEVICE_SCHEMA: vol.Schema = vol.Schema(
 
 CONF_DISPLAY_NAME = "osd_name"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICES): vol.Any(
-                    DEVICE_SCHEMA, vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
+                probatio.Optional(CONF_DEVICES): probatio.Any(
+                    DEVICE_SCHEMA,
+                    probatio.Schema({probatio.All(cv.string): probatio.Any(cv.string)}),
                 ),
-                vol.Optional(CONF_PLATFORM): vol.Any(
+                probatio.Optional(CONF_PLATFORM): probatio.Any(
                     SWITCH_DOMAIN, MEDIA_PLAYER_DOMAIN
                 ),
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_DISPLAY_NAME): cv.string,
-                vol.Optional(CONF_TYPES, default={}): vol.Schema(
-                    {cv.entity_id: vol.Any(MEDIA_PLAYER_DOMAIN, SWITCH_DOMAIN)}
+                probatio.Optional(CONF_HOST): cv.string,
+                probatio.Optional(CONF_DISPLAY_NAME): cv.string,
+                probatio.Optional(CONF_TYPES, default={}): probatio.Schema(
+                    {cv.entity_id: probatio.Any(MEDIA_PLAYER_DOMAIN, SWITCH_DOMAIN)}
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 WATCHDOG_INTERVAL = 120
