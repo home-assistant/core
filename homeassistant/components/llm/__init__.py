@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 TOOL_PREFIX_BREAKS_IN_HA_VERSION = "2027.3"
+TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
 
 DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = HassKey(
     "llm_platforms"
@@ -92,6 +93,7 @@ async def async_get_tools(
         if result is None:
             continue
         _async_report_unprefixed_tools(hass, domain, result.tools)
+        _async_report_untagged_tools(hass, domain, result.tools)
         tools.extend(result.tools)
         if result.prompt:
             prompts.append(result.prompt)
@@ -120,6 +122,26 @@ def _async_report_unprefixed_tools(
         level=logging.WARNING
         if integration and not integration.is_built_in
         else logging.ERROR,
+    )
+
+
+@callback
+def _async_report_untagged_tools(
+    hass: HomeAssistant, domain: str, tools: list[Tool]
+) -> None:
+    """Report tools that do not record the integration providing them."""
+    untagged = [tool.name for tool in tools if tool.integration is None]
+    if not untagged:
+        return
+
+    report_usage(
+        "provides LLM tools that do not set the integration: "
+        f"{', '.join(sorted(untagged))}",
+        breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
+        core_behavior=ReportBehavior.ERROR,
+        core_integration_behavior=ReportBehavior.ERROR,
+        custom_integration_behavior=ReportBehavior.LOG,
+        integration_domain=domain,
     )
 
 
