@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.const import FilterStatus
 from flow_it_api.models import MachineStatusResponse
 
@@ -24,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlowItConfigEntry, FlowItCoordinator
+from .coordinator import FlowItConfigEntry
 from .entity import FlowItVmcEntity
 
 
@@ -62,9 +61,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: (
-            round(val * 100, 2)
-            if (val := data.data.mode.humidityIn) is not None
-            else None
+            val * 100 if (val := data.data.mode.humidityIn) is not None else None
         ),
     ),
     FlowItVmcSensorEntityDescription(
@@ -75,9 +72,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: (
-            round(val * 100, 2)
-            if (val := data.data.mode.humidityOut) is not None
-            else None
+            val * 100 if (val := data.data.mode.humidityOut) is not None else None
         ),
     ),
     FlowItVmcSensorEntityDescription(
@@ -140,15 +135,6 @@ class FlowItVmcSensor(FlowItVmcEntity, SensorEntity):
     """Flow-it sensor entity."""
 
     entity_description: FlowItVmcSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: FlowItCoordinator,
-        vmc: FlowItVMCMachine,
-        description: FlowItVmcSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, vmc, description)
 
     @override
     @property
