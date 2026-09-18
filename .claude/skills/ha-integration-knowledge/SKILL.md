@@ -29,7 +29,7 @@ The following platforms have extra guidelines:
 
 ## Reauth and reconfigure
 
-- An action that fails on authentication has to start reauth itself: call `entry.async_start_reauth(hass)` and raise a `HomeAssistantError`. Raising `ConfigEntryAuthFailed` there starts nothing; only a config entry's own setup and a coordinator refresh act on it. An `OAuth2Session` also starts reauth on its own, but on `OAuth2TokenRequestReauthError` from its token refresh.
+- An action that fails on authentication has to start reauth itself: call `entry.async_start_reauth(hass)` and raise a `HomeAssistantError`. Raising `ConfigEntryAuthFailed` there starts nothing; it is acted on by a config entry's own setup, and by a coordinator refresh if the coordinator was given its `config_entry`. An `OAuth2Session` also starts reauth on its own, but on `OAuth2TokenRequestReauthError` from its token refresh.
 - Reauth cannot fix an account limitation, so never route one into it. While the limit is temporary, such as a rate limit or a quota that resets on its own, raise `UpdateFailed` from the coordinator update. When it lasts, raise `ConfigEntryError` where the entry cannot work at all, and create a repair issue where it stays loaded.
 - In a reauth or reconfigure flow, call `_abort_if_unique_id_mismatch()` after `async_set_unique_id()`. It aborts when the unique ID does not match the entry being changed. `_abort_if_unique_id_configured()` is for the flows that add an entry, user and discovery alike.
 
