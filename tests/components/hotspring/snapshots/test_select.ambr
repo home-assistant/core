@@ -122,7 +122,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'low',
   })
 # ---
 # name: test_select_state[select.connectedspa_ddeeff_jet_2-entry]
@@ -181,6 +181,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'high',
   })
 # ---

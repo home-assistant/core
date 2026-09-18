@@ -109,9 +109,10 @@ class HotSpringJetSelectEntity(HotSpringEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected jet speed."""
-        await self.coordinator.hotspring.set_jet(
-            self._jet_id, OPTION_TO_JET_SPEED[option]
-        )
+        speed = OPTION_TO_JET_SPEED[option]
+        if speed is JetSpeed.HIGH_SPEED and not self._jet.is_dual_speed:
+            speed = JetSpeed.SINGLE_SPEED
+        await self.coordinator.hotspring.set_jet(self._jet_id, speed)
         self.coordinator.async_set_updated_data(
             cast(Spa, self.coordinator.hotspring.spa)
         )
