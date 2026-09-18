@@ -515,6 +515,56 @@ async def test_yaml_dashboard_reloads_on_nested_include(
     assert deepest(config) == "updated"
 
 
+async def test_yaml_dashboard_follows_nested_include_dirs(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test directory includes recurse and may themselves contain directory includes."""
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    nested_view = views / "sub" / "b.yaml"
+    panel = tmp_path / "panels" / "panel.yaml"
+    items = tmp_path / "panels" / "items"
+
+    _write(root, "views: !include_dir_list views\nextra: !include panels/panel.yaml\n")
+    _write(views / "a.yaml", "title: A\n")
+    _write(nested_view, "title: B\n")
+    # A directory include reached through a file that was itself included.
+    _write(panel, "items: !include_dir_named items\n")
+    _write(items / "d.yaml", "title: D\n")
+
+    files = dashboard._referenced_files(str(root))
+
+    # Directories are tracked so that added files are noticed.
+    assert str(views) in files
+    assert str(views / "sub") in files, "!include_dir_* must recurse into subdirs"
+    assert str(items) in files
+    # ...as are the files themselves, at every level.
+    assert str(views / "a.yaml") in files
+    assert str(nested_view) in files
+    assert str(panel) in files
+    assert str(items / "d.yaml") in files
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["d"]["title"] == "D"
+
+    # Editing a file two directory-includes deep invalidates the cache.
+    root_mtime = root.stat().st_mtime
+    _write(items / "d.yaml", "title: updated\n")
+    os.utime(items / "d.yaml", (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["d"]["title"] == "updated"
+
+    # Adding a file to that nested directory is noticed too.
+    _write(items / "e.yaml", "title: E\n")
+    os.utime(items / "e.yaml", (root_mtime + 20, root_mtime + 20))
+    os.utime(items, (root_mtime + 20, root_mtime + 20))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["extra"]["items"]["e"]["title"] == "E"
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
