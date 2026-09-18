@@ -993,6 +993,7 @@ HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
+HTTP_HEADER_HA_DEVICE_ID: Final = "Home-Assistant-Device-Id"
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"
 
 CONTENT_TYPE_JSON: Final = "application/json"
