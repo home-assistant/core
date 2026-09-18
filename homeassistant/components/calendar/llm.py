@@ -28,6 +28,7 @@ class CalendarGetEventsTool(Tool):
     """LLM Tool allowing querying a calendar."""
 
     name = "calendar__get_events"
+    title = "Get calendar events"
     description = (
         "Get events from a calendar. "
         "When asked if something happens, search the whole week. "
