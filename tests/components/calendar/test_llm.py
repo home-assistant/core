@@ -109,7 +109,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 
     assert response == llm.ToolResult(
         data={
-            "result": [
+            "events": [
                 {
                     "start": "2025-09-17",
                     "end": "2025-09-18",

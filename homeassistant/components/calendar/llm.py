@@ -87,7 +87,7 @@ class CalendarGetEventsTool(Tool):
             for event in cast(dict, service_result)[entity_id]["events"]
         ]
 
-        return ToolResult(data={"result": events})
+        return ToolResult(data={"events": events})
 
 
 @callback
