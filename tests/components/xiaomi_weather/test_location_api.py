@@ -108,6 +108,26 @@ async def test_unsupported_and_failed_locations() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "valid_cities",
+    [pytest.param([], id="all-failed"), pytest.param([CITY], id="mixed-results")],
+)
+async def test_failed_location_without_key(
+    valid_cities: list[dict[str, str | int]],
+) -> None:
+    """Skip status-only failures while preserving valid search results."""
+    with patch(
+        "homeassistant.components.xiaomi_weather.api._async_get_json",
+        return_value=[{"status": 1}, *valid_cities],
+    ):
+        result = await XiaomiLocationClient(AsyncMock(spec=ClientSession)).async_search(
+            "北京"
+        )
+    assert result == [
+        Location("101010100", "北京市", "中国", 39.904, 116.408) for _ in valid_cities
+    ]
+
+
 async def test_wrong_city_match() -> None:
     """Test wrong city match."""
     with patch(
