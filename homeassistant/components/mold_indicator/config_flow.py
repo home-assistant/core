@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import SensorDeviceClass
@@ -47,32 +47,32 @@ async def validate_input(
     return user_input
 
 
-DATA_SCHEMA_OPTIONS = vol.Schema(
+DATA_SCHEMA_OPTIONS = probatio.Schema(
     {
-        vol.Required(CONF_INDOOR_TEMP): EntitySelector(
+        probatio.Required(CONF_INDOOR_TEMP): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE
             )
         ),
-        vol.Required(CONF_INDOOR_HUMIDITY): EntitySelector(
+        probatio.Required(CONF_INDOOR_HUMIDITY): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR, device_class=SensorDeviceClass.HUMIDITY
             )
         ),
-        vol.Required(CONF_OUTDOOR_TEMP): EntitySelector(
+        probatio.Required(CONF_OUTDOOR_TEMP): EntitySelector(
             EntitySelectorConfig(
                 domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE
             )
         ),
-        vol.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
+        probatio.Required(CONF_CALIBRATION_FACTOR): NumberSelector(
             NumberSelectorConfig(step=0.1, mode=NumberSelectorMode.BOX)
         ),
     }
 )
 
-DATA_SCHEMA_CONFIG = vol.Schema(
+DATA_SCHEMA_CONFIG = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     }
 ).extend(DATA_SCHEMA_OPTIONS.schema)
 
@@ -117,10 +117,10 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mold_indicator/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "mold_indicator/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @callback

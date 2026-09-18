@@ -1104,7 +1104,7 @@ async def test_target_trickle_down_to_splits(
     split_a = next(
         d
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
-        if entry_a.entry_id in d.config_entries
+        if d.config_entry_id == entry_a.entry_id
     )
     child = device_registry.async_get_or_create_child(
         config_entry_id=entry_a.entry_id,

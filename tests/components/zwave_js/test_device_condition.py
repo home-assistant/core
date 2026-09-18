@@ -2,9 +2,8 @@
 
 from unittest.mock import patch
 
-from probatio import to_field_list
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -455,7 +454,7 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert capabilities and "extra_fields" in capabilities
-    assert to_field_list(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -508,7 +507,7 @@ async def test_get_condition_capabilities_value(
         ("134", "Version"),
     ]
 
-    assert to_field_list(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -553,7 +552,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert to_field_list(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -584,7 +583,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert to_field_list(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -692,7 +691,7 @@ async def test_get_value_from_config_failure(
     hass: HomeAssistant, client, hank_binary_switch, integration
 ) -> None:
     """Test get_value_from_config invalid value ID."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         get_zwave_value_from_config(
             hank_binary_switch,
             {
