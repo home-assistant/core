@@ -94,7 +94,12 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json_dumps(chat_content.result.data),
+            content=json_dumps(
+                {
+                    "result": chat_content.result.data,
+                    "error": chat_content.result.error,
+                }
+            ),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
