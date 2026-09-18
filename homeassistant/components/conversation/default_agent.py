@@ -1765,9 +1765,6 @@ _NO_TARGET_ERRORS: dict[tuple[str, str, bool], ErrorKey] = {
 }
 
 
-# The failing constraint is what the message should be about. Anything else the
-# caller happened to set would name the wrong thing: a DOMAIN failure alongside a
-# name means no entity of that domain exists, not that nothing has that name.
 class _NoTargetOrder(NamedTuple):
     """Which constraints an error may name, most specific first."""
 
@@ -1778,10 +1775,7 @@ class _NoTargetOrder(NamedTuple):
     """Where it was asked for."""
 
 
-# The failing constraint is what the message should be about. Anything else the
-# caller happened to set would name the wrong thing: a DOMAIN failure alongside a
-# name means no entity of that domain exists, and a FLOOR failure alongside an
-# area means the floor held nothing, since the area is filtered after the floor.
+# The failing constraint is what the message should be about
 _ANY_TARGET = ("entity", "device_class", "domain")
 _ANY_SCOPE = ("area", "floor")
 _NO_TARGET_ORDER: dict[intent.MatchFailedReason, _NoTargetOrder] = {
@@ -1833,8 +1827,7 @@ def _get_no_target_response(
     return _NO_TARGET_ERRORS[kind, scope, exposed_only], args
 
 
-# Not an ErrorKey yet, so languages without it fall back to their own generic
-# error. Naming which constraint was ambiguous needs a response per constraint.
+# Present in intents, but not the ErrorKey enum yet.
 _DUPLICATE_TARGETS = "duplicate_targets"
 
 
