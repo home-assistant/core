@@ -66,6 +66,11 @@ class AdsHub:
         for device in self._devices:
             device.mark_unavailable()
 
+    @property
+    def devices(self) -> list[AdsEntity]:
+        """Return the entities registered with this hub."""
+        return self._devices
+
     def register_device(self, device: AdsEntity) -> None:
         """Register a new device."""
         self._devices.append(device)

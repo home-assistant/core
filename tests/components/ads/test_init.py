@@ -17,6 +17,7 @@ from homeassistant.components.ads.const import (
     DOMAIN,
     AdsType,
 )
+from homeassistant.components.ads.entity import AdsEntity
 from homeassistant.components.ads.hub import AdsHub
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
@@ -58,6 +59,30 @@ async def test_setup_and_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_pyads_connection.return_value.close.assert_called_once()
+
+
+async def test_reload_resubscribes_yaml_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+) -> None:
+    """Test a reload rebinds YAML-configured entities to the new hub."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    original_hub = mock_config_entry.runtime_data
+    entity = AdsEntity(original_hub, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    new_hub = mock_config_entry.runtime_data
+    assert new_hub is not original_hub
+    assert entity._ads_hub is new_hub
+    assert entity in new_hub.devices
 
 
 async def test_setup_with_local_net_id(

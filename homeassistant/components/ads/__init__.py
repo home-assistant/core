@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DOMAIN, AdsType
+from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_DEVICES, DOMAIN, AdsType
 from .hub import AdsConfigEntry, AdsHub
 
 ADS_TYPEMAP = {
@@ -156,7 +156,7 @@ def _connect(entry: AdsConfigEntry) -> AdsHub:
     hub = AdsHub(client)
     try:
         client.read_state()
-    except pyads.ADSError:
+    except pyads.ADSError, RuntimeError:
         hub.shutdown()
         raise
     return hub
@@ -175,6 +175,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 
     entry.runtime_data = hub
 
+    if DOMAIN in hass.data and (devices := hass.data[DOMAIN].pop(DATA_DEVICES, None)):
+        # YAML-configured entity platforms are not tied to the config entry's
+        # lifecycle, so a reload leaves them registered to the old, now shut
+        # down hub. Rebind and resubscribe them to the new one instead of
+        # leaving them stuck unavailable. Runs in the background so a reload
+        # does not block on every entity's notification round trip.
+        async def _async_resubscribe_devices() -> None:
+            for device in devices:
+                await device.async_resubscribe(hub)
+
+        entry.async_create_task(
+            hass, _async_resubscribe_devices(), "ads resubscribe devices"
+        )
+
     async def _async_shutdown(event: Event) -> None:
         await hass.async_add_executor_job(hub.shutdown)
 
@@ -186,5 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
     """Unload an ADS config entry."""
-    await hass.async_add_executor_job(entry.runtime_data.shutdown)
+    hub = entry.runtime_data
+    hass.data.setdefault(DOMAIN, {})[DATA_DEVICES] = list(hub.devices)
+    await hass.async_add_executor_job(hub.shutdown)
     return True

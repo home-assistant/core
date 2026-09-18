@@ -1,6 +1,6 @@
 """Test the ADS entity base class."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.ads.const import STATE_KEY_STATE
 from homeassistant.components.ads.entity import AdsEntity
@@ -48,3 +48,16 @@ def test_mark_unavailable_schedules_update(hass: HomeAssistant) -> None:
 
     mock_schedule.assert_called_once()
     assert not entity.available
+
+
+async def test_async_resubscribe() -> None:
+    """Test resubscribing rebinds the entity to a new hub and resubscribes."""
+    entity = AdsEntity(MagicMock(spec=AdsHub), "test", "GVL.test")
+
+    new_hub = MagicMock(spec=AdsHub)
+    with patch.object(entity, "async_added_to_hass", AsyncMock()) as mock_added_to_hass:
+        await entity.async_resubscribe(new_hub)
+
+    assert entity._ads_hub is new_hub
+    new_hub.register_device.assert_called_once_with(entity)
+    mock_added_to_hass.assert_awaited_once()

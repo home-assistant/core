@@ -76,3 +76,9 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         if self.hass is not None:
             self.schedule_update_ha_state()
+
+    async def async_resubscribe(self, ads_hub: AdsHub) -> None:
+        """Rebind this entity to a new hub and resubscribe after a reload."""
+        self._ads_hub = ads_hub
+        ads_hub.register_device(self)
+        await self.async_added_to_hass()
