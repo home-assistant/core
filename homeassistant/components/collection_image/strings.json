@@ -30,6 +30,12 @@
   "exceptions": {
     "image_read_error": {
       "message": "Error reading image from {path}: {error}"
+    },
+    "no_images": {
+      "message": "No image files were found in the configured media. {entity} will now be unavailable. Reload the config entry after correcting the media source."
+    },
+    "unresolvable": {
+      "message": "Selected media id {id} failed to resolve for {entity}."
     }
   },
   "services": {
