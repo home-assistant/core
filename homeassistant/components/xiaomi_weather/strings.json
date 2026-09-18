@@ -104,7 +104,7 @@
         "data_description": {
           "zone": "Use the coordinates of this zone to find a weather location."
         },
-        "description": "Choose Home or another zone. Its coordinates are captured now; later zone changes require reconfiguration. The service name defaults to the zone name.",
+        "description": "Choose Home or another zone. Its coordinates are captured now; later zone changes require reconfiguration. The location name defaults to the zone name.",
         "sections": {
           "advanced": {
             "data": {
