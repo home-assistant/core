@@ -111,6 +111,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
     STATE_ON,
@@ -118,7 +119,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1246,6 +1247,46 @@ async def test_aborted_add_cancels_first_update(
 
     assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
     assert hass.states.get(entity_id) is None
+
+
+async def test_renamed_entity_keeps_polling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test an entity polls again after a rename, which removes and re-adds it."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_UNIQUE_ID: "renamed_sensor",
+                    }
+                ],
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "0"
+
+    new_entity_id = f"{SENSOR_DOMAIN}.renamed"
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x2A])
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(new_entity_id).state == "42"
 
 
 async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
