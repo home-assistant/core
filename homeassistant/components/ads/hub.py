@@ -61,13 +61,14 @@ def local_net_id_probe(local_net_id: str | None) -> Iterator[None]:
     Restores whichever NetID was active beforehand, so a validation
     attempt never leaves process-wide ADS state changed.
     """
-    if local_net_id is None:
+    target_net_id = local_net_id or _original_local_net_id
+    if target_net_id is None:
         yield
         return
     pyads.open_port()
     try:
         previous_net_id = pyads.get_local_address().netid
-        pyads.set_local_address(local_net_id)
+        pyads.set_local_address(target_net_id)
     finally:
         pyads.close_port()
     try:
