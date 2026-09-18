@@ -279,7 +279,7 @@ def test_last_synchronization_parses_string_timestamp() -> None:
 
 def test_last_synchronization_converts_naive_timestamp_object_to_utc() -> None:
     """A timestamp that is already a datetime object is still normalized to UTC."""
-    timestamp = datetime(2024, 1, 10, 10, 0, 0, tzinfo=dt_util.UTC)
+    timestamp = datetime(2024, 1, 10, 10, 0, 0)
     status = SimpleNamespace(car_captured_timestamp=timestamp)
     coordinator = _make_vehicle_status_coordinator(status)
     sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
