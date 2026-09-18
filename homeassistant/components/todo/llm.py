@@ -27,7 +27,21 @@ from .intent import (
 )
 
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_LIST_ADD_ITEM, INTENT_LIST_COMPLETE_ITEM, INTENT_LIST_REMOVE_ITEM)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_LIST_ADD_ITEM: "Add to-do list item",
+    INTENT_LIST_COMPLETE_ITEM: "Complete to-do list item",
+    INTENT_LIST_REMOVE_ITEM: "Remove to-do list item",
+}
+
+# Adding an item appends to the list, so it has an effect on every call and
+# takes nothing away. The others act on an item that is already there.
+INTENT_ANNOTATIONS = {
+    INTENT_LIST_ADD_ITEM: ToolAnnotations(destructive=False, open_world=False),
+    INTENT_LIST_COMPLETE_ITEM: ToolAnnotations(idempotent=True, open_world=False),
+    INTENT_LIST_REMOVE_ITEM: ToolAnnotations(idempotent=True, open_world=False),
+}
 
 
 class TodoGetItemsTool(Tool):
@@ -119,7 +133,13 @@ def async_get_tools(
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     )
