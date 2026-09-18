@@ -322,9 +322,7 @@ class ToolResultContent:
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
             "result": asdict(self.result),
-            # Deprecated, and removed in HA Core 2027.11. Reading a serialized
-            # key cannot be reported, so the frontend and the companion apps
-            # are confirmed by hand before it goes.
+            # Deprecated, and removed in HA Core 2027.11.
             "tool_result": self.result.data,
             "created": self.created,
         }
