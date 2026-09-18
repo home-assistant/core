@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -308,7 +308,7 @@ class ToolResultContent:
             "agent_id": self.agent_id,
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
-            "result": asdict(self.result),
+            "result": self.result.as_dict(),
             "tool_result": self.result.data,
             "created": self.created,
         }

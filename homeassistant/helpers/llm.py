@@ -161,6 +161,10 @@ class ToolResult:
     data: JsonObjectType
     error: bool = False
 
+    def as_dict(self) -> JsonObjectType:
+        """Return a dictionary representation of the result."""
+        return {"data": self.data, "error": self.error}
+
 
 class Tool:
     """LLM Tool base class."""
