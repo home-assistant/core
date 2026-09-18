@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_ARM_MODES = frozenset({"home", "away"})
+
 _MODE_TO_STATE = {
     "home": AlarmControlPanelState.ARMED_HOME,
     "away": AlarmControlPanelState.ARMED_AWAY,
@@ -42,7 +44,12 @@ def _device_has_alarm_panel(device: ImouHaDevice) -> bool:
     if panel is None:
         return False
     supported = panel.get(PARAM_SUPPORTED, [])
-    return isinstance(supported, list) and bool(supported)
+    if not isinstance(supported, list):
+        return False
+    modes = {mode for mode in supported if isinstance(mode, str)}
+    if "disarm" not in modes:
+        return False
+    return bool(modes & _ARM_MODES)
 
 
 def _iter_alarm_control_panels(

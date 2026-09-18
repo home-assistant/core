@@ -50,6 +50,20 @@ def alarm_panel_without_modes_devices() -> list[ImouHaDevice]:
     return [device]
 
 
+def alarm_panel_disarm_only_devices() -> list[ImouHaDevice]:
+    """Return a device that supports disarm but no arm modes."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_SUPPORTED: ["disarm"]}
+    return [device]
+
+
+def alarm_panel_home_without_disarm_devices() -> list[ImouHaDevice]:
+    """Return a device that supports home but not disarm."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_SUPPORTED: ["home"]}
+    return [device]
+
+
 @pytest.mark.parametrize("platforms", [[Platform.ALARM_CONTROL_PANEL]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [alarm_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
@@ -188,9 +202,15 @@ async def test_alarm_state_from_device(
 
 @pytest.mark.parametrize("platforms", [[Platform.ALARM_CONTROL_PANEL]], indirect=True)
 @pytest.mark.parametrize(
-    "imou_mock_devices", [alarm_panel_without_modes_devices], indirect=True
+    "imou_mock_devices",
+    [
+        alarm_panel_without_modes_devices,
+        alarm_panel_disarm_only_devices,
+        alarm_panel_home_without_disarm_devices,
+    ],
+    indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_skips_panel_without_supported_modes(hass: HomeAssistant) -> None:
-    """Devices with an empty supported-mode list do not get an arming entity."""
+async def test_skips_incomplete_alarm_panel(hass: HomeAssistant) -> None:
+    """Devices without disarm and an arm mode do not get an arming entity."""
     assert not hass.states.async_all(ALARM_DOMAIN)
