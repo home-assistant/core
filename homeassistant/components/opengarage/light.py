@@ -1,6 +1,6 @@
 """Platform for OpenGarage opener lights."""
 
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from opengarage.errors import OpenGarageError
@@ -10,12 +10,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
+from .coordinator import OpenGarageConfigEntry
 from .entity import OpenGarageEntity
 
 LIGHT_DESCRIPTION = LightEntityDescription(key="light", translation_key="light")
@@ -30,12 +30,14 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if LIGHT_DESCRIPTION.key not in coordinator.data:
         return
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
 
     async_add_entities(
         [
             OpenGarageLight(
                 coordinator,
-                cast(str, entry.unique_id),
+                entry.unique_id,
                 LIGHT_DESCRIPTION,
             )
         ]
@@ -48,22 +50,12 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(
-        self,
-        coordinator: OpenGarageDataUpdateCoordinator,
-        device_id: str,
-        description: LightEntityDescription,
-    ) -> None:
-        """Initialize the light."""
-        self._attr_is_on = False
-        super().__init__(coordinator, device_id, description)
-
-    @callback
+    @property
     @override
-    def _update_attr(self) -> None:
-        """Update the light state from the coordinator."""
+    def is_on(self) -> bool | None:
+        """Return whether the opener light is on."""
         state = self.coordinator.data.get(LIGHT_DESCRIPTION.key)
-        self._attr_is_on = bool(state) if state in (0, 1) else None
+        return state == 1 if state in (0, 1) else None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
