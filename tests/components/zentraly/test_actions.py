@@ -1,5 +1,7 @@
 """Tests for action failure categories and translated errors."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from zentraly import (
     ZentralyApiError,
@@ -10,15 +12,19 @@ from zentraly import (
     ZentralyValidationError,
 )
 
-from homeassistant.components.zentraly.actions import translate_action_errors
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.translation import async_get_translations
 
+from .conftest import ENTITY_ID
 
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("error", "ha_error", "key"),
     [
+        pytest.param(ZentralyApiError, HomeAssistantError, "action_failed", id="api"),
         pytest.param(
             ZentralyConnectionBusyError,
             HomeAssistantError,
@@ -52,16 +58,24 @@ from homeassistant.helpers.translation import async_get_translations
     ],
 )
 async def test_error_translation(
-    error: type[ZentralyApiError], ha_error: type[HomeAssistantError], key: str
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    error: type[ZentralyApiError],
+    ha_error: type[HomeAssistantError],
+    key: str,
 ) -> None:
     """Expose translation metadata instead of model-specific technical text."""
 
-    @translate_action_errors
-    async def action() -> None:
-        raise error("Technical protocol detail")
-
+    mock_climate_api.async_set_target_temperature.side_effect = error(
+        "Technical protocol detail"
+    )
     with pytest.raises(ha_error) as exc:
-        await action()
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            blocking=True,
+        )
     assert exc.value.translation_domain == "zentraly"
     assert exc.value.translation_key == key
     assert isinstance(exc.value.__cause__, error)
