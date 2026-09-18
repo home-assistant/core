@@ -321,7 +321,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "web_search_call",
-                    "result": llm.ToolResult(data={"status": event.item.status}),
+                    "result": llm.ToolResult(
+                        data={"status": event.item.status},
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, LLMResponseImageOutputItem):
