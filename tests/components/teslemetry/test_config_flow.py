@@ -1600,7 +1600,7 @@ def _empty_clients() -> AuthorizedClients:
     return AuthorizedClients(clients=[], raw=None)
 
 
-def _local_client(public_key: str, state: str | int) -> dict[str, Any]:
+def _local_client(public_key: str, state: str) -> dict[str, Any]:
     """Return one client entry as the gateway's local read reports it."""
     return {
         "public_key": public_key,
@@ -2307,6 +2307,26 @@ async def _setup_paired_account(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+async def _setup_cloud_only_account(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up a paired account whose local control failed to initialize at setup.
+
+    The RSA key the local gateway client needs cannot be loaded, so the integration
+    falls back to the bare cloud api for the site.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            side_effect=OSError,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_reconfigure_updates_credentials_and_schedules_reload(
     hass: HomeAssistant,
@@ -2468,44 +2488,6 @@ async def test_reconfigure_aborts_when_rsa_key_load_fails(hass: HomeAssistant) -
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-@pytest.mark.parametrize(
-    "local_error",
-    [
-        pytest.param(PowerwallConnectionError(), id="gateway_unreachable"),
-        pytest.param(PowerwallAuthenticationError(), id="credentials_or_key_rejected"),
-        pytest.param(PowerwallFaultError("MESSAGEFAULT_ERROR_BUSY"), id="fault"),
-    ],
-)
-async def test_reconfigure_falls_back_to_cloud_when_local_lookup_fails(
-    hass: HomeAssistant,
-    mock_local_authorized_clients: AsyncMock,
-    local_error: Exception,
-) -> None:
-    """A failed local lookup on a paired site falls back to the cloud lookup.
-
-    Reconfigure is how a changed gateway address or password is fixed, and the
-    local read uses the stored ones, so it must not block the flow.
-    """
-    entry = await _setup_paired_account(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-    mock_local_authorized_clients.side_effect = local_error
-
-    cloud_lookup = AsyncMock(
-        return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
-    )
-    with patch(
-        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-        new=cloud_lookup,
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-
-    # Reaching credentials means the cloud lookup reported the key verified.
-    assert result["step_id"] == "credentials"
-    mock_local_authorized_clients.assert_awaited_once()
-    cloud_lookup.assert_awaited_once()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
 async def test_reconfigure_aborts_when_local_and_cloud_lookups_fail(
     hass: HomeAssistant,
     mock_local_authorized_clients: AsyncMock,
@@ -2537,44 +2519,14 @@ async def test_reconfigure_aborts_when_local_and_cloud_lookups_fail(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_reconfigure_pair_step_skips_failed_local_lookup(
-    hass: HomeAssistant,
-    mock_local_authorized_clients: AsyncMock,
-) -> None:
-    """Once the local lookup fails, pair-step checks go straight to the cloud."""
-    entry = await _setup_paired_account(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-
-    with patch(
-        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-        new=AsyncMock(
-            side_effect=[
-                _own_key_clients(AuthorizedClientState.PENDING_VERIFICATION),
-                _own_key_clients(AuthorizedClientState.VERIFIED),
-            ]
-        ),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert result["step_id"] == "pair"
-
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-
-    assert result["step_id"] == "credentials"
-    # A retried local read would wait out the same failure on every check.
-    mock_local_authorized_clients.assert_awaited_once()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
 async def test_reconfigure_reads_authorized_clients_locally(
     hass: HomeAssistant,
     mock_local_authorized_clients: AsyncMock,
 ) -> None:
     """A paired site's verified key is confirmed on the gateway, not the cloud.
 
-    The local read is signed with our key, so only a verified key can succeed;
-    any other key state is rejected locally and covered by the cloud fallback.
+    The router reads local-first, so a reachable gateway answers the lookup and
+    the flow reaches the credentials step without asking the cloud.
     """
     entry = await _setup_paired_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -2606,11 +2558,8 @@ async def test_reconfigure_cloud_only_site_skips_local_lookup(
     mock_local_authorized_clients: AsyncMock,
 ) -> None:
     """A site whose local control failed at setup is looked up only in the cloud."""
-    entry = await _setup_paired_account(hass)
+    entry = await _setup_cloud_only_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-    energy_data = entry.runtime_data.energysites[0]
-    # Setup falls back to the bare cloud api when the local router cannot be built.
-    energy_data.api = energy_data.api.secondary
 
     cloud_lookup = AsyncMock(
         return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
@@ -2621,6 +2570,7 @@ async def test_reconfigure_cloud_only_site_skips_local_lookup(
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     cloud_lookup.assert_awaited_once()
     mock_local_authorized_clients.assert_not_awaited()
@@ -2633,9 +2583,10 @@ async def test_reconfigure_registers_key_via_cloud_not_local_gateway(
 ) -> None:
     """Registering an unknown key goes to the cloud site, not the local gateway.
 
-    A paired site's api is a local-first router and the local backend also offers
-    add_authorized_client, so a registration that was not unwrapped to the cloud
-    secondary would silently be routed to the Powerwall.
+    A paired site's api is a local-first router, so registration must be unwrapped
+    to the cloud secondary. The local backend is given a working
+    add_authorized_client here so that a routed registration would land on the
+    Powerwall and fail this test.
     """
     entry = await _setup_paired_account(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -2656,33 +2607,3 @@ async def test_reconfigure_registers_key_via_cloud_not_local_gateway(
     assert result["step_id"] == "pair"
     cloud_add.assert_awaited_once()
     local_add.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_rsa_key")
-async def test_reconfigure_local_unrecognized_state_aborts(
-    hass: HomeAssistant,
-    mock_local_authorized_clients: AsyncMock,
-) -> None:
-    """An unrecognized local key state is unusable, so the flow aborts."""
-    entry = await _setup_paired_account(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
-    mock_local_authorized_clients.side_effect = None
-    # The gateway reports a state number newer than aiopowerwall knows by name.
-    mock_local_authorized_clients.return_value = {
-        "clients": [_local_client(PUBLIC_KEY_B64, 99)],
-        "enable_line_switch_off": False,
-    }
-
-    cloud_lookup = AsyncMock(
-        return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
-    )
-    with patch(
-        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
-        new=cloud_lookup,
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-    mock_local_authorized_clients.assert_awaited_once()
-    cloud_lookup.assert_not_awaited()
