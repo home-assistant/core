@@ -301,9 +301,9 @@ def parse_weather(payload: Any) -> WeatherData:
         raise XiaomiWeatherError("Invalid weather response") from err
 
 
-def measurement(value: dict[str, Any], unit: str) -> float | None:
+def measurement(value: object, unit: str) -> float | None:
     """Never label a measurement with an unverified unit."""
-    if value.get("unit") != unit:
+    if not isinstance(value, dict) or value.get("unit") != unit:
         return None
     return number(value.get("value"))
 
