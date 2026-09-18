@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This TrueNAS host is already configured.",
-      "not_truenas": "The discovered device does not appear to be a TrueNAS instance."
+      "already_configured": "This TrueNAS host is already configured."
     },
     "error": {
       "api_not_found": "Connection failed, API not found.",
@@ -36,10 +35,6 @@
           "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
         },
         "description": "Set up TrueNAS CE integration."
-      },
-      "zeroconf_confirm": {
-        "description": "A TrueNAS instance was discovered at {host}. Do you want to set it up?",
-        "title": "Discovered TrueNAS"
       }
     }
   },
@@ -90,14 +85,14 @@
     "disconnected": {
       "message": "TrueNAS instance {host} disconnected"
     },
+    "interface_unavailable": {
+      "message": "Network interface information was not received from TrueNAS ({host})"
+    },
     "invalid_api_key": {
       "message": "Invalid TrueNAS API key for {host}"
     },
     "system_info_unavailable": {
       "message": "Essential system information was not received from TrueNAS ({host})"
-    },
-    "interface_unavailable": {
-      "message": "Network interface information was not received from TrueNAS ({host})"
     }
   }
 }

@@ -240,10 +240,11 @@ async def test_connect_quiet_logs_debug_not_error(
     api: TrueNASAPI,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Zeroconf discovery probes many non-TrueNAS devices (issue #46 follow-up).
+    """A connect() attempt on an already-failing host must stay quiet.
 
-    A failed probe connection must stay quiet -- DEBUG, no traceback --
-    instead of flooding the log with an ERROR per candidate.
+    DEBUG, no traceback -- the coordinator threads ``quiet=True`` in while a
+    connection is already known to be failing, so it doesn't re-log a full
+    ERROR every poll (see coordinator.py's ``_async_ensure_connected``).
     """
     api._client.connect.side_effect = TrueNASConnectionRefusedError("refused")
     with caplog.at_level("DEBUG", logger=api_module.__name__):
@@ -273,7 +274,7 @@ async def test_connect_forwards_quiet_to_client(api: TrueNASAPI) -> None:
 
 
 async def test_connect_defaults_to_non_quiet_client_connect(api: TrueNASAPI) -> None:
-    """A real (non-probing) connect does not request quiet mode."""
+    """A normal connect (host not already known failing) does not request quiet mode."""
     assert await api.connect() is True
     api._client.connect.assert_awaited_once_with(quiet=False)
 

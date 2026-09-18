@@ -56,8 +56,12 @@ rules:
   diagnostics:
     status: todo
     comment: Planned as a follow-up PR after the initial bronze PR merges.
-  discovery: done
-  discovery-update-info: done
+  discovery:
+    status: todo
+    comment: Zeroconf discovery was implemented and then removed as part of the bronze-scope cut (not required for bronze); planned as a follow-up PR.
+  discovery-update-info:
+    status: todo
+    comment: Depends on discovery above.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

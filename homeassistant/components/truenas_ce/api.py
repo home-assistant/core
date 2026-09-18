@@ -150,8 +150,9 @@ class TrueNASAPI:
     async def connect(self, *, quiet: bool = False) -> bool:
         """Connect and log in. Return connected boolean.
 
-        ``quiet``: log failures at debug (used by zeroconf probing, where
-        most connection attempts are expected to fail).
+        ``quiet``: log failures at debug instead of error (used while a
+        connection is already known to be failing, to avoid re-logging the
+        same error every poll).
         """
         if self._closed:
             self._error = ERR_UNKNOWN

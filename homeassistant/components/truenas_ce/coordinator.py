@@ -134,27 +134,16 @@ def get_truenas_coordinator(
     return getattr(config_entry, "runtime_data", None)
 
 
-# Maps each coordinator job (by method name) to the self.ds key(s) it owns,
-# used to decide which entities go unavailable while a job is persistently
-# failing (see TrueNASCoordinator._note_job_outcome/is_data_path_failing).
-# get_systemstats is intentionally omitted: it only contributes a subset of
-# "system_info"/"interface" fields that get_systeminfo already owns, so
-# mapping it here would wrongly mark unrelated entities (hostname, version,
-# uptime, ...) unavailable whenever only a netdata-graph fetch fails. It
-# tracks its own graph failures via _record_failed_graphs (transition
-# warning + cooldown) instead.
-# "_query_interfaces" is not a top-level job run via the _run_job closure in
-# _async_update_data -- it's called from inside get_systeminfo() -- but its
-# outcome is tracked through the same _note_job_outcome/_job_failing
-# mechanism under its own name, for the same reason get_systemstats isn't
-# folded into get_systeminfo's entry: keeping a failure scoped to the
-# entities it actually affects.
+# Maps each coordinator job to the self.ds key(s) it owns, for
+# is_data_path_failing(). get_systemstats is deliberately omitted: it only
+# enriches fields get_systeminfo already owns, so including it would wrongly
+# mark unrelated entities unavailable on a netdata-graph-only failure (see
+# _record_failed_graphs for its own tracking). _query_interfaces is tracked
+# under its own name (though called from inside get_systeminfo) so an
+# interface-only failure doesn't also mark system_info unavailable; the
+# reverse still applies "interface" to get_systeminfo, since a system.info
+# failure means interface data wasn't refreshed this poll either.
 _JOB_DATA_PATHS: dict[str, tuple[str, ...]] = {
-    # "interface" stays listed here too: if get_systeminfo raises before ever
-    # reaching _query_interfaces (system.info itself failed), the interface
-    # data wasn't refreshed this poll either. The reverse direction --
-    # interface.query failing on its own -- is tracked separately below via
-    # "_query_interfaces" so it doesn't also mark system_info unavailable.
     "get_systeminfo": ("system_info", "interface"),
     "_query_interfaces": ("interface",),
 }
@@ -199,18 +188,11 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # entity-unavailable/log-when-unavailable; see _note_job_outcome.
         self._job_failing: dict[str, bool] = {}
 
-        # The ERR_* code of the last failed _async_ensure_connected attempt,
-        # deduped so a persistently unreachable host (e.g. deliberately
-        # powered off via truenas_ce.system_shutdown) logs one ERROR instead
-        # of one every 60s poll -- see issue #145. Seeded from hass.data
-        # instead of always None: a failed first refresh raises
-        # ConfigEntryNotReady, which makes Home Assistant retry setup with a
-        # brand-new TrueNASCoordinator instance -- without this, the
-        # in-memory state can never survive that recreation and every retry
-        # re-logs a fresh ERROR, forever, every ~10 min (the setup-retry
-        # backoff cap). hass.data persists across that recreation (only
-        # reset by an actual HA restart, where one fresh ERROR is correct)
-        # -- see _set_connection_failing.
+        # ERR_* code of the last failed _async_ensure_connected attempt,
+        # deduped so a persistently unreachable host logs one ERROR instead
+        # of one every poll. Seeded from hass.data (see
+        # _set_connection_failing) so it survives a ConfigEntryNotReady
+        # setup-retry recreating this coordinator, not just re-set to None.
         self._connection_failing_error: str | None = _seed_connection_failing(
             hass, config_entry
         )
@@ -259,25 +241,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_ensure_connected(self) -> None:
         """Connect if needed, raising the appropriate coordinator error on failure.
 
-        For the common case where api.connect() returns False (e.g. TrueNAS
-        unreachable), deduped like _note_job_outcome/self._job_failing: a
-        persistently unreachable host logs one ERROR instead of one every
-        60s poll, plus an INFO line once the connection recovers. If the
-        ERR_* code changes while still failing (e.g. the host comes back
-        only far enough to fail TLS instead of refusing the connection
-        outright), one fresh ERROR is logged for that change too, instead of
-        silently staying pinned to whichever code was first seen -- see
-        _connection_failing_error. This dedup state is seeded from hass.data
-        in __init__ and mirrored back on every change (see
-        _set_connection_failing), so it survives a coordinator recreated by
-        a Home Assistant setup retry instead of re-logging a fresh ERROR
-        every ~10 minutes forever. quiet is threaded into api.connect() on
-        repeat failures so its own ERROR-level traceback is deduped too, not
-        just the shorter follow-up line below. An unexpected exception from
-        api.connect() itself (rather than a normal False return) bypasses
-        this dedup and relies on the DataUpdateCoordinator's own
-        success/failure-transition logging instead -- that path is rare
-        enough not to warrant its own bookkeeping here.
+        Deduped like _note_job_outcome: a persistently unreachable host logs
+        one ERROR (or one per distinct ERR_* code) instead of one every poll,
+        plus an INFO line on recovery -- see _connection_failing_error.
         """
         if self.api.connected():
             self._note_connection_recovered()
@@ -306,12 +272,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         if self._connection_failing:
             if self.api.error != self._connection_failing_error:
-                # The persisted marker survives coordinator recreation (see
-                # _set_connection_failing), so without this, a failure whose
-                # cause changes mid-outage (e.g. connection_refused turning
-                # into certificate_verify_failed) would stay silently pinned
-                # to DEBUG at the *first* error code for the rest of the
-                # outage instead of surfacing the new one.
+                # Surface a fresh ERROR when the cause changes mid-outage
+                # (e.g. connection_refused -> certificate_verify_failed),
+                # instead of staying pinned to DEBUG at the first code seen.
                 _LOGGER.error(
                     "TrueNAS connection failure changed (error code: %s -> %s)",
                     self._connection_failing_error,
@@ -398,16 +361,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             name,
                         )
                 else:
-                    # A job can return cleanly (no exception) yet not have
-                    # actually finished its work, if the connection dropped
-                    # mid-job and its own connected() guard made it bail out
-                    # early (e.g. get_systeminfo/_handle_update_job). Only
-                    # count this as a real success while still connected --
-                    # otherwise a job that was previously flagged failing
-                    # would log a spurious "recovered" line in the very same
-                    # poll that then raises "disconnected" below. Leaving the
-                    # flag untouched here just defers the recovery log to a
-                    # poll where the job actually completes while connected.
+                    # Only count a clean return as success while still
+                    # connected -- a job that bailed out early on a mid-job
+                    # disconnect must not log a spurious "recovered" line.
                     if self.api.connected():
                         self._note_job_outcome(name, failed=False)
 

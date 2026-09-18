@@ -696,9 +696,6 @@ ZEROCONF = {
             },
         },
         {
-            "domain": "truenas_ce",
-        },
-        {
             "domain": "velux",
             "name": "velux_klf_lan_*",
         },

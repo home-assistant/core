@@ -15,7 +15,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.helpers import selector
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import TrueNASAPI
 from .const import (
@@ -104,71 +103,17 @@ def _guess_ip() -> str:
     return DEFAULT_HOST
 
 
-async def _async_try_connect(api: TrueNASAPI, host: str, context: str) -> bool:
-    """Attempt ``api.connect()``, returning False (and logging) on any failure.
-
-    Used by the zeroconf probe so one bad candidate can't abort discovery.
-    """
-    try:
-        return await api.connect(quiet=True)
-    except Exception as err:  # noqa: BLE001 - must not abort discovery on an unexpected error
-        _LOGGER.debug("TrueNAS %s: %s: %s", host, context, err)
-        return False
-
-
 async def _async_safe_disconnect(api: TrueNASAPI) -> None:
-    """Disconnect ``api``, swallowing any error.
-
-    Cleanup in a probe/rediscovery ``finally`` block must never raise.
-    """
+    """Disconnect ``api``, swallowing any error."""
     with contextlib.suppress(Exception):
         await api.disconnect()
 
 
-# 443 is the wss default; 80 is the web UI's plain-HTTP port, worthless to
-# retry now that only wss is probed. Either way, an mDNS announcement naming
-# one of them adds nothing over probing the bare host.
-_DEFAULT_WS_PORTS = frozenset({80, 443})
-
-
-def _probe_candidates(host: str, port: int | None) -> list[str]:
-    """Return the host strings to probe for ``host``, most likely first.
-
-    The bare host is tried first so a standard box on ``wss`` isn't forced
-    onto the advertised plain-HTTP port; a genuinely non-default port is
-    appended as a fallback for custom ports/reverse proxies.
-    """
-    if port is None or port in _DEFAULT_WS_PORTS:
-        return [host]
-    return [host, f"{host}:{port}"]
-
-
-async def _async_probe_candidate(host: str) -> bool:
-    """Return True only if ``host`` rejects a bogus API key as invalid.
-
-    Only a genuine TrueNAS JSON-RPC endpoint answers ``ERR_INVALID_KEY``. Only
-    ``wss`` is probed: validation and every later connection always default to
-    ``wss`` too (the config flow has no scheme field), so a candidate that only
-    answers on plain ``ws`` could never complete setup regardless.
-    """
-    api = TrueNASAPI(host, "-", verify_ssl=False, scheme="wss")
-    try:
-        # connect() returns False either way, so api.error (not the return
-        # value) is what distinguishes a rejected key from "unreachable".
-        await _async_try_connect(api, host, "probe is not reachable")
-        return api.error == ERR_INVALID_KEY
-    finally:
-        await _async_safe_disconnect(api)
-
-
 async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
-    """Fetch ``system.global.id``, returning None (and logging) on failure.
-
-    A failed lookup must never block configuration/rediscovery.
-    """
+    """Fetch ``system.global.id``, returning None (and logging) on failure."""
     try:
         system_id = await api.query("system.global.id")
-    except Exception as err:  # noqa: BLE001 - a failed lookup must never block config/rediscovery
+    except Exception as err:  # noqa: BLE001
         _LOGGER.debug("TrueNAS %s: failed to read system.global.id: %s", host, err)
         return None
 
@@ -187,13 +132,10 @@ async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
 
 
 async def _async_get_hostname(api: TrueNASAPI, host: str) -> str:
-    """Fetch ``system.info.hostname``, falling back to DEFAULT_DEVICE_NAME.
-
-    Auto-generates the entry's name/title; a failed lookup must not block setup.
-    """
+    """Fetch ``system.info.hostname``, falling back to DEFAULT_DEVICE_NAME."""
     try:
         info = await api.query("system.info")
-    except Exception as err:  # noqa: BLE001 - a failed lookup must never block setup
+    except Exception as err:  # noqa: BLE001
         _LOGGER.debug("TrueNAS %s: failed to read system.info: %s", host, err)
         return DEFAULT_DEVICE_NAME
 
@@ -317,9 +259,9 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self._validate_connection(truenas_config, errors)
 
-        # Key unique_id on the stable system_id (not the host) so rediscovery
-        # survives IP changes; safe to fold the host into a matched entry
-        # here because this flow authenticated it itself.
+        # Key unique_id on the stable system_id (not the host) so an entry
+        # survives an IP change; the host is folded onto the matched entry
+        # because this flow just authenticated it.
         system_id = truenas_config.get(CONF_SYSTEM_ID)
         if not errors and isinstance(system_id, str) and system_id:
             await self.async_set_unique_id(system_id)
@@ -340,55 +282,3 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                 options={CONF_DATA_UNIT: data_unit},
             )
         return None
-
-    @override
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle a TrueNAS instance discovered over mDNS.
-
-        The generic ``_http._tcp`` service type matches many unrelated
-        devices, so the host is probed with a bogus API key first; only a
-        genuine TrueNAS endpoint answers ``ERR_INVALID_KEY``. A confirmed
-        host is never used to silently replay a stored key from an existing
-        entry (a spoofed device could mimic the probe) -- the flow always
-        falls through to the user-facing confirm step instead.
-        """
-        host = sanitize_host(discovery_info.host)
-        self._async_abort_entries_match({CONF_HOST: host})
-        # Provisional unique_id to dedupe concurrent events; re-keyed to the
-        # stable system_id once the probe below succeeds.
-        await self.async_set_unique_id(  # pylint: disable=home-assistant-unique-id-ip-based
-            host
-        )
-        self._abort_if_unique_id_configured()
-
-        probed_host = await self._probe_is_truenas(host, discovery_info.port)
-        if probed_host is None:
-            return self.async_abort(reason="not_truenas")
-
-        self.truenas_config[CONF_HOST] = probed_host
-        self.context["title_placeholders"] = {CONF_NAME: probed_host}
-        return await self.async_step_zeroconf_confirm()
-
-    @staticmethod
-    async def _probe_is_truenas(host: str, port: int | None = None) -> str | None:
-        """Return the ``host[:port]`` that answers as TrueNAS, or None.
-
-        Any connection-level error is treated the same as "not TrueNAS".
-        """
-        for candidate in _probe_candidates(host, port):
-            if await _async_probe_candidate(candidate):
-                return candidate
-        return None
-
-    async def async_step_zeroconf_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask the user to confirm setup of the discovered TrueNAS host."""
-        if user_input is not None:
-            return await self.async_step_user()
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={CONF_HOST: self.truenas_config[CONF_HOST]},
-        )

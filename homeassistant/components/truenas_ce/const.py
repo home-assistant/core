@@ -81,7 +81,7 @@ TO_REDACT = {
 
 CONF_DATA_UNIT = "data_unit"
 
-# system.global.id UUID; lets zeroconf rediscovery under a new IP match this device without a pre-auth probe.
+# system.global.id UUID; identifies a device stably across IP changes.
 CONF_SYSTEM_ID = "system_id"
 
 DEFAULT_POLL_INTERVAL = 60
