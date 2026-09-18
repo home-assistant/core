@@ -2,7 +2,10 @@
   "entity": {
     "binary_sensor": {
       "is_disable": {
-        "default": "mdi:power-off"
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
       }
     },
     "sensor": {
