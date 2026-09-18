@@ -57,7 +57,7 @@ async def async_setup_scanner(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"yaml_import_{reason}",
+                f"yaml_import_{reason}_{config[CONF_HOST]}",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,
@@ -69,7 +69,7 @@ async def async_setup_scanner(
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_device_tracker_yaml",
+        f"deprecated_device_tracker_yaml_{config[CONF_HOST]}",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,

@@ -36,6 +36,23 @@ YAML_CONFIG = {
     }
 }
 
+MULTI_YAML_CONFIG = {
+    DEVICE_TRACKER_DOMAIN: [
+        {
+            CONF_PLATFORM: DOMAIN,
+            CONF_HOST: "192.168.31.1",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+        {
+            CONF_PLATFORM: DOMAIN,
+            CONF_HOST: "192.168.31.2",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+    ]
+}
+
 CONNECTION_ERRORS: list[Exception] = [
     XiaomiConnectionError(),
     XiaomiTimeoutError(),
@@ -194,7 +211,9 @@ async def test_yaml_import(
     assert entries[0].data[CONF_USERNAME] == "admin"
     assert entries[0].data[CONF_PASSWORD] == "password"
 
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_device_tracker_yaml")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_device_tracker_yaml_192.168.31.1"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"host": "192.168.31.1"}
@@ -220,7 +239,9 @@ async def test_yaml_import_cannot_connect(
 
     assert not hass.config_entries.async_entries(DOMAIN)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "yaml_import_cannot_connect_192.168.31.1"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"host": "192.168.31.1"}
@@ -240,7 +261,32 @@ async def test_yaml_import_invalid_auth(
 
     assert not hass.config_entries.async_entries(DOMAIN)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_invalid_auth")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "yaml_import_invalid_auth_192.168.31.1"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {"host": "192.168.31.1"}
+
+
+@pytest.mark.usefixtures("mock_device_tracker_conf")
+async def test_yaml_import_multiple_cannot_connect(
+    hass: HomeAssistant,
+    mock_xiaomi_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test each failing YAML import creates its own issue keyed by host."""
+    mock_xiaomi_client.login.side_effect = XiaomiConnectionError()
+
+    assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, MULTI_YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    for host in ("192.168.31.1", "192.168.31.2"):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"yaml_import_cannot_connect_{host}"
+        )
+        assert issue is not None
+        assert issue.severity == ir.IssueSeverity.ERROR
+        assert issue.translation_placeholders == {"host": host}
