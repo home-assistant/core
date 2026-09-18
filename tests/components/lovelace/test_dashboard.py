@@ -470,6 +470,36 @@ async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
     assert len(config["views"]) == 2
 
 
+async def test_yaml_dashboard_reloads_on_nested_include(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test includes are followed through several levels of nesting."""
+    root = tmp_path / "ui-lovelace.yaml"
+    one = tmp_path / "a" / "one.yaml"
+    two = tmp_path / "a" / "b" / "two.yaml"
+    three = tmp_path / "a" / "b" / "c" / "three.yaml"
+
+    # Each level is relative to the file that includes it, not to the root.
+    _write(root, "views: !include a/one.yaml\n")
+    _write(one, "- title: One\n  sub: !include b/two.yaml\n")
+    _write(two, "deep: !include c/three.yaml\n")
+    _write(three, "value: original\n")
+
+    files = dashboard._referenced_files(str(root))
+    assert {str(root), str(one), str(two), str(three)} <= files
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["sub"]["deep"]["value"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    _write(three, "value: updated\n")
+    os.utime(three, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["sub"]["deep"]["value"] == "updated"
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
