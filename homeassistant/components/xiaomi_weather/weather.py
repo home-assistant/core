@@ -4,7 +4,7 @@ from typing import override
 
 from homeassistant.components.weather import (
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.const import (
@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import ForecastData
-from .coordinator import XiaomiWeatherConfigEntry
+from .coordinator import XiaomiWeatherConfigEntry, XiaomiWeatherCoordinator
 from .entity import XiaomiWeatherEntity
 
 PARALLEL_UPDATES = 0
@@ -56,7 +56,9 @@ def _forecast(items: tuple[ForecastData, ...]) -> list[Forecast]:
     return result
 
 
-class XiaomiWeather(XiaomiWeatherEntity, WeatherEntity):
+class XiaomiWeather(
+    XiaomiWeatherEntity, SingleCoordinatorWeatherEntity[XiaomiWeatherCoordinator]
+):
     """Represent Xiaomi Weather for one city."""
 
     _attr_name = None
@@ -74,7 +76,6 @@ class XiaomiWeather(XiaomiWeatherEntity, WeatherEntity):
     def __init__(self, entry: XiaomiWeatherConfigEntry) -> None:
         """Initialize the weather entity."""
         super().__init__(entry, "weather")
-        self._entry = entry
 
     @property
     @override
@@ -130,26 +131,20 @@ class XiaomiWeather(XiaomiWeatherEntity, WeatherEntity):
         """Return visibility only when the source provides a valid km value."""
         return self.coordinator.data.visibility
 
+    @callback
     @override
-    async def async_forecast_twice_daily(self) -> list[Forecast]:
+    def _async_forecast_twice_daily(self) -> list[Forecast]:
         """Return daytime highs and nighttime lows, anchored to solar times."""
         return _forecast(self.coordinator.data.twice_daily)
 
+    @callback
     @override
-    async def async_forecast_daily(self) -> list[Forecast]:
+    def _async_forecast_daily(self) -> list[Forecast]:
         """Return the cached daily forecast."""
         return _forecast(self.coordinator.data.daily)
 
-    @override
-    async def async_forecast_hourly(self) -> list[Forecast]:
-        """Return the cached hourly forecast."""
-        return _forecast(self.coordinator.data.hourly)
-
     @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Push state and forecasts to active subscribers."""
-        super()._handle_coordinator_update()
-        self._entry.async_create_task(
-            self.hass, self.async_update_listeners(None), "Update weather forecasts"
-        )
+    def _async_forecast_hourly(self) -> list[Forecast]:
+        """Return the cached hourly forecast."""
+        return _forecast(self.coordinator.data.hourly)
