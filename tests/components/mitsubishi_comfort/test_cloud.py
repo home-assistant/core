@@ -120,11 +120,13 @@ async def test_cloud_commands(
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "reauth_steps"),
     [
-        pytest.param(CommandError("rejected"), id="rejected"),
-        pytest.param(DeviceConnectionError("timeout"), id="timeout"),
-        pytest.param(AuthenticationError("expired"), id="authentication"),
+        pytest.param(CommandError("rejected"), [], id="rejected"),
+        pytest.param(DeviceConnectionError("timeout"), [], id="timeout"),
+        pytest.param(
+            AuthenticationError("expired"), ["reauth_confirm"], id="authentication"
+        ),
     ],
 )
 async def test_cloud_command_failure(
@@ -133,8 +135,9 @@ async def test_cloud_command_failure(
     mock_device_info: DeviceInfo,
     mock_cloud_account: AsyncMock,
     error: Exception,
+    reauth_steps: list[str],
 ) -> None:
-    """Failed commands do not update the displayed state."""
+    """Failed commands preserve state and only auth failures request reauth."""
     mock_device_info.password = ""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -149,6 +152,10 @@ async def test_cloud_command_failure(
         )
     await hass.async_block_till_done()
     assert hass.states.get("climate.living_room").state == "cool"
+    assert [
+        (flow["step_id"], flow["context"]["entry_id"])
+        for flow in hass.config_entries.flow.async_progress(DOMAIN)
+    ] == [(step, mock_config_entry.entry_id) for step in reauth_steps]
 
 
 @pytest.mark.parametrize(
