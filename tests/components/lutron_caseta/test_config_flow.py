@@ -547,3 +547,29 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_discovery_athena(hass: HomeAssistant) -> None:
+    """Test Athena processors are discovered over zeroconf."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("10.81.4.11"),
+            ip_addresses=[ip_address("10.81.4.11")],
+            hostname="Lutron-093cbfd8.local.",
+            name="Lutron Status (2)._lutron._tcp.local.",
+            port=22,
+            properties={
+                "SYSTYPE": "AthenaProcessor",
+                "SERNUM": "093CBFD8",
+                "DEVCLASS": "08130101",
+                "CODEVER": "26.06.45f000",
+            },
+            type="_lutron._tcp.local.",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
