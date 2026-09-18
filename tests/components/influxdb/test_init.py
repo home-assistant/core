@@ -641,6 +641,56 @@ async def test_event_listener(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+async def test_event_listener_multiline_strings(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
+    """Test line breaks in string fields are replaced, line protocol has no escape."""
+    await _setup(hass, mock_client, config_ext, get_write_api)
+
+    hass.states.async_set(
+        "fake.entity_id",
+        "Avenida de Logroño, 50\n28002 Madrid\r\nEspaña",
+        {"address": "line one\nline two"},
+    )
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    body = [
+        {
+            "measurement": "fake.entity_id",
+            "tags": {"domain": "fake", "entity_id": "entity_id"},
+            "time": ANY,
+            "fields": {
+                "state": "Avenida de Logroño, 50 28002 Madrid España",
+                "address_str": "line one line two",
+            },
+        }
+    ]
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
+    [
+        (
+            {"influxdb": BASE_OPTIONS},
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            {"influxdb": BASE_OPTIONS},
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
 async def test_event_listener_no_units(
     hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
 ) -> None:

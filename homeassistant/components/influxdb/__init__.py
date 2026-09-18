@@ -209,6 +209,15 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
+def _single_line(value: str) -> str:
+    """Return the value with its line breaks replaced by spaces.
+
+    Line protocol has no escape for a line break inside a string field, a
+    line break ends the point instead.
+    """
+    return " ".join(value.splitlines())
+
+
 def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
@@ -286,7 +295,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
             INFLUX_CONF_FIELDS: {},
         }
         if _include_state:
-            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = state.state
+            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = _single_line(state.state)
         if _include_value:
             json[INFLUX_CONF_FIELDS][INFLUX_CONF_VALUE] = _state_as_value
 
@@ -311,7 +320,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     json[INFLUX_CONF_FIELDS][key] = float(value)
                 except ValueError, TypeError:
                     new_key = f"{key}_str"
-                    new_value = str(value)
+                    new_value = _single_line(str(value))
                     json[INFLUX_CONF_FIELDS][new_key] = new_value
 
                     if RE_DIGIT_TAIL.match(new_value):
