@@ -154,10 +154,14 @@ async def test_reauth_errors(
     mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("api_key", ["replacement-token", "test-token"])
 async def test_reauth_duplicate(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    api_key: str,
 ) -> None:
-    """Reject a replacement key that already belongs to another feed."""
+    """Keep reauthentication open after a duplicate key and allow a retry."""
     mock_config_entry.add_to_hass(hass)
     other_entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "other-token"})
     other_entry.add_to_hass(hass)
@@ -171,9 +175,23 @@ async def test_reauth_duplicate(
         )
         await hass.async_block_till_done()
 
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {CONF_API_KEY: "already_configured"}
+        assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
+        assert other_entry.data == {CONF_API_KEY: "other-token"}
+        mock_client.get_event.assert_not_called()
+        mock_reload.assert_not_called()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: api_key}
+        )
+        await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_config_entry.data == {CONF_API_KEY: "test-token"}
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: api_key}
     assert other_entry.data == {CONF_API_KEY: "other-token"}
-    mock_client.get_event.assert_not_called()
-    mock_reload.assert_not_called()
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry, other_entry]
+    mock_client.get_event.assert_awaited_once()
+    mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
