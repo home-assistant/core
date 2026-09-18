@@ -1,10 +1,7 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import cast
 
 from bluetooth_data_tools import get_cipher_for_irk, resolve_private_address
 from cryptography.hazmat.primitives.ciphers import Cipher
@@ -13,7 +10,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import PRIVATE_BLE_DEVICE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +23,8 @@ def async_last_service_info(
 ) -> bluetooth.BluetoothServiceInfoBleak | None:
     """Find a BluetoothServiceInfoBleak for the irk.
 
-    This iterates over all currently visible mac addresses and checks them against `irk`.
-    It returns the newest.
+    This iterates over all currently visible mac addresses
+    and checks them against `irk`. It returns the newest.
     """
 
     # This can't use existing data collected by the coordinator - its called when
@@ -45,12 +42,14 @@ def async_last_service_info(
 
 
 class PrivateDevicesCoordinator:
-    """Monitor private bluetooth devices and correlate them with known IRK.
+    """Monitor private bluetooth devices and correlate with IRK.
 
-    This class should not be instanced directly - use `async_get_coordinator` to get an instance.
+    This class should not be instanced directly - use
+    `async_get_coordinator` to get an instance.
 
-    There is a single shared coordinator for all instances of this integration. This is to avoid
-    unnecessary hashing (AES) operations as much as possible.
+    There is a single shared coordinator for all instances
+    of this integration. This is to avoid unnecessary
+    hashing (AES) operations as much as possible.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -94,7 +93,8 @@ class PrivateDevicesCoordinator:
     def _async_track_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
-        # This should be called when the current MAC address associated with an IRK goes away.
+        # This should be called when the current MAC address
+        # associated with an IRK goes away.
         if resolved := self._mac_to_irk.get(service_info.address):
             if callbacks := self._unavailable_callbacks.get(resolved):
                 for cb in callbacks:
@@ -239,9 +239,9 @@ def async_get_coordinator(hass: HomeAssistant) -> PrivateDevicesCoordinator:
     mac addresses with an IRK involves AES operations. We don't want to
     duplicate that work.
     """
-    if existing := hass.data.get(DOMAIN):
-        return cast(PrivateDevicesCoordinator, existing)
+    if (existing := hass.data.get(PRIVATE_BLE_DEVICE_DATA)) is not None:
+        return existing
 
-    pdm = hass.data[DOMAIN] = PrivateDevicesCoordinator(hass)
+    coordinator = hass.data[PRIVATE_BLE_DEVICE_DATA] = PrivateDevicesCoordinator(hass)
 
-    return pdm
+    return coordinator

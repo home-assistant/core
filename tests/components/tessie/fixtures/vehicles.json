@@ -81,7 +81,12 @@
           "timestamp": 1701139037461,
           "trip_charging": false,
           "usable_battery_level": 75,
-          "user_charge_enable_request": null
+          "user_charge_enable_request": null,
+          "module_temp_min": 16.5,
+          "module_temp_max": 18,
+          "energy_remaining": 46.92,
+          "lifetime_energy_used": 20505.629,
+          "charging_schedule_override": false
         },
         "climate_state": {
           "allow_cabin_overheat_protection": true,

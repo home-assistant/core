@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_calendar_snapshot[start_date0-end_date0]
   dict({
-    'calendar.test_mower_1': dict({
+    'calendar.garden_test_mower_1': dict({
       'events': list([
         dict({
           'end': '2023-06-05T09:00:00+02:00',
@@ -75,7 +75,7 @@
         }),
       ]),
     }),
-    'calendar.test_mower_2': dict({
+    'calendar.garden_test_mower_2': dict({
       'events': list([
         dict({
           'end': '2023-06-05T02:49:00+02:00',

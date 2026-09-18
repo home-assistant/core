@@ -2,9 +2,9 @@
 
 from json import JSONDecodeError
 import logging
-from typing import cast
+from typing import cast, override
 
-from aiohttp import BasicAuth, ClientError
+from aiohttp import ClientError, encode_basic_auth
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -38,6 +38,7 @@ async def async_get_auth_implementation(
 class SmartThingsOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)
@@ -45,12 +46,14 @@ class SmartThingsOAuth2Implementation(AuthImplementation):
         resp = await session.post(
             self.token_url,
             data=data,
-            auth=BasicAuth(self.client_id, self.client_secret),
+            headers={
+                "Authorization": encode_basic_auth(self.client_id, self.client_secret)
+            },
         )
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")

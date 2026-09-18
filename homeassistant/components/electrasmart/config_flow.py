@@ -1,13 +1,11 @@
 """Config flow for Electra Air Conditioner integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.api.utils import generate_imei
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -32,6 +30,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._token: str | None = None
         self._api: ElectraAPI | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,16 +58,18 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if step_id == "user":
             schema = {
-                vol.Required(
+                probatio.Required(
                     CONF_PHONE_NUMBER, default=user_input.get(CONF_PHONE_NUMBER, "")
                 ): str
             }
         else:
-            schema = {vol.Required(CONF_OTP, default=user_input.get(CONF_OTP, "")): str}
+            schema = {
+                probatio.Required(CONF_OTP, default=user_input.get(CONF_OTP, "")): str
+            }
 
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors or {},
             description_placeholders=self._description_placeholders,
         )
@@ -155,6 +156,6 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=CONF_OTP,
-            data_schema=vol.Schema({vol.Required(CONF_OTP): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_OTP): str}),
             errors=errors or {},
         )

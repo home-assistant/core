@@ -4,8 +4,8 @@ import asyncio
 from functools import partial
 import logging
 
+import probatio
 from tellduslive import DIM, TURNON, UP, Session
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -32,18 +32,20 @@ APPLICATION_NAME = "Home Assistant"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_HOST, default=DOMAIN): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): vol.All(
-                    cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)
+                probatio.Optional(CONF_HOST, default=DOMAIN): cv.string,
+                probatio.Optional(
+                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL
+                ): probatio.All(
+                    cv.time_period, probatio.Clamp(min=MIN_UPDATE_INTERVAL)
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 DATA_CONFIG_ENTRY_LOCK = "tellduslive_config_entry_lock"
@@ -84,6 +86,8 @@ async def async_new_client(hass, session, entry):
     interval = entry.data[KEY_SCAN_INTERVAL]
     _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = client
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():

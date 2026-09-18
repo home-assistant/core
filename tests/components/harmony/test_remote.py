@@ -293,7 +293,7 @@ async def test_async_send_command_custom_delay(
     mock_write_config,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure calls to send remote commands properly propagate to devices with custom delays."""
+    """Ensure calls to send remote commands propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123",

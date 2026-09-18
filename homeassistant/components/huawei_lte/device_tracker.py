@@ -1,15 +1,12 @@
 """Support for device tracking of Huawei LTE routers."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -17,11 +14,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import snakecase
 
-from . import Router
+from . import HuaweiLteConfigEntry, Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DOMAIN,
     KEY_LAN_HOST_INFO,
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
@@ -50,7 +46,7 @@ def _get_hosts(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
@@ -58,7 +54,7 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     if (hosts := _get_hosts(router, True)) is None:
         return
 
@@ -119,7 +115,8 @@ def _is_connected(host: _HostType | None) -> bool:
 
 def _is_us(host: _HostType) -> bool:
     """Try to determine if the host entry is us, the HA instance."""
-    # LAN host info entries have an "isLocalDevice" property, "1" / "0"; WLAN host list ones don't.
+    # LAN host info entries have an "isLocalDevice" property,
+    # "1" / "0"; WLAN host list ones don't.
     return cast(str, host.get("isLocalDevice", "0")) == "1"
 
 
@@ -168,39 +165,47 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._mac_address = mac_address
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self.hostname or self.mac_address
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return self.mac_address
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._ip_address
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._mac_address
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._hostname
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Get whether the entity is connected."""
         return self._is_connected
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attributes related to entity state."""
         return self._extra_state_attributes
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         if (hosts := _get_hosts(self.router)) is None:
@@ -213,7 +218,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._is_connected = _is_connected(host)
         if host is not None:
             # IpAddress can contain multiple semicolon separated addresses.
-            # Pick one for model sanity; e.g. the dhcp component to which it is fed, parses and expects to see just one.
+            # Pick one for model sanity; e.g. the dhcp component
+            # to which it is fed, parses and expects to see just one.
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {

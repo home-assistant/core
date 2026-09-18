@@ -1,7 +1,5 @@
 """Base UptimeRobot entity."""
 
-from __future__ import annotations
-
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -23,39 +21,26 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
         self,
         coordinator: UptimeRobotDataUpdateCoordinator,
         description: EntityDescription,
-        monitor: UptimeRobotMonitor,
     ) -> None:
         """Initialize UptimeRobot entities."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._monitor = monitor
+        self._monitor_id = description.key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self.monitor.id))},
-            name=self.monitor.friendly_name,
+            identifiers={(DOMAIN, self._monitor_id)},
+            name=self._monitor.friendlyName,
             manufacturer="UptimeRobot Team",
             entry_type=DeviceEntryType.SERVICE,
-            model=self.monitor.type.name,
-            configuration_url=f"https://uptimerobot.com/dashboard#{self.monitor.id}",
+            model=self._monitor.type,
+            configuration_url=f"https://uptimerobot.com/dashboard#{self._monitor_id}",
         )
         self._attr_extra_state_attributes = {
-            ATTR_TARGET: self.monitor.url,
+            ATTR_TARGET: self._monitor.url,
         }
-        self._attr_unique_id = str(self.monitor.id)
+        self._attr_unique_id = self._monitor_id
         self.api = coordinator.api
 
     @property
-    def _monitors(self) -> list[UptimeRobotMonitor]:
-        """Return all monitors."""
-        return self.coordinator.data or []
-
-    @property
-    def monitor(self) -> UptimeRobotMonitor:
-        """Return the monitor for this entity."""
-        return next(
-            (
-                monitor
-                for monitor in self._monitors
-                if str(monitor.id) == self.entity_description.key
-            ),
-            self._monitor,
-        )
+    def _monitor(self) -> UptimeRobotMonitor:
+        """Handle monitor updates."""
+        return self.coordinator.data[int(self._monitor_id)]

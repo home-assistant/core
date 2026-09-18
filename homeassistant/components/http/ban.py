@@ -1,7 +1,5 @@
 """Ban logic for HTTP component."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -21,7 +19,7 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +28,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS
+from .const import KEY_HASS, is_supervisor_unix_socket_request
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -47,8 +45,8 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
-SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
-    {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
+SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
+    {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
 )
 
 
@@ -72,6 +70,10 @@ async def ban_middleware(
     request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
 ) -> StreamResponse:
     """IP Ban middleware."""
+    # Unix socket connections are trusted, skip ban checks
+    if is_supervisor_unix_socket_request(request):
+        return await handler(request)
+
     if (ban_manager := request.app.get(KEY_BAN_MANAGER)) is None:
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
@@ -230,7 +232,7 @@ class IpBanManager:
                 ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
                 ban = IpBan(ip_ban, ip_info["banned_at"])
                 ip_bans_lookup[ban.ip_address] = ban
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
                 continue
             except ValueError:

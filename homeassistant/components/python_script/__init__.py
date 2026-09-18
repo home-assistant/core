@@ -9,8 +9,9 @@ import operator
 import os
 import time
 import types
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import probatio
 from RestrictedPython import (
     compile_restricted_exec,
     limited_builtins,
@@ -23,7 +24,6 @@ from RestrictedPython.Guards import (
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
 )
-import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import (
@@ -35,7 +35,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 from homeassistant.util.yaml.loader import load_yaml_dict
 
@@ -45,7 +44,9 @@ DOMAIN = "python_script"
 
 FOLDER = "python_scripts"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema(dict)}, extra=probatio.ALLOW_EXTRA
+)
 
 ALLOWED_HASS = {"bus", "services", "states"}
 ALLOWED_EVENTBUS = {"fire"}
@@ -195,7 +196,6 @@ def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
     return op_fun(target, operand)
 
 
-@bind_hass
 def execute_script(
     hass: HomeAssistant,
     name: str,
@@ -210,7 +210,6 @@ def execute_script(
     return execute(hass, filename, source, data, return_response=return_response)
 
 
-@bind_hass
 def execute(
     hass: HomeAssistant,
     filename: str,
@@ -232,6 +231,9 @@ def execute(
         _LOGGER.warning(
             "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
         )
+
+    if TYPE_CHECKING:
+        assert compiled.code is not None
 
     def protected_getattr(obj: object, name: str, default: Any = None) -> Any:
         """Restricted method to get attributes."""

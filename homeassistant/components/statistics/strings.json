@@ -121,7 +121,7 @@
   "services": {
     "reload": {
       "description": "Reloads statistics sensors from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload statistics sensors"
     }
   },
   "title": "Statistics"

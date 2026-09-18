@@ -1,25 +1,27 @@
 """The Mikrotik router class."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-import logging
 import ssl
-from typing import Any
+from typing import Any, override
 
 import librouteros
+from librouteros.exceptions import ConnectionClosed
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ARP,
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
+    ATTR_ROUTERBOARD_FIRMWARE,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
     CONF_ARP_PING,
@@ -28,24 +30,32 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DHCP,
     DOMAIN,
+    HEALTH,
     IDENTITY,
-    INFO,
+    INTERFACE,
     IS_CAPSMAN,
     IS_WIFI,
     IS_WIFIWAVE2,
     IS_WIRELESS,
+    LOGGER,
     MIKROTIK_SERVICES,
     NAME,
+    PING,
+    POE,
+    RESOURCE,
+    ROUTERBOARD,
+    UPDATE,
     WIFI,
     WIFIWAVE2,
     WIRELESS,
 )
 from .device import Device
 from .errors import CannotConnect, LoginError
-
-_LOGGER = logging.getLogger(__name__)
+from .utils import calculate_uptime, mikrotik_config_entry_errors, percentage
 
 type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
+
+CONNECTION_ERRORS = (ConnectionClosed, OSError, TimeoutError)
 
 
 class MikrotikData:
@@ -69,6 +79,97 @@ class MikrotikData:
         self.model: str = ""
         self.firmware: str = ""
         self.serial_number: str = ""
+        self.sensors: dict[str, Any] = {}
+        self.system: dict[str, Any] = {}
+        self.interfaces: list[dict[str, Any]] = []
+
+    def _get_system_details(self, during_setup: bool = False) -> None:
+        """Retrieve system and routerboard details from Mikrotik API."""
+        self.system[IDENTITY] = (
+            self.command(MIKROTIK_SERVICES[IDENTITY], during_setup=during_setup) or [{}]
+        )[0]
+        self.system[ROUTERBOARD] = (
+            self.command(
+                MIKROTIK_SERVICES[ROUTERBOARD],
+                suppress_errors=True,
+                during_setup=during_setup,
+            )
+            or [{}]
+        )[0]
+
+    def _get_health_details(self) -> None:
+        """Retrieve health details from Mikrotik API."""
+        health_data = (
+            self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
+        )
+        self.sensors[HEALTH] = {
+            entry["name"]: entry["value"]
+            for entry in health_data
+            if "name" in entry and "value" in entry
+        }
+
+    def _get_resource_details(self) -> None:
+        """Retrieve resource details from Mikrotik API."""
+        resource_data = (
+            self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or [{}]
+        )[0]
+        self.sensors[RESOURCE] = (
+            {
+                "cpu-load": resource_data.get("cpu-load"),
+                "memory-usage": percentage(
+                    resource_data.get("total-memory", 0),
+                    resource_data.get("free-memory", 0),
+                ),
+                "disk-usage": percentage(
+                    resource_data.get("total-hdd-space", 0),
+                    resource_data.get("free-hdd-space", 0),
+                ),
+                "uptime": (
+                    calculate_uptime(resource_data["uptime"])
+                    if resource_data.get("uptime")
+                    else None
+                ),
+            }
+            if resource_data
+            else {}
+        )
+
+    def _get_interfaces_details(self) -> None:
+        """Get interfaces details."""
+        all_interfs = self.command(MIKROTIK_SERVICES[INTERFACE])
+
+        fields = {
+            ".id",
+            "name",
+            "type",
+            "mac-address",
+            "running",
+            "disabled",
+        }
+
+        poe_interfs = self.command(MIKROTIK_SERVICES[POE], suppress_errors=True) or []
+
+        poe_by_id = {
+            poe_interf[".id"]: poe_interf.get("poe-out", "off")
+            for poe_interf in poe_interfs
+        }
+
+        existing_by_id = {interf[".id"]: interf for interf in self.interfaces}
+
+        interfaces = []
+        for interf in all_interfs:
+            if interf.get("type") == "loopback":
+                continue
+            data = {key: interf.get(key) for key in fields}
+            if (poe_out := poe_by_id.get(data[".id"])) is not None:
+                data["poe-out"] = poe_out
+            if existing := existing_by_id.get(data[".id"]):
+                existing.update(data)
+                interfaces.append(existing)
+            else:
+                interfaces.append(data)
+
+        self.interfaces = interfaces
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -90,30 +191,34 @@ class MikrotikData:
         """Return force_dhcp option setting."""
         return self.config_entry.options.get(CONF_FORCE_DHCP, False)  # type: ignore[no-any-return]
 
-    def get_info(self, param: str) -> str:
-        """Return device model name."""
-        cmd = IDENTITY if param == NAME else INFO
-        if data := self.command(MIKROTIK_SERVICES[cmd], suppress_errors=(cmd == INFO)):
-            return str(data[0].get(param))
-        return ""
-
     def get_hub_details(self) -> None:
         """Get Hub info."""
-        self.hostname = self.get_info(NAME)
-        self.model = self.get_info(ATTR_MODEL)
-        self.firmware = self.get_info(ATTR_FIRMWARE)
-        self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+        self._get_system_details(during_setup=True)
+        self.hostname = str(self.system[IDENTITY].get(NAME))
+        self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
+        self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
+        self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(
-            self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True, during_setup=True
+            )
         )
         self.support_wireless = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True, during_setup=True
+            )
         )
         self.support_wifiwave2 = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIFIWAVE2],
+                suppress_errors=True,
+                during_setup=True,
+            )
         )
         self.support_wifi = bool(
-            self.command(MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True)
+            self.command(
+                MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True, during_setup=True
+            )
         )
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
@@ -131,36 +236,44 @@ class MikrotikData:
         arp_devices = {}
         device_list = {}
         wireless_devices = {}
-        try:
+        with mikrotik_config_entry_errors():
+            # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_capsman:
-                _LOGGER.debug("Hub is a CAPSman manager")
-                device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
-            elif self.support_wireless:
-                _LOGGER.debug("Hub supports wireless Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
-            elif self.support_wifiwave2:
-                _LOGGER.debug("Hub supports wifiwave2 Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFIWAVE2)
-            elif self.support_wifi:
-                _LOGGER.debug("Hub supports wifi Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFI)
+
+            # A hub can expose more than one wireless stack at once (e.g. the
+            # legacy "wireless" package kept for CAPsMAN alongside the newer
+            # "wifi" registration table), so merge every supported interface
+            # instead of picking only the first match.
+            for supported, interface, message in (
+                (self.support_capsman, CAPSMAN, "Hub is a CAPSman manager"),
+                (self.support_wireless, WIRELESS, "Hub supports wireless Interface"),
+                (self.support_wifiwave2, WIFIWAVE2, "Hub supports wifiwave2 Interface"),
+                (self.support_wifi, WIFI, "Hub supports wifi Interface"),
+            ):
+                if supported:
+                    LOGGER.debug(message)
+                    wireless_devices.update(self.get_list_from_interface(interface))
+
+            device_list = wireless_devices
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
-                _LOGGER.debug("Falling back to DHCP for scanning devices")
+                LOGGER.debug("Falling back to DHCP for scanning devices")
 
             if self.arp_enabled:
-                _LOGGER.debug("Using arp-ping to check devices")
+                LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
-            # get new hub firmware version if updated
-            self.firmware = self.get_info(ATTR_FIRMWARE)
+            # get hub details and system info
+            self._get_system_details()
 
-        except CannotConnect as err:
-            raise UpdateFailed from err
-        except LoginError as err:
-            raise ConfigEntryAuthFailed from err
+            self.system[UPDATE] = (
+                self.command(MIKROTIK_SERVICES[UPDATE], suppress_errors=True) or [{}]
+            )[0]
+
+            self._get_health_details()
+            self._get_resource_details()
+            self._get_interfaces_details()
 
         if not device_list:
             return
@@ -192,7 +305,7 @@ class MikrotikData:
 
     def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
-        _LOGGER.debug("pinging - %s", ip_address)
+        LOGGER.debug("pinging - %s", ip_address)
         params = {
             "arp-ping": "yes",
             "interval": "100ms",
@@ -200,15 +313,14 @@ class MikrotikData:
             "interface": interface,
             "address": ip_address,
         }
-        cmd = "/ping"
-        data = self.command(cmd, params)
+        data = self.command(MIKROTIK_SERVICES[PING], params)
         if data:
             status = 0
             for result in data:
                 if "status" in result:
                     status += 1
             if status == len(data):
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Mikrotik %s - %s arp_ping timed out", ip_address, interface
                 )
                 return False
@@ -219,30 +331,27 @@ class MikrotikData:
         cmd: str,
         params: dict[str, Any] | None = None,
         suppress_errors: bool = False,
+        during_setup: bool = False,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
-        _LOGGER.debug("Running command %s", cmd)
-        try:
-            if params:
-                return list(self.api(cmd=cmd, **params))
-            return list(self.api(cmd=cmd))
-        except (
-            librouteros.exceptions.ConnectionClosed,
-            OSError,
-            TimeoutError,
-        ) as api_error:
-            _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            # try to reconnect
-            self.api = get_api(dict(self.config_entry.data))
-            # we still have to raise CannotConnect to fail the update.
-            raise CannotConnect from api_error
-        except librouteros.exceptions.ProtocolError as api_error:
-            emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
-            if suppress_errors and "no such command prefix" in str(api_error):
-                _LOGGER.debug(emsg, self._host, cmd, api_error)
-                return []
-            _LOGGER.warning(emsg, self._host, cmd, api_error)
-            return []
+        LOGGER.debug("Running command %s", cmd)
+        with mikrotik_config_entry_errors(
+            suppress_errors=suppress_errors, during_setup=during_setup
+        ):
+            try:
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
+            except CONNECTION_ERRORS as err:
+                LOGGER.debug(
+                    "Mikrotik %s - connection dropped (%s), reconnecting",
+                    self._host,
+                    err,
+                )
+                self.api = get_api(dict(self.config_entry.data))
+                if params:
+                    return list(self.api(cmd, **params))
+                return list(self.api(cmd))
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -260,7 +369,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._mk_data = MikrotikData(hass, config_entry, api)
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} - {config_entry.data[CONF_HOST]}",
             update_interval=timedelta(seconds=10),
@@ -305,6 +414,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Represent Mikrotik data object."""
         return self._mk_data
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Mikrotik devices information."""
         await self.hass.async_add_executor_job(self._mk_data.update_devices)
@@ -312,10 +422,9 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
 def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
-    _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
+    LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
+    kwargs = {"port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
@@ -324,22 +433,30 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         _ssl_wrapper = ssl_context.wrap_socket
         kwargs["ssl_wrapper"] = _ssl_wrapper
 
-    try:
-        api = librouteros.connect(
-            entry[CONF_HOST],
-            entry[CONF_USERNAME],
-            entry[CONF_PASSWORD],
-            **kwargs,
-        )
-    except (
-        librouteros.exceptions.LibRouterosError,
-        OSError,
-        TimeoutError,
-    ) as api_error:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
-        if "invalid user name or password" in str(api_error):
-            raise LoginError from api_error
-        raise CannotConnect from api_error
+    _error: Exception | None = None
+    for method in (login_plain, login_token):
+        try:
+            kwargs["login_method"] = method
+            api = librouteros.connect(
+                entry[CONF_HOST],
+                entry[CONF_USERNAME],
+                entry[CONF_PASSWORD],
+                **kwargs,
+            )
+            _error = None
+            break
+        except (
+            librouteros.exceptions.LibRouterosError,
+            OSError,
+            TimeoutError,
+        ) as api_error:
+            _error = api_error
 
-    _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
+    if _error is not None:
+        LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        if "invalid user name or password" in str(_error):
+            raise LoginError from _error
+        raise CannotConnect from _error
+
+    LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api

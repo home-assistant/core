@@ -1,7 +1,5 @@
 """The melnor integration."""
 
-from __future__ import annotations
-
 from melnor_bluetooth.device import Device
 
 from homeassistant.components import bluetooth
@@ -9,7 +7,10 @@ from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 
+from .const import DOMAIN
 from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -56,6 +57,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register the parent device up front so zone entities can deterministically
+    # resolve its via_device_id, regardless of platform setup order.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, device.mac)},
+        connections={(CONNECTION_BLUETOOTH, device.mac)},
+        manufacturer="Melnor",
+        model=device.model,
+        name=device.name,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

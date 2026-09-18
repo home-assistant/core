@@ -1,8 +1,5 @@
 """The Electric Kiwi integration."""
 
-from __future__ import annotations
-
-import aiohttp
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
 
@@ -38,14 +35,7 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    try:
-        await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     ek_api = ElectricKiwiApi(
         api.ConfigEntryElectricKiwiAuth(

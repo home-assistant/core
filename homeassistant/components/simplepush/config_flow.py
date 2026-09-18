@@ -1,11 +1,9 @@
 """Config flow for simplepush integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from simplepush import UnknownError, send
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
@@ -39,6 +37,7 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
 class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for simplepush."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,12 +65,14 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE_KEY): str,
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): str,
-                    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,
+                    probatio.Required(CONF_DEVICE_KEY): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
+                    probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
+                    probatio.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): str,
+                    probatio.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,
                 }
             ),
             errors=errors,

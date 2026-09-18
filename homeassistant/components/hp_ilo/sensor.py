@@ -1,12 +1,10 @@
 """Support for information from HP iLO sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 import hpilo
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -52,26 +50,26 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_MONITORED_VARIABLES, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_SENSOR_TYPE): vol.All(
-                            cv.string, vol.In(SENSOR_TYPES)
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_SENSOR_TYPE): probatio.All(
+                            cv.string, probatio.In(SENSOR_TYPES)
                         ),
-                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+                        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -101,7 +99,6 @@ def setup_platform(
     devices = []
     for monitored_variable in monitored_variables:
         new_device = HpIloSensor(
-            hass=hass,
             hp_ilo_data=hp_ilo_data,
             sensor_name=f"{config[CONF_NAME]} {monitored_variable[CONF_NAME]}",
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
@@ -118,7 +115,6 @@ class HpIloSensor(SensorEntity):
 
     def __init__(
         self,
-        hass,
         hp_ilo_data,
         sensor_type,
         sensor_name,
@@ -126,37 +122,13 @@ class HpIloSensor(SensorEntity):
         unit_of_measurement,
     ):
         """Initialize the HP iLO sensor."""
-        self._hass = hass
-        self._name = sensor_name
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_name = sensor_name
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
         self._sensor_value_template = sensor_value_template
 
-        self._state = None
-        self._state_attributes = None
-
         _LOGGER.debug("Created HP iLO sensor %r", self)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._state_attributes
 
     def update(self) -> None:
         """Get the latest data from HP iLO and updates the states."""
@@ -171,7 +143,7 @@ class HpIloSensor(SensorEntity):
                 ilo_data=ilo_data, parse_result=False
             )
 
-        self._state = ilo_data
+        self._attr_native_value = ilo_data
 
 
 class HpIloData:

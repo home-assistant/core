@@ -1,14 +1,12 @@
 """Config flow for Airzone Cloud."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
 from aioairzone_cloud.const import AZD_ID, AZD_NAME, AZD_WEBSERVERS
 from aioairzone_cloud.exceptions import AirzoneCloudError, LoginError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
@@ -63,9 +61,9 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ID): SelectSelector(
+                    probatio.Required(CONF_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(value=k, label=v)
@@ -79,6 +77,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,17 +99,17 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.airzone.login()
-            except (AirzoneCloudError, LoginError):
+            except AirzoneCloudError, LoginError:
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_inst_pick()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

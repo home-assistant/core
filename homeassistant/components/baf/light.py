@@ -1,8 +1,6 @@
 """Support for Big Ass Fans lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiobafi6 import Device, OffOnAuto
 
@@ -37,6 +35,7 @@ class BAFLight(BAFEntity, LightEntity):
     _attr_name = None
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self._device.light_mode == OffOnAuto.ON
@@ -45,6 +44,7 @@ class BAFLight(BAFEntity, LightEntity):
                 self._device.light_brightness_level / 16 * 255
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -52,6 +52,7 @@ class BAFLight(BAFEntity, LightEntity):
         else:
             self._device.light_mode = OffOnAuto.ON
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._device.light_mode = OffOnAuto.OFF
@@ -77,11 +78,13 @@ class BAFStandaloneLight(BAFLight):
         self._attr_min_color_temp_kelvin = device.light_coolest_color_temperature
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         super()._async_update_attrs()
         self._attr_color_temp_kelvin = self._device.light_color_temperature
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if (color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:

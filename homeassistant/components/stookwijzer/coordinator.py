@@ -1,6 +1,7 @@
 """Class representing a Stookwijzer update coordinator."""
 
 from datetime import timedelta
+from typing import override
 
 from stookwijzer import Stookwijzer
 
@@ -39,6 +40,7 @@ class StookwijzerCoordinator(DataUpdateCoordinator[None]):
             config_entry.data[CONF_LONGITUDE],
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()

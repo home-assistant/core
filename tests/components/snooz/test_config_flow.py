@@ -1,12 +1,10 @@
 """Test the Snooz config flow."""
 
-from __future__ import annotations
-
 from asyncio import Event, sleep
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.snooz import DOMAIN
+from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -37,7 +35,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth with a device that's not in pairing mode, but enters pairing mode to complete setup."""
+    """Test discovery with a device not in pairing mode that enters it."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -52,7 +50,7 @@ async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_bluetooth_retries_pairing(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth with a device that's not in pairing mode, times out waiting, but eventually complete setup."""
+    """Test discovery retries pairing after timeout and completes setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -90,9 +88,14 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.snooz.config_flow.async_discovered_service_info",
-        return_value=[SNOOZ_SERVICE_INFO_PAIRING],
+    with (
+        patch(
+            "homeassistant.components.snooz.config_flow.async_discovered_service_info",
+            return_value=[SNOOZ_SERVICE_INFO_PAIRING],
+        ),
+        patch(
+            "homeassistant.components.snooz.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -103,6 +106,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result["data_schema"]
     # ensure discovered devices are listed as options
     assert result["data_schema"].schema["name"].container == [TEST_SNOOZ_DISPLAY_NAME]
+    mock_request_active_scan.assert_awaited_once_with(hass)
     await _test_setup_entry(
         hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
     )
@@ -111,7 +115,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
 async def test_async_step_user_with_found_devices_waits_to_pair(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found that require pairing mode."""
+    """Test setup from service info cache with devices requiring pairing."""
     with patch(
         "homeassistant.components.snooz.config_flow.async_discovered_service_info",
         return_value=[SNOOZ_SERVICE_INFO_NOT_PAIRING],
@@ -129,7 +133,7 @@ async def test_async_step_user_with_found_devices_waits_to_pair(
 async def test_async_step_user_with_found_devices_retries_pairing(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found that require pairing mode, times out, then completes."""
+    """Test setup from service info cache retries pairing then completes."""
     with patch(
         "homeassistant.components.snooz.config_flow.async_discovered_service_info",
         return_value=[SNOOZ_SERVICE_INFO_NOT_PAIRING],

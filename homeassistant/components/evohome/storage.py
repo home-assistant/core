@@ -1,9 +1,7 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
-from datetime import UTC, datetime, timedelta
-from typing import Any, NotRequired, TypedDict
+from datetime import datetime, timedelta
+from typing import Any, NotRequired, TypedDict, override
 
 from evohomeasync.auth import (
     SZ_SESSION_ID,
@@ -14,6 +12,7 @@ from evohomeasync2.auth import AbstractTokenManager
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import STORAGE_KEY, STORAGE_VER
 
@@ -47,6 +46,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         self._store = Store(hass, STORAGE_VER, STORAGE_KEY)  # type: ignore[var-annotated]
         self._store_initialized = False  # True once cache loaded first time
 
+    @override
     async def get_access_token(self) -> str:
         """Return a valid access token.
 
@@ -58,6 +58,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         return await super().get_access_token()
 
+    @override
     async def get_session_id(self) -> str:
         """Return a valid session id.
 
@@ -85,6 +86,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
             self._import_session_id(cache)  # type: ignore[arg-type]
         self._import_access_token(cache)
 
+    @override
     def _import_session_id(self, session: _SessionIdEntryT) -> None:  # type: ignore[override]
         """Extract the session id from a (serialized) dictionary."""
         # base class method overridden because session_id_expired is NotRequired here
@@ -93,14 +95,16 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         session_id_expires = session.get(SZ_SESSION_ID_EXPIRES)
         if session_id_expires is None:
-            self._session_id_expires = datetime.now(tz=UTC) + timedelta(minutes=15)
+            self._session_id_expires = dt_util.utcnow() + timedelta(minutes=15)
         else:
             self._session_id_expires = datetime.fromisoformat(session_id_expires)
 
+    @override
     async def save_access_token(self) -> None:  # an abstractmethod
         """Save the access token (and expiry dtm, refresh token) to the cache."""
         await self.save_cache_to_store()
 
+    @override
     async def save_session_id(self) -> None:  # an abstractmethod
         """Save the session id (and expiry dtm) to the cache."""
         await self.save_cache_to_store()

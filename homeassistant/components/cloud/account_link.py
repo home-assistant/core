@@ -1,10 +1,8 @@
 """Account linking via the cloud."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -98,15 +96,24 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         self.service = service
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Home Assistant Cloud"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain that is providing the implementation."""
         return DOMAIN
 
+    @property
+    @override
+    def service_domain(self) -> str:
+        """Domain of the service the tokens are for."""
+        return self.service
+
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         helper = account_link.AuthorizeAccountHelper(
@@ -130,20 +137,24 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        # It's a background task because it should be cancelled on shutdown and there's nothing else
-        # we can do in such case. There's also no need to wait for this during setup.
+        # It's a background task because it should be cancelled
+        # on shutdown and there's nothing else we can do in
+        # such case. There's also no need to wait for this
+        # during setup.
         self.hass.async_create_background_task(
             await_tokens(), name="Awaiting OAuth tokens"
         )
 
         return authorize_url
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve external data to tokens."""
         # We already passed in tokens
         dict_data: dict = external_data
         return dict_data
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
         new_token = await account_link.async_fetch_access_token(

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from melnor_bluetooth.device import Device
 
@@ -33,6 +34,7 @@ class MelnorDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         )
         self._device = device
 
+    @override
     async def _async_update_data(self):
         """Update the device state."""
 

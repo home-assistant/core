@@ -2,16 +2,21 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyHomee import (
     Homee,
     HomeeAuthFailedException as HomeeAuthenticationFailedException,
     HomeeConnectionFailedException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -24,11 +29,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -76,6 +81,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,6 +108,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -113,7 +120,22 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_address")
 
-        await self.async_set_unique_id(self._name)
+        # If an already configured homee reports with a second IP, abort.
+        existing_entry = await self.async_set_unique_id(self._name)
+        if (
+            existing_entry
+            and existing_entry.state is ConfigEntryState.LOADED
+            and existing_entry.runtime_data.connected
+            and existing_entry.data[CONF_HOST] != self._host
+        ):
+            _LOGGER.debug(
+                "Aborting config flow for discovered homee with IP %s "
+                "since it is already configured at IP %s",
+                self._host,
+                existing_entry.data[CONF_HOST],
+            )
+            return self.async_abort(reason="2nd_ip_address")
+
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         # Cause an auth-error to see if homee is reachable.
@@ -157,10 +179,10 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -215,10 +237,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._reauth_username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=self._reauth_username
+                    ): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={
@@ -265,9 +289,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                     ): str
                 }

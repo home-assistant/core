@@ -112,8 +112,6 @@
               ]),
               'success': list([
               ]),
-              'targets': list([
-              ]),
             }),
             'language': 'en',
             'response_type': 'action_done',
@@ -347,8 +345,6 @@
               ]),
               'success': list([
               ]),
-              'targets': list([
-              ]),
             }),
             'language': 'en',
             'response_type': 'action_done',
@@ -494,6 +490,10 @@
         'chat_log_delta': dict({
           'agent_id': 'test-agent',
           'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'result': dict({
+            'data': 'Test response',
+            'error': False,
+          }),
           'role': 'tool_result',
           'tool_call_id': 'test_tool_id',
           'tool_name': 'test_tool',
@@ -579,8 +579,6 @@
               ]),
               'success': list([
               ]),
-              'targets': list([
-              ]),
             }),
             'language': 'en',
             'response_type': 'action_done',
@@ -658,8 +656,6 @@
               ]),
               'success': list([
               ]),
-              'targets': list([
-              ]),
             }),
             'language': 'en',
             'response_type': 'action_done',
@@ -712,8 +708,6 @@
               ]),
               'success': list([
               ]),
-              'targets': list([
-              ]),
             }),
             'language': 'en',
             'response_type': 'action_done',
@@ -765,8 +759,6 @@
               'failed': list([
               ]),
               'success': list([
-              ]),
-              'targets': list([
               ]),
             }),
             'language': 'en',

@@ -6,10 +6,15 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 
 
-def test_async_parse_datetime(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.parametrize(
+    "device_class",
+    [SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME],
+)
+def test_async_parse_datetime(
+    caplog: pytest.LogCaptureFixture, device_class: SensorDeviceClass
+) -> None:
     """Test async_parse_date_datetime."""
     entity_id = "sensor.timestamp"
-    device_class = SensorDeviceClass.TIMESTAMP
     assert (
         async_parse_date_datetime(
             "2021-12-12 12:12Z", entity_id, device_class

@@ -1,13 +1,12 @@
 """Support for Broadlink switches."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import ABC, abstractmethod
 import logging
-from typing import Any
+from typing import Any, override
 
 from broadlink.exceptions import BroadlinkException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -46,24 +45,24 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SLOTS = "slots"
 
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_COMMAND_OFF): data_packet,
-        vol.Optional(CONF_COMMAND_ON): data_packet,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_COMMAND_OFF): data_packet,
+        probatio.Optional(CONF_COMMAND_ON): data_packet,
     }
 )
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_SLOTS),
     cv.deprecated(CONF_TIMEOUT),
     cv.deprecated(CONF_TYPE),
     SWITCH_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_MAC): mac_address,
-            vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+            probatio.Required(CONF_MAC): mac_address,
+            probatio.Optional(CONF_HOST): cv.string,
+            probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
                 cv.ensure_list,
                 [SWITCH_SCHEMA],
             ),
@@ -150,18 +149,21 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._command_on = command_on
         self._command_off = command_off
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the switch is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
         await super().async_added_to_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         if await self._async_send_packet(self._command_on):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         if await self._async_send_packet(self._command_off):
@@ -183,6 +185,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
         )
         self._attr_name = config[CONF_NAME]
 
+    @override
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         device = self._device
@@ -208,6 +211,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         super().__init__(device, 1, 0)
         self._attr_unique_id = self._device.unique_id
 
+    @override
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         device = self._device
@@ -232,6 +236,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         super().__init__(device, *args, **kwargs)
         self._attr_is_on = self._coordinator.data["pwr"]
 
+    @override
     def _update_state(self, data):
         """Update the state of the entity."""
         self._attr_is_on = data["pwr"]
@@ -251,10 +256,12 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         self._attr_name = f"S{slot}"
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
+    @override
     def _update_state(self, data):
         """Update the state of the entity."""
         self._attr_is_on = data[f"s{self._slot}"]
 
+    @override
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         device = self._device
@@ -283,10 +290,12 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
+    @override
     def _update_state(self, data):
         """Update the state of the entity."""
         self._attr_is_on = data[f"pwr{self._slot}"]
 
+    @override
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         device = self._device

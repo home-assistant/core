@@ -59,6 +59,9 @@
       "self_test": {
         "default": "mdi:progress-wrench"
       },
+      "storage_free_space": {
+        "default": "mdi:sd"
+      },
       "tilt": {
         "default": "mdi:angle-acute"
       },
@@ -70,6 +73,13 @@
       }
     },
     "switch": {
+      "camera_privacy": {
+        "default": "mdi:eye-outline",
+        "state": {
+          "off": "mdi:eye-outline",
+          "on": "mdi:eye-off-outline"
+        }
+      },
       "cury_away_mode": {
         "default": "mdi:home-outline",
         "state": {
@@ -104,6 +114,14 @@
           "on": "mdi:valve-open"
         }
       }
+    }
+  },
+  "services": {
+    "get_kvs_value": {
+      "service": "mdi:import"
+    },
+    "set_kvs_value": {
+      "service": "mdi:export"
     }
   }
 }

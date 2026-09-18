@@ -1,7 +1,5 @@
 """Support for Netgear LTE modems."""
 
-from typing import Any
-
 from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
@@ -19,7 +17,6 @@ from .const import (
     ATTR_MESSAGE,
     ATTR_SMS_ID,
     DATA_HASS_CONFIG,
-    DATA_SESSION,
     DOMAIN,
 )
 from .coordinator import NetgearLTEConfigEntry, NetgearLTEDataUpdateCoordinator
@@ -51,7 +48,6 @@ ALL_BINARY_SENSORS = [
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.NOTIFY,
     Platform.SENSOR,
 ]
 
@@ -61,6 +57,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     hass.data[DATA_HASS_CONFIG] = config
+    async_setup_services(hass)
 
     return True
 
@@ -70,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
-    if not (session := data.get(DATA_SESSION)) or session.closed:
-        session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     modem = eternalegypt.Modem(hostname=host, websession=session)
 
     try:
@@ -96,29 +91,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    async_setup_services(hass)
-
     await discovery.async_load_platform(
         hass,
         Platform.NOTIFY,
         DOMAIN,
-        {CONF_NAME: entry.title, "modem": modem},
+        {CONF_NAME: entry.title, "modem": modem, "entry": entry},
         hass.data[DATA_HASS_CONFIG],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.data.pop(DOMAIN, None)
-        for service_name in hass.services.async_services()[DOMAIN]:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

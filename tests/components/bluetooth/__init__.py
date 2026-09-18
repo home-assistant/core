@@ -3,6 +3,7 @@
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 import itertools
+from platform import system
 import time
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -37,6 +38,7 @@ __all__ = (
     "inject_advertisement_with_time_and_source_connectable",
     "inject_bluetooth_service_info",
     "patch_all_discovered_devices",
+    "patch_bleak_backend_type",
     "patch_bluetooth_time",
     "patch_discovered_devices",
 )
@@ -72,6 +74,47 @@ def patch_bluetooth_time(mock_time: float) -> None:
         patch("habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time),
         patch("habluetooth.manager.monotonic_time_coarse", return_value=mock_time),
         patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time),
+    ):
+        yield
+
+
+@contextmanager
+def patch_bleak_backend_type() -> Generator[None]:
+    """Patch bleak backend type based on current platform."""
+    platform = system()
+
+    if platform == "Darwin":
+        from bleak.backends.corebluetooth.client import (  # noqa: PLC0415
+            BleakClientCoreBluetooth,
+        )
+        from bleak.backends.corebluetooth.scanner import (  # noqa: PLC0415
+            BleakScannerCoreBluetooth,
+        )
+
+        scanner_backend = (BleakScannerCoreBluetooth, "CoreBluetooth")
+        client_backend = (BleakClientCoreBluetooth, "CoreBluetooth")
+    elif platform == "Linux":
+        from bleak.backends.bluezdbus.client import (  # noqa: PLC0415
+            BleakClientBlueZDBus,
+        )
+        from bleak.backends.bluezdbus.scanner import (  # noqa: PLC0415
+            BleakScannerBlueZDBus,
+        )
+
+        scanner_backend = (BleakScannerBlueZDBus, "BlueZ")
+        client_backend = (BleakClientBlueZDBus, "BlueZ")
+    else:
+        raise RuntimeError(f"Unsupported platform for Bluetooth testing: {platform}")
+
+    with (
+        patch(
+            "bleak.get_platform_scanner_backend_type",
+            return_value=scanner_backend,
+        ),
+        patch(
+            "bleak.get_platform_client_backend_type",
+            return_value=client_backend,
+        ),
     ):
         yield
 
@@ -147,7 +190,7 @@ def inject_advertisement_with_time_and_source_connectable(
     connectable: bool,
     raw: bytes | None = None,
 ) -> None:
-    """Inject an advertisement into the manager from a specific source at a time and connectable status."""
+    """Inject an advertisement at a time from a source with connectable status."""
     async_get_advertisement_callback(hass)(
         BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
@@ -269,7 +312,7 @@ async def _async_setup_with_adapter(
     hass: HomeAssistant, address: str
 ) -> MockConfigEntry:
     """Set up the Bluetooth integration with any adapter."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id=address)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=address)
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

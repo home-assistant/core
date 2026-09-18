@@ -1,12 +1,10 @@
 """Handle Hue Service calls."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
 from aiohue import HueBridgeV1, HueBridgeV2
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -65,12 +63,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_HUE_ACTIVATE_SCENE,
         verify_domain_control(DOMAIN)(hue_activate_scene),
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_GROUP_NAME): cv.string,
-                vol.Required(ATTR_SCENE_NAME): cv.string,
-                vol.Optional(ATTR_TRANSITION): cv.positive_int,
-                vol.Optional(ATTR_DYNAMIC): cv.boolean,
+                probatio.Required(ATTR_GROUP_NAME): cv.string,
+                probatio.Required(ATTR_SCENE_NAME): cv.string,
+                probatio.Optional(ATTR_TRANSITION): cv.positive_int,
+                probatio.Optional(ATTR_DYNAMIC): cv.boolean,
             }
         ),
     )

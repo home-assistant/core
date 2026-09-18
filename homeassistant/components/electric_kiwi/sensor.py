@@ -1,10 +1,9 @@
 """Support for Electric Kiwi sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from electrickiwi_api.model import AccountSummary, Hop
 
@@ -47,8 +46,8 @@ class ElectricKiwiAccountSensorEntityDescription(SensorEntityDescription):
 def _get_hop_percentage(account_balance: AccountSummary) -> float:
     """Return the hop percentage from account summary."""
     if power := account_balance.services.get("power"):
-        if connection := power.connections[0]:
-            return float(connection.hop_percentage)
+        if connections := power.connections:
+            return float(connections[0].hop_percentage)
     return 0.0
 
 
@@ -179,6 +178,7 @@ class ElectricKiwiAccountEntity(
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
@@ -208,6 +208,7 @@ class ElectricKiwiHOPEntity(
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)

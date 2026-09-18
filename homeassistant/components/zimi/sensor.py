@@ -1,10 +1,9 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
@@ -72,7 +71,7 @@ async def async_setup_entry(
     api = config_entry.runtime_data
 
     async_add_entities(
-        ZimiSensor(device, description, api)
+        ZimiSensor(hass, device, description, api, config_entry.entry_id)
         for device in api.sensors
         for description in GARAGE_SENSOR_DESCRIPTIONS
     )
@@ -85,18 +84,21 @@ class ZimiSensor(ZimiEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         device: ControlPointDevice,
         description: ZimiSensorEntityDescription,
         api: ControlPoint,
+        config_entry_id: str,
     ) -> None:
         """Initialize an ZimiSensor with specified type."""
 
-        super().__init__(device, api, use_device_name=False)
+        super().__init__(hass, device, api, config_entry_id, use_device_name=False)
 
         self.entity_description = description
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 

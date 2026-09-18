@@ -1,7 +1,5 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform

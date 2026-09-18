@@ -1,7 +1,5 @@
 """Test cryptographic hash functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 
 from tests.helpers.template.helpers import render
@@ -30,6 +28,10 @@ def test_sha256(hass: HomeAssistant) -> None:
 
 def test_sha512(hass: HomeAssistant) -> None:
     """Test the sha512 function and filter."""
-    ha_sha512 = "9e3c2cdd1fbab0037378d37e1baf8a3a4bf92c54b56ad1d459deee30ccbb2acbebd7a3614552ea08992ad27dedeb7b4c5473525ba90cb73dbe8b9ec5f69295bb"
+    ha_sha512 = (
+        "9e3c2cdd1fbab0037378d37e1baf8a3a4bf92c54b56ad1d459deee30"
+        "ccbb2acbebd7a3614552ea08992ad27dedeb7b4c5473525ba90cb73d"
+        "be8b9ec5f69295bb"
+    )
     assert render(hass, "{{ sha512('Home Assistant') }}") == ha_sha512
     assert render(hass, "{{ 'Home Assistant' | sha512 }}") == ha_sha512

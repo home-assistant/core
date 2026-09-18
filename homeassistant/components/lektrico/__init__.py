@@ -1,7 +1,5 @@
 """The Lektrico Charging Station integration."""
 
-from __future__ import annotations
-
 from lektricowifi import Device
 
 from homeassistant.const import CONF_TYPE, Platform

@@ -3,7 +3,7 @@
 from datetime import timedelta
 import re
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -48,7 +48,9 @@ CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST = "localhost"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_PORT = 8086
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
@@ -130,25 +132,36 @@ RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
-    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
-        vol.Coerce(str),
-        vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+    probatio.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): probatio.All(
+        probatio.Coerce(str),
+        probatio.In([DEFAULT_API_VERSION, API_VERSION_2]),
     ),
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PATH): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_SSL_CA_CERT): cv.isfile,
-    vol.Optional(CONF_PRECISION): vol.In(["ms", "s", "us", "ns"]),
+    probatio.Optional(CONF_HOST): cv.string,
+    probatio.Optional(CONF_PATH): cv.string,
+    probatio.Optional(CONF_PORT): cv.port,
+    probatio.Optional(CONF_SSL): cv.boolean,
+    probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    probatio.Optional(CONF_SSL_CA_CERT): cv.isfile,
+    probatio.Optional(CONF_PRECISION): probatio.In(["ms", "s", "us", "ns"]),
     # Connection config for V1 API only.
-    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+    probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+    probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    probatio.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     # Connection config for V2 API only.
-    vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
-    vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
-    vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+    probatio.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    probatio.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
+    probatio.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+}
+
+# Same keys without defaults, used in CONFIG_SCHEMA to validate
+# without injecting default values (so we can detect explicit keys).
+COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS = {
+    (
+        probatio.Optional(k.schema)
+        if isinstance(k, probatio.Optional) and k.default is not probatio.UNDEFINED
+        else k
+    ): v
+    for k, v in COMPONENT_CONFIG_SCHEMA_CONNECTION.items()
 }

@@ -22,8 +22,7 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
-And optional parameter 'type' has to set as 'link_user' if login flow used for
-link credential to exist user. Default 'type' is 'authorize'.
+The default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
@@ -52,10 +51,8 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
-The authorization code associated with an authorized user by default, it will
-associate with an credential if "type" set to "link_user" in
-"/auth/login_flow"
+have type FlowResultType.CREATE_ENTRY and "result" key will contain
+an authorization code.
 
 {
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
@@ -67,16 +64,13 @@ associate with an credential if "type" set to "link_user" in
 }
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
-import voluptuous as vol
-import voluptuous_serialize
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
@@ -115,6 +109,7 @@ def async_setup(
 ) -> None:
     """Component to allow users to login."""
     hass.http.register_view(WellKnownOAuthInfoView)
+    hass.http.register_view(WellKnownProtectedResourceView)
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow, store_result))
     hass.http.register_view(LoginFlowResourceView(hass.auth.login_flow, store_result))
@@ -141,6 +136,12 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            # Home Assistant accepts URL-based client_ids via IndieAuth without
+            # prior registration, and discovers allowed redirect URIs from link
+            # tags or a Client ID Metadata Document served at the client_id URL.
+            # This flag advertises that support
+            # (draft-ietf-oauth-client-id-metadata-document).
+            "client_id_metadata_document_supported": True,
             "response_types_supported": ["code"],
             "service_documentation": (
                 "https://developers.home-assistant.io/docs/auth_api"
@@ -152,6 +153,32 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             metadata["issuer"] = url_prefix
 
         return self.json(metadata)
+
+
+class WellKnownProtectedResourceView(HomeAssistantView):
+    """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
+
+    requires_auth = False
+    url = "/.well-known/oauth-protected-resource"
+    name = "well-known/oauth-protected-resource"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return the protected resource metadata."""
+        hass = request.app[KEY_HASS]
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
+
+        return self.json(
+            {
+                "resource": url_prefix,
+                "authorization_servers": [url_prefix],
+                "resource_documentation": (
+                    "https://developers.home-assistant.io/docs/auth_api"
+                ),
+            }
+        )
 
 
 class AuthProvidersView(HomeAssistantView):
@@ -194,7 +221,8 @@ class AuthProvidersView(HomeAssistantView):
                         remote_address
                     )
                 except InvalidAuthError:
-                    # Not a trusted network, so we don't expose that trusted_network authenticator is setup
+                    # Not a trusted network, so we don't expose that
+                    # trusted_network authenticator is setup
                     continue
 
             providers.append(
@@ -217,19 +245,19 @@ class AuthProvidersView(HomeAssistantView):
 
 def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return {
             key: val for key, val in result.items() if key not in ("result", "data")
         }
 
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = probatio.to_field_list(schema)
 
     return data
 
@@ -255,11 +283,11 @@ class LoginFlowBaseView(HomeAssistantView):
         result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (
-                result["type"] == data_entry_flow.FlowResultType.FORM
+                result["type"] is data_entry_flow.FlowResultType.FORM
                 and (errors := result.get("errors"))
                 and errors.get("base")
                 in (
@@ -310,14 +338,18 @@ class LoginFlowIndexView(LoginFlowBaseView):
         return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("client_id"): str,
-                vol.Required("handler"): vol.All(
-                    [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
+                probatio.Required("client_id"): str,
+                probatio.Required("handler"): probatio.All(
+                    [probatio.Any(str, None)],
+                    probatio.Length(2, 2),
+                    probatio.Coerce(tuple),
                 ),
-                vol.Required("redirect_uri"): str,
-                vol.Optional("type", default="authorize"): str,
+                probatio.Required("redirect_uri"): str,
+                probatio.Optional(
+                    "type", default="authorize"
+                ): str,  # not used, kept for backwards compatibility
             }
         )
     )
@@ -337,7 +369,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 handler,
                 context=AuthFlowContext(
                     ip_address=ip_address(request.remote),  # type: ignore[arg-type]
-                    credential_only=data.get("type") == "link_user",
                     redirect_uri=redirect_uri,
                 ),
             )
@@ -362,9 +393,9 @@ class LoginFlowResourceView(LoginFlowBaseView):
         return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
 
     @RequestDataValidator(
-        vol.Schema(
-            {vol.Required("client_id"): str},
-            extra=vol.ALLOW_EXTRA,
+        probatio.Schema(
+            {probatio.Required("client_id"): str},
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @log_invalid_auth
@@ -385,7 +416,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
         return await self._async_flow_result_to_response(request, client_id, result)

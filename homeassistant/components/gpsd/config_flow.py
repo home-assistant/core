@@ -1,12 +1,10 @@
 """Config flow for GPSD integration."""
 
-from __future__ import annotations
-
 import socket
-from typing import Any
+from typing import Any, override
 
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT, HOST as DEFAULT_HOST
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -14,10 +12,10 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -39,6 +37,7 @@ class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

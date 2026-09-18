@@ -1,8 +1,7 @@
 """Support for the QR code image processing."""
 
-from __future__ import annotations
-
 import io
+from typing import override
 
 from PIL import Image
 from pyzbar import pyzbar
@@ -41,6 +40,7 @@ class QrEntity(ImageProcessingEntity):
             self._attr_name = f"QR {split_entity_id(camera_entity)[1]}"
         self._attr_state = None
 
+    @override
     def process_image(self, image: bytes) -> None:
         """Process image."""
         stream = io.BytesIO(image)

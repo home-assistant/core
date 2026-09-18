@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_number_snapshot[number.test_number_button_brightness_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button brightness (active)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -42,12 +44,12 @@
 # name: test_number_snapshot[number.test_number_button_brightness_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Button brightness (active)',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Button brightness (active)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_button_brightness_active',
@@ -59,14 +61,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_button_brightness_dimmed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button brightness (dimmed)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -100,12 +104,12 @@
 # name: test_number_snapshot[number.test_number_button_brightness_dimmed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Button brightness (dimmed)',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Button brightness (dimmed)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_button_brightness_dimmed',
@@ -117,14 +121,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_display_brightness_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness (active)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -158,12 +164,12 @@
 # name: test_number_snapshot[number.test_number_display_brightness_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Display brightness (active)',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Display brightness (active)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_display_brightness_active',
@@ -175,14 +181,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_display_brightness_dimmed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness (dimmed)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,12 +224,12 @@
 # name: test_number_snapshot[number.test_number_display_brightness_dimmed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Display brightness (dimmed)',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Display brightness (dimmed)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_display_brightness_dimmed',
@@ -233,14 +241,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_movement_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 240,
-      'min': 4,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -257,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down-movement duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -274,13 +284,13 @@
 # name: test_number_snapshot[number.test_number_down_movement_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Down-movement duration',
-      'max': 240,
-      'min': 4,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down-movement duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_movement_duration',
@@ -292,14 +302,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -316,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -333,12 +345,12 @@
 # name: test_number_snapshot[number.test_number_down_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Down position',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down position',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_position',
@@ -350,14 +362,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_down_slat_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 75,
-      'min': -75,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 75,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -75,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -374,6 +387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Down slat position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,12 +405,12 @@
 # name: test_number_snapshot[number.test_number_down_slat_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Down slat position',
-      'max': 75,
-      'min': -75,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down slat position',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 75,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -75,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_slat_position',
@@ -408,14 +422,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_end_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 130,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 130,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -432,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,11 +465,11 @@
 # name: test_number_snapshot[number.test_number_end_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number End position',
-      'max': 130,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number End position',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 130,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_end_position',
@@ -465,14 +481,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_external_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 6,
-      'min': -6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -489,6 +506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -506,12 +524,12 @@
 # name: test_number_snapshot[number.test_number_external_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number External temperature offset',
-      'max': 6,
-      'min': -6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number External temperature offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_external_temperature_offset',
@@ -523,14 +541,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_floor_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 6,
-      'min': -6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -547,6 +566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Floor temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,12 +584,12 @@
 # name: test_number_snapshot[number.test_number_floor_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Floor temperature offset',
-      'max': 6,
-      'min': -6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Floor temperature offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_floor_temperature_offset',
@@ -581,14 +601,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_maximum_slat_angle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 127,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -605,6 +626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum slat angle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -622,12 +644,12 @@
 # name: test_number_snapshot[number.test_number_maximum_slat_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Maximum slat angle',
-      'max': 127,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Maximum slat angle',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_maximum_slat_angle',
@@ -639,14 +661,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_minimum_slat_angle-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 127,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -663,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum slat angle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -680,12 +704,12 @@
 # name: test_number_snapshot[number.test_number_minimum_slat_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Minimum slat angle',
-      'max': 127,
-      'min': -127,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Minimum slat angle',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_minimum_slat_angle',
@@ -697,14 +721,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_motion_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 15300,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion alarm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -738,13 +764,13 @@
 # name: test_number_snapshot[number.test_number_motion_alarm_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Motion alarm delay',
-      'max': 15300,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Motion alarm delay',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_motion_alarm_delay',
@@ -756,14 +782,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_polling_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 45,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -780,6 +807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Polling interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -797,13 +825,13 @@
 # name: test_number_snapshot[number.test_number_polling_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Polling interval',
-      'max': 45,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5.0,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Polling interval',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_polling_interval',
@@ -815,14 +843,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_slat_steps-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 20,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 20,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -839,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Slat steps',
     'options': dict({
     }),
     'original_device_class': None,
@@ -856,11 +886,11 @@
 # name: test_number_snapshot[number.test_number_slat_steps-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Slat steps',
-      'max': 20,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Slat steps',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 20,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_slat_steps',
@@ -872,14 +902,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_slat_turn_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 24,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 24,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -896,6 +927,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Slat turn duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -913,13 +945,13 @@
 # name: test_number_snapshot[number.test_number_slat_turn_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Slat turn duration',
-      'max': 24,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Slat turn duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 24,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_slat_turn_duration',
@@ -931,14 +963,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 128,
-      'min': -5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 128,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -955,6 +988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -972,31 +1006,32 @@
 # name: test_number_snapshot[number.test_number_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Temperature offset',
-      'max': 128,
-      'min': -5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Temperature offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 128,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '-3',
   })
 # ---
 # name: test_number_snapshot[number.test_number_temperature_report_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 32767,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 32767,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1013,6 +1048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature report interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1030,13 +1066,13 @@
 # name: test_number_snapshot[number.test_number_temperature_report_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Temperature report interval',
-      'max': 32767,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Temperature report interval',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 32767,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_temperature_report_interval',
@@ -1048,14 +1084,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 22.5,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threshold for wind trigger',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
@@ -1089,13 +1127,13 @@
 # name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'wind_speed',
-      'friendly_name': 'Test Number Threshold for wind trigger',
-      'max': 22.5,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2.5,
-      'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Threshold for wind trigger',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_threshold_for_wind_trigger',
@@ -1107,14 +1145,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_up_movement_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 240,
-      'min': 4,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1131,6 +1170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up-movement duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1148,13 +1188,13 @@
 # name: test_number_snapshot[number.test_number_up_movement_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Up-movement duration',
-      'max': 240,
-      'min': 4,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Up-movement duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_up_movement_duration',
@@ -1166,14 +1206,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_wake_up_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 7200,
-      'min': 30,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 30.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7200,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 30,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 30.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1190,6 +1231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wake-up interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1207,13 +1249,13 @@
 # name: test_number_snapshot[number.test_number_wake_up_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Wake-up interval',
-      'max': 7200,
-      'min': 30,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 30.0,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Wake-up interval',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7200,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 30,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 30.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_wake_up_interval',
@@ -1225,14 +1267,15 @@
 # ---
 # name: test_number_snapshot[number.test_number_window_open_sensibility-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 3,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1249,6 +1292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window open sensibility',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1266,11 +1310,11 @@
 # name: test_number_snapshot[number.test_number_window_open_sensibility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Window open sensibility',
-      'max': 3,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Window open sensibility',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_window_open_sensibility',

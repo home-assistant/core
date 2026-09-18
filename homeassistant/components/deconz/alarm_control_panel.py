@@ -1,6 +1,6 @@
 """Support for deCONZ alarm control panel devices."""
 
-from __future__ import annotations
+from typing import override
 
 from pydeconz.models.alarm_system import AlarmSystemArmAction
 from pydeconz.models.event import EventType
@@ -91,18 +91,21 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
         self.alarm_system_id = alarm_system_id
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the control panels state."""
         if self._device.panel in DECONZ_TO_ALARM_STATE:
             super().async_update_callback()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the control panel."""
         if self._device.panel in DECONZ_TO_ALARM_STATE:
             return DECONZ_TO_ALARM_STATE[self._device.panel]
         return None
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code:
@@ -110,6 +113,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
                 self.alarm_system_id, AlarmSystemArmAction.AWAY, code
             )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
@@ -117,6 +121,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
                 self.alarm_system_id, AlarmSystemArmAction.STAY, code
             )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code:
@@ -124,6 +129,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
                 self.alarm_system_id, AlarmSystemArmAction.NIGHT, code
             )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:

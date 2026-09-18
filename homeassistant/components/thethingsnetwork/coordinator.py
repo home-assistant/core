@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ttn_client import TTNAuthError, TTNClient
 
@@ -15,13 +16,15 @@ from .const import CONF_APP_ID, POLLING_PERIOD_S
 
 _LOGGER = logging.getLogger(__name__)
 
+type TTNConfigEntry = ConfigEntry[TTNCoordinator]
+
 
 class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
     """TTN coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TTNConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TTNConfigEntry) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -42,6 +45,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             push_callback=self._push_callback,
         )
 
+    @override
     async def _async_update_data(self) -> TTNClient.DATA_TYPE:
         """Fetch data from API endpoint.
 

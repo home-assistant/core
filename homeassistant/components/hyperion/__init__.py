@@ -1,6 +1,4 @@
-"""The Hyperion component."""
-
-from __future__ import annotations
+"""The Hyperion integration."""
 
 import asyncio
 from collections.abc import Callable
@@ -258,7 +256,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> 
 
     hyperion_client.set_callbacks(
         {
-            f"{hyperion_const.KEY_INSTANCE}-{hyperion_const.KEY_UPDATE}": async_instances_to_clients,
+            f"{hyperion_const.KEY_INSTANCE}-{hyperion_const.KEY_UPDATE}": (
+                async_instances_to_clients
+            ),
         }
     )
 

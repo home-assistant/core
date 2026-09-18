@@ -5,20 +5,17 @@ from unittest.mock import call
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
-from .conftest import create_rfx_test_cfg
+from .conftest import create_rfx_test_entry
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import mock_restore_cache
 
 
 async def test_one_light(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 light."""
-    entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
-
+    mock_entry = create_rfx_test_entry(devices={"0b1100cd0213c7f210020f51": {}})
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -102,9 +99,7 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, brightness) -> 
         hass, [State(entity_id, state, attributes={ATTR_BRIGHTNESS: brightness})]
     )
 
-    entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
-
+    mock_entry = create_rfx_test_entry(devices={"0b1100cd0213c7f210020f51": {}})
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -116,15 +111,13 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, brightness) -> 
 
 async def test_several_lights(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 lights."""
-    entry_data = create_rfx_test_cfg(
+    mock_entry = create_rfx_test_entry(
         devices={
             "0b1100cd0213c7f230020f71": {},
             "0b1100100118cdea02020f70": {},
             "0b1100101118cdea02050f70": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
-
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)

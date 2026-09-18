@@ -1,11 +1,9 @@
 """Config flow to configure the AdGuard Home integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -35,14 +33,14 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=3000): vol.Coerce(int),
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=True): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=True): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Required(CONF_SSL, default=True): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             errors=errors or {},
@@ -59,6 +57,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,10 +103,11 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for a Hass.io AdGuard Home add-on.
+        """Prepare configuration for a Hass.io AdGuard Home app.
 
         This flow is triggered by the discovery component.
         """

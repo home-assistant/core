@@ -1,7 +1,5 @@
 """Manager to set up IO with Crownstone devices for a config entry."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -81,7 +79,8 @@ class CrownstoneEntryManager:
             _LOGGER.error("Unknown error during login")
             raise ConfigEntryNotReady from unknown_err
 
-        # A new clientsession is created because the default one does not cleanup on unload
+        # A new clientsession is created because the default
+        # one does not cleanup on unload
         self.sse = CrownstoneSSEAsync(
             email=email,
             password=password,
@@ -100,7 +99,8 @@ class CrownstoneEntryManager:
             await self.async_setup_usb()
 
         # Save the sphere where the USB is located
-        # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
+        # Makes HA aware of the Crownstone environment HA is
+        # placed in, a user can have multiple
         self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
 
         return True

@@ -1,10 +1,8 @@
 """Support for switches using GC100."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -18,10 +16,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_PORTS, DATA_GC100, GC100Device
 
-_SWITCH_SCHEMA = vol.Schema({cv.string: cv.string})
+_SWITCH_SCHEMA = probatio.Schema({cv.string: cv.string})
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SWITCH_SCHEMA])}
+    {probatio.Required(CONF_PORTS): probatio.All(cv.ensure_list, [_SWITCH_SCHEMA])}
 )
 
 
@@ -51,19 +49,23 @@ class GC100Switch(SwitchEntity):
         self._state: bool | None = None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the entity."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._gc100.write_switch(self._port_addr, 1, self.set_state)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._gc100.write_switch(self._port_addr, 0, self.set_state)

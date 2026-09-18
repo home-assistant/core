@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -82,6 +83,16 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         value_fn=lambda result: result.data.get("jitter"),
         has_fn=lambda result: "jitter" in result.data,
     ),
+    PingSensorEntityDescription(
+        key="loss",
+        translation_key="loss",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.data.get("loss"),
+        has_fn=lambda result: "loss" in result.data,
+    ),
 )
 
 
@@ -119,11 +130,13 @@ class PingSensor(PingEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.is_alive
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

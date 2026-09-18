@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant import core
 from homeassistant.components import switch
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -63,7 +64,7 @@ async def test_switch_context(
     hass_admin_user: MockUser,
 ) -> None:
     """Test that switch context works."""
-    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"switch": {"platform": "test"}})
 
     await hass.async_block_till_done()
 

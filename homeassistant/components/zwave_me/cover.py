@@ -1,20 +1,18 @@
 """Representation of a cover."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry
 from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.COVER
@@ -22,21 +20,14 @@ DEVICE_NAME = ZWaveMePlatform.COVER
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the cover platform."""
 
     @callback
     def add_new_device(new_device):
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        cover = ZWaveMeCover(controller, new_device)
-
-        async_add_entities(
-            [
-                cover,
-            ]
-        )
+        async_add_entities([ZWaveMeCover(config_entry.runtime_data, new_device)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -55,14 +46,17 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         | CoverEntityFeature.STOP
     )
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=99")
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
         value = kwargs[ATTR_POSITION]
@@ -70,11 +64,13 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
             self.device.id, f"exact?level={min(value, 99)!s}"
         )
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         self.controller.zwave_api.send_command(self.device.id, "stop")
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -89,6 +85,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         return self.device.level
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed.
 

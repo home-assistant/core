@@ -1,10 +1,9 @@
 """Support for SNMP enabled switch."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
@@ -29,7 +28,6 @@ from pysnmp.proto.rfc1902 import (
     TimeTicks,
     Unsigned32,
 )
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -103,27 +101,29 @@ MAP_SNMP_VARTYPES = {
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BASEOID): cv.string,
-        vol.Optional(CONF_COMMAND_OID): cv.string,
-        vol.Optional(CONF_COMMAND_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_COMMAND_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTH_KEY): cv.string,
-        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
-            MAP_AUTH_PROTOCOLS
+        probatio.Required(CONF_BASEOID): cv.string,
+        probatio.Optional(CONF_COMMAND_OID): cv.string,
+        probatio.Optional(CONF_COMMAND_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_COMMAND_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
+            SNMP_VERSIONS
         ),
-        vol.Optional(CONF_PRIV_KEY): cv.string,
-        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
-            MAP_PRIV_PROTOCOLS
-        ),
-        vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_AUTH_KEY): cv.string,
+        probatio.Optional(
+            CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
+        ): probatio.In(MAP_AUTH_PROTOCOLS),
+        probatio.Optional(CONF_PRIV_KEY): cv.string,
+        probatio.Optional(
+            CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
+        ): probatio.In(MAP_PRIV_PROTOCOLS),
+        probatio.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 
@@ -233,17 +233,20 @@ class SnmpSwitch(SwitchEntity):
         self._request_args = request_args
         self._command_args = command_args
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # The transport creation is done once this entity is registered with HA
         # (rather than in the __init__)
         self._target = await UdpTransportTarget.create((self._host, self._port))  # pylint: disable=attribute-defined-outside-init
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         # If vartype set, use it - https://www.pysnmp.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
         await self._execute_command(self._command_payload_on)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._execute_command(self._command_payload_off)
@@ -292,6 +295,7 @@ class SnmpSwitch(SwitchEntity):
                     self._state = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on; False if off. None if unknown."""
         return self._state

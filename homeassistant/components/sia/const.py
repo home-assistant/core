@@ -1,7 +1,5 @@
 """Constants for the sia integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import Platform

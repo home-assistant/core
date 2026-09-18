@@ -4,6 +4,7 @@
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/otp",
+  "integration_type": "helper",
   "iot_class": "local_polling",
   "loggers": ["pyotp"],
   "quality_scale": "internal",

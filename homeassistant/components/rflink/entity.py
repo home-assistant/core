@@ -1,9 +1,8 @@
 """Support for Rflink devices."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
+from typing import override
 
 from rflink.protocol import ProtocolBase
 
@@ -37,7 +36,6 @@ class RflinkDevice(Entity):
     """
 
     _state: bool | None = None
-    _available = True
     _attr_should_poll = False
 
     def __init__(
@@ -51,16 +49,16 @@ class RflinkDevice(Entity):
         nogroup_aliases=None,
         fire_event=False,
         signal_repetitions=DEFAULT_SIGNAL_REPETITIONS,
-    ):
+    ) -> None:
         """Initialize the device."""
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
         self._attr_unique_id = device_id
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = device_id
+            self._attr_name = device_id
 
         self._aliases = aliases
         self._group = group
@@ -93,33 +91,25 @@ class RflinkDevice(Entity):
         raise NotImplementedError
 
     @property
-    def name(self):
-        """Return a name for the device."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         if self.assumed_state:
             return False
         return self._state
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Assume device state until first device event sets state."""
         return self._state is None
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
     @callback
     def _availability_callback(self, availability):
         """Update availability state."""
-        self._available = availability
+        self._attr_available = availability
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
@@ -300,12 +290,14 @@ class RflinkCommand(RflinkDevice):
 class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_ON
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()

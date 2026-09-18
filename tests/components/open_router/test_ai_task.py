@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, patch
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.const import Platform
@@ -121,9 +121,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.gemini_1_5_pro",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -149,6 +149,7 @@ async def test_generate_structured_data(
                 },
                 "required": ["characters"],
                 "type": "object",
+                "additionalProperties": False,
             },
             "strict": True,
         },
@@ -197,9 +198,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id="ai_task.gemini_1_5_pro",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -208,6 +209,35 @@ async def test_generate_invalid_structured_data(
                     )
                 },
             ),
+        )
+
+
+async def test_generate_data_empty_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task raises HomeAssistantError when API returns empty choices."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[],
+            created=1700000000,
+            model="x-ai/grok-3",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="API returned empty response"):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate test data",
         )
 
 

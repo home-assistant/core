@@ -1,12 +1,12 @@
 """Config flow for the Airobot integration."""
 
-from __future__ import annotations
-
+import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import (
     AirobotAuthError,
@@ -14,7 +14,6 @@ from pyairobotrest.exceptions import (
     AirobotError,
     AirobotTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as BaseConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
@@ -27,11 +26,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -60,11 +59,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceInf
 
     try:
         # Try to fetch data to validate connection and authentication
-        status = await client.get_statuses()
-        settings = await client.get_settings()
+        status, settings = await asyncio.gather(
+            client.get_statuses(), client.get_settings()
+        )
     except AirobotAuthError as err:
         raise InvalidAuth from err
-    except (AirobotConnectionError, AirobotTimeoutError, AirobotError) as err:
+    except (
+        AirobotConnectionError,
+        AirobotTimeoutError,
+        AirobotError,
+        TimeoutError,
+    ) as err:
         raise CannotConnect from err
 
     # Use device name or device ID as title
@@ -85,6 +90,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         self._discovered_mac: str | None = None
         self._discovered_device_id: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -137,9 +143,9 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         # Only ask for password since we already have the device_id from discovery
         return self.async_show_form(
             step_id="dhcp_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={
@@ -149,6 +155,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -173,6 +180,42 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Verify the device ID matches the existing config entry
+                await self.async_set_unique_id(info.device_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                    title=info.title,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(
@@ -213,9 +256,9 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             description_placeholders={

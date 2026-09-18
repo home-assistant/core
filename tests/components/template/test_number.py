@@ -1,17 +1,12 @@
 """The tests for the Template number platform."""
 
+from enum import StrEnum
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import setup
-from homeassistant.components import number, template
-from homeassistant.components.input_number import (
-    ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
-    DOMAIN as INPUT_NUMBER_DOMAIN,
-    SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
-)
+from homeassistant.components import number
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
@@ -19,9 +14,11 @@ from homeassistant.components.number import (
     ATTR_VALUE as NUMBER_ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
+    NumberEntityCapabilityAttribute,
 )
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.const import CONF_PICTURE
+from homeassistant.components.template.number import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -32,86 +29,51 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import ConfigType
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
+)
 
-from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
-_TEST_OBJECT_ID = "template_number"
-_TEST_NUMBER = f"number.{_TEST_OBJECT_ID}"
-# Represent for number's value
-_VALUE_INPUT_NUMBER = "input_number.value"
-# Represent for number's minimum
-_MINIMUM_INPUT_NUMBER = "input_number.minimum"
-# Represent for number's maximum
-_MAXIMUM_INPUT_NUMBER = "input_number.maximum"
-# Represent for number's step
-_STEP_INPUT_NUMBER = "input_number.step"
-
-# Config for `_VALUE_INPUT_NUMBER`
-_VALUE_INPUT_NUMBER_CONFIG = {
-    "value": {
-        "min": 0.0,
-        "max": 100.0,
-        "name": "Value",
-        "step": 1.0,
-        "mode": "slider",
-    }
-}
-
-TEST_STATE_ENTITY_ID = "number.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
-TEST_STATE_TRIGGER = {
-    "trigger": {
-        "trigger": "state",
-        "entity_id": [TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY_ID],
-    },
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "action": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
+TEST_MAXIMUM_ENTITY_ID = "sensor.maximum"
+TEST_MINIMUM_ENTITY_ID = "sensor.minimum"
+TEST_STATE_ENTITY_ID = "number.test_state"
+TEST_STEP_ENTITY_ID = "sensor.step"
+TEST_NUMBER = TemplatePlatformSetup(
+    number.DOMAIN,
+    "template_number",
+    make_test_trigger(
+        TEST_AVAILABILITY_ENTITY_ID,
+        TEST_MAXIMUM_ENTITY_ID,
+        TEST_MINIMUM_ENTITY_ID,
+        TEST_STATE_ENTITY_ID,
+        TEST_STEP_ENTITY_ID,
+    ),
+)
+TEST_SET_VALUE_ACTION = make_test_action("set_value", {"value": "{{ value }}"})
 TEST_REQUIRED = {"state": "0", "step": "1", "set_value": []}
-
-
-async def async_setup_modern_format(
-    hass: HomeAssistant, count: int, number_config: dict[str, Any]
-) -> None:
-    """Do setup of number integration via new format."""
-    config = {"template": {"number": number_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, number_config: dict[str, Any]
-) -> None:
-    """Do setup of number integration via trigger format."""
-    config = {"template": {**TEST_STATE_TRIGGER, "number": number_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -119,17 +81,10 @@ async def setup_number(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
-    number_config: dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass, count, {"name": _TEST_OBJECT_ID, **number_config}
-        )
-    if style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass, count, {"name": _TEST_OBJECT_ID, **number_config}
-        )
+    await setup_entity(hass, TEST_NUMBER, style, count, config)
 
 
 async def test_setup_config_entry(
@@ -166,294 +121,131 @@ async def test_setup_config_entry(
     assert state == snapshot
 
 
-async def test_missing_optional_config(hass: HomeAssistant) -> None:
-    """Test: missing optional template is ok."""
-    with assert_setup_component(1, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
             {
-                "template": {
-                    "number": {
-                        "state": "{{ 4 }}",
-                        "set_value": {"service": "script.set_value"},
-                        "step": "{{ 1 }}",
-                    }
-                }
+                "state": "{{ 4 }}",
+                "set_value": {"service": "script.set_value"},
+                "step": "{{ 1 }}",
             },
         )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
+    """Test: missing optional template is ok."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     _verify(hass, 4, 1, 0.0, 100.0, None)
 
 
-async def test_missing_required_keys(hass: HomeAssistant) -> None:
-    """Test: missing required fields will fail."""
-    with assert_setup_component(0, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            0,
             {
-                "template": {
-                    "number": {
-                        "state": "{{ 4 }}",
-                    }
-                }
+                "state": "{{ 4 }}",
             },
         )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_missing_required_keys(hass: HomeAssistant) -> None:
+    """Test: missing required fields will fail."""
     assert hass.states.async_all("number") == []
 
 
-async def test_all_optional_config(hass: HomeAssistant) -> None:
-    """Test: including all optional templates is ok."""
-    with assert_setup_component(1, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
             {
-                "template": {
-                    "number": {
-                        "state": "{{ 4 }}",
-                        "set_value": {"service": "script.set_value"},
-                        "min": "{{ 3 }}",
-                        "max": "{{ 5 }}",
-                        "step": "{{ 1 }}",
-                        "unit_of_measurement": "beer",
-                    }
-                }
+                "state": "{{ 4 }}",
+                "set_value": {"service": "script.set_value"},
+                "min": "{{ 3 }}",
+                "max": "{{ 5 }}",
+                "step": "{{ 1 }}",
+                "unit_of_measurement": "beer",
             },
         )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_all_optional_config(hass: HomeAssistant) -> None:
+    """Test: including all optional templates is ok."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     _verify(hass, 4, 1, 3, 5, "beer")
 
 
-async def test_templates_with_entities(
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "state": f"{{{{ states('{TEST_STATE_ENTITY_ID}') | float(1.0) }}}}",
+                "step": f"{{{{ states('{TEST_STEP_ENTITY_ID}') | float(5.0) }}}}",
+                "min": f"{{{{ states('{TEST_MINIMUM_ENTITY_ID}') | float(0.0) }}}}",
+                "max": f"{{{{ states('{TEST_MAXIMUM_ENTITY_ID}') | float(100.0) }}}}",
+                **TEST_SET_VALUE_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_template_number(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
 ) -> None:
     """Test templates with values from other entities."""
-    with assert_setup_component(4, "input_number"):
-        assert await setup.async_setup_component(
-            hass,
-            "input_number",
-            {
-                "input_number": {
-                    **_VALUE_INPUT_NUMBER_CONFIG,
-                    "step": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Step",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
-                    "minimum": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Minimum",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
-                    "maximum": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Maximum",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
-                }
-            },
-        )
-
-    with assert_setup_component(1, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
-            {
-                "template": {
-                    "unique_id": "b",
-                    "number": {
-                        "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
-                        "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
-                        "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
-                        "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
-                        "set_value": [
-                            {
-                                "service": "input_number.set_value",
-                                "data_template": {
-                                    "entity_id": _VALUE_INPUT_NUMBER,
-                                    "value": "{{ value }}",
-                                },
-                            },
-                            {
-                                "service": "test.automation",
-                                "data_template": {
-                                    "action": "set_value",
-                                    "caller": "{{ this.entity_id }}",
-                                    "value": "{{ value }}",
-                                },
-                            },
-                        ],
-                        "optimistic": True,
-                        "unique_id": "a",
-                    },
-                }
-            },
-        )
-
-    hass.states.async_set(_VALUE_INPUT_NUMBER, 4)
-    hass.states.async_set(_STEP_INPUT_NUMBER, 1)
-    hass.states.async_set(_MINIMUM_INPUT_NUMBER, 3)
-    hass.states.async_set(_MAXIMUM_INPUT_NUMBER, 5)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    entry = entity_registry.async_get(_TEST_NUMBER)
-    assert entry
-    assert entry.unique_id == "b-a"
-
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 4)
+    await async_trigger(hass, TEST_STEP_ENTITY_ID, 1)
+    await async_trigger(hass, TEST_MINIMUM_ENTITY_ID, 3)
+    await async_trigger(hass, TEST_MAXIMUM_ENTITY_ID, 5)
     _verify(hass, 4, 1, 3, 5, None)
 
-    await hass.services.async_call(
-        INPUT_NUMBER_DOMAIN,
-        INPUT_NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 5},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 5)
     _verify(hass, 5, 1, 3, 5, None)
 
-    await hass.services.async_call(
-        INPUT_NUMBER_DOMAIN,
-        INPUT_NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: _STEP_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 2},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STEP_ENTITY_ID, 2)
     _verify(hass, 5, 2, 3, 5, None)
 
-    await hass.services.async_call(
-        INPUT_NUMBER_DOMAIN,
-        INPUT_NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: _MINIMUM_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 2},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_MINIMUM_ENTITY_ID, 2)
     _verify(hass, 5, 2, 2, 5, None)
 
-    await hass.services.async_call(
-        INPUT_NUMBER_DOMAIN,
-        INPUT_NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: _MAXIMUM_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 6},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_MAXIMUM_ENTITY_ID, 6)
     _verify(hass, 5, 2, 2, 6, None)
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: _TEST_NUMBER, NUMBER_ATTR_VALUE: 2},
+        {CONF_ENTITY_ID: TEST_NUMBER.entity_id, NUMBER_ATTR_VALUE: 2},
         blocking=True,
     )
+
+    assert_action(TEST_NUMBER, calls, 1, "set_value", value=2)
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 2)
     _verify(hass, 2, 2, 2, 6, None)
-
-    # Check this variable can be used in set_value script
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_value"
-    assert calls[-1].data["caller"] == _TEST_NUMBER
-    assert calls[-1].data["value"] == 2
-
-
-async def test_trigger_number(hass: HomeAssistant) -> None:
-    """Test trigger based template number."""
-    events = async_capture_events(hass, "test_number_event")
-    assert await setup.async_setup_component(
-        hass,
-        "template",
-        {
-            "template": [
-                {"invalid": "config"},
-                # Config after invalid should still be set up
-                {
-                    "unique_id": "listening-test-event",
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "number": [
-                        {
-                            "name": "Hello Name",
-                            "unique_id": "hello_name-id",
-                            "state": "{{ trigger.event.data.beers_drank }}",
-                            "min": "{{ trigger.event.data.min_beers }}",
-                            "max": "{{ trigger.event.data.max_beers }}",
-                            "step": "{{ trigger.event.data.step }}",
-                            "unit_of_measurement": "beer",
-                            "set_value": {
-                                "event": "test_number_event",
-                                "event_data": {"entity_id": "{{ this.entity_id }}"},
-                            },
-                            "optimistic": True,
-                        },
-                    ],
-                },
-            ],
-        },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.hello_name")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes["min"] == 0.0
-    assert state.attributes["max"] == 100.0
-    assert state.attributes["step"] == 1.0
-    assert state.attributes["unit_of_measurement"] == "beer"
-
-    context = Context()
-    hass.bus.async_fire(
-        "test_event",
-        {
-            "beers_drank": 3,
-            "min_beers": 1.0,
-            "max_beers": 5.0,
-            "step": 0.5,
-        },
-        context=context,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.hello_name")
-    assert state is not None
-    assert state.state == "3.0"
-    assert state.attributes["min"] == 1.0
-    assert state.attributes["max"] == 5.0
-    assert state.attributes["step"] == 0.5
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        NUMBER_SERVICE_SET_VALUE,
-        {CONF_ENTITY_ID: "number.hello_name", NUMBER_ATTR_VALUE: 2},
-        blocking=True,
-    )
-    assert len(events) == 1
-    assert events[0].event_type == "test_number_event"
-    entity_id = events[0].data.get("entity_id")
-    assert entity_id is not None
-    assert entity_id == "number.hello_name"
 
 
 def _verify(
@@ -465,7 +257,7 @@ def _verify(
     expected_unit_of_measurement: str | None,
 ) -> None:
     """Verify number's state."""
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     attributes = state.attributes
     assert state.state == str(float(expected_value))
     assert attributes.get(ATTR_STEP) == float(expected_step)
@@ -480,11 +272,13 @@ def _verify(
     [(ConfigurationStyle.MODERN, ""), (ConfigurationStyle.TRIGGER, None)],
 )
 @pytest.mark.parametrize(
-    ("number_config", "attribute", "expected"),
+    ("config", "attribute", "expected"),
     [
         (
             {
-                CONF_ICON: "{% if states.number.test_state.state == '1' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.number.test_state.state == '1' %}mdi:check{% endif %}"
+                ),
                 **TEST_REQUIRED,
             },
             ATTR_ICON,
@@ -492,7 +286,9 @@ def _verify(
         ),
         (
             {
-                CONF_PICTURE: "{% if states.number.test_state.state == '1' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.number.test_state.state == '1' %}check.jpg{% endif %}"
+                ),
                 **TEST_REQUIRED,
             },
             ATTR_ENTITY_PICTURE,
@@ -508,13 +304,12 @@ async def test_templated_optional_config(
     initial_expected_state: str | None,
 ) -> None:
     """Test optional config templates."""
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert state.attributes.get(attribute) == initial_expected_state
 
-    state = hass.states.async_set(TEST_STATE_ENTITY_ID, "1")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "1")
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
 
     assert state.attributes[attribute] == expected
 
@@ -561,13 +356,13 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("number.my_template")
+    template_entity = entity_registry.async_get("number.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
 
 @pytest.mark.parametrize(
-    ("count", "number_config"),
+    ("count", "config"),
     [
         (
             1,
@@ -587,26 +382,26 @@ async def test_optimistic(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         number.DOMAIN,
         number.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        {ATTR_ENTITY_ID: TEST_NUMBER.entity_id, "value": 4},
         blocking=True,
     )
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 4
 
     await hass.services.async_call(
         number.DOMAIN,
         number.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 2},
+        {ATTR_ENTITY_ID: TEST_NUMBER.entity_id, "value": 2},
         blocking=True,
     )
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 2
 
 
 @pytest.mark.parametrize(
-    ("count", "number_config"),
+    ("count", "config"),
     [
         (
             1,
@@ -628,23 +423,25 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         number.DOMAIN,
         number.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        {ATTR_ENTITY_ID: TEST_NUMBER.entity_id, "value": 4},
         blocking=True,
     )
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
-    ("count", "number_config"),
+    ("count", "config"),
     [
         (
             1,
             {
                 "set_value": [],
                 "state": "{{ states('number.test_state') }}",
-                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+                "availability": (
+                    "{{ is_state('binary_sensor.test_availability', 'on') }}"
+                ),
             },
         )
     ],
@@ -656,34 +453,56 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
 async def test_availability(hass: HomeAssistant) -> None:
     """Test configuration with optimistic state."""
 
-    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
-    hass.states.async_set(TEST_STATE_ENTITY_ID, "4.0")
-    await hass.async_block_till_done()
-
-    state = hass.states.get(_TEST_NUMBER)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "4.0")
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "on")
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 4
 
-    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "off")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "off")
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert state.state == STATE_UNAVAILABLE
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, "2.0")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "2.0")
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert state.state == STATE_UNAVAILABLE
 
-    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "on")
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 2
 
 
 @pytest.mark.parametrize(
-    ("count", "number_config"),
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "set_value": [],
+                "state": "{{ states('number.test_state') }}",
+                "availability": "{{ x - 12 }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog_setup_text: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "anything")
+    assert hass.states.get(TEST_NUMBER.entity_id).state != STATE_UNAVAILABLE
+    error = "UndefinedError: 'x' is undefined"
+    assert error in caplog_setup_text or error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
     [
         (
             1,
@@ -702,16 +521,17 @@ async def test_availability(hass: HomeAssistant) -> None:
         ConfigurationStyle.MODERN,
     ],
 )
-async def test_empty_action_config(hass: HomeAssistant, setup_number) -> None:
+@pytest.mark.usefixtures("setup_number")
+async def test_empty_action_config(hass: HomeAssistant) -> None:
     """Test configuration with empty script."""
     await hass.services.async_call(
         number.DOMAIN,
         number.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        {ATTR_ENTITY_ID: TEST_NUMBER.entity_id, "value": 4},
         blocking=True,
     )
 
-    state = hass.states.get(_TEST_NUMBER)
+    state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 4
 
 
@@ -734,3 +554,335 @@ async def test_flow_preview(
     )
 
     assert state["state"] == "0.0"
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+) -> None:
+    """Test unique_id option only creates one vacuum per id."""
+    await setup_and_test_unique_id(hass, TEST_NUMBER, style, TEST_REQUIRED, "{{ 0 }}")
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to vacuum unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_NUMBER, style, entity_registry, TEST_REQUIRED, "{{ 0 }}"
+    )
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "expected_device_class"),
+    [
+        (
+            {
+                **TEST_REQUIRED,
+                "unit_of_measurement": "°C",
+                "device_class": "temperature",
+            },
+            "temperature",
+        ),
+        (
+            TEST_REQUIRED,
+            None,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_setup_valid_device_class(
+    hass: HomeAssistant, expected_device_class: str | None
+) -> None:
+    """Test setup with valid device_class."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "75")
+    assert (
+        hass.states.get(TEST_NUMBER.entity_id).attributes.get("device_class")
+        == expected_device_class
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "some_value",
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            "10",
+            {
+                "step": 2,
+                "min": 2,
+                "max": 80,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            "some_value",
+            {
+                "native_max_value": None,
+                "native_min_value": None,
+                "native_step": None,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            "10",
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            STATE_UNKNOWN,
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            STATE_UNKNOWN,
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring state."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_NUMBER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_NUMBER,
+        style,
+        {
+            "max": "{{ state_attr('number.test_state', 'max') or 100 }}",
+            "min": "{{ state_attr('number.test_state', 'min') or 0 }}",
+            "state": "{{ state_attr('number.test_state', 'native_value') }}",
+            "step": "{{ state_attr('number.test_state', 'step') or 1 }}",
+            "set_value": [],
+            "device_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        "state_attr('number.test_state', 'native_value') | float(0) > 6",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_NUMBER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "number.test_state",
+        "anything",
+        {
+            "native_value": 30.0,
+            "step": 3,
+            "min": 3,
+            "max": 60,
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_NUMBER,
+        "30.0",
+        {"step": 3, "min": 3, "max": 60},
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass,
+        TEST_NUMBER,
+        style,
+        {
+            "state": "0",
+            "step": "1",
+        },
+        "set_value",
+        caplog,
+    )
+
+
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass,
+        TEST_NUMBER,
+        {
+            "state": "0",
+            "step": 1,
+        },
+        "set_value",
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_NUMBER,
+        style,
+        TEST_REQUIRED,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(NumberEntityCapabilityAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_NUMBER,
+        style,
+        0,
+        {
+            **TEST_REQUIRED,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_NUMBER,
+        style,
+        TEST_REQUIRED,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [*list(NumberEntityCapabilityAttribute), "device_class"],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum | str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_NUMBER,
+        style,
+        1,
+        {
+            **TEST_REQUIRED,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_NUMBER.entity_id}: {attribute}"
+    assert error in caplog.text

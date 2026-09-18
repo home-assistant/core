@@ -1,27 +1,176 @@
 """Support for Tibber."""
 
+import asyncio
+from dataclasses import dataclass, field
 import logging
+from typing import Final
 
 import aiohttp
 import tibber
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
+from .coordinator import (
+    TibberDataAPICoordinator,
+    TibberDataCoordinator,
+    TibberFetchPriceCoordinator,
+    TibberPriceCoordinator,
+)
 from .services import async_setup_services
 
-PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
+
+DISCONNECT_TIMEOUT: Final = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _migrate_data_api_registry_entries(
+    hass: HomeAssistant,
+    entry: TibberConfigEntry,
+    coordinator: TibberDataAPICoordinator,
+    home_ids: set[str],
+) -> None:
+    """Migrate Data API registry entries to Tibber device IDs."""
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    legacy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ""), entry.entry_id
+    )
+    legacy_device_name = legacy_device.name if legacy_device else None
+
+    migrations: dict[str, tuple[str, str]] = {}
+    device_migrations: dict[str, set[str]] = {}
+    device_id_by_identifier = {home_id: home_id for home_id in home_ids}
+    for device in sorted(
+        coordinator.data.values(),
+        key=lambda device: (device.name != legacy_device_name, device.id),
+    ):
+        if (
+            legacy_device
+            and not device.external_id
+            and device.name == legacy_device_name
+        ):
+            device_id_by_identifier.setdefault("", device.id)
+        device_id_by_identifier[device.id] = device.id
+        if device.external_id:
+            device_id_by_identifier[device.external_id] = device.id
+        for sensor in device.sensors:
+            new_unique_id = f"{device.id}_{sensor.id}"
+            migration = (new_unique_id, device.id)
+            migrations[new_unique_id] = migration
+            if device.external_id:
+                migrations[f"{device.external_id}_{sensor.id}"] = migration
+            else:
+                # An empty external ID produced a legacy leading-underscore unique ID.
+                migrations.setdefault(f"_{sensor.id}", migration)
+
+    for entity_entry in entity_entries:
+        if not (registry_migration := migrations.get(entity_entry.unique_id)):
+            continue
+        new_unique_id, device_id = registry_migration
+        if entity_entry.device_id:
+            # Empty external IDs may have grouped multiple Tibber devices.
+            device_migrations.setdefault(entity_entry.device_id, set()).add(device_id)
+        if entity_entry.unique_id != new_unique_id:
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+
+    for registry_device in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if tibber_device_ids := device_migrations.get(registry_device.id):
+            tibber_device_id = min(
+                (
+                    coordinator.data[device_id].name != registry_device.name,
+                    device_id,
+                )
+                for device_id in tibber_device_ids
+            )[1]
+        else:
+            expected_device_ids = {
+                device_id_by_identifier[identifier]
+                for domain, identifier in registry_device.identifiers
+                if domain == DOMAIN and identifier in device_id_by_identifier
+            }
+            if len(expected_device_ids) != 1:
+                device_registry.async_remove_device(registry_device.id)
+                continue
+            tibber_device_id = expected_device_ids.pop()
+
+        identifiers = {(DOMAIN, tibber_device_id)}
+        if registry_device.identifiers != identifiers:
+            device_registry.async_update_device(
+                registry_device.id,
+                new_identifiers=identifiers,
+            )
+
+
+@dataclass
+class TibberRuntimeData:
+    """Runtime data for Tibber API entries."""
+
+    session: OAuth2Session
+    data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
+    data_coordinator: TibberDataCoordinator | None = field(default=None)
+    fetch_price_coordinator: TibberFetchPriceCoordinator | None = field(default=None)
+    price_coordinator: TibberPriceCoordinator | None = field(default=None)
+    _client: tibber.Tibber | None = None
+
+    async def _async_get_access_token(self) -> str:
+        """Return a valid Tibber access token."""
+        await self.session.async_ensure_token_valid()
+        token = self.session.token
+        access_token: str | None = token.get(CONF_ACCESS_TOKEN)
+        if not access_token:
+            raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        return access_token
+
+    async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
+        """Return an authenticated Tibber client."""
+        access_token = await self._async_get_access_token()
+        if self._client is None:
+            self._client = tibber.Tibber(
+                access_token=access_token,
+                websession=async_get_clientsession(hass),
+                time_zone=dt_util.get_default_time_zone(),
+                ssl=ssl_util.get_default_context(),
+                refresh_access_token=self._async_get_access_token,
+            )
+        else:
+            await self._client.set_access_token(access_token)
+        return self._client
+
+    async def async_disconnect(self) -> None:
+        """Disconnect the cached realtime connection without raising."""
+        if self._client is None:
+            return
+        try:
+            async with asyncio.timeout(DISCONNECT_TIMEOUT):
+                await self._client.rt_disconnect()
+        except Exception:
+            _LOGGER.warning(
+                "Error disconnecting the Tibber realtime connection", exc_info=True
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -34,48 +183,75 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bool:
     """Set up a config entry."""
 
-    tibber_connection = tibber.Tibber(
-        access_token=entry.data[CONF_ACCESS_TOKEN],
-        websession=async_get_clientsession(hass),
-        time_zone=dt_util.get_default_time_zone(),
-        ssl=ssl_util.get_default_context(),
+    # Added in 2026.1 to migrate existing users to OAuth2 (Tibber Data API).
+    # Can be removed after 2026.7
+    if AUTH_IMPLEMENTATION not in entry.data:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="data_api_reauth_required",
+        )
+
+    implementation = await async_get_config_entry_implementation(hass, entry)
+
+    session = OAuth2Session(hass, entry, implementation)
+    await session.async_ensure_token_valid()
+
+    entry.runtime_data = TibberRuntimeData(
+        session=session,
     )
-    hass.data[DOMAIN] = tibber_connection
+
+    tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
-        await tibber_connection.rt_disconnect()
+        await entry.runtime_data.async_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
-
     except (
         TimeoutError,
         aiohttp.ClientError,
         tibber.RetryableHttpExceptionError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
-    except tibber.InvalidLoginError as exp:
-        _LOGGER.error("Failed to login. %s", exp)
-        return False
-    except tibber.FatalHttpExceptionError:
-        return False
+    except tibber.InvalidLoginError as err:
+        raise ConfigEntryAuthFailed("Invalid login credentials") from err
+    except tibber.FatalHttpExceptionError as err:
+        raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
+
+    if tibber_connection.get_homes(only_active=True):
+        fetch_price_coordinator = TibberFetchPriceCoordinator(hass, entry)
+        await fetch_price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.fetch_price_coordinator = fetch_price_coordinator
+
+        price_coordinator = TibberPriceCoordinator(hass, entry, fetch_price_coordinator)
+        await price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.price_coordinator = price_coordinator
+
+        data_coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+        await data_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.data_coordinator = data_coordinator
+
+    coordinator = TibberDataAPICoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data.data_api_coordinator = coordinator
+    home_ids = {home.home_id for home in tibber_connection.get_homes(only_active=False)}
+    _migrate_data_api_registry_entries(hass, entry, coordinator, home_ids)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TibberConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
-    )
-    if unload_ok:
-        tibber_connection = hass.data[DOMAIN]
-        await tibber_connection.rt_disconnect()
+    ):
+        await config_entry.runtime_data.async_disconnect()
     return unload_ok

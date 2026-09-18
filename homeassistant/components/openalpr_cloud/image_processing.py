@@ -1,15 +1,13 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
 
-from __future__ import annotations
-
 import asyncio
 from base64 import b64encode
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
@@ -60,8 +58,10 @@ OPENALPR_REGIONS = [
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_REGION): probatio.All(
+            probatio.Lower, probatio.In(OPENALPR_REGIONS)
+        ),
     }
 )
 
@@ -101,6 +101,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         self.vehicles = 0
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         confidence = 0.0
@@ -114,6 +115,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return plate
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
@@ -177,6 +179,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         else:
             self._attr_name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
+    @override
     async def async_process_image(self, image: bytes) -> None:
         """Process image.
 
@@ -199,7 +202,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                     _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.error("Timeout for OpenALPR API")
             return
 

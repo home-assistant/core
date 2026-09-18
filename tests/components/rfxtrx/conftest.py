@@ -1,7 +1,5 @@
 """Common test tools."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -14,6 +12,8 @@ from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
+
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -39,6 +39,23 @@ def create_rfx_test_cfg(
     }
 
 
+def create_rfx_test_entry(
+    device="abcd",
+    automatic_add=False,
+    protocols=None,
+    devices=None,
+    host=None,
+    port=None,
+):
+    """Create rfxtrx config entry."""
+    entry_data = create_rfx_test_cfg(
+        device, automatic_add, protocols, devices, host, port
+    )
+    return MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
+
+
 async def setup_rfx_test_cfg(
     hass: HomeAssistant,
     device="abcd",
@@ -49,7 +66,7 @@ async def setup_rfx_test_cfg(
     port=None,
 ):
     """Construct a rfxtrx config entry."""
-    entry_data = create_rfx_test_cfg(
+    mock_entry = create_rfx_test_entry(
         device=device,
         automatic_add=automatic_add,
         devices=devices,
@@ -57,7 +74,6 @@ async def setup_rfx_test_cfg(
         host=host,
         port=port,
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
     mock_entry.supports_remove_device = True
     mock_entry.add_to_hass(hass)
 

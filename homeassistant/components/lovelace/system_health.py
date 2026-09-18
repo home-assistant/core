@@ -42,9 +42,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             else:
                 health_info[key] = dashboard[key]
 
-    if hass.data[LOVELACE_DATA].mode == MODE_YAML:
-        health_info[CONF_MODE] = MODE_YAML
-    elif MODE_STORAGE in modes:
+    if MODE_STORAGE in modes:
         health_info[CONF_MODE] = MODE_STORAGE
     elif MODE_YAML in modes:
         health_info[CONF_MODE] = MODE_YAML

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from evolutionhttp import BryantEvolutionLocalClient
 
@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +46,7 @@ async def async_setup_entry(
         zone_id = sz[1]
         client = config_entry.runtime_data.get(tuple(sz))
         climate = BryantEvolutionClimate(
+            hass,
             client,
             system_id,
             zone_id,
@@ -82,6 +84,7 @@ class BryantEvolutionClimate(ClimateEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         client: BryantEvolutionLocalClient,
         system_id: int,
         zone_id: int,
@@ -94,7 +97,11 @@ class BryantEvolutionClimate(ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Bryant",
-            via_device=(DOMAIN, names.system_device_uid(sam_uid, system_id)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, names.system_device_uid(sam_uid, system_id)),
+                config_entry_id=sam_uid,  # This is the config entry id
+            ),
             name=f"System {system_id} Zone {zone_id}",
         )
 
@@ -197,6 +204,7 @@ class BryantEvolutionClimate(ClimateEntity):
             },
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT_COOL:
@@ -208,6 +216,7 @@ class BryantEvolutionClimate(ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self._async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if value := kwargs.get(ATTR_TARGET_TEMP_HIGH):
@@ -243,6 +252,7 @@ class BryantEvolutionClimate(ClimateEntity):
         # invalid service call (without any recognized kwarg).
         self._async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not await self._client.set_fan_mode(fan_mode):

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -34,6 +33,9 @@
     "binary_sensor": {
       "auto_run": {
         "name": "Auto run"
+      },
+      "loadshed_parameter": {
+        "name": "Load shed {display_name}"
       },
       "oil_pressure": {
         "name": "Oil pressure"
@@ -119,7 +121,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Can not connect to Rehlko servers."
+      "message": "Cannot connect to Rehlko servers."
     },
     "invalid_auth": {
       "message": "Authentication failed for email {email}."

@@ -1,17 +1,15 @@
 """Support for IGN Sismologia (Earthquakes) Feeds."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from georss_ign_sismologia_client import (
     IgnSismologiaFeedEntry,
     IgnSismologiaFeedManager,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
@@ -52,10 +50,12 @@ SOURCE = "ign_sismologia"
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-        vol.Optional(
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
         ): cv.positive_float,
     }
@@ -166,6 +166,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -211,6 +212,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         self._image_url = feed_entry.image_url
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the entity."""
         if self._magnitude and self._region:
@@ -222,6 +224,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return self._title
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

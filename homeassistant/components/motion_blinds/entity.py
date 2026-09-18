@@ -1,6 +1,6 @@
 """Support for Motionblinds using their WLAN API."""
 
-from __future__ import annotations
+from typing import override
 
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
@@ -22,6 +22,23 @@ from .const import (
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
+
+
+def gateway_device_info(gateway: MotionGateway) -> DeviceInfo:
+    """Return the device info of a Motionblinds gateway."""
+    if gateway.firmware is not None:
+        sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
+    else:
+        sw_version = f"Protocol: {gateway.protocol}"
+
+    return DeviceInfo(
+        connections={(dr.CONNECTION_NETWORK_MAC, gateway.mac)},
+        identifiers={(DOMAIN, gateway.mac)},
+        manufacturer=MANUFACTURER,
+        name=DEFAULT_GATEWAY_NAME,
+        model="Wi-Fi bridge",
+        sw_version=sw_version,
+    )
 
 
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
@@ -50,44 +67,40 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._update_interval_moving = UPDATE_INTERVAL_MOVING
 
         if blind.device_type in DEVICE_TYPES_GATEWAY:
-            gateway = blind
+            self._attr_device_info = gateway_device_info(blind)
         else:
             gateway = blind._gateway  # noqa: SLF001
-        if gateway.firmware is not None:
-            sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
-        else:
-            sw_version = f"Protocol: {gateway.protocol}"
+            if gateway.firmware is not None:
+                sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
+            else:
+                sw_version = f"Protocol: {gateway.protocol}"
 
-        if blind.device_type in DEVICE_TYPES_GATEWAY:
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                name=DEFAULT_GATEWAY_NAME,
-                model="Wi-Fi bridge",
-                sw_version=sw_version,
-            )
-        elif blind.device_type in DEVICE_TYPES_WIFI:
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                model=blind.blind_type,
-                name=device_name(blind),
-                sw_version=sw_version,
-                hw_version=blind.wireless_name,
-            )
-        else:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, blind.mac)},
-                manufacturer=MANUFACTURER,
-                model=blind.blind_type,
-                name=device_name(blind),
-                via_device=(DOMAIN, blind._gateway.mac),  # noqa: SLF001
-                hw_version=blind.wireless_name,
-            )
+            if blind.device_type in DEVICE_TYPES_WIFI:
+                self._attr_device_info = DeviceInfo(
+                    connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
+                    identifiers={(DOMAIN, blind.mac)},
+                    manufacturer=MANUFACTURER,
+                    model=blind.blind_type,
+                    name=device_name(blind),
+                    sw_version=sw_version,
+                    hw_version=blind.wireless_name,
+                )
+            else:
+                self._attr_device_info = DeviceInfo(
+                    identifiers={(DOMAIN, blind.mac)},
+                    manufacturer=MANUFACTURER,
+                    model=blind.blind_type,
+                    name=device_name(blind),
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, gateway.mac),
+                        config_entry_id=coordinator.config_entry.entry_id,
+                    ),
+                    hw_version=blind.wireless_name,
+                )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
@@ -99,11 +112,13 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
         return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to multicast pushes and register signal handler."""
         self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._blind.Remove_callback(self.unique_id)
@@ -135,7 +150,8 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
                 self._blind.angle == prev_angle for prev_angle in self._previous_angles
             )
         ):
-            # keep updating the position @self._update_interval_moving until the position does not change.
+            # keep updating the position @self._update_interval_moving
+            # until the position does not change.
             self._requesting_position = async_call_later(
                 self.hass,
                 self._update_interval_moving,
@@ -147,7 +163,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._requesting_position = None
 
     async def async_request_position_till_stop(self, delay: int | None = None) -> None:
-        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
+        """Request the position of the blind at intervals until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
 

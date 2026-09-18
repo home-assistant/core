@@ -1,16 +1,14 @@
 """Support for TPLink lights."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -50,74 +48,76 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_RANDOM_EFFECT = "random_effect"
 SERVICE_SEQUENCE_EFFECT = "sequence_effect"
 
-HUE = vol.Range(min=0, max=360)
-SAT = vol.Range(min=0, max=100)
-VAL = vol.Range(min=0, max=100)
-TRANSITION = vol.Range(min=0, max=6000)
-HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
+HUE = probatio.Range(min=0, max=360)
+SAT = probatio.Range(min=0, max=100)
+VAL = probatio.Range(min=0, max=100)
+TRANSITION = probatio.Range(min=0, max=6000)
+HSV_SEQUENCE = probatio.ExactSequence((HUE, SAT, VAL))
 
 BASE_EFFECT_DICT: VolDictType = {
-    vol.Optional("brightness", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
+    probatio.Optional("brightness", default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    vol.Optional("duration", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=5000)
+    probatio.Optional("duration", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=5000)
     ),
-    vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
-    vol.Optional("segments", default=[0]): vol.All(
+    probatio.Optional("transition", default=0): probatio.All(
+        probatio.Coerce(int), TRANSITION
+    ),
+    probatio.Optional("segments", default=[0]): probatio.All(
         cv.ensure_list_csv,
-        vol.Length(min=1, max=80),
-        [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
+        probatio.Length(min=1, max=80),
+        [probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=80))],
     ),
 }
 
 SEQUENCE_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
-    vol.Required("sequence"): vol.All(
+    probatio.Required("sequence"): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        probatio.Length(min=1, max=16),
+        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
-    vol.Optional("repeat_times", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=10)
+    probatio.Optional("repeat_times", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=10)
     ),
-    vol.Optional("spread", default=1): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=16)
+    probatio.Optional("spread", default=1): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=16)
     ),
-    vol.Optional("direction", default=4): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=4)
+    probatio.Optional("direction", default=4): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=4)
     ),
 }
 
 RANDOM_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
-    vol.Optional("fadeoff", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=3000)
+    probatio.Optional("fadeoff", default=0): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=3000)
     ),
-    vol.Optional("hue_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((HUE, HUE))
+    probatio.Optional("hue_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((HUE, HUE))
     ),
-    vol.Optional("saturation_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((SAT, SAT))
+    probatio.Optional("saturation_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((SAT, SAT))
     ),
-    vol.Optional("brightness_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((VAL, VAL))
+    probatio.Optional("brightness_range"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((VAL, VAL))
     ),
-    vol.Optional("transition_range"): vol.All(
+    probatio.Optional("transition_range"): probatio.All(
         cv.ensure_list_csv,
-        [vol.Coerce(int)],
-        vol.ExactSequence((TRANSITION, TRANSITION)),
+        [probatio.Coerce(int)],
+        probatio.ExactSequence((TRANSITION, TRANSITION)),
     ),
-    vol.Required("init_states"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
+    probatio.Required("init_states"): probatio.All(
+        cv.ensure_list_csv, [probatio.Coerce(int)], HSV_SEQUENCE
     ),
-    vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=600)
+    probatio.Optional("random_seed", default=100): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=600)
     ),
-    vol.Optional("backgrounds"): vol.All(
+    probatio.Optional("backgrounds"): probatio.All(
         cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+        probatio.Length(min=1, max=16),
+        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
 }
 
@@ -179,16 +179,18 @@ class TPLinkLightEntityDescription(
 LIGHT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
     TPLinkLightEntityDescription(
         key="light",
-        exists_fn=lambda dev, _: Module.Light in dev.modules
-        and Module.LightEffect not in dev.modules,
+        exists_fn=lambda dev, _: (
+            Module.Light in dev.modules and Module.LightEffect not in dev.modules
+        ),
     ),
 )
 
 LIGHT_EFFECT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
     TPLinkLightEntityDescription(
         key="light_effect",
-        exists_fn=lambda dev, _: Module.Light in dev.modules
-        and Module.LightEffect in dev.modules,
+        exists_fn=lambda dev, _: (
+            Module.Light in dev.modules and Module.LightEffect in dev.modules
+        ),
     ),
 )
 
@@ -333,6 +335,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
@@ -346,6 +349,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
             await self._async_turn_on_with_brightness(brightness, transition)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
@@ -369,6 +373,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         return ColorMode.HS
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
@@ -404,6 +409,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
 
         self._effect_module = device.modules[Module.LightEffect]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -424,6 +430,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             )
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
@@ -440,6 +447,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         return True
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)

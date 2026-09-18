@@ -1,14 +1,11 @@
 """Support to interface with Sonos players."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 
 from .const import ATTR_QUEUE_POSITION, DOMAIN
 from .media_player import SonosMediaPlayerEntity
@@ -35,25 +32,11 @@ ATTR_WITH_GROUP = "with_group"
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register Sonos services."""
 
-    @service.verify_domain_control(DOMAIN)
-    async def async_service_handle(service_call: ServiceCall) -> None:
-        """Handle dispatched services."""
-        platform_entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
-            (MEDIA_PLAYER_DOMAIN, DOMAIN), {}
-        )
-
-        entities = await service.async_extract_entities(
-            platform_entities.values(), service_call
-        )
-
-        if not entities:
-            return
-
-        speakers: list[SonosSpeaker] = []
-        for entity in entities:
-            assert isinstance(entity, SonosMediaPlayerEntity)
-            speakers.append(entity.speaker)
-
+    async def async_handle_snapshot_restore(
+        entities: list[SonosMediaPlayerEntity], service_call: ServiceCall
+    ) -> None:
+        """Handle snapshot and restore services."""
+        speakers = [entity.speaker for entity in entities]
         config_entry = speakers[0].config_entry  # All speakers share the same entry
 
         if service_call.service == SERVICE_SNAPSHOT:
@@ -65,16 +48,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 hass, config_entry, speakers, service_call.data[ATTR_WITH_GROUP]
             )
 
-    join_unjoin_schema = cv.make_entity_service_schema(
-        {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
+    service.async_register_batched_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SNAPSHOT,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={probatio.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
+        func=async_handle_snapshot_restore,
     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
+    service.async_register_batched_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_RESTORE,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={probatio.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
+        func=async_handle_snapshot_restore,
     )
 
     service.async_register_platform_entity_service(
@@ -83,8 +72,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_TIMER,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=86399)
+            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=86399)
             )
         },
         func="set_sleep_timer",
@@ -105,11 +94,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_UPDATE_ALARM,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_ALARM_ID): cv.positive_int,
-            vol.Optional(ATTR_TIME): cv.time,
-            vol.Optional(ATTR_VOLUME): cv.small_float,
-            vol.Optional(ATTR_ENABLED): cv.boolean,
-            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+            probatio.Required(ATTR_ALARM_ID): cv.positive_int,
+            probatio.Optional(ATTR_TIME): cv.time,
+            probatio.Optional(ATTR_VOLUME): cv.small_float,
+            probatio.Optional(ATTR_ENABLED): cv.boolean,
+            probatio.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
         },
         func="set_alarm",
     )
@@ -119,7 +108,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        schema={probatio.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         func="play_queue",
     )
 
@@ -128,7 +117,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_FROM_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        schema={probatio.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         func="remove_from_queue",
     )
 

@@ -1,11 +1,11 @@
 """Support for displaying collected data over SNMP."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from struct import unpack
+from typing import override
 
+import probatio
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
 import pysnmp.hlapi.v3arch.asyncio as hlapi
@@ -18,7 +18,6 @@ from pysnmp.hlapi.v3arch.asyncio import (
 )
 from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -89,25 +88,27 @@ TRIGGER_ENTITY_OPTIONS = (
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BASEOID): cv.string,
-        vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        vol.Optional(CONF_DEFAULT_VALUE): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        probatio.Required(CONF_BASEOID): cv.string,
+        probatio.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
+        probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        probatio.Optional(CONF_DEFAULT_VALUE): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_VALUE_TEMPLATE): probatio.All(
             cv.template, ValueTemplate.from_template
         ),
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTH_KEY): cv.string,
-        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
-            MAP_AUTH_PROTOCOLS
+        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
+            SNMP_VERSIONS
         ),
-        vol.Optional(CONF_PRIV_KEY): cv.string,
-        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
-            MAP_PRIV_PROTOCOLS
-        ),
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_AUTH_KEY): cv.string,
+        probatio.Optional(
+            CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
+        ): probatio.In(MAP_AUTH_PROTOCOLS),
+        probatio.Optional(CONF_PRIV_KEY): cv.string,
+        probatio.Optional(
+            CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
+        ): probatio.In(MAP_PRIV_PROTOCOLS),
     }
 ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
 
@@ -159,15 +160,6 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
-    get_result = await get_cmd(*request_args)
-    errindication, _, _, _ = get_result
-
-    if errindication and not accept_errors:
-        _LOGGER.error(
-            "Please check the details in the configuration file: %s",
-            errindication,
-        )
-        return
 
     name = config.get(CONF_NAME, Template(DEFAULT_NAME, hass))
     trigger_entity_config = {CONF_NAME: name}
@@ -200,6 +192,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
         self._state = None
         self._value_template = value_template
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()

@@ -4,13 +4,15 @@ from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.const import ModelName
+from pylamarzocco.const import DeviceType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import Thing
 import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import (
     CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
     CONF_USE_BLUETOOTH,
     DOMAIN,
 )
@@ -34,7 +36,7 @@ from . import (
     get_bluetooth_service_info,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -194,6 +196,30 @@ async def test_form_no_machines(
 
     result = await __do_successful_user_step(hass, result, mock_cloud_client)
     await __do_sucessful_machine_selection_step(hass, result)
+
+
+async def test_grinders_not_configurable(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test that grinders are filtered out so only machines can be configured."""
+    grinder = await async_load_json_object_fixture(hass, "thing.json", DOMAIN)
+    grinder["type"] = DeviceType.GRINDER
+    grinder["serialNumber"] = "GR012345"
+    grinder["name"] = "GR012345"
+
+    mock_cloud_client.list_things.return_value = [
+        *mock_cloud_client.list_things.return_value,
+        Thing.from_dict(grinder),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await __do_successful_user_step(hass, result, mock_cloud_client)
+
+    options = result["data_schema"].schema[CONF_MACHINE].config["options"]
+    assert [option["value"] for option in options] == ["GS012345"]
 
 
 async def test_reauth_flow(
@@ -522,4 +548,47 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_USE_BLUETOOTH: False,
+        CONF_OFFLINE_MODE: False,
+    }
+
+
+async def test_options_flow_bluetooth_required_for_offline_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow validates BT is required for offline mode."""
+    await async_init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USE_BLUETOOTH: False,
+            CONF_OFFLINE_MODE: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {CONF_USE_BLUETOOTH: "bluetooth_required_offline"}
+
+    # recover
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USE_BLUETOOTH: True,
+            CONF_OFFLINE_MODE: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USE_BLUETOOTH: True,
+        CONF_OFFLINE_MODE: True,
     }

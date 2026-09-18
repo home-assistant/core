@@ -1,10 +1,8 @@
 """The weather websocket API."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +28,7 @@ def async_setup(hass: HomeAssistant) -> None:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "weather/convertible_units",
+        probatio.Required("type"): "weather/convertible_units",
     }
 )
 def ws_convertible_units(
@@ -45,9 +43,11 @@ def ws_convertible_units(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "weather/subscribe_forecast",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-        vol.Required("forecast_type"): vol.In(["daily", "hourly", "twice_daily"]),
+        probatio.Required("type"): "weather/subscribe_forecast",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("forecast_type"): probatio.In(
+            ["daily", "hourly", "twice_daily"]
+        ),
     }
 )
 @websocket_api.async_response

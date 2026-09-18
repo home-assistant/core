@@ -1,12 +1,14 @@
 """Representation of a toggleButton."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry
 from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.BUTTON
@@ -14,21 +16,14 @@ DEVICE_NAME = ZWaveMePlatform.BUTTON
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 
     @callback
     def add_new_device(new_device):
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        button = ZWaveMeButton(controller, new_device)
-
-        async_add_entities(
-            [
-                button,
-            ]
-        )
+        async_add_entities([ZWaveMeButton(config_entry.runtime_data, new_device)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -40,6 +35,7 @@ async def async_setup_entry(
 class ZWaveMeButton(ZWaveMeEntity, ButtonEntity):
     """Representation of a ZWaveMe button."""
 
+    @override
     def press(self) -> None:
         """Turn the entity on."""
         self.controller.zwave_api.send_command(self.device.id, "on")

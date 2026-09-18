@@ -1,11 +1,9 @@
 """Template render information tracking for Home Assistant."""
 
-from __future__ import annotations
-
 import collections.abc
 from collections.abc import Callable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.core import split_entity_id
 
@@ -42,6 +40,7 @@ class RenderInfo:
         "_result",
         "all_states",
         "all_states_lifecycle",
+        "collecting",
         "domains",
         "domains_lifecycle",
         "entities",
@@ -57,6 +56,10 @@ class RenderInfo:
     def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
+        # Work scheduled during a render inherits a copy of its context, so the
+        # render info in that copy outlives the render. Cleared when the render
+        # ends, so the copy neither collects nor looks like a render in flight.
+        self.collecting = True
         # Will be set sensibly once frozen.
         self.filter_lifecycle: Callable[[str], bool] = _true
         self.filter: Callable[[str], bool] = _true
@@ -71,6 +74,7 @@ class RenderInfo:
         self.rate_limit: float | None = None
         self.has_time = False
 
+    @override
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
         return (

@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.panasonic_viera.const import (
     ATTR_FRIENDLY_NAME,
-    ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
     ATTR_UDN,
     CONF_APP_ID,
@@ -19,7 +18,7 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 

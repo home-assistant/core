@@ -68,24 +68,35 @@ async def async_check_entity_translations(
     for entity_entry in entity_entries:
         dc_translation = None
         if entity_entry.original_device_class:
-            dc_translation_key = f"component.{platform_domain}.entity_component.{entity_entry.original_device_class.value}.name"
+            dc_translation_key = (
+                f"component.{platform_domain}.entity_component"
+                f".{entity_entry.original_device_class.value}.name"
+            )
             dc_translation = device_class_translations.get(dc_translation_key)
 
         if entity_entry.translation_key:
-            key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
+            key = (
+                f"component.{DOMAIN}.entity"
+                f".{entity_entry.domain}"
+                f".{entity_entry.translation_key}.name"
+            )
             entity_translation = translations.get(key)
             assert entity_translation, (
-                f"Translation key {entity_entry.translation_key} defined for {entity_entry.entity_id} not in strings.json"
+                f"Translation key {entity_entry.translation_key}"
+                f" defined for {entity_entry.entity_id}"
+                f" not in strings.json"
             )
             assert dc_translation != entity_translation, (
-                f"Translation {key} is defined the same as the device class translation."
+                f"Translation {key} is defined the same as"
+                f" the device class translation."
             )
             used_translation_keys.add(key)
 
         else:
             unique_key = (entity_entry.device_id, entity_entry.original_device_class)
             assert unique_key not in unique_device_classes, (
-                f"No translation key and multiple entities using {entity_entry.original_device_class}"
+                f"No translation key and multiple entities using"
+                f" {entity_entry.original_device_class}"
             )
             unique_device_classes.add(entity_entry.original_device_class)
 

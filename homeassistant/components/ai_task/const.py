@@ -1,7 +1,5 @@
 """Constants for the AI Task integration."""
 
-from __future__ import annotations
-
 from enum import IntFlag
 from typing import TYPE_CHECKING, Final
 
@@ -14,7 +12,7 @@ if TYPE_CHECKING:
     from . import AITaskPreferences
     from .entity import AITaskEntity
 
-DOMAIN = "ai_task"
+DOMAIN: Final = "ai_task"
 DATA_COMPONENT: HassKey[EntityComponent[AITaskEntity]] = HassKey(DOMAIN)
 DATA_PREFERENCES: HassKey[AITaskPreferences] = HassKey(f"{DOMAIN}_preferences")
 DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_source")

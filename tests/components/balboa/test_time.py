@@ -1,7 +1,5 @@
 """Tests of the times of the balboa integration."""
 
-from __future__ import annotations
-
 from datetime import time
 from unittest.mock import MagicMock, patch
 

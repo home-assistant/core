@@ -1,15 +1,13 @@
 """Config flow for OctoPrint integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
+import probatio
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,16 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 def _schema_with_defaults(
     username="", host="", port=80, path="/", ssl=False, verify_ssl=True
 ):
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): str,
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): cv.port,
-            vol.Required(CONF_PATH, default=path): str,
-            vol.Required(CONF_SSL, default=ssl): bool,
-            vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+            probatio.Required(CONF_USERNAME, default=username): str,
+            probatio.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_PORT, default=port): cv.port,
+            probatio.Required(CONF_PATH, default=path): str,
+            probatio.Required(CONF_SSL, default=ssl): bool,
+            probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     )
 
 
@@ -56,7 +54,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     api_key_task: asyncio.Task[None] | None = None
-    discovery_schema: vol.Schema | None = None
+    discovery_schema: probatio.Schema | None = None
     _reauth_data: dict[str, Any] | None = None
     _user_input: dict[str, Any] | None = None
 
@@ -64,6 +62,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -154,6 +153,8 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         except ApiError as err:
             _LOGGER.error("Failed to connect to printer")
             raise CannotConnect from err
+        finally:
+            await self._sessions.pop().close()
 
         await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
@@ -168,6 +169,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -194,6 +196,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -242,9 +245,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_USERNAME, default=self._reauth_data[CONF_USERNAME]
                         ): str,
                     }
@@ -262,9 +265,12 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._user_input is not None
         octoprint = self._get_octoprint_client(self._user_input)
 
-        self._user_input[CONF_API_KEY] = await octoprint.request_app_key(
-            "Home Assistant", self._user_input[CONF_USERNAME], 300
-        )
+        try:
+            self._user_input[CONF_API_KEY] = await octoprint.request_app_key(
+                "Home Assistant", self._user_input[CONF_USERNAME], 300
+            )
+        finally:
+            await self._sessions.pop().close()
 
     def _get_octoprint_client(self, user_input: dict[str, Any]) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
@@ -286,11 +292,6 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             ssl=user_input[CONF_SSL],
             path=user_input[CONF_PATH],
         )
-
-    def async_remove(self) -> None:
-        """Detach the session."""
-        for session in self._sessions:
-            session.detach()
 
 
 class CannotConnect(HomeAssistantError):

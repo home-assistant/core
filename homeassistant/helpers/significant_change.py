@@ -27,8 +27,6 @@ The following cases will never be passed to your function:
 - state adding/removing
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import math
 from types import MappingProxyType

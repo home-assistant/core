@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
@@ -58,6 +57,7 @@
         "state": {
           "advanced": "Advanced",
           "gridcompany": "Grid company",
+          "nettleie": "Grid fee",
           "off": "[%key:common::state::off%]",
           "oso": "OSO",
           "smartcompany": "Smart company"

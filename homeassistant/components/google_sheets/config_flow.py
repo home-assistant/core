@@ -1,10 +1,8 @@
 """Config flow for Google Sheets integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
@@ -26,11 +24,13 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -54,6 +54,7 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         service = Client(
@@ -62,13 +63,14 @@ class OAuth2FlowHandler(
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
+            assert reauth_entry.unique_id is not None
             _LOGGER.debug("service.open_by_key")
             try:
                 await self.hass.async_add_executor_job(
                     service.open_by_key,
                     reauth_entry.unique_id,
                 )
-            except GSpreadException as err:
+            except (GSpreadException, PermissionError) as err:
                 _LOGGER.error(
                     "Could not find spreadsheet '%s': %s",
                     reauth_entry.unique_id,
@@ -82,7 +84,7 @@ class OAuth2FlowHandler(
             doc = await self.hass.async_add_executor_job(
                 service.create, "Home Assistant"
             )
-        except GSpreadException as err:
+        except (GSpreadException, PermissionError) as err:
             _LOGGER.error("Error creating spreadsheet: %s", str(err))
             return self.async_abort(reason="create_spreadsheet_failure")
 

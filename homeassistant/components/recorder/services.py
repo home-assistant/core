@@ -1,11 +1,9 @@
 """Support for recorder services."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
@@ -35,54 +33,67 @@ SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 SERVICE_GET_STATISTICS = "get_statistics"
 
-SERVICE_PURGE_SCHEMA = vol.Schema(
+SERVICE_PURGE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
-        vol.Optional(ATTR_REPACK, default=False): cv.boolean,
-        vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
+        probatio.Optional(ATTR_KEEP_DAYS): cv.positive_int,
+        probatio.Optional(ATTR_REPACK, default=False): cv.boolean,
+        probatio.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
 
 ATTR_DOMAINS = "domains"
 ATTR_ENTITY_GLOBS = "entity_globs"
 
-SERVICE_PURGE_ENTITIES_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-            vol.Optional(ATTR_DOMAINS, default=[]): vol.All(
+            probatio.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+            probatio.Optional(ATTR_DOMAINS, default=[]): probatio.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
+            probatio.Optional(ATTR_ENTITY_GLOBS, default=[]): probatio.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
+            probatio.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
         }
     ),
-    vol.Any(
-        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
-        vol.Schema({vol.Required(ATTR_DOMAINS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
-        vol.Schema(
-            {vol.Required(ATTR_ENTITY_GLOBS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA
+    probatio.Any(
+        probatio.Schema(
+            {probatio.Required(ATTR_ENTITY_ID): probatio.IsTrue()},
+            extra=probatio.ALLOW_EXTRA,
+        ),
+        probatio.Schema(
+            {probatio.Required(ATTR_DOMAINS): probatio.IsTrue()},
+            extra=probatio.ALLOW_EXTRA,
+        ),
+        probatio.Schema(
+            {probatio.Required(ATTR_ENTITY_GLOBS): probatio.IsTrue()},
+            extra=probatio.ALLOW_EXTRA,
         ),
         msg="At least one of entity_id, domains, or entity_globs must have a value",
     ),
 )
 
-SERVICE_ENABLE_SCHEMA = vol.Schema({})
-SERVICE_DISABLE_SCHEMA = vol.Schema({})
+SERVICE_ENABLE_SCHEMA = probatio.Schema({})
+SERVICE_DISABLE_SCHEMA = probatio.Schema({})
 
-SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
+SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
     {
-        vol.Required("start_time"): cv.datetime,
-        vol.Optional("end_time"): cv.datetime,
-        vol.Required("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
-        vol.Required("types"): vol.All(
-            cv.ensure_list,
-            [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
+        probatio.Required("start_time"): cv.datetime,
+        probatio.Optional("end_time"): cv.datetime,
+        probatio.Required("statistic_ids"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required("period"): probatio.In(
+            ["5minute", "hour", "day", "week", "month", "year"]
         ),
-        vol.Optional("units"): vol.Schema({cv.string: cv.string}),
+        probatio.Required("types"): probatio.All(
+            cv.ensure_list,
+            [
+                probatio.In(
+                    ["change", "last_reset", "max", "mean", "min", "state", "sum"]
+                )
+            ],
+        ),
+        probatio.Optional("units"): probatio.Schema({cv.string: cv.string}),
     }
 )
 
@@ -100,7 +111,8 @@ async def _async_handle_purge_service(service: ServiceCall) -> None:
 
 async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
-    entity_ids = await async_extract_entity_ids(service)
+    # Keep group entities as purge targets instead of expanding them to their members.
+    entity_ids = await async_extract_entity_ids(service, expand_group=False)
     domains = service.data.get(ATTR_DOMAINS, [])
     keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
     entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])

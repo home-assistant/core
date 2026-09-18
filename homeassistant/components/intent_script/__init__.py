@@ -1,15 +1,14 @@
 """Handle intents with scripts."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     intent,
@@ -18,6 +17,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
-CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
 CONF_CONTENT = "content"
@@ -38,36 +37,38 @@ CONF_ASYNC_ACTION = "async_action"
 
 DEFAULT_CONF_ASYNC_ACTION = False
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
             cv.string: {
-                vol.Optional(CONF_DESCRIPTION): cv.string,
-                vol.Optional(CONF_PLATFORMS): vol.All([cv.string], vol.Coerce(set)),
-                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(
+                probatio.Optional(CONF_DESCRIPTION): cv.string,
+                probatio.Optional(CONF_PLATFORMS): probatio.All(
+                    [cv.string], probatio.Coerce(set)
+                ),
+                probatio.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+                probatio.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
                 ): cv.boolean,
-                vol.Optional(CONF_MODE, default=script.DEFAULT_SCRIPT_MODE): vol.In(
-                    script.SCRIPT_MODE_CHOICES
-                ),
-                vol.Optional(CONF_CARD): {
-                    vol.Optional(CONF_TYPE, default="simple"): cv.string,
-                    vol.Required(CONF_TITLE): cv.template,
-                    vol.Required(CONF_CONTENT): cv.template,
+                probatio.Optional(
+                    CONF_MODE, default=script.DEFAULT_SCRIPT_MODE
+                ): probatio.In(script.SCRIPT_MODE_CHOICES),
+                probatio.Optional(CONF_CARD): {
+                    probatio.Optional(CONF_TYPE, default="simple"): cv.string,
+                    probatio.Required(CONF_TITLE): cv.template,
+                    probatio.Required(CONF_CONTENT): cv.template,
                 },
-                vol.Optional(CONF_SPEECH): {
-                    vol.Optional(CONF_TYPE, default="plain"): cv.string,
-                    vol.Required(CONF_TEXT): cv.template,
+                probatio.Optional(CONF_SPEECH): {
+                    probatio.Optional(CONF_TYPE, default="plain"): cv.string,
+                    probatio.Required(CONF_TEXT): cv.template,
                 },
-                vol.Optional(CONF_REPROMPT): {
-                    vol.Optional(CONF_TYPE, default="plain"): cv.string,
-                    vol.Required(CONF_TEXT): cv.template,
+                probatio.Optional(CONF_REPROMPT): {
+                    probatio.Optional(CONF_TYPE, default="plain"): cv.string,
+                    probatio.Required(CONF_TEXT): cv.template,
                 },
             }
         }
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -76,8 +77,10 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
     new_config = await async_integration_yaml_config(hass, DOMAIN)
     existing_intents = hass.data[DOMAIN]
 
-    for intent_type in existing_intents:
+    for intent_type, conf in existing_intents.items():
         intent.async_remove(hass, intent_type)
+        if isinstance(conf.get(CONF_ACTION), script.Script):
+            await conf[CONF_ACTION].async_unload()
 
     if not new_config or DOMAIN not in new_config:
         hass.data[DOMAIN] = {}
@@ -85,19 +88,29 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
 
     new_intents = new_config[DOMAIN]
 
-    async_load_intents(hass, new_intents)
+    await async_load_intents(hass, new_intents)
 
 
-def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> None:
+async def async_load_intents(
+    hass: HomeAssistant, intents: dict[str, ConfigType]
+) -> None:
     """Load YAML intents into the intent system."""
     hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
+            try:
+                actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
+            except (probatio.Invalid, HomeAssistantError) as exc:
+                _LOGGER.error(
+                    "Failed to validate actions for intent %s: %s", intent_type, exc
+                )
+                continue  # Skip this intent
+
             script_mode: str = conf.get(CONF_MODE, script.DEFAULT_SCRIPT_MODE)
             conf[CONF_ACTION] = script.Script(
                 hass,
-                conf[CONF_ACTION],
+                actions,
                 f"Intent Script {intent_type}",
                 DOMAIN,
                 script_mode=script_mode,
@@ -109,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the intent script component."""
     intents = config[DOMAIN]
 
-    async_load_intents(hass, intents)
+    await async_load_intents(hass, intents)
 
     async def _handle_reload(service_call: ServiceCall) -> None:
         return await async_reload(hass, service_call)
@@ -145,11 +158,11 @@ class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
     slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Any("name", "area", "floor"): cv.string,
+        probatio.Optional("domain"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
     def __init__(self, intent_type: str, config: ConfigType) -> None:
@@ -159,6 +172,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.description = config.get(CONF_DESCRIPTION)
         self.platforms = config.get(CONF_PLATFORMS)
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)
@@ -242,7 +256,8 @@ class ScriptIntentHandler(intent.IntentHandler):
             else:
                 action_res = await action.async_run(slots, intent_obj.context)
 
-                # if the action returns a response, make it available to the speech/reprompt templates below
+                # if the action returns a response, make it
+                # available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
                     slots["action_response"] = action_res.service_response
 

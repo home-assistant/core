@@ -1,7 +1,10 @@
 """Base class for pilight."""
 
-import voluptuous as vol
+from typing import Any, override
 
+import probatio
+
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -10,8 +13,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, EVENT, SERVICE_NAME
 from .const import (
@@ -27,29 +32,33 @@ from .const import (
     CONF_UNITCODE,
 )
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PROTOCOL): cv.string,
-        vol.Optional(CONF_ON): cv.positive_int,
-        vol.Optional(CONF_OFF): cv.positive_int,
-        vol.Optional(CONF_UNIT): cv.positive_int,
-        vol.Optional(CONF_UNITCODE): cv.positive_int,
-        vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-        vol.Optional(CONF_STATE): vol.Any(STATE_ON, STATE_OFF),
-        vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
+        probatio.Optional(CONF_PROTOCOL): cv.string,
+        probatio.Optional(CONF_ON): cv.positive_int,
+        probatio.Optional(CONF_OFF): cv.positive_int,
+        probatio.Optional(CONF_UNIT): cv.positive_int,
+        probatio.Optional(CONF_UNITCODE): cv.positive_int,
+        probatio.Optional(CONF_ID): probatio.Any(cv.positive_int, cv.string),
+        probatio.Optional(CONF_STATE): probatio.Any(STATE_ON, STATE_OFF),
+        probatio.Optional(CONF_SYSTEMCODE): cv.positive_int,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({vol.Optional(CONF_ECHO): cv.boolean})
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({probatio.Optional(CONF_ECHO): cv.boolean})
 
-SWITCHES_SCHEMA = vol.Schema(
+SWITCHES_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
-        vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OFF_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
-        vol.Optional(CONF_ON_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
+        probatio.Required(CONF_ON_CODE): COMMAND_SCHEMA,
+        probatio.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_OFF_CODE_RECEIVE): probatio.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
+        probatio.Optional(CONF_ON_CODE_RECEIVE): probatio.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
     }
 )
 
@@ -57,21 +66,22 @@ SWITCHES_SCHEMA = vol.Schema(
 class PilightBaseDevice(RestoreEntity):
     """Base class for pilight switches and lights."""
 
+    _attr_assumed_state = True
     _attr_should_poll = False
 
-    def __init__(self, hass, name, config):
+    def __init__(self, hass: HomeAssistant, name: str, config: ConfigType) -> None:
         """Initialize a device."""
         self._hass = hass
-        self._name = config.get(CONF_NAME, name)
-        self._is_on = False
+        self._attr_name = config.get(CONF_NAME, name)
+        self._attr_is_on: bool | None = False
         self._code_on = config.get(CONF_ON_CODE)
         self._code_off = config.get(CONF_OFF_CODE)
 
         code_on_receive = config.get(CONF_ON_CODE_RECEIVE, [])
         code_off_receive = config.get(CONF_OFF_CODE_RECEIVE, [])
 
-        self._code_on_receive = []
-        self._code_off_receive = []
+        self._code_on_receive: list[_ReceiveHandle] = []
+        self._code_off_receive: list[_ReceiveHandle] = []
 
         for code_list, conf in (
             (self._code_on_receive, code_on_receive),
@@ -84,29 +94,17 @@ class PilightBaseDevice(RestoreEntity):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(EVENT, self._handle_code)
 
-        self._brightness = 255
+        self._brightness: int | None = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._is_on = state.state == STATE_ON
-            self._brightness = state.attributes.get("brightness")
-
-    @property
-    def name(self):
-        """Get the name of the switch."""
-        return self._name
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return True
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._is_on
+            self._attr_is_on = state.state == STATE_ON
+            self._brightness = state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            )
 
     def _handle_code(self, call):
         """Check if received code by the pilight-daemon.
@@ -148,7 +146,7 @@ class PilightBaseDevice(RestoreEntity):
                     DOMAIN, SERVICE_NAME, self._code_off, blocking=True
                 )
 
-        self._is_on = turn_on
+        self._attr_is_on = turn_on
         self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
@@ -161,18 +159,18 @@ class PilightBaseDevice(RestoreEntity):
 
 
 class _ReceiveHandle:
-    def __init__(self, config, echo):
+    def __init__(self, config: dict[str, Any], echo: bool) -> None:
         """Initialize the handle."""
         self.config_items = config.items()
         self.echo = echo
 
-    def match(self, code):
+    def match(self, code: dict[str, Any]) -> bool:
         """Test if the received code matches the configured values.
 
         The received values have to be a subset of the configured options.
         """
         return self.config_items <= code.items()
 
-    def run(self, switch, turn_on):
+    def run(self, switch: PilightBaseDevice, turn_on: bool) -> None:
         """Change the state of the switch."""
         switch.set_state(turn_on=turn_on, send_code=self.echo)

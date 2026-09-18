@@ -1,40 +1,58 @@
 """Config flow for Velux integration."""
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, override
 
+import probatio
 from pyvlx import PyVLX, PyVLXException
-import voluptuous as vol
+from pyvlx.discovery import sanitize_hostname
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
 
-async def _check_connection(host: str, password: str) -> dict[str, Any]:
-    """Check if we can connect to the Velux bridge."""
+async def _check_connection(
+    host: str, password: str
+) -> tuple[PyVLX | None, dict[str, str]]:
+    """Connect to the Velux bridge and return the live instance.
+
+    The caller is responsible for storing the returned instance so that
+    async_setup_entry can reuse it, avoiding a disconnect/reboot cycle.
+    Returns (None, errors) on failure, (pyvlx, {}) on success.
+    """
     pyvlx = PyVLX(host=host, password=password)
     try:
         await pyvlx.connect()
-        await pyvlx.disconnect()
     except (PyVLXException, ConnectionError) as err:
+        # since pyvlx raises the same exception for auth and connection errors,
+        # we need to check the exception message to distinguish them
+        if (
+            isinstance(err, PyVLXException)
+            and err.description == "Login to KLF 200 failed, check credentials"
+        ):
+            LOGGER.debug("Invalid password")
+            return None, {"base": "invalid_auth"}
+
         LOGGER.debug("Cannot connect: %s", err)
-        return {"base": "cannot_connect"}
+        return None, {"base": "cannot_connect"}
     except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception: %s", err)
-        return {"base": "unknown"}
+        return None, {"base": "unknown"}
 
-    return {}
+    return pyvlx, {}
 
 
 class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,6 +64,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovery_data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -54,12 +73,15 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            errors = await _check_connection(
-                user_input[CONF_HOST], user_input[CONF_PASSWORD]
-            )
+            host = user_input[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
             if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
+                    title=host,
                     data=user_input,
                 )
 
@@ -69,6 +91,74 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth flow when password has changed."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = reauth_entry.data[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
+            if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_PASSWORD): cv.string,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "host": reauth_entry.data[CONF_HOST],
+            },
+        )
+
+    def _is_already_configured_without_unique_id(self) -> bool:
+        """Checks if a config entry already exists for the given host without a unique_id configured.
+
+        If yes, it updates the entry with the unique_id and discovery data and returns True.
+        If no, it returns False.
+
+        Comparing the host is the best we can do, it will fail if the user configured manually
+        with a different name, but the gateway does not provide a good unique ID other than the
+        announced name, which does not exist if configured manually.
+        """
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.data[CONF_HOST] == self.discovery_data[CONF_HOST]
+                and entry.unique_id is None
+                and entry.state is ConfigEntryState.LOADED
+            ):
+                LOGGER.info(
+                    "Config entry for host %s exists without unique_id, updating entry",
+                    self.discovery_data[CONF_HOST],
+                )
+                self.hass.config_entries.async_update_entry(
+                    entry=entry,
+                    unique_id=self.discovery_data[CONF_NAME],
+                    data={**entry.data, **self.discovery_data},
+                )
+                return True
+        return False
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -86,18 +176,27 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         # Abort if config_entry already exists without unique_id configured.
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_HOST] == self.discovery_data[CONF_HOST]
-                and entry.unique_id is None
-                and entry.state is ConfigEntryState.LOADED
-            ):
-                self.hass.config_entries.async_update_entry(
-                    entry=entry,
-                    unique_id=self.discovery_data[CONF_NAME],
-                    data={**entry.data, **self.discovery_data},
-                )
-                return self.async_abort(reason="already_configured")
+        if self._is_already_configured_without_unique_id():
+            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
+        return await self.async_step_discovery_confirm()
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery by zeroconf."""
+        self.discovery_data[CONF_HOST] = discovery_info.host
+        self.discovery_data[CONF_NAME] = sanitize_hostname(discovery_info.name)
+
+        self.context["title_placeholders"] = {CONF_NAME: self.discovery_data[CONF_NAME]}
+        await self.async_set_unique_id(self.discovery_data[CONF_NAME])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.discovery_data[CONF_HOST]}
+        )
+        # Abort if config_entry already exists without unique_id configured.
+        if self._is_already_configured_without_unique_id():
+            return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
         return await self.async_step_discovery_confirm()
 
@@ -107,10 +206,13 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Velux device."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await _check_connection(
-                self.discovery_data[CONF_HOST], user_input[CONF_PASSWORD]
-            )
+            host = self.discovery_data[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
             if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
                     title=self.discovery_data[CONF_NAME],
                     data={**self.discovery_data, **user_input},
@@ -118,9 +220,9 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,

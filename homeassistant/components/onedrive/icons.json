@@ -22,6 +22,9 @@
     }
   },
   "services": {
+    "delete": {
+      "service": "mdi:cloud-remove"
+    },
     "upload": {
       "service": "mdi:cloud-upload"
     }

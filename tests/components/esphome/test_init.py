@@ -37,7 +37,7 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_client,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that removing an entry clears the dynamic encryption key from device and storage."""
+    """Test removing entry clears dynamic encryption key."""
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
     await storage.async_store_key(
@@ -56,13 +56,15 @@ async def test_remove_entry_clears_dynamic_encryption_key(
     mock_client.connect.assert_called_once()
     mock_client.noise_encryption_set_key.assert_called_once_with(b"")
     mock_client.disconnect.assert_called_once()
+    # The connection that wipes the key must not become a dial-back target
+    assert mock_client.outgoing_connection_target is False
 
     assert await storage.async_get_key(mock_config_entry.unique_id) is None
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_remove_entry_no_noise_psk(hass: HomeAssistant, mock_client) -> None:
-    """Test that removing an entry without noise_psk does not attempt to clear encryption key."""
+    """Test removing entry without noise_psk skips key clearing."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -135,7 +137,7 @@ async def test_remove_entry_connection_error(
     mock_client,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that connection error during key clearing does not remove key from storage."""
+    """Test connection error during key clearing preserves storage."""
     # Store the encryption key to simulate it was dynamically generated
     storage = await async_get_encryption_key_storage(hass)
     await storage.async_store_key(

@@ -1,6 +1,6 @@
 """Select for Yale Alarm."""
 
-from __future__ import annotations
+from typing import override
 
 from yalesmartalarmclient import YaleLock, YaleLockVolume
 
@@ -43,6 +43,7 @@ class YaleLockVolumeSelect(YaleLockEntity, SelectEntity):
         self._attr_current_option = self.lock_data.volume().name.lower()
         self._attr_options = [volume.name.lower() for volume in YaleLockVolume]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         convert_to_value = VOLUME_OPTIONS[option]
@@ -54,6 +55,7 @@ class YaleLockVolumeSelect(YaleLockEntity, SelectEntity):
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_current_option = self.lock_data.volume().name.lower()

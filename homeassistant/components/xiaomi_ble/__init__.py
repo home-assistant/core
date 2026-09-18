@@ -1,7 +1,5 @@
 """The Xiaomi Bluetooth integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import cast
@@ -42,7 +40,7 @@ def process_service_info(
     device_registry: DeviceRegistry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak and return sensor data."""
     coordinator = entry.runtime_data
     data = coordinator.device_data
     update = data.update(service_info)
@@ -98,10 +96,11 @@ def process_service_info(
             )
 
     # If device isn't pending we know it has seen at least one broadcast with a payload
-    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    # If that payload was encrypted and the bindkey was
+    # not verified then we need to reauth
     if (
         not data.pending
-        and data.encryption_scheme != EncryptionScheme.NONE
+        and data.encryption_scheme is not EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
         entry.async_start_reauth(hass, data={"device": data})

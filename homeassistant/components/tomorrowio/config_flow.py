@@ -1,18 +1,16 @@
 """Config flow for Tomorrow.io integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
     RateLimitedException,
 )
 from pytomorrowio.pytomorrowio import TomorrowioV4
-import voluptuous as vol
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import (
@@ -23,11 +21,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_FRIENDLY_NAME,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,7 +46,7 @@ def _get_config_schema(
     hass: HomeAssistant,
     source: str | None,
     input_dict: dict[str, Any] | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return schema defaults for init step based on user input/config dict.
 
     Retain info already provided for future form views by setting them as
@@ -58,7 +56,7 @@ def _get_config_schema(
         input_dict = {}
 
     api_key_schema = {
-        vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
+        probatio.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
     }
 
     default_location = input_dict.get(
@@ -68,10 +66,10 @@ def _get_config_schema(
             CONF_LONGITUDE: hass.config.longitude,
         },
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
             **api_key_schema,
-            vol.Required(
+            probatio.Required(
                 CONF_LOCATION,
                 default=default_location,
             ): LocationSelector(LocationSelectorConfig(radius=False)),
@@ -99,14 +97,14 @@ class TomorrowioOptionsConfigFlow(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = {
-            vol.Required(
+            probatio.Required(
                 CONF_TIMESTEP,
                 default=self.config_entry.options[CONF_TIMESTEP],
-            ): vol.In([1, 5, 15, 30, 60]),
+            ): probatio.In([1, 5, 15, 30, 60]),
         }
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options_schema)
+            step_id="init", data_schema=probatio.Schema(options_schema)
         )
 
 
@@ -117,12 +115,14 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> TomorrowioOptionsConfigFlow:
         """Get the options flow for this handler."""
         return TomorrowioOptionsConfigFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -141,7 +141,9 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_NAME] = DEFAULT_NAME
                 # Append zone name if it exists and we are using the default name
                 if zone_state := async_active_zone(self.hass, latitude, longitude):
-                    zone_name = zone_state.attributes[CONF_FRIENDLY_NAME]
+                    zone_name = zone_state.attributes[
+                        EntityStateAttribute.FRIENDLY_NAME
+                    ]
                     user_input[CONF_NAME] += f" - {zone_name}"
             try:
                 await TomorrowioV4(

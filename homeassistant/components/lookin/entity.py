@@ -1,9 +1,8 @@
 """The lookin integration entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import logging
+from typing import override
 
 from aiolookin import (
     POWER_CMD,
@@ -15,6 +14,7 @@ from aiolookin import (
 )
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,15 +38,17 @@ def _lookin_device_to_device_info(lookin_device: Device, host: str) -> DeviceInf
 
 
 def _lookin_controlled_device_to_device_info(
-    lookin_device: Device, uuid: str, device: Climate | Remote, host: str
+    uuid: str, device: Climate | Remote, host: str, via_device_id: str | None
 ) -> DeviceInfo:
-    return DeviceInfo(
+    device_info = DeviceInfo(
         identifiers={(DOMAIN, uuid)},
         name=device.name,
         model=device.device_type,
-        via_device=(DOMAIN, lookin_device.id),
         configuration_url=f"http://{host}/data/{uuid}",
     )
+    if via_device_id is not None:
+        device_info["via_device_id"] = via_device_id
+    return device_info
 
 
 class LookinDeviceMixIn:
@@ -114,7 +116,14 @@ class LookinCoordinatorEntity(
         self._set_lookin_device_attrs(lookin_data)
         self._set_lookin_entity_attrs(uuid, device, lookin_data)
         self._attr_device_info = _lookin_controlled_device_to_device_info(
-            self._lookin_device, uuid, device, lookin_data.host
+            uuid,
+            device,
+            lookin_data.host,
+            dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self._lookin_device.id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self._attr_unique_id = uuid
         self._attr_name = device.name
@@ -181,6 +190,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
         await self.coordinator.async_refresh()
         self._attr_name = self._remote.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_added_to_hass()

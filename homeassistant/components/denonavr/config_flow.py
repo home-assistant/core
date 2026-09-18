@@ -1,14 +1,12 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -52,7 +50,7 @@ IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 
 DEFAULT_USE_TELNET_NEW_INSTALL = True
 
-CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
+CONFIG_SCHEMA = probatio.Schema({probatio.Optional(CONF_HOST): str})
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
@@ -65,29 +63,29 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_ALL_SOURCES,
                     default=self.config_entry.options.get(
                         CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ZONE2,
                     default=self.config_entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ZONE3,
                     default=self.config_entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_UPDATE_AUDYSSEY,
                     default=self.config_entry.options.get(
                         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_TELNET,
                     default=self.config_entry.options.get(
                         CONF_USE_TELNET, DEFAULT_USE_TELNET
@@ -117,12 +115,14 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: DenonavrConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,9 +159,9 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
             self.host = user_input["select_host"]
             return await self.async_step_connect()
 
-        select_scheme = vol.Schema(
+        select_scheme = probatio.Schema(
             {
-                vol.Required("select_host"): vol.In(
+                probatio.Required("select_host"): probatio.In(
                     [d_receiver["host"] for d_receiver in self.d_receivers]
                 )
             }
@@ -199,7 +199,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             success = await connect_denonavr.async_connect_receiver()
-        except (AvrNetworkError, AvrTimoutError):
+        except AvrNetworkError, AvrTimoutError:
             success = False
         if not success:
             return self.async_abort(reason="cannot_connect")
@@ -237,6 +237,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
             options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

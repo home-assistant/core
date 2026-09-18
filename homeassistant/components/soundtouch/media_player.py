@@ -1,10 +1,8 @@
 """Support for interface with a Bose SoundTouch."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
@@ -19,16 +17,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SoundTouchConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,16 +40,16 @@ ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SoundTouchConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     media_player = SoundTouchMediaPlayer(device)
 
     async_add_entities([media_player], True)
 
-    hass.data[DOMAIN][entry.entry_id].media_player = media_player
+    entry.runtime_data.media_player = media_player
 
 
 class SoundTouchMediaPlayer(MediaPlayerEntity):
@@ -91,9 +85,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.config.device_id)},
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(device.config.mac_address))
-            },
+            connections={(CONNECTION_NETWORK_MAC, device.config.mac_address)},
             manufacturer="Bose Corporation",
             model=device.config.type,
             name=device.config.name,
@@ -115,11 +107,13 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._zone = self.get_zone_info()
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume.actual / 100
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._status is None or self._status.source == "STANDBY":
@@ -131,19 +125,23 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return MAP_STATUS.get(self._status.play_status)
 
     @property
+    @override
     def source(self):
         """Name of the current input source."""
         return self._status.source
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._volume.muted
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self._device.power_off()
 
+    @override
     def turn_on(self) -> None:
         """Turn on media player."""
         self._device.power_on()
@@ -156,10 +154,12 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Volume down media player."""
         self._device.volume_down()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._device.set_volume(int(volume * 100))
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._device.mute()
@@ -168,28 +168,34 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Simulate play pause media player."""
         self._device.play_pause()
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._device.play()
 
+    @override
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._device.pause()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._device.next_track()
 
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._device.previous_track()
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         return self._status.image
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         if self._status.station_name is not None:
@@ -200,25 +206,30 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_duration(self):
         """Duration of current playing media in seconds."""
         return self._status.duration
 
     @property
+    @override
     def media_artist(self):
         """Artist of current playing media."""
         return self._status.artist
 
     @property
+    @override
     def media_track(self):
         """Artist of current playing media."""
         return self._status.track
 
     @property
+    @override
     def media_album_name(self):
         """Album name of current playing media."""
         return self._status.album
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Populate zone info which requires entity_id."""
 
@@ -231,6 +242,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             EVENT_HOMEASSISTANT_START, async_update_on_start
         )
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -245,6 +257,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -269,6 +282,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             else:
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         if source == Source.AUX.value:
@@ -333,9 +347,10 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.add_zone_slave([slave.device for slave in slaves])
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         if self._zone and "master" in self._zone:
             attributes[ATTR_SOUNDTOUCH_ZONE] = self._zone
@@ -346,6 +361,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
         return attributes
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -388,14 +404,16 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def _get_instance_by_ip(self, ip_address):
         """Search and return a SoundTouchDevice instance by it's IP address."""
-        for data in self.hass.data[DOMAIN].values():
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_ip == ip_address:
                 return data.media_player
         return None
 
     def _get_instance_by_id(self, instance_id):
-        """Search and return a SoundTouchDevice instance by it's ID (aka MAC address)."""
-        for data in self.hass.data[DOMAIN].values():
+        """Search and return a SoundTouchDevice by its ID."""
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_id == instance_id:
                 return data.media_player
         return None

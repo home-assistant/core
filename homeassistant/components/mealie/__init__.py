@@ -1,7 +1,5 @@
 """The Mealie integration."""
 
-from __future__ import annotations
-
 from aiomealie import MealieAuthenticationError, MealieClient, MealieError
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
@@ -94,7 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
     await statistics_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = MealieData(
-        client, mealplan_coordinator, shoppinglist_coordinator, statistics_coordinator
+        client,
+        version,
+        mealplan_coordinator,
+        shoppinglist_coordinator,
+        statistics_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

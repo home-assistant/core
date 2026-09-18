@@ -1,9 +1,7 @@
 """Coordinator for the Lektrico Charging Station integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device, DeviceConnectionError
 
@@ -47,6 +45,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.board_revision: str = self.config_entry.data[ATTR_HW_VERSION]
         self.device_type: str = self.config_entry.data[CONF_TYPE]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Async Update device state."""
         try:

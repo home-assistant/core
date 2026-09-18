@@ -1,10 +1,9 @@
 """Sensor support for Skybell Doorbells."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from aioskybell import SkybellDevice
 from aioskybell.helpers import const as CONST
@@ -14,13 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .entity import DOMAIN, SkybellEntity
+from .coordinator import SkybellConfigEntry
+from .entity import SkybellEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -89,13 +88,13 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell sensor."""
     async_add_entities(
         SkybellSensor(coordinator, description)
-        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for coordinator in entry.runtime_data
         for description in SENSOR_TYPES
         if coordinator.device.owner or description.key not in CONST.ATTR_OWNER_STATS
     )
@@ -107,6 +106,7 @@ class SkybellSensor(SkybellEntity, SensorEntity):
     entity_description: SkybellSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)

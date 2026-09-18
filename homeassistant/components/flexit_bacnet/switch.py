@@ -3,7 +3,7 @@
 import asyncio.exceptions
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -38,13 +38,6 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
         is_on_fn=lambda data: data.electric_heater,
         turn_on_fn=lambda data: data.enable_electric_heater(),
         turn_off_fn=lambda data: data.disable_electric_heater(),
-    ),
-    FlexitSwitchEntityDescription(
-        key="fireplace_mode",
-        translation_key="fireplace_mode",
-        is_on_fn=lambda data: data.fireplace_ventilation_status,
-        turn_on_fn=lambda data: data.trigger_fireplace_mode(),
-        turn_off_fn=lambda data: data.trigger_fireplace_mode(),
     ),
     FlexitSwitchEntityDescription(
         key="cooker_hood_mode",
@@ -93,10 +86,12 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return value of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         try:
@@ -112,6 +107,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         try:

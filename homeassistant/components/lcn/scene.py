@@ -2,11 +2,11 @@
 
 from collections.abc import Iterable
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
-from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE, Scene
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,7 +22,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 
 
 def add_lcn_entities(
@@ -51,14 +51,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SCENE: add_entities}
+        {SCENE_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SCENE
+            if entity_config[CONF_DOMAIN] == SCENE_DOMAIN
         ),
     )
 
@@ -88,6 +88,7 @@ class LcnScene(LcnEntity, Scene):
                 config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
             )
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         await self.device_connection.activate_scene(

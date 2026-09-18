@@ -1,14 +1,12 @@
 """Helpers for data entry flows for config entries."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 
 from .typing import DiscoveryInfoType
 
@@ -43,12 +41,16 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
         self._title = title
         self._discovery_function = discovery_function
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
 
@@ -74,89 +76,123 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
                     has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(
+                    reason="no_devices_found",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             # Cancel the discovered one.
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return self.async_create_entry(title=self._title, data={})
 
+    @override
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by mqtt discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Ssdp discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(self._domain)
 
@@ -167,7 +203,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         # Cancel other flows.
         in_progress = self._async_in_progress()
@@ -211,15 +250,27 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._description_placeholder = description_placeholder
         self._allow_multiple = allow_multiple
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a user initiated set up flow to create a webhook."""
-        if not self._allow_multiple and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        if (
+            not self._allow_multiple
+            and self._async_current_entries()
+            and self.source != config_entries.SOURCE_RECONFIGURE
+        ):
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         if user_input is None:
-            return self.async_show_form(step_id="user")
+            return self.async_show_form(
+                step_id="reconfigure"
+                if self.source == config_entries.SOURCE_RECONFIGURE
+                else "user"
+            )
 
         # Local import to be sure cloud is loaded and setup
         from homeassistant.components.cloud import (  # noqa: PLC0415
@@ -234,13 +285,20 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             async_generate_url,
         )
 
-        webhook_id = async_generate_id()
+        if self.source == config_entries.SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            webhook_id = entry.data["webhook_id"]
+        else:
+            webhook_id = async_generate_id()
 
         if "cloud" in self.hass.config.components and async_active_subscription(
             self.hass
         ):
             if not async_is_connected(self.hass):
-                return self.async_abort(reason="cloud_not_connected")
+                return self.async_abort(
+                    reason="cloud_not_connected",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
@@ -250,11 +308,29 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
         self._description_placeholder["webhook_url"] = webhook_url
 
+        if self.source == config_entries.SOURCE_RECONFIGURE:
+            if self.hass.config_entries.async_update_entry(
+                entry=entry,
+                data={**entry.data, "webhook_id": webhook_id, "cloudhook": cloudhook},
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(
+                reason="reconfigure_successful",
+                description_placeholders=self._description_placeholder,
+            )
+
         return self.async_create_entry(
             title=self._title,
             data={"webhook_id": webhook_id, "cloudhook": cloudhook},
             description_placeholders=self._description_placeholder,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a user initiated flow to re-configure a webhook."""
+
+        return await self.async_step_user(user_input)
 
 
 def register_webhook_flow(

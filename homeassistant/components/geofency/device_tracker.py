@@ -1,7 +1,9 @@
 """Support for the Geofency device tracker platform."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,9 +42,7 @@ async def async_setup_entry(
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.get_devices_for_config_entry_id(
-            config_entry.entry_id
-        )
+        for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)
         for identifier in device.identifiers
     }
 
@@ -73,6 +73,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
             name=device,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
@@ -89,9 +90,10 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._attr_latitude = attr.get(ATTR_LATITUDE)
-        self._attr_longitude = attr.get(ATTR_LONGITUDE)
+        self._attr_latitude = attr.get(EntityStateAttribute.LATITUDE)
+        self._attr_longitude = attr.get(EntityStateAttribute.LONGITUDE)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()

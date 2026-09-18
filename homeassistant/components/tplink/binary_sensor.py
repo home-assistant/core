@@ -1,9 +1,7 @@
 """Support for TPLink binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final, cast, override
 
 from kasa import Feature
 
@@ -108,6 +106,7 @@ class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntit
     entity_description: TPLinkBinarySensorEntityDescription
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = cast(bool | None, self._feature.value)

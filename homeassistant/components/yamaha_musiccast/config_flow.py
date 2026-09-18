@@ -1,14 +1,12 @@
 """Config flow for MusicCast."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError, DummyCookieJar
 from aiomusiccast import MusicCastConnectionException, MusicCastDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -34,6 +32,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     upnp_description: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -52,7 +51,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await MusicCastDevice.get_device_info(
                 host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
             )
-        except (MusicCastConnectionException, ClientConnectorError):
+        except MusicCastConnectionException, ClientConnectorError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -80,10 +79,11 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors or {},
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -97,7 +97,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
 
-        # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
+        # ssdp_location and hostname have been checked in
+        # check_yamaha_ssdp so it is safe to ignore type
         self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)

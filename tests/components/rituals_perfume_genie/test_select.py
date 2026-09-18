@@ -2,7 +2,10 @@
 
 import pytest
 
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -47,7 +50,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
     config_entry = mock_config_entry(unique_id="select_invalid_option_test")
     diffuser = mock_diffuser(hublot="lot123", room_size_square_meter=60)
     await init_integration(hass, config_entry, [diffuser])
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     diffuser.room_size_square_meter = 30
 
     state = hass.states.get("select.genie_room_size")
@@ -61,7 +64,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
         blocking=True,
     )
     await hass.services.async_call(
-        "homeassistant",
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["select.genie_room_size"]},
         blocking=True,
@@ -78,7 +81,7 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     config_entry = mock_config_entry(unique_id="select_invalid_option_test")
     diffuser = mock_diffuser(hublot="lot123", room_size_square_meter=60)
     await init_integration(hass, config_entry, [diffuser])
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     state = hass.states.get("select.genie_room_size")
     assert state
@@ -92,7 +95,7 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
             blocking=True,
         )
     await hass.services.async_call(
-        "homeassistant",
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["select.genie_room_size"]},
         blocking=True,

@@ -1,12 +1,10 @@
 """Support for currencylayer.com exchange rates service."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -29,10 +27,10 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_QUOTE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_QUOTE): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -63,35 +61,20 @@ class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
     _attr_attribution = "Data provided by currencylayer.com"
-    _attr_icon = "mdi:currency"
+    _attr_icon = "mdi:currency-usd"
 
-    def __init__(self, rest, base, quote):
+    def __init__(self, rest: CurrencylayerData, base: str, quote: str) -> None:
         """Initialize the sensor."""
         self.rest = rest
-        self._quote = quote
-        self._base = base
-        self._state = None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._quote
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._base
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = base
+        self._attr_native_unit_of_measurement = quote
+        self._key = f"{base}{quote}"
 
     def update(self) -> None:
         """Update current date."""
         self.rest.update()
         if (value := self.rest.data) is not None:
-            self._state = round(value[f"{self._base}{self._quote}"], 4)
+            self._attr_native_value = round(value[self._key], 4)
 
 
 class CurrencylayerData:

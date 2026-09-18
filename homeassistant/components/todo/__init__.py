@@ -1,15 +1,14 @@
 """The todo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
+import copy
 import dataclasses
 import datetime
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
@@ -28,7 +27,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_DESCRIPTION,
@@ -64,7 +62,7 @@ class TodoItemFieldDescription:
     """Field name for TodoItem."""
 
     validation: Callable[[Any], Any]
-    """Voluptuous validation function."""
+    """Probatio validation function."""
 
     required_feature: TodoListEntityFeature
     """Entity feature that enables this field."""
@@ -73,32 +71,32 @@ class TodoItemFieldDescription:
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATE,
-        validation=vol.Any(cv.date, None),
+        validation=probatio.Any(cv.date, None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATETIME,
-        validation=vol.Any(vol.All(cv.datetime, dt_util.as_local), None),
+        validation=probatio.Any(probatio.All(cv.datetime, dt_util.as_local), None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DESCRIPTION,
-        validation=vol.Any(cv.string, None),
+        validation=probatio.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
 ]
 
 TODO_ITEM_FIELD_SCHEMA = {
-    vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
+    probatio.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 TODO_SERVICE_GET_ITEMS_SCHEMA = {
-    vol.Optional(ATTR_STATUS): vol.All(
+    probatio.Optional(ATTR_STATUS): probatio.All(
         cv.ensure_list,
-        [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+        [probatio.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
     ),
 }
 
@@ -132,11 +130,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         TodoServices.ADD_ITEM,
-        vol.All(
+        probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required(ATTR_ITEM): vol.All(
-                        cv.string, str.strip, vol.Length(min=1)
+                    probatio.Required(ATTR_ITEM): probatio.All(
+                        cv.string, str.strip, probatio.Length(min=1)
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
@@ -148,14 +146,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.UPDATE_ITEM,
-        vol.All(
+        probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(ATTR_RENAME): vol.All(
-                        cv.string, str.strip, vol.Length(min=1)
+                    probatio.Required(ATTR_ITEM): probatio.All(
+                        cv.string, probatio.Length(min=1)
                     ),
-                    vol.Optional(ATTR_STATUS): vol.In(
+                    probatio.Optional(ATTR_RENAME): probatio.All(
+                        cv.string, str.strip, probatio.Length(min=1)
+                    ),
+                    probatio.Optional(ATTR_STATUS): probatio.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
@@ -175,7 +175,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
+                probatio.Required(ATTR_ITEM): probatio.All(cv.ensure_list, [cv.string]),
             }
         ),
         _async_remove_todo_items,
@@ -231,6 +231,22 @@ class TodoItem:
     """The date and time that a to-do item was marked completed."""
 
 
+_TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
+    field.name for field in dataclasses.fields(TodoItem)
+)
+
+
+def _serialize_todo_item(item: TodoItem) -> dict[str, Any]:
+    """Serialize a To-do item for websocket subscribers.
+
+    Avoids dataclasses.asdict(), which recursively deepcopies every field value
+    (including the status StrEnum via __deepcopy__) on every subscriber update.
+    TodoItem is a flat dataclass of immutable values, so a shallow dict is
+    equivalent and far cheaper.
+    """
+    return {name: getattr(item, name) for name in _TODO_ITEM_FIELD_NAMES}
+
+
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
 }
@@ -240,9 +256,10 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
-    _update_listeners: list[Callable[[list[JsonValueType] | None], None]] | None = None
+    _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
 
     @property
+    @override
     def state(self) -> int | None:
         """Return the entity state as the count of incomplete items."""
         items = self.todo_items
@@ -281,13 +298,9 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_subscribe_updates(
-        self,
-        listener: Callable[[list[JsonValueType] | None], None],
+        self, listener: Callable[[list[TodoItem] | None], None]
     ) -> CALLBACK_TYPE:
-        """Subscribe to To-do list item updates.
-
-        Called by websocket API.
-        """
+        """Subscribe to To-do list item updates."""
         if self._update_listeners is None:
             self._update_listeners = []
         self._update_listeners.append(listener)
@@ -306,13 +319,14 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._update_listeners:
             return
 
-        todo_items: list[JsonValueType] = [
-            dataclasses.asdict(item) for item in self.todo_items or ()
-        ]
+        items = self.todo_items
+        todo_items = [copy.copy(item) for item in items] if items is not None else None
+
         for listener in self._update_listeners:
             listener(todo_items)
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Notify to-do item subscribers."""
         super()._async_write_ha_state()
@@ -321,8 +335,8 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "todo/item/subscribe",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        probatio.Required("type"): "todo/item/subscribe",
+        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.async_response
@@ -341,14 +355,13 @@ async def websocket_handle_subscribe_todo_items(
         return
 
     @callback
-    def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
+    def todo_item_listener(todo_items: list[TodoItem] | None) -> None:
         """Push updated To-do list items to websocket."""
+        items = [_serialize_todo_item(item) for item in todo_items or []]
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {
-                    "items": todo_items,
-                },
+                {"items": items},
             )
         )
 
@@ -357,8 +370,8 @@ async def websocket_handle_subscribe_todo_items(
     )
     connection.send_result(msg["id"])
 
-    # Push an initial forecast update
-    entity.async_update_listeners()
+    # Push an initial list update to the new subscriber only
+    todo_item_listener(entity.todo_items)
 
 
 def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
@@ -376,8 +389,8 @@ def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "todo/item/list",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "todo/item/list",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
@@ -409,10 +422,10 @@ async def websocket_handle_todo_item_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "todo/item/move",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required("uid"): cv.string,
-        vol.Optional("previous_uid"): cv.string,
+        probatio.Required("type"): "todo/item/move",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required("uid"): cv.string,
+        probatio.Optional("previous_uid"): cv.string,
     }
 )
 @websocket_api.async_response

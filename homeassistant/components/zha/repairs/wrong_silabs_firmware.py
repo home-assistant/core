@@ -1,7 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
 
-from __future__ import annotations
-
 import enum
 import logging
 
@@ -73,7 +71,6 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
 
     app_type = await probe_silabs_firmware_type(
         device,
-        bootloader_reset_methods=(),
         application_probe_methods=[
             (ApplicationType.GECKO_BOOTLOADER, 115200),
             (ApplicationType.EZSP, 115200),

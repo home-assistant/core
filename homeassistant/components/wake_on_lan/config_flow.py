@@ -1,9 +1,9 @@
 """Config flow for Wake on lan integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.helpers import device_registry as dr
@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_SECUREON_PASSWORD, DEFAULT_NAME, DOMAIN
 
 
 async def validate(
@@ -46,10 +46,11 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA = {vol.Required(CONF_MAC): TextSelector()}
+DATA_SCHEMA = {probatio.Required(CONF_MAC): TextSelector()}
 OPTIONS_SCHEMA = {
-    vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
-    vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
+    probatio.Optional(CONF_SECUREON_PASSWORD): TextSelector(),
+    probatio.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
+    probatio.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
     ),
 }
@@ -57,13 +58,13 @@ OPTIONS_SCHEMA = {
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=vol.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
+        schema=probatio.Schema(DATA_SCHEMA).extend(OPTIONS_SCHEMA),
         validate_user_input=validate,
     )
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        vol.Schema(OPTIONS_SCHEMA), validate_user_input=validate_options
+        probatio.Schema(OPTIONS_SCHEMA), validate_user_input=validate_options
     ),
 }
 
@@ -75,6 +76,7 @@ class WakeonLanConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         mac: str = options[CONF_MAC]

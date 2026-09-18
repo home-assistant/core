@@ -30,7 +30,7 @@ async def test_events(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
 async def test_events_data_on_startup(
     hass: HomeAssistant, bypass_api: AsyncMock
 ) -> None:
-    """Test events and check test values are correctly set if data exists on first update."""
+    """Test events are correctly set if data exists on first update."""
 
     def update_status(_):
         find_update_callback(bypass_api, "random_num")(MOCK_SNOO_DATA)

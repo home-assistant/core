@@ -1,26 +1,25 @@
 """The select entities for musiccast."""
 
-from __future__ import annotations
+from typing import override
 
 from aiomusiccast.capabilities import OptionSetter
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, TRANSLATION_KEY_MAPPING
-from .coordinator import MusicCastDataUpdateCoordinator
+from .const import TRANSLATION_KEY_MAPPING
+from .coordinator import MusicCastConfigEntry, MusicCastDataUpdateCoordinator
 from .entity import MusicCastCapabilityEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MusicCastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast select entities based on a config entry."""
-    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     select_entities = [
         SelectableCapability(coordinator, capability)
@@ -54,6 +53,7 @@ class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
         self._attr_options = list(capability.options.values())
         self._attr_translation_key = TRANSLATION_KEY_MAPPING.get(capability.id)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select the given option."""
         value = {val: key for key, val in self.capability.options.items()}[option]
@@ -61,6 +61,7 @@ class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
         self._attr_translation_key = TRANSLATION_KEY_MAPPING.get(self.capability.id)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         return self.capability.options.get(self.capability.current)

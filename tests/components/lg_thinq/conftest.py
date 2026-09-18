@@ -115,6 +115,11 @@ def mock_thinq_mqtt_client() -> Generator[None]:
 @pytest.fixture(
     params=[
         "air_conditioner",
+        "air_conditioner1",
+        "air_conditioner2",
+        "air_purifier",
+        "dehumidifier",
+        "kimchi_refrigerator",
         "washer",
     ]
 )

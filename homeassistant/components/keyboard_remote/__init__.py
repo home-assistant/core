@@ -1,7 +1,5 @@
 """Receive signals from a keyboard and use it as a remote control."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import logging
@@ -10,7 +8,7 @@ from typing import Any
 
 from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -40,28 +38,32 @@ EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 
 DEVINPUT = "/dev/input"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-                        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-                        vol.Optional(TYPE, default=["key_up"]): vol.All(
-                            cv.ensure_list, [vol.In(KEY_VALUE)]
+                        probatio.Exclusive(
+                            DEVICE_DESCRIPTOR, DEVICE_ID_GROUP
+                        ): cv.string,
+                        probatio.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+                        probatio.Optional(TYPE, default=["key_up"]): probatio.All(
+                            cv.ensure_list, [probatio.In(KEY_VALUE)]
                         ),
-                        vol.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
-                        vol.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,
-                        vol.Optional(EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
+                        probatio.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
+                        probatio.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,
+                        probatio.Optional(
+                            EMULATE_KEY_HOLD_REPEAT, default=0.033
+                        ): float,
                     }
                 ),
                 cv.has_at_least_one_key(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP),
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -76,7 +78,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class KeyboardRemote:
-    """Manage device connection/disconnection using inotify to asynchronously monitor."""
+    """Manage device connection/disconnection.
+
+    Uses inotify to asynchronously monitor.
+    """
 
     def __init__(self, hass: HomeAssistant, config: list[dict[str, Any]]) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
@@ -196,7 +201,7 @@ class KeyboardRemote:
         return (dev, handler)
 
     async def async_monitor_devices(self):
-        """Monitor asynchronously for device connection/disconnection or permissions changes."""
+        """Monitor for device connection/disconnection or permissions changes."""
 
         _LOGGER.debug("Start monitoring loop")
 
@@ -255,7 +260,10 @@ class KeyboardRemote:
             self.descriptor = None
 
         async def async_device_keyrepeat(self, code, delay, repeat):
-            """Emulate keyboard delay/repeat behaviour by sending key events on a timer."""
+            """Emulate keyboard delay/repeat behaviour.
+
+            Sends key events on a timer.
+            """
 
             await asyncio.sleep(delay)
             while True:
@@ -275,7 +283,9 @@ class KeyboardRemote:
             _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
             if self.monitor_task is None:
                 self.dev = dev
-                # set the descriptor to the one provided to the config if any, falling back to the device path if not set
+                # set the descriptor to the one provided to
+                # the config if any, falling back to the
+                # device path if not set
                 if self.config_descriptor:
                     self.descriptor = self.config_descriptor
                 else:
@@ -364,7 +374,7 @@ class KeyboardRemote:
                         ):
                             repeat_tasks[event.code].cancel()
                             del repeat_tasks[event.code]
-            except (OSError, asyncio.CancelledError):
+            except OSError, asyncio.CancelledError:
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

@@ -1,7 +1,5 @@
 """Victron Remote Monitoring energy platform."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +10,7 @@ async def async_get_solar_forecast(
     """Get solar forecast for a config entry ID."""
     if (
         entry := hass.config_entries.async_get_entry(config_entry_id)
-    ) is None or entry.state != ConfigEntryState.LOADED:
+    ) is None or entry.state is not ConfigEntryState.LOADED:
         return None
     data = entry.runtime_data.data.solar
     if data is None:

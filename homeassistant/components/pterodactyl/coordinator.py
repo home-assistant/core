@@ -1,9 +1,8 @@
 """Data update coordinator of the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -15,7 +14,7 @@ from .api import (
     PterodactylAPI,
     PterodactylAuthorizationError,
     PterodactylConnectionError,
-    PterodactylData,
+    PterodactylGameServerData,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -25,7 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 type PterodactylConfigEntry = ConfigEntry[PterodactylCoordinator]
 
 
-class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
+class PterodactylCoordinator(
+    DataUpdateCoordinator[dict[str, PterodactylGameServerData]]
+):
     """Pterodactyl data update coordinator."""
 
     config_entry: PterodactylConfigEntry
@@ -46,6 +47,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Pterodactyl data coordinator."""
         self.api = PterodactylAPI(
@@ -61,7 +63,8 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
         except PterodactylAuthorizationError as error:
             raise ConfigEntryAuthFailed(error) from error
 
-    async def _async_update_data(self) -> dict[str, PterodactylData]:
+    @override
+    async def _async_update_data(self) -> dict[str, PterodactylGameServerData]:
         """Get updated data from the Pterodactyl server."""
         try:
             return await self.api.async_get_data()

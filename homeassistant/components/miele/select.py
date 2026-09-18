@@ -1,12 +1,10 @@
 """Platform for Miele select entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp import ClientResponseError
 
@@ -71,7 +69,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -96,6 +94,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
     entity_description: MieleSelectDescription
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of available options."""
         return sorted(
@@ -104,6 +103,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str:
         """Retrieve currently selected option."""
         # There is no direct mapping from Miele 3rd party API, so we infer the
@@ -124,6 +124,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
 
         return MieleModes.NORMAL.name.lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
         new_mode = MieleModes[option.upper()].value

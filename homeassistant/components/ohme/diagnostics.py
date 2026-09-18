@@ -1,7 +1,5 @@
 """Provides diagnostics for Ohme."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -19,6 +17,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "device_info": client.device_info,
         "vehicles": client.vehicles,
-        "ct_connected": client.ct_connected,
         "cap_available": client.cap_available,
     }

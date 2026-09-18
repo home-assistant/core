@@ -1,11 +1,11 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientError
+import probatio
 from pykoplenti import ApiClient, AuthenticationException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
@@ -17,11 +17,11 @@ from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_SERVICE_CODE): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_SERVICE_CODE): str,
     }
 )
 
@@ -48,6 +48,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -62,7 +63,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, TimeoutError):
+            except ClientError, TimeoutError:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -87,7 +88,7 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, TimeoutError):
+            except ClientError, TimeoutError:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

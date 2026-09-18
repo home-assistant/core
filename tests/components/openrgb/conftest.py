@@ -66,6 +66,11 @@ def mock_openrgb_device() -> MagicMock:
     device = MagicMock(spec=device_obj)
     device.configure_mock(**vars(device_obj))
 
+    # Used by select entity to track state changes
+    type(device).data = property(
+        lambda self: {attr: getattr(self, attr) for attr in vars(device_obj)}
+    )
+
     # Methods
     device.set_color = MagicMock()
     device.set_mode = MagicMock()
@@ -96,11 +101,13 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
         # Attributes
         client.protocol_version = 4
         client.devices = [mock_openrgb_device]
+        client.profiles = []
 
         # Methods
         client.update = MagicMock()
         client.connect = MagicMock()
         client.disconnect = MagicMock()
+        client.load_profile = MagicMock()
 
         # Store the class mock so tests can set side_effect
         client.client_class_mock = client_mock

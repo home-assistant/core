@@ -1,11 +1,10 @@
 """Device tracker for Synology SRM routers."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
+import probatio
 import synology_srm
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -33,12 +32,12 @@ DEFAULT_VERIFY_SSL = False
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -100,12 +99,14 @@ class SynologySrmDeviceScanner(DeviceScanner):
         self.devices = []
         self.success_init = self._update_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device["mac"] for device in self.devices]
 
+    @override
     def get_extra_attributes(self, device) -> dict:
         """Get the extra attributes of a device."""
         device = next(
@@ -121,6 +122,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
             filtered_attributes[attr] = value
         return filtered_attributes
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [

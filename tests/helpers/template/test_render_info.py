@@ -1,10 +1,11 @@
 """Test template render information tracking for Home Assistant."""
 
-from __future__ import annotations
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.template.render_info import (
@@ -15,6 +16,7 @@ from homeassistant.helpers.template.render_info import (
     _true,
     render_info_cv,
 )
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -28,6 +30,7 @@ def test_render_info_initialization(template_obj: template.Template) -> None:
     info = RenderInfo(template_obj)
 
     assert info.template is template_obj
+    assert info.collecting is True
     assert info._result is None
     assert info.is_static is False
     assert info.exception is None
@@ -192,3 +195,49 @@ def test_render_info_context_var(template_obj: template.Template) -> None:
     # Reset for other tests
     render_info_cv.set(None)
     assert render_info_cv.get() is None
+
+
+@pytest.mark.parametrize(
+    "render",
+    [
+        pytest.param(
+            lambda tpl: tpl.async_render_to_info().result(), id="render_to_info"
+        ),
+        pytest.param(lambda tpl: tpl.async_render(), id="render"),
+    ],
+)
+async def test_render_info_does_not_escape_into_scheduled_work(
+    hass: HomeAssistant,
+    render: Callable[[template.Template], Any],
+) -> None:
+    """Test the render in flight does not escape into work scheduled during it.
+
+    An error logged while a template renders makes `system_log` fire an event,
+    and firing hands the dispatch to the event loop together with a copy of the
+    context of the render. Renders made from that copy used to collect into the
+    render that had already finished, or raise "RenderInfo already set", and the
+    error logged for that fired another event carrying the same copy, so the
+    loop sustained itself.
+    """
+    assert await async_setup_component(
+        hass, "system_log", {"system_log": {"fire_event": True}}
+    )
+    hass.states.async_set("sensor.test", "ok")
+
+    renders: list[str] = []
+
+    @callback
+    def _render_on_event(event: Event) -> None:
+        renders.append(render(template.Template("{{ states('sensor.test') }}", hass)))
+
+    hass.bus.async_listen("system_log_event", _render_on_event)
+
+    # Calling an undefined variable logs an error from inside the render
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ nope.startswith('x') }}", hass
+        ).async_render_to_info().result()
+
+    await hass.async_block_till_done()
+
+    assert renders == ["ok"]

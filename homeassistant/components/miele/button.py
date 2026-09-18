@@ -1,10 +1,8 @@
 """Platform for Miele button integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp import ClientResponseError
 
@@ -112,7 +110,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -137,6 +135,7 @@ class MieleButton(MieleEntity, ButtonEntity):
     entity_description: MieleButtonDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
@@ -145,6 +144,7 @@ class MieleButton(MieleEntity, ButtonEntity):
             and self.entity_description.press_data in self.action.process_actions
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         _LOGGER.debug("Press: %s", self.entity_description.key)

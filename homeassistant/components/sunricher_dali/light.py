@@ -1,9 +1,7 @@
 """Platform for light integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_light_device
@@ -18,10 +16,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER
+from .entity import DaliDeviceEntity
 from .types import DaliCenterConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,42 +36,26 @@ async def async_setup_entry(
     devices = runtime_data.devices
 
     async_add_entities(
-        DaliCenterLight(device)
+        DaliCenterLight(hass, device, entry)
         for device in devices
         if is_light_device(device.dev_type)
     )
 
 
-class DaliCenterLight(LightEntity):
+class DaliCenterLight(DaliDeviceEntity, LightEntity):
     """Representation of a Sunricher DALI Light."""
 
-    _attr_has_entity_name = True
     _attr_name = None
-    _attr_is_on: bool | None = None
-    _attr_brightness: int | None = None
+    _attr_min_color_temp_kelvin = 1000
+    _attr_max_color_temp_kelvin = 8000
     _white_level: int | None = None
-    _attr_color_mode: ColorMode | str | None = None
-    _attr_color_temp_kelvin: int | None = None
-    _attr_hs_color: tuple[float, float] | None = None
-    _attr_rgbw_color: tuple[int, int, int, int] | None = None
 
-    def __init__(self, light: Device) -> None:
+    def __init__(
+        self, hass: HomeAssistant, light: Device, entry: DaliCenterConfigEntry
+    ) -> None:
         """Initialize the light entity."""
-
+        super().__init__(hass, light, entry)
         self._light = light
-        self._unavailable_logged = False
-        self._attr_unique_id = light.unique_id
-        self._attr_available = light.status == "online"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, light.dev_id)},
-            name=light.name,
-            manufacturer=MANUFACTURER,
-            model=light.model,
-            via_device=(DOMAIN, light.gw_sn),
-        )
-        self._attr_min_color_temp_kelvin = 1000
-        self._attr_max_color_temp_kelvin = 8000
-
         self._determine_features()
 
     def _determine_features(self) -> None:
@@ -89,6 +70,7 @@ class DaliCenterLight(LightEntity):
         supported_modes.add(self._attr_color_mode)
         self._attr_supported_color_modes = supported_modes
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         _LOGGER.debug(
@@ -105,12 +87,15 @@ class DaliCenterLight(LightEntity):
             rgbw_color=rgbw_color,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._light.turn_off()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             self._light.register_listener(
@@ -118,26 +103,9 @@ class DaliCenterLight(LightEntity):
             )
         )
 
-        self.async_on_remove(
-            self._light.register_listener(
-                CallbackEventType.ONLINE_STATUS, self._handle_availability
-            )
-        )
-
         # read_status() only queues a request on the gateway and relies on the
         # current event loop via call_later, so it must run in the loop thread.
         self._light.read_status()
-
-    @callback
-    def _handle_availability(self, available: bool) -> None:
-        self._attr_available = available
-        if not available and not self._unavailable_logged:
-            _LOGGER.info("Light %s became unavailable", self._attr_unique_id)
-            self._unavailable_logged = True
-        elif available and self._unavailable_logged:
-            _LOGGER.info("Light %s is back online", self._attr_unique_id)
-            self._unavailable_logged = False
-        self.schedule_update_ha_state()
 
     @callback
     def _handle_device_update(self, status: LightStatus) -> None:

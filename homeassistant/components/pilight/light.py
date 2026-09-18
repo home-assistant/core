@@ -1,10 +1,8 @@
 """Support for switching devices via Pilight to on and off."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,13 +21,13 @@ from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     {
-        vol.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
-        vol.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
     }
 )
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_LIGHTS): vol.Schema({cv.string: LIGHTS_SCHEMA})}
+    {probatio.Required(CONF_LIGHTS): probatio.Schema({cv.string: LIGHTS_SCHEMA})}
 )
 
 
@@ -55,17 +53,19 @@ class PilightLight(PilightBaseDevice, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, hass, name, config):
+    def __init__(self, hass: HomeAssistant, name: str, config: ConfigType) -> None:
         """Initialize a switch."""
         super().__init__(hass, name, config)
-        self._dimlevel_min = config.get(CONF_DIMLEVEL_MIN)
-        self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
+        self._dimlevel_min: int = config[CONF_DIMLEVEL_MIN]
+        self._dimlevel_max: int = config[CONF_DIMLEVEL_MAX]
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int | None:
         """Return the brightness."""
         return self._brightness
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on by calling pilight.send service with on code."""
         # Update brightness only if provided as an argument.

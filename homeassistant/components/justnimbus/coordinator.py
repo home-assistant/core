@@ -1,9 +1,8 @@
 """JustNimbus coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import justnimbus
 
@@ -40,6 +39,7 @@ class JustNimbusCoordinator(DataUpdateCoordinator[justnimbus.JustNimbusModel]):
             zip_code=config_entry.data[CONF_ZIP_CODE],
         )
 
+    @override
     async def _async_update_data(self) -> justnimbus.JustNimbusModel:
         """Fetch the latest data from the source."""
         return await self.hass.async_add_executor_job(self._client.get_data)

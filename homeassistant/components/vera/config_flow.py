@@ -1,29 +1,25 @@
 """Config flow for Vera."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
+import probatio
 import pyvera as pv
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import VolDictType
 
+from .common import VeraConfigEntry
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
 LIST_REGEX = re.compile("[^0-9]+")
@@ -54,11 +50,11 @@ def options_schema(options: Mapping[str, Any] | None = None) -> VolDictType:
     """Return options schema."""
     options = options or {}
     return {
-        vol.Optional(
+        probatio.Optional(
             CONF_LIGHTS,
             default=list_to_str(options.get(CONF_LIGHTS, [])),
         ): str,
-        vol.Optional(
+        probatio.Optional(
             CONF_EXCLUDE,
             default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
@@ -89,7 +85,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(options_schema(self.config_entry.options)),
+            data_schema=probatio.Schema(options_schema(self.config_entry.options)),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
                 "documentation_url": "https://www.home-assistant.io/integrations/vera/",
@@ -102,10 +98,12 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    @override
+    def async_get_options_flow(config_entry: VeraConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,38 +120,13 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
                 "documentation_url": "https://www.home-assistant.io/integrations/vera/",
             },
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initialized by import."""
-
-        # If there are entities with the legacy unique_id, then this imported config
-        # should also use the legacy unique_id for entity creation.
-        entity_registry = er.async_get(self.hass)
-        use_legacy_unique_id = (
-            len(
-                [
-                    entry
-                    for entry in entity_registry.entities.values()
-                    if entry.platform == DOMAIN and entry.unique_id.isdigit()
-                ]
-            )
-            > 0
-        )
-
-        return await self.async_step_finish(
-            {
-                **import_data,
-                CONF_SOURCE: SOURCE_IMPORT,
-                CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id,
-            }
         )
 
     async def async_step_finish(self, config: dict[str, Any]) -> ConfigFlowResult:

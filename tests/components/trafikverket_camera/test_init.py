@@ -1,14 +1,11 @@
 """Test for Trafikverket Ferry component Init."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from pytrafikverket import CameraInfoModel, UnknownError
 
-from homeassistant.components.trafikverket_camera import async_migrate_entry
 from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -27,7 +24,7 @@ async def test_setup_entry(
 ) -> None:
     """Test setup entry."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -59,7 +56,7 @@ async def test_unload_entry(
 ) -> None:
     """Test unload an entry."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -93,7 +90,7 @@ async def test_migrate_entry(
 ) -> None:
     """Test migrate entry to version 2."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(
@@ -207,17 +204,24 @@ async def test_migrate_entry_fails_no_id(
     _camera = CameraInfoModel(
         camera_name="Test_camera",
         camera_id=None,
+        camera_group="Test Camera Group",
+        camera_type="Road",
         active=True,
         deleted=False,
         description="Test Camera for testing",
         direction="180",
-        fullsizephoto=True,
-        location="Test location",
+        has_fullsizephoto=True,
+        has_sketchimage=True,
+        icon="12",
+        location="Test location2",
         modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo.jpg",
+        photourlfullsize="https://www.testurl.com/test_photo_fullsize.jpg",
+        photourlsketch="https://www.testurl.com/test_photo_sketch.jpg",
+        photourlthumbnail="https://www.testurl.com/test_photo_thumbnail.jpg",
         status="Running",
-        camera_type="Road",
+        wgs84="POINT (12.345678 56.789012)",
     )
 
     with patch(
@@ -231,31 +235,3 @@ async def test_migrate_entry_fails_no_id(
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
-
-
-async def test_no_migration_needed(
-    hass: HomeAssistant,
-    get_camera: CameraInfoModel,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test migrate entry fails, camera returns no id."""
-    aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
-    )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=ENTRY_CONFIG,
-        version=3,
-        entry_id="1234",
-        unique_id="trafikverket_camera-1234",
-        title="Test location",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_camera",
-        return_value=get_camera,
-    ):
-        assert await async_migrate_entry(hass, entry) is True

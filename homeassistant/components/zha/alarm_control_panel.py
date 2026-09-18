@@ -1,10 +1,10 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 import functools
+from typing import override
 
 from zha.application.platforms.alarm_control_panel.const import (
+    AlarmControlPanelEntityFeature as ZHAAlarmControlPanelEntityFeature,
     AlarmState as ZHAAlarmState,
 )
 
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
@@ -65,54 +65,80 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
+class ZHAAlarmControlPanel(ZHASupportedFeaturesEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
     _attr_translation_key: str = "alarm_control_panel"
     _attr_code_format = CodeFormat.TEXT
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
+
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: int,
+    ) -> AlarmControlPanelEntityFeature:
+        """Convert ZHA alarm control panel features to HA ones."""
+        zha_flags = ZHAAlarmControlPanelEntityFeature(zha_features)
+        features = AlarmControlPanelEntityFeature(0)
+
+        if ZHAAlarmControlPanelEntityFeature.ARM_HOME in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_HOME
+        if ZHAAlarmControlPanelEntityFeature.ARM_AWAY in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if ZHAAlarmControlPanelEntityFeature.ARM_NIGHT in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_NIGHT
+        if ZHAAlarmControlPanelEntityFeature.TRIGGER in zha_flags:
+            features |= AlarmControlPanelEntityFeature.TRIGGER
+        if ZHAAlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        if ZHAAlarmControlPanelEntityFeature.ARM_VACATION in zha_flags:
+            features |= AlarmControlPanelEntityFeature.ARM_VACATION
+
+        return features
 
     @property
+    @override
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self.entity_data.entity.code_arm_required
+        return self._zha_state.code_arm_required
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.entity_data.entity.async_alarm_disarm(code)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.entity_data.entity.async_alarm_arm_home(code)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.entity_data.entity.async_alarm_arm_away(code)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.entity_data.entity.async_alarm_arm_night(code)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.entity_data.entity.async_alarm_trigger(code)
         self.async_write_ha_state()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
-        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.state["state"])
+        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self._zha_state.alarm_state)

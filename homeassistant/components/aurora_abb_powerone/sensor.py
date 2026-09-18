@@ -1,10 +1,8 @@
 """Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aurorapy.mapping import Mapping as AuroraMapping
 
@@ -15,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -33,7 +32,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
@@ -68,6 +66,7 @@ SENSOR_TYPES = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="grid_frequency",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -86,6 +85,60 @@ SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="i_leak_inverter",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="power_in_1",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="power_in_1",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="power_in_2",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="power_in_2",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="voltage_in_1",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voltage_in_1",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_in_1",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_in_1",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="voltage_in_2",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voltage_in_2",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_in_2",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_in_2",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -167,6 +220,7 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
         return self.coordinator.data.get(self.entity_description.key)

@@ -1,0 +1,11 @@
+{
+  "domain": "egauge",
+  "name": "eGauge",
+  "codeowners": ["@neggert"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/egauge",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["egauge-async==0.4.0"]
+}

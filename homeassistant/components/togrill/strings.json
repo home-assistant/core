@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "failed_to_read_config": "Failed to read config from device",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
@@ -28,6 +27,11 @@
     }
   },
   "entity": {
+    "button": {
+      "silence": {
+        "name": "Silence alarm"
+      }
+    },
     "event": {
       "event": {
         "name": "Event",
@@ -55,6 +59,12 @@
       "alarm_interval": {
         "name": "Alarm interval"
       },
+      "ambient_temperature_maximum": {
+        "name": "Ambient maximum temperature"
+      },
+      "ambient_temperature_minimum": {
+        "name": "Ambient minimum temperature"
+      },
       "temperature_maximum": {
         "name": "Maximum temperature"
       },
@@ -63,6 +73,9 @@
       },
       "temperature_target": {
         "name": "Target temperature"
+      },
+      "timer": {
+        "name": "Timer"
       }
     },
     "select": {
@@ -97,6 +110,11 @@
           "rare": "Rare",
           "well_done": "Well done"
         }
+      }
+    },
+    "sensor": {
+      "ambient_temperature": {
+        "name": "Ambient temperature"
       }
     }
   },

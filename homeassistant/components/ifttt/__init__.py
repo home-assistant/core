@@ -1,15 +1,13 @@
 """Support to trigger Maker IFTTT recipes."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
 
 from aiohttp import web
+import probatio
 import pyfttt
 import requests
-import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -35,23 +33,27 @@ CONF_KEY = "key"
 SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
 SERVICE_TRIGGER = "trigger"
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema(
+SERVICE_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_EVENT): cv.string,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_VALUE1): cv.string,
-        vol.Optional(ATTR_VALUE2): cv.string,
-        vol.Optional(ATTR_VALUE3): cv.string,
+        probatio.Required(ATTR_EVENT): cv.string,
+        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_VALUE1): cv.string,
+        probatio.Optional(ATTR_VALUE2): cv.string,
+        probatio.Optional(ATTR_VALUE3): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
-            {vol.Required(CONF_KEY): vol.Any({cv.string: cv.string}, cv.string)}
+        probatio.Optional(DOMAIN): probatio.Schema(
+            {
+                probatio.Required(CONF_KEY): probatio.Any(
+                    {cv.string: cv.string}, cv.string
+                )
+            }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -84,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTPStatus.OK:
                     _LOGGER.error("IFTTT reported error sending event to %s", target)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 

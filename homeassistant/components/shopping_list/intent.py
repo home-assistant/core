@@ -1,11 +1,12 @@
 """Intents for the Shopping List integration."""
 
-from __future__ import annotations
+from typing import cast, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
-from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED, NoMatchingShoppingListItem
+from .common import NoMatchingShoppingListItem, _get_shopping_data
+from .const import DOMAIN
 
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
 INTENT_COMPLETE_ITEM = "HassShoppingListCompleteItem"
@@ -27,15 +28,32 @@ class AddItemIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"].strip()
-        await intent_obj.hass.data[DOMAIN].async_add(item)
+        item_name = slots["item"]["value"].strip()
+        shopping_data = _get_shopping_data(intent_obj.hass)
+        completed_match = None
+        normalized_name = item_name.casefold()
+        for item in shopping_data.items:
+            name = item["name"]
+            if not isinstance(name, str) or name.casefold() != normalized_name:
+                continue
+            if not item["complete"]:
+                return intent_obj.create_response()
+            if completed_match is None:
+                completed_match = item
 
-        response = intent_obj.create_response()
-        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
-        return response
+        if completed_match is None:
+            await shopping_data.async_add(item_name)
+        else:
+            await shopping_data.async_update(
+                cast(str, completed_match["id"]),
+                {"name": cast(str, completed_match["name"]), "complete": False},
+            )
+
+        return intent_obj.create_response()
 
 
 class CompleteItemIntent(intent.IntentHandler):
@@ -46,17 +64,18 @@ class CompleteItemIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"].strip()
 
         try:
-            complete_items = await intent_obj.hass.data[DOMAIN].async_complete(item)
+            complete_items = await _get_shopping_data(intent_obj.hass).async_complete(
+                item
+            )
         except NoMatchingShoppingListItem:
             complete_items = []
-
-        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
         response = intent_obj.create_response()
         response.async_set_speech_slots({"completed_items": complete_items})
@@ -72,16 +91,19 @@ class ListTopItemsIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        items = intent_obj.hass.data[DOMAIN].items[-5:]
+        items = _get_shopping_data(intent_obj.hass).items[-5:]
         response: intent.IntentResponse = intent_obj.create_response()
 
         if not items:
             response.async_set_speech("There are no items on your shopping list")
         else:
-            items_list = ", ".join(itm["name"] for itm in reversed(items))
+            items_list = ", ".join(str(itm["name"]) for itm in reversed(items))
             response.async_set_speech(
-                f"These are the top {min(len(items), 5)} items on your shopping list: {items_list}"
+                "These are the top"
+                f" {min(len(items), 5)} items on your"
+                f" shopping list: {items_list}"
             )
         return response

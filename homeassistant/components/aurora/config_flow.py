@@ -1,13 +1,11 @@
 """Config flow for Aurora."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -22,10 +20,10 @@ from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100)
+        probatio.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=100)
         ),
     }
 )
@@ -41,12 +39,14 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,10 +79,10 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
                     }
                 ),
                 {

@@ -51,7 +51,9 @@ TELEMETRY = {
                             "Heater-Type": "HTR_GAS",
                             "Enabled": "yes",
                             "Priority": "HTR_PRIORITY_1",
-                            "Run-For-Priority": "HTR_MAINTAINS_PRIORITY_FOR_AS_LONG_AS_VALID",
+                            "Run-For-Priority": (
+                                "HTR_MAINTAINS_PRIORITY_FOR_AS_LONG_AS_VALID"
+                            ),
                             "Shared-Equipment-System-ID": "-1",
                             "Current-Set-Point": "103",
                             "Max-Water-Temp": "104",

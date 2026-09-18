@@ -1,12 +1,10 @@
 """Config flow for Android IP Webcam integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from pydroid_ipcam import PyDroidIPCam
 from pydroid_ipcam.exceptions import PyDroidIPCamException, Unauthorized
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -16,12 +14,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_PORT, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Inclusive(CONF_USERNAME, "authentication"): str,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Inclusive(CONF_USERNAME, "authentication"): str,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): str,
     }
 )
 
@@ -55,6 +53,7 @@ class AndroidIPWebcamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

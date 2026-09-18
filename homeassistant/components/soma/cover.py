@@ -1,8 +1,6 @@
 """Support for Soma Covers."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -11,29 +9,29 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API, DEVICES, DOMAIN
+from . import SomaConfigEntry
 from .entity import SomaEntity
 from .utils import is_api_response_success
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SomaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Soma cover platform."""
 
-    api = hass.data[DOMAIN][API]
-    devices = hass.data[DOMAIN][DEVICES]
+    data = config_entry.runtime_data
+    api = data.api
     entities: list[SomaTilt | SomaShade] = []
 
-    for device in devices:
-        # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
+    for device in data.devices:
+        # Assume a shade device if the type is not present
+        # in the api response (Connect <2.2.6)
         if "type" in device and device["type"].lower() == "tilt":
             entities.append(SomaTilt(device, api))
         else:
@@ -57,11 +55,13 @@ class SomaTilt(SomaEntity, CoverEntity):
     CLOSED_DOWN_THRESHOLD = 20
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int:
         """Return the current cover tilt position."""
         return self.current_position
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover tilt is closed."""
         if (
@@ -71,6 +71,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             return True
         return False
 
+    @override
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], 100)
@@ -80,6 +81,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(0)
 
+    @override
     def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         response = self.api.set_shade_position(self.device["mac"], -100)
@@ -89,6 +91,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(100)
 
+    @override
     def stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         response = self.api.stop_shade(self.device["mac"])
@@ -99,6 +102,7 @@ class SomaTilt(SomaEntity, CoverEntity):
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
 
+    @override
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         # 0 -> Closed down (api: 100)
@@ -138,15 +142,18 @@ class SomaShade(SomaEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current cover position."""
         return self.current_position
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_position == 0
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         response = self.api.set_shade_position(self.device["mac"], 100)
@@ -155,6 +162,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f"Error while closing the cover ({self.name}): {response['msg']}"
             )
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         response = self.api.set_shade_position(self.device["mac"], 0)
@@ -163,6 +171,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f"Error while opening the cover ({self.name}): {response['msg']}"
             )
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         response = self.api.stop_shade(self.device["mac"])
@@ -173,6 +182,7 @@ class SomaShade(SomaEntity, CoverEntity):
         # Set cover position to some value where up/down are both enabled
         self.set_position(50)
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         self.current_position = kwargs[ATTR_POSITION]

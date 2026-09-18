@@ -1,7 +1,5 @@
 """Helper class for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from .const import (
@@ -28,4 +26,5 @@ def get_station_name(station: dict[str, Any]) -> str:
         .get(API_STATION_LOCATION)
     )
     station_type = station.get(API_LAST_DATA, {}).get(API_STATION_TYPE)
-    return f"{location}{'' if location is None or station_type is None else ' '}{station_type}"
+    separator = "" if location is None or station_type is None else " "
+    return f"{location}{separator}{station_type}"

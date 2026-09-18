@@ -1,9 +1,7 @@
 """Config flow for Plugwise integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from plugwise import Smile
 from plugwise.exceptions import (
@@ -14,7 +12,7 @@ from plugwise.exceptions import (
     ResponseError,
     UnsupportedDeviceError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -48,22 +46,22 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SMILE_RECONF_SCHEMA = vol.Schema(
+SMILE_RECONF_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
 
-def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> probatio.Schema:
     """Generate base schema for gateways."""
-    schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
+    schema = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
         schema = schema.extend(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME, default=SMILE): vol.In(
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_USERNAME, default=SMILE): probatio.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
                 ),
             }
@@ -103,7 +101,7 @@ async def verify_connection(
         errors[CONF_BASE] = "invalid_auth"
     except InvalidSetupError:
         errors[CONF_BASE] = "invalid_setup"
-    except (InvalidXMLError, ResponseError):
+    except InvalidXMLError, ResponseError:
         errors[CONF_BASE] = "response_error"
     except UnsupportedDeviceError:
         errors[CONF_BASE] = "unsupported"
@@ -124,6 +122,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     product: str = UNKNOWN_SMILE
     _username: str = DEFAULT_USERNAME
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -180,6 +179,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         # This is an Anna, and there is already an Adam flow in progress
@@ -192,6 +192,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

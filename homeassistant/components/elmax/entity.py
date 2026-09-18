@@ -1,6 +1,6 @@
 """Elmax integration common classes and utilities."""
 
-from __future__ import annotations
+from typing import override
 
 from elmax_api.model.endpoint import DeviceEndpoint
 
@@ -36,6 +36,7 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.panel_entry.online

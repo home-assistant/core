@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
-from typing import TypedDict
+from typing import TypedDict, override
 
 from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import (
@@ -84,6 +82,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             return departure_datetime - dt_util.as_local(dt_util.utcnow())
         return None
 
+    @override
     async def _async_update_data(self) -> list[DataConnection]:
         return await self.fetch_connections(limit=CONNECTIONS_COUNT)
 

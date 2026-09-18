@@ -1,7 +1,5 @@
 """Repair issues for the Backblaze B2 integration."""
 
-from __future__ import annotations
-
 import logging
 
 from b2sdk.v2.exception import (

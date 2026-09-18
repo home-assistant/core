@@ -119,7 +119,7 @@ async def pylint(files):
 
 async def ruff(files):
     """Exec ruff."""
-    _, log = await async_exec("pre-commit", "run", "ruff", "--files", *files)
+    _, log = await async_exec("prek", "run", "ruff", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")

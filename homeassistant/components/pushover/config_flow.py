@@ -1,12 +1,10 @@
 """Config flow for pushover integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pushover_complete import BadAPIRequestError, PushoverAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -14,11 +12,13 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_USER_KEY): str,
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_USER_KEY): str,
     }
 )
 
@@ -76,14 +76,15 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

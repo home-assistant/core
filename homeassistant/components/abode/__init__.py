@@ -1,7 +1,5 @@
 """Support for the Abode Security System."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -67,13 +65,16 @@ class AbodeSystem:
     logout_listener: CALLBACK_TYPE | None = None
 
 
+type AbodeConfigEntry = ConfigEntry[AbodeSystem]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Abode component."""
     async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AbodeConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -99,49 +100,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
-    hass.data[DOMAIN] = AbodeSystem(abode, polling)
+    entry.runtime_data = AbodeSystem(abode, polling)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await setup_hass_events(hass)
-    await hass.async_add_executor_job(setup_abode_events, hass)
+    await setup_hass_events(hass, entry)
+    await hass.async_add_executor_job(setup_abode_events, hass, entry)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def _shutdown_client(abode: Abode) -> None:
+    """Shutdown client."""
+    abode.events.stop()
+    abode.logout()
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AbodeConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
-    await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
+    await hass.async_add_executor_job(_shutdown_client, entry.runtime_data.abode)
 
-    hass.data[DOMAIN].logout_listener()
-    hass.data.pop(DOMAIN)
+    if logout_listener := entry.runtime_data.logout_listener:
+        logout_listener()
 
     return unload_ok
 
 
-async def setup_hass_events(hass: HomeAssistant) -> None:
+async def setup_hass_events(hass: HomeAssistant, entry: AbodeConfigEntry) -> None:
     """Home Assistant start and stop callbacks."""
 
     def logout(event: Event) -> None:
         """Logout of Abode."""
-        if not hass.data[DOMAIN].polling:
-            hass.data[DOMAIN].abode.events.stop()
+        if not entry.runtime_data.polling:
+            entry.runtime_data.abode.events.stop()
 
-        hass.data[DOMAIN].abode.logout()
+        entry.runtime_data.abode.logout()
         LOGGER.info("Logged out of Abode")
 
-    if not hass.data[DOMAIN].polling:
-        await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
+    if not entry.runtime_data.polling:
+        await hass.async_add_executor_job(entry.runtime_data.abode.events.start)
 
-    hass.data[DOMAIN].logout_listener = hass.bus.async_listen_once(
+    entry.runtime_data.logout_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, logout
     )
 
 
-def setup_abode_events(hass: HomeAssistant) -> None:
+def setup_abode_events(hass: HomeAssistant, entry: AbodeConfigEntry) -> None:
     """Event callbacks."""
 
     def event_callback(event: str, event_json: dict[str, str]) -> None:
@@ -178,6 +184,6 @@ def setup_abode_events(hass: HomeAssistant) -> None:
     ]
 
     for event in events:
-        hass.data[DOMAIN].abode.events.add_event_callback(
+        entry.runtime_data.abode.events.add_event_callback(
             event, partial(event_callback, event)
         )

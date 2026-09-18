@@ -1,12 +1,10 @@
 """Code to handle the Plenticore API."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import (
@@ -212,6 +210,7 @@ class ProcessDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for process data."""
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
@@ -236,6 +235,7 @@ class SettingDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
+    @override
     async def _async_update_data(self) -> Mapping[str, Mapping[str, str]]:
         if (client := self._plenticore.client) is None:
             return {}
@@ -310,6 +310,7 @@ class SelectDataUpdateCoordinator(
 ):
     """Implementation of PlenticoreUpdateCoordinator for select data."""
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         if self._plenticore.client is None:
             return {}

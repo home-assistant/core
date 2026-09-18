@@ -1,10 +1,8 @@
 """Support for LimitlessLED bulbs."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from limitlessled import Color
 from limitlessled.bridge import Bridge
@@ -15,7 +13,7 @@ from limitlessled.group.rgbww import RgbwwGroup
 from limitlessled.group.white import WhiteGroup
 from limitlessled.pipeline import Pipeline
 from limitlessled.presets import COLORLOOP
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -31,6 +29,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -77,25 +76,25 @@ SUPPORT_LIMITLESSLED_RGBWW = (
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BRIDGES): vol.All(
+        probatio.Required(CONF_BRIDGES): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Optional(
                         CONF_VERSION, default=DEFAULT_VERSION
                     ): cv.positive_int,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Required(CONF_GROUPS): vol.All(
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    probatio.Required(CONF_GROUPS): probatio.All(
                         cv.ensure_list,
                         [
                             {
-                                vol.Required(CONF_NAME): cv.string,
-                                vol.Optional(
+                                probatio.Required(CONF_NAME): cv.string,
+                                probatio.Optional(
                                     CONF_TYPE, default=DEFAULT_LED_TYPE
-                                ): vol.In(LED_TYPE),
-                                vol.Required(CONF_NUMBER): cv.positive_int,
-                                vol.Optional(
+                                ): probatio.In(LED_TYPE),
+                                probatio.Required(CONF_NUMBER): cv.positive_int,
+                                probatio.Optional(
                                     CONF_FADE, default=DEFAULT_FADE
                                 ): cv.boolean,
                             }
@@ -196,7 +195,7 @@ def state[_LimitlessLEDGroupT: LimitlessLEDGroup, **_P](
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
             if self.effect == EFFECT_COLORLOOP:
-                self.group.stop()
+                self.led_group.stop()
             self._attr_effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
@@ -205,7 +204,7 @@ def state[_LimitlessLEDGroupT: LimitlessLEDGroup, **_P](
             function(self, transition_time, pipeline, *args, **kwargs)
             # Update state.
             self._attr_is_on = new_state
-            self.group.enqueue(pipeline)
+            self.led_group.enqueue(pipeline)
             self.schedule_update_ha_state()
 
         return wrapper
@@ -250,23 +249,29 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
                 ColorMode.HS,
             }
 
-        self.group = group
+        self.led_group = group
         self._attr_name = group.name
         self.config = config
         self._attr_is_on = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
             self._attr_is_on = last_state.state == STATE_ON
-            self._attr_brightness = last_state.attributes.get("brightness")
-            self._attr_color_temp_kelvin = last_state.attributes.get(
-                "color_temp_kelvin"
+            self._attr_brightness = last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
             )
-            self._attr_hs_color = last_state.attributes.get("hs_color")
+            self._attr_color_temp_kelvin = last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            )
+            self._attr_hs_color = last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            )
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness property."""
         if self.effect == EFFECT_NIGHT:
@@ -275,7 +280,8 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return self._attr_brightness
 
     @property
-    def color_mode(self) -> str | None:
+    @override
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode
@@ -290,6 +296,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return ColorMode.HS
 
     @state(False)
+    @override
     def turn_off(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn off a group."""
         if self.config[CONF_FADE]:
@@ -297,6 +304,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         pipeline.off()
 
     @state(True)
+    @override
     def turn_on(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn on (or adjust property of) a group."""
         # The night effect does not need a turned on light

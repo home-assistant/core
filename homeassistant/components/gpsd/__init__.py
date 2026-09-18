@@ -1,7 +1,5 @@
 """The GPSD integration."""
 
-from __future__ import annotations
-
 from gps3.agps3threaded import AGPS3mechanism
 
 from homeassistant.config_entries import ConfigEntry

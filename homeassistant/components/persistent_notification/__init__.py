@@ -1,7 +1,5 @@
 """Support for displaying persistent notifications."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from enum import StrEnum
@@ -9,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any, Final, TypedDict
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
@@ -19,7 +17,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.uuid import random_uuid_hex
@@ -55,8 +52,8 @@ SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = SignalType[
     UpdateType, dict[str, Notification]
 ]("persistent_notifications_updated")
 
-SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
-    {vol.Required(ATTR_NOTIFICATION_ID): cv.string}
+SCHEMA_SERVICE_NOTIFICATION = probatio.Schema(
+    {probatio.Required(ATTR_NOTIFICATION_ID): cv.string}
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +72,6 @@ def async_register_callback(
     )
 
 
-@bind_hass
 def create(
     hass: HomeAssistant,
     message: str,
@@ -86,14 +82,12 @@ def create(
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
-@bind_hass
 def dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
 
 
 @callback
-@bind_hass
 def async_create(
     hass: HomeAssistant,
     message: str,
@@ -104,6 +98,9 @@ def async_create(
     notifications = _async_get_or_create_notifications(hass)
     if notification_id is None:
         notification_id = random_uuid_hex()
+    update_type = (
+        UpdateType.UPDATED if notification_id in notifications else UpdateType.ADDED
+    )
     notifications[notification_id] = {
         ATTR_MESSAGE: message,
         ATTR_NOTIFICATION_ID: notification_id,
@@ -114,7 +111,7 @@ def async_create(
     async_dispatcher_send(
         hass,
         SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
-        UpdateType.ADDED,
+        update_type,
         {notification_id: notifications[notification_id]},
     )
 
@@ -127,7 +124,6 @@ def _async_get_or_create_notifications(hass: HomeAssistant) -> dict[str, Notific
 
 
 @callback
-@bind_hass
 def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     notifications = _async_get_or_create_notifications(hass)
@@ -182,11 +178,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         "create",
         create_service,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_MESSAGE): cv.string,
-                vol.Optional(ATTR_TITLE): cv.string,
-                vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+                probatio.Required(ATTR_MESSAGE): cv.string,
+                probatio.Optional(ATTR_TITLE): cv.string,
+                probatio.Optional(ATTR_NOTIFICATION_ID): cv.string,
             }
         ),
     )
@@ -204,7 +200,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "persistent_notification/get"}
+)
 def websocket_get_notifications(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -235,7 +233,7 @@ def _async_send_notification_update(
 
 @callback
 @websocket_api.websocket_command(
-    {vol.Required("type"): "persistent_notification/subscribe"}
+    {probatio.Required("type"): "persistent_notification/subscribe"}
 )
 def websocket_subscribe_notifications(
     hass: HomeAssistant,

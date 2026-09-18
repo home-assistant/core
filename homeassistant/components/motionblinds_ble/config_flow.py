@@ -1,23 +1,16 @@
 """Config flow for Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from bleak.backends.device import BLEDevice
 from motionblindsble.const import DISPLAY_NAME, SETTING_DISCONNECT_TIME, MotionBlindType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import MotionConfigEntry
 from .const import (
     CONF_BLIND_TYPE,
     CONF_LOCAL_NAME,
@@ -42,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
+CONFIG_SCHEMA = probatio.Schema({probatio.Required(CONF_MAC_CODE): str})
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -56,6 +50,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._mac_code: str | None = None
         self._blind_type: MotionBlindType | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -73,6 +68,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,9 +121,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_BLIND_TYPE): SelectSelector(
+                    probatio.Required(CONF_BLIND_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 blind_type.name.lower()
@@ -184,8 +180,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler()
@@ -203,9 +200,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         OPTION_PERMANENT_CONNECTION,
                         default=(
                             self.config_entry.options.get(
@@ -213,14 +210,14 @@ class OptionsFlowHandler(OptionsFlow):
                             )
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         OPTION_DISCONNECT_TIME,
                         default=(
                             self.config_entry.options.get(
                                 OPTION_DISCONNECT_TIME, SETTING_DISCONNECT_TIME
                             )
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
                 }
             ),
         )

@@ -1,13 +1,13 @@
 """Config flow for tractive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
+import aiohttp
 import aiotractive
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -18,8 +18,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -34,6 +34,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         user_id = await client.user_id()
     except aiotractive.exceptions.UnauthorizedError as error:
         raise InvalidAuth from error
+    except aiotractive.exceptions.TractiveError as error:
+        if (
+            isinstance(error.__cause__, aiohttp.ClientResponseError)
+            and error.__cause__.status == HTTPStatus.TOO_MANY_REQUESTS
+        ):
+            raise RateLimitExceeded from error
+        raise CannotConnect from error
     finally:
         await client.close()
 
@@ -45,6 +52,7 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -56,6 +64,10 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+        except RateLimitExceeded:
+            errors["base"] = "rate_limit_exceeded"
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:
@@ -86,6 +98,10 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except RateLimitExceeded:
+                errors["base"] = "rate_limit_exceeded"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
@@ -105,5 +121,13 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class RateLimitExceeded(HomeAssistantError):
+    """Error to indicate the API rate limit has been exceeded."""

@@ -1,7 +1,5 @@
 """Support for LIFX."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -10,7 +8,7 @@ from typing import Any
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
@@ -25,34 +23,37 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
+from .const import DATA_LIFX_MANAGER, DOMAIN, LOGGER, TARGET_ANY
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
+from .services import async_setup_services
 from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
 
 
-INTERFACE_SCHEMA = vol.Schema(
+INTERFACE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_BROADCAST): cv.string,
+        probatio.Optional(CONF_SERVER): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_BROADCAST): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.All(
+CONFIG_SCHEMA = probatio.All(
     cv.deprecated(DOMAIN),
-    vol.Schema(
+    probatio.Schema(
         {
             DOMAIN: {
-                LIGHT_DOMAIN: vol.Schema(vol.All(cv.ensure_list, [INTERFACE_SCHEMA]))
+                LIGHT_DOMAIN: probatio.Schema(
+                    probatio.All(cv.ensure_list, [INTERFACE_SCHEMA])
+                )
             }
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 
@@ -87,13 +88,13 @@ async def async_legacy_migration(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Migration in progress, waiting to discover %s device(s)",
             missing_discovery_count,
         )
         return False
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migration successful, removing legacy entry %s", legacy_entry.entry_id
     )
     await hass.config_entries.async_remove(legacy_entry.entry_id)
@@ -119,7 +120,7 @@ class LIFXDiscoveryManager:
         discovery_interval = (
             MIGRATION_INTERVAL if self.migrating else DISCOVERY_INTERVAL
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "LIFX starting discovery with interval: %s and migrating: %s",
             discovery_interval,
             self.migrating,
@@ -141,7 +142,7 @@ class LIFXDiscoveryManager:
                 )
                 if migration_complete and migrating_was_in_progress:
                     self.migrating = False
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         (
                             "LIFX migration complete, switching to normal discovery"
                             " interval: %s"
@@ -156,6 +157,8 @@ class LIFXDiscoveryManager:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
+    async_setup_services(hass)
+
     migrating = bool(async_get_legacy_entry(hass))
     discovery_manager = LIFXDiscoveryManager(hass, migrating)
 
@@ -197,9 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
 
     assert entry.unique_id is not None
     if DATA_LIFX_MANAGER not in hass.data:
-        manager = LIFXManager(hass)
-        hass.data[DATA_LIFX_MANAGER] = manager
-        manager.async_setup()
+        hass.data[DATA_LIFX_MANAGER] = LIFXManager(hass)
 
     host = entry.data[CONF_HOST]
     connection = LIFXConnection(host, TARGET_ANY)
@@ -224,7 +225,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {serial}"
+            f"Unexpected device found at {host};"
+            f" expected {entry.unique_id}, found {serial}"
         )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -239,6 +241,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> boo
         entry.runtime_data.connection.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
     if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 0:
-        manager = hass.data.pop(DATA_LIFX_MANAGER)
-        manager.async_unload()
+        hass.data.pop(DATA_LIFX_MANAGER)
     return unload_ok

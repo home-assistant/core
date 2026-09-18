@@ -1,6 +1,6 @@
 """Demo platform that offers a fake Number entity."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -122,6 +122,7 @@ class DemoNumber(NumberEntity):
             name=device_name,
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._attr_native_value = value

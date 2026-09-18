@@ -1,9 +1,8 @@
 """Support for Aseko Pool Live binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aioaseko import Unit
 
@@ -56,6 +55,7 @@ class AsekoBinarySensorEntity(AsekoEntity, BinarySensorEntity):
     entity_description: AsekoBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.unit)

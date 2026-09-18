@@ -1,13 +1,12 @@
 """Support for OhmConnect."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import Any, override
 
 import defusedxml.ElementTree as ET
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -28,8 +27,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -58,11 +57,13 @@ class OhmconnectSensor(SensorEntity):
         self._attr_unique_id = ohmid
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._data.get("active") == "True":
@@ -70,7 +71,8 @@ class OhmconnectSensor(SensorEntity):
         return "Inactive"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"Address": self._data.get("address"), "ID": self._ohmid}
 

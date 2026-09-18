@@ -2,46 +2,31 @@
 
 from unittest.mock import patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.abode.const import DOMAIN
-from homeassistant.components.abode.services import SERVICE_TRIGGER_AUTOMATION
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
+from tests.common import snapshot_platform
+
 AUTOMATION_ID = "switch.test_automation"
-AUTOMATION_UID = "47fae27488f74f55b964a81a066c3a01"
 DEVICE_ID = "switch.test_switch"
-DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    """Test all entities."""
+    config_entry = await setup_platform(hass, SWITCH_DOMAIN)
 
-    entry = entity_registry.async_get(AUTOMATION_ID)
-    assert entry.unique_id == AUTOMATION_UID
-
-    entry = entity_registry.async_get(DEVICE_ID)
-    assert entry.unique_id == DEVICE_UID
-
-
-async def test_attributes(hass: HomeAssistant) -> None:
-    """Test the switch attributes are correct."""
-    await setup_platform(hass, SWITCH_DOMAIN)
-
-    state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_OFF
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_switch_on(hass: HomeAssistant) -> None:
@@ -68,15 +53,6 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         mock_switch_off.assert_called_once()
-
-
-async def test_automation_attributes(hass: HomeAssistant) -> None:
-    """Test the automation attributes are correct."""
-    await setup_platform(hass, SWITCH_DOMAIN)
-
-    state = hass.states.get(AUTOMATION_ID)
-    # State is set based on "enabled" key in automation JSON.
-    assert state.state == STATE_ON
 
 
 async def test_turn_automation_off(hass: HomeAssistant) -> None:
@@ -118,7 +94,7 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER_AUTOMATION,
+            "trigger_automation",
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )

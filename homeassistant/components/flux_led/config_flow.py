@@ -1,9 +1,7 @@
 """Config flow for Flux LED/MagicLight."""
 
-from __future__ import annotations
-
 import contextlib
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 from flux_led.const import (
     ATTR_ID,
@@ -14,7 +12,7 @@ from flux_led.const import (
     ATTR_VERSION_NUM,
 )
 from flux_led.scanner import FluxLEDDiscovery
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -71,12 +69,14 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: FluxLedConfigEntry,
     ) -> FluxLedOptionsFlow:
         """Get the options flow for the Flux LED component."""
         return FluxLedOptionsFlow()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -96,6 +96,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -138,7 +139,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.SETUP_IN_PROGRESS,
                     ConfigEntryState.NOT_LOADED,
                 )
-            ) or entry.state == ConfigEntryState.SETUP_RETRY:
+            ) or entry.state is ConfigEntryState.SETUP_RETRY:
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
             else:
                 async_dispatcher_send(
@@ -176,6 +177,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -218,6 +220,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -240,7 +243,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
         )
 
@@ -281,7 +286,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def _async_try_connect(
@@ -331,24 +338,26 @@ class FluxLedOptionsFlow(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CUSTOM_EFFECT_COLORS,
                     default=options.get(CONF_CUSTOM_EFFECT_COLORS, ""),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_CUSTOM_EFFECT_SPEED_PCT,
                     default=options.get(
                         CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                vol.Optional(
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100)),
+                probatio.Optional(
                     CONF_CUSTOM_EFFECT_TRANSITION,
                     default=options.get(
                         CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL
                     ),
-                ): vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]),
+                ): probatio.In(
+                    [TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE]
+                ),
             }
         )
 

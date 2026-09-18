@@ -1,12 +1,11 @@
 """Permission for events."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_LABS_UPDATED,
     EVENT_LOVELACE_UPDATED,
     EVENT_PANELS_UPDATED,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
@@ -45,6 +44,7 @@ SUBSCRIBE_ALLOWLIST: Final[set[EventType[Any] | str]] = {
     EVENT_STATE_CHANGED,
     EVENT_THEMES_UPDATED,
     EVENT_LABEL_REGISTRY_UPDATED,
+    EVENT_LABS_UPDATED,
     EVENT_CATEGORY_REGISTRY_UPDATED,
     EVENT_FLOOR_REGISTRY_UPDATED,
 }

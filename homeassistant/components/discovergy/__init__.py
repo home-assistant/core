@@ -1,7 +1,5 @@
 """The Discovergy integration."""
 
-from __future__ import annotations
-
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
@@ -27,7 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
     )
 
     try:
-        # try to get meters from api to check if credentials are still valid and for later use
+        # try to get meters from api to check if credentials
+        # are still valid and for later use;
         # if no exception is raised everything is fine to go
         meters = await client.meters()
     except discovergyError.InvalidLogin as err:

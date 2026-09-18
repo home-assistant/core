@@ -38,13 +38,6 @@ ATTRIBUTION = "Data provided by the Met Office"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
-METOFFICE_COORDINATES = "metoffice_coordinates"
-METOFFICE_HOURLY_COORDINATOR = "metoffice_hourly_coordinator"
-METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
-METOFFICE_TWICE_DAILY_COORDINATOR = "metoffice_twice_daily_coordinator"
-METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
-METOFFICE_NAME = "metoffice_name"
-
 CONDITION_CLASSES: dict[str, list[int]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [0],
     ATTR_CONDITION_CLOUDY: [7, 8],

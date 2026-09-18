@@ -1,14 +1,12 @@
 """Config flow for Flexit Nordic (BACnet) integration."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 import logging
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
@@ -19,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVICE_ID = 2
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
     }
 )
 
@@ -32,6 +30,7 @@ class FlexitBacnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -44,7 +43,7 @@ class FlexitBacnetConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await device.update()
-            except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError):
+            except asyncio.exceptions.TimeoutError, ConnectionError, DecodingError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

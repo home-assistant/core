@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -85,6 +84,18 @@
       "batteries": {
         "name": "Batteries"
       },
+      "battery_charge_energy": {
+        "name": "Charge energy today"
+      },
+      "battery_discharge_energy": {
+        "name": "Discharge energy today"
+      },
+      "battery_power": {
+        "name": "Power"
+      },
+      "battery_state_of_charge": {
+        "name": "State of charge"
+      },
       "consumption_energy": {
         "name": "Consumed energy"
       },
@@ -105,6 +116,13 @@
       },
       "gateways": {
         "name": "Gateways"
+      },
+      "grid_flow_direction": {
+        "name": "Grid flow direction",
+        "state": {
+          "export": "Export",
+          "import": "Import"
+        }
       },
       "grid_power": {
         "name": "Grid power"
@@ -138,6 +156,19 @@
       },
       "solar_power": {
         "name": "Solar power"
+      },
+      "storage_charge_energy": {
+        "name": "Storage charge energy today"
+      },
+      "storage_discharge_energy": {
+        "name": "Storage discharge energy today"
+      },
+      "storage_flow_direction": {
+        "name": "Storage flow direction",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge"
+        }
       },
       "storage_level": {
         "name": "Storage level"

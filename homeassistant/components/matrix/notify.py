@@ -1,10 +1,8 @@
 """Support for Matrix notifications."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -23,7 +21,7 @@ from .const import DOMAIN, SERVICE_SEND_MESSAGE
 CONF_DEFAULT_ROOM = "default_room"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEFAULT_ROOM): cv.string}
+    {probatio.Required(CONF_DEFAULT_ROOM): cv.string}
 )
 
 
@@ -43,6 +41,7 @@ class MatrixNotificationService(BaseNotificationService):
         """Set up the Matrix notification service."""
         self._default_room = default_room
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
         target_rooms: list[RoomID] = kwargs.get(ATTR_TARGET) or [self._default_room]

@@ -4,14 +4,15 @@
   "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "dependencies": ["hardware", "homeassistant_hardware"],
+  "dependencies": ["hardware", "homeassistant_hardware", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
   "integration_type": "hardware",
   "loggers": [
     "bellows",
     "universal_silabs_flasher",
     "zigpy.serial",
-    "serial_asyncio_fast"
+    "serial_asyncio_fast",
+    "serialx"
   ],
   "single_config_entry": true
 }

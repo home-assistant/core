@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -61,9 +61,9 @@ def _setup_climate_group(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
-        (Model.S320, "s1", "climate.climate_system_s1"),
-        (Model.F1155, "s2", "climate.climate_system_s2"),
-        (Model.F730, "s1", "climate.climate_system_s1"),
+        (Model.S320, "s1", "climate.s320_climate_system_s1"),
+        (Model.F1155, "s2", "climate.f1155_climate_system_s2"),
+        (Model.F730, "s1", "climate.f730_climate_system_s1"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -109,8 +109,8 @@ async def test_basic(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
-        (Model.F1155, "s2", "climate.climate_system_s2"),
-        (Model.F1155, "s3", "climate.climate_system_s3"),
+        (Model.F1155, "s2", "climate.f1155_climate_system_s2"),
+        (Model.F1155, "s3", "climate.f1155_climate_system_s3"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -137,8 +137,8 @@ async def test_active_accessory(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
-        (Model.S320, "s1", "climate.climate_system_s1"),
-        (Model.F1155, "s2", "climate.climate_system_s2"),
+        (Model.S320, "s1", "climate.s320_climate_system_s1"),
+        (Model.F1155, "s2", "climate.f1155_climate_system_s2"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -164,7 +164,7 @@ async def test_set_temperature_supported_cooling(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -181,7 +181,7 @@ async def test_set_temperature_supported_cooling(
     mock_connection.write_coil.reset_mock()
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -199,7 +199,7 @@ async def test_set_temperature_supported_cooling(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -209,7 +209,7 @@ async def test_set_temperature_supported_cooling(
         )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -231,7 +231,7 @@ async def test_set_temperature_supported_cooling(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
-        (Model.F730, "s1", "climate.climate_system_s1"),
+        (Model.F730, "s1", "climate.f730_climate_system_s1"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -255,7 +255,7 @@ async def test_set_temperature_unsupported_cooling(
 
     # Set temperature to heat
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -272,7 +272,7 @@ async def test_set_temperature_unsupported_cooling(
     # Attempt to set temperature to cool should raise ServiceValidationError
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -295,8 +295,8 @@ async def test_set_temperature_unsupported_cooling(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id"),
     [
-        (Model.S320, "s1", "climate.climate_system_s1"),
-        (Model.F1155, "s2", "climate.climate_system_s2"),
+        (Model.S320, "s1", "climate.s320_climate_system_s1"),
+        (Model.F1155, "s2", "climate.f1155_climate_system_s2"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -324,7 +324,7 @@ async def test_set_hvac_mode(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -343,9 +343,9 @@ async def test_set_hvac_mode(
 @pytest.mark.parametrize(
     ("model", "climate_id", "entity_id", "unsupported_mode"),
     [
-        (Model.S320, "s1", "climate.climate_system_s1", HVACMode.DRY),
-        (Model.F1155, "s2", "climate.climate_system_s2", HVACMode.DRY),
-        (Model.F730, "s1", "climate.climate_system_s1", HVACMode.COOL),
+        (Model.S320, "s1", "climate.s320_climate_system_s1", HVACMode.DRY),
+        (Model.F1155, "s2", "climate.f1155_climate_system_s2", HVACMode.DRY),
+        (Model.F730, "s1", "climate.f730_climate_system_s1", HVACMode.COOL),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -364,7 +364,7 @@ async def test_set_invalid_hvac_mode(
     await async_add_model(hass, model)
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: entity_id,

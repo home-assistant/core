@@ -4,6 +4,7 @@
   "codeowners": ["@ratsept"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/soma",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["api"],
   "requirements": ["pysoma==0.0.12"]

@@ -1,19 +1,23 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Collection
+from contextlib import suppress
 from functools import cache
-from importlib.metadata import files, metadata
+from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
@@ -41,7 +45,8 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "serialx": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
     "zeroconf": "SemVer",
@@ -78,10 +83,32 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },
 }
+
+# Constraints use an impossible version to prohibit a package altogether.
+PROHIBITED_VERSION = "1000000000.0.0"
+
+# Hassfest runs the Python version Home Assistant requires, but on a single
+# platform. Markers are evaluated against every platform a requirement could
+# land on, so one is only skipped when it can never be installed at all.
+MARKER_ENVIRONMENTS = tuple(
+    {
+        "os_name": os_name,
+        "platform_machine": platform_machine,
+        "platform_system": platform_system,
+        "sys_platform": sys_platform,
+    }
+    for os_name, platform_system, sys_platform in (
+        ("posix", "Linux", "linux"),
+        ("posix", "Darwin", "darwin"),
+        ("nt", "Windows", "win32"),
+    )
+    for platform_machine in ("aarch64", "armv7l", "i686", "x86_64")
+)
 
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
@@ -92,13 +119,20 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 FORBIDDEN_PACKAGES = {
     # Not longer needed, as we could use the standard library
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # backoff is archived / unmaintained
+    # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Coloredlogs is unmaintained and contains a '.pth' file
+    "coloredlogs": "be replaced with colorlog",
+    # dataclasses-json is no longer maintained
+    # Some uses will start to break in Python 3.15
+    "dataclasses-json": "be removed (it can break in Python 3.15)",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
-    # Does blocking I/O and should be replaced by pyserial-asyncio-fast
-    # See https://github.com/home-assistant/core/pull/116635
-    "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
+    # See https://developers.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
+    "pyserial-asyncio": "be replaced by serialx",
     # Only needed for tests
     "pytest": "not be a runtime dependency",
     # Only needed for build
@@ -115,15 +149,9 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
-    "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
-    "apple_tv": {"pyatv": {"async-timeout"}},
-    "blackbird": {
-        # https://github.com/koolsb/pyblackbird/issues/12
-        # pyblackbird > pyserial-asyncio
-        "pyblackbird": {"pyserial-asyncio"}
-    },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
+    "aseko_pool_live": {"gql": {"backoff"}},
+    "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -137,6 +165,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "pyefergy": {"codecov", "types-pytz"}
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "energyid": {"energyid-webhooks": {"backoff"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
@@ -150,42 +179,23 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
-    "guardian": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # aioguardian > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
+    "geocaching": {"geocachingapi": {"backoff"}},
+    "github": {"aiogithubapi": {"backoff"}},
+    "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
-    "heatmiser": {
-        # https://github.com/andylockran/heatmiserV3/issues/96
-        # heatmiserV3 > pyserial-asyncio
-        "heatmiserv3": {"pyserial-asyncio"}
-    },
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
+    "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "influxdb": {
-        # https://github.com/influxdata/influxdb-client-python/issues/695
-        # influxdb-client > setuptools
-        "influxdb-client": {"setuptools"}
-    },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
-    },
-    "izone": {"python-izone": {"async-timeout"}},
-    "keba": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # keba-kecontact > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
+    "iqvia": {"pyiqvia": {"backoff"}},
+    "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
@@ -194,7 +204,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
@@ -204,26 +213,19 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "microbeespy": {"setuptools"}
     },
     "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
-    "minecraft_server": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # mcstatus > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "mochad": {
         # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "modern_forms": {"aiomodernforms": {"backoff"}},
+    "monarch_money": {"gql": {"backoff"}},
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
-    "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
-    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
+    "overkiz": {"pyoverkiz": {"backoff"}},
+    "prosegur": {"pyprosegur": {"backoff"}},
+    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
@@ -231,10 +233,16 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
+    "roku": {"rokuecp": {"backoff"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
+    "simplefin": {"simplefin4py": {"dataclasses-json"}},
+    "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
+    "tailwind": {"gotailwind": {"backoff"}},
+    "tibber": {"gql": {"backoff"}},
+    "toon": {"toonapi": {"backoff"}},
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -243,14 +251,16 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
-    "unifiprotect": {"uiprotect": {"async-timeout"}},
+    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
+    "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
+        "zigpy-znp": {"coloredlogs"},
     },
 }
 
@@ -270,32 +280,73 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # - reasonX should be the name of the invalid dependency
     # https://github.com/jaraco/jaraco.net
     "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/Azure/azure-kusto-python/
+    "azure_data_explorer": {
+        # Legacy namespace packages, resolved with >=5.0.5
+        # azure_kusto_data-*-nspkg.pth
+        # azure_kusto_ingest-*-nspkg.pth
+        "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+        "azure-kusto-ingest": {"azure-kusto-data"},
+    },
     # https://github.com/coinbase/coinbase-advanced-py
+    "cmus": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
+    # https://github.com/lawtancool/pyControl4 - ships tests/ in wheel
+    "control4": {"homeassistant": {"pycontrol4"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "fitbit": {
+        # Setuptools - distutils-precedence.pth
+        "fitbit": {"setuptools"}
+    },
     "flume": {"homeassistant": {"pyflume"}},
     # https://github.com/fortinet-solutions-cse/fortiosapi
     "fortios": {"homeassistant": {"fortiosapi"}},
     # https://github.com/manzanotti/geniushub-client
     "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/costastf/locationsharinglib
+    "google_maps": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "locationsharinglib": {"coloredlogs"},
+    },
+    # https://github.com/NabuCasa/universal-silabs-flasher
+    "homeassistant_hardware": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "universal-silabs-flasher": {"coloredlogs"},
+    },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
-    # https://github.com/danifus/pyzipper
-    "knx": {"xknxproject": {"pyzipper"}},
     # https://github.com/hthiery/python-lacrosse
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
     "linode": {"homeassistant": {"linode-api"}},
-    # https://github.com/timmo001/aiolyric
-    "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
-    "microbees": {"homeassistant": {"microbeespy"}},
+    "microbees": {
+        "homeassistant": {"microbeespy"},
+        "microbeespy": {"setuptools"},
+    },
+    "mochad": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    "remote_rpi_gpio": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"}
+    },
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},
@@ -303,10 +354,20 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/smappee/pysmappee
     "smappee": {"homeassistant": {"pysmappee"}},
+    # https://github.com/mosquito/caio/pull/75
+    "velbus": {"aiofile": {"caio"}},
     # https://github.com/watergate-ai/watergate-local-api-python
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client
     "xs1": {"homeassistant": {"xs1-api-client"}},
+    # https://github.com/zigpy/zigpy-znp
+    "zha": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"},
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        # https://github.com/xolox/python-coloredlogs/blob/15.0.1/coloredlogs.pth
+        "zigpy-znp": {"coloredlogs"},
+    },
 }
 
 PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
@@ -336,7 +397,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
-            validate_requirements_format(integration)
+            if validate_requirements_format(integration) and not integration.core:
+                validate_custom_requirements(integration, config)
         return
 
     # check for incompatible requirements
@@ -344,7 +406,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
-        validate_requirements(integration)
+        validate_requirements(integration, config)
 
 
 def validate_requirements_format(integration: Integration) -> bool:
@@ -397,9 +459,166 @@ def validate_requirements_format(integration: Integration) -> bool:
     return len(integration.errors) == start_errors
 
 
-def validate_requirements(integration: Integration) -> None:
+@cache
+def _load_requirement_file(path: Path) -> dict[str, SpecifierSet]:
+    """Read a pip requirements file into a map of package name to version specifier."""
+    requirements: dict[str, SpecifierSet] = {}
+    if not path.is_file():
+        return requirements
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+
+        # Skip comments and pip options such as "-r requirements.txt"
+        if not line or line.startswith(("#", "-")):
+            continue
+
+        try:
+            requirement = Requirement(line)
+        except InvalidRequirement:
+            continue
+
+        # These files can name a package more than once, each line narrows it.
+        package = canonicalize_name(requirement.name)
+        requirements[package] = (
+            requirements.get(package, SpecifierSet()) & requirement.specifier
+        )
+
+    return requirements
+
+
+def _probe_versions(*specifier_sets: SpecifierSet) -> set[Version]:
+    """Return the versions worth probing to compare specifier sets.
+
+    A specifier set describes a union of version intervals, so a non-empty
+    intersection of two of them always contains a version that sits on, just
+    below, or just above one of the boundaries either of them mentions. The
+    release suffix covers boundaries that exclude their own pre and post
+    releases, such as ">1.0" not allowing "1.0.post0".
+    """
+    versions = {Version("0")}
+
+    for specifiers in specifier_sets:
+        for specifier in specifiers:
+            boundary = specifier.version.removesuffix(".*")
+            for suffix in ("", ".dev0", ".post0", ".0.0.1"):
+                with suppress(InvalidVersion):
+                    versions.add(Version(f"{boundary}{suffix}"))
+
+    return versions
+
+
+def _specifiers_conflict(left: SpecifierSet, right: SpecifierSet) -> bool:
+    """Return if no single version can satisfy both specifier sets."""
+    return not any(
+        left.contains(version, prereleases=True)
+        and right.contains(version, prereleases=True)
+        for version in _probe_versions(left, right)
+    )
+
+
+def validate_custom_requirements(integration: Integration, config: Config) -> bool:
+    """Validate a custom integration against the requirements of Home Assistant.
+
+    Custom integrations are installed into the same Python environment as Home
+    Assistant itself. A requirement that rules out the version Home Assistant
+    needs takes the whole installation down with it.
+
+    Returns if valid.
+    """
+    if integration.core:
+        return True
+
+    start_errors = len(integration.errors)
+
+    core_requirements = _load_requirement_file(config.root / "requirements.txt")
+    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
+    constraints = _load_requirement_file(
+        config.root / "homeassistant/package_constraints.txt"
+    )
+
+    for req in integration.requirements:
+        try:
+            requirement = Requirement(req)
+        except InvalidRequirement:
+            continue
+
+        if requirement.marker and not any(
+            requirement.marker.evaluate(environment)
+            for environment in MARKER_ENVIRONMENTS
+        ):
+            continue
+
+        package = canonicalize_name(requirement.name)
+
+        if package in core_requirements:
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is a dependency of Home Assistant itself and "
+                "must not be listed in the manifest of a custom integration.",
+            )
+            continue
+
+        pinned = all_requirements.get(package)
+        constraint = constraints.get(package)
+
+        if constraint is not None and any(
+            specifier.version == PROHIBITED_VERSION for specifier in constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is prohibited by Home Assistant, "
+                f"{package} must not be installed.",
+            )
+            continue
+
+        if pinned is not None and _specifiers_conflict(requirement.specifier, pinned):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{pinned}, which "
+                "Home Assistant depends on.",
+            )
+            continue
+
+        if constraint is not None and _specifiers_conflict(
+            requirement.specifier, constraint
+        ):
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} is incompatible with {package}{constraint}, "
+                "which Home Assistant's package constraints require.",
+            )
+            continue
+
+        # Pinning a package Home Assistant ships breaks the moment we bump it.
+        # Constrained packages are left alone, we only bound those.
+        if pinned is not None and (
+            exact := sorted(
+                specifier.version
+                for specifier in requirement.specifier
+                if specifier.operator in ("==", "===")
+                and not specifier.version.endswith(".*")
+            )
+        ):
+            suggestion = f"{package}>={exact[0]}"
+            integration.add_error(
+                "requirements",
+                f"Requirement {req} pins a package Home Assistant depends on "
+                f'({package}{pinned}). Use a minimum version ("{suggestion}") '
+                "instead, so it can follow along when Home Assistant updates it.",
+            )
+
+    return len(integration.errors) == start_errors
+
+
+def validate_requirements(integration: Integration, config: Config) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
+        return
+
+    # Installing a requirement we already rejected would downgrade the
+    # environment hassfest itself runs in.
+    if not validate_custom_requirements(integration, config):
         return
 
     integration_requirements = set()
@@ -482,6 +701,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> PackageMetadata:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -530,7 +755,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+        if (
+            requires_python := metadata_cache(package).get("Requires-Python")
+        ) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):
@@ -613,8 +840,10 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     ):
         integration.add_error(
             "requirements",
-            f"Integration {integration.domain} runtime files dependency exceptions "
-            "have been resolved, please remove from `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -704,8 +933,10 @@ def check_dependency_files(
         for file in files(pkg) or ():
             if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
                 top_level.add(top)
-            if (name := str(file)).lower() in FORBIDDEN_FILE_NAMES:
-                file_names.add(name)
+            if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
+            ):
+                file_names.add(str(file))
         results = _PackageFilesCheckResult(
             top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
             file_names=file_names,
@@ -718,10 +949,12 @@ def check_dependency_files(
         integration.add_warning_or_error(
             pkg in package_exceptions,
             "requirements",
-            f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
-        integration.add_error(
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
             "requirements",
             f"Package {pkg} has a forbidden file '{file_name}' in {package}",
         )

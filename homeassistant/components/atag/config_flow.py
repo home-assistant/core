@@ -1,9 +1,9 @@
 """Config flow for the Atag component."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 import pyatag
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -12,8 +12,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import DOMAIN
 
 DATA_SCHEMA = {
-    vol.Required(CONF_HOST): str,
-    vol.Required(CONF_PORT, default=pyatag.const.DEFAULT_PORT): vol.Coerce(int),
+    probatio.Required(CONF_HOST): str,
+    probatio.Required(CONF_PORT, default=pyatag.const.DEFAULT_PORT): probatio.Coerce(
+        int
+    ),
 }
 
 
@@ -22,6 +24,7 @@ class AtagConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,6 +53,6 @@ class AtagConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(DATA_SCHEMA),
-            errors=errors if errors else {},
+            data_schema=probatio.Schema(DATA_SCHEMA),
+            errors=errors or {},
         )

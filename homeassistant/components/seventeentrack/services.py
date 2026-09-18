@@ -2,10 +2,9 @@
 
 from typing import Any, Final
 
+import probatio
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
 from homeassistant.core import (
     HomeAssistant,
@@ -14,11 +13,9 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util import slugify
 
-from . import SeventeenTrackCoordinator
 from .const import (
     ATTR_DESTINATION_COUNTRY,
     ATTR_INFO_TEXT,
@@ -36,11 +33,12 @@ from .const import (
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
 )
+from .coordinator import SeventeenTrackConfigEntry
 
-SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
+SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 multiple=True,
                 options=[
@@ -54,32 +52,31 @@ SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
     }
 )
 
-SERVICE_ADD_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ADD_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
-        vol.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
     }
 )
 
-SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
     }
 )
 
 
 async def _get_packages(call: ServiceCall) -> ServiceResponse:
     """Get packages from 17Track."""
-    config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
     package_states = call.data.get(ATTR_PACKAGE_STATE, [])
 
-    await _validate_service(call.hass, config_entry_id)
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        config_entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
     live_packages = sorted(
         await seventeen_coordinator.client.profile.packages(
             show_archived=seventeen_coordinator.show_archived
@@ -97,15 +94,14 @@ async def _get_packages(call: ServiceCall) -> ServiceResponse:
 
 async def _add_package(call: ServiceCall) -> None:
     """Add a new package to 17Track."""
-    config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
     tracking_number = call.data[ATTR_PACKAGE_TRACKING_NUMBER]
     friendly_name = call.data[ATTR_PACKAGE_FRIENDLY_NAME]
 
-    await _validate_service(call.hass, config_entry_id)
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        config_entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
 
     await seventeen_coordinator.client.profile.add_package(
         tracking_number, friendly_name
@@ -113,14 +109,13 @@ async def _add_package(call: ServiceCall) -> None:
 
 
 async def _archive_package(call: ServiceCall) -> None:
-    config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
     tracking_number = call.data[ATTR_PACKAGE_TRACKING_NUMBER]
 
-    await _validate_service(call.hass, config_entry_id)
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
 
-    seventeen_coordinator: SeventeenTrackCoordinator = call.hass.data[DOMAIN][
-        config_entry_id
-    ]
+    seventeen_coordinator = entry.runtime_data
 
     await seventeen_coordinator.client.profile.archive_package(tracking_number)
 
@@ -140,26 +135,6 @@ def _package_to_dict(package: Package) -> dict[str, Any]:
     if timestamp := package.timestamp:
         result[ATTR_TIMESTAMP] = timestamp.isoformat()
     return result
-
-
-async def _validate_service(hass: HomeAssistant, config_entry_id: str) -> None:
-    entry: ConfigEntry | None = hass.config_entries.async_get_entry(config_entry_id)
-    if not entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry_id": config_entry_id,
-            },
-        )
-    if entry.state != ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry_id": entry.title,
-            },
-        )
 
 
 @callback

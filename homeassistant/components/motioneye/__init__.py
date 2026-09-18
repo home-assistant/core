@@ -1,7 +1,5 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from http import HTTPStatus
@@ -45,7 +43,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -56,20 +54,16 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_WEBHOOK_ID,
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
-    CONF_CLIENT,
-    CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
     CONF_WEBHOOK_SET_OVERWRITE,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_WEBHOOK_SET,
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
@@ -84,6 +78,7 @@ from .const import (
     WEB_HOOK_SENTINEL_KEY,
     WEB_HOOK_SENTINEL_VALUE,
 )
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -137,7 +132,7 @@ def is_acceptable_camera(camera: dict[str, Any] | None) -> bool:
 @callback
 def listen_for_new_cameras(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     add_func: Callable,
 ) -> None:
     """Listen for new cameras."""
@@ -171,7 +166,7 @@ def _add_camera(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MotionEyeClient,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     camera_id: int,
     camera: dict[str, Any],
     device_identifier: tuple[str, str],
@@ -277,9 +272,8 @@ def _add_camera(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     client = create_motioneye_client(
         entry.data[CONF_URL],
@@ -308,24 +302,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    async def async_update_data() -> dict[str, Any] | None:
-        try:
-            return await client.async_get_cameras()
-        except MotionEyeClientError as exc:
-            raise UpdateFailed("Error communicating with API") from exc
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_CLIENT: client,
-        CONF_COORDINATOR: coordinator,
-    }
+    coordinator = MotionEyeUpdateCoordinator(hass, entry, client)
+    entry.runtime_data = coordinator
 
     current_cameras: set[tuple[str, str]] = set()
     device_registry = dr.async_get(hass)
@@ -381,14 +359,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Unload a config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data[CONF_CLIENT].async_client_close()
+        await entry.runtime_data.client.async_client_close()
 
     return unload_ok
 
@@ -400,7 +377,7 @@ async def handle_webhook(
 
     try:
         data = await request.json()
-    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+    except json.decoder.JSONDecodeError, UnicodeDecodeError:
         return Response(
             text="Could not decode request",
             status=HTTPStatus.BAD_REQUEST,
@@ -417,7 +394,9 @@ async def handle_webhook(
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
 
-    if not (device := device_registry.async_get(device_id)):
+    if not (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
@@ -456,13 +435,15 @@ def _get_media_event_data(
     event_file_path: str,
     event_file_type: int,
 ) -> dict[str, str]:
-    config_entry_id = next(iter(device.config_entries), None)
-    if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
         return {}
+    config_entry_id = config_entry.entry_id
 
-    config_entry_data = hass.data[DOMAIN][config_entry_id]
-    client = config_entry_data[CONF_CLIENT]
-    coordinator = config_entry_data[CONF_COORDINATOR]
+    coordinator: MotionEyeUpdateCoordinator = config_entry.runtime_data
+    client = coordinator.client
 
     for identifier in device.identifiers:
         data = split_motioneye_device_identifier(identifier)
@@ -482,7 +463,10 @@ def _get_media_event_data(
     # The file_path in the event is the full local filesystem path to the
     # media. To convert that to the media path that motionEye will
     # understand, we need to strip the root directory from the path.
-    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+    try:
+        if os.path.commonpath([root_directory, event_file_path]) != root_directory:
+            return {}
+    except ValueError:
         return {}
 
     file_path = "/" + os.path.relpath(event_file_path, root_directory)

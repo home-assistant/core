@@ -1,26 +1,24 @@
 """Provides functionality to notify people."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
@@ -34,6 +32,7 @@ from .const import (  # noqa: F401
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
+    NotifyEntityFeature,
 )
 from .legacy import (  # noqa: F401
     BaseNotificationService,
@@ -55,16 +54,13 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
-    extra=vol.ALLOW_EXTRA,
+PLATFORM_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_PLATFORM): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
-
-
-class NotifyEntityFeature(IntFlag):
-    """Supported features of a notify entity."""
-
-    TITLE = 1
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -85,8 +81,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
         {
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_TITLE): cv.string,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_TITLE): cv.string,
         },
         "_async_send_message",
     )
@@ -148,6 +144,7 @@ class NotifyEntity(RestoreEntity):
         self.__dict__.pop("state", None)
         self.__last_notified_isoformat = state
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the notify entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -156,14 +153,27 @@ class NotifyEntity(RestoreEntity):
             self.__set_state(state.state)
 
     @final
+    def _record_notification(self) -> None:
+        run_callback_threadsafe(
+            self.hass.loop, self._async_record_notification
+        ).result()
+
+    @final
+    @callback
+    def _async_record_notification(self) -> None:
+        """Record last notification."""
+
+        self.__set_state(dt_util.utcnow().isoformat())
+        self.async_write_ha_state()
+
+    @final
     async def _async_send_message(self, **kwargs: Any) -> None:
         """Send a notification message (from e.g., service call).
 
         Should not be overridden, handle setting last notification timestamp.
         """
-        self.__set_state(dt_util.utcnow().isoformat())
-        self.async_write_ha_state()
         await self.async_send_message(**kwargs)
+        self._async_record_notification()
 
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""

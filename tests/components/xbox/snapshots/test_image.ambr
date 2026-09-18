@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_image_platform[image.erics273_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,9 +39,9 @@
 # name: test_image_platform[image.erics273_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.erics273_avatar?token=520',
-      'friendly_name': 'erics273 Avatar',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_avatar',
@@ -51,8 +53,9 @@
 # ---
 # name: test_image_platform[image.erics273_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
     'original_device_class': None,
@@ -87,9 +91,9 @@
 # name: test_image_platform[image.erics273_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.erics273_gamerpic?token=520',
-      'friendly_name': 'erics273 Gamerpic',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_gamerpic',
@@ -101,8 +105,9 @@
 # ---
 # name: test_image_platform[image.erics273_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -137,9 +143,9 @@
 # name: test_image_platform[image.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.erics273_now_playing?token=520',
-      'friendly_name': 'erics273 Now playing',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_now_playing',
@@ -151,8 +157,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -187,9 +195,9 @@
 # name: test_image_platform[image.gsr_ae_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_avatar?token=520',
-      'friendly_name': 'GSR Ae Avatar',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_avatar',
@@ -201,8 +209,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -220,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
     'original_device_class': None,
@@ -237,9 +247,9 @@
 # name: test_image_platform[image.gsr_ae_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_gamerpic?token=520',
-      'friendly_name': 'GSR Ae Gamerpic',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_gamerpic',
@@ -251,8 +261,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -270,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -287,9 +299,9 @@
 # name: test_image_platform[image.gsr_ae_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_now_playing?token=520',
-      'friendly_name': 'GSR Ae Now playing',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_now_playing',
@@ -301,8 +313,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -320,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,9 +351,9 @@
 # name: test_image_platform[image.ikken_hissatsuu_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_avatar?token=520',
-      'friendly_name': 'Ikken Hissatsuu Avatar',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_avatar',
@@ -351,8 +365,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
     'original_device_class': None,
@@ -387,9 +403,9 @@
 # name: test_image_platform[image.ikken_hissatsuu_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_gamerpic?token=520',
-      'friendly_name': 'Ikken Hissatsuu Gamerpic',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_gamerpic',
@@ -401,8 +417,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -420,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -437,9 +455,9 @@
 # name: test_image_platform[image.ikken_hissatsuu_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_now_playing?token=520',
-      'friendly_name': 'Ikken Hissatsuu Now playing',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_now_playing',

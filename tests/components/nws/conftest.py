@@ -1,6 +1,7 @@
 """Fixtures for National Weather Service tests."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,6 +15,7 @@ def mock_simple_nws():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):
@@ -36,6 +38,7 @@ def mock_simple_nws_times_out():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):
@@ -50,6 +53,16 @@ def mock_simple_nws_times_out():
         instance.forecast = None
         instance.forecast_hourly = None
         yield mock_nws
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture

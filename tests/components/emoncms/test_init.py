@@ -1,7 +1,5 @@
 """Test Emoncms component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from homeassistant.components.emoncms.const import DOMAIN, FEED_ID, FEED_NAME

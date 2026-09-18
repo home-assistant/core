@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Hashable, Iterable, Sequence
@@ -15,11 +13,11 @@ import os
 from pathlib import Path
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
-from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
+import probatio
+from probatio.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 from yaml.error import MarkedYAMLError
 
 from .const import CONF_PACKAGES, CONF_PLATFORM, __version__
@@ -234,7 +232,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     for key in config:
         try:
             cv.domain_key(key)
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             suffix = ""
             if annotation := find_annotation(config, exc.path):
                 suffix = f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
@@ -246,7 +244,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     core_config = config.get(HOMEASSISTANT_DOMAIN, {})
     try:
         await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         suffix = ""
         if annotation := find_annotation(
             config, [HOMEASSISTANT_DOMAIN, CONF_PACKAGES, *exc.path]
@@ -343,7 +341,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 @callback
 def async_log_schema_error(
-    exc: vol.Invalid,
+    exc: probatio.Invalid,
     domain: str,
     config: dict,
     hass: HomeAssistant,
@@ -356,14 +354,14 @@ def async_log_schema_error(
 
 @callback
 def async_log_config_validator_error(
-    exc: vol.Invalid | HomeAssistantError,
+    exc: probatio.Invalid | HomeAssistantError,
     domain: str,
     config: dict,
     hass: HomeAssistant,
     link: str | None = None,
 ) -> None:
     """Log an error from a custom config validator."""
-    if isinstance(exc, vol.Invalid):
+    if isinstance(exc, probatio.Invalid):
         async_log_schema_error(exc, domain, config, hass, link)
         return
 
@@ -385,7 +383,7 @@ def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """
     try:
         return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
-    except (KeyError, IndexError, TypeError):
+    except KeyError, IndexError, TypeError:
         return None
 
 
@@ -449,16 +447,16 @@ def _relpath(hass: HomeAssistant, path: str) -> str:
 
 def stringify_invalid(
     hass: HomeAssistant,
-    exc: vol.Invalid,
+    exc: probatio.Invalid,
     domain: str,
     config: dict,
     link: str | None,
     max_sub_error_length: int,
 ) -> str:
-    """Stringify voluptuous.Invalid.
+    """Stringify probatio.Invalid.
 
     This is an alternative to the custom __str__ implemented in
-    voluptuous.error.Invalid. The modifications are:
+    probatio.error.Invalid. The modifications are:
     - Format the path delimited by -> instead of @data[]
     - Prefix with domain, file and line of the error
     - Suffix with a link to the documentation
@@ -480,18 +478,21 @@ def stringify_invalid(
     if annotation := find_annotation(config, exc.path):
         message_prefix += f" at {_relpath(hass, annotation[0])}, line {annotation[1]}"
     path = "->".join(str(m) for m in exc.path)
-    if exc.error_message == "extra keys not allowed":
-        return (
-            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}', "
-            f"check: {path}{message_suffix}"
+    if exc.code == "extra_keys_not_allowed":
+        message = (
+            f"{message_prefix}: '{exc.path[-1]}' is an invalid option for '{domain}'"
         )
+        if candidates := exc.context.get("candidates"):
+            options = " or ".join(f"'{candidate}'" for candidate in candidates)
+            message += f" (did you mean {options}?)"
+        return f"{message}, check: {path}{message_suffix}"
     if exc.error_message == "required key not provided":
         return (
             f"{message_prefix}: required key '{exc.path[-1]}' not provided"
             f"{message_suffix}"
         )
     # This function is an alternative to the stringification done by
-    # vol.Invalid.__str__, so we need to call Exception.__str__ here
+    # probatio.Invalid.__str__, so we need to call Exception.__str__ here
     # instead of str(exc)
     output = Exception.__str__(exc)
     if error_type := exc.error_type:
@@ -509,7 +510,7 @@ def stringify_invalid(
 
 def humanize_error(
     hass: HomeAssistant,
-    validation_error: vol.Invalid,
+    validation_error: probatio.Invalid,
     domain: str,
     config: dict,
     link: str | None,
@@ -517,10 +518,10 @@ def humanize_error(
 ) -> str:
     """Provide a more helpful + complete validation error message.
 
-    This is a modified version of voluptuous.error.Invalid.__str__,
+    This is a modified version of probatio.error.Invalid.__str__,
     the modifications make some minor changes to the formatting.
     """
-    if isinstance(validation_error, vol.MultipleInvalid):
+    if isinstance(validation_error, probatio.MultipleInvalid):
         return "\n".join(
             sorted(
                 humanize_error(
@@ -565,7 +566,7 @@ def format_homeassistant_error(
 @callback
 def format_schema_error(
     hass: HomeAssistant,
-    exc: vol.Invalid,
+    exc: probatio.Invalid,
     domain: str,
     config: dict,
     link: str | None = None,
@@ -589,12 +590,12 @@ def _log_pkg_error(
 
 def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
-    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
+    if not isinstance(module.CONFIG_SCHEMA, probatio.Schema):
         return None  # type: ignore[unreachable]
 
     schema = module.CONFIG_SCHEMA.schema
 
-    if isinstance(schema, vol.All):
+    if isinstance(schema, probatio.All):
         for subschema in schema.validators:
             if isinstance(subschema, dict):
                 schema = subschema
@@ -604,15 +605,13 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     try:
         key = next(k for k in schema if k == module.DOMAIN)
-    except (TypeError, AttributeError, StopIteration):
+    except TypeError, AttributeError, StopIteration:
         return None
     except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
         return None
 
-    if hasattr(key, "default") and not isinstance(
-        key.default, vol.schema_builder.Undefined
-    ):
+    if hasattr(key, "default") and not isinstance(key.default, probatio.Undefined):
         default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
             module.DOMAIN
         ]
@@ -674,7 +673,7 @@ async def merge_packages_config(
     """Merge packages into the top-level configuration.
 
     Ignores packages that cannot be setup. Mutates config. Raises
-    vol.Invalid if whole package config is invalid.
+    probatio.Invalid if whole package config is invalid.
     """
 
     _PACKAGES_CONFIG_SCHEMA(packages)
@@ -683,7 +682,7 @@ async def merge_packages_config(
     for pack_name, pack_conf in packages.items():
         try:
             _validate_package_definition(pack_name, pack_conf)
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             _log_pkg_error(
                 hass,
                 pack_name,
@@ -700,7 +699,7 @@ async def merge_packages_config(
                 continue
             try:
                 domain = cv.domain_key(comp_name)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _log_pkg_error(
                     hass, pack_name, comp_name, config, f"Invalid domain '{comp_name}'"
                 )
@@ -822,13 +821,13 @@ def _get_log_message_and_stack_print_pref(
         # If no pre defined log_message is set, we generate an enriched error
         # message, so we can notify about it during setup
         show_stack_trace = False
-        if isinstance(exception, vol.Invalid):
+        if isinstance(exception, probatio.Invalid):
             log_message = format_schema_error(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, exception.path):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
         else:
             if TYPE_CHECKING:
                 assert isinstance(exception, HomeAssistantError)
@@ -836,8 +835,8 @@ def _get_log_message_and_stack_print_pref(
                 hass, exception, platform_path, platform_config, link
             )
             if annotation := find_annotation(platform_config, [platform_path]):
-                placeholders["config_file"], line = annotation
-                placeholders["line"] = str(line)
+                placeholders["config_file"] = _relpath(hass, annotation[0])
+                placeholders["line"] = str(annotation[1])
             show_stack_trace = True
         return (log_message, show_stack_trace, placeholders)
 
@@ -849,6 +848,36 @@ def _get_log_message_and_stack_print_pref(
     )
 
     return (log_message, show_stack_trace, placeholders)
+
+
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+) -> ConfigType | None: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType: ...
+
+
+@overload
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: bool,
+) -> ConfigType | None: ...
 
 
 async def async_process_component_and_handle_errors(
@@ -998,7 +1027,7 @@ def extract_platform_integrations(
     for key, domain_config in config.items():
         try:
             domain = cv.domain_key(key)
-        except vol.Invalid:
+        except probatio.Invalid:
             continue
         if domain not in domains:
             continue
@@ -1011,7 +1040,7 @@ def extract_platform_integrations(
                 platform = item.get(CONF_PLATFORM)
             except AttributeError:
                 continue
-            if platform and isinstance(platform, Hashable):
+            if platform and isinstance(platform, str):
                 platform_integrations.setdefault(domain, set()).add(platform)
     return platform_integrations
 
@@ -1023,7 +1052,7 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     """
     domain_configs = []
     for key in config:
-        with suppress(vol.Invalid):
+        with suppress(probatio.Invalid):
             if cv.domain_key(key) != domain:
                 continue
             domain_configs.append(key)
@@ -1069,7 +1098,7 @@ async def _async_load_and_validate_platform_integration(
     # Validate platform specific schema
     try:
         return platform.PLATFORM_SCHEMA(p_integration.config)  # type: ignore[no-any-return]
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         exc_info = ConfigExceptionInfo(
             exc,
             ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,
@@ -1152,7 +1181,7 @@ async def async_process_component_config(
             return IntegrationConfigInfo(
                 await config_validator.async_validate_config(hass, config), []
             )
-        except (vol.Invalid, HomeAssistantError) as exc:
+        except (probatio.Invalid, HomeAssistantError) as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
@@ -1179,7 +1208,7 @@ async def async_process_component_config(
             return IntegrationConfigInfo(
                 await cv.async_validate(hass, component.CONFIG_SCHEMA, config), []
             )
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.CONFIG_VALIDATION_ERR,
@@ -1216,7 +1245,7 @@ async def async_process_component_config(
             p_validated = await cv.async_validate(
                 hass, component_platform_schema, p_config
             )
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
                 ConfigErrorTranslationKey.PLATFORM_CONFIG_VALIDATION_ERR,

@@ -1,12 +1,10 @@
 """Config flow to configure the Tailscale integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -34,6 +32,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,12 +66,12 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={"authkeys_url": AUTHKEYS_URL},
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_TAILNET, default=user_input.get(CONF_TAILNET, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): str,
                 }
@@ -113,6 +112,6 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"authkeys_url": AUTHKEYS_URL},
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

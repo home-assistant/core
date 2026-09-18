@@ -1,12 +1,11 @@
 """Support for Linksys Smart Wifi routers."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
+from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -23,7 +22,7 @@ DEFAULT_TIMEOUT = 10
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}
+    {probatio.Required(CONF_HOST): cv.string}
 )
 
 
@@ -50,12 +49,14 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         if response.status_code != HTTPStatus.OK:
             raise ConnectionError("Cannot connect to Linksys Access Point")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with device IDs (MACs)."""
         self._update_info()
 
         return self.last_results.keys()
 
+    @override
     def get_device_name(self, device):
         """Return the name (if known) of the device."""
         return self.last_results.get(device)
@@ -93,7 +94,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
                 _LOGGER.debug("Device %s is connected", mac)
                 self.last_results[mac] = name
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             _LOGGER.exception("Router returned unexpected response")
             return False
         return True

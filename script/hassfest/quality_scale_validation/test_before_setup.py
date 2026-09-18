@@ -14,6 +14,13 @@ _VALID_EXCEPTIONS = {
     "ConfigEntryError",
 }
 
+# Helpers that raise one of the above on the caller's behalf, so an integration
+# awaiting them satisfies the rule without repeating the mapping itself.
+_VALID_AWAITED_CALLS = {
+    "async_config_entry_first_refresh",
+    "async_ensure_token_valid",
+}
+
 
 def _get_exception_name(expression: ast.expr) -> str:
     """Get the name of the exception being raised."""
@@ -33,6 +40,11 @@ def _get_exception_name(expression: ast.expr) -> str:
         # Raise namespace.???
         return _get_exception_name(expression.value)
 
+    if isinstance(expression, ast.Subscript):
+        # Raise errors[0][0]
+        # Unable to determine exception name
+        return None
+
     raise AssertionError(
         f"Raise is neither Attribute nor Call nor Name: {type(expression)}"
     )
@@ -40,7 +52,8 @@ def _get_exception_name(expression: ast.expr) -> str:
 
 def _raises_exception(integration: Integration) -> bool:
     """Check that a valid exception is raised."""
-    for module_file in integration.path.rglob("*.py"):
+    # Sorted to ensure reproducible checks
+    for module_file in sorted(integration.path.rglob("*.py")):
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
             if (
@@ -52,17 +65,20 @@ def _raises_exception(integration: Integration) -> bool:
     return False
 
 
-def _calls_first_refresh(async_setup_entry_function: ast.AsyncFunctionDef) -> bool:
-    """Check that a async_config_entry_first_refresh within `async_setup_entry`."""
-    for node in ast.walk(async_setup_entry_function):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "async_config_entry_first_refresh"
-        ):
-            return True
+def _awaits_raising_helper(async_setup_entry_function: ast.AsyncFunctionDef) -> bool:
+    """Check that `async_setup_entry` awaits a helper that raises on its behalf.
 
-    return False
+    The call only has to sit somewhere inside an await, so gathering several of
+    them still counts, while an unawaited call does not.
+    """
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in _VALID_AWAITED_CALLS
+        for await_node in ast.walk(async_setup_entry_function)
+        if isinstance(await_node, ast.Await)
+        for node in ast.walk(await_node)
+    )
 
 
 def _get_setup_entry_function(module: ast.Module) -> ast.AsyncFunctionDef | None:
@@ -84,6 +100,8 @@ def validate(
     if not (async_setup_entry := _get_setup_entry_function(init)):
         return [f"Could not find `async_setup_entry` in {init_file}"]
 
-    if not (_calls_first_refresh(async_setup_entry) or _raises_exception(integration)):
+    if not (
+        _awaits_raising_helper(async_setup_entry) or _raises_exception(integration)
+    ):
         return [f"Integration does not raise one of {_VALID_EXCEPTIONS}"]
     return None

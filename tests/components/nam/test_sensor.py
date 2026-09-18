@@ -9,6 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.nam.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
@@ -102,7 +106,7 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 async def test_availability(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when device causes an error."""
+    """Ensure we mark entities unavailable when device causes an error."""
     nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
 
     await init_integration(hass)
@@ -151,7 +155,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
 
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     update_response = Mock(json=AsyncMock(return_value=nam_data))
     with (
@@ -162,8 +166,8 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         ) as mock_get_data,
     ):
         await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
             {ATTR_ENTITY_ID: ["sensor.nettigo_air_monitor_bme280_temperature"]},
             blocking=True,
         )

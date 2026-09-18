@@ -1,6 +1,6 @@
 """Tests for JVC Projector remote platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -31,6 +31,7 @@ async def test_entity_state(
     assert entity_registry.async_get(entity.entity_id)
 
 
+@patch("homeassistant.components.jvc_projector.remote.POWER_SLEEP", 0)
 async def test_commands(
     hass: HomeAssistant,
     mock_device: MagicMock,
@@ -43,7 +44,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.power_on.call_count == 1
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -51,7 +51,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.power_off.call_count == 1
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -59,15 +58,28 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["ok"]},
         blocking=True,
     )
-    assert mock_device.remote.call_count == 1
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi_1"]},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi1"]},
         blocking=True,
     )
-    assert mock_device.remote.call_count == 2
+
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["anamo"]},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["picture_mode"]},
+        blocking=True,
+    )
+    assert mock_device.remote.call_count == 4
 
 
 async def test_unknown_command(

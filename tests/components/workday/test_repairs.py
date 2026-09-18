@@ -1,7 +1,5 @@
 """Test repairs for unifiprotect."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.workday.const import CONF_REMOVE_HOLIDAYS, DOMAIN
@@ -32,7 +30,7 @@ async def test_bad_country(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_INCORRECT_COUNTRY)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert not state
 
     ws_client = await hass_ws_client(hass)
@@ -62,7 +60,7 @@ async def test_bad_country(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -85,7 +83,7 @@ async def test_bad_country_none(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_INCORRECT_COUNTRY)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert not state
 
     ws_client = await hass_ws_client(hass)
@@ -115,7 +113,7 @@ async def test_bad_country_none(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -138,7 +136,7 @@ async def test_bad_country_no_province(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_INCORRECT_COUNTRY)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert not state
 
     ws_client = await hass_ws_client(hass)
@@ -166,7 +164,7 @@ async def test_bad_country_no_province(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_zz")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -189,7 +187,7 @@ async def test_bad_province(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_INCORRECT_PROVINCE)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_zz")
     assert not state
 
     ws_client = await hass_ws_client(hass)
@@ -220,7 +218,7 @@ async def test_bad_province(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_zz")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -243,7 +241,7 @@ async def test_bad_province_none(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_INCORRECT_PROVINCE)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_zz")
     assert not state
 
     ws_client = await hass_ws_client(hass)
@@ -274,7 +272,7 @@ async def test_bad_province_none(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_zz")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -298,7 +296,7 @@ async def test_bad_named_holiday(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_REMOVE_NAMED)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state
 
     issues = issue_registry.issues.keys()
@@ -347,7 +345,7 @@ async def test_bad_named_holiday(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -371,7 +369,7 @@ async def test_bad_date_holiday(
     assert await async_setup_component(hass, "repairs", {})
     entry = await init_integration(hass, TEST_CONFIG_REMOVE_DATE)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state
 
     issues = issue_registry.issues.keys()
@@ -410,7 +408,7 @@ async def test_bad_date_holiday(
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})

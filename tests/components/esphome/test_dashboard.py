@@ -7,6 +7,7 @@ from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
+from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,9 +20,11 @@ from .conftest import MockESPHomeDeviceType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("init_integration", "mock_dashboard")
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_dashboard_storage(
     hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
@@ -108,11 +111,40 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
         assert not mock_dashboard_api.called
 
 
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_restore_dashboard_storage_if_supervisor_not_ready(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Restore the dashboard, without failing setup, if Supervisor is not ready."""
+    hass_storage[dashboard.STORAGE_KEY] = {
+        "version": dashboard.STORAGE_VERSION,
+        "minor_version": dashboard.STORAGE_VERSION,
+        "key": dashboard.STORAGE_KEY,
+        "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
+    }
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=HassioNotReadyError,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
+
+
 async def test_setup_dashboard_fails(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
+    """Test nothing is stored on failed setup without prior dashboard."""
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
@@ -129,6 +161,7 @@ async def test_setup_dashboard_fails(
 
 async def test_setup_dashboard_fails_when_already_setup(
     hass: HomeAssistant,
+    mock_client: APIClient,
     mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -168,7 +201,9 @@ async def test_setup_dashboard_fails_when_already_setup(
 
 @pytest.mark.usefixtures("mock_dashboard")
 async def test_new_info_reload_config_entries(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test config entries are reloaded when new info is set."""
     assert init_integration.state is ConfigEntryState.LOADED

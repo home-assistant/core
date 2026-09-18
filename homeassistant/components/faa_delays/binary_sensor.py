@@ -1,10 +1,8 @@
 """Platform for FAA Delays sensor component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from faadelays import Airport
 
@@ -124,11 +122,13 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the status of the sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return attributes for sensor."""
         return self.entity_description.extra_state_attributes_fn(self.coordinator.data)

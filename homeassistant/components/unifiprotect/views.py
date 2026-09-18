@@ -1,7 +1,5 @@
 """UniFi Protect Integration views."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -149,6 +147,10 @@ class ProtectProxyView(HomeAssistantView):
             async_get_data_for_nvr_id(self.hass, nvr_id_or_entry_id)
             or async_get_data_for_entry_id(self.hass, nvr_id_or_entry_id)
         ):
+            # Event media is private-API-backed; an API-key-only entry has
+            # neither the bootstrap these views read nor any event media.
+            if data.api.is_public_only:
+                return _404("Invalid NVR ID")
             return data
         return _404("Invalid NVR ID")
 
@@ -161,7 +163,9 @@ class ProtectProxyView(HomeAssistantView):
         device_registry = dr.async_get(self.hass)
 
         if (entity := entity_registry.async_get(camera_id)) is None or (
-            device := device_registry.async_get(entity.device_id or "")
+            device := device_registry.async_get(
+                entity.device_id or "", include_child_devices=False
+            )
         ) is None:
             return None
 

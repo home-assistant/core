@@ -3,9 +3,9 @@
 import asyncio
 from typing import Final
 
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp import ClientError
 import jwt
-from tesla_fleet_api import TeslaFleetApi
+from tesla_fleet_api import TeslaFleetApi, is_valid_region
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
@@ -15,26 +15,33 @@ from tesla_fleet_api.exceptions import (
     OAuthExpired,
     TeslaFleetError,
 )
+from tesla_fleet_api.tesla import VehicleFleet
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, LOGGER
 from .coordinator import (
+    VEHICLE_FIRST_REFRESH_TIMEOUT,
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
+    _stale_site_info_error,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
@@ -58,71 +65,95 @@ type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
+    """Get products from Tesla Fleet API with region fallback handling."""
+    try:
+        return (await tesla.products())["response"]
+    except InvalidRegion:
+        LOGGER.warning("Region is invalid, trying to find the correct region")
+    except (
+        InvalidToken,
+        OAuthExpired,
+        LoginRequired,
+        OAuth2TokenRequestReauthError,
+    ) as e:
+        raise ConfigEntryAuthFailed from e
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
+        raise ConfigEntryNotReady from e
+
+    try:
+        await tesla.find_server()
+    except (
+        InvalidToken,
+        OAuthExpired,
+        LoginRequired,
+        LibraryError,
+        OAuth2TokenRequestReauthError,
+    ) as e:
+        raise ConfigEntryAuthFailed from e
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
+        raise ConfigEntryNotReady from e
+
+    try:
+        return (await tesla.products())["response"]
+    except (
+        InvalidToken,
+        OAuthExpired,
+        LoginRequired,
+        OAuth2TokenRequestReauthError,
+    ) as e:
+        raise ConfigEntryAuthFailed from e
+    except (
+        TeslaFleetError,
+        OAuth2TokenRequestError,
+        ClientError,
+        TimeoutError,
+    ) as e:
+        raise ConfigEntryNotReady from e
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Set up TeslaFleet config."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
-    except ValueError as e:
-        # Remove invalid implementation from config entry then raise AuthFailed
-        hass.config_entries.async_update_entry(
-            entry, data={"auth_implementation": None}
-        )
-        raise ConfigEntryAuthFailed from e
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
-    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+    oauth_session = OAuth2Session(hass, entry, implementation)
+    await oauth_session.async_ensure_token_valid()
+
+    access_token = oauth_session.token[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
-    region: str = token["ou_code"].lower()
+    region_code = token["ou_code"].lower()
+    region = region_code if is_valid_region(region_code) else None
 
-    oauth_session = OAuth2Session(hass, entry, implementation)
-    refresh_lock = asyncio.Lock()
-
-    async def _refresh_token() -> str:
-        async with refresh_lock:
-            try:
-                await oauth_session.async_ensure_token_valid()
-            except ClientResponseError as e:
-                if e.status == 401:
-                    raise ConfigEntryAuthFailed from e
-                raise ConfigEntryNotReady from e
-            token: str = oauth_session.token[CONF_ACCESS_TOKEN]
-            return token
+    async def _get_access_token() -> str:
+        await oauth_session.async_ensure_token_valid()
+        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
+        return token
 
     # Create API connection
     tesla = TeslaFleetApi(
         session=session,
-        access_token=access_token,
+        access_token=_get_access_token,
         region=region,
         charging_scope=False,
         partner_scope=False,
         energy_scope=Scope.ENERGY_DEVICE_DATA in scopes,
         vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
-        refresh_hook=_refresh_token,
     )
-    try:
-        products = (await tesla.products())["response"]
-    except (InvalidToken, OAuthExpired, LoginRequired) as e:
-        raise ConfigEntryAuthFailed from e
-    except InvalidRegion:
-        try:
-            LOGGER.warning("Region is invalid, trying to find the correct region")
-            await tesla.find_server()
-            try:
-                products = (await tesla.products())["response"]
-            except TeslaFleetError as e:
-                raise ConfigEntryNotReady from e
-        except LibraryError as e:
-            raise ConfigEntryAuthFailed from e
-    except TeslaFleetError as e:
-        raise ConfigEntryNotReady from e
+    products = await _async_get_products(tesla)
 
     device_registry = dr.async_get(hass)
 
@@ -135,29 +166,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             product.pop("cached_data", None)
             vin = product["vin"]
             signing = product["command_signing"] == "required"
+            api_vehicle: VehicleFleet
             if signing:
                 if not tesla.private_key:
                     await tesla.get_private_key(hass.config.path("tesla_fleet.key"))
-                api = tesla.vehicles.createSigned(vin)
+                api_vehicle = tesla.vehicles.createSigned(vin)
             else:
-                api = tesla.vehicles.createFleet(vin)
+                api_vehicle = tesla.vehicles.createFleet(vin)
             coordinator = TeslaFleetVehicleDataCoordinator(
-                hass, entry, api, product, Scope.VEHICLE_LOCATION in scopes
+                hass, entry, api_vehicle, product, Scope.VEHICLE_LOCATION in scopes
             )
 
-            await coordinator.async_config_entry_first_refresh()
+            # A sleeping vehicle can take minutes to answer vehicle_data; bound the
+            # first refresh so setup retries instead of stalling HA's bootstrap.
+            try:
+                async with asyncio.timeout(VEHICLE_FIRST_REFRESH_TIMEOUT):
+                    await coordinator.async_config_entry_first_refresh()
+            except TimeoutError as err:
+                raise ConfigEntryNotReady(
+                    f"Timed out waiting for vehicle {vin} to respond"
+                ) from err
 
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api_vehicle.model,
                 serial_number=vin,
             )
 
             vehicles.append(
                 TeslaFleetVehicleData(
-                    api=api,
+                    api=api_vehicle,
                     coordinator=coordinator,
                     vin=vin,
                     device=device,
@@ -177,18 +217,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 )
                 continue
 
-            api = tesla.energySites.create(site_id)
-
-            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, entry, api)
-            history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-                hass, entry, api
-            )
+            api_energy = tesla.energySites.create(site_id)
             info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
-                hass, entry, api, product
+                hass, entry, api_energy, product
+            )
+            try:
+                await info_coordinator.async_config_entry_first_refresh()
+            except ConfigEntryNotReady as err:
+                if (stale_err := _stale_site_info_error(err)) is None:
+                    raise
+                LOGGER.warning(
+                    "Skipping stale Tesla energy site %s because site info failed: %s",
+                    site_id,
+                    stale_err,
+                )
+                await info_coordinator.async_shutdown()
+                continue
+
+            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
+                hass, entry, api_energy
+            )
+            history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+                hass, entry, api_energy
             )
 
             await live_coordinator.async_config_entry_first_refresh()
-            await info_coordinator.async_config_entry_first_refresh()
 
             # Create energy site model
             model = None
@@ -211,14 +264,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             # Create the energy site device regardless of it having entities
-            # This is so users with a Wall Connector but without a Powerwall can still make service calls
+            # This is so users with a Wall Connector but
+            # without a Powerwall can still make service calls
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id, **device
             )
 
             energysites.append(
                 TeslaFleetEnergyData(
-                    api=api,
+                    api=api_energy,
                     live_coordinator=live_coordinator,
                     history_coordinator=history_coordinator,
                     info_coordinator=info_coordinator,

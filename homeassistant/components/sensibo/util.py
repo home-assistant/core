@@ -1,7 +1,5 @@
 """Utils for Sensibo integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from pysensibo import SensiboClient

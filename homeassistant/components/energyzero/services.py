@@ -1,16 +1,14 @@
 """The EnergyZero services."""
 
-from __future__ import annotations
-
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from enum import Enum
 from functools import partial
 from typing import Final
+from zoneinfo import ZoneInfo
 
-from energyzero import Electricity, Gas, VatOption
-import voluptuous as vol
+from energyzero import EnergyPrices, EnergyZeroNoDataError, Interval, PriceType
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,7 +17,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -29,37 +27,59 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_PRICE_TYPE: Final = "price_type"
+ATTR_INTERVAL: Final = "interval"
+
+ENERGY_INTERVALS = {"hour": Interval.HOUR, "quarter": Interval.QUARTER}
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
-SERVICE_SCHEMA: Final = vol.Schema(
+SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
+    }
+)
+
+ENERGY_SERVICE_SCHEMA: Final = SERVICE_SCHEMA.extend(
+    {
+        probatio.Optional(ATTR_PRICE_TYPE, default="market"): probatio.In(
+            ("market", "all_in")
+        ),
+        probatio.Optional(ATTR_INTERVAL, default="hour"): probatio.In(ENERGY_INTERVALS),
     }
 )
 
 
-class PriceType(Enum):
-    """Type of price."""
+class ServicePriceType(Enum):
+    """Type of service."""
 
     ENERGY = "energy"
     GAS = "gas"
 
 
-def __get_date(date_input: str | None) -> date | datetime:
-    """Get date."""
+def __get_date(
+    date_input: str | None, local_tz: ZoneInfo
+) -> tuple[date, datetime | None]:
+    """Get date for the API and optional datetime for response filtering."""
     if not date_input:
-        return dt_util.now().date()
+        return dt_util.now().astimezone(local_tz).date(), None
+
+    if date_value := dt_util.parse_date(date_input):
+        return date_value, None
 
     if value := dt_util.parse_datetime(date_input):
-        return value
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=local_tz)
+        else:
+            value = value.astimezone(local_tz)
+        return value.date(), dt_util.as_utc(value)
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -70,77 +90,107 @@ def __get_date(date_input: str | None) -> date | datetime:
     )
 
 
-def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
-    """Serialize prices."""
+def __serialize_prices(
+    prices: list[EnergyPrices], start: datetime, end: datetime
+) -> ServiceResponse:
+    """Filter and serialize prices to the requested datetime range."""
     return {
         "prices": [
             {
-                key: str(value) if isinstance(value, datetime) else value
-                for key, value in timestamp_price.items()
+                "price": price,
+                "timestamp": str(time_range.start_including),
+                "start": str(time_range.start_including),
+                "end": str(time_range.end_excluding),
             }
-            for timestamp_price in prices.timestamp_prices
+            for price_data in prices
+            for time_range, price in price_data.prices.items()
+            if time_range.end_excluding > start and time_range.start_including < end
         ]
     }
 
 
 def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
     """Get the coordinator from the entry."""
-    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: EnergyZeroConfigEntry | None = call.hass.config_entries.async_get_entry(
-        entry_id
+    entry: EnergyZeroConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
     )
-
-    if not entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
-        )
-    if entry.state != ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry": entry.title,
-            },
-        )
-
     return entry.runtime_data
 
 
 async def __get_prices(
     call: ServiceCall,
     *,
-    price_type: PriceType,
+    price_type: ServicePriceType,
 ) -> ServiceResponse:
     coordinator = __get_coordinator(call)
+    local_tz = ZoneInfo(call.hass.config.time_zone)
+    start_date, start_datetime = __get_date(call.data.get(ATTR_START), local_tz)
+    end_date, end_datetime = __get_date(call.data.get(ATTR_END), local_tz)
 
-    start = __get_date(call.data.get(ATTR_START))
-    end = __get_date(call.data.get(ATTR_END))
+    filter_start = start_datetime or dt_util.as_utc(
+        dt_util.start_of_local_day(start_date)
+    )
+    end_start = end_datetime or dt_util.as_utc(dt_util.start_of_local_day(end_date))
 
-    vat = VatOption.INCLUDE
-
-    if call.data.get(ATTR_INCL_VAT) is False:
-        vat = VatOption.EXCLUDE
-
-    data: Electricity | Gas
-
-    if price_type == PriceType.GAS:
-        data = await coordinator.energyzero.gas_prices(
-            start_date=start,
-            end_date=end,
-            vat=vat,
-        )
+    if filter_start == end_start:
+        day = filter_start.astimezone(local_tz).date()
+        filter_start = dt_util.as_utc(dt_util.start_of_local_day(day))
+        filter_end = dt_util.as_utc(dt_util.start_of_local_day(day + timedelta(days=1)))
     else:
-        data = await coordinator.energyzero.energy_prices(
-            start_date=start,
-            end_date=end,
-            vat=vat,
+        filter_end = end_datetime or dt_util.as_utc(
+            dt_util.start_of_local_day(end_date + timedelta(days=1))
         )
 
-    return __serialize_prices(data)
+    if filter_end <= filter_start:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_range",
+            translation_placeholders={
+                "start": call.data.get(ATTR_START) or start_date.isoformat(),
+                "end": call.data.get(ATTR_END) or end_date.isoformat(),
+            },
+        )
+
+    selected_price_type = (
+        PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
+    )
+
+    if price_type is ServicePriceType.ENERGY and call.data[ATTR_PRICE_TYPE] == "all_in":
+        selected_price_type = (
+            PriceType.ALL_IN if call.data[ATTR_INCL_VAT] else PriceType.ALL_IN_EXCL_VAT
+        )
+
+    price_data: list[EnergyPrices] = []
+    for day_offset in range((end_date - start_date).days + 1):
+        request_date = start_date + timedelta(days=day_offset)
+        if price_type is ServicePriceType.GAS:
+            prices = coordinator.energyzero.get_gas_prices(
+                start_date=request_date,
+                end_date=request_date,
+                price_type=selected_price_type,
+                local_tz=local_tz,
+            )
+        else:
+            prices = coordinator.energyzero.get_electricity_prices(
+                start_date=request_date,
+                end_date=request_date,
+                interval=ENERGY_INTERVALS[call.data[ATTR_INTERVAL]],
+                price_type=selected_price_type,
+                local_tz=local_tz,
+            )
+
+        try:
+            price_data.append(await prices)
+        except EnergyZeroNoDataError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+                translation_placeholders={
+                    "date": request_date.isoformat(),
+                },
+            ) from err
+
+    return __serialize_prices(price_data, filter_start, filter_end)
 
 
 @callback
@@ -150,14 +200,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.GAS),
+        partial(__get_prices, price_type=ServicePriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY),
-        schema=SERVICE_SCHEMA,
+        partial(__get_prices, price_type=ServicePriceType.ENERGY),
+        schema=ENERGY_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

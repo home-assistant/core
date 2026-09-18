@@ -1,10 +1,8 @@
 """Light support for switch entities."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -32,8 +30,8 @@ DEFAULT_NAME = "Light Switch"
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
     }
 )
 
@@ -73,6 +71,7 @@ class LightSwitch(LightEntity):
         self._attr_unique_id = unique_id
         self._switch_entity_id = switch_entity_id
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
@@ -83,6 +82,7 @@ class LightSwitch(LightEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
@@ -93,6 +93,7 @@ class LightSwitch(LightEntity):
             context=self._context,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 

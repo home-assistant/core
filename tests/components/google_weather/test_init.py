@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from google_weather_api import GoogleWeatherApiError
+from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
 
 from homeassistant.components.google_weather.const import DOMAIN
@@ -29,6 +29,23 @@ async def test_async_setup_entry(
     assert state.state == "sunny"
 
 
+async def test_hourly_forecast_fits_in_one_request(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the hourly forecast asks for no more than one page of records.
+
+    The API returns at most 24 hourly records per request, so asking for more
+    costs an extra request against the quota on every update.
+    """
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    mock_google_weather_api.async_get_hourly_forecast.assert_called_once_with(
+        10.1, 20.1, hours=24
+    )
+
+
 @pytest.mark.parametrize(
     "failing_api_method",
     [
@@ -42,15 +59,37 @@ async def test_config_not_ready(
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
     failing_api_method: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for setup failure if an API call fails."""
     getattr(
         mock_google_weather_api, failing_api_method
-    ).side_effect = GoogleWeatherApiError()
+    ).side_effect = GoogleWeatherApiError("API error")
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert "Error fetching weather data: API error" in caplog.text
+
+
+async def test_setup_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test auth failed during setup."""
+    mock_google_weather_api.async_get_current_conditions.side_effect = (
+        GoogleWeatherApiAuthError()
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(
+        flow["step_id"] == "user"
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )
 
 
 async def test_unload_entry(

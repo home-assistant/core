@@ -1,12 +1,28 @@
 """The Modern Forms integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
+
+_NAME_SEPARATORS = " -_"
+
+
+def strip_device_name_prefix(device_name: str, name: str) -> str | None:
+    """Strip a leading device-name prefix so has_entity_name doesn't duplicate it.
+
+    Returns None (rather than a name identical to the device name) when
+    the fixture name adds nothing beyond the device name.
+    """
+    if not device_name or not name.lower().startswith(device_name.lower()):
+        return name
+    rest = name[len(device_name) :]
+    if rest and rest[0] not in _NAME_SEPARATORS:
+        return name
+    return rest.lstrip(_NAME_SEPARATORS) or None
 
 
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
@@ -27,6 +43,7 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         self._entry_id = entry_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Modern Forms device."""
         return DeviceInfo(

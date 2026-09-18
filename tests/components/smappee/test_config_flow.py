@@ -146,7 +146,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
 
 async def test_user_local_connection_error(hass: HomeAssistant) -> None:
-    """Test we show user form on Smappee connection error in local next generation option."""
+    """Test user form on Smappee local connection error."""
     with (
         patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None),
         patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True),
@@ -373,7 +373,7 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
 async def test_zeroconf_confirm_abort_if_cloud_device_exists(
     hass: HomeAssistant,
 ) -> None:
-    """Test we abort zeroconf confirm flow if Smappee Cloud device already configured."""
+    """Test zeroconf abort if Cloud device already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},

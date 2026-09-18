@@ -1,1 +1,1 @@
-"""The tomato component."""
+"""The Tomato integration."""

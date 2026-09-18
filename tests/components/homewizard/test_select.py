@@ -33,31 +33,31 @@ pytestmark = [
         (
             "HWE-WTR",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "SDM230",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "SDM630",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "HWE-KWH1",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
         (
             "HWE-KWH3",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
     ],
@@ -74,10 +74,9 @@ async def test_entities_not_created_for_device(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id"),
     [
-        ("HWE-P1", "select.device_battery_group_mode"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_entity_snapshots(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -102,20 +101,30 @@ async def test_select_entity_snapshots(
     [
         (
             "HWE-P1",
-            "select.device_battery_group_mode",
+            "select.device_battery_group_charging_strategy",
             "standby",
             Batteries.Mode.STANDBY,
         ),
         (
             "HWE-P1",
-            "select.device_battery_group_mode",
+            "select.device_battery_group_charging_strategy",
             "to_full",
             Batteries.Mode.TO_FULL,
         ),
-        ("HWE-P1", "select.device_battery_group_mode", "zero", Batteries.Mode.ZERO),
+        (
+            "HWE-P1",
+            "select.device_battery_group_charging_strategy",
+            "zero",
+            Batteries.Mode.ZERO,
+        ),
+        (
+            "HWE-P1-predictive",
+            "select.device_battery_group_charging_strategy",
+            "predictive",
+            Batteries.Mode.PREDICTIVE,
+        ),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_set_option(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -136,15 +145,21 @@ async def test_select_set_option(
     mock_homewizardenergy.batteries.assert_called_with(mode=expected_mode)
 
 
+@pytest.mark.parametrize("device_fixture", ["HWE-P1-predictive"])
+async def test_select_predictive_mode_is_available(hass: HomeAssistant) -> None:
+    """Test that predictive mode is available when supported by the device."""
+    assert (state := hass.states.get("select.device_battery_group_charging_strategy"))
+    assert "predictive" in state.attributes["options"]
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "option"),
     [
-        ("HWE-P1", "select.device_battery_group_mode", "zero"),
-        ("HWE-P1", "select.device_battery_group_mode", "standby"),
-        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "zero"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "standby"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "to_full"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_request_error(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -155,7 +170,7 @@ async def test_select_request_error(
     mock_homewizardenergy.batteries.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
+        match=r"^An error occurred while communicating with your HomeWizard device$",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -171,10 +186,9 @@ async def test_select_request_error(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "option"),
     [
-        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy", "to_full"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unauthorized_error(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -185,7 +199,11 @@ async def test_select_unauthorized_error(
     mock_homewizardenergy.batteries.side_effect = UnauthorizedError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API is unauthorized\. Restore API access by following the instructions in the repair issue$",
+        match=(
+            r"^The local API is unauthorized\. Restore API"
+            r" access by following the instructions in the"
+            r" repair issue$"
+        ),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -203,10 +221,9 @@ async def test_select_unauthorized_error(
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("select.device_battery_group_mode", "combined"),
+        ("select.device_battery_group_charging_strategy", "combined"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_unreachable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -227,10 +244,9 @@ async def test_select_unreachable(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id"),
     [
-        ("HWE-P1", "select.device_battery_group_mode"),
+        ("HWE-P1", "select.device_battery_group_charging_strategy"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_multiple_state_changes(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -275,9 +291,9 @@ async def test_select_multiple_state_changes(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-P1",
+            "HWE-P1-no-batteries",
             [
-                "select.device_battery_group_mode",
+                "select.device_battery_group_charging_strategy",
             ],
         ),
     ],

@@ -1,15 +1,13 @@
 """Config flow for Gogogate2."""
 
-from __future__ import annotations
-
 import dataclasses
 import logging
 import re
-from typing import Any, Self
+from typing import Any, Self, override
 
 from ismartgate.common import AbstractInfoResponse, ApiError
 from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -46,6 +44,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self._ip_address: str | None = None
         self._device_type: str | None = None
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -53,6 +52,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.properties[ATTR_PROPERTIES_ID])
         return await self._async_discovery_handler(discovery_info.host)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -73,10 +73,12 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_type = DEVICE_TYPE_ISMARTGATE
         return await self.async_step_user()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._ip_address == self._ip_address  # noqa: SLF001
+        return other_flow._ip_address == self._ip_address
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -129,21 +131,21 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=self._device_type
                         or user_input.get(CONF_DEVICE, DEVICE_TYPE_GOGOGATE2),
-                    ): vol.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
-                    vol.Required(
+                    ): probatio.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=user_input.get(CONF_IP_ADDRESS, self._ip_address),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
                 }

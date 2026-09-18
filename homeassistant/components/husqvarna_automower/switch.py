@@ -1,7 +1,7 @@
 """Creates a switch entity for the mower."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import MowerModes, StayOutZones, Zone
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.stay_out_zones:
             _stay_out_zones = coordinator.data[mower_id].stay_out_zones
-            if _stay_out_zones is not None:
+            if _stay_out_zones is not None and _stay_out_zones.zones is not None:
                 entities.extend(
                     StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
                     for stay_out_zone_uid in _stay_out_zones.zones
@@ -104,16 +104,19 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         self._attr_unique_id = f"{self.mower_id}_{self._attr_translation_key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.mower_attributes.mower.mode != MowerModes.HOME
 
     @handle_sending_exception
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
     @handle_sending_exception
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
@@ -137,31 +140,44 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         self._attr_unique_id = (
             f"{self.mower_id}_{stay_out_zone_uid}_{self._attr_translation_key}"
         )
+        if TYPE_CHECKING:
+            assert self.stay_out_zone is not None
         self._attr_translation_placeholders = {"stay_out_zone": self.stay_out_zone.name}
 
     @property
-    def stay_out_zones(self) -> StayOutZones:
+    def stay_out_zones(self) -> StayOutZones | None:
         """Return all stay out zones."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.stay_out_zones is not None
         return self.mower_attributes.stay_out_zones
 
     @property
-    def stay_out_zone(self) -> Zone:
+    def stay_out_zone(self) -> Zone | None:
         """Return the specific stay out zone."""
-        return self.stay_out_zones.zones[self.stay_out_zone_uid]
+        if (stay_out_zones := self.stay_out_zones) is None:
+            return None
+        return stay_out_zones.zones.get(self.stay_out_zone_uid)
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        return self.stay_out_zone.enabled
+        if (stay_out_zone := self.stay_out_zone) is None:
+            return None
+        return stay_out_zone.enabled
 
     @property
+    @override
     def available(self) -> bool:
-        """Return True if the device is available and the zones are not `dirty`."""
-        return super().available and not self.stay_out_zones.dirty
+        if not super().available:
+            return False
+        stay_out_zones = self.stay_out_zones
+        if stay_out_zones is None or stay_out_zones.zones is None:
+            return False
+        if self.stay_out_zone_uid not in stay_out_zones.zones:
+            return False
+        return not stay_out_zones.dirty
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
@@ -169,6 +185,7 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         )
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
@@ -190,6 +207,8 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         key = "work_area"
         self._attr_translation_key = _work_area_translation_key(work_area_id, key)
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{key}"
+        if TYPE_CHECKING:
+            assert self.work_area_attributes is not None
         if self.work_area_attributes.name == "my_lawn":
             self._attr_translation_placeholders = {
                 "work_area": self.work_area_attributes.name
@@ -198,11 +217,15 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
             self._attr_name = self.work_area_attributes.name
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        return self.work_area_attributes.enabled
+        if (work_area := self.work_area_attributes) is None:
+            return None
+        return work_area.enabled
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.workarea_settings(
@@ -210,6 +233,7 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         ).enabled(enabled=False)
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.workarea_settings(

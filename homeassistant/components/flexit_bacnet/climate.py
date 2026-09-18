@@ -1,9 +1,11 @@
 """The Flexit Nordic (BACnet) integration."""
 
 import asyncio.exceptions
-from typing import Any
+from typing import Any, override
 
 from flexit_bacnet import (
+    OPERATION_MODE_FIREPLACE,
+    OPERATION_MODE_OFF,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
@@ -12,7 +14,6 @@ from flexit_bacnet.bacnet import DecodingError
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
-    PRESET_BOOST,
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
@@ -28,8 +29,10 @@ from .const import (
     DOMAIN,
     MAX_TEMP,
     MIN_TEMP,
+    OPERATION_TO_PRESET_MODE_MAP,
+    PRESET_FIREPLACE,
+    PRESET_HIGH,
     PRESET_TO_VENTILATION_MODE_MAP,
-    VENTILATION_TO_PRESET_MODE_MAP,
 )
 from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
@@ -51,6 +54,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     """Flexit air handling unit."""
 
     _attr_name = None
+    _attr_translation_key = "flexit_bacnet"
 
     _attr_hvac_modes = [
         HVACMode.OFF,
@@ -60,7 +64,8 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     _attr_preset_modes = [
         PRESET_AWAY,
         PRESET_HOME,
-        PRESET_BOOST,
+        PRESET_HIGH,
+        PRESET_FIREPLACE,
     ]
 
     _attr_supported_features = (
@@ -81,6 +86,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         self._attr_unique_id = coordinator.device.serial_number
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
         if self.device.electric_heater:
@@ -88,11 +94,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         return HVACAction.FAN
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.device.room_temperature
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
@@ -100,6 +108,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
         return self.device.air_temp_setpoint_home
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -110,7 +119,11 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.device.set_air_temp_setpoint_away(temperature)
             else:
                 await self.device.set_air_temp_setpoint_home(temperature)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_temperature",
@@ -122,38 +135,55 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             await self.coordinator.async_refresh()
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return VENTILATION_TO_PRESET_MODE_MAP[self.device.ventilation_mode]
+        return OPERATION_TO_PRESET_MODE_MAP[self.device.operation_mode]
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
-
         try:
-            await self.device.set_ventilation_mode(ventilation_mode)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+            if preset_mode == PRESET_FIREPLACE:
+                # Use trigger method for fireplace mode
+                await self.device.trigger_fireplace_mode()
+            else:
+                # If currently in fireplace mode, toggle it off first
+                # trigger_fireplace_mode() acts as a toggle
+                if self.device.operation_mode == OPERATION_MODE_FIREPLACE:
+                    await self.device.trigger_fireplace_mode()
+
+                # Set the desired ventilation mode
+                ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
+                await self.device.set_ventilation_mode(ventilation_mode)
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode",
                 translation_placeholders={
-                    "preset": str(ventilation_mode),
+                    "preset": preset_mode,
                 },
             ) from exc
         finally:
             await self.coordinator.async_refresh()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self.device.ventilation_mode == VENTILATION_MODE_STOP:
+        if self.device.operation_mode == OPERATION_MODE_OFF:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
@@ -161,7 +191,11 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 await self.device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
                 await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)
-        except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
+        except (
+            asyncio.exceptions.TimeoutError,
+            ConnectionError,
+            DecodingError,
+        ) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_hvac_mode",

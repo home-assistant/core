@@ -2,10 +2,10 @@
 
 import re
 
+import probatio
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.amberelectric.const import DOMAIN, SERVICE_GET_FORECASTS
+from homeassistant.components.amberelectric.const import DOMAIN
 from homeassistant.components.amberelectric.services import ATTR_CHANNEL_TYPE
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ async def test_get_general_forecasts(
     await setup_integration(hass, general_channel_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        "get_forecasts",
         {ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "general"},
         blocking=True,
         return_response=True,
@@ -41,8 +41,8 @@ async def test_get_general_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == 0.09
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == 8.8 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50
@@ -59,7 +59,7 @@ async def test_get_controlled_load_forecasts(
     await setup_integration(hass, general_channel_and_controlled_load_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        "get_forecasts",
         {
             ATTR_CONFIG_ENTRY_ID: GENERAL_AND_CONTROLLED_SITE_ID,
             ATTR_CHANNEL_TYPE: "controlled_load",
@@ -73,8 +73,8 @@ async def test_get_controlled_load_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == 0.04
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == 4.4 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50
@@ -91,7 +91,7 @@ async def test_get_feed_in_forecasts(
     await setup_integration(hass, general_channel_and_feed_in_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        "get_forecasts",
         {
             ATTR_CONFIG_ENTRY_ID: GENERAL_AND_FEED_IN_SITE_ID,
             ATTR_CHANNEL_TYPE: "feed_in",
@@ -105,8 +105,8 @@ async def test_get_feed_in_forecasts(
     assert first["duration"] == 30
     assert first["date"] == "2021-09-21"
     assert first["nem_date"] == "2021-09-21T09:00:00+10:00"
-    assert first["per_kwh"] == -0.01
-    assert first["spot_per_kwh"] == 0.01
+    assert first["per_kwh"] == -1.1 / 100
+    assert first["spot_per_kwh"] == 1.1 / 100
     assert first["start_time"] == "2021-09-21T08:30:00+10:00"
     assert first["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first["renewables"] == 50
@@ -123,14 +123,15 @@ async def test_incorrect_channel_type(
     await setup_integration(hass, general_channel_config_entry)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match=re.escape(
-            "value must be one of ['controlled_load', 'feed_in', 'general'] for dictionary value @ data['channel_type']"
+            "value must be one of ['controlled_load', 'feed_in',"
+            " 'general'] at 'channel_type'"
         ),
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS,
+            "get_forecasts",
             {
                 ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
                 ATTR_CHANNEL_TYPE: "incorrect",
@@ -153,7 +154,7 @@ async def test_unavailable_channel_type(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS,
+            "get_forecasts",
             {
                 ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
                 ATTR_CHANNEL_TYPE: "controlled_load",
@@ -175,10 +176,10 @@ async def test_service_entry_availability(
     await hass.config_entries.async_setup(general_channel_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS,
+            "get_forecasts",
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id,
                 ATTR_CHANNEL_TYPE: "general",
@@ -186,15 +187,16 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_placeholders["entry_title"] == "Mock Title"
 
-    with pytest.raises(
-        ServiceValidationError,
-        match='Config entry "bad-config_id" not found in registry',
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS,
+            "get_forecasts",
             {ATTR_CONFIG_ENTRY_ID: "bad-config_id", ATTR_CHANNEL_TYPE: "general"},
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_placeholders["entry_id"] == "bad-config_id"

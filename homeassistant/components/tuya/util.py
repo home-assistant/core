@@ -1,67 +1,40 @@
 """Utility methods for the Tuya integration."""
 
-from __future__ import annotations
-
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, DPCode, DPType
+from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
 
-_DPTYPE_MAPPING: dict[str, DPType] = {
-    "bitmap": DPType.BITMAP,
-    "bool": DPType.BOOLEAN,
-    "enum": DPType.ENUM,
-    "json": DPType.JSON,
-    "raw": DPType.RAW,
-    "string": DPType.STRING,
-    "value": DPType.INTEGER,
+_TEMP_UNIT_CONVERT_MAPPING = {
+    "c": UnitOfTemperature.CELSIUS,
+    "f": UnitOfTemperature.FAHRENHEIT,
 }
 
 
-def get_dpcode(
-    device: CustomerDevice, dpcodes: str | tuple[str, ...] | None
-) -> str | None:
-    """Get the first matching DPCode from the device or return None."""
-    if dpcodes is None:
-        return None
+def get_temperature_unit(
+    device: CustomerDevice, dpcode_uom: str | None
+) -> UnitOfTemperature | None:
+    """Convert the DPCode unit of measurement to a temperature unit."""
+    if not dpcode_uom:
+        return get_device_temp_unit_convert(device)
 
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    for dpcode in dpcodes:
-        if (
-            dpcode in device.function
-            or dpcode in device.status
-            or dpcode in device.status_range
-        ):
-            return dpcode
-
+    dpcode_uom = dpcode_uom.lower()
+    if dpcode_uom in CELSIUS_ALIASES:
+        return UnitOfTemperature.CELSIUS
+    if dpcode_uom in FAHRENHEIT_ALIASES:
+        return UnitOfTemperature.FAHRENHEIT
     return None
 
 
-def parse_dptype(dptype: str) -> DPType | None:
-    """Parse DPType from device DPCode information."""
-    try:
-        return DPType(dptype)
-    except ValueError:
-        # Sometimes, we get ill-formed DPTypes from the cloud,
-        # this fixes them and maps them to the correct DPType.
-        return _DPTYPE_MAPPING.get(dptype)
-
-
-def remap_value(
-    value: float,
-    from_min: float = 0,
-    from_max: float = 255,
-    to_min: float = 0,
-    to_max: float = 255,
-    reverse: bool = False,
-) -> float:
-    """Remap a value from its current range, to a new range."""
-    if reverse:
-        value = from_max - value + from_min
-    return ((value - from_min) / (from_max - from_min)) * (to_max - to_min) + to_min
+def get_device_temp_unit_convert(device: CustomerDevice) -> UnitOfTemperature | None:
+    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
+    if temp_unit_convert := device.status.get(DPCode.TEMP_UNIT_CONVERT):
+        return _TEMP_UNIT_CONVERT_MAPPING.get(temp_unit_convert)
+    return None
 
 
 class ActionDPCodeNotFoundError(ServiceValidationError):
@@ -88,3 +61,26 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
                 "available": str(sorted(device.function.keys())),
             },
         )
+
+
+def get_device_info(device: CustomerDevice) -> DeviceInfo:
+    """Get device info."""
+    manufacturer = "Tuya"
+    model: str | None = device.product_name
+    model_id: str | None = device.product_id
+
+    if (
+        quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)
+    ) and quirk.manufacturer:
+        # If the manufacturer is not set, we cannot trust the model/model_id
+        manufacturer = quirk.manufacturer
+        model = quirk.model
+        model_id = quirk.model_id
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        manufacturer=manufacturer,
+        name=device.name,
+        model=model,
+        model_id=model_id,
+    )

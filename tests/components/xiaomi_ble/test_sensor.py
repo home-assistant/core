@@ -293,7 +293,8 @@ async def test_xiaomi_hhccjcy01(hass: HomeAssistant) -> None:
 async def test_xiaomi_hhccjcy01_not_connectable(hass: HomeAssistant) -> None:
     """Test HHCCJCY01 when sensors are not connectable.
 
-    This device has multiple advertisements before all sensors are visible but not connectable.
+    This device has multiple advertisements before all sensors are
+    visible but not connectable.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -691,7 +692,7 @@ async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -733,7 +734,7 @@ async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_body_composition_scale_b5dc_weight_non_stabilized"
@@ -843,7 +844,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
@@ -894,7 +895,7 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     mass_non_stabilized_sensor = hass.states.get(
         "sensor.mi_smart_scale_b5dc_weight_non_stabilized"

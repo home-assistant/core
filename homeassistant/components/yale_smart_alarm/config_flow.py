@@ -1,11 +1,9 @@
 """Adds config flow for Yale Smart Alarm integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from yalesmartalarmclient.client import YaleSmartAlarmClient
 from yalesmartalarmclient.exceptions import AuthenticationError
 
@@ -27,23 +25,23 @@ from .const import (
     YALE_BASE_ERRORS,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
     }
 )
 
-DATA_SCHEMA_AUTH = vol.Schema(
+DATA_SCHEMA_AUTH = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_LOCK_CODE_DIGITS,
         ): int,
     }
@@ -66,10 +64,11 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler()
@@ -137,6 +136,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

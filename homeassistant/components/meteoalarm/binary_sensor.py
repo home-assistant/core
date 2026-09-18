@@ -1,19 +1,17 @@
 """Binary Sensor for MeteoAlarm.eu."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 from meteoalertapi import Meteoalert
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by MeteoAlarm"
 
-CONF_COUNTRY = "country"
-CONF_LANGUAGE = "language"
 CONF_PROVINCE = "province"
 
 DEFAULT_NAME = "meteoalarm"
@@ -34,10 +30,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COUNTRY): cv.string,
-        vol.Required(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_LANGUAGE, default="en"): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_COUNTRY): cv.string,
+        probatio.Required(CONF_PROVINCE): cv.string,
+        probatio.Optional(CONF_LANGUAGE, default="en"): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -84,5 +80,12 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
             expiration_date = dt_util.parse_datetime(alert["expires"])
 
             if expiration_date is not None and expiration_date > dt_util.utcnow():
-                self._attr_extra_state_attributes = alert
+                self._attr_extra_state_attributes = {
+                    key: (
+                        value.encode("utf-8", errors="replace").decode("utf-8")
+                        if isinstance(value, str)
+                        else value
+                    )
+                    for key, value in alert.items()
+                }
                 self._attr_is_on = True

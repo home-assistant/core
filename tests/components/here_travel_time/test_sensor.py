@@ -64,7 +64,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_API_KEY,
     CONF_MODE,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     UnitOfLength,
     UnitOfTime,
@@ -135,6 +134,7 @@ async def test_sensor(
     hass.set_state(CoreState.not_running)
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -143,7 +143,6 @@ async def test_sensor(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: mode,
-            CONF_NAME: "test",
         },
         options={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
@@ -200,6 +199,7 @@ async def test_circular_ref(
     hass.states.async_set("test.second", "test.first")
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_ENTITY_ID: "test.first",
@@ -207,7 +207,6 @@ async def test_circular_ref(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -229,6 +228,7 @@ async def test_public_transport(hass: HomeAssistant) -> None:
     hass.set_state(CoreState.not_running)
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -237,7 +237,6 @@ async def test_public_transport(hass: HomeAssistant) -> None:
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_PUBLIC,
-            CONF_NAME: "test",
         },
         options={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
@@ -255,9 +254,10 @@ async def test_public_transport(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.test_duration").attributes.get(ATTR_ATTRIBUTION)
-        == "http://creativecommons.org/licenses/by/3.0/it/,Some line names used in this product or service were edited to align with official transportation maps."
+    assert hass.states.get("sensor.test_duration").attributes.get(ATTR_ATTRIBUTION) == (
+        "http://creativecommons.org/licenses/by/3.0/it/,"
+        "Some line names used in this product or service were"
+        " edited to align with official transportation maps."
     )
     assert hass.states.get("sensor.test_distance").state == "1.883"
 
@@ -267,6 +267,7 @@ async def test_no_attribution_response(hass: HomeAssistant) -> None:
     """Test that no_attribution is handled."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -275,7 +276,6 @@ async def test_no_attribution_response(hass: HomeAssistant) -> None:
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_PUBLIC,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -318,13 +318,13 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> Non
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_ENTITY_ID: "zone.origin",
             CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -359,6 +359,7 @@ async def test_destination_entity_not_found(
     """Test that a not existing destination_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -366,7 +367,6 @@ async def test_destination_entity_not_found(
             CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -389,6 +389,7 @@ async def test_origin_entity_not_found(
     """Test that a not existing origin_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_ENTITY_ID: "device_tracker.test",
@@ -396,7 +397,6 @@ async def test_origin_entity_not_found(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -423,6 +423,7 @@ async def test_invalid_destination_entity_state(
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -430,7 +431,6 @@ async def test_invalid_destination_entity_state(
             CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -459,6 +459,7 @@ async def test_invalid_origin_entity_state(
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_ENTITY_ID: "device_tracker.test",
@@ -466,7 +467,6 @@ async def test_invalid_origin_entity_state(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,
@@ -496,6 +496,7 @@ async def test_route_not_found(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
+            title="test",
             unique_id="0123456789",
             data={
                 CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -504,7 +505,6 @@ async def test_route_not_found(
                 CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_TRUCK,
-                CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
             version=HERETravelTimeConfigFlow.VERSION,
@@ -621,6 +621,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     # create and add entry
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id=DOMAIN,
         data=DEFAULT_CONFIG,
         options=DEFAULT_OPTIONS,
@@ -683,6 +684,7 @@ async def test_transit_errors(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
+            title="test",
             unique_id="0123456789",
             data={
                 CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -691,7 +693,6 @@ async def test_transit_errors(
                 CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_PUBLIC,
-                CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
             version=HERETravelTimeConfigFlow.VERSION,
@@ -719,6 +720,7 @@ async def test_routing_rate_limit(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
+            title="test",
             unique_id="0123456789",
             data=DEFAULT_CONFIG,
             options=DEFAULT_OPTIONS,
@@ -770,6 +772,7 @@ async def test_transit_rate_limit(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
+            title="test",
             unique_id="0123456789",
             data={
                 CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -778,7 +781,6 @@ async def test_transit_rate_limit(
                 CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_PUBLIC,
-                CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
             version=HERETravelTimeConfigFlow.VERSION,
@@ -824,6 +826,7 @@ async def test_multiple_sections(
     hass.set_state(CoreState.not_running)
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="test",
         unique_id="0123456789",
         data={
             CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
@@ -832,7 +835,6 @@ async def test_multiple_sections(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_BICYCLE,
-            CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
         version=HERETravelTimeConfigFlow.VERSION,

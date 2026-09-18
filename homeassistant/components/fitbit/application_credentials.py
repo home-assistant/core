@@ -7,7 +7,7 @@ details on Fitbit authorization.
 import base64
 from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 
@@ -33,6 +33,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
     Authorization header.
     """
 
+    @override
     async def async_resolve_external_data(self, external_data: dict[str, Any]) -> dict:
         """Resolve the authorization code to tokens."""
         return await self._post(
@@ -43,6 +44,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
             }
         )
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         return await self._post(

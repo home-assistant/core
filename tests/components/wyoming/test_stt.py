@@ -1,11 +1,11 @@
 """Test stt."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.error import Error
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
@@ -69,6 +69,43 @@ async def test_streaming_audio_connection_lost(
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
+
+
+@pytest.mark.usefixtures("init_wyoming_stt")
+@pytest.mark.parametrize(
+    ("error_code", "expected_message"),
+    [
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
+        pytest.param(
+            "ModelNotFoundError",
+            "Error from Wyoming service: Boom! (code: ModelNotFoundError)",
+            id="with_code",
+        ),
+    ],
+)
+async def test_streaming_audio_error_event(
+    hass: HomeAssistant,
+    metadata: stt.SpeechMetadata,
+    caplog: pytest.LogCaptureFixture,
+    error_code: str | None,
+    expected_message: str,
+) -> None:
+    """Test that an error event from the service is reported."""
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
+
+    async def audio_stream():
+        yield "chunk1"
+
+    with patch(
+        "homeassistant.components.wyoming.stt.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
+    ):
+        result = await entity.async_process_audio_stream(metadata, audio_stream())
+
+    assert result.result == stt.SpeechResultState.ERROR
+    assert result.text is None
+    assert expected_message in caplog.text
 
 
 async def test_streaming_audio_oserror(

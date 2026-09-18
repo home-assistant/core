@@ -1,12 +1,10 @@
 """Websocket API for Lovelace."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -14,7 +12,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
 
-from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
+from .const import (
+    CONF_RESOURCE_MODE,
+    CONF_URL_PATH,
+    DOMAIN,
+    LOVELACE_DATA,
+    ConfigNotFound,
+)
 from .dashboard import LovelaceConfig
 
 if TYPE_CHECKING:
@@ -38,7 +42,16 @@ def _handle_errors[_R](
         msg: dict[str, Any],
     ) -> None:
         url_path = msg.get(CONF_URL_PATH)
-        config = hass.data[LOVELACE_DATA].dashboards.get(url_path)
+
+        # When url_path is None, prefer "lovelace" dashboard
+        # if it exists (for YAML mode)
+        # Otherwise fall back to dashboards[None] (storage mode default)
+        if url_path is None:
+            config = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[
+                LOVELACE_DATA
+            ].dashboards.get(None)
+        else:
+            config = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
         if config is None:
             connection.send_error(
@@ -100,11 +113,25 @@ async def websocket_lovelace_resources_impl(
     connection.send_result(msg["id"], resources.async_items())
 
 
+@websocket_api.websocket_command({"type": "lovelace/info"})
+@websocket_api.async_response
+async def websocket_lovelace_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send Lovelace UI info over WebSocket connection."""
+    connection.send_result(
+        msg["id"],
+        {CONF_RESOURCE_MODE: hass.data[LOVELACE_DATA].resource_mode},
+    )
+
+
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config",
-        vol.Optional("force", default=False): bool,
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        probatio.Optional("force", default=False): bool,
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response
@@ -123,8 +150,8 @@ async def websocket_lovelace_config(
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/save",
-        "config": vol.Any(str, dict),
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        "config": probatio.Any(str, dict),
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response
@@ -143,7 +170,7 @@ async def websocket_lovelace_save_config(
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/delete",
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response

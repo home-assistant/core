@@ -1,11 +1,6 @@
 """Conversation support for Home Assistant Cloud."""
 
-from __future__ import annotations
-
-from typing import Literal
-
-from hass_nabucasa import NabuCasaBaseError
-from hass_nabucasa.llm import LLMError
+from typing import Literal, override
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -24,19 +19,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Assistant Cloud conversation entity."""
-    if not (cloud := hass.data[DATA_CLOUD]).is_logged_in:
-        return
-    try:
-        await cloud.llm.async_ensure_token()
-    except (LLMError, NabuCasaBaseError):
-        return
-
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudConversationEntity(cloud, config_entry)])
 
 
 class CloudConversationEntity(
-    conversation.ConversationEntity,
     BaseCloudLLMEntity,
+    conversation.ConversationEntity,
 ):
     """Home Assistant Cloud conversation agent."""
 
@@ -47,15 +36,18 @@ class CloudConversationEntity(
     _attr_supported_features = conversation.ConversationEntityFeature.CONTROL
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return self._cloud.is_logged_in and self._cloud.valid_subscription
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @override
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,

@@ -1,10 +1,8 @@
 """Support for TPLink number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Final, cast
+from typing import Final, cast, override
 
 from kasa import Device, Feature
 
@@ -133,11 +131,13 @@ class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
         self._attr_native_max_value = self._feature.maximum_value
 
     @async_refresh_after
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set feature value."""
         await self._feature.set_value(int(value))
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_native_value = cast(float | None, self._feature.value)

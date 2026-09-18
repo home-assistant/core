@@ -1,9 +1,7 @@
 """Constants for calendar components."""
 
-from __future__ import annotations
-
-from enum import IntFlag
-from typing import TYPE_CHECKING
+from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -12,10 +10,19 @@ if TYPE_CHECKING:
 
     from . import CalendarEntity
 
-DOMAIN = "calendar"
+DOMAIN: Final = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
-CONF_EVENT = "event"
+
+class CalendarEntityStateAttribute(StrEnum):
+    """State attributes for calendar entities."""
+
+    MESSAGE = "message"
+    ALL_DAY = "all_day"
+    START_TIME = "start_time"
+    END_TIME = "end_time"
+    LOCATION = "location"
+    DESCRIPTION = "description"
 
 
 class CalendarEntityFeature(IntFlag):
@@ -24,6 +31,22 @@ class CalendarEntityFeature(IntFlag):
     CREATE_EVENT = 1
     DELETE_EVENT = 2
     UPDATE_EVENT = 4
+
+
+class CalendarEventStatus(StrEnum):
+    """Status of a calendar event.
+
+    A subset of the statuses defined by the rfc5545 STATUS property: a calendar
+    entity does not return cancelled events, so that value is not represented
+    here.
+
+    An event without a status is not the same as a confirmed event: it means
+    the calendar did not report one, either because the source does not
+    support it or because the integration does not read it yet.
+    """
+
+    CONFIRMED = "confirmed"
+    TENTATIVE = "tentative"
 
 
 # rfc5545 fields
@@ -36,6 +59,7 @@ EVENT_LOCATION = "location"
 EVENT_RECURRENCE_ID = "recurrence_id"
 EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
+EVENT_STATUS = "status"
 
 # Service call fields
 EVENT_START_DATE = "start_date"
@@ -62,4 +86,5 @@ LIST_EVENT_FIELDS = {
     EVENT_SUMMARY,
     EVENT_DESCRIPTION,
     EVENT_LOCATION,
+    EVENT_STATUS,
 }

@@ -1,7 +1,7 @@
 {
   "AirDays": ["string"],
   "AirTime": "string",
-  "BackdropImageTags": [],
+  "BackdropImageTags": ["c22fd826-17fc-44f4-9b04-1eb3e8fb9173"],
   "ChannelId": "string",
   "CommunityRating": 0,
   "EndDate": "string",
@@ -11,10 +11,12 @@
   "IsFolder": true,
   "LocationType": "FileSystem",
   "Name": "SERIES",
+  "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+  "ParentBackdropImageTags": ["string"],
   "PremiereDate": "string",
   "ProductionYear": 0,
   "RunTimeTicks": 0,
-  "ServerId": "string",
+  "ServerId": "SERVER-UUID",
   "Status": "string",
   "Type": "Series",
   "UserData": {

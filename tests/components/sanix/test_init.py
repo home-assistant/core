@@ -1,7 +1,5 @@
 """Test the Sanix init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from homeassistant.config_entries import ConfigEntryState

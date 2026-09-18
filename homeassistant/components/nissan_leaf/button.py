@@ -1,8 +1,7 @@
 """Button to start charging the Nissan Leaf."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -39,15 +38,18 @@ class LeafChargingButton(LeafEntity, ButtonEntity):
     _attr_icon = "mdi:power"
 
     @property
+    @override
     def name(self) -> str:
         """Sensor name."""
         return f"Start {self.car.leaf.nickname} Charging"
 
     @property
+    @override
     def available(self) -> bool:
         """Button availability."""
         return self.car.data[DATA_CHARGING] is not None
 
+    @override
     async def async_press(self) -> None:
         """Start charging."""
         await self.car.async_start_charging()

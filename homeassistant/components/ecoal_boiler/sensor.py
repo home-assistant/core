@@ -1,7 +1,5 @@
 """Allows reading temperatures from ecoal/esterownik.pl controller."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant

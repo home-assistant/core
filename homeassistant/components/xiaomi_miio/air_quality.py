@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import Any, override
 
 from miio import (
     AirQualityMonitor,
@@ -81,11 +82,13 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._air_quality_index
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
@@ -96,6 +99,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._carbon_dioxide_equivalent
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
@@ -116,7 +120,8 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._humidity
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data = {}
 
@@ -130,6 +135,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
 class AirMonitorS1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
+    @override
     async def async_update(self):
         """Fetch state from the miio device."""
         try:
@@ -150,6 +156,7 @@ class AirMonitorS1(AirMonitorB1):
 class AirMonitorV1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
+    @override
     async def async_update(self):
         """Fetch state from the miio device."""
         try:
@@ -163,6 +170,7 @@ class AirMonitorV1(AirMonitorB1):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return None
@@ -201,16 +209,19 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
 
     @property
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10

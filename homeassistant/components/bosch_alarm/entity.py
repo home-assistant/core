@@ -1,10 +1,12 @@
 """Support for Bosch Alarm Panel History as a sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 
 from homeassistant.components.sensor import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
@@ -31,21 +33,24 @@ class BoschAlarmEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.panel.connection_status()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         self.panel.connection_status_observer.attach(self.schedule_update_ha_state)
         if self._observe_faults:
             self.panel.faults_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
         if self._observe_faults:
-            self.panel.faults_observer.attach(self.schedule_update_ha_state)
+            self.panel.faults_observer.detach(self.schedule_update_ha_state)
 
 
 class BoschAlarmAreaEntity(BoschAlarmEntity):
@@ -53,9 +58,11 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         panel: Panel,
         area_id: int,
         unique_id: str,
+        config_entry_id: str,
         observe_alarms: bool,
         observe_ready: bool,
         observe_status: bool,
@@ -72,9 +79,12 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._area_unique_id)},
             name=self._area.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
@@ -85,9 +95,10 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         if self._observe_status:
             self._area.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         if self._observe_alarms:
             self._area.alarm_observer.detach(self.schedule_update_ha_state)
         if self._observe_ready:
@@ -99,7 +110,14 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
 class BoschAlarmPointEntity(BoschAlarmEntity):
     """A base entity for point related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, point_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        point_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._point_id = point_id
@@ -109,24 +127,35 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._point_unique_id)},
             name=self._point.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._point.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._point.status_observer.detach(self.schedule_update_ha_state)
 
 
 class BoschAlarmDoorEntity(BoschAlarmEntity):
     """A base entity for area related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        door_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._door_id = door_id
@@ -136,24 +165,35 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._door_unique_id)},
             name=self._door.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._door.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._door.status_observer.detach(self.schedule_update_ha_state)
 
 
 class BoschAlarmOutputEntity(BoschAlarmEntity):
     """A base entity for area related entities within a bosch alarm panel."""
 
-    def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        output_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Set up a output related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
         self._output_id = output_id
@@ -163,15 +203,19 @@ class BoschAlarmOutputEntity(BoschAlarmEntity):
             identifiers={(DOMAIN, self._output_unique_id)},
             name=self._output.name,
             manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, unique_id), config_entry_id=config_entry_id
+            ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._output.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._output.status_observer.detach(self.schedule_update_ha_state)

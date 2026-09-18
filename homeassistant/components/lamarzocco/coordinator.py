@@ -1,17 +1,19 @@
 """Coordinator for La Marzocco API."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from asyncio import Task
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
-from pylamarzocco import LaMarzoccoCloudClient, LaMarzoccoMachine
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco import LaMarzoccoMachine
+from pylamarzocco.exceptions import (
+    AuthFail,
+    BluetoothConnectionFailed,
+    RequestNotSuccessful,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -19,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_OFFLINE_MODE, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=8)
@@ -36,6 +38,7 @@ class LaMarzoccoRuntimeData:
     settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
     schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
     statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
+    bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
@@ -44,27 +47,32 @@ type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Base class for La Marzocco coordinators."""
 
-    _default_update_interval = SCAN_INTERVAL
+    _default_update_interval: timedelta | None = SCAN_INTERVAL
+    _ignore_offline_mode = False
     config_entry: LaMarzoccoConfigEntry
-    _websocket_task: Task | None = None
+    update_success = False
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
-        cloud_client: LaMarzoccoCloudClient | None = None,
     ) -> None:
         """Initialize coordinator."""
+        update_interval = self._default_update_interval
+        if not self._ignore_offline_mode and entry.options.get(
+            CONF_OFFLINE_MODE, False
+        ):
+            update_interval = None
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=self._default_update_interval,
+            update_interval=update_interval,
         )
         self.device = device
-        self.cloud_client = cloud_client
+        self._websocket_task: Task | None = None
 
     @property
     def websocket_terminated(self) -> bool:
@@ -81,19 +89,35 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             await func()
         except AuthFail as ex:
             _LOGGER.debug("Authentication failed", exc_info=True)
+            self.update_success = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
+            self.update_success = False
+            # if no bluetooth coordinator, this is a fatal error
+            # otherwise, bluetooth may still work
+            if not self.device.bluetooth_client_available:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="api_error"
+                ) from ex
+        except BluetoothConnectionFailed as err:
+            self.update_success = False
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="api_error"
-            ) from ex
+                translation_domain=DOMAIN,
+                translation_key="bluetooth_connection_failed",
+            ) from err
+        else:
+            self.update_success = True
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         await self.__handle_internal_update(self._internal_async_setup)
 
+    @override
     async def _async_update_data(self) -> None:
         """Do the data update."""
         await self.__handle_internal_update(self._internal_async_update_data)
@@ -109,21 +133,22 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    cloud_client: LaMarzoccoCloudClient
-
+    @override
     async def _internal_async_setup(self) -> None:
         """Set up the coordinator."""
-        await self.cloud_client.async_get_access_token()
+        await self.device.ensure_token_valid()
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
         # ensure token stays valid; does nothing if token is still valid
-        await self.cloud_client.async_get_access_token()
+        await self.device.ensure_token_valid()
 
-        # Only skip websocket reconnection if it's currently connected and the task is still running
+        # Only skip websocket reconnection if it's currently
+        # connected and the task is still running
         if self.device.websocket.connected and not self.websocket_terminated:
             return
 
@@ -167,6 +192,7 @@ class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = SETTINGS_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_settings()
@@ -178,6 +204,7 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = SCHEDULE_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_schedule()
@@ -189,7 +216,28 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     _default_update_interval = STATISTICS_UPDATE_INTERVAL
 
+    @override
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_coffee_and_flush_counter()
         _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())
+
+
+class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Class to handle fetching data from the La Marzocco Bluetooth API centrally."""
+
+    _ignore_offline_mode = True
+
+    @override
+    async def _internal_async_setup(self) -> None:
+        """Initial setup for Bluetooth coordinator."""
+        await self.device.get_model_info_from_bluetooth()
+
+    @override
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from Bluetooth endpoint."""
+        # if the websocket is connected and the machine is connected to the cloud
+        # skip bluetooth update, because we get push updates
+        if self.device.websocket.connected and self.device.dashboard.connected:
+            return
+        await self.device.get_dashboard_from_bluetooth()

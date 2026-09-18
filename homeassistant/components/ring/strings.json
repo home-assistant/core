@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -73,7 +71,14 @@
     },
     "event": {
       "ding": {
-        "name": "Ding"
+        "name": "Ding",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
+            }
+          }
+        }
       },
       "intercom_unlock": {
         "name": "Intercom unlock"
@@ -150,6 +155,9 @@
     },
     "api_timeout": {
       "message": "Timeout communicating with Ring API"
+    },
+    "no_subscription": {
+      "message": "Ring Protect subscription required for snapshots"
     },
     "sdp_m_line_index_required": {
       "message": "Error negotiating stream for {device}"

@@ -1,12 +1,10 @@
 """Config flow to configure the PVOutput integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -32,8 +30,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    imported_name: str | None = None
-
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -56,7 +53,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(user_input[CONF_SYSTEM_ID]))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self.imported_name or str(user_input[CONF_SYSTEM_ID]),
+                    title=str(user_input[CONF_SYSTEM_ID]),
                     data={
                         CONF_SYSTEM_ID: user_input[CONF_SYSTEM_ID],
                         CONF_API_KEY: user_input[CONF_API_KEY],
@@ -70,14 +67,53 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_SYSTEM_ID, default=user_input.get(CONF_SYSTEM_ID, "")
                     ): int,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a PVOutput entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                await validate_input(
+                    self.hass,
+                    api_key=user_input[CONF_API_KEY],
+                    system_id=reconfigure_entry.data[CONF_SYSTEM_ID],
+                )
+            except PVOutputAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except PVOutputError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={
+                "account_url": "https://pvoutput.org/account.jsp"
+            },
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -117,6 +153,6 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "account_url": "https://pvoutput.org/account.jsp"
             },
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

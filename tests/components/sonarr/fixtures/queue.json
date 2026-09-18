@@ -17,15 +17,18 @@
         "images": [
           {
             "coverType": "fanart",
-            "url": "https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg"
+            "url": "/MediaCover/17/fanart.jpg?lastWrite=637217160281262470",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg"
           },
           {
             "coverType": "banner",
-            "url": "https://artworks.thetvdb.com/banners/graphical/77754-g.jpg"
+            "url": "/MediaCover/17/banner.jpg?lastWrite=637217160301222320",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/graphical/77754-g.jpg"
           },
           {
             "coverType": "poster",
-            "url": "https://artworks.thetvdb.com/banners/posters/77754-4.jpg"
+            "url": "/MediaCover/17/poster.jpg?lastWrite=637217160322182160",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/posters/77754-4.jpg"
           }
         ],
         "seasons": [

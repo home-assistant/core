@@ -71,21 +71,23 @@ def get_train_route(
     dest_platform: str = "2",
     origin_station: str = "3500",
     destination_station: str = "3700",
+    departure_delay: int | None = None,
 ) -> TrainRoute:
     """Build a TrainRoute of the israelrail API."""
-    return TrainRoute(
-        [
-            {
-                "orignStation": origin_station,
-                "destinationStation": destination_station,
-                "departureTime": departure_time,
-                "arrivalTime": arrival_time,
-                "originPlatform": origin_platform,
-                "destPlatform": dest_platform,
-                "trainNumber": train_number,
-            }
+    train_data: dict = {
+        "orignStation": origin_station,
+        "destinationStation": destination_station,
+        "departureTime": departure_time,
+        "arrivalTime": arrival_time,
+        "originPlatform": origin_platform,
+        "destPlatform": dest_platform,
+        "trainNumber": train_number,
+    }
+    if departure_delay is not None:
+        train_data["etaDiffTimes"] = [
+            {"stationId": origin_station, "difMin": departure_delay}
         ]
-    )
+    return TrainRoute([train_data])
 
 
 TRAINS = [

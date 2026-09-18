@@ -1,30 +1,29 @@
 """Support for Phone Modem button."""
 
-from __future__ import annotations
+from typing import override
 
 from phone_modem import PhoneModem
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_KEY_API, DOMAIN
+from . import ModemCallerIdConfigEntry
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ModemCallerIdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Modem Caller ID sensor."""
-    api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
         [
             PhoneModemButton(
-                api,
+                entry.runtime_data,
                 entry.data[CONF_DEVICE],
                 entry.entry_id,
             )
@@ -45,6 +44,7 @@ class PhoneModemButton(ButtonEntity):
         self._attr_unique_id = server_unique_id
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, server_unique_id)})
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.api.reject_call(self.device)

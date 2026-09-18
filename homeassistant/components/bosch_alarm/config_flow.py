@@ -1,15 +1,13 @@
 """Config flow for Bosch Alarm integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
 import ssl
-from typing import Any, Self
+from typing import Any, Self, override
 
 from bosch_alarm_mode2 import Panel
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -35,33 +33,33 @@ from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=7700): cv.positive_int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=7700): cv.positive_int,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA_SOLUTION = vol.Schema(
+STEP_AUTH_DATA_SCHEMA_SOLUTION = probatio.Schema(
     {
-        vol.Required(CONF_USER_CODE): str,
+        probatio.Required(CONF_USER_CODE): str,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA_AMAX = vol.Schema(
+STEP_AUTH_DATA_SCHEMA_AMAX = probatio.Schema(
     {
-        vol.Required(CONF_INSTALLER_CODE): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_INSTALLER_CODE): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
+STEP_AUTH_DATA_SCHEMA_BG = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_INIT_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
+STEP_INIT_DATA_SCHEMA = probatio.Schema({probatio.Optional(CONF_CODE): str})
 
 
 async def try_connect(
@@ -96,10 +94,12 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.mac: str | None = None
         self.host: str | None = None
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return self.mac == other_flow.mac or self.host == other_flow.host
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -143,6 +143,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

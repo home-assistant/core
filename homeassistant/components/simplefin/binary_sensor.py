@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from simplefin4py import Account
 
@@ -63,6 +64,7 @@ class SimpleFinBinarySensor(SimpleFinEntity, BinarySensorEntity):
     entity_description: SimpleFinBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Use this to get the correct value."""
         return self.entity_description.value_fn(self.account_data)

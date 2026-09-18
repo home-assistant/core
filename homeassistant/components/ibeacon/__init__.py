@@ -1,11 +1,9 @@
 """The iBeacon tracker integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import IBeaconCoordinator
@@ -29,7 +27,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: IBeaconConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: IBeaconConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove iBeacon config entry from a device."""
     coordinator = config_entry.runtime_data

@@ -1,7 +1,5 @@
 """Describe Shelly logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
@@ -43,7 +41,10 @@ def async_describe_events(
             rpc_coordinator = get_rpc_coordinator_by_device_id(hass, device_id)
             if rpc_coordinator and rpc_coordinator.device.initialized:
                 key = f"input:{channel - 1}"
-                input_name = f"{rpc_coordinator.device.name} {get_rpc_channel_name(rpc_coordinator.device, key)}"
+                input_name = (
+                    f"{rpc_coordinator.device.name}"
+                    f" {get_rpc_channel_name(rpc_coordinator.device, key)}"
+                )
 
         elif click_type in BLOCK_INPUTS_EVENTS_TYPES:
             block_coordinator = get_block_coordinator_by_device_id(hass, device_id)

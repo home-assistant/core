@@ -1,25 +1,24 @@
 """Config flow for Netgear LTE integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiohttp.cookiejar import CookieJar
 from eternalegypt import Error, Modem
 from eternalegypt.eternalegypt import Information
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
+from .const import DEFAULT_HOST, DOMAIN, MANUFACTURER
 
 
 class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Netgear LTE."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,10 +44,10 @@ class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
                 user_input or {CONF_HOST: DEFAULT_HOST},
@@ -72,9 +71,6 @@ class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await modem.information()
         except Error as ex:
             raise InputValidationError("cannot_connect") from ex
-        except Exception as ex:
-            LOGGER.exception("Unexpected exception")
-            raise InputValidationError("unknown") from ex
         await modem.logout()
         return info
 

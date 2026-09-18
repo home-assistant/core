@@ -1,12 +1,11 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
 
+import probatio
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import (
     HW_BUTTON_PRESSED,
@@ -14,10 +13,10 @@ from pyhomeworks.pyhomeworks import (
     HW_LOGIN_INCORRECT,
     Homeworks,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_COMMAND,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -41,8 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
 
-CONF_COMMAND = "command"
-
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
@@ -50,10 +47,10 @@ KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONTROLLER_ID): str,
-        vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [str]),
+        probatio.Required(CONF_CONTROLLER_ID): str,
+        probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [str]),
     }
 )
 

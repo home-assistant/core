@@ -1,9 +1,8 @@
 """Base entity class for DROP entities."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,11 +43,12 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
             identifiers={(DOMAIN, unique_id)},
         )
         if entry_data[CONF_DEVICE_TYPE] != DEV_HUB:
-            self._attr_device_info.update(
-                {
-                    "via_device": (
-                        DOMAIN,
-                        entry_data[CONF_DEVICE_OWNER_ID],
-                    )
-                }
+            # The owner hub lives in a separate config entry created independently
+            # by MQTT discovery, so it may not exist yet. Link best-effort when
+            # present; an identifier can match devices from several config entries
+            # and we can't tell which is the owner hub, so link to the first.
+            via_devices = dr.async_get(coordinator.hass).async_get_devices(
+                identifiers={(DOMAIN, entry_data[CONF_DEVICE_OWNER_ID])}
             )
+            if via_devices:
+                self._attr_device_info["via_device_id"] = via_devices[0].id

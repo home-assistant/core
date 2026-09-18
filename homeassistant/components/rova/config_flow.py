@@ -1,10 +1,10 @@
 """Config flow for the Rova platform."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -16,6 +16,7 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -36,7 +37,7 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await self.hass.async_add_executor_job(api.is_rova_area):
                     errors = {"base": "invalid_rova_area"}
-            except (ConnectTimeout, HTTPError):
+            except ConnectTimeout, HTTPError:
                 errors = {"base": "cannot_connect"}
 
             if not errors:
@@ -48,11 +49,11 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ZIP_CODE): str,
-                        vol.Required(CONF_HOUSE_NUMBER): str,
-                        vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): str,
+                        probatio.Required(CONF_ZIP_CODE): str,
+                        probatio.Required(CONF_HOUSE_NUMBER): str,
+                        probatio.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): str,
                     }
                 ),
                 user_input,

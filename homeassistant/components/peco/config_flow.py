@@ -1,9 +1,7 @@
 """Config flow for PECO Outage Counter integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from peco import (
     HttpError,
@@ -11,17 +9,17 @@ from peco import (
     PecoOutageApi,
     UnresponsiveMeterError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_COUNTY): vol.In(COUNTY_LIST),
-        vol.Optional(CONF_PHONE_NUMBER): cv.string,
+        probatio.Required(CONF_COUNTY): probatio.In(COUNTY_LIST),
+        probatio.Optional(CONF_PHONE_NUMBER): cv.string,
     }
 )
 
@@ -52,6 +50,7 @@ class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
         except HttpError:
             self.meter_error = {"phone_number": "http_error", "type": "error"}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -103,6 +102,9 @@ class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=self.meter_error["phone_number"])
 
         return self.async_create_entry(
-            title=f"{self.meter_data[CONF_COUNTY].capitalize()} - {self.meter_data[CONF_PHONE_NUMBER]}",
+            title=(
+                f"{self.meter_data[CONF_COUNTY].capitalize()}"
+                f" - {self.meter_data[CONF_PHONE_NUMBER]}"
+            ),
             data=self.meter_data,
         )

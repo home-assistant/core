@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,7 +15,7 @@
         },
         "data_description": {
           "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security.",
-          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the add-on."
+          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the SABnzbd app for Home Assistant."
         }
       }
     }

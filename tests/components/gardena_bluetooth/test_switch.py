@@ -20,15 +20,17 @@ from . import setup_entry
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.fixture
 def mock_switch_chars(mock_read_char_raw):
     """Mock data on device."""
-    mock_read_char_raw[Valve.state.uuid] = b"\x00"
-    mock_read_char_raw[Valve.remaining_open_time.uuid] = (
+    mock_read_char_raw[Valve.state.unique_id] = b"\x00"
+    mock_read_char_raw[Valve.remaining_open_time.unique_id] = (
         Valve.remaining_open_time.encode(0)
     )
-    mock_read_char_raw[Valve.manual_watering_time.uuid] = (
+    mock_read_char_raw[Valve.manual_watering_time.unique_id] = (
         Valve.manual_watering_time.encode(1000)
     )
     return mock_read_char_raw
@@ -48,7 +50,7 @@ async def test_setup(
     await setup_entry(hass, mock_entry, [Platform.SWITCH])
     assert hass.states.get(entity_id) == snapshot
 
-    mock_switch_chars[Valve.state.uuid] = b"\x01"
+    mock_switch_chars[Valve.state.unique_id] = b"\x01"
     await scan_step()
     assert hass.states.get(entity_id) == snapshot
 
@@ -81,5 +83,33 @@ async def test_switching(
 
     assert mock_client.write_char.mock_calls == [
         call(Valve.remaining_open_time, 1000),
+        call(Valve.remaining_open_time, 0),
+    ]
+
+
+async def test_switching_zero_watering_time(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+    mock_switch_chars: dict[str, bytes],
+) -> None:
+    """Test a manual watering time of zero is a valid duration, not a missing one."""
+
+    mock_switch_chars[Valve.manual_watering_time.unique_id] = (
+        Valve.manual_watering_time.encode(0)
+    )
+
+    entity_id = "switch.mock_title_open"
+    await setup_entry(hass, mock_entry, [Platform.SWITCH])
+    assert hass.states.get(entity_id)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_client.write_char.mock_calls == [
         call(Valve.remaining_open_time, 0),
     ]

@@ -2,13 +2,13 @@
 # name: test_setup_config_entry
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': 'single',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'single',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'single',
         'double',
         'hold',
       ]),
-      'friendly_name': 'template_event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'template_event',
     }),
     'context': <ANY>,
     'entity_id': 'event.template_event',

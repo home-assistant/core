@@ -1,9 +1,7 @@
 """Support for Lutron Homeworks lights."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED, Homeworks
 
@@ -65,6 +63,7 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         self._level = 0
         self._prev_level = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         signal = f"homeworks_entity_{self._controller_id}_{self._addr}"
@@ -74,6 +73,7 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         )
         self._controller.request_dimmer_level(self._addr)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -84,11 +84,13 @@ class HomeworksLight(HomeworksEntity, LightEntity):
             new_level = self._prev_level
         self._set_brightness(new_level)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._set_brightness(0)
 
     @property
+    @override
     def brightness(self) -> int:
         """Control the brightness."""
         return self._level
@@ -100,6 +102,7 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Is the light on/off."""
         return self._level != 0

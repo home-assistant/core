@@ -1,7 +1,7 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
 from collections.abc import Generator
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -95,11 +95,11 @@ def mock_get_device(
 
     water_quality = WaterQuality(
         uv=UV(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(time.time()),
             installed=True,
         ),
         filter=Filter(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(time.time()),
             milli_litters_passed=1000,
             installed=True,
         ),

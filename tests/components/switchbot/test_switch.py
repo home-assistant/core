@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switch import (
@@ -18,9 +18,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
+    STANDING_FAN_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
 )
@@ -294,3 +299,159 @@ async def test_relay_switch_control_with_exception(
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    (
+        "service_info",
+        "sensor_type",
+        "entity_id",
+        "turn_on_method",
+        "turn_off_method",
+    ),
+    [
+        (
+            AIR_PURIFIER_JP_SERVICE_INFO,
+            "air_purifier_jp",
+            "switch.test_name_child_lock",
+            "open_child_lock",
+            "close_child_lock",
+        ),
+        (
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+            "air_purifier_table_jp",
+            "switch.test_name_child_lock",
+            "open_child_lock",
+            "close_child_lock",
+        ),
+        (
+            AIR_PURIFIER_US_SERVICE_INFO,
+            "air_purifier_us",
+            "switch.test_name_child_lock",
+            "open_child_lock",
+            "close_child_lock",
+        ),
+        (
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+            "air_purifier_table_us",
+            "switch.test_name_child_lock",
+            "open_child_lock",
+            "close_child_lock",
+        ),
+        (
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+            "air_purifier_table_jp",
+            "switch.test_name_wireless_charging",
+            "open_wireless_charging",
+            "close_wireless_charging",
+        ),
+        (
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+            "air_purifier_table_us",
+            "switch.test_name_wireless_charging",
+            "open_wireless_charging",
+            "close_wireless_charging",
+        ),
+    ],
+)
+async def test_air_purifier_switch_control(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    entity_id: str,
+    turn_on_method: str,
+    turn_off_method: str,
+) -> None:
+    """Test air purifier switch control."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+
+    mocked_turn_on = AsyncMock(return_value=True)
+    mocked_turn_off = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotAirPurifier",
+        update=AsyncMock(return_value=None),
+        **{turn_on_method: mocked_turn_on, turn_off_method: mocked_turn_off},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_turn_on.assert_awaited_once()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_turn_off.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "set_method", "get_state_method"),
+    [
+        (
+            "switch.test_name_horizontal_oscillation",
+            "set_horizontal_oscillation",
+            "get_horizontal_oscillating_state",
+        ),
+        (
+            "switch.test_name_vertical_oscillation",
+            "set_vertical_oscillation",
+            "get_vertical_oscillating_state",
+        ),
+    ],
+)
+async def test_standing_fan_oscillation_switches(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    entity_id: str,
+    set_method: str,
+    get_state_method: str,
+) -> None:
+    """Test horizontal/vertical oscillation switches for the standing fan."""
+    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="standing_fan")
+    entry.add_to_hass(hass)
+
+    mocked_set = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotStandingFan",
+        get_basic_info=AsyncMock(return_value=None),
+        **{
+            set_method: mocked_set,
+            get_state_method: lambda self: False,
+        },
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mocked_set.assert_awaited_once_with(True)
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        assert mocked_set.await_count == 2
+        mocked_set.assert_awaited_with(False)

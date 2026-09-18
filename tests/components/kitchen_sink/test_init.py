@@ -4,9 +4,9 @@ import datetime
 from http import HTTPStatus
 from unittest.mock import ANY
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.labs import EVENT_LABS_UPDATED
@@ -359,7 +359,7 @@ async def test_service(
     """Test we can call the service."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
 
     await hass.services.async_call(
@@ -369,7 +369,7 @@ async def test_service(
     await hass.services.async_call(
         DOMAIN,
         "test_service_1",
-        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forward"},
         blocking=True,
     )
 
@@ -388,7 +388,7 @@ async def test_special_repair_issue_not_created_when_disabled(
     issue_registry: ir.IssueRegistry,
     setup_kitchen_sink_with_repairs: None,
 ) -> None:
-    """Test that special repair issue is not created when preview feature is disabled."""
+    """Test repair issue is not created when preview is disabled."""
     # Check that issue does not exist when preview feature is disabled
     issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
     assert issue is None
@@ -432,7 +432,7 @@ async def test_special_repair_preview_feature_toggle(
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that special repair issue is created/deleted when preview feature is toggled."""
+    """Test repair issue is created/deleted when preview is toggled."""
     # Setup repairs and kitchen_sink first
     assert await async_setup_component(hass, "labs", {})
     assert await async_setup_component(hass, "repairs", {})

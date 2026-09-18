@@ -1,7 +1,5 @@
 """Conversation chat log."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
@@ -12,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any, Literal, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -295,8 +293,13 @@ class ToolResultContent:
     agent_id: str
     tool_call_id: str
     tool_name: str
-    tool_result: JsonObjectType
+    result: llm.ToolResult
     created: datetime = field(init=False, default_factory=utcnow)
+
+    @property
+    def tool_result(self) -> JsonObjectType:
+        """Return the data of the result."""
+        return self.result.data
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
@@ -305,7 +308,8 @@ class ToolResultContent:
             "agent_id": self.agent_id,
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
-            "tool_result": self.tool_result,
+            "result": asdict(self.result),
+            "tool_result": self.result.data,
             "created": self.created,
         }
 
@@ -329,6 +333,7 @@ class ToolResultContentDeltaDict(TypedDict, total=False):
     role: Literal["tool_result"]
     tool_call_id: str
     tool_name: str
+    result: llm.ToolResult
     tool_result: JsonObjectType
 
 
@@ -423,9 +428,11 @@ class ChatLog:
     ) -> AsyncGenerator[ToolResultContent]:
         """Add assistant content and execute tool calls.
 
-        tool_call_tasks can contains tasks for tool calls that are already in progress.
+        tool_call_tasks can contain tasks for tool calls
+        that are already in progress.
 
-        This method is an async generator and will yield the tool results as they come in.
+        This method is an async generator and will yield
+        the tool results as they come in.
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
@@ -459,17 +466,18 @@ class ChatLog:
 
             try:
                 tool_result = await tool_call_tasks[tool_input.id]
-            except (HomeAssistantError, vol.Invalid) as e:
-                tool_result = {"error": type(e).__name__}
+            except (HomeAssistantError, probatio.Invalid) as e:
+                error_data: JsonObjectType = {"error": type(e).__name__}
                 if str(e):
-                    tool_result["error_text"] = str(e)
+                    error_data["error_text"] = str(e)
+                tool_result = llm.ToolResult(data=error_data, error=True)
             LOGGER.debug("Tool response: %s", tool_result)
 
             response_content = ToolResultContent(
                 agent_id=content.agent_id,
                 tool_call_id=tool_input.id,
                 tool_name=tool_input.tool_name,
-                tool_result=tool_result,
+                result=tool_result,
             )
             self.content.append(response_content)
             _async_notify_subscribers(
@@ -489,14 +497,17 @@ class ChatLog:
     ) -> AsyncGenerator[AssistantContent | ToolResultContent]:
         """Stream content into the chat log.
 
-        Returns a generator with all content that was added to the chat log.
+        Returns a generator with all content that was added
+        to the chat log.
 
-        stream iterates over dictionaries with optional keys role, content and tool_calls.
+        stream iterates over dictionaries with optional keys
+        role, content and tool_calls.
 
-        When a delta contains a role key, the current message is considered complete and
-        a new message is started.
+        When a delta contains a role key, the current message
+        is considered complete and a new message is started.
 
-        The keys content and tool_calls will be concatenated if they appear multiple times.
+        The keys content and tool_calls will be concatenated
+        if they appear multiple times.
         """
         current_content = ""
         current_thinking_content = ""
@@ -564,7 +575,7 @@ class ChatLog:
                 ):
                     yield tool_result
                     if self.delta_listener:
-                        self.delta_listener(self, asdict(tool_result))
+                        self.delta_listener(self, tool_result.as_dict())
                 current_content = ""
                 current_thinking_content = ""
                 current_native = None
@@ -582,15 +593,17 @@ class ChatLog:
                     }:
                         self.delta_listener(self, filtered_delta)
             elif delta["role"] == "tool_result":
+                if (result := delta.get("result")) is None:
+                    result = llm.ToolResult(data=delta["tool_result"])
                 content = ToolResultContent(
                     agent_id=agent_id,
                     tool_call_id=delta["tool_call_id"],
                     tool_name=delta["tool_name"],
-                    tool_result=delta["tool_result"],
+                    result=result,
                 )
                 yield content
                 if self.delta_listener:
-                    self.delta_listener(self, asdict(content))
+                    self.delta_listener(self, content.as_dict())
                 self.async_add_assistant_content_without_tools(content)
             else:
                 raise ValueError(
@@ -617,7 +630,7 @@ class ChatLog:
             ):
                 yield tool_result
                 if self.delta_listener:
-                    self.delta_listener(self, asdict(tool_result))
+                    self.delta_listener(self, tool_result.as_dict())
 
     async def _async_expand_prompt_template(
         self,
@@ -732,7 +745,8 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        # Append current date and time to the prompt if the corresponding tool is not provided
+        # Append current date and time to the prompt if the
+        # corresponding tool is not provided
         llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
             prompt_parts.append(

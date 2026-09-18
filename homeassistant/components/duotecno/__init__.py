@@ -1,7 +1,5 @@
 """The duotecno integration."""
 
-from __future__ import annotations
-
 from duotecno.controller import PyDuotecno
 from duotecno.exceptions import InvalidPassword, LoadFailure
 

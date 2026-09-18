@@ -1,7 +1,5 @@
 """Axis network device abstraction."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Self
 

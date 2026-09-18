@@ -8,9 +8,10 @@ import pytest
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
-from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -19,12 +20,11 @@ def platform() -> Platform:
     return Platform.BUTTON
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_pause_job(hass: HomeAssistant) -> None:
+async def test_pause_job(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test the pause job button."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test pausing the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.pause_job") as pause_command:
@@ -77,12 +77,11 @@ async def test_pause_job(hass: HomeAssistant) -> None:
             )
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_resume_job(hass: HomeAssistant) -> None:
+async def test_resume_job(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test the resume job button."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test resuming the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.resume_job") as resume_command:
@@ -135,12 +134,9 @@ async def test_resume_job(hass: HomeAssistant) -> None:
             )
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_stop_job(hass: HomeAssistant) -> None:
+async def test_stop_job(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
     """Test the stop job button."""
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
+    coordinator: OctoprintDataUpdateCoordinator = init_integration.runtime_data
 
     # Test stopping the printer when it is paused
     with patch("pyoctoprintapi.OctoprintClient.cancel_job") as stop_command:

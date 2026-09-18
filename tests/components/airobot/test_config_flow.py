@@ -93,9 +93,9 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -116,10 +116,9 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_airobot_client: AsyncMock,
+    hass: HomeAssistant, mock_airobot_client: AsyncMock
 ) -> None:
     """Test DHCP discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -204,9 +203,9 @@ async def test_dhcp_discovery_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_duplicate(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -225,7 +224,8 @@ async def test_dhcp_discovery_duplicate(
     )
     await hass.async_block_till_done()
 
-    # Should abort immediately since device_id extracted from hostname matches existing entry
+    # Should abort immediately since device_id extracted from
+    # hostname matches existing entry
     # and update the IP address
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -234,9 +234,9 @@ async def test_dhcp_discovery_duplicate(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -270,9 +270,9 @@ async def test_reauth_flow(
         (Exception("Unknown error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -306,4 +306,121 @@ async def test_reauth_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Trigger reconfiguration
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Update configuration (e.g., new IP address and password)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_USERNAME: "T01A1B2C3",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+    assert mock_config_entry.data[CONF_USERNAME] == "T01A1B2C3"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow with wrong device."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Trigger reconfiguration
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    # Try to reconfigure with a different device ID
+    mock_airobot_client.get_settings.return_value.device_name = "Different Device"
+    mock_airobot_client.get_statuses.return_value.device_id = "T01DIFFERENT"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_USERNAME: "T01DIFFERENT",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (AirobotAuthError("Invalid credentials"), "invalid_auth"),
+        (AirobotConnectionError("Connection failed"), "cannot_connect"),
+        (Exception("Unknown error"), "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_base: str,
+) -> None:
+    """Test reconfiguration flow with errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Trigger reconfiguration
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # First attempt with error
+    mock_airobot_client.get_statuses.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_USERNAME: "T01A1B2C3",
+            CONF_PASSWORD: "wrong-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
+
+    # Recover from error
+    mock_airobot_client.get_statuses.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_USERNAME: "T01A1B2C3",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"

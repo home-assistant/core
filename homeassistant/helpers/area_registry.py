@@ -1,22 +1,20 @@
 """Provide a way to connect devices to one physical location."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
-from . import device_registry as dr, entity_registry as er
-from .json import json_bytes, json_fragment
+from . import device_registry as dr
+from .json import cached_json_fragment, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
@@ -89,28 +87,27 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON representation of this AreaEntry."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": list(self.aliases),
-                    "area_id": self.id,
-                    "floor_id": self.floor_id,
-                    "humidity_entity_id": self.humidity_entity_id,
-                    "icon": self.icon,
-                    "labels": list(self.labels),
-                    "name": self.name,
-                    "picture": self.picture,
-                    "temperature_entity_id": self.temperature_entity_id,
-                    "created_at": self.created_at.timestamp(),
-                    "modified_at": self.modified_at.timestamp(),
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": list(self.aliases),
+                "area_id": self.id,
+                "floor_id": self.floor_id,
+                "humidity_entity_id": self.humidity_entity_id,
+                "icon": self.icon,
+                "labels": list(self.labels),
+                "name": self.name,
+                "picture": self.picture,
+                "temperature_entity_id": self.temperature_entity_id,
+                "created_at": self.created_at.timestamp(),
+                "modified_at": self.modified_at.timestamp(),
+            }
         )
 
 
 class AreaRegistryStore(Store[AreasRegistryStoreData]):
     """Store area registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -179,6 +176,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         self._floors_index: RegistryIndexType = defaultdict(dict)
         self._aliases_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
@@ -189,6 +187,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
     ) -> None:
@@ -325,6 +324,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        from . import entity_registry as er  # noqa: PLC0415  # Circular dependency
+
         self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
@@ -346,13 +347,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -382,13 +383,13 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        floor_id: str | UndefinedType | None = UNDEFINED,
+        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
-        picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        picture: str | UndefinedType | None = UNDEFINED,
+        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -447,7 +448,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             EventAreaRegistryUpdatedData(action="reorder", area_id=None),
         )
 
-    async def async_load(self) -> None:
+    @override
+    async def _async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
 
@@ -476,6 +478,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self._area_data = areas.data
 
     @callback
+    @override
     def _data_to_save(self) -> AreasRegistryStoreData:
         """Return data of area registry to store in a file."""
         return {
@@ -549,10 +552,10 @@ def async_get(hass: HomeAssistant) -> AreaRegistry:
     return AreaRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback
@@ -576,7 +579,8 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
 
     if (
         state.domain != "sensor"
-        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.TEMPERATURE
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        != SensorDeviceClass.TEMPERATURE
     ):
         raise ValueError(f"Entity {entity_id} is not a temperature sensor")
 
@@ -590,6 +594,7 @@ def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
 
     if (
         state.domain != "sensor"
-        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.HUMIDITY
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        != SensorDeviceClass.HUMIDITY
     ):
         raise ValueError(f"Entity {entity_id} is not a humidity sensor")

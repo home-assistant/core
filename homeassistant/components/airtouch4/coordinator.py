@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the airtouch integration."""
 
 import logging
+from typing import override
 
 from airtouch4pyapi import AirTouch
 from airtouch4pyapi.airtouch import AirTouchStatus
@@ -34,6 +35,7 @@ class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self):
         """Fetch data from Airtouch."""
         await self.airtouch.UpdateInfo()

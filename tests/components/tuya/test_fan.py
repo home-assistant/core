@@ -1,7 +1,5 @@
 """Test Tuya fan platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -13,6 +11,7 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -26,7 +25,14 @@ from . import initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN]):
+        yield
+
+
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -41,7 +47,6 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.FAN])
 @pytest.mark.parametrize(
     ("mock_device_code", "entity_id", "service", "service_data", "expected_commands"),
     [
@@ -86,6 +91,27 @@ async def test_platform_setup_and_discovery(
             SERVICE_TURN_ON,
             {"preset_mode": "sleep"},
             [{"code": "switch", "value": True}, {"code": "mode", "value": "sleep"}],
+        ),
+        (
+            "fs_g0ewlb1vmwqljzji",
+            "fan.ceiling_fan_with_light",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 50},
+            [{"code": "fan_speed", "value": "3"}],
+        ),
+        (
+            "fs_g0ewlb1vmwqljzji",
+            "fan.ceiling_fan_with_light",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            [{"code": "switch", "value": False}],
+        ),
+        (
+            "ks_j9fa8ahzac8uvlfl",
+            "fan.tower_fan_ca_407g_smart",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            [{"code": "switch", "value": False}],
         ),
     ],
 )

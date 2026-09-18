@@ -146,7 +146,9 @@ async def test_if_fires_on_event(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -155,7 +157,9 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -229,7 +233,9 @@ async def test_if_fires_on_event_legacy(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -238,7 +244,9 @@ async def test_if_fires_on_event_legacy(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -310,8 +318,10 @@ async def test_if_fires_on_event_with_subtype(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.event.data.data.mode}} - "
-                                "{{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.event.data.data.mode}}"
+                                " - {{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -320,7 +330,9 @@ async def test_if_fires_on_event_with_subtype(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -387,7 +399,9 @@ async def test_if_invalid_device(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },

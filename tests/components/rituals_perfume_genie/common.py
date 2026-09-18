@@ -1,11 +1,10 @@
 """Common methods used across tests for Rituals Perfume Genie."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
+from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -17,7 +16,11 @@ def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConf
         domain=DOMAIN,
         title="name@example.com",
         unique_id=unique_id,
-        data={ACCOUNT_HASH: "an_account_hash"},
+        data={
+            CONF_EMAIL: "test@rituals.com",
+            CONF_PASSWORD: "test-password",
+        },
+        version=2,
         entry_id=entry_id,
     )
 
@@ -60,12 +63,31 @@ def mock_diffuser(
     diffuser_mock.version = version
     diffuser_mock.wifi_percentage = wifi_percentage
     diffuser_mock.data = load_json_object_fixture("data.json", DOMAIN)
+    diffuser_mock.hub_data = diffuser_mock.data["hub"]
     return diffuser_mock
 
 
 def mock_diffuser_v1_battery_cartridge() -> MagicMock:
     """Create and return a mock version 1 Diffuser with battery and a cartridge."""
     return mock_diffuser(hublot="lot123v1")
+
+
+def mock_diffuser_v3_no_battery_no_fill() -> MagicMock:
+    """Create and return a mock version 3 Diffuser without battery or fill sensor."""
+    diffuser = mock_diffuser(
+        hublot="lot123v3",
+        battery_percentage=Exception(),
+        charging=Exception(),
+        fill="",
+        has_battery=False,
+        has_cartridge=True,
+        name="Genie V3",
+        perfume="Ritual of Sakura",
+        version="6.0",
+    )
+    diffuser.data = load_json_object_fixture("data_no_fill.json", DOMAIN)
+    diffuser.hub_data = diffuser.data["hub"]
+    return diffuser
 
 
 def mock_diffuser_v2_no_battery_no_cartridge() -> MagicMock:
@@ -87,16 +109,17 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_diffusers: list[MagicMock],
 ) -> None:
-    """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
+    """Initialize Rituals Perfume Genie with given entry and diffusers."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.rituals_perfume_genie.Account.get_devices",
-        return_value=mock_diffusers,
-    ):
+        "homeassistant.components.rituals_perfume_genie.Account"
+    ) as mock_account_cls:
+        mock_account = mock_account_cls.return_value
+        mock_account.authenticate = AsyncMock()
+        mock_account.get_devices = AsyncMock(return_value=mock_diffusers)
+
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    assert hass.data[DOMAIN]
-
-    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data

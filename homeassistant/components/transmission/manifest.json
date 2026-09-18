@@ -1,7 +1,7 @@
 {
   "domain": "transmission",
   "name": "Transmission",
-  "codeowners": ["@engrbm87", "@JPHutchins"],
+  "codeowners": ["@engrbm87", "@JPHutchins", "@andrew-codechimp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/transmission",
   "integration_type": "service",

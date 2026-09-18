@@ -512,6 +512,171 @@ async def test_luxembourg_meter(
     )
 
 
+async def test_luxembourg_smarty_encrypted_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if an encrypted Luxembourg Smarty (MSn) meter is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "MSn",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+        "encryption_key": "aabbccddeeff00112233445566778899",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        HOURLY_GAS_METER_READING,
+        MBusObject(
+            (0, 0),
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "m3"},
+            ],
+        ),
+        "HOURLY_GAS_METER_READING",
+    )
+    telegram.add(
+        ELECTRICITY_IMPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_IMPORTED_TOTAL",
+    )
+    telegram.add(
+        ELECTRICITY_EXPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_EXPORTED_TOTAL",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    consumption = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert consumption.state == "123.456"
+    assert consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert (
+        consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
+    )
+
+    production = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert production.state == "654.321"
+
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+
+
+async def test_austrian_sagemcom_encrypted_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if an encrypted Austrian Sagemcom (T210-D-R) meter is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "SAGEMCOM_T210_D_R",
+        "serial_id": None,
+        "serial_id_gas": None,
+        "encryption_key": "aabbccddeeff00112233445566778899",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        ELECTRICITY_IMPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_IMPORTED_TOTAL",
+    )
+    telegram.add(
+        ELECTRICITY_EXPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_EXPORTED_TOTAL",
+    )
+    telegram.add(
+        obis_references.ELECTRICITY_USED_TARIFF_1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("11.111"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_1",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    consumption = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert consumption.state == "123.456"
+    assert consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+
+    production = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert production.state == "654.321"
+
+    tariff_1 = hass.states.get("sensor.electricity_meter_energy_consumption_tarif_1")
+    assert tariff_1.state == "11.111"
+    assert tariff_1.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+
+
 async def test_eonhu_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
@@ -1380,8 +1545,12 @@ async def test_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    # Legacy host/port entries are combined into a socket URL in memory and
+    # opened with the keep-alive watchdog; the stored entry is left untouched so
+    # a downgrade keeps working.
+    assert mock_entry.data["host"] == "localhost"
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
 
 
 async def test_rfxtrx_tcp(
@@ -1409,8 +1578,66 @@ async def test_rfxtrx_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Legacy host/port entries keep using the TCP reader (with keep-alive); the
+    # stored entry is left untouched so a downgrade keeps working.
+    assert mock_entry.data["host"] == "localhost"
     assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    assert connection_factory.call_args_list[0][0][1] == 1234
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_tcp_socket_url(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A socket:// port should be opened with the keep-alive watchdog."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "socket://localhost:1234",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_serial_no_keep_alive(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A local serial device should use the plain reader without keep-alive."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "/dev/ttyUSB0"
+    assert "keep_alive_interval" not in connection_factory.call_args_list[0][1]
 
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
@@ -1611,6 +1838,74 @@ async def test_heat_meter_mbus(
     telegram.add(
         MBUS_DEVICE_TYPE,
         CosemObject((0, 1), [{"value": "004", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "GJ"},
+            ],
+        ),
+        "MBUS_METER_READING",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    hass.loop.set_debug(True)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
+    assert heat_consumption.state == "745.695"
+    assert (
+        heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    )
+    assert (
+        heat_consumption.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.GIGA_JOULE
+    )
+    assert (
+        heat_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
+
+async def test_heat_cool_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if heat/cool meter reading is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5",
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "012", "unit": ""}]),
         "MBUS_DEVICE_TYPE",
     )
     telegram.add(

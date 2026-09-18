@@ -33,7 +33,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -92,7 +92,7 @@ async def test_flow_abort_without_channel(
 ) -> None:
     """Check abort flow if user has no channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -133,7 +133,7 @@ async def test_flow_abort_without_subscriptions(
 ) -> None:
     """Check abort flow if user has no subscriptions and no own channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -176,9 +176,9 @@ async def test_flow_without_subscriptions(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Check flow continues even without subscriptions since user has their own channel."""
+    """Check flow continues without subscriptions using own channel."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -241,7 +241,7 @@ async def test_flow_http_error(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -266,14 +266,26 @@ async def test_flow_http_error(
     with patch(
         "homeassistant.components.youtube.config_flow.YouTube.get_user_channels",
         side_effect=ForbiddenError(
-            "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+            "YouTube Data API v3 has not been used in project 0"
+            " before or it is disabled. Enable it by visiting"
+            " https://console.developers.google.com/apis/api/"
+            "youtube.googleapis.com/overview?project=0 then"
+            " retry. If you enabled this API recently, wait a"
+            " few minutes for the action to propagate to our"
+            " systems and retry."
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "access_not_configured"
         assert result["description_placeholders"]["message"] == (
-            "YouTube Data API v3 has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+            "YouTube Data API v3 has not been used in project 0"
+            " before or it is disabled. Enable it by visiting"
+            " https://console.developers.google.com/apis/api/"
+            "youtube.googleapis.com/overview?project=0 then"
+            " retry. If you enabled this API recently, wait a"
+            " few minutes for the action to propagate to our"
+            " systems and retry."
         )
 
 
@@ -386,7 +398,7 @@ async def test_flow_exception(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -447,9 +459,9 @@ async def test_own_channel_included(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test that the user's own channel is included in the list of selectable channels."""
+    """Test user's own channel is included in selectable channels."""
     result = await hass.config_entries.flow.async_init(
-        "youtube", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

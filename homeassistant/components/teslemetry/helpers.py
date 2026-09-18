@@ -1,28 +1,52 @@
 """Teslemetry helper functions."""
 
+import asyncio
+from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER
+from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
 
 
-def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+async def async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
+    """Return a shared TeslaBluetooth parent with the private key loaded."""
+    lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
+    async with lock:
+        existing: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
+        if existing is not None:
+            return existing
+        parent = TeslaBluetooth()
+        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
+        hass.data[BLE_PARENT_KEY] = parent
+        return parent
+
+
+def flatten(
+    data: dict[str, Any],
+    parent: str | None = None,
+    *,
+    skip_keys: list[str] | None = None,
+) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
     for key, value in data.items():
+        skip = skip_keys and key in skip_keys
         if parent:
             key = f"{parent}_{key}"
-        if isinstance(value, dict):
-            result.update(flatten(value, key))
+        if isinstance(value, dict) and not skip:
+            result.update(flatten(value, key, skip_keys=skip_keys))
         else:
             result[key] = value
     return result
 
 
-async def handle_command(command) -> dict[str, Any]:
+async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     """Handle a command."""
     try:
         result = await command
@@ -36,7 +60,7 @@ async def handle_command(command) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command) -> Any:
+async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:
@@ -48,7 +72,9 @@ async def handle_vehicle_command(command) -> Any:
                 translation_placeholders={"error": error},
             )
         # No response without error (unexpected)
-        raise HomeAssistantError(f"Unknown response: {response}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="command_no_response"
+        )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
             if reason in ("already_set", "not_charging", "requested"):
@@ -66,3 +92,35 @@ async def handle_vehicle_command(command) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_remove_stale_vehicle_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    domain: str,
+    vins: set[str],
+    valid_unique_ids: set[str],
+) -> None:
+    """Remove registry entries for vehicle entities that are no longer created."""
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, config_entry_id):
+        if (
+            entity.domain == domain
+            and entity.unique_id not in valid_unique_ids
+            and any(entity.unique_id.startswith(f"{vin}-") for vin in vins)
+        ):
+            entity_registry.async_remove(entity.entity_id)
+
+
+@callback
+def async_update_device_sw_version(
+    hass: HomeAssistant, identifier: str, config_entry_id: str, sw_version: str
+) -> None:
+    """Update the software version in the device registry."""
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device_by_identifier(
+        (DOMAIN, identifier), config_entry_id
+    ):
+        if device.sw_version != sw_version:
+            dev_reg.async_update_device(device.id, sw_version=sw_version)

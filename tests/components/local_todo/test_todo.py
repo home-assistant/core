@@ -1,6 +1,6 @@
 """Tests for todo platform of local_todo."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import datetime
 import textwrap
 from typing import Any
@@ -23,15 +23,17 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import TEST_ENTITY
+from .conftest import TEST_ENTITY, TODO_NAME
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
+type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
 
 
 @pytest.fixture
-async def ws_get_items(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[], Awaitable[dict[str, str]]]:
+async def ws_get_items(hass_ws_client: WebSocketGenerator) -> WsGetItemsType:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
@@ -51,12 +53,10 @@ async def ws_get_items(
 
 
 @pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[str, str | None], Awaitable[None]]:
+async def ws_move_item(hass_ws_client: WebSocketGenerator) -> WsMoveItemType:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, previous_uid: str | None) -> None:
+    async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         data = {
@@ -67,15 +67,14 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        assert resp.get("success")
+        return await client.receive_json()
 
     return move
 
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
@@ -100,13 +99,17 @@ EXPECTED_ADD_ITEM = {
         ),
         ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
         ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
+        (
+            {ATTR_ITEM: "测试主卧清扫"},
+            {**EXPECTED_ADD_ITEM, "summary": "测试主卧清扫"},
+        ),
     ],
 )
 async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -151,7 +154,7 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -195,7 +198,7 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing multiple todo items."""
     for i in range(5):
@@ -269,7 +272,7 @@ EXPECTED_UPDATE_ITEM = {
 async def test_update_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
     expected_state: str,
@@ -396,7 +399,7 @@ async def test_update_item(
 async def test_update_existing_field(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -447,7 +450,7 @@ async def test_update_existing_field(
 async def test_rename(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test renaming a todo item."""
 
@@ -521,8 +524,8 @@ async def test_rename(
 async def test_move_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[None]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -544,10 +547,9 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    previous_uid = None
-    if dst_idx is not None:
-        previous_uid = uids[dst_idx]
-    await ws_move_item(uids[src_idx], previous_uid)
+    previous_uid = None if dst_idx is None else uids[dst_idx]
+    resp = await ws_move_item(uids[src_idx], previous_uid)
+    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -558,22 +560,11 @@ async def test_move_item(
 async def test_move_item_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": "unknown",
-        "previous_uid": "item-2",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
@@ -582,8 +573,8 @@ async def test_move_item_unknown(
 async def test_move_item_previous_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
@@ -597,18 +588,7 @@ async def test_move_item_previous_unknown(
     items = await ws_get_items()
     assert len(items) == 1
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": items[0]["uid"],
-        "previous_uid": "unknown",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
@@ -739,7 +719,7 @@ async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
@@ -812,3 +792,305 @@ async def test_susbcribe(
     assert items[0]["summary"] == "milk"
     assert items[0]["status"] == "needs_action"
     assert "uid" in items[0]
+
+
+async def test_reset_item_via_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test resetting a todo item via update action."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+    item_uid = item.pop("uid")
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Complete item
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "completed"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "completed",
+        "completed": "2023-11-18T08:00:00+00:00",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Reset item
+    update_time = datetime(2023, 11, 18, 8, 1, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "needs_action"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is not completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item.get("completed") is None  # automatically unset
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "needs_action",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+
+@pytest.mark.parametrize(
+    ("ics_content", "expected_description"),
+    [
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
+                "VERSION:2.0\n"
+                "BEGIN:VTODO\n"
+                "DTSTAMP:20260205T183141Z\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+                "CREATED:20260205T183141Z\n"
+                "SEQUENCE:0\n"
+                "STATUS:NEEDS-ACTION\n"
+                "SUMMARY:Notizen\n"
+                "DESCRIPTION:Einkaufsliste\n\\nMilch\n\\nBrot\n"
+                "END:VTODO\n"
+                "END:VCALENDAR\n"
+            ),
+            "Einkaufsliste\nMilch\nBrot",
+            id="universal_newlines",
+        ),
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\r\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\r\n"
+                "VERSION:2.0\r\n"
+                "BEGIN:VTODO\r\n"
+                "DTSTAMP:20260205T183141Z\r\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\r\n"
+                "CREATED:20260205T183141Z\r\n"
+                "SEQUENCE:0\r\n"
+                "STATUS:NEEDS-ACTION\r\n"
+                "SUMMARY:Notizen\r\n"
+                "DESCRIPTION:Einkaufsliste\r\\nMilch\r\\nBrot\r\n"
+                "END:VTODO\r\n"
+                "END:VCALENDAR\r\n"
+            ),
+            "Einkaufsliste\nMilch\nBrot",
+            id="raw_crlf",
+        ),
+        pytest.param(
+            (
+                "BEGIN:VCALENDAR\n"
+                "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
+                "VERSION:2.0\n"
+                "BEGIN:VTODO\n"
+                "DTSTAMP:20260205T183141Z\n"
+                "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+                "CREATED:20260205T183141Z\n"
+                "SEQUENCE:0\n"
+                "STATUS:NEEDS-ACTION\n"
+                "SUMMARY:Notizen\n"
+                "DESCRIPTION:Line 1\n\\n\n\\nLine 2\n"
+                "END:VTODO\n"
+                "END:VCALENDAR\n"
+            ),
+            "Line 1\n\nLine 2",
+            id="consecutive_newlines",
+        ),
+    ],
+)
+async def test_repair_legacy_crlf_on_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+    expected_description: str,
+) -> None:
+    """Test repairing malformed ICS content from ical <= 12.1.3 CRLF bug on setup."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        f"Repaired malformed iCalendar file for to-do list {TODO_NAME}" in caplog.text
+    )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state is not None
+    assert state.state == "1"
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["summary"] == "Notizen"
+    assert items[0]["description"] == expected_description
+
+    # Verify that the file was re-saved cleanly to storage without any invalid lines
+    store = config_entry.runtime_data
+    re_saved = store._mock_path.read_text.return_value
+    assert "\r" not in re_saved
+    assert "\n\\n" not in re_saved
+
+
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        (
+            "BEGIN:VCALENDAR\n"
+            "PRODID:-//homeassistant.io//local_todo 1.0//EN\n"
+            "VERSION:2.0\n"
+            "BEGIN:VTODO\n"
+            "DTSTAMP:20231024T014011\n"
+            "UID:077cb7f2-6c89-11ee-b2a9-0242ac110002\n"
+            "CREATED:20231017T010348\n"
+            "SEQUENCE:1\n"
+            "STATUS:NEEDS-ACTION\n"
+            "SUMMARY:Task\n"
+            "DESCRIPTION:Line 1\n\\nLine 2\n"
+            "DUE:20231023\n"
+            "END:VTODO\n"
+            "END:VCALENDAR\n"
+        )
+    ],
+)
+async def test_repair_and_migrate_legacy_due_date(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that repaired legacy 1.0 calendars also undergo due date migration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        f"Repaired malformed iCalendar file for to-do list {TODO_NAME}" in caplog.text
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == "Line 1\nLine 2"
+    assert items[0]["due"] == "2023-10-23"
+
+    store = config_entry.runtime_data
+    re_saved = store._mock_path.read_text.return_value
+    assert "PRODID:-//homeassistant.io//local_todo 2.0//EN" in re_saved
+    assert "DUE;VALUE=DATE:20231024" in re_saved
+
+
+async def test_description_newlines_preserved(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test that newlines in descriptions are preserved through service calls and reload."""
+    description = "Line 1\nLine 2\n\nLine 3"
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "Item 1",
+            ATTR_DESCRIPTION: description,
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == description
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ITEM: items[0]["uid"],
+            ATTR_DESCRIPTION: f"Updated\n{description}",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == f"Updated\n{description}"
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == f"Updated\n{description}"
+
+
+async def test_crlf_description_preserved_on_reload(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that items added with CRLF descriptions are saved cleanly and load on reload."""
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "Item CRLF",
+            ATTR_DESCRIPTION: "Line 1\r\nLine 2\r\n\r\nLine 3",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # After reload from storage, newlines are preserved as LF and no repair warning is logged
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["description"] == "Line 1\nLine 2\n\nLine 3"
+    assert "Repaired malformed iCalendar file" not in caplog.text

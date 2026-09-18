@@ -1,7 +1,5 @@
 """The Network Configuration integration."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
 from pathlib import Path
@@ -10,7 +8,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
-from homeassistant.loader import bind_hass
 from homeassistant.util import package
 
 from . import util
@@ -42,7 +39,6 @@ def _check_docker_without_host_networking() -> bool:
     return False
 
 
-@bind_hass
 async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     network: Network = await async_get_network(hass)
@@ -55,7 +51,6 @@ def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
     return async_get_loaded_network(hass).adapters
 
 
-@bind_hass
 async def async_get_source_ip(
     hass: HomeAssistant, target_ip: str | UndefinedType = UNDEFINED
 ) -> str:
@@ -90,7 +85,6 @@ async def async_get_source_ip(
     return source_ip if source_ip in all_ipv4s else all_ipv4s[0]
 
 
-@bind_hass
 async def async_get_enabled_source_ips(
     hass: HomeAssistant,
 ) -> list[IPv4Address | IPv6Address]:
@@ -128,7 +122,6 @@ def async_only_default_interface_enabled(adapters: list[Adapter]) -> bool:
     )
 
 
-@bind_hass
 async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Address]:
     """Return a set of broadcast addresses."""
     broadcast_addresses: set[IPv4Address] = {IPv4Address(IPV4_BROADCAST_ADDR)}

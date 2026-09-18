@@ -1,19 +1,24 @@
 """Details about the built-in battery."""
 
-from __future__ import annotations
-
 import logging
 import os
+from typing import Any, override
 
 from batinfo import Batteries
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_NAME, ATTR_SERIAL_NUMBER, CONF_NAME, PERCENTAGE
+from homeassistant.const import (
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    ATTR_SERIAL_NUMBER,
+    CONF_NAME,
+    PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,7 +34,6 @@ ATTR_CYCLE_COUNT = "cycle_count"
 ATTR_ENERGY_FULL = "energy_full"
 ATTR_ENERGY_FULL_DESIGN = "energy_full_design"
 ATTR_ENERGY_NOW = "energy_now"
-ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL_NAME = "model_name"
 ATTR_POWER_NOW = "power_now"
 ATTR_STATUS = "status"
@@ -51,9 +55,9 @@ SYSTEMS = ["android", "linux"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
+        probatio.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): probatio.In(SYSTEMS),
     }
 )
 
@@ -97,7 +101,8 @@ class LinuxBatterySensor(SensorEntity):
         self._system = system
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         if self._system == "android":
             return {

@@ -1,8 +1,6 @@
 """Base class for Rehlko entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -80,6 +78,7 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
         return self.coordinator.data[self.entity_description.key]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (

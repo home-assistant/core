@@ -1,8 +1,6 @@
 """PG LAB Electronics Cover."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.shutter import Shutter as PyPGLabShutter
@@ -73,19 +71,23 @@ class PGLabCover(PGLabEntity, CoverEntity):
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._shutter.open()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._shutter.close()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._shutter.stop()
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if cover is closed."""
         if not self._shutter.state:
@@ -93,6 +95,7 @@ class PGLabCover(PGLabEntity, CoverEntity):
         return self._shutter.state == PyPGLabShutter.STATE_CLOSED
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if not self._shutter.state:
@@ -100,6 +103,7 @@ class PGLabCover(PGLabEntity, CoverEntity):
         return self._shutter.state == PyPGLabShutter.STATE_CLOSING
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if not self._shutter.state:

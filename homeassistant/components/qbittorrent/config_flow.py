@@ -1,12 +1,10 @@
 """Config flow for qBittorrent."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
@@ -16,12 +14,12 @@ from .helpers import setup_client
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL, default=DEFAULT_URL): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -29,6 +27,7 @@ USER_DATA_SCHEMA = vol.Schema(
 class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the qBittorrent integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,7 +44,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     user_input[CONF_VERIFY_SSL],
                 )
-            except (LoginFailed, Forbidden403Error):
+            except LoginFailed, Forbidden403Error:
                 errors = {"base": "invalid_auth"}
             except APIConnectionError:
                 errors = {"base": "cannot_connect"}

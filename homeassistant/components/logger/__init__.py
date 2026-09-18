@@ -1,15 +1,15 @@
 """Support for setting the level of logging for components."""
 
-from __future__ import annotations
-
 import logging
 import re
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -32,22 +32,28 @@ from .helpers import (
     set_log_levels,
 )
 
-_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
+_VALID_LOG_LEVEL = probatio.All(
+    probatio.Upper, probatio.In(LOGSEVERITY), LOGSEVERITY.__getitem__
+)
 
-SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
-SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
+SERVICE_SET_DEFAULT_LEVEL_SCHEMA = probatio.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
+SERVICE_SET_LEVEL_SCHEMA = probatio.Schema({cv.string: _VALID_LOG_LEVEL})
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
-                vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
-                vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
+                probatio.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+                probatio.Optional(LOGGER_LOGS): probatio.Schema(
+                    {cv.string: _VALID_LOG_LEVEL}
+                ),
+                probatio.Optional(LOGGER_FILTERS): probatio.Schema(
+                    {cv.string: [cv.is_regex]}
+                ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -74,7 +80,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for key, value in log_filters.items():
             _add_log_filter(logging.getLogger(key), value)
 
-    # Combine log levels configured in configuration.yaml with log levels set by frontend
+    # Combine log levels configured in configuration.yaml
+    # with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 
@@ -86,14 +93,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             set_log_levels(hass, service.data)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_DEFAULT_LEVEL,
         async_service_handler,
         schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_LEVEL,
         async_service_handler,
@@ -122,6 +131,7 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
     class HassLogger(logging.Logger):
         """Home Assistant aware logger class."""
 
+        @override
         def setLevel(self, level: int | str) -> None:
             """Set the log level unless overridden."""
             if self.name in hass_overrides:

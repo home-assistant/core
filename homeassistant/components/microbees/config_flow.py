@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from microBeesPy import MicroBees, MicroBeesException
 
@@ -19,18 +19,23 @@ class OAuth2FlowHandler(
     """Handle a config flow for microBees."""
 
     DOMAIN = DOMAIN
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         scopes = ["read", "write"]
         return {"scope": " ".join(scopes)}
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
 
@@ -47,7 +52,7 @@ class OAuth2FlowHandler(
             self.logger.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(current_user.id)
+        await self.async_set_unique_id(str(current_user.id))
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(

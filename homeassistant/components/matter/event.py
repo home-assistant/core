@@ -1,9 +1,7 @@
 """Matter event entities from Node events."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -14,13 +12,13 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SwitchFeature = clusters.Switch.Bitmaps.Feature
@@ -39,11 +37,11 @@ EVENT_TYPES_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.EVENT, async_add_entities)
 
 
@@ -82,7 +80,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
             # momentary switch without multi press support
             event_types.append("initial_press")
             if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                # momentary switch without multi press support can optionally support release
+                # momentary switch without multi press support
+                # can optionally support release
                 event_types.append("short_release")
 
         # a momentary switch can optionally support long press
@@ -92,6 +91,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
         self._attr_event_types = event_types
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -105,6 +105,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             )
         )
 
+    @override
     def _update_from_device(self) -> None:
         """Call when Node attribute(s) changed."""
 
@@ -117,12 +118,25 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
+
+        # event ids are only unique within a cluster, and an endpoint can host
+        # more clusters than the switch this entity was made for
+        if data.cluster_id != clusters.Switch.id:
+            return
+
+        event_type: str | None = EVENT_TYPES_MAP.get(data.event_id)
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
             presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
             event_type = f"multi_press_{presses}"
-        else:
-            event_type = EVENT_TYPES_MAP[data.event_id]
+
+        if event_type is None:
+            LOGGER.debug(
+                "Ignoring unknown switch event id %s for %s",
+                data.event_id,
+                self.entity_id,
+            )
+            return
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things

@@ -21,7 +21,12 @@ from homeassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_SSDP,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -32,7 +37,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -40,7 +45,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import (
     DEVICE_TOKEN,
     HOST,
@@ -67,7 +72,10 @@ def mock_controller_service():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -90,7 +98,10 @@ def mock_controller_service_2sa():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -111,7 +122,10 @@ def mock_controller_service_vdsm():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=[],
             volumes_ids=["volume_1"],
@@ -132,7 +146,10 @@ def mock_controller_service_with_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -166,6 +183,7 @@ def mock_controller_service_failed():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=None, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=[])
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=[],
             volumes_ids=[],
@@ -366,6 +384,80 @@ async def test_user_with_filestation(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_backup_share_form_reopened(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+) -> None:
+    """Test the backup location form can be shown again without losing the input."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        # The dialog is closed and reopened before a location is picked
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: "automatic_ha_backups"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_backup_share_requires_a_path(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+) -> None:
+    """Test an empty backup path is rejected instead of looping the flow."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: ""},
+            )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(hass: HomeAssistant, service: MagicMock) -> None:
     """Test reauthentication."""
     entry = MockConfigEntry(
@@ -511,7 +603,8 @@ async def test_form_ssdp(
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX99",
             },
         ),
     )
@@ -558,7 +651,8 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -601,7 +695,8 @@ async def test_skip_reconfig_ssdp(
             ssdp_location=f"http://{new_host}:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -634,7 +729,8 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -690,6 +786,32 @@ async def test_options_flow(
     assert config_entry.options[CONF_BACKUP_SHARE] == "/ha_backup"
 
 
+async def test_options_flow_entry_not_loaded(
+    hass: HomeAssistant, service_with_filestation: MagicMock
+) -> None:
+    """Test the options flow aborts when the integration is not loaded."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: USE_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS[0],
+        },
+        unique_id=SERIAL,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovered_via_zeroconf(
     hass: HomeAssistant, service: MagicMock, snapshot: SnapshotAssertion
@@ -707,7 +829,8 @@ async def test_discovered_via_zeroconf(
             type="_http._tcp.local.",
             name="mydsm._http._tcp.local.",
             properties={
-                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",
             },
         ),
     )

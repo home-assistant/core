@@ -1,15 +1,12 @@
 """Pushbullet platform for notify component."""
 
-from __future__ import annotations
-
 import logging
 import mimetypes
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pushbullet import PushBullet, PushError
 from pushbullet.channel import Channel
 from pushbullet.device import Device
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -22,8 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .api import PushBulletNotificationProvider
-from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL, DOMAIN
+from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +32,10 @@ async def async_get_service(
     """Get the Pushbullet notification service."""
     if TYPE_CHECKING:
         assert discovery_info is not None
-    pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN][
-        discovery_info["entry_id"]
-    ]
-    return PushBulletNotificationService(hass, pb_provider.pushbullet)
+    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
+    if TYPE_CHECKING:
+        assert entry is not None
+    return PushBulletNotificationService(hass, entry.runtime_data.pushbullet)
 
 
 class PushBulletNotificationService(BaseNotificationService):
@@ -60,6 +56,7 @@ class PushBulletNotificationService(BaseNotificationService):
             },
         }
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a specified target.
 
@@ -146,7 +143,7 @@ class PushBulletNotificationService(BaseNotificationService):
                     raise ValueError("Cannot send an empty file")
                 kwargs.update(filedata)
                 pusher.push_file(**kwargs)
-            elif (file_url := data.get(ATTR_FILE_URL)) and vol.Url(file_url):
+            elif file_url := data.get(ATTR_FILE_URL):
                 pusher.push_file(
                     file_name=file_url,
                     file_url=file_url,

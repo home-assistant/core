@@ -8,20 +8,6 @@ from .const import CONF_CLOCK_FORMAT, CONF_MONITORED_RESOURCES, FitbitScope
 
 
 @dataclass
-class FitbitProfile:
-    """User profile from the Fitbit API response."""
-
-    encoded_id: str
-    """The ID representing the Fitbit user."""
-
-    display_name: str
-    """The name shown when the user's friends look at their Fitbit profile."""
-
-    locale: str | None
-    """The locale defined in the user's Fitbit account settings."""
-
-
-@dataclass
 class FitbitConfig:
     """Information from the fitbit ConfigEntry data."""
 

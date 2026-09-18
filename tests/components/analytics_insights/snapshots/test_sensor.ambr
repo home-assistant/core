@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[sensor.homeassistant_analytics_core_samba-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'core_samba',
     'options': dict({
     }),
     'original_device_class': None,
@@ -31,17 +33,17 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'addons',
-    'unique_id': 'addon_core_samba_active_installations',
+    'translation_key': 'apps',
+    'unique_id': 'app_core_samba_active_installations',
     'unit_of_measurement': 'active installations',
   })
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_core_samba-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics core_samba',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics core_samba',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_core_samba',
@@ -53,11 +55,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'hacs (custom)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,9 +95,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics hacs (custom)',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics hacs (custom)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_hacs_custom',
@@ -105,11 +109,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_myq-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'myq',
     'options': dict({
     }),
     'original_device_class': None,
@@ -143,9 +149,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_myq-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics myq',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics myq',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_myq',
@@ -157,11 +163,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_spotify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -178,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'spotify',
     'options': dict({
     }),
     'original_device_class': None,
@@ -195,9 +203,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_spotify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics spotify',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics spotify',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_spotify',
@@ -209,11 +217,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_total_active_installations-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -230,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total active installations',
     'options': dict({
     }),
     'original_device_class': None,
@@ -247,9 +257,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_total_active_installations-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics Total active installations',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics Total active installations',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_total_active_installations',
@@ -261,11 +271,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_total_reported_integrations-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -282,6 +293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total reported integrations',
     'options': dict({
     }),
     'original_device_class': None,
@@ -299,9 +311,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_total_reported_integrations-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics Total reported integrations',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics Total reported integrations',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_total_reported_integrations',
@@ -313,11 +325,12 @@
 # ---
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -334,6 +347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'YouTube',
     'options': dict({
     }),
     'original_device_class': None,
@@ -351,9 +365,9 @@
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeassistant Analytics YouTube',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'active installations',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeassistant Analytics YouTube',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'active installations',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.homeassistant_analytics_youtube',

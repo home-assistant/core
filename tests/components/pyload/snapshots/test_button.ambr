@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[button.pyload_abort_all_running_downloads-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Abort all running downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,7 +39,7 @@
 # name: test_state[button.pyload_abort_all_running_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Abort all running downloads',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Abort all running downloads',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_abort_all_running_downloads',
@@ -49,8 +51,9 @@
 # ---
 # name: test_state[button.pyload_delete_finished_files_packages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delete finished files/packages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,7 +89,7 @@
 # name: test_state[button.pyload_delete_finished_files_packages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Delete finished files/packages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Delete finished files/packages',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_delete_finished_files_packages',
@@ -97,8 +101,9 @@
 # ---
 # name: test_state[button.pyload_restart_all_failed_files-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart all failed files',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,7 +139,7 @@
 # name: test_state[button.pyload_restart_all_failed_files-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Restart all failed files',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Restart all failed files',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_restart_all_failed_files',
@@ -145,8 +151,9 @@
 # ---
 # name: test_state[button.pyload_restart_pyload_core-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart pyload core',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,7 +189,7 @@
 # name: test_state[button.pyload_restart_pyload_core-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Restart pyload core',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Restart pyload core',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_restart_pyload_core',

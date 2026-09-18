@@ -1,12 +1,10 @@
 """Config flow to configure the Toon component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from toonapi import Agreement, Toon, ToonError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,16 +18,19 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
     VERSION = 2
+    MINOR_VERSION = 2
 
     agreements: list[Agreement]
     data: dict[str, Any]
     migrate_entry: str | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Test connection and load up agreements."""
         self.data = data
@@ -80,8 +81,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="agreement",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_AGREEMENT): vol.In(agreements_list)}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_AGREEMENT): probatio.In(agreements_list)}
                 ),
             )
 
@@ -92,7 +93,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self.migrate_entry:
             await self.hass.config_entries.async_remove(self.migrate_entry)
 
-        await self.async_set_unique_id(agreement.agreement_id)
+        await self.async_set_unique_id(str(agreement.agreement_id))
         self._abort_if_unique_id_configured()
 
         self.data[CONF_AGREEMENT_ID] = agreement.agreement_id

@@ -2,9 +2,9 @@
 
 import logging
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,20 +29,27 @@ DEFAULT_GATEWAY_NAME = "Xiaomi Aqara Gateway"
 DEFAULT_INTERFACE = "any"
 
 
-GATEWAY_CONFIG = vol.Schema(
-    {vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): str}
+GATEWAY_CONFIG = probatio.Schema(
+    {probatio.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): str}
 )
 CONFIG_HOST = {
-    vol.Optional(CONF_HOST): str,
-    vol.Optional(CONF_MAC): str,
+    probatio.Optional(CONF_HOST): str,
+    probatio.Optional(CONF_MAC): str,
 }
 GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
-GATEWAY_SETTINGS = vol.Schema(
+GATEWAY_SETTINGS = probatio.Schema(
     {
-        vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
-        vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
+        probatio.Optional(CONF_KEY): probatio.All(str, probatio.Length(min=16, max=16)),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
+        probatio.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
     }
 )
+
+ERROR_STEP_PLACEHOLDERS = {
+    "tutorial_url": "https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz",
+    "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+}
 
 
 class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -66,8 +73,14 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         if (self.host is None and self.sid is None) or errors:
             schema = GATEWAY_CONFIG_HOST
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
+        )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -140,18 +153,22 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             self.sid = self.selected_gateway.sid
             return await self.async_step_settings()
 
-        select_schema = vol.Schema(
+        select_schema = probatio.Schema(
             {
-                vol.Required("select_ip"): vol.In(
+                probatio.Required("select_ip"): probatio.In(
                     [gateway.ip_adress for gateway in self.gateways.values()]
                 )
             }
         )
 
         return self.async_show_form(
-            step_id="select", data_schema=select_schema, errors=errors
+            step_id="select",
+            data_schema=select_schema,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -236,5 +253,8 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             errors[CONF_KEY] = "invalid_key"
 
         return self.async_show_form(
-            step_id="settings", data_schema=GATEWAY_SETTINGS, errors=errors
+            step_id="settings",
+            data_schema=GATEWAY_SETTINGS,
+            errors=errors,
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )

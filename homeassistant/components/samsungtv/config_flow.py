@@ -1,18 +1,17 @@
 """Config flow for Samsung TV."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
 import getmac
+import probatio
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
-import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -40,7 +39,12 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    async_get_device_info,
+    mac_from_device_info,
+    model_may_require_encryption,
+)
 from .const import (
     CONF_MANUFACTURER,
     CONF_SESSION_ID,
@@ -48,6 +52,7 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
@@ -61,7 +66,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -266,6 +271,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title = self._host
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -289,6 +295,32 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the config entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            if await self._async_set_name_host_from_input(user_input):
+                self._async_abort_entries_match({CONF_HOST: self._host})
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: self._host},
+                )
+            errors = {"base": "invalid_host"}
+
+        suggested_values = user_input or {CONF_HOST: reconfigure_entry.data[CONF_HOST]}
+        return self.async_show_form(
+            step_id=SOURCE_RECONFIGURE,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                suggested_values,
+            ),
+            errors=errors,
+        )
+
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -298,6 +330,26 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self._bridge.async_try_connect()
             if result == RESULT_SUCCESS:
                 return self._get_entry_from_bridge()
+            if result == RESULT_CANNOT_CONNECT and model_may_require_encryption(
+                self._model
+            ):
+                # Some 2016 K-series sets advertise the websocket method but only
+                # pair via the encrypted PIN flow; try it before giving up
+                LOGGER.debug(
+                    "Websocket pairing failed for %s (%s), falling back to encrypted",
+                    self._host,
+                    self._model,
+                )
+                encrypted_bridge = SamsungTVBridge.get_bridge(
+                    self.hass,
+                    METHOD_ENCRYPTED_WEBSOCKET,
+                    self._host,
+                    ENCRYPTED_WEBSOCKET_PORT,
+                )
+                if await encrypted_bridge.async_try_connect() == RESULT_CANNOT_CONNECT:
+                    raise AbortFlow(RESULT_CANNOT_CONNECT)
+                self._bridge = encrypted_bridge
+                return await self.async_step_encrypted_pairing()
             if result != RESULT_AUTH_MISSING:
                 raise AbortFlow(result)
             errors = {"base": RESULT_AUTH_MISSING}
@@ -307,7 +359,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
         )
 
     async def async_step_encrypted_pairing(
@@ -339,7 +391,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )
 
     @callback
@@ -417,7 +469,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
         self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             # If its loaded it already has a reload listener in place
             # and we do not want to trigger multiple reloads
             self.hass.async_create_task(
@@ -439,6 +491,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return getattr(other_flow, "_host", None) == self._host
@@ -450,6 +503,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -495,6 +549,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -507,11 +562,18 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
+        if "Soundbar" in discovery_info.name:
+            LOGGER.debug(
+                "Ignoring Samsung Soundbar found via Zeroconf: %s", discovery_info
+            )
+            return self.async_abort(reason="not_supported")
+
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
         self._async_start_discovery_with_mac_address()
@@ -615,5 +677,5 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": reauth_entry.title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )

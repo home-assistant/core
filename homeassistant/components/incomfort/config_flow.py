@@ -1,13 +1,15 @@
 """Config flow support for Intergas InComfort integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from incomfortclient import InvalidGateway, InvalidHeaterList
-import voluptuous as vol
+from incomfortclient import (
+    Gateway as InComfortGateway,
+    InvalidGateway,
+    InvalidHeaterList,
+)
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -19,6 +21,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -30,48 +33,48 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
-from .coordinator import InComfortConfigEntry, async_connect_gateway
+from .coordinator import InComfortConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
-DHCP_CONFIG_SCHEMA = vol.Schema(
+DHCP_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
 )
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): BooleanSelector(
+        probatio.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): BooleanSelector(
             BooleanSelectorConfig()
         )
     }
@@ -83,7 +86,13 @@ async def async_try_connect_gateway(
 ) -> dict[str, str] | None:
     """Try to connect to the Lan2RF gateway."""
     try:
-        await async_connect_gateway(hass, config)
+        client = InComfortGateway(
+            hostname=config[CONF_HOST],
+            username=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
+            session=async_get_clientsession(hass),
+        )
+        await client.heaters()
     except InvalidGateway:
         return {"base": "auth_error"}
     except InvalidHeaterList:
@@ -102,6 +111,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_host: str
 
+    @override
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -110,6 +120,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return InComfortOptionsFlowHandler()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -155,7 +166,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial set up via DHCP."""
         errors: dict[str, str] | None = None
-        data_schema: vol.Schema = DHCP_CONFIG_SCHEMA
+        data_schema: probatio.Schema = DHCP_CONFIG_SCHEMA
         if user_input is not None:
             user_input[CONF_HOST] = self._discovered_host
             if (
@@ -171,12 +182,13 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self._discovered_host},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
-        data_schema: vol.Schema = CONFIG_SCHEMA
+        data_schema: probatio.Schema = CONFIG_SCHEMA
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
             data_schema = self.add_suggested_values_to_schema(

@@ -34,13 +34,68 @@ API_DISCOVERY_PORT_MANAGEMENT = {
     "name": "IO Port Management",
 }
 
-APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
- <application Name="fenceguard" NiceName="AXIS Fence Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="47775" License="None" Status="Running" ConfigurationPage="local/fenceguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="loiteringguard" NiceName="AXIS Loitering Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="46775" License="None" Status="Running" ConfigurationPage="local/loiteringguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="motionguard" NiceName="AXIS Motion Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="48170" License="None" Status="Running" ConfigurationPage="local/motionguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
- <application Name="objectanalytics" NiceName="AXIS Object Analytics" Vendor="Axis Communications" Version="1.0-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
-</reply>"""
+APPLICATIONS_LIST_RESPONSE = (
+    '<reply result="ok">\n'
+    " <application"
+    ' Name="fenceguard"'
+    ' NiceName="AXIS Fence Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="47775"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/fenceguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="loiteringguard"'
+    ' NiceName="AXIS Loitering Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="46775"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/loiteringguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="motionguard"'
+    ' NiceName="AXIS Motion Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="48170"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/motionguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="vmd"'
+    ' NiceName="AXIS Video Motion Detection"'
+    ' Vendor="Axis Communications"'
+    ' Version="4.2-0"'
+    ' ApplicationID="143440"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/vmd/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    " />\n"
+    " <application"
+    ' Name="objectanalytics"'
+    ' NiceName="AXIS Object Analytics"'
+    ' Vendor="Axis Communications"'
+    ' Version="1.0-0"'
+    ' ApplicationID="143440"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/vmd/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    " />\n"
+    "</reply>"
+)
 
 BASIC_DEVICE_INFO_RESPONSE = {
     "apiVersion": "1.1",

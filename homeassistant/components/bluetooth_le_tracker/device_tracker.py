@@ -1,13 +1,11 @@
 """Tracking for bluetooth low energy devices."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -44,8 +42,8 @@ MIN_SEEN_NEW = 5
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
-        vol.Optional(
+        probatio.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
+        probatio.Optional(
             CONF_TRACK_BATTERY_INTERVAL, default=DEFAULT_TRACK_BATTERY_INTERVAL
         ): cv.time_period,
     }
@@ -164,8 +162,10 @@ async def async_setup_scanner(  # noqa: C901
         # until bleak releases v0.15+ which resolves these.
         except (AttributeError, BleakError) as err:
             _LOGGER.debug("Could not read battery status: %s", err)
-            # If the device does not offer battery information, there is no point in asking again later on.
-            # Remove the device from the battery-tracked devices, so that their battery is not wasted
+            # If the device does not offer battery information,
+            # there is no point in asking again later on.
+            # Remove the device from the battery-tracked
+            # devices, so that their battery is not wasted
             # trying to get an unavailable information.
             del devs_track_battery[mac]
         if battery:

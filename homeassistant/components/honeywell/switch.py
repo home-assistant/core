@@ -1,8 +1,6 @@
 """Support for Honeywell switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiosomecomfort import SomeComfortError
 from aiosomecomfort.device import Device as SomeComfortDevice
@@ -68,6 +66,7 @@ class HoneywellSwitch(SwitchEntity):
             manufacturer="Honeywell",
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on if heat mode is enabled."""
         try:
@@ -77,6 +76,7 @@ class HoneywellSwitch(SwitchEntity):
                 translation_domain=DOMAIN, translation_key="switch_failed_on"
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off if on."""
         if self.is_on:
@@ -89,6 +89,7 @@ class HoneywellSwitch(SwitchEntity):
                 ) from err
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if Emergency heat is enabled."""
         return self._device.system_mode == "emheat"

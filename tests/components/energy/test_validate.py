@@ -371,19 +371,11 @@ async def test_validation_grid(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.grid_consumption_1",
-                            "stat_cost": "sensor.grid_cost_1",
-                        }
-                    ],
-                    "flow_to": [
-                        {
-                            "stat_energy_to": "sensor.grid_production_1",
-                            "stat_compensation": "sensor.grid_compensation_1",
-                        }
-                    ],
-                    "power": [],
+                    "stat_energy_from": "sensor.grid_consumption_1",
+                    "stat_energy_to": "sensor.grid_production_1",
+                    "stat_cost": "sensor.grid_cost_1",
+                    "stat_compensation": "sensor.grid_compensation_1",
+                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -464,19 +456,11 @@ async def test_validation_grid_external_cost_compensation(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.grid_consumption_1",
-                            "stat_cost": "external:grid_cost_1",
-                        }
-                    ],
-                    "flow_to": [
-                        {
-                            "stat_energy_to": "sensor.grid_production_1",
-                            "stat_compensation": "external:grid_compensation_1",
-                        }
-                    ],
-                    "power": [],
+                    "stat_energy_from": "sensor.grid_consumption_1",
+                    "stat_energy_to": "sensor.grid_production_1",
+                    "stat_cost": "external:grid_cost_1",
+                    "stat_compensation": "external:grid_compensation_1",
+                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -559,20 +543,11 @@ async def test_validation_grid_price_not_exist(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.grid_consumption_1",
-                            "entity_energy_price": "sensor.grid_price_1",
-                            "number_energy_price": None,
-                        }
-                    ],
-                    "flow_to": [
-                        {
-                            "stat_energy_to": "sensor.grid_production_1",
-                            "entity_energy_price": None,
-                            "number_energy_price": 0.10,
-                        }
-                    ],
+                    "stat_energy_from": "sensor.grid_consumption_1",
+                    "stat_energy_to": "sensor.grid_production_1",
+                    "entity_energy_price": "sensor.grid_price_1",
+                    "number_energy_price_export": 0.10,
+                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -710,15 +685,9 @@ async def test_validation_grid_price_errors(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.grid_consumption_1",
-                            "entity_energy_price": "sensor.grid_price_1",
-                            "number_energy_price": None,
-                        }
-                    ],
-                    "flow_to": [],
-                    "power": [],
+                    "stat_energy_from": "sensor.grid_consumption_1",
+                    "entity_energy_price": "sensor.grid_price_1",
+                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -857,7 +826,9 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            f"{ENERGY_PRICE_UNITS_STRING}, EUR/CCF, EUR/ft³, EUR/m³, EUR/L, EUR/MCF"
+                            f"{ENERGY_PRICE_UNITS_STRING},"
+                            " EUR/CCF, EUR/ft³, EUR/m³,"
+                            " EUR/L, EUR/MCF"
                         )
                     },
                 },
@@ -1071,7 +1042,9 @@ async def test_validation_water(
                     "type": "entity_unexpected_unit_water_price",
                     "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
                     "translation_placeholders": {
-                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
+                        "price_units": (
+                            "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
+                        )
                     },
                 },
             ],

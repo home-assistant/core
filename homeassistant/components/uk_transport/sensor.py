@@ -1,15 +1,13 @@
 """Support for UK public transport data provided by transportapi.com."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -40,19 +38,21 @@ CONF_QUERIES = "queries"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 
-_QUERY_SCHEME = vol.Schema(
+_QUERY_SCHEME = probatio.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
+        probatio.Required(CONF_MODE): probatio.All(
+            cv.ensure_list, [probatio.In(["bus", "train"])]
+        ),
+        probatio.Required(CONF_ORIGIN): cv.string,
+        probatio.Required(CONF_DESTINATION): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_APP_ID): cv.string,
-        vol.Required(CONF_API_APP_KEY): cv.string,
-        vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
+        probatio.Required(CONF_API_APP_ID): cv.string,
+        probatio.Required(CONF_API_APP_KEY): cv.string,
+        probatio.Required(CONF_QUERIES): [_QUERY_SCHEME],
     }
 )
 
@@ -123,11 +123,13 @@ class UkTransportSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
@@ -163,7 +165,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         self._destination_re = re.compile(f"{bus_direction}", re.IGNORECASE)
 
         sensor_name = f"Next bus to {bus_direction}"
-        stop_url = f"bus/stop/{stop_atcocode}.json"
+        stop_url = f"bus/stop/{stop_atcocode}/live.json"
 
         UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key, stop_url)
         self.update = Throttle(interval)(self._update)
@@ -197,6 +199,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
@@ -226,7 +229,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._next_trains = []
 
         sensor_name = f"Next train to {calling_at}"
-        query_url = f"train/station/{station_code}.json"
+        query_url = f"train/station/{station_code}/live.json"
 
         UkTransportSensor.__init__(
             self, sensor_name, api_app_id, api_app_key, query_url
@@ -269,6 +272,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:

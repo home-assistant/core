@@ -1,7 +1,5 @@
 """Implement the services discovery feature from Hass.io for Add-ons."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -13,7 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
@@ -21,15 +19,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import ATTR_ADDON, ATTR_UUID, DOMAIN
-from .handler import HassIO, get_supervisor_client
+from .handler import get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_discovery_view(hass: HomeAssistant, hassio: HassIO) -> None:
+def async_setup_discovery_view(hass: HomeAssistant) -> None:
     """Discovery setup."""
-    hassio_discovery = HassIODiscovery(hass, hassio)
+    hassio_discovery = HassIODiscovery(hass)
     supervisor_client = get_supervisor_client(hass)
     hass.http.register_view(hassio_discovery)
 
@@ -77,12 +75,12 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass: HomeAssistant, hassio: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize WebView."""
         self.hass = hass
-        self.hassio = hassio
         self._supervisor_client = get_supervisor_client(hass)
 
+    @require_admin
     async def post(self, request: web.Request, uuid: str) -> web.Response:
         """Handle new discovery requests."""
         # Fetch discovery data and prevent injections
@@ -95,6 +93,7 @@ class HassIODiscovery(HomeAssistantView):
         await self.async_process_new(data)
         return web.Response()
 
+    @require_admin
     async def delete(self, request: web.Request, uuid: str) -> web.Response:
         """Handle remove discovery requests."""
         data: dict[str, Any] = await request.json()
@@ -117,7 +116,7 @@ class HassIODiscovery(HomeAssistantView):
         try:
             addon_info = await self._supervisor_client.addons.addon_info(data.addon)
         except SupervisorError as err:
-            _LOGGER.error("Can't read add-on info: %s", err)
+            _LOGGER.error("Can't read app info: %s", err)
             return
 
         data.config[ATTR_ADDON] = addon_info.name

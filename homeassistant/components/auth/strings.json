@@ -10,12 +10,6 @@
       "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
     }
   },
-  "issues": {
-    "homeassistant_provider_not_normalized_usernames": {
-      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces.",
-      "title": "Not normalized usernames detected"
-    }
-  },
   "mfa_setup": {
     "notify": {
       "abort": {
@@ -30,6 +24,9 @@
           "title": "Set up one-time password delivered by notify component"
         },
         "setup": {
+          "data": {
+            "code": "Code"
+          },
           "description": "A one-time password has been sent via **notify.{notify_service}**. Please enter it below:",
           "title": "Verify setup"
         }
@@ -42,6 +39,9 @@
       },
       "step": {
         "init": {
+          "data": {
+            "code": "Code"
+          },
           "description": "To activate two-factor authentication using time-based one-time passwords, scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator]({google_authenticator_url}) or [Authy]({authy_url}).\n\n{qr_code}\n\nAfter scanning the code, enter the six-digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**.",
           "title": "Set up two-factor authentication using TOTP"
         }

@@ -1,10 +1,8 @@
 """Config flow to configure the Open-Meteo integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -19,6 +17,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -35,9 +34,9 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ZONE): EntitySelector(
+                    probatio.Required(CONF_ZONE): EntitySelector(
                         EntitySelectorConfig(domain=ZONE_DOMAIN),
                     ),
                 }

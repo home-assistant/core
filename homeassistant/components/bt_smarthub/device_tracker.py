@@ -1,12 +1,11 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 import logging
+from typing import override
 
 from btsmarthub_devicelist import BTSmartHub
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -25,8 +24,8 @@ CONF_SMARTHUB_MODEL = "smarthub_model"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-        vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
+        probatio.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        probatio.Optional(CONF_SMARTHUB_MODEL): probatio.In([1, 2]),
     }
 )
 
@@ -69,11 +68,13 @@ class BTSmartHubScanner(DeviceScanner):
         else:
             _LOGGER.warning("Failed to connect to %s", self.smarthub.router_ip)
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:

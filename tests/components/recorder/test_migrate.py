@@ -808,7 +808,9 @@ def test_raise_if_exception_missing_str() -> None:
     """Test we raise an exception if strings are not present."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError(
-        "[42S11] [FreeTDS][SQL Server]The operation failed because an index or statistics with name 'ix_states_old_state_id' already exists on table 'states'. (1913) (SQLExecDirectW)"
+        "[42S11] [FreeTDS][SQL Server]The operation failed because an"
+        " index or statistics with name 'ix_states_old_state_id'"
+        " already exists on table 'states'. (1913) (SQLExecDirectW)"
     )
 
     migration.raise_if_exception_missing_str(

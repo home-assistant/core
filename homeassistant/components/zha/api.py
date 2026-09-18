@@ -1,7 +1,5 @@
 """API for Zigbee Home Automation."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Literal
 
 from zha.application.const import RadioType
@@ -57,12 +55,7 @@ async def async_get_last_network_settings(
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
     async with radio_mgr.create_zigpy_app(connect=False) as app:
-        try:
-            settings = max(app.backups, key=lambda b: b.backup_time)
-        except ValueError:
-            settings = None
-
-    return settings
+        return app.backups.most_recent_backup()
 
 
 async def async_get_network_settings(

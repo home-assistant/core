@@ -1,12 +1,11 @@
 """Support gathering system information of hosts which are running netdata."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -39,21 +38,23 @@ DEFAULT_PORT = 19999
 
 DEFAULT_ICON = "mdi:desktop-classic"
 
-RESOURCE_SCHEMA = vol.Any(
+RESOURCE_SCHEMA = probatio.Any(
     {
-        vol.Required(CONF_DATA_GROUP): cv.string,
-        vol.Required(CONF_ELEMENT): cv.string,
-        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
+        probatio.Required(CONF_DATA_GROUP): cv.string,
+        probatio.Required(CONF_ELEMENT): cv.string,
+        probatio.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+        probatio.Optional(CONF_INVERT, default=False): cv.boolean,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_RESOURCES): probatio.Schema(
+            {cv.string: RESOURCE_SCHEMA}
+        ),
     }
 )
 
@@ -113,36 +114,17 @@ class NetdataSensor(SensorEntity):
     def __init__(self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
         """Initialize the Netdata sensor."""
         self.netdata = netdata
-        self._state = None
         self._sensor = sensor
         self._element = element
-        self._sensor_name = self._sensor if sensor_name is None else sensor_name
-        self._name = name
-        self._icon = icon
-        self._unit_of_measurement = unit
+        if sensor_name is None:
+            sensor_name = self._sensor
+        self._attr_name = f"{name} {sensor_name}"
+        self._attr_icon = icon
+        self._attr_native_unit_of_measurement = unit
         self._invert = invert
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._sensor_name}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        return self._state
-
-    @property
+    @override
     def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
@@ -151,9 +133,9 @@ class NetdataSensor(SensorEntity):
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
-        self._state = round(resource_data["dimensions"][self._element]["value"], 2) * (
-            -1 if self._invert else 1
-        )
+        self._attr_native_value = round(
+            resource_data["dimensions"][self._element]["value"], 2
+        ) * (-1 if self._invert else 1)
 
 
 class NetdataAlarms(SensorEntity):
@@ -162,33 +144,24 @@ class NetdataAlarms(SensorEntity):
     def __init__(self, netdata, name, host, port):
         """Initialize the Netdata alarm sensor."""
         self.netdata = netdata
-        self._state = None
-        self._name = name
+        self._attr_name = f"{name} Alarms"
         self._host = host
         self._port = port
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} Alarms"
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        return self._state
-
-    @property
-    def icon(self):
+    @override
+    def icon(self) -> str:
         """Status symbol if type is symbol."""
-        if self._state == "ok":
+        if self._attr_native_value == "ok":
             return "mdi:check"
-        if self._state == "warning":
+        if self._attr_native_value == "warning":
             return "mdi:alert-outline"
-        if self._state == "critical":
+        if self._attr_native_value == "critical":
             return "mdi:alert"
         return "mdi:crosshairs-question"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
@@ -197,7 +170,7 @@ class NetdataAlarms(SensorEntity):
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
         alarms = self.netdata.api.alarms["alarms"]
-        self._state = None
+        self._attr_native_value = None
         number_of_alarms = len(alarms)
         number_of_relevant_alarms = number_of_alarms
 
@@ -211,9 +184,9 @@ class NetdataAlarms(SensorEntity):
             ):
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
-                self._state = "critical"
+                self._attr_native_value = "critical"
                 return
-        self._state = "ok" if number_of_relevant_alarms == 0 else "warning"
+        self._attr_native_value = "ok" if number_of_relevant_alarms == 0 else "warning"
 
 
 class NetdataData:

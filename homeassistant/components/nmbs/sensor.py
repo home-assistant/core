@@ -1,10 +1,8 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrail import iRail
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
@@ -12,10 +10,9 @@ from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -57,7 +54,7 @@ def get_delay_in_minutes(delay=0):
 def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0):
     """Calculate the total travel time in minutes."""
     duration = arrival_time - departure_time
-    duration_time = int(round(duration.total_seconds() / 60))
+    duration_time = round(duration.total_seconds() / 60)
     return duration_time + get_delay_in_minutes(delay)
 
 
@@ -118,19 +115,22 @@ class NMBSLiveBoard(SensorEntity):
         self.entity_registry_enabled_default = False
 
     @property
+    @override
     def name(self) -> str:
         """Return the sensor default name."""
         return f"Trains in {self._station.standard_name}"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID."""
 
         unique_id = f"{self._station.id}_{self._station_from.id}_{self._station_to.id}"
         vias = "_excl_vias" if self._excl_vias else ""
-        return f"nmbs_live_{unique_id}{vias}"
+        return f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def icon(self) -> str:
         """Return the default icon or an alert icon if delays."""
         if self._attrs and int(self._attrs.delay) > 0:
@@ -139,11 +139,13 @@ class NMBSLiveBoard(SensorEntity):
         return DEFAULT_ICON
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return sensor state."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the sensor attributes if data is available."""
         if self._state is None or not self._attrs:
@@ -215,21 +217,27 @@ class NMBSSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID."""
         unique_id = f"{self._station_from.id}_{self._station_to.id}"
 
         vias = "_excl_vias" if self._excl_vias else ""
-        return f"nmbs_connection_{unique_id}{vias}"
+        return f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         if self._name is None:
-            return f"Train from {self._station_from.standard_name} to {self._station_to.standard_name}"
+            return (
+                f"Train from {self._station_from.standard_name}"
+                f" to {self._station_to.standard_name}"
+            )
         return self._name
 
     @property
+    @override
     def icon(self) -> str:
         """Return the sensor default icon or an alert icon if any delay."""
         if self._attrs:
@@ -240,6 +248,7 @@ class NMBSSensor(SensorEntity):
         return "mdi:train"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return sensor attributes if data is available."""
         if self._state is None or not self._attrs:
@@ -265,8 +274,8 @@ class NMBSSensor(SensorEntity):
             attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
-            attrs[ATTR_LATITUDE] = self.station_coordinates[0]
-            attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
+            attrs[EntityStateAttribute.LATITUDE] = self.station_coordinates[0]
+            attrs[EntityStateAttribute.LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
             via = self._attrs.vias[0]
@@ -284,6 +293,7 @@ class NMBSSensor(SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the device."""
         return self._state

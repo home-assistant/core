@@ -1,16 +1,13 @@
 """Support to interface with universal remote control devices."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,12 +22,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
+
+from .const import DOMAIN, RemoteEntityFeature, RemoteEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "remote"
 DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
@@ -60,20 +57,11 @@ DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
 
-class RemoteEntityFeature(IntFlag):
-    """Supported features of the remote entity."""
-
-    LEARN_COMMAND = 1
-    DELETE_COMMAND = 2
-    ACTIVITY = 4
-
-
 REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
-    {vol.Optional(ATTR_ACTIVITY): cv.string}
+    {probatio.Optional(ATTR_ACTIVITY): cv.string}
 )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the remote is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -101,13 +89,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
         {
-            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_DEVICE): cv.string,
-            vol.Optional(
+            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_DEVICE): cv.string,
+            probatio.Optional(
                 ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
             ): cv.positive_int,
-            vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
-            vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
+            probatio.Optional(ATTR_DELAY_SECS): probatio.Coerce(float),
+            probatio.Optional(
+                ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS
+            ): probatio.Coerce(float),
         },
         "async_send_command",
     )
@@ -115,11 +105,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_LEARN_COMMAND,
         {
-            vol.Optional(ATTR_DEVICE): cv.string,
-            vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
-            vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+            probatio.Optional(ATTR_DEVICE): cv.string,
+            probatio.Optional(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_COMMAND_TYPE): cv.string,
+            probatio.Optional(ATTR_ALTERNATIVE): cv.boolean,
+            probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
         },
         "async_learn_command",
     )
@@ -127,8 +117,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_DELETE_COMMAND,
         {
-            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_DEVICE): cv.string,
+            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_DEVICE): cv.string,
         },
         "async_delete_command",
     )
@@ -166,6 +156,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @cached_property
+    @override
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -182,14 +173,15 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
         if RemoteEntityFeature.ACTIVITY not in self.supported_features:
             return None
 
         return {
-            ATTR_ACTIVITY_LIST: self.activity_list,
-            ATTR_CURRENT_ACTIVITY: self.current_activity,
+            RemoteEntityStateAttribute.ACTIVITY_LIST: self.activity_list,
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY: self.current_activity,
         }
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:

@@ -1,8 +1,6 @@
 """Support for Yale Access Bluetooth locks."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState, LockStatus
 
@@ -32,6 +30,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     _secure_mode: bool = False
 
     @callback
+    @override
     def _async_update_state(
         self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
     ) -> None:
@@ -52,12 +51,14 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         elif lock_state in (
             LockStatus.UNKNOWN_01,
             LockStatus.UNKNOWN_06,
+            LockStatus.JAMMED,
         ):
             self._attr_is_jammed = True
         elif lock_state is LockStatus.UNKNOWN:
             self._attr_is_locked = None
         super()._async_update_state(new_state, lock_info, connection_info)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._device.unlock()
@@ -68,6 +69,7 @@ class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
 
     _attr_name = None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._device.lock()
@@ -85,6 +87,7 @@ class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
         super().__init__(data)
         self._attr_unique_id = f"{self._device.address}_secure_mode"
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._device.securemode()

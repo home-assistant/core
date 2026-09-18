@@ -1,13 +1,12 @@
 """Code to handle a Livisi switches."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from livisi.const import CAPABILITY_MAP
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -48,7 +47,8 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
         # For livisi climate entities, the device should have the room name from
         # the livisi setup, as each livisi room gets exactly one VRCC device. The entity
-        # name will always be some localized value of "Climate", so the full element name
+        # name will always be some localized value of
+        # "Climate", so the full element name
         # in homeassistent will be in the form of "Bedroom Climate"
         if use_room_as_device_name and room_name is not None:
             self._attr_name = name
@@ -60,10 +60,15 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
             model=device["type"],
             name=device_name,
             suggested_area=room_name,
-            via_device=(DOMAIN, config_entry.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, config_entry.entry_id),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
         super().__init__(coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
         await super().async_added_to_hass()

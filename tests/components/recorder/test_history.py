@@ -1,7 +1,5 @@
 """The tests the History component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
@@ -72,7 +70,7 @@ def setup_recorder(recorder_mock: Recorder) -> recorder.Recorder:
 async def test_get_full_significant_states_with_session_entity_no_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test getting states at a specific point in time for entities that never have been recorded."""
+    """Test getting states for entities that never have been recorded."""
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     with session_scope(hass=hass, read_only=True) as session:
@@ -97,7 +95,7 @@ async def test_get_full_significant_states_with_session_entity_no_matches(
 async def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test getting states at a specific point in time for entities that never have been recorded."""
+    """Test getting states for entities that never have been recorded."""
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     with session_scope(hass=hass, read_only=True) as session:
@@ -1029,7 +1027,7 @@ async def test_get_significant_states_with_non_existent_entity_ids_returns_empty
 async def test_state_changes_during_period_with_non_existent_entity_ids_returns_empty(
     hass: HomeAssistant,
 ) -> None:
-    """Test state_changes_during_period returns an empty dict when entities not in the db."""
+    """Test state_changes_during_period with non-existent entities."""
     now = dt_util.utcnow()
     assert (
         history.state_changes_during_period(hass, now, None, "nonexistent.entity") == {}

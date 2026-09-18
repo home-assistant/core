@@ -31,8 +31,9 @@ VALID_CONFIG_OLD = {
 }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_seventeentrack: AsyncMock
+    hass: HomeAssistant, mock_seventeentrack: AsyncMock
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
@@ -80,10 +81,16 @@ async def test_flow_fails(
     """Test that the user step fails."""
     mock_seventeentrack.return_value.profile.login.return_value = return_value
     mock_seventeentrack.return_value.profile.login.side_effect = side_effect
-    failed_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    failed_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        VALID_CONFIG,
     )
 
     assert failed_result["errors"] == {"base": error}

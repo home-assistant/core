@@ -1,8 +1,6 @@
 """Support for Acmeda Roller Blinds."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -50,6 +48,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the roller blind.
 
@@ -61,6 +60,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         return position
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt of the roller blind.
 
@@ -72,6 +72,7 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         return position
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature(0)
@@ -93,38 +94,47 @@ class AcmedaCover(AcmedaEntity, CoverEntity):
         return supported_features
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.roller.closed_percent == 100  # type: ignore[no-any-return]
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])

@@ -1,11 +1,9 @@
 """Label functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import (
     area_registry as ar,
@@ -83,7 +81,7 @@ class LabelExtension(BaseTemplateExtension):
         )
 
     def labels(self, lookup_value: Any = None) -> Iterable[str | None]:
-        """Return all labels, or those from a area ID, device ID, or entity ID."""
+        """Return all labels, or those from an area ID, device ID, or entity ID."""
         label_reg = lr.async_get(self.hass)
         if lookup_value is None:
             return list(label_reg.labels)
@@ -97,7 +95,7 @@ class LabelExtension(BaseTemplateExtension):
 
         try:
             cv.entity_id(lookup_value)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
         else:
             if entity := ent_reg.async_get(lookup_value):
@@ -108,7 +106,7 @@ class LabelExtension(BaseTemplateExtension):
         if device := dev_reg.async_get(lookup_value):
             return list(device.labels)
 
-        # Check if this could be a area ID
+        # Check if this could be an area ID
         area_reg = ar.async_get(self.hass)
         if area := area_reg.async_get_area(lookup_value):
             return list(area.labels)

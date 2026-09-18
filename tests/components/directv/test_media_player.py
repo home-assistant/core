@@ -1,13 +1,12 @@
 """The tests for the DirecTV Media player platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.directv.const import DOMAIN
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
@@ -48,10 +47,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
+from . import RECEIVER_ID, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -162,6 +161,29 @@ async def test_unique_id(
     unavailable_client = entity_registry.async_get(UNAVAILABLE_ENTITY_ID)
     assert unavailable_client.original_device_class == MediaPlayerDeviceClass.RECEIVER
     assert unavailable_client.unique_id == "9XXXXXXXXXX9"
+
+
+async def test_client_device_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a client's device links to the receiver device via via_device_id."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    receiver_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, RECEIVER_ID), entry.entry_id
+    )
+    assert receiver_device is not None
+
+    client_entity = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client_entity is not None
+    assert client_entity.device_id is not None
+
+    client_device = device_registry.async_get(client_entity.device_id)
+    assert client_device is not None
+    assert client_device.via_device_id == receiver_device.id
 
 
 async def test_supported_features(

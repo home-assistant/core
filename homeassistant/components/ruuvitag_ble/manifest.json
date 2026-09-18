@@ -15,6 +15,7 @@
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
+  "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["ruuvitag-ble==0.3.0"]
+  "requirements": ["ruuvitag-ble==0.4.0"]
 }

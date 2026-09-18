@@ -12,11 +12,13 @@ from bring_api import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bring import async_setup_entry
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
@@ -52,11 +54,11 @@ async def test_load_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "status"),
+    ("exception", "status", "reauth_triggered"),
     [
-        (BringRequestException, ConfigEntryState.SETUP_RETRY),
-        (BringAuthException, ConfigEntryState.SETUP_ERROR),
-        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringRequestException, ConfigEntryState.SETUP_RETRY, False),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR, True),
+        (BringParseException, ConfigEntryState.SETUP_RETRY, False),
     ],
 )
 async def test_init_failure(
@@ -64,35 +66,22 @@ async def test_init_failure(
     mock_bring_client: AsyncMock,
     status: ConfigEntryState,
     exception: Exception,
+    reauth_triggered: bool,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
     mock_bring_client.login.side_effect = exception
     await setup_integration(hass, bring_config_entry)
-    assert bring_config_entry.state == status
+    assert bring_config_entry.state is status
 
-
-@pytest.mark.parametrize(
-    ("exception", "expected"),
-    [
-        (BringRequestException, ConfigEntryNotReady),
-        (BringAuthException, ConfigEntryAuthFailed),
-        (BringParseException, ConfigEntryNotReady),
-    ],
-)
-async def test_init_exceptions(
-    hass: HomeAssistant,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-    expected: Exception,
-    bring_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initialization error on integration load."""
-    bring_config_entry.add_to_hass(hass)
-    mock_bring_client.login.side_effect = exception
-
-    with pytest.raises(expected):
-        await async_setup_entry(hass, bring_config_entry)
+    assert (
+        any(
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == SOURCE_REAUTH
+        )
+        is reauth_triggered
+    )
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
@@ -208,8 +197,9 @@ async def test_coordinator_skips_deactivated(
 
     assert mock_bring_client.get_list.await_count == 2
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{UUID}_b4776778-7f6c-496e-951b-92a35d3db0dd")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{UUID}_b4776778-7f6c-496e-951b-92a35d3db0dd"),
+        bring_config_entry.entry_id,
     )
     device_registry.async_update_device(device.id, disabled_by=ConfigEntryDisabler.USER)
 
@@ -235,8 +225,9 @@ async def test_purge_devices(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
 
-    assert device_registry.async_get_device(
-        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+        bring_config_entry.entry_id,
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
@@ -248,8 +239,9 @@ async def test_purge_devices(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+            bring_config_entry.entry_id,
         )
         is None
     )
@@ -272,8 +264,9 @@ async def test_create_devices(
     assert bring_config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+            bring_config_entry.entry_id,
         )
         is None
     )
@@ -285,8 +278,9 @@ async def test_create_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(
-        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}"),
+        bring_config_entry.entry_id,
     )
 
 

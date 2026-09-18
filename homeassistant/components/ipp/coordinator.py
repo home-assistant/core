@@ -1,9 +1,8 @@
 """Coordinator for The Internet Printing Protocol (IPP) integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyipp import IPP, IPPError, Printer as IPPPrinter
 
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BASE_PATH, DOMAIN
+from .const import CONF_BASE_PATH, DOMAIN, REQUEST_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -37,6 +36,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             tls=config_entry.data[CONF_SSL],
             verify_ssl=config_entry.data[CONF_VERIFY_SSL],
             session=async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            request_timeout=REQUEST_TIMEOUT,
         )
 
         super().__init__(
@@ -47,6 +47,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> IPPPrinter:
         """Fetch data from IPP."""
         try:

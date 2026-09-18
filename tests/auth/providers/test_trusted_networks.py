@@ -4,8 +4,8 @@ from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 
 from hass_nabucasa import remote
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import auth
 from homeassistant.auth import auth_store
@@ -153,7 +153,7 @@ async def test_config_schema() -> None:
         }
     )
     # Wrong user id format
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         tn_auth.CONFIG_SCHEMA(
             {
                 "type": "trusted_networks",
@@ -267,7 +267,7 @@ async def test_login_flow(
     # not from trusted network
     flow = await provider.async_login_flow({"ip_address": ip_address("127.0.0.1")})
     step = await flow.async_step_init()
-    assert step["type"] == FlowResultType.ABORT
+    assert step["type"] is FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users
@@ -277,12 +277,12 @@ async def test_login_flow(
 
     schema = step["data_schema"]
     assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": "invalid-user"})
 
     # login with valid user
     step = await flow.async_step_init({"user": user.id})
-    assert step["type"] == FlowResultType.CREATE_ENTRY
+    assert step["type"] is FlowResultType.CREATE_ENTRY
     assert step["data"]["user"] == user.id
 
 
@@ -309,7 +309,7 @@ async def test_trusted_users_login(
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == FlowResultType.ABORT
+    assert step["type"] is FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
@@ -322,7 +322,7 @@ async def test_trusted_users_login(
     schema = step["data_schema"]
     # only owner listed
     assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -335,9 +335,9 @@ async def test_trusted_users_login(
     schema = step["data_schema"]
     # only user listed
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -349,7 +349,7 @@ async def test_trusted_users_login(
     # both owner and user listed
     assert schema({"user": owner.id})
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
     # from trusted network, list users intersect trusted_users
@@ -361,11 +361,11 @@ async def test_trusted_users_login(
 
     schema = step["data_schema"]
     # no user listed
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": sys_user.id})
 
 
@@ -396,7 +396,7 @@ async def test_trusted_group_login(
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == FlowResultType.ABORT
+    assert step["type"] is FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, list users intersect trusted_users
@@ -409,7 +409,7 @@ async def test_trusted_group_login(
     schema = step["data_schema"]
     # only user listed
     assert schema({"user": user.id})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert schema({"user": owner.id})
 
     # from trusted network, list users intersect trusted_users
@@ -437,7 +437,7 @@ async def test_bypass_login_flow(
         {"ip_address": ip_address("127.0.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == FlowResultType.ABORT
+    assert step["type"] is FlowResultType.ABORT
     assert step["reason"] == "not_allowed"
 
     # from trusted network, only one available user, bypass the login flow
@@ -445,7 +445,7 @@ async def test_bypass_login_flow(
         {"ip_address": ip_address("192.168.0.1")}
     )
     step = await flow.async_step_init()
-    assert step["type"] == FlowResultType.CREATE_ENTRY
+    assert step["type"] is FlowResultType.CREATE_ENTRY
     assert step["data"]["user"] == owner.id
 
     user = await manager_bypass_login.async_create_user("test-user")

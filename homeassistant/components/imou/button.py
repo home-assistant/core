@@ -1,0 +1,110 @@
+"""Support for Imou button controls."""
+
+from typing import override
+
+from pyimouapi.const import PARAM_RESTART_DEVICE
+from pyimouapi.ha_device import ImouHaDevice
+
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
+from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
+from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
+
+PARALLEL_UPDATES = 1
+# Button types not yet exported by pyimouapi (keep module-local).
+PARAM_MUTE = "mute"
+PARAM_PTZ_UP = "ptz_up"
+PARAM_PTZ_DOWN = "ptz_down"
+PARAM_PTZ_LEFT = "ptz_left"
+PARAM_PTZ_RIGHT = "ptz_right"
+
+PTZ_BUTTON_TYPES = (
+    PARAM_PTZ_UP,
+    PARAM_PTZ_DOWN,
+    PARAM_PTZ_LEFT,
+    PARAM_PTZ_RIGHT,
+)
+
+BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
+    ButtonEntityDescription(
+        key=PARAM_RESTART_DEVICE,
+        device_class=ButtonDeviceClass.RESTART,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_MUTE,
+        translation_key=PARAM_MUTE,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_UP,
+        translation_key=PARAM_PTZ_UP,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_DOWN,
+        translation_key=PARAM_PTZ_DOWN,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_LEFT,
+        translation_key=PARAM_PTZ_LEFT,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_RIGHT,
+        translation_key=PARAM_PTZ_RIGHT,
+    ),
+)
+
+
+def _iter_buttons(
+    coordinator: ImouDataUpdateCoordinator,
+) -> list[tuple[ButtonEntityDescription, ImouHaDevice]]:
+    """Return (description, device) pairs for supported buttons."""
+    return [
+        (description, device)
+        for device in coordinator.devices
+        for description in BUTTON_TYPES
+        if description.key in device.buttons
+    ]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ImouConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Imou button entities."""
+    coordinator = entry.runtime_data
+
+    def _add_buttons(new_devices: list[ImouHaDevice]) -> None:
+        device_keys = {imou_device_identifier(device) for device in new_devices}
+        async_add_entities(
+            ImouButton(coordinator, description, device)
+            for description, device in _iter_buttons(coordinator)
+            if imou_device_identifier(device) in device_keys
+        )
+
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_buttons))
+    _add_buttons(coordinator.devices)
+
+
+class ImouButton(ImouEntity, ButtonEntity):
+    """Imou button entity."""
+
+    entity_description: ButtonEntityDescription
+
+    @override
+    @async_wrap_imou_command("press_button_failed")
+    async def async_press(self) -> None:
+        """Handle button press."""
+        duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
+        await self.coordinator.device_manager.async_press_button(
+            self.device,
+            self._entity_type,
+            duration,
+        )

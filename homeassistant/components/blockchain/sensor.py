@@ -1,12 +1,10 @@
 """Support for Blockchain.com sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
+import probatio
 from pyblockchain import get_balance, validate_address
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -28,8 +26,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESSES): [cv.string],
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ADDRESSES): [cv.string],
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

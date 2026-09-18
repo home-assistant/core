@@ -1,6 +1,5 @@
 """The Broadlink integration."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from dataclasses import dataclass, field
 

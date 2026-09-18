@@ -5,16 +5,19 @@ import http
 from http import HTTPStatus
 import json
 import time
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
-from httplib2 import Response
+from httplib2 import Response, ServerNotFoundError
 import pytest
 
 from homeassistant.components.google_tasks import DOMAIN
 from homeassistant.components.google_tasks.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .conftest import LIST_TASK_LIST_RESPONSE, LIST_TASKS_RESPONSE_WATER
 
@@ -128,16 +131,23 @@ async def test_expired_token_refresh_failure(
 @pytest.mark.parametrize(
     "response_handler",
     [
-        ([(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")]),
-        # First request succeeds, second request fails
-        (
+        pytest.param(
+            [(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")],
+            id="first_request_fails",
+        ),
+        pytest.param(
             [
                 (
                     Response({"status": HTTPStatus.OK}),
                     json.dumps(LIST_TASK_LIST_RESPONSE),
                 ),
                 (Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b""),
-            ]
+            ],
+            id="second_request_fails",
+        ),
+        pytest.param(
+            [ServerNotFoundError("Unable to find the server at tasks.googleapis.com")],
+            id="server_not_found",
         ),
     ],
 )
@@ -151,4 +161,21 @@ async def test_setup_error(
     """Test an error returned by the server when setting up the platform."""
 
     assert not await integration_setup()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_tasks.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert config_entry.state is ConfigEntryState.SETUP_RETRY

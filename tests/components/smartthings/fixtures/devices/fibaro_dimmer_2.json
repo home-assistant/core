@@ -1,0 +1,110 @@
+{
+  "items": [
+    {
+      "deviceId": "df9f5405-f930-46aa-9693-14c570b35c83",
+      "name": "fibaro-dimmer-2",
+      "label": "Dimmer entr\u00e9 1 1",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "b1b79065-1923-3e7a-b016-9abcc3d1d416",
+      "deviceManufacturerCode": "010F-0102-1001",
+      "locationId": "c85a9f8a-5d2e-4cdd-8bdb-bc49ba4a3544",
+      "ownerId": "7b68139b-d068-45d8-bf27-961320350024",
+      "roomId": "f4084bf6-2985-47cc-b3c9-3907d098ec0c",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "legendabsolute60149.forcedOnLevel",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Switch",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "button1",
+          "label": "button1",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "button2",
+          "label": "button2",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2023-04-23T06:35:16.202Z",
+      "parentDeviceId": "4869d882-e898-40c3-a198-7611b72187a5",
+      "profile": {
+        "id": "c6edf569-c7bb-38e7-a442-fe397ebe0cae"
+      },
+      "zwave": {
+        "networkId": "0A",
+        "driverId": "17c05c19-f008-42e2-aa12-f12f1aae5612",
+        "executingLocally": true,
+        "hubId": "4869d882-e898-40c3-a198-7611b72187a5",
+        "networkSecurityLevel": "ZWAVE_S0_LEGACY",
+        "provisioningState": "NONFUNCTIONAL",
+        "manufacturerId": 271,
+        "productType": 258,
+        "productId": 4097
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

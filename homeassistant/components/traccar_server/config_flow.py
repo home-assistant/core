@@ -1,17 +1,15 @@
 """Config flow for Traccar Server integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytraccar import (
     ApiClient,
     ServerModel,
     TraccarAuthenticationException,
     TraccarException,
 )
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,19 +50,21 @@ from .const import (
     LOGGER,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Optional(CONF_PORT, default="8082"): TextSelector(
+        probatio.Optional(CONF_PORT, default="8082"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Required(CONF_API_TOKEN): TextSelector(
+        probatio.Required(CONF_API_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Optional(CONF_SSL, default=False): BooleanSelector(BooleanSelectorConfig()),
-        vol.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(
+        probatio.Optional(CONF_SSL, default=False): BooleanSelector(
+            BooleanSelectorConfig()
+        ),
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(
             BooleanSelectorConfig()
         ),
     }
@@ -72,15 +72,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(CONF_MAX_ACCURACY, default=0.0): NumberSelector(
+                probatio.Optional(CONF_MAX_ACCURACY, default=0.0): NumberSelector(
                     NumberSelectorConfig(
                         mode=NumberSelectorMode.BOX,
                         min=0.0,
                     )
                 ),
-                vol.Optional(CONF_CUSTOM_ATTRIBUTES, default=[]): SelectSelector(
+                probatio.Optional(CONF_CUSTOM_ATTRIBUTES, default=[]): SelectSelector(
                     SelectSelectorConfig(
                         mode=SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -89,7 +89,9 @@ OPTIONS_FLOW = {
                         options=[],
                     )
                 ),
-                vol.Optional(CONF_SKIP_ACCURACY_FILTER_FOR, default=[]): SelectSelector(
+                probatio.Optional(
+                    CONF_SKIP_ACCURACY_FILTER_FOR, default=[]
+                ): SelectSelector(
                     SelectSelectorConfig(
                         mode=SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -98,7 +100,7 @@ OPTIONS_FLOW = {
                         options=[],
                     )
                 ),
-                vol.Optional(CONF_EVENTS, default=[]): SelectSelector(
+                probatio.Optional(CONF_EVENTS, default=[]): SelectSelector(
                     SelectSelectorConfig(
                         mode=SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -130,6 +132,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await client.get_server()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -200,9 +203,9 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TOKEN): TextSelector(
+                    probatio.Required(CONF_API_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -216,6 +219,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

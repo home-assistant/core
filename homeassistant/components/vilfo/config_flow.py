@@ -1,14 +1,14 @@
 """Config flow for Vilfo Router integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from vilfo import Client as VilfoClient
 from vilfo.exceptions import (
     AuthenticationException as VilfoAuthenticationException,
     VilfoException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
@@ -20,10 +20,10 @@ from .const import DOMAIN, ROUTER_DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=ROUTER_DEFAULT_HOST): str,
-        vol.Required(CONF_ACCESS_TOKEN, default=""): str,
+        probatio.Required(CONF_HOST, default=ROUTER_DEFAULT_HOST): str,
+        probatio.Required(CONF_ACCESS_TOKEN, default=""): str,
     }
 )
 
@@ -33,7 +33,7 @@ RESULT_INVALID_AUTH = "invalid_auth"
 
 
 def _try_connect_and_fetch_basic_info(host, token):
-    """Attempt to connect and call the ping endpoint and, if successful, fetch basic information."""
+    """Connect, call ping endpoint, and fetch basic info."""
 
     # Perform the ping. This doesn't validate authentication.
     controller = VilfoClient(host=host, token=token)
@@ -100,6 +100,7 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

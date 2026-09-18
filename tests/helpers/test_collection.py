@@ -1,13 +1,11 @@
 """Tests for the collection helper."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -262,7 +260,7 @@ async def test_storage_collection_update_modifiet_at(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that updating a storage collection will update the modified_at datetime in the entity registry."""
+    """Test updating a storage collection updates modified_at in the entity registry."""
 
     entities: dict[str, TestEntity] = {}
 
@@ -524,8 +522,8 @@ async def test_storage_collection_websocket(
         coll,
         "test_item/collection",
         "test_item",
-        {vol.Required("name"): str, vol.Required("immutable_string"): str},
-        {vol.Optional("name"): str},
+        {probatio.Required("name"): str, probatio.Required("immutable_string"): str},
+        {probatio.Optional("name"): str},
     ).async_setup(hass)
 
     client = await hass_ws_client(hass)
@@ -657,8 +655,8 @@ async def test_storage_collection_websocket_subscribe(
         coll,
         "test_item/collection",
         "test_item",
-        {vol.Required("name"): str, vol.Required("immutable_string"): str},
-        {vol.Optional("name"): str},
+        {probatio.Required("name"): str, probatio.Required("immutable_string"): str},
+        {probatio.Optional("name"): str},
     ).async_setup(hass)
 
     client = await hass_ws_client(hass)

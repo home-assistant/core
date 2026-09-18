@@ -1,7 +1,5 @@
 """Constants for the media_source integration."""
 
-from __future__ import annotations
-
 import re
 from typing import TYPE_CHECKING
 
@@ -9,11 +7,20 @@ from homeassistant.components.media_player import MediaClass
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
+
     from .models import MediaSource
 
 DOMAIN = "media_source"
-MEDIA_SOURCE_DATA: HassKey[dict[str, MediaSource]] = HassKey(DOMAIN)
+DATA_LOCAL_SOURCE: HassKey[MediaSource] = HassKey("media_source_local_source")
+DATA_MEDIA_SOURCE_PLATFORMS: HassKey[LazyIntegrationPlatforms[MediaSource]] = HassKey(
+    "media_source_platforms"
+)
 MEDIA_MIME_TYPES = ("audio", "video", "image")
+# Media types that pass the check above but are documents a browser executes.
+# Serving these inline would run them on the Home Assistant origin, where the
+# frontend keeps its tokens, so the browser is told to download them instead.
+DOWNLOAD_ONLY_MIME_TYPES = {"image/svg+xml"}
 MEDIA_CLASS_MAP = {
     "audio": MediaClass.MUSIC,
     "video": MediaClass.VIDEO,

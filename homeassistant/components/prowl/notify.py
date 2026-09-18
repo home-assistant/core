@@ -1,14 +1,12 @@
 """Prowl notification service."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
+import probatio
 import prowlpy
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -29,7 +27,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {probatio.Required(CONF_API_KEY): cv.string}
+)
 
 
 async def async_get_service(
@@ -66,6 +66,7 @@ class ProwlNotificationService(BaseNotificationService):
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
         data = kwargs.get(ATTR_DATA, {})
@@ -116,6 +117,7 @@ class ProwlNotificationEntity(NotifyEntity):
         self._attr_name = name
         self._attr_unique_id = name
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)

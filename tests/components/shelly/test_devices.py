@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import force_uptime_value, init_integration, snapshot_device_entities
+from . import MOCK_MAC, force_uptime_value, init_integration, snapshot_device_entities
 
 from tests.common import async_load_json_object_fixture
 
@@ -45,7 +45,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
     config_entry = await init_integration(hass, gen=3, model=MODEL_2PM_G3)
 
     # Relay 0 sub-device
-    entity_id = "switch.test_name_switch_0"
+    entity_id = "switch.test_name_output_0"
 
     state = hass.states.get(entity_id)
     assert state
@@ -55,9 +55,9 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 0"
+    assert device_entry.name == "Test name Output 0"
 
-    entity_id = "sensor.test_name_switch_0_power"
+    entity_id = "sensor.test_name_output_0_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -67,10 +67,10 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 0"
+    assert device_entry.name == "Test name Output 0"
 
     # Relay 1 sub-device
-    entity_id = "switch.test_name_switch_1"
+    entity_id = "switch.test_name_output_1"
 
     state = hass.states.get(entity_id)
     assert state
@@ -80,9 +80,9 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 1"
+    assert device_entry.name == "Test name Output 1"
 
-    entity_id = "sensor.test_name_switch_1_power"
+    entity_id = "sensor.test_name_output_1_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -92,7 +92,7 @@ async def test_shelly_2pm_gen3_no_relay_names(
 
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.name == "Test name Switch 1"
+    assert device_entry.name == "Test name Output 1"
 
     # Main device
     entity_id = "update.test_name_firmware"
@@ -579,7 +579,7 @@ async def test_blu_trv_device_info(
     device_registry: DeviceRegistry,
 ) -> None:
     """Test BLU TRV device info."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    config_entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     entry = entity_registry.async_get("climate.trv_name")
     assert entry
@@ -590,6 +590,12 @@ async def test_blu_trv_device_info(
     assert device_entry.model_id == "SBTR-001AEU"
     assert device_entry.sw_version == "v1.2.10"
 
+    gateway_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_MAC), config_entry.entry_id
+    )
+    assert gateway_device_entry
+    assert device_entry.via_device_id == gateway_device_entry.id
+
 
 @pytest.mark.parametrize(
     "fixture",
@@ -598,6 +604,7 @@ async def test_blu_trv_device_info(
         "duo_bulb_gen3",
         "power_strip_gen4",
         "presence_gen4",
+        "pro1cb_gen2",
         "wall_display_xl",
     ],
 )

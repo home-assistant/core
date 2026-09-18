@@ -1,8 +1,7 @@
 """Button platform for the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -13,6 +12,7 @@ from .api import (
     PterodactylAuthorizationError,
     PterodactylCommand,
     PterodactylConnectionError,
+    PterodactylGameServer,
 )
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 from .entity import PterodactylEntity
@@ -67,8 +67,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        PterodactylButtonEntity(coordinator, identifier, description, config_entry)
-        for identifier in coordinator.api.identifiers
+        PterodactylButtonEntity(coordinator, game_server, description, config_entry)
+        for game_server in coordinator.api.game_servers
         for description in BUTTON_DESCRIPTIONS
     )
 
@@ -81,24 +81,33 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: PterodactylCoordinator,
-        identifier: str,
+        game_server: PterodactylGameServer,
         description: PterodactylButtonEntityDescription,
         config_entry: PterodactylConfigEntry,
     ) -> None:
         """Initialize the button entity."""
-        super().__init__(coordinator, identifier, config_entry)
+        super().__init__(coordinator, game_server, config_entry)
         self.entity_description = description
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return button availability."""
+        return super().available and not self.game_server.is_suspended
+
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
             await self.coordinator.api.async_send_command(
-                self.identifier, self.entity_description.command
+                self.game_server.identifier, self.entity_description.command
             )
         except PterodactylConnectionError as err:
             raise HomeAssistantError(
-                f"Failed to send action '{self.entity_description.key}': Connection error"
+                "Failed to send action"
+                f" '{self.entity_description.key}':"
+                " Connection error"
             ) from err
         except PterodactylAuthorizationError as err:
             raise HomeAssistantError(

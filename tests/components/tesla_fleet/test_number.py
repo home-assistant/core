@@ -85,6 +85,21 @@ async def test_number_services(
         assert state.state == "60"
         call.assert_called_once()
 
+    # Test float conversion
+    with patch(
+        "tesla_fleet_api.tesla.VehicleFleet.set_charge_limit",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60.5},
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "60"
+        call.assert_called_once_with(60)
+
     entity_id = "number.energy_site_backup_reserve"
     with patch(
         "tesla_fleet_api.tesla.EnergySite.backup",

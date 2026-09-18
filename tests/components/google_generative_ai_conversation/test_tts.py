@@ -1,7 +1,5 @@
 """Tests for the Google Generative AI Conversation TTS entity."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -16,15 +14,11 @@ from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     DOMAIN,
-    RECOMMENDED_HARM_BLOCK_THRESHOLD,
-    RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_TOP_K,
-    RECOMMENDED_TOP_P,
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.config_entries import ConfigSubentry
@@ -54,7 +48,7 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
 @pytest.fixture
 async def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock media player calls."""
-    return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    return async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
 
 @pytest.fixture(autouse=True)
@@ -187,28 +181,6 @@ async def test_tts_service_speak(
                 )
             ),
             temperature=RECOMMENDED_TEMPERATURE,
-            top_k=RECOMMENDED_TOP_K,
-            top_p=RECOMMENDED_TOP_P,
-            max_output_tokens=RECOMMENDED_MAX_TOKENS,
-            safety_settings=[
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-            ],
-            thinking_config=None,
         ),
     )
 
@@ -256,27 +228,5 @@ async def test_tts_service_speak_error(
                 )
             ),
             temperature=RECOMMENDED_TEMPERATURE,
-            top_k=RECOMMENDED_TOP_K,
-            top_p=RECOMMENDED_TOP_P,
-            max_output_tokens=RECOMMENDED_MAX_TOKENS,
-            safety_settings=[
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-                types.SafetySetting(
-                    category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                ),
-            ],
-            thinking_config=None,
         ),
     )

@@ -22,22 +22,21 @@ from homeassistant.components.shelly.const import (
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
-    UPTIME_DEVIATION,
+    WALL_DISPLAY_RELEASE_URL,
 )
 from homeassistant.components.shelly.utils import (
     ShellyReceiver,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
-    get_device_uptime,
     get_host,
     get_release_url,
     get_rpc_channel_name,
     get_rpc_input_triggers,
+    get_rpc_sub_device_name,
     is_block_momentary_input,
     mac_address_from_name,
 )
-from homeassistant.util import dt as dt_util
 
 DEVICE_BLOCK_ID = 4
 
@@ -147,19 +146,6 @@ async def test_get_block_device_sleep_period(
     assert get_block_device_sleep_period(settings) == sleep_period
 
 
-@pytest.mark.freeze_time("2019-01-10 18:43:00+00:00")
-async def test_get_device_uptime() -> None:
-    """Test block test get device uptime."""
-    assert get_device_uptime(
-        55, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-
-    assert get_device_uptime(
-        55 - UPTIME_DEVIATION,
-        dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:43:05+00:00"))
-
-
 async def test_get_block_input_triggers(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -264,7 +250,7 @@ async def test_get_rpc_input_triggers(
         (1, MODEL_MOTION, False, None),
         (1, MODEL_1, False, GEN1_RELEASE_URL),
         (1, MODEL_1, True, None),
-        (2, MODEL_WALL_DISPLAY, False, None),
+        (2, MODEL_WALL_DISPLAY, False, WALL_DISPLAY_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, True, GEN2_BETA_RELEASE_URL),
     ],
@@ -319,3 +305,53 @@ async def test_shelly_receiver_get() -> None:
 
     ws_server.websocket_handler.assert_awaited_once_with(mock_request)
     assert response == "test_response"
+
+
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    [
+        ("switch:0", "Test name Output 0"),
+        ("switch:1", "Test name Output 1"),
+        ("cover:0", "Test name Cover 0"),
+        ("light:0", "Test name Light 0"),
+        ("rgb:0", "Test name RGB light 0"),
+        ("rgbw:1", "Test name RGBW light 1"),
+        ("cct:0", "Test name CCT light 0"),
+        ("em1:0", "Test name Energy Meter 0"),
+    ],
+)
+async def test_get_rpc_sub_device_name(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    key: str,
+    expected: str,
+) -> None:
+    """Test get RPC sub-device name."""
+    # Ensure the key has no custom name set
+    config = {key: {"name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, key) == expected
+
+
+async def test_get_rpc_sub_device_name_with_custom_name(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test get RPC sub-device name with custom name."""
+    config = {"switch:0": {"name": "My Custom Output"}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, "switch:0") == "My Custom Output"
+
+
+async def test_get_rpc_sub_device_name_with_emeter_phase(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test get RPC sub-device name with emeter phase."""
+    config = {"em:0": {"name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"

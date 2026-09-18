@@ -1,24 +1,22 @@
 """Support for the GIOS service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from gios.model import GiosSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,8 +34,6 @@ from .const import (
     ATTR_SO2,
     ATTRIBUTION,
     DOMAIN,
-    MANUFACTURER,
-    URL,
 )
 from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
@@ -67,7 +63,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_C6H6,
         value=lambda sensors: sensors.c6h6.value if sensors.c6h6 else None,
         suggested_display_precision=0,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="c6h6",
     ),
@@ -75,16 +71,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_CO,
         value=lambda sensors: sensors.co.value if sensors.co else None,
         suggested_display_precision=0,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="co",
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO,
         value=lambda sensors: sensors.no.value if sensors.no else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -92,7 +88,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=lambda sensors: sensors.no2.value if sensors.no2 else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -108,7 +104,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         translation_key=ATTR_NOX,
         value=lambda sensors: sensors.nox.value if sensors.nox else None,
         suggested_display_precision=0,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -116,7 +112,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=lambda sensors: sensors.o3.value if sensors.o3 else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.OZONE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -132,7 +128,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=lambda sensors: sensors.pm10.value if sensors.pm10 else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -148,7 +144,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=lambda sensors: sensors.pm25.value if sensors.pm25 else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -164,7 +160,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=lambda sensors: sensors.so2.value if sensors.so2 else None,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
@@ -184,15 +180,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    name = entry.data[CONF_NAME]
-
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.gios.station_id}-pm2.5"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.gios.station_id}-{ATTR_PM25}"
         _LOGGER.debug(
@@ -208,7 +202,7 @@ async def async_setup_entry(
     for description in SENSOR_TYPES:
         if getattr(coordinator.data, description.key) is None:
             continue
-        sensors.append(GiosSensor(name, coordinator, description))
+        sensors.append(GiosSensor(coordinator, description))
 
     async_add_entities(sensors)
 
@@ -222,19 +216,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        name: str,
         coordinator: GiosDataUpdateCoordinator,
         description: GiosSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
-            manufacturer=MANUFACTURER,
-            name=name,
-            configuration_url=URL.format(station_id=coordinator.gios.station_id),
-        )
+
+        self._attr_device_info = coordinator.device_info
         if description.subkey:
             self._attr_unique_id = (
                 f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"
@@ -244,11 +232,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)

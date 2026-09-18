@@ -45,7 +45,7 @@ async def test_step_discovery_confirm_create_entry(
             DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_step_discovery_confirm_create_entry(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         CONF_ID: "UL1",
         CONF_SERIAL_NUMBER: "000001",
@@ -85,7 +85,7 @@ async def test_step_mqtt_invalid(
         DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "invalid_discovery_info"
 
 
@@ -117,7 +117,7 @@ async def test_handle_gateway_topic_when_online(
         )
 
     assert mock_publish.called is mqtt_publish
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "discovery_in_progress"
 
 
@@ -143,7 +143,7 @@ async def test_handle_config_topic(
         )
 
     assert mock_publish.called
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "discovery_in_progress"
 
 
@@ -162,7 +162,7 @@ async def test_handle_device_topic_missing_config(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "invalid_discovery_info"
 
 
@@ -188,7 +188,7 @@ async def test_handle_device_topic_device_not_found(
             DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
         )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "invalid_discovery_info"
 
 
@@ -198,5 +198,5 @@ async def test_step_user_not_supported(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "not_supported"

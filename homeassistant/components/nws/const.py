@@ -1,7 +1,5 @@
 """Constants for National Weather Service Integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Final
 
@@ -23,7 +21,10 @@ from homeassistant.components.weather import (
 
 DOMAIN = "nws"
 
+CONF_LOCATION_ENTITY = "location_entity"
 CONF_STATION = "station"
+
+LOCATION_CHANGE_THRESHOLD = 2000  # meters
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 

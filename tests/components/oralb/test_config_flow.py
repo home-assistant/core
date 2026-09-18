@@ -26,7 +26,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smart Series 7000 48BE"
+    assert result2["title"] == "Triumph D36 48BE"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
 
@@ -91,7 +91,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             user_input={"address": "78:DB:2F:C2:48:BE"},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smart Series 7000 48BE"
+    assert result2["title"] == "Triumph D36 48BE"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
 
@@ -121,7 +121,7 @@ async def test_async_step_user_replace_ignored(hass: HomeAssistant) -> None:
             user_input={"address": "78:DB:2F:C2:48:BE"},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smart Series 7000 48BE"
+    assert result2["title"] == "Triumph D36 48BE"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
 
@@ -240,7 +240,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
             user_input={"address": "78:DB:2F:C2:48:BE"},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smart Series 7000 48BE"
+    assert result2["title"] == "Triumph D36 48BE"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "78:DB:2F:C2:48:BE"
 

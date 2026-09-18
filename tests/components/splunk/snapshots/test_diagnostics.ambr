@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entity_filter': dict({
+      'exclude_domains': list([
+      ]),
+      'exclude_entities': list([
+      ]),
+      'exclude_entity_globs': list([
+      ]),
+      'include_domains': list([
+      ]),
+      'include_entities': list([
+      ]),
+      'include_entity_globs': list([
+      ]),
+    }),
+    'entry_data': dict({
+      'host': 'localhost',
+      'port': 8088,
+      'ssl': False,
+      'token': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+  })
+# ---

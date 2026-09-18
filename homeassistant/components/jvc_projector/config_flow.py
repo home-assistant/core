@@ -1,13 +1,16 @@
 """Config flow for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorAuthError,
+    JvcProjectorTimeoutError,
+    command as cmd,
+)
 from jvcprojector.projector import DEFAULT_PORT
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -22,6 +25,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -40,7 +44,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 mac = await get_mac_address(host, port, password)
             except InvalidHost:
                 errors["base"] = "invalid_host"
-            except JvcProjectorConnectError:
+            except JvcProjectorTimeoutError:
                 errors["base"] = "cannot_connect"
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
@@ -61,11 +65,11 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Optional(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -91,7 +95,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await get_mac_address(host, port, password)
-            except JvcProjectorConnectError:
+            except JvcProjectorTimeoutError:
                 errors["base"] = "cannot_connect"
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
@@ -102,7 +106,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Optional(CONF_PASSWORD): str}),
             errors=errors,
         )
 
@@ -115,7 +119,7 @@ async def get_mac_address(host: str, port: int, password: str | None) -> str:
     """Get device mac address for config flow."""
     device = JvcProjector(host, port=port, password=password)
     try:
-        await device.connect(True)
+        await device.connect()
+        return await device.get(cmd.MacAddress)
     finally:
         await device.disconnect()
-    return device.mac

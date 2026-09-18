@@ -1,9 +1,7 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 import pyflume
 from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
@@ -14,10 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    _LOGGER,
     DEVICE_CONNECTION_SCAN_INTERVAL,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
+    LOGGER,
     NOTIFICATION_SCAN_INTERVAL,
 )
 
@@ -51,19 +49,20 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             config_entry=config_entry,
             name=DOMAIN,
-            logger=_LOGGER,
+            logger=LOGGER,
             update_interval=DEVICE_SCAN_INTERVAL,
         )
 
         self.flume_device = flume_device
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from the Flume."""
         try:
             await self.hass.async_add_executor_job(self.flume_device.update_force)
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
-        _LOGGER.debug(
+        LOGGER.debug(
             "Flume Device Data Update values=%s query_payload=%s",
             self.flume_device.values,
             self.flume_device.query_payload,
@@ -86,25 +85,33 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             config_entry=config_entry,
             name=DOMAIN,
-            logger=_LOGGER,
+            logger=LOGGER,
             update_interval=DEVICE_CONNECTION_SCAN_INTERVAL,
         )
 
         self.flume_devices = flume_devices
         self.connected: dict[str, bool] = {}
+        self.battery_level: dict[str, str] = {}
 
-    def _update_connectivity(self) -> None:
-        """Update device connectivity.."""
-        self.connected = {
-            device["id"]: device["connected"]
-            for device in self.flume_devices.get_devices()
+    def _update_device_status(self) -> None:
+        """Update device connectivity and battery level."""
+        devices = self.flume_devices.get_devices()
+        self.connected = {device["id"]: device["connected"] for device in devices}
+        # Only sensors report a battery level; bridges omit the key entirely.
+        self.battery_level = {
+            device["id"]: battery_level
+            for device in devices
+            if (battery_level := device.get("battery_level")) is not None
         }
-        _LOGGER.debug("Connectivity %s", self.connected)
+        LOGGER.debug(
+            "Connectivity %s battery level %s", self.connected, self.battery_level
+        )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the device list."""
         try:
-            await self.hass.async_add_executor_job(self._update_connectivity)
+            await self.hass.async_add_executor_job(self._update_device_status)
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
 
@@ -122,7 +129,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             config_entry=config_entry,
             name=DOMAIN,
-            logger=_LOGGER,
+            logger=LOGGER,
             update_interval=NOTIFICATION_SCAN_INTERVAL,
         )
         self.auth = auth
@@ -132,12 +139,12 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _update_lists(self) -> None:
         """Query flume for notification list."""
         # Get notifications (read or unread).
-        # The related binary sensors (leak detected, high flow, low battery)
+        # The related binary sensors (leak detected, high flow)
         # will be active until the notification is deleted in the Flume app.
         self.notifications = pyflume.FlumeNotificationList(
             self.auth, read=None
         ).notification_list
-        _LOGGER.debug("Notifications %s", self.notifications)
+        LOGGER.debug("Notifications %s", self.notifications)
 
         active_notifications_by_device: dict[str, set[str]] = {}
 
@@ -154,9 +161,10 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.active_notifications_by_device = active_notifications_by_device
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data."""
-        _LOGGER.debug("Updating Flume Notification")
+        LOGGER.debug("Updating Flume Notification")
         try:
             await self.hass.async_add_executor_job(self._update_lists)
         except Exception as ex:

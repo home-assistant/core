@@ -1,15 +1,13 @@
 """Config flow for Discovergy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -25,9 +23,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_EMAIL,
         ): TextSelector(
             TextSelectorConfig(
@@ -35,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
                 autocomplete="email",
             )
         ),
-        vol.Required(
+        probatio.Required(
             CONF_PASSWORD,
         ): TextSelector(
             TextSelectorConfig(
@@ -58,6 +56,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,7 +71,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
                 ).meters()
-            except (discovergyError.HTTPError, discovergyError.DiscovergyClientError):
+            except discovergyError.HTTPError, discovergyError.DiscovergyClientError:
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"

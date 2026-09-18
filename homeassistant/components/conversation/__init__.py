@@ -1,16 +1,14 @@
 """Support for functionality to have conversations with Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, Literal
 
 from hassil.recognize import RecognizeResult
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import MATCH_ALL, SERVICE_RELOAD
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,7 +21,6 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .agent_manager import (
     AgentInfo,
@@ -56,7 +53,6 @@ from .const import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
     SERVICE_PROCESS,
-    SERVICE_RELOAD,
     ConversationEntityFeature,
 )
 from .default_agent import async_setup_default_agent
@@ -95,39 +91,38 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PROCESS_SCHEMA = vol.Schema(
+SERVICE_PROCESS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TEXT): cv.string,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
+        probatio.Required(ATTR_TEXT): cv.string,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
 
-SERVICE_RELOAD_SCHEMA = vol.Schema(
+SERVICE_RELOAD_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Optional("intents"): vol.Schema(
-                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
+                probatio.Optional("intents"): probatio.Schema(
+                    {cv.string: probatio.All(cv.ensure_list, [cv.string])}
                 )
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 @callback
-@bind_hass
 def async_set_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -138,7 +133,6 @@ def async_set_agent(
 
 
 @callback
-@bind_hass
 def async_unset_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -335,20 +329,18 @@ def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, 
     """Return config intents."""
     intents = config.get(DOMAIN, {}).get("intents", {})
     return {
-        "intents": {
-            intent_name: {
-                "data": [
-                    {
-                        "sentences": sentences,
-                        "metadata": {
-                            METADATA_CUSTOM_SENTENCE: True,
-                            METADATA_CUSTOM_FILE: hass_config_path,
-                        },
-                    }
-                ]
-            }
-            for intent_name, sentences in intents.items()
+        intent_name: {
+            "data": [
+                {
+                    "sentences": sentences,
+                    "metadata": {
+                        METADATA_CUSTOM_SENTENCE: True,
+                        METADATA_CUSTOM_FILE: hass_config_path,
+                    },
+                }
+            ]
         }
+        for intent_name, sentences in intents.items()
     }
 
 

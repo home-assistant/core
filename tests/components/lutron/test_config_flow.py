@@ -1,7 +1,7 @@
 """Test the lutron config flow."""
 
 from email.message import Message
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from urllib.error import HTTPError
 
 import pytest
@@ -21,7 +21,8 @@ MOCK_DATA_STEP = {
 }
 
 
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,11 +53,9 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_failure(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    raise_error: Exception,
-    text_error: str,
+    hass: HomeAssistant, raise_error: Exception, text_error: str
 ) -> None:
     """Test unknown errors."""
     result = await hass.config_entries.flow.async_init(
@@ -93,9 +92,8 @@ async def test_flow_failure(
         assert result["data"] == MOCK_DATA_STEP
 
 
-async def test_flow_incorrect_guid(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_incorrect_guid(hass: HomeAssistant) -> None:
     """Test configuring flow with incorrect guid."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -166,7 +164,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     # Try to set an out of range dimmer level (260)
     out_of_range_level = 260
 
-    # The voluptuous validation will raise an exception before the handler processes it
+    # The probatio validation will raise an exception before the handler processes it
     with pytest.raises(InvalidData):
         await hass.config_entries.options.async_configure(
             result["flow_id"],

@@ -1,12 +1,10 @@
 """Config flow for Elvia integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from elvia import Elvia, error as ElviaError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -23,6 +21,7 @@ class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._api_token: str | None = None
         self._metering_point_ids: list[str] | None = None
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -65,9 +64,9 @@ class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TOKEN): str,
+                    probatio.Required(CONF_API_TOKEN): str,
                 }
             ),
             errors=errors,
@@ -89,12 +88,12 @@ class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_meter",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_METERING_POINT_ID,
                         default=self._metering_point_ids[0],
-                    ): vol.In(self._metering_point_ids),
+                    ): probatio.In(self._metering_point_ids),
                 }
             ),
         )

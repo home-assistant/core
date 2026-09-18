@@ -1,12 +1,10 @@
 """Config flow for Tautulli."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytautulli import PyTautulli, PyTautulliException, exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -20,6 +18,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -36,16 +35,18 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
         data_schema = {
-            vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")): str,
-            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-            vol.Optional(
+            probatio.Required(
+                CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+            ): str,
+            probatio.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+            probatio.Optional(
                 CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
             ): bool,
         }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             errors=errors or {},
             description_placeholders={
                 "sample_url": "http://192.168.0.10:8181",
@@ -72,7 +73,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 

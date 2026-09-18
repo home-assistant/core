@@ -1,7 +1,5 @@
 """The Volvo integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from volvocarsapi.api import VolvoCarsApi
@@ -14,12 +12,13 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
@@ -32,6 +31,16 @@ from .coordinator import (
     VolvoSlowIntervalCoordinator,
     VolvoVerySlowIntervalCoordinator,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Volvo integration."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bool:
@@ -40,19 +49,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     api = await _async_auth_and_create_api(hass, entry)
     context = await _async_create_context(api)
 
-    # Order is important! Faster intervals must come first.
     # Different interval coordinators are in place to keep the number
-    # of requests under 5000 per day. This lets users use the same
-    # API key for two vehicles (as the limit is 10000 per day).
-    coordinators = (
-        VolvoFastIntervalCoordinator(hass, entry, context),
-        VolvoMediumIntervalCoordinator(hass, entry, context),
-        VolvoSlowIntervalCoordinator(hass, entry, context),
-        VolvoVerySlowIntervalCoordinator(hass, entry, context),
-    )
-    await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
+    # of requests under 10000 per day.
+    fast_coordinator = VolvoFastIntervalCoordinator(hass, entry, context)
+    medium_coordinator = VolvoMediumIntervalCoordinator(hass, entry, context)
+    slow_coordinator = VolvoSlowIntervalCoordinator(hass, entry, context)
+    very_slow_coordinator = VolvoVerySlowIntervalCoordinator(hass, entry, context)
 
-    entry.runtime_data = VolvoRuntimeData(coordinators, context)
+    await asyncio.gather(
+        *(
+            c.async_config_entry_first_refresh()
+            for c in (
+                fast_coordinator,
+                medium_coordinator,
+                slow_coordinator,
+                very_slow_coordinator,
+            )
+        )
+    )
+
+    entry.runtime_data = VolvoRuntimeData(
+        fast_coordinator,
+        medium_coordinator,
+        slow_coordinator,
+        very_slow_coordinator,
+        context,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -66,13 +88,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bo
 async def _async_auth_and_create_api(
     hass: HomeAssistant, entry: VolvoConfigEntry
 ) -> VolvoCarsApi:
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)

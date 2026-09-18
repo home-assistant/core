@@ -1,6 +1,6 @@
 """Sensor platform for the PoolSense sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -79,6 +79,7 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """State of the sensor."""
         return self.coordinator.data[self.entity_description.key]

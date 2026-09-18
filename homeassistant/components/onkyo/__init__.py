@@ -17,12 +17,13 @@ from .const import (
     InputSource,
     ListeningMode,
 )
+from .coordinator import ChannelMutingCoordinator
 from .receiver import ReceiverManager, async_interview
-from .services import DATA_MP_ENTITIES, async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -47,15 +48,22 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Set up the Onkyo config entry."""
-
     host = entry.data[CONF_HOST]
 
     try:
         info = await async_interview(host)
     except TimeoutError as exc:
-        raise ConfigEntryNotReady(f"Timed out interviewing: {host}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="interview_timeout",
+            translation_placeholders={"host": host},
+        ) from exc
     except OSError as exc:
-        raise ConfigEntryNotReady(f"Unexpected exception interviewing: {host}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="interview_error",
+            translation_placeholders={"host": host},
+        ) from exc
 
     manager = ReceiverManager(hass, entry, info)
 
@@ -67,21 +75,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     entry.runtime_data = OnkyoData(manager, sources, sound_modes)
 
+    ChannelMutingCoordinator(hass, entry, manager)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if error := await manager.start():
         try:
             await error
         except OSError as exc:
-            raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": host},
+            ) from exc
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
     """Unload Onkyo config entry."""
-    del hass.data[DATA_MP_ENTITIES][entry.entry_id]
-
     entry.runtime_data.manager.start_unloading()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,8 +1,6 @@
 """Provides device automations for control of Samsung TV."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -28,7 +26,7 @@ from .triggers.turn_on import (
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -45,7 +43,11 @@ async def async_validate_trigger_config(
             device = async_get_device_entry_by_device_id(hass, device_id)
             async_get_client_by_device_entry(hass, device)
         except ValueError as err:
-            raise InvalidDeviceAutomationConfig(err) from err
+            raise InvalidDeviceAutomationConfig(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device",
+                translation_placeholders={"device_id": device_id},
+            ) from err
 
     return config
 

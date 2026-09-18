@@ -1,9 +1,7 @@
 """Platform for switch integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from triggercmd import client, ha
 
@@ -56,16 +54,19 @@ class TRIGGERcmdSwitch(SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if hub is available."""
         return self._switch.hub.online
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.trigger("on")
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.trigger("off")

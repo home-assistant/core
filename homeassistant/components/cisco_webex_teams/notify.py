@@ -1,10 +1,9 @@
 """Cisco Webex notify component."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from webexpythonsdk import ApiError, WebexAPI, exceptions
 
 from homeassistant.components.notify import (
@@ -22,7 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ROOM_ID = "room_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_ROOM_ID): cv.string}
+    {
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(CONF_ROOM_ID): cv.string,
+    }
 )
 
 
@@ -51,7 +53,8 @@ class CiscoWebexNotificationService(BaseNotificationService):
         self.room = room
         self.client = client
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         title = ""
@@ -60,6 +63,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
 
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ApiError as api_error:
             _LOGGER.error(
                 "Could not send Cisco Webex notification. Error: %s", api_error

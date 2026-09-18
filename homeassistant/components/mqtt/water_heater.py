@@ -1,11 +1,9 @@
 """Support for MQTT water heater devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
@@ -17,8 +15,10 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -78,12 +78,12 @@ DEFAULT_NAME = "MQTT Water Heater"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        water_heater.ATTR_CURRENT_TEMPERATURE,
-        water_heater.ATTR_MAX_TEMP,
-        water_heater.ATTR_MIN_TEMP,
-        water_heater.ATTR_TEMPERATURE,
-        water_heater.ATTR_OPERATION_LIST,
-        water_heater.ATTR_OPERATION_MODE,
+        WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+        WaterHeaterCapabilityAttribute.MAX_TEMP,
+        WaterHeaterCapabilityAttribute.MIN_TEMP,
+        WaterHeaterStateAttribute.TARGET_TEMPERATURE,
+        WaterHeaterCapabilityAttribute.OPERATION_LIST,
+        WaterHeaterStateAttribute.OPERATION_MODE,
     }
 )
 
@@ -112,11 +112,11 @@ TOPIC_KEYS = (
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
-        vol.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(
+        probatio.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
+        probatio.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(
             CONF_MODE_LIST,
             default=[
                 STATE_ECO,
@@ -128,38 +128,38 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 STATE_OFF,
             ],
         ): cv.ensure_list,
-        vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-        vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRECISION): vol.All(
-            vol.Coerce(float),
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+        probatio.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+        probatio.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        probatio.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRECISION): probatio.All(
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TEMP_INITIAL): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_TEMP_INITIAL): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_MIN): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_MAX): probatio.Coerce(float),
+        probatio.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
 )
 
-_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+_DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA)
 
-DISCOVERY_SCHEMA = vol.All(
+DISCOVERY_SCHEMA = probatio.All(
     _DISCOVERY_SCHEMA_BASE,
 )
 
@@ -191,10 +191,12 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _attr_target_temperature_high: float | None = None
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_operation_list = config[CONF_MODE_LIST]
@@ -285,6 +287,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         # add subscriptions for WaterHeaterEntity
@@ -296,6 +299,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         # add subscriptions for MqttTemperatureControlEntity
         self.prepare_subscribe_topics()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         operation_mode: str | None
@@ -303,6 +307,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             await self.async_set_operation_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](operation_mode)
@@ -312,6 +317,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if CONF_POWER_COMMAND_TOPIC in self._config:
@@ -320,6 +326,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             )
             await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_POWER_COMMAND_TOPIC in self._config:

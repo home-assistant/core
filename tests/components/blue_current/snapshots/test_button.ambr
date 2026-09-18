@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_buttons_created[button.101_reboot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reboot',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -37,8 +39,8 @@
 # name: test_buttons_created[button.101_reboot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': '101 Reboot',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Reboot',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_reboot',
@@ -50,8 +52,9 @@
 # ---
 # name: test_buttons_created[button.101_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -86,8 +90,8 @@
 # name: test_buttons_created[button.101_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': '101 Reset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Reset',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_reset',
@@ -99,8 +103,9 @@
 # ---
 # name: test_buttons_created[button.101_stop_charge_session-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge session',
     'options': dict({
     }),
     'original_device_class': None,
@@ -135,7 +141,7 @@
 # name: test_buttons_created[button.101_stop_charge_session-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '101 Stop charge session',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Stop charge session',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_stop_charge_session',

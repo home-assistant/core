@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 class MockAsyncSubprocess:
-    """Minimal mock implementation of asyncio.subprocess.Process for exception testing."""
+    """Minimal mock of asyncio.subprocess.Process for testing."""
 
     def __init__(self, killsig=ProcessLookupError, **kwargs) -> None:
         """Store provided exception type for later."""
@@ -22,7 +22,7 @@ class MockAsyncSubprocess:
         """Fails immediately with a timeout."""
         raise TimeoutError
 
-    async def kill(self) -> None:
+    def kill(self) -> None:
         """Raise preset exception when called."""
         raise self.killsig
 

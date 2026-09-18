@@ -1,7 +1,5 @@
 """Constants for the BTHome Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import Final, TypedDict
 
 DOMAIN = "bthome"
@@ -19,6 +17,7 @@ BTHOME_BLE_EVENT: Final = "bthome_ble_event"
 
 EVENT_CLASS_BUTTON: Final = "button"
 EVENT_CLASS_DIMMER: Final = "dimmer"
+EVENT_CLASS_COMMAND: Final = "command"
 
 CONF_EVENT_CLASS: Final = "event_class"
 CONF_EVENT_PROPERTIES: Final = "event_properties"

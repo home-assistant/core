@@ -1,15 +1,13 @@
 """Person detection using Sighthound cloud service."""
 
-from __future__ import annotations
-
 import io
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
+import probatio
 import simplehound.core as hound
-import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
@@ -44,10 +42,10 @@ PROD = "prod"
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
-        vol.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
-        vol.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_ACCOUNT_TYPE, default=DEV): probatio.In([DEV, PROD]),
+        probatio.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
+        probatio.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,
     }
 )
 
@@ -115,6 +113,7 @@ class SighthoundEntity(ImageProcessingEntity):
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
 
+    @override
     def process_image(self, image: bytes) -> None:
         """Process an image."""
         detections = self._api.detect(image)
@@ -173,6 +172,7 @@ class SighthoundEntity(ImageProcessingEntity):
             _LOGGER.debug("Sighthound saved file %s", timestamp_save_path)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         if not self._last_detection:

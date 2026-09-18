@@ -1,0 +1,27 @@
+get_kvs_value:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: shelly
+    key:
+      required: true
+      selector:
+        text:
+
+set_kvs_value:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: shelly
+    key:
+      required: true
+      selector:
+        text:
+    value:
+      required: true
+      selector:
+        object:

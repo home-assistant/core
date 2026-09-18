@@ -39,6 +39,18 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_migrate_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test migration adds the default Modbus port to old config entries."""
+    mock_responses(aioclient_mock)
+    entry = await setup_fronius_integration(hass)
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.data["modbus_port"] == 502
+
+
 async def test_logger_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -68,7 +80,7 @@ async def test_inverter_night_rescan(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test dynamic adding of an inverter discovered automatically after a Home Assistant reboot during the night."""
+    """Test adding inverter discovered after HA reboot at night."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
     config_entry = await setup_fronius_integration(hass, is_logger=True)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -84,14 +96,18 @@ async def test_inverter_night_rescan(
     await hass.async_block_till_done()
 
     # We expect our inverter to be present now
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "203200"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
 
     # After another re-scan we still only expect this inverter
     freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "203200"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
 
 
@@ -156,9 +172,13 @@ async def test_device_remove_devices(
         hass, is_logger=False, unique_id="12345678"
     )
 
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345678"), config_entry.entry_id
+    )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(inverter_1.id, config_entry.entry_id)
+    response = await client.remove_device(inverter_1.id)
     assert response["success"]
 
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345678"), config_entry.entry_id
+    )

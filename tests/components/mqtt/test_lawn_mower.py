@@ -7,14 +7,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import lawn_mower, mqtt
+from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    SERVICE_STOP,
     LawnMowerEntityFeature,
 )
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -60,15 +62,17 @@ DEFAULT_FEATURES = (
     LawnMowerEntityFeature.START_MOWING
     | LawnMowerEntityFeature.PAUSE
     | LawnMowerEntityFeature.DOCK
+    | LawnMowerEntityFeature.STOP
 )
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         lawn_mower.DOMAIN: {
             "name": "test",
             "dock_command_topic": "dock-test-topic",
             "pause_command_topic": "pause-test-topic",
             "start_mowing_command_topic": "start_mowing-test-topic",
+            "stop_command_topic": "stop-test-topic",
         }
     }
 }
@@ -78,7 +82,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "activity_state_topic": "test/lawn_mower_stat",
                     "dock_command_topic": "dock-test-topic",
@@ -110,6 +114,13 @@ async def test_run_lawn_mower_setup_and_state_updates(
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "returning"
 
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", "idle")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "idle"
+
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", "docked")
 
     await hass.async_block_till_done()
@@ -135,7 +146,7 @@ async def test_run_lawn_mower_setup_and_state_updates(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     lawn_mower.DOMAIN: {
                         "pause_command_topic": "pause-test-topic",
                         "name": "test",
@@ -146,7 +157,7 @@ async def test_run_lawn_mower_setup_and_state_updates(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     lawn_mower.DOMAIN: {
                         "dock_command_topic": "dock-test-topic",
                         "start_mowing_command_topic": "start_mowing-test-topic",
@@ -155,6 +166,17 @@ async def test_run_lawn_mower_setup_and_state_updates(
                 }
             },
             LawnMowerEntityFeature.START_MOWING | LawnMowerEntityFeature.DOCK,
+        ),
+        (
+            {
+                DOMAIN: {
+                    lawn_mower.DOMAIN: {
+                        "stop_command_topic": "stop-test-topic",
+                        "name": "test",
+                    }
+                }
+            },
+            LawnMowerEntityFeature.STOP,
         ),
     ],
 )
@@ -175,7 +197,7 @@ async def test_supported_features(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "activity_state_topic": "test/lawn_mower_stat",
                     "name": "Test Lawn Mower",
@@ -246,7 +268,11 @@ async def test_run_lawn_mower_service_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "start_mowing-test-topic", "start_mowing", 0, False
+        "start_mowing-test-topic",
+        "start_mowing",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
@@ -260,7 +286,7 @@ async def test_run_lawn_mower_service_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "pause-test-topic", "pause", 0, False
+        "pause-test-topic", "pause", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
@@ -273,17 +299,33 @@ async def test_run_lawn_mower_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("dock-test-topic", "dock", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "dock-test-topic", "dock", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
     assert state.state == "docked"
+
+    await hass.services.async_call(
+        lawn_mower.DOMAIN,
+        SERVICE_STOP,
+        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "stop-test-topic", "stop", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lawn_mower.test")
+    assert state.state == "idle"
 
 
 @pytest.mark.parametrize(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "pause_command_topic": "test/lawn_mower_pause_cmd",
                     "name": "Test Lawn Mower",
@@ -309,7 +351,7 @@ async def test_restore_lawn_mower_from_invalid_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "name": "Test Lawn Mower",
                     "dock_command_topic": "test/lawn_mower_dock_cmd",
@@ -318,6 +360,8 @@ async def test_restore_lawn_mower_from_invalid_state(
                     "pause_command_template": '{"action": "{{ value }}"}',
                     "start_mowing_command_topic": "test/lawn_mower_start_mowing_cmd",
                     "start_mowing_command_template": '{"action": "{{ value }}"}',
+                    "stop_command_topic": "test/lawn_mower_stop_cmd",
+                    "stop_command_template": '{"action": "{{ value }}"}',
                 }
             }
         }
@@ -344,7 +388,11 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_start_mowing_cmd", '{"action": "start_mowing"}', 0, False
+        "test/lawn_mower_start_mowing_cmd",
+        '{"action": "start_mowing"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
@@ -358,7 +406,11 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_pause_cmd", '{"action": "pause"}', 0, False
+        "test/lawn_mower_pause_cmd",
+        '{"action": "pause"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
@@ -372,11 +424,33 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/lawn_mower_dock_cmd", '{"action": "dock"}', 0, False
+        "test/lawn_mower_dock_cmd",
+        '{"action": "dock"}',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "docked"
+
+    await hass.services.async_call(
+        lawn_mower.DOMAIN,
+        SERVICE_STOP,
+        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/lawn_mower_stop_cmd",
+        '{"action": "stop"}',
+        0,
+        False,
+        message_expiry_interval=None,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "idle"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -483,7 +557,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -511,7 +585,7 @@ async def test_discovery_removal_lawn_mower(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered lawn_mower."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][lawn_mower.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, lawn_mower.DOMAIN, data)
 
 
@@ -541,7 +615,10 @@ async def test_discovery_update_unchanged_lawn_mower(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered lawn_mower."""
-    data1 = '{ "name": "Beer", "activity_state_topic": "test-topic", "command_topic": "test-topic", "actions": ["milk", "beer"]}'
+    data1 = (
+        '{ "name": "Beer", "activity_state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "actions": ["milk", "beer"]}'
+    )
     with patch(
         "homeassistant.components.mqtt.lawn_mower.MqttLawnMower.discovery_update"
     ) as discovery_update:
@@ -556,7 +633,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "invalid" }'
-    data2 = '{ "name": "Milk", "activity_state_topic": "test-topic", "pause_command_topic": "test-topic"}'
+    data2 = (
+        '{ "name": "Milk", "activity_state_topic": "test-topic",'
+        ' "pause_command_topic": "test-topic"}'
+    )
 
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, lawn_mower.DOMAIN, data1, data2
@@ -604,7 +684,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             lawn_mower.DOMAIN: {
                 "name": "test",
                 "activity_state_topic": "test-topic",
@@ -650,6 +730,13 @@ async def test_entity_id_update_discovery_update(
             "test/lawn_mower_stat",
             "dock-test-topic",
         ),
+        (
+            SERVICE_STOP,
+            "stop",
+            "idle",
+            "test/lawn_mower_stat",
+            "stop-test-topic",
+        ),
     ],
 )
 async def test_entity_debug_info_message(
@@ -663,12 +750,13 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             lawn_mower.DOMAIN: {
                 "activity_state_topic": "test/lawn_mower_stat",
                 "dock_command_topic": "dock-test-topic",
                 "pause_command_topic": "pause-test-topic",
                 "start_mowing_command_topic": "start_mowing-test-topic",
+                "stop_command_topic": "stop-test-topic",
                 "name": "test",
             }
         }
@@ -690,7 +778,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "dock_command_topic": "dock-test-topic",
                     "pause_command_topic": "pause-test-topic",
@@ -716,8 +804,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
 
     assert (
         "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
-        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning'])"
-        in caplog.text
+        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning', "
+        "'idle'])" in caplog.text
     )
 
 
@@ -744,6 +832,13 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
             {},
             "dock",
             "dock_command_template",
+        ),
+        (
+            SERVICE_STOP,
+            "stop_command_topic",
+            {},
+            "stop",
+            "stop_command_template",
         ),
     ],
 )
@@ -791,6 +886,7 @@ async def test_reloadable(
         ("activity_state_topic", "docked", None, "docked"),
         ("activity_state_topic", "returning", None, "returning"),
         ("activity_state_topic", "mowing", None, "mowing"),
+        ("activity_state_topic", "idle", None, "idle"),
     ],
 )
 async def test_encoding_subscribable_topics(
@@ -802,9 +898,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(
-        DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN]
-    )
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][lawn_mower.DOMAIN])
     config["actions"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
@@ -848,7 +942,10 @@ async def test_persistent_state_after_reconfig(
 ) -> None:
     """Test of the state is persistent after reconfiguring the lawn_mower activity."""
     await mqtt_mock_entry()
-    discovery_data = '{ "name": "Garden", "activity_state_topic": "test-topic", "command_topic": "test-topic"}'
+    discovery_data = (
+        '{ "name": "Garden", "activity_state_topic": "test-topic",'
+        ' "command_topic": "test-topic"}'
+    )
     await help_test_discovery_setup(hass, LAWN_MOWER_DOMAIN, discovery_data, "garden")
 
     # assign an initial state
@@ -857,7 +954,10 @@ async def test_persistent_state_after_reconfig(
     assert state.state == "docked"
 
     # change the config
-    discovery_data = '{ "name": "Garden", "activity_state_topic": "test-topic2", "command_topic": "test-topic"}'
+    discovery_data = (
+        '{ "name": "Garden", "activity_state_topic": "test-topic2",'
+        ' "command_topic": "test-topic"}'
+    )
     await help_test_discovery_setup(hass, LAWN_MOWER_DOMAIN, discovery_data, "garden")
 
     # assert the state persistent
@@ -905,7 +1005,7 @@ async def test_skipped_async_ha_write_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lawn_mower.DOMAIN: {
                     "name": "test",
                     "activity_state_topic": "test-topic",
@@ -924,6 +1024,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

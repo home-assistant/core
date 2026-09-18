@@ -1,7 +1,5 @@
 """The cert_expiry component."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started

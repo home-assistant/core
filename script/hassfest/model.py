@@ -1,9 +1,7 @@
 """Models for manifest validator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 import json
 import pathlib
 from typing import Any, Literal
@@ -200,9 +198,15 @@ class Integration:
         return self.manifest.get("supported_by", {})
 
     @property
-    def integration_type(self) -> str:
+    def integration_type(self) -> IntegrationType:
         """Get integration_type."""
-        return self.manifest.get("integration_type", "hub")
+        integration_type = self.manifest.get("integration_type", "hub")
+        try:
+            return IntegrationType(integration_type)
+        except ValueError:
+            # The manifest validation will catch this as an error, so we can default to
+            # a valid value here to avoid ValueErrors in other plugins
+            return IntegrationType.HUB
 
     @property
     def iot_class(self) -> str | None:
@@ -246,6 +250,19 @@ class Integration:
 
         self._manifest = manifest
         self.manifest_path = manifest_path
+
+
+class IntegrationType(StrEnum):
+    """Supported integration types."""
+
+    DEVICE = "device"
+    ENTITY = "entity"
+    HARDWARE = "hardware"
+    HELPER = "helper"
+    HUB = "hub"
+    SERVICE = "service"
+    SYSTEM = "system"
+    VIRTUAL = "virtual"
 
 
 class ScaledQualityScaleTiers(IntEnum):

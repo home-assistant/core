@@ -4,6 +4,7 @@
   "codeowners": ["@RyuzakiKK"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ialarm",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyialarm"],
   "requirements": ["pyialarm==2.2.0"]

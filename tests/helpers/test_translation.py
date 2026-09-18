@@ -158,8 +158,9 @@ async def test_load_translations_files_invalid_localized_placeholders(
     )
     for expected_error in expected_errors:
         assert (
-            f"Validation of translation placeholders for localized ({language}) string {expected_error} failed"
-            in caplog.text
+            f"Validation of translation placeholders for"
+            f" localized ({language}) string"
+            f" {expected_error} failed" in caplog.text
         )
 
 
@@ -361,7 +362,7 @@ async def test_get_translation_categories(hass: HomeAssistant) -> None:
 async def test_translation_merging_loaded_together(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we merge translations of two integrations when they are loaded at the same time."""
+    """Test we merge translations of two integrations loaded at the same time."""
     hass.config.components.add("hue")
     hass.config.components.add("homekit")
     hue_translations = await translation.async_get_translations(
@@ -620,7 +621,8 @@ async def test_translate_state(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={
-            "component.platform.entity.binary_sensor.translation_key.state.on": "TRANSLATED"
+            "component.platform.entity.binary_sensor"
+            ".translation_key.state.on": "TRANSLATED"
         },
     ) as mock:
         result = translation.async_translate_state(
@@ -632,7 +634,8 @@ async def test_translate_state(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={
-            "component.binary_sensor.entity_component.device_class.state.on": "TRANSLATED"
+            "component.binary_sensor.entity_component"
+            ".device_class.state.on": "TRANSLATED"
         },
     ) as mock:
         result = translation.async_translate_state(
@@ -683,6 +686,98 @@ async def test_translate_state(hass: HomeAssistant) -> None:
         assert result == "on"
 
 
+async def test_translate_state_attr(hass: HomeAssistant) -> None:
+    """Test the state attribute translation helper."""
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.platform.entity.climate"
+            ".translation_key.state_attributes"
+            ".fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            "translation_key",
+            None,
+            "fan_mode",
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.climate.entity_component"
+            ".device_class.state_attributes"
+            ".fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            None,
+            "device_class",
+            "fan_mode",
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.climate.entity_component"
+            "._.state_attributes"
+            ".fan_mode.state.auto": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass, "auto", "climate", "platform", None, None, "fan_mode"
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass, "auto", "climate", "platform", None, None, "fan_mode"
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity_component"),
+            ]
+        )
+        assert result == "auto"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state_attr(
+            hass,
+            "auto",
+            "climate",
+            "platform",
+            "translation_key",
+            "device_class",
+            "fan_mode",
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity"),
+                call(hass, hass.config.language, "entity_component"),
+            ]
+        )
+        assert result == "auto"
+
+
 async def test_get_translations_still_has_title_without_translations_files(
     hass: HomeAssistant, mock_config_flows
 ) -> None:
@@ -712,3 +807,67 @@ async def test_get_translations_still_has_title_without_translations_files(
     assert translations == {
         "component.component1.title": "Component 1",
     }
+
+
+async def test_english_cache_populated_for_partial_batch_overlap(
+    hass: HomeAssistant,
+) -> None:
+    """Test English caching when a non-English batch partially overlaps it."""
+    integration_a = Mock(file_path=pathlib.Path(__file__))
+    integration_a.name = "Component A"
+    integration_b = Mock(file_path=pathlib.Path(__file__))
+    integration_b.name = "Component B"
+
+    component_strings = {
+        "comp_a": {
+            "en": {"issues": {"broken": {"title": "A is broken"}}},
+            "de": {"issues": {"broken": {"title": "A kaputt"}}},
+        },
+        "comp_b": {
+            "en": {"issues": {"detached": {"title": "B detached"}}},
+            "de": {"issues": {"detached": {"title": "B abgetrennt"}}},
+        },
+    }
+
+    def mock_load_translation_files(
+        files: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Return language-keyed strings for the requested components."""
+        return {
+            language: {
+                component: component_strings[component][language]
+                for component in components
+            }
+            for language, components in files.items()
+        }
+
+    cache = translation._async_get_translations_cache(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation._load_translations_files_by_language",
+            mock_load_translation_files,
+        ),
+        patch(
+            "homeassistant.helpers.translation.async_get_integrations",
+            return_value={"comp_a": integration_a, "comp_b": integration_b},
+        ),
+    ):
+        # Bootstrap: comp_a is set up (and cached in English) first.
+        await cache.async_load("en", {"comp_a"})
+        # Preload the full set in the real language; the batch overlaps comp_a.
+        await cache.async_load("de", {"comp_a", "comp_b"})
+
+    # comp_b's English strings were fetched during the "de" load and must be in
+    # the English cache even though comp_a was already cached in English.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B detached"}
+    # The already-cached component is unaffected.
+    assert translation.async_get_cached_translations(
+        hass, "en", "issues", "comp_a"
+    ) == {"component.comp_a.issues.broken.title": "A is broken"}
+    # The requested language keeps the localized strings on top of English.
+    assert translation.async_get_cached_translations(
+        hass, "de", "issues", "comp_b"
+    ) == {"component.comp_b.issues.detached.title": "B abgetrennt"}

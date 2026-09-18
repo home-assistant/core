@@ -1,7 +1,7 @@
 """Tests for Shelly cover platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -23,7 +23,13 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -111,6 +117,83 @@ async def test_block_device_update(
     state = hass.states.get("cover.test_name")
     assert state
     assert state.state == CoverState.OPEN
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("last_direction", "expected_state"),
+    [
+        ("close", CoverState.CLOSED),
+        ("open", CoverState.OPEN),
+        # Nothing has moved since the device booted
+        (None, STATE_UNKNOWN),
+    ],
+)
+async def test_block_device_roller_without_positioning(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    last_direction: str | None,
+    expected_state: str,
+) -> None:
+    """Test an uncalibrated roller reports the direction it last travelled in."""
+    settings = deepcopy(mock_block_device.settings)
+    settings["rollers"][0]["positioning"] = False
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+
+    status = deepcopy(mock_block_device.status)
+    # An uncalibrated roller parks its position on 101
+    status["rollers"] = [{"current_pos": 101, "last_direction": last_direction}]
+    monkeypatch.setattr(mock_block_device, "status", status)
+
+    await init_integration(hass, 1)
+
+    assert (state := hass.states.get("cover.test_name"))
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    # Stopping mid travel leaves the direction saying more than it knows, so
+    # both buttons stay available
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+
+async def test_block_device_roller_without_positioning_stopped(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test stopping an uncalibrated roller keeps it on its last direction."""
+    settings = deepcopy(mock_block_device.settings)
+    settings["rollers"][0]["positioning"] = False
+    monkeypatch.setattr(mock_block_device, "settings", settings)
+
+    status = deepcopy(mock_block_device.status)
+    status["rollers"] = [{"current_pos": 101, "last_direction": "close"}]
+    monkeypatch.setattr(mock_block_device, "status", status)
+
+    # An uncalibrated roller answers a command with position 101 as well
+    monkeypatch.setattr(
+        mock_block_device.blocks[ROLLER_BLOCK_ID],
+        "set_state",
+        AsyncMock(
+            side_effect=lambda go, roller_pos=0: {"current_pos": 101, "state": go}
+        ),
+    )
+
+    await init_integration(hass, 1)
+
+    entity_id = "cover.test_name"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == CoverState.CLOSED
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == CoverState.CLOSED
 
 
 async def test_block_device_no_roller_blocks(
@@ -346,7 +429,8 @@ async def test_rpc_cover_position_update(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.state == CoverState.CLOSED
 
-    # Ensure update_position does not call update_cover_status when the cover is not moving
+    # Ensure update_position does not call update_cover_status
+    # when the cover is not moving
     await mock_polling_rpc_update(hass, freezer, RPC_COVER_UPDATE_TIME_SEC)
     mock_rpc_device.update_cover_status.assert_not_called()
 

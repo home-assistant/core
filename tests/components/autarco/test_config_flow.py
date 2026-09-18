@@ -73,10 +73,10 @@ async def test_duplicate_entry(
         (AutarcoAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
     hass: HomeAssistant,
     mock_autarco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -102,10 +102,9 @@ async def test_exceptions(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow."""
     mock_config_entry.add_to_hass(hass)
@@ -134,11 +133,11 @@ async def test_step_reauth(
         (AutarcoAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth_exceptions(
     hass: HomeAssistant,
     mock_autarco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:

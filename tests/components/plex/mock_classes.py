@@ -53,7 +53,9 @@ GDM_CLIENT_PAYLOAD = [
             "Port": "32500",
             "Product": "Plex for Android (TV)",
             "Protocol": "plex",
-            "Protocol-Capabilities": "timeline,playback,navigation,mirror,playqueues,provider-playback",
+            "Protocol-Capabilities": (
+                "timeline,playback,navigation,mirror,playqueues,provider-playback"
+            ),
             "Protocol-Version": "1",
             "Resource-Identifier": "client-999",
             "Updated-At": "1597686153",

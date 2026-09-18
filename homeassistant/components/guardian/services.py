@@ -1,12 +1,10 @@
 """Support for Guardian services."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
 from aioguardian.errors import GuardianError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -17,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import CONF_UID, DOMAIN
 
@@ -34,25 +32,25 @@ SERVICES = (
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 
-SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
+SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(CONF_UID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CONF_UID): cv.string,
     }
 )
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
+SERVICE_UPGRADE_FIRMWARE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(CONF_URL): cv.url,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_FILENAME): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(CONF_URL): cv.url,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_FILENAME): cv.string,
     },
 )
 
@@ -60,19 +58,11 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 @callback
 def async_get_entry_id_for_service_call(call: ServiceCall) -> GuardianConfigEntry:
     """Get the entry ID related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(call.hass)
-
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid Guardian device ID: {device_id}")
-
-    for entry_id in device_entry.config_entries:
-        if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return entry
-
-    raise ValueError(f"No config entry for device ID: {device_id}")
+    config_entry: GuardianConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[CONF_DEVICE_ID]
+    )
+    return config_entry
 
 
 @callback

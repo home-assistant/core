@@ -20,7 +20,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
     """Mock cloud object."""
     return Mock(
-        accounts_server="accounts.nabucasa.com",
         auth=Mock(async_check_token=AsyncMock()),
         websession=async_get_clientsession(hass),
         payments=Mock(

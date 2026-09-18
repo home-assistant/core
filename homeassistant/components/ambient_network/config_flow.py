@@ -1,11 +1,9 @@
 """Config flow for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioambient import OpenAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -48,6 +46,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._radius = 0.0
         self._stations: dict[str, dict[str, Any]] = {}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -77,9 +76,11 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             # Filter out indoor stations
             self._stations = dict(
                 filter(
-                    lambda item: not item[1]
-                    .get(API_STATION_INFO, {})
-                    .get(API_STATION_INDOOR, False),
+                    lambda item: (
+                        not item[1]
+                        .get(API_STATION_INFO, {})
+                        .get(API_STATION_INDOOR, False)
+                    ),
                     self._stations.items(),
                 )
             )
@@ -89,10 +90,10 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors = {"base": "no_stations_found"}
 
-        schema: vol.Schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+        schema: probatio.Schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                     ): LocationSelector(LocationSelectorConfig(radius=True)),
                 }
@@ -112,8 +113,9 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+        # pylint: disable-next=home-assistant-config-flow-field-not-translated
         return self.async_show_form(
-            step_id=CONF_USER, data_schema=schema, errors=errors if errors else {}
+            step_id=CONF_USER, data_schema=schema, errors=errors or {}
         )
 
     async def async_step_station(
@@ -138,9 +140,9 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             for mac_address, station in self._stations.items()
         ]
 
-        schema: vol.Schema = vol.Schema(
+        schema: probatio.Schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION): SelectSelector(
+                probatio.Required(CONF_STATION): SelectSelector(
                     SelectSelectorConfig(options=options, multiple=False, sort=True),
                 )
             }

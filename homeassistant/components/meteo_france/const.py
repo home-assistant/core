@@ -1,7 +1,5 @@
 """Meteo-France component constants."""
 
-from __future__ import annotations
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -20,12 +18,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
 )
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "meteo_france"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
-COORDINATOR_FORECAST = "coordinator_forecast"
-COORDINATOR_RAIN = "coordinator_rain"
-COORDINATOR_ALERT = "coordinator_alert"
+
+# Departments that already have a city providing weather alerts. Only one city
+# per department may do so, so this is shared between config entries rather than
+# owned by any one of them.
+METEO_FRANCE_DATA: HassKey[set[str]] = HassKey(DOMAIN)
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
@@ -48,6 +49,7 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Brouillard givrant",
         "Bancs de Brouillard",
         "Brouillard dense",
+        "Brouillard dense givrant",
     ],
     ATTR_CONDITION_HAIL: ["Risque de grêle", "Averses de grêle"],
     ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages", "Orage avec grêle"],

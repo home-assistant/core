@@ -1,10 +1,10 @@
 """Config flow for Palazzetti."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pypalazzetti.client import PalazzettiClient
 from pypalazzetti.exceptions import CommunicationError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -19,6 +19,7 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_device: PalazzettiClient
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,10 +49,11 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

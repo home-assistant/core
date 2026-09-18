@@ -1,12 +1,10 @@
 """Support for customised Kankun SP3 Wifi switch."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -31,19 +29,19 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 80
 DEFAULT_PATH = "/cgi-bin/json.cgi"
 
-SWITCH_SCHEMA = vol.Schema(
+SWITCH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
+    {probatio.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
 
@@ -79,8 +77,8 @@ class KankunSwitch(SwitchEntity):
     def __init__(self, hass, name, host, port, path, user, passwd):
         """Initialize the device."""
         self._hass = hass
-        self._name = name
-        self._state = False
+        self._attr_name = name
+        self._attr_is_on = False
         self._url = f"http://{host}:{port}{path}"
         if user is not None:
             self._auth = (user, passwd)
@@ -109,26 +107,18 @@ class KankunSwitch(SwitchEntity):
         except requests.RequestException:
             _LOGGER.error("State query failed")
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     def update(self) -> None:
         """Update device state."""
-        self._state = self._query_state()
+        self._attr_is_on = self._query_state()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch("on"):
-            self._state = True
+            self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch("off"):
-            self._state = False
+            self._attr_is_on = False

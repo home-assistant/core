@@ -1,7 +1,5 @@
 """The Tasmota integration."""
 
-from __future__ import annotations
-
 import logging
 
 from hatasmota.const import (
@@ -44,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _publish(
         topic: str,
         payload: mqtt.PublishPayloadType,
-        qos: int | None,
-        retain: bool | None,
+        qos: int,
+        retain: bool,
     ) -> None:
         await mqtt.async_publish(hass, topic, payload, qos, retain)
 
@@ -116,17 +114,15 @@ async def _remove_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Remove a discovered Tasmota device."""
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, mac)}
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
     )
 
-    if device is None or config_entry.entry_id not in device.config_entries:
+    if device is None:
         return
 
     _LOGGER.debug("Removing tasmota from device %s", mac)
-    device_registry.async_update_device(
-        device.id, remove_config_entry_id=config_entry.entry_id
-    )
+    device_registry.async_remove_device(device.id)
 
 
 def _update_device(
@@ -164,9 +160,12 @@ async def async_setup_device(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Tasmota config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
 
     connections = device_entry.connections
     macs = [c[1] for c in connections if c[0] == CONNECTION_NETWORK_MAC]

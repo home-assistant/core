@@ -6,8 +6,6 @@ from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from homeassistant import setup
 from homeassistant.components import automation
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -16,12 +14,6 @@ from homeassistant.util import dt as dt_util
 from . import async_init_integration
 
 from tests.common import async_fire_time_changed_exact
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
 
 _LOGGER = logging.getLogger(__name__)
 

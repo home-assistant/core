@@ -41,3 +41,19 @@ def bedrock_mock_config_entry() -> MockConfigEntry:
         },
         version=3,
     )
+
+
+@pytest.fixture
+def legacy_java_mock_config_entry() -> MockConfigEntry:
+    """Create legacy Java Edition mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        entry_id=TEST_CONFIG_ENTRY_ID,
+        title=TEST_ADDRESS,
+        data={
+            CONF_ADDRESS: TEST_ADDRESS,
+            CONF_TYPE: MinecraftServerType.LEGACY_JAVA_EDITION,
+        },
+        version=3,
+    )

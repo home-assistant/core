@@ -5,19 +5,24 @@ from dataclasses import dataclass
 import datetime
 from datetime import time
 import logging
-from typing import Any
+from typing import Any, override
 
-from roborock.data import DnDTimer
+from roborock.data import DnDTimer, ValleyElectricityTimer
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+)
 from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +37,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     trait: Callable[[Any], Any | None]
     """Function to determine if time entity is supported by the device."""
 
-    get_value: Callable[[Any], datetime.time]
+    get_value: Callable[[Any], datetime.time | None]
     """Function to get the value from the trait."""
 
     update_value: Callable[[Any, datetime.time], Coroutine[Any, Any, None]]
@@ -53,9 +58,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -71,26 +74,23 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
         key="off_peak_start",
         translation_key="off_peak_start",
         trait=lambda api: api.valley_electricity_timer,
-        update_value=lambda trait, desired_time: trait.update_value(
-            [
-                desired_time.hour,
-                desired_time.minute,
-                trait.end_hour,
-                trait.end_minute,
-            ]
+        update_value=lambda trait, desired_time: trait.set_timer(
+            ValleyElectricityTimer(
+                enabled=trait.enabled,
+                start_hour=desired_time.hour,
+                start_minute=desired_time.minute,
+                end_hour=trait.end_hour,
+                end_minute=trait.end_minute,
+            )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -98,17 +98,16 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
         key="off_peak_end",
         translation_key="off_peak_end",
         trait=lambda api: api.valley_electricity_timer,
-        update_value=lambda trait, desired_time: trait.update_value(
-            [
-                trait.start_hour,
-                trait.start_minute,
-                desired_time.hour,
-                desired_time.minute,
-            ]
+        update_value=lambda trait, desired_time: trait.set_timer(
+            ValleyElectricityTimer(
+                enabled=trait.enabled,
+                start_hour=trait.start_hour,
+                start_minute=trait.start_minute,
+                end_hour=desired_time.hour,
+                end_minute=desired_time.minute,
+            )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -121,23 +120,41 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
-    async_add_entities(
-        [
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if not isinstance(coordinator, RoborockDataUpdateCoordinator):
+            return
+        entities = [
             RoborockTimeEntity(
                 f"{description.key}_{coordinator.duid_slug}",
                 coordinator,
                 description,
                 trait,
             )
-            for coordinator in config_entry.runtime_data.v1
             for description in TIME_DESCRIPTIONS
             if (trait := description.trait(coordinator.properties_api)) is not None
         ]
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 
 class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set time options on a Roborock vacuum."""
 
     entity_description: RoborockTimeDescription
 
@@ -156,10 +173,12 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
         self._trait = trait
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self.entity_description.get_value(self._trait)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         try:

@@ -1,8 +1,6 @@
 """Support for KNX binary sensor entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
@@ -10,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -37,7 +34,12 @@ from .const import (
     DOMAIN,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -66,9 +68,7 @@ async def async_setup_entry(
             KnxYamlBinarySensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(
-        Platform.BINARY_SENSOR
-    ):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.BINARY_SENSOR):
         entities.extend(
             KnxUiBinarySensor(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -82,6 +82,7 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
 
     _device: XknxBinarySensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         if (
@@ -91,11 +92,13 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
         await super().async_added_to_hass()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._device.is_on()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         attr: dict[str, Any] = {}
@@ -114,24 +117,27 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
+        self._device = XknxBinarySensor(
+            xknx=knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address_state=config[CONF_STATE_ADDRESS],
+            invert=config[CONF_INVERT],
+            sync_state=config[CONF_SYNC_STATE],
+            ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
+            context_timeout=config.get(CONF_CONTEXT_TIMEOUT),
+            reset_after=config.get(CONF_RESET_AFTER),
+            always_callback=True,
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxBinarySensor(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_state=config[CONF_STATE_ADDRESS],
-                invert=config[CONF_INVERT],
-                sync_state=config[CONF_SYNC_STATE],
-                ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
-                context_timeout=config.get(CONF_CONTEXT_TIMEOUT),
-                reset_after=config.get(CONF_RESET_AFTER),
-                always_callback=True,
+            unique_id=build_yaml_unique_id(
+                self._device.remote_value.group_address_state
             ),
+            entity_config=config,
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
-        self._attr_unique_id = str(self._device.remote_value.group_address_state)
 
 
 class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):

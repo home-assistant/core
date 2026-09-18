@@ -1,14 +1,16 @@
 """Config flow for Smart Meter B Route integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from momonga import Momonga, MomongaSkJoinFailure, MomongaSkScanFailure
-from serial.tools.list_ports import comports
-from serial.tools.list_ports_common import ListPortInfo
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.usb import get_serial_by_id, human_readable_device_name
+from homeassistant.components.usb import (
+    USBDevice,
+    async_scan_serial_ports,
+    human_readable_device_name,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import callback
@@ -25,14 +27,14 @@ def _validate_input(device: str, id: str, password: str) -> None:
         pass
 
 
-def _human_readable_device_name(port: UsbServiceInfo | ListPortInfo) -> str:
+def _human_readable_device_name(port: UsbServiceInfo | USBDevice) -> str:
     return human_readable_device_name(
         port.device,
         port.serial_number,
         port.manufacturer,
         port.description,
-        str(port.vid) if port.vid else None,
-        str(port.pid) if port.pid else None,
+        port.vid,
+        port.pid,
     )
 
 
@@ -45,11 +47,9 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_discovered_device_id_and_name(
-        self, device_options: dict[str, ListPortInfo]
+        self, device_options: dict[str, USBDevice]
     ) -> tuple[str | None, str | None]:
-        discovered_device_id = (
-            get_serial_by_id(self.device.device) if self.device else None
-        )
+        discovered_device_id = self.device.device if self.device else None
         discovered_device = (
             device_options.get(discovered_device_id) if discovered_device_id else None
         )
@@ -60,11 +60,12 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return discovered_device_id, discovered_device_name
 
-    async def _get_usb_devices(self) -> dict[str, ListPortInfo]:
+    async def _get_usb_devices(self) -> dict[str, USBDevice]:
         """Return a list of available USB devices."""
-        devices = await self.hass.async_add_executor_job(comports)
-        return {get_serial_by_id(port.device): port for port in devices}
+        devices = await async_scan_serial_ports(self.hass)
+        return {port.device: port for port in devices if isinstance(port, USBDevice)}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -98,9 +99,11 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE, default=discovered_device_id): vol.In(
+                    probatio.Required(
+                        CONF_DEVICE, default=discovered_device_id
+                    ): probatio.In(
                         {discovered_device_id: discovered_device_name}
                         if discovered_device_id and discovered_device_name
                         else {
@@ -108,8 +111,8 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                             for name, device in device_options.items()
                         }
                     ),
-                    vol.Required(CONF_ID): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_ID): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

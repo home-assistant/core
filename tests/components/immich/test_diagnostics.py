@@ -1,7 +1,5 @@
 """Tests for the Immich integration."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 from syrupy.assertion import SnapshotAssertion

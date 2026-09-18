@@ -1,7 +1,5 @@
 """Entity for Firmata devices."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 

@@ -1,16 +1,14 @@
 """Config flow for elmax-cloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry, PanelStatus
 import httpx
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -41,34 +39,34 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-LOGIN_FORM_SCHEMA = vol.Schema(
+LOGIN_FORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_USERNAME): str,
-        vol.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(CONF_ELMAX_USERNAME): str,
+        probatio.Required(CONF_ELMAX_PASSWORD): str,
     }
 )
 
-REAUTH_FORM_SCHEMA = vol.Schema(
+REAUTH_FORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_USERNAME): str,
-        vol.Required(CONF_ELMAX_PASSWORD): str,
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_USERNAME): str,
+        probatio.Required(CONF_ELMAX_PASSWORD): str,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
 
-DIRECT_SETUP_SCHEMA = vol.Schema(
+DIRECT_SETUP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_PORT, default=443): int,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_PORT, default=443): int,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
 
-ZEROCONF_SETUP_SCHEMA = vol.Schema(
+ZEROCONF_SETUP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ELMAX_PANEL_PIN): str,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
+        probatio.Required(CONF_ELMAX_PANEL_PIN): str,
+        probatio.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
     }
 )
 
@@ -112,9 +110,10 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_cloud_panelid: str | None
 
     # Panel selection variables
-    _panels_schema: vol.Schema
+    _panels_schema: probatio.Schema
     _panel_names: dict
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -134,17 +133,18 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _handle_direct_and_create_entry(
-        self, fallback_step_id: str, schema: vol.Schema
+        self, fallback_step_id: str, schema: probatio.Schema
     ) -> ConfigFlowResult:
         return await self._test_direct_and_create_entry()
 
     async def _test_direct_and_create_entry(self):
-        """Test the direct connection to the Elmax panel and create and entry if successful."""
+        """Test the direct connection to the Elmax panel and create entry."""
         ssl_context = None
         self._panel_direct_ssl_cert = None
         if self._panel_direct_use_ssl:
             # Fetch the remote certificate.
-            # Local API is exposed via a self-signed SSL that we must add to our trust store.
+            # Local API is exposed via a self-signed SSL that
+            # we must add to our trust store.
             self._panel_direct_ssl_cert = (
                 await GenericElmax.retrieve_server_certificate(
                     hostname=self._panel_direct_hostname,
@@ -155,7 +155,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 build_direct_ssl_context, self._panel_direct_ssl_cert
             )
 
-        # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
+        # Attempt the connection to make sure the pin works.
+        # Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
             host=self._panel_direct_hostname,
             port=self._panel_direct_port,
@@ -168,7 +169,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.login()
-        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
+        except ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,
@@ -219,18 +220,18 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
         self._panel_direct_follow_mdns = True
 
-        tmp_schema = vol.Schema(
+        tmp_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_HOST, default=self._panel_direct_hostname
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_PORT, default=self._panel_direct_port
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_SSL, default=self._panel_direct_use_ssl
                 ): bool,
-                vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
             }
         )
         return await self._handle_direct_and_create_entry(
@@ -254,10 +255,10 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             else self._panel_direct_http_port
         )
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
-        tmp_schema = vol.Schema(
+        tmp_schema = probatio.Schema(
             {
-                vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
-                vol.Required(
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
+                probatio.Required(
                     CONF_ELMAX_MODE_DIRECT_SSL, default=self._panel_direct_use_ssl
                 ): bool,
             }
@@ -289,7 +290,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Otherwise, it means we are handling now the "submission" of the user form.
-        # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
+        # In this case, let's try to log in to the Elmax cloud
+        # and retrieve the available panels.
         username = user_input[CONF_ELMAX_USERNAME]
         password = user_input[CONF_ELMAX_PASSWORD]
         try:
@@ -309,7 +311,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "network_error"},
             )
 
-        # If the login succeeded, retrieve the list of available panels and filter the online ones
+        # If the login succeeded, retrieve the list of available
+        # panels and filter the online ones
         online_panels = [x for x in await client.list_control_panels() if x.online]
 
         # If no online panel was found, we display an error in the next UI.
@@ -321,8 +324,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Show the panel selection.
-        # We want the user to choose the panel using the associated name, we set up a mapping
-        # dictionary to handle that case.
+        # We want the user to choose the panel using the
+        # associated name, we set up a mapping dictionary to
+        # handle that case.
         panel_names: dict[str, str] = {}
         username = client.get_authenticated_username()
         for panel in online_panels:
@@ -332,10 +336,12 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._client = client
         self._panel_names = panel_names
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ELMAX_PANEL_NAME): vol.In(self._panel_names.keys()),
-                vol.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
+                probatio.Required(CONF_ELMAX_PANEL_NAME): probatio.In(
+                    self._panel_names.keys()
+                ),
+                probatio.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
             }
         )
         self._panels_schema = schema
@@ -411,7 +417,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
             await self.async_set_unique_id(self._reauth_cloud_panelid)
 
-            # Handle authentication, make sure the panel we are re-authenticating against is listed among results
+            # Handle authentication, make sure the panel we are
+            # re-authenticating against is listed among results
             # and verify its pin is correct.
             reauth_entry = self._get_reauth_entry()
             try:
@@ -465,15 +472,20 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         http_port: int,
     ) -> ConfigFlowResult | None:
         # Look for another entry with the same PANEL_ID (local or remote).
-        # If there already is a matching panel, take the change to notify the Coordinator
-        # so that it uses the newly discovered IP address. This mitigates the issues
+        # If there already is a matching panel, take the chance
+        # to notify the Coordinator so that it uses the newly
+        # discovered IP address. This mitigates the issues
         # arising with DHCP and IP changes of the panels.
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_ELMAX_PANEL_ID] in (local_id, remote_id):
-                # If the discovery finds another entry with the same ID, skip the notification.
-                # However, if the discovery finds a new host for a panel that was already registered
-                # for a given host (leave PORT comparison aside as we don't want to get notified twice
-                # for HTTP and HTTPS), update the entry so that the integration "follows" the DHCP IP.
+                # If the discovery finds another entry with the
+                # same ID, skip the notification. However, if the
+                # discovery finds a new host for a panel that was
+                # already registered for a given host (leave PORT
+                # comparison aside as we don't want to get
+                # notified twice for HTTP and HTTPS), update the
+                # entry so that the integration "follows" the
+                # DHCP IP.
                 if (
                     entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
                     == CONF_ELMAX_MODE_DIRECT
@@ -490,10 +502,12 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(
                         entry, unique_id=entry.unique_id, data=new_data
                     )
-                # Abort the configuration, as there already is an entry for this PANEL-ID.
+                # Abort the configuration, as there already
+                # is an entry for this PANEL-ID.
                 return self.async_abort(reason="already_configured")
         return None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -1,8 +1,8 @@
 """The tests for Number device actions."""
 
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -22,11 +22,6 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_actions(
@@ -269,7 +264,7 @@ async def test_capabilities(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"name": "value", "required": True, "type": "float"}]
 
@@ -301,6 +296,6 @@ async def test_capabilities_legacy(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"name": "value", "required": True, "type": "float"}]

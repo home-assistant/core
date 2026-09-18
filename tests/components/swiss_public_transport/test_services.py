@@ -1,6 +1,5 @@
 """Test the swiss_public_transport service."""
 
-import json
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -8,8 +7,8 @@ from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
 )
+import probatio
 import pytest
-from voluptuous import error as vol_er
 
 from homeassistant.components.swiss_public_transport.const import (
     ATTR_LIMIT,
@@ -27,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,8 +67,8 @@ async def test_service_call_fetch_connections_success(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
+        mock().connections = (
+            await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
         )[0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2]
 
         await setup_integration(hass, config_entry)
@@ -91,12 +90,12 @@ async def test_service_call_fetch_connections_success(
 @pytest.mark.parametrize(
     ("limit", "config_data", "expected_result", "raise_error"),
     [
-        (-1, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
-        (0, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
+        (-1, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
+        (0, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
         (
             CONNECTIONS_MAX + 1,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(vol_er.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
             None,
         ),
         (
@@ -136,8 +135,8 @@ async def test_service_call_fetch_connections_error(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
+        mock().connections = await async_load_json_array_fixture(
+            hass, "connections.json", DOMAIN
         )
 
         await setup_integration(hass, config_entry)
@@ -178,8 +177,8 @@ async def test_service_call_load_unload(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(
-            await async_load_fixture(hass, "connections.json", DOMAIN)
+        mock().connections = await async_load_json_array_fixture(
+            hass, "connections.json", DOMAIN
         )
 
         await setup_integration(hass, config_entry)
@@ -200,9 +199,7 @@ async def test_service_call_load_unload(
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        with pytest.raises(
-            ServiceValidationError, match=f"{config_entry.title} is not loaded"
-        ):
+        with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 domain=DOMAIN,
                 service=SERVICE_FETCH_CONNECTIONS,
@@ -212,11 +209,9 @@ async def test_service_call_load_unload(
                 blocking=True,
                 return_response=True,
             )
+        assert err.value.translation_key == "service_config_entry_not_loaded"
 
-        with pytest.raises(
-            ServiceValidationError,
-            match=f'Swiss public transport integration instance "{bad_entry_id}" not found',
-        ):
+        with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
                 domain=DOMAIN,
                 service=SERVICE_FETCH_CONNECTIONS,
@@ -226,3 +221,4 @@ async def test_service_call_load_unload(
                 blocking=True,
                 return_response=True,
             )
+        assert err.value.translation_key == "service_config_entry_not_found"

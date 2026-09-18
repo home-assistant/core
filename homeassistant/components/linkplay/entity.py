@@ -51,7 +51,7 @@ class LinkPlayBaseEntity(Entity):
             )
 
         self._attr_device_info = dr.DeviceInfo(
-            configuration_url=bridge.endpoint,
+            configuration_url=str(bridge.endpoint),
             connections=connections,
             hw_version=bridge.device.properties["hardware"],
             identifiers={(DOMAIN, bridge.device.uuid)},

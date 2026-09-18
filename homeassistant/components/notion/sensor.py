@@ -1,6 +1,7 @@
 """Support for Notion sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from aionotion.listener.models import ListenerKind
 
@@ -10,13 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
-from .coordinator import NotionDataUpdateCoordinator
+from .const import SENSOR_MOLD, SENSOR_TEMPERATURE
+from .coordinator import NotionConfigEntry
 from .entity import NotionEntity, NotionEntityDescription
 
 
@@ -43,11 +43,11 @@ SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NotionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -70,6 +70,7 @@ class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
@@ -81,6 +82,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         if not self.listener.status_localized:

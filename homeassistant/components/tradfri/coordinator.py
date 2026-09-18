@@ -1,14 +1,14 @@
 """Tradfri DataUpdateCoordinator."""
 
-from __future__ import annotations
-
-from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import cast, override
 
-from pytradfri.command import Command
+from pytradfri import Gateway
+from pytradfri.api.aiocoap_api import APIFactory, APIRequestProtocol
 from pytradfri.device import Device
 from pytradfri.error import RequestError
+from pytradfri.resource import ApiResource
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -18,17 +18,31 @@ from .const import LOGGER
 
 SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
+type TradfriConfigEntry = ConfigEntry[TradfriData]
+
+
+@dataclass
+class TradfriData:
+    """Runtime data for a Tradfri config entry."""
+
+    factory: APIFactory
+    gateway: Gateway
+    api: APIRequestProtocol
+    coordinator_list: list[TradfriDeviceDataUpdateCoordinator] = field(
+        default_factory=list
+    )
+
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
-    config_entry: ConfigEntry
+    config_entry: TradfriConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        api: Callable[[Command | list[Command]], Any],
+        config_entry: TradfriConfigEntry,
+        api: APIRequestProtocol,
         device: Device,
     ) -> None:
         """Initialize device coordinator."""
@@ -52,9 +66,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             await self.async_request_refresh()
 
     @callback
-    def _observe_update(self, device: Device) -> None:
+    def _observe_update(self, device: ApiResource) -> None:
         """Update the coordinator for a device when a change is detected."""
-        self.async_set_updated_data(data=device)
+        self.async_set_updated_data(data=cast(Device, device))
 
     @callback
     def _exception_callback(self, exc: Exception) -> None:
@@ -73,6 +87,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.update_interval = timedelta(seconds=5)
         await self.async_request_refresh()
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
         try:

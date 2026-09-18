@@ -1,18 +1,16 @@
 """Selectors for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.util import decorator
@@ -22,19 +20,24 @@ from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorStateClass
+
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
     """Get selector type and class."""
     if not isinstance(config, dict):
-        raise vol.Invalid("Expected a dictionary")
+        raise probatio.Invalid("Expected a dictionary")
 
     if len(config) != 1:
-        raise vol.Invalid(f"Only one type can be specified. Found {', '.join(config)}")
+        raise probatio.Invalid(
+            f"Only one type can be specified. Found {', '.join(config)}"
+        )
 
     selector_type: str = list(config)[0]
 
     if (selector_class := SELECTORS.get(selector_type)) is None:
-        raise vol.Invalid(f"Unknown selector type {selector_type} found")
+        raise probatio.Invalid(f"Unknown selector type {selector_type} found")
 
     return selector_type, selector_class
 
@@ -57,15 +60,20 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
-    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
-    # Selectors can use the value of other fields in the same schema as context for filtering for example.
-    # The selector defines which context keys it supports and what selector types are allowed for each key.
-    allowed_context_keys: dict[str, set[str]] = {}
+    # Context keys that are allowed to be used in the
+    # selector, with list of allowed selector types. Selectors
+    # can use the value of other fields in the same schema as
+    # context for filtering for example. The selector defines
+    # which context keys it supports and what selector types
+    # are allowed for each key.
+    allowed_context_keys: dict[str, set[str]]
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
+        self.allowed_context_keys = {}
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Check equality."""
         if not isinstance(other, Selector):
@@ -74,7 +82,7 @@ class Selector[_T: Mapping[str, Any]]:
         return self.selector_type == other.selector_type and self.config == other.config
 
     def serialize(self) -> dict[str, dict[str, _T]]:
-        """Serialize Selector for voluptuous_serialize."""
+        """Serialize Selector for to_field_list."""
         return {"selector": {self.selector_type: self.config}}
 
 
@@ -97,7 +105,7 @@ def _validate_supported_feature(supported_feature: str) -> int:
     try:
         domain, enum, feature = supported_feature.split(".", 2)
     except ValueError as exc:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Invalid supported feature '{supported_feature}', expected "
             "<domain>.<enum>.<member>"
         ) from exc
@@ -105,7 +113,9 @@ def _validate_supported_feature(supported_feature: str) -> int:
     try:
         return _entity_feature_flag(domain, enum, feature)
     except (ModuleNotFoundError, AttributeError) as exc:
-        raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
+        raise probatio.Invalid(
+            f"Unknown supported feature '{supported_feature}'"
+        ) from exc
 
 
 def _validate_supported_features(supported_features: list[str]) -> int:
@@ -119,7 +129,14 @@ def _validate_supported_features(supported_features: list[str]) -> int:
     return feature_mask
 
 
-def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
+def _validate_selector_reorder_config(config: Any) -> Any:
+    """Validate selectors with reorder option."""
+    if config.get("reorder") and not config.get("multiple"):
+        raise probatio.Invalid("reorder can only be used when multiple is true")
+    return config
+
+
+def make_selector_config_schema(schema_dict: dict | None = None) -> probatio.Schema:
     """Make selector config schema."""
     if schema_dict is None:
         schema_dict = {}
@@ -129,11 +146,11 @@ def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
             return {}
         return value
 
-    return vol.Schema(
-        vol.All(
+    return probatio.Schema(
+        probatio.All(
             none_to_empty_dict,
             {
-                vol.Optional("read_only"): bool,
+                probatio.Optional("read_only"): bool,
                 **schema_dict,
             },
         )
@@ -146,20 +163,35 @@ class BaseSelectorConfig(TypedDict, total=False):
     read_only: bool
 
 
-ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(
     {
         # Integration that provided the entity
-        vol.Optional("integration"): str,
+        probatio.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+        probatio.Optional("domain"): probatio.All(cv.ensure_list, [str]),
         # Device class of the entity
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+        probatio.Optional("device_class"): probatio.All(cv.ensure_list, [str]),
         # Features supported by the entity
-        vol.Optional("supported_features"): [
-            vol.All(cv.ensure_list, [str], _validate_supported_features)
+        probatio.Optional("supported_features"): [
+            probatio.All(cv.ensure_list, [str], _validate_supported_features)
         ],
+        # Unit of measurement of the entity
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.All(
+            cv.ensure_list, [str]
+        ),
     }
 )
+
+
+class _LegacyEntityFilterSelectorConfig(TypedDict, total=False):
+    """Class for legacy entity filter support in EntitySelectorConfig.
+
+    Provided for backwards compatibility and remains feature frozen.
+    """
+
+    integration: str
+    domain: str | list[str]
+    device_class: str | list[str]
 
 
 # Legacy entity selector config schema used directly under entity selectors
@@ -168,11 +200,11 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # https://github.com/home-assistant/frontend/pull/15302
 _LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT = {
     # Integration that provided the entity
-    vol.Optional("integration"): str,
+    probatio.Optional("integration"): str,
     # Domain the entity belongs to
-    vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+    probatio.Optional("domain"): probatio.All(cv.ensure_list, [str]),
     # Device class of the entity
-    vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+    probatio.Optional("device_class"): probatio.All(cv.ensure_list, [str]),
 }
 
 
@@ -183,18 +215,19 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     domain: str | list[str]
     device_class: str | list[str]
     supported_features: list[str]
+    unit_of_measurement: str | list[str]
 
 
-DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(
     {
         # Integration linked to it with a config entry
-        vol.Optional("integration"): str,
+        probatio.Optional("integration"): str,
         # Manufacturer of device
-        vol.Optional("manufacturer"): str,
+        probatio.Optional("manufacturer"): str,
         # Model of device
-        vol.Optional("model"): str,
+        probatio.Optional("model"): str,
         # Model ID of device
-        vol.Optional("model_id"): str,
+        probatio.Optional("model_id"): str,
     }
 )
 
@@ -205,11 +238,11 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # https://github.com/home-assistant/frontend/pull/15302
 _LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT = {
     # Integration linked to it with a config entry
-    vol.Optional("integration"): str,
+    probatio.Optional("integration"): str,
     # Manufacturer of device
-    vol.Optional("manufacturer"): str,
+    probatio.Optional("manufacturer"): str,
     # Model of device
-    vol.Optional("model"): str,
+    probatio.Optional("model"): str,
 }
 
 
@@ -220,6 +253,26 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     manufacturer: str
     model: str
     model_id: str
+
+
+ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = (
+    ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            # Filter on properties of the device the entity belongs to
+            probatio.Optional("device"): DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+        }
+    )
+)
+
+
+class EntityWithDeviceFilterSelectorConfig(EntityFilterSelectorConfig, total=False):
+    """Class to represent an entity selector filter config.
+
+    Adds device filtering on top of the shared entity filter, only used by
+    the entity selector.
+    """
+
+    device: DeviceFilterSelectorConfig
 
 
 class ActionSelectorConfig(BaseSelectorConfig):
@@ -243,25 +296,51 @@ class ActionSelector(Selector[ActionSelectorConfig]):
         return data
 
 
-class AddonSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an addon selector config."""
+class AppSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an app selector config."""
 
     name: str
     slug: str
 
 
-@SELECTORS.register("addon")
-class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of a add-on."""
+@SELECTORS.register("app")
+class AppSelector(Selector[AppSelectorConfig]):
+    """Selector of an app."""
 
-    selector_type = "addon"
+    selector_type = "app"
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("name"): str,
-            vol.Optional("slug"): str,
+            probatio.Optional("name"): str,
+            probatio.Optional("slug"): str,
         }
     )
+
+    def __init__(self, config: AppSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        app: str = probatio.Schema(str)(data)
+        return app
+
+
+# AddonSelectorConfig as an alias of AppSelectorConfig
+AddonSelectorConfig = AppSelectorConfig
+
+
+@SELECTORS.register("addon")
+class AddonSelector(Selector[AddonSelectorConfig]):
+    """Selector of an add-on.
+
+    Kept for backward compatibility after add-ons -> apps
+    rename.
+    """
+
+    selector_type = "addon"
+
+    CONFIG_SCHEMA = AppSelector.CONFIG_SCHEMA
 
     def __init__(self, config: AddonSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -269,7 +348,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        addon: str = vol.Schema(str)(data)
+        addon: str = probatio.Schema(str)(data)
         return addon
 
 
@@ -279,6 +358,7 @@ class AreaSelectorConfig(BaseSelectorConfig, total=False):
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
+    reorder: bool
 
 
 @SELECTORS.register("area")
@@ -287,18 +367,22 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     selector_type = "area"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Optional("entity"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("device"): vol.All(
-                cv.ensure_list,
-                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-            vol.Optional("multiple", default=False): cv.boolean,
-        }
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                probatio.Optional("entity"): probatio.All(
+                    cv.ensure_list,
+                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                probatio.Optional("device"): probatio.All(
+                    cv.ensure_list,
+                    [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+                probatio.Optional("multiple", default=False): cv.boolean,
+                probatio.Optional("reorder", default=False): cv.boolean,
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: AreaSelectorConfig | None = None) -> None:
@@ -308,11 +392,11 @@ class AreaSelector(Selector[AreaSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            area_id: str = vol.Schema(str)(data)
+            area_id: str = probatio.Schema(str)(data)
             return area_id
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class AssistPipelineSelectorConfig(BaseSelectorConfig, total=False):
@@ -333,7 +417,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        pipeline: str = vol.Schema(str)(data)
+        pipeline: str = probatio.Schema(str)(data)
         return pipeline
 
 
@@ -350,28 +434,90 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
-    allowed_context_keys = {
-        # Filters the available attributes based on the selected entity
-        "filter_entity": {"entity"}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Required("entity_id"): cv.entity_id,
+            probatio.Required("entity_id"): cv.entity_id,
             # hide_attributes is used to hide attributes in the frontend.
             # A hidden attribute can still be provided manually.
-            vol.Optional("hide_attributes"): [str],
+            probatio.Optional("hide_attributes"): [str],
         }
     )
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available attributes based on the selected entity
+            "filter_entity": {"entity"}
+        }
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        attribute: str = vol.Schema(str)(data)
+        attribute: str = probatio.Schema(str)(data)
         return attribute
+
+
+class AutomationBehavior(StrEnum):
+    """Possible behaviors for an automation behavior selector."""
+
+    ALL = "all"
+    FIRST = "first"
+    EACH = "each"
+    ANY = "any"
+
+
+class AutomationBehaviorSelectorMode(StrEnum):
+    """Possible modes for an automation behavior selector."""
+
+    TRIGGER = "trigger"
+    CONDITION = "condition"
+
+
+_AUTOMATION_BEHAVIOR_MODES: dict[AutomationBehaviorSelectorMode, list[str]] = {
+    AutomationBehaviorSelectorMode.TRIGGER: [
+        AutomationBehavior.FIRST,
+        AutomationBehavior.ALL,
+        AutomationBehavior.EACH,
+    ],
+    AutomationBehaviorSelectorMode.CONDITION: [
+        AutomationBehavior.ALL,
+        AutomationBehavior.ANY,
+    ],
+}
+
+
+class AutomationBehaviorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an automation behavior selector config."""
+
+    mode: Required[AutomationBehaviorSelectorMode]
+    translation_key: str
+
+
+@SELECTORS.register("automation_behavior")
+class AutomationBehaviorSelector(Selector[AutomationBehaviorConfig]):
+    """Selector of an automation behavior."""
+
+    selector_type = "automation_behavior"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            probatio.Required("mode"): probatio.All(
+                probatio.Coerce(AutomationBehaviorSelectorMode), lambda val: val.value
+            ),
+            probatio.Optional("translation_key"): cv.string,
+        },
+    )
+
+    def __init__(self, config: AutomationBehaviorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise probatio.Invalid("Value should be a string")
+        mode = AutomationBehaviorSelectorMode(self.config["mode"])
+        return probatio.In(_AUTOMATION_BEHAVIOR_MODES[mode])(data)
 
 
 class BackupLocationSelectorConfig(BaseSelectorConfig, total=False):
@@ -392,7 +538,7 @@ class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        name: str = vol.Match(r"^(?:\/backup|\w+)$")(data)
+        name: str = probatio.Match(r"^(?:\/backup|\w+)$")(data)
         return name
 
 
@@ -414,8 +560,93 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
 
     def __call__(self, data: Any) -> bool:
         """Validate the passed selection."""
-        value: bool = vol.Coerce(bool)(data)
+        value: bool = probatio.Coerce(bool)(data)
         return value
+
+
+def reject_nested_choose_selector(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject nested choose selectors."""
+    for choice in config.get("choices", {}).values():
+        if isinstance(choice["selector"], dict):
+            selector_type, _ = _get_selector_type_and_class(choice["selector"])
+            if selector_type == "choose":
+                raise probatio.Invalid("Nested choose selectors are not allowed")
+    return config
+
+
+class ChooseSelectorChoiceConfig(TypedDict, total=False):
+    """Class to represent a choose selector choice config."""
+
+    selector: Required[Selector | dict[str, Any]]
+
+
+class ChooseSelectorConfig(BaseSelectorConfig):
+    """Class to represent a choose selector config."""
+
+    choices: Required[dict[str, ChooseSelectorChoiceConfig]]
+    translation_key: str
+
+
+@SELECTORS.register("choose")
+class ChooseSelector(Selector[ChooseSelectorConfig]):
+    """Selector allowing to choose one of several selectors."""
+
+    selector_type = "choose"
+
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                probatio.Required("choices"): {
+                    str: {
+                        probatio.Required("selector"): probatio.Any(
+                            Selector, validate_selector
+                        ),
+                    }
+                },
+                probatio.Optional("translation_key"): cv.string,
+            },
+        ),
+        reject_nested_choose_selector,
+    )
+
+    def __init__(self, config: ChooseSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    @override
+    def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
+        """Serialize ChooseSelectorConfig for to_field_list."""
+        _config = deepcopy(self.config)
+        if "choices" in _config:
+            for choice in _config["choices"].values():
+                if isinstance(choice["selector"], Selector):
+                    choice["selector"] = choice["selector"].serialize()["selector"]
+        return {"selector": {self.selector_type: _config}}
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, dict):
+            for choice in self.config["choices"].values():
+                try:
+                    validated = selector(choice["selector"])(data)  # type: ignore[operator]
+                except probatio.Invalid, probatio.MultipleInvalid:
+                    continue
+                else:
+                    return validated
+
+            raise probatio.Invalid("Value does not match any choice selector")
+
+        if "active_choice" not in data:
+            raise probatio.Invalid("Missing active_choice key")
+        if data["active_choice"] not in data:
+            raise probatio.Invalid("Missing value for active choice")
+
+        choices = self.config.get("choices", {})
+        if data["active_choice"] not in choices:
+            raise probatio.Invalid("Invalid active_choice key")
+        return selector(choices[data["active_choice"]]["selector"])(  # type: ignore[operator]
+            data[data["active_choice"]]
+        )
 
 
 class ColorRGBSelectorConfig(BaseSelectorConfig):
@@ -436,7 +667,9 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 
     def __call__(self, data: Any) -> list[int]:
         """Validate the passed selection."""
-        value: list[int] = vol.All(list, vol.ExactSequence((cv.byte,) * 3))(data)
+        value: list[int] = probatio.All(list, probatio.ExactSequence((cv.byte,) * 3))(
+            data
+        )
         return value
 
 
@@ -459,19 +692,21 @@ class ColorTempSelectorUnit(StrEnum):
 
 @SELECTORS.register("color_temp")
 class ColorTempSelector(Selector[ColorTempSelectorConfig]):
-    """Selector of an color temperature."""
+    """Selector of a color temperature."""
 
     selector_type = "color_temp"
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("unit", default=ColorTempSelectorUnit.MIRED): vol.All(
-                vol.Coerce(ColorTempSelectorUnit), lambda val: val.value
+            probatio.Optional(
+                "unit", default=ColorTempSelectorUnit.MIRED
+            ): probatio.All(
+                probatio.Coerce(ColorTempSelectorUnit), lambda val: val.value
             ),
-            vol.Optional("min"): vol.Coerce(int),
-            vol.Optional("max"): vol.Coerce(int),
-            vol.Optional("max_mireds"): vol.Coerce(int),
-            vol.Optional("min_mireds"): vol.Coerce(int),
+            probatio.Optional("min"): probatio.Coerce(int),
+            probatio.Optional("max"): probatio.Coerce(int),
+            probatio.Optional("max_mireds"): probatio.Coerce(int),
+            probatio.Optional("min_mireds"): probatio.Coerce(int),
         }
     )
 
@@ -490,9 +725,9 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         if range_max is None:
             range_max = self.config.get("max_mireds")
 
-        value: int = vol.All(
-            vol.Coerce(float),
-            vol.Range(
+        value: int = probatio.All(
+            probatio.Coerce(float),
+            probatio.Range(
                 min=range_min,
                 max=range_max,
             ),
@@ -501,12 +736,12 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
 
 class ConditionSelectorConfig(BaseSelectorConfig):
-    """Class to represent an condition selector config."""
+    """Class to represent a condition selector config."""
 
 
 @SELECTORS.register("condition")
 class ConditionSelector(Selector[ConditionSelectorConfig]):
-    """Selector of an condition sequence (script syntax)."""
+    """Selector of a condition sequence (script syntax)."""
 
     selector_type = "condition"
 
@@ -518,7 +753,7 @@ class ConditionSelector(Selector[ConditionSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return vol.Schema(cv.CONDITIONS_SCHEMA)(data)
+        return probatio.Schema(cv.CONDITIONS_SCHEMA)(data)
 
 
 class ConfigEntrySelectorConfig(BaseSelectorConfig, total=False):
@@ -535,7 +770,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("integration"): str,
+            probatio.Optional("integration"): str,
         }
     )
 
@@ -545,7 +780,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        config: str = vol.Schema(str)(data)
+        config: str = probatio.Schema(str)(data)
         return config
 
 
@@ -565,9 +800,9 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("label"): str,
-            vol.Optional("translation_key"): cv.string,
-            vol.Required("value"): vol.Any(str, int, bool),
+            probatio.Optional("label"): str,
+            probatio.Optional("translation_key"): cv.string,
+            probatio.Required("value"): probatio.Any(str, int, bool),
         }
     )
 
@@ -577,7 +812,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        vol.Schema(self.config["value"])(data)
+        probatio.Schema(self.config["value"])(data)
         return self.config["value"]
 
 
@@ -595,7 +830,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("language"): str,
+            probatio.Optional("language"): str,
         }
     )
 
@@ -605,7 +840,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        agent: str = vol.Schema(str)(data)
+        agent: str = probatio.Schema(str)(data)
         return agent
 
 
@@ -624,8 +859,8 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("countries"): [str],
-            vol.Optional("no_sort", default=False): cv.boolean,
+            probatio.Optional("countries"): [str],
+            probatio.Optional("no_sort", default=False): cv.boolean,
         }
     )
 
@@ -635,11 +870,11 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        country: str = vol.Schema(str)(data)
+        country: str = probatio.Schema(str)(data)
         if "countries" in self.config and (
             country not in self.config["countries"] or country not in COUNTRIES
         ):
-            raise vol.Invalid(f"Value {country} is not a valid option")
+            raise probatio.Invalid(f"Value {country} is not a valid option")
         return country
 
 
@@ -687,6 +922,74 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
+class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a device class selector config."""
+
+    domain: Required[Platform]
+    multiple: bool
+
+
+@cache
+def _enum_options(domain: str, enum_name: str) -> list[str]:
+    """Return a cached lookup of enum options for a domain.
+
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    enum = getattr(module, enum_name)
+
+    return [element.value for element in enum]
+
+
+@SELECTORS.register("device_class")
+class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
+    """Selector for device class."""
+
+    selector_type = "device_class"
+
+    SUPPORTED_PLATFORMS = {
+        Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
+        Platform.BUTTON: "ButtonDeviceClass",
+        Platform.COVER: "CoverDeviceClass",
+        Platform.EVENT: "EventDeviceClass",
+        Platform.HUMIDIFIER: "HumidifierDeviceClass",
+        Platform.INFRARED: "InfraredDeviceClass",
+        Platform.MEDIA_PLAYER: "MediaPlayerDeviceClass",
+        Platform.NUMBER: "NumberDeviceClass",
+        Platform.SENSOR: "SensorDeviceClass",
+        Platform.SWITCH: "SwitchDeviceClass",
+        Platform.UPDATE: "UpdateDeviceClass",
+        Platform.VALVE: "ValveDeviceClass",
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            probatio.Required("domain"): probatio.All(
+                probatio.In(SUPPORTED_PLATFORMS), lambda val: Platform(val).value
+            ),
+            probatio.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: DeviceClassSelectorConfig) -> None:
+        """Instantiate a device class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        valid_options = _enum_options(
+            self.config["domain"], self.SUPPORTED_PLATFORMS[self.config["domain"]]
+        )
+        options_schema = probatio.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(probatio.Schema(str)(data))
+        if not isinstance(data, list):
+            raise probatio.Invalid("Value should be a list")
+        return [options_schema(probatio.Schema(str)(val)) for val in data]
+
+
 class DeviceSelectorConfig(BaseSelectorConfig, DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
@@ -705,11 +1008,11 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
         {
             **_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT,
             # Device has to contain entities matching this selector
-            vol.Optional("entity"): vol.All(
+            probatio.Optional("entity"): probatio.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
             ),
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("filter"): vol.All(
+            probatio.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("filter"): probatio.All(
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
@@ -723,17 +1026,18 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            device_id: str = vol.Schema(str)(data)
+            device_id: str = probatio.Schema(str)(data)
             return device_id
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
 
@@ -748,11 +1052,13 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         {
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
-            vol.Optional("enable_day"): cv.boolean,
+            probatio.Optional("enable_day"): cv.boolean,
+            # Enable seconds field in frontend.
+            probatio.Optional("enable_second", default=True): cv.boolean,
             # Enable millisecond field in frontend.
-            vol.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations. Will default to False in HA Core 2025.6.0.
-            vol.Optional("allow_negative"): cv.boolean,
+            probatio.Optional("enable_millisecond"): cv.boolean,
+            # Allow negative durations.
+            probatio.Optional("allow_negative"): cv.boolean,
         }
     )
 
@@ -762,21 +1068,30 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", True):
+        if self.config.get("allow_negative", False):
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(
+    BaseSelectorConfig, _LegacyEntityFilterSelectorConfig, total=False
+):
     """Class to represent an entity selector config."""
+
+    # Note: The class inherits _LegacyEntityFilterSelectorConfig to keep
+    # support for legacy entity filter at top level for backwards compatibility,
+    # new entity filter options should be added under the `filter` key instead.
 
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
     reorder: bool
-    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    filter: (
+        EntityWithDeviceFilterSelectorConfig
+        | list[EntityWithDeviceFilterSelectorConfig]
+    )
 
 
 @SELECTORS.register("entity")
@@ -785,18 +1100,21 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
-            vol.Optional("exclude_entities"): [str],
-            vol.Optional("include_entities"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("reorder", default=False): cv.boolean,
-            vol.Optional("filter"): vol.All(
-                cv.ensure_list,
-                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
-            ),
-        }
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
+                probatio.Optional("exclude_entities"): [str],
+                probatio.Optional("include_entities"): [str],
+                probatio.Optional("multiple", default=False): cv.boolean,
+                probatio.Optional("reorder", default=False): cv.boolean,
+                probatio.Optional("filter"): probatio.All(
+                    cv.ensure_list,
+                    [ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+                ),
+            }
+        ),
+        _validate_selector_reorder_config,
     )
 
     def __init__(self, config: EntitySelectorConfig | None = None) -> None:
@@ -816,21 +1134,21 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             if allowed_domains := cv.ensure_list(self.config.get("domain")):
                 domain = split_entity_id(e_or_u)[0]
                 if domain not in allowed_domains:
-                    raise vol.Invalid(
+                    raise probatio.Invalid(
                         f"Entity {e_or_u} belongs to domain {domain}, "
                         f"expected {allowed_domains}"
                     )
             if include_entities:
-                vol.In(include_entities)(e_or_u)
+                probatio.In(include_entities)(e_or_u)
             if exclude_entities:
-                vol.NotIn(exclude_entities)(e_or_u)
+                probatio.NotIn(exclude_entities)(e_or_u)
             return e_or_u
 
         if not self.config["multiple"]:
             return validate(data)
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return cast(list, vol.Schema([validate])(data))  # Output is a list
+            raise probatio.Invalid("Value should be a list")
+        return cast(list, probatio.Schema([validate])(data))  # Output is a list
 
 
 class FileSelectorConfig(BaseSelectorConfig):
@@ -848,7 +1166,7 @@ class FileSelector(Selector[FileSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
-            vol.Required("accept"): str,
+            probatio.Required("accept"): str,
         }
     )
 
@@ -859,7 +1177,7 @@ class FileSelector(Selector[FileSelectorConfig]):
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         if not isinstance(data, str):
-            raise vol.Invalid("Value should be a string")
+            raise probatio.Invalid("Value should be a string")
 
         UUID(data)
 
@@ -867,7 +1185,7 @@ class FileSelector(Selector[FileSelectorConfig]):
 
 
 class FloorSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an floor selector config."""
+    """Class to represent a floor selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
@@ -882,15 +1200,15 @@ class FloorSelector(Selector[FloorSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("entity"): vol.All(
+            probatio.Optional("entity"): probatio.All(
                 cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): vol.All(
+            probatio.Optional("device"): probatio.All(
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("multiple", default=False): cv.boolean,
         }
     )
 
@@ -901,11 +1219,11 @@ class FloorSelector(Selector[FloorSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            floor_id: str = vol.Schema(str)(data)
+            floor_id: str = probatio.Schema(str)(data)
             return floor_id
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class IconSelectorConfig(BaseSelectorConfig, total=False):
@@ -921,7 +1239,7 @@ class IconSelector(Selector[IconSelectorConfig]):
     selector_type = "icon"
 
     CONFIG_SCHEMA = make_selector_config_schema(
-        {vol.Optional("placeholder"): str}
+        {probatio.Optional("placeholder"): str}
         # Frontend also has a fallbackPath option, this is not used by core
     )
 
@@ -931,7 +1249,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        icon: str = vol.Schema(str)(data)
+        icon: str = probatio.Schema(str)(data)
         return icon
 
 
@@ -949,7 +1267,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("multiple", default=False): cv.boolean,
         }
     )
 
@@ -960,15 +1278,15 @@ class LabelSelector(Selector[LabelSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            label_id: str = vol.Schema(str)(data)
+            label_id: str = probatio.Schema(str)(data)
             return label_id
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class LanguageSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an language selector config."""
+    """Class to represent a language selector config."""
 
     languages: list[str]
     native_name: bool
@@ -977,15 +1295,15 @@ class LanguageSelectorConfig(BaseSelectorConfig, total=False):
 
 @SELECTORS.register("language")
 class LanguageSelector(Selector[LanguageSelectorConfig]):
-    """Selector for an language."""
+    """Selector for a language."""
 
     selector_type = "language"
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("languages"): [str],
-            vol.Optional("native_name", default=False): cv.boolean,
-            vol.Optional("no_sort", default=False): cv.boolean,
+            probatio.Optional("languages"): [str],
+            probatio.Optional("native_name", default=False): cv.boolean,
+            probatio.Optional("no_sort", default=False): cv.boolean,
         }
     )
 
@@ -995,9 +1313,9 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        language: str = vol.Schema(str)(data)
+        language: str = probatio.Schema(str)(data)
         if "languages" in self.config and language not in self.config["languages"]:
-            raise vol.Invalid(f"Value {language} is not a valid option")
+            raise probatio.Invalid(f"Value {language} is not a valid option")
         return language
 
 
@@ -1015,13 +1333,13 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     selector_type = "location"
 
     CONFIG_SCHEMA = make_selector_config_schema(
-        {vol.Optional("radius"): bool, vol.Optional("icon"): str}
+        {probatio.Optional("radius"): bool, probatio.Optional("icon"): str}
     )
-    DATA_SCHEMA = vol.Schema(
+    DATA_SCHEMA = probatio.Schema(
         {
-            vol.Required("latitude"): vol.Coerce(float),
-            vol.Required("longitude"): vol.Coerce(float),
-            vol.Optional("radius"): vol.Coerce(float),
+            probatio.Required("latitude"): probatio.Coerce(float),
+            probatio.Required("longitude"): probatio.Coerce(float),
+            probatio.Optional("radius"): probatio.Coerce(float),
         }
     )
 
@@ -1048,34 +1366,34 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    allowed_context_keys = {
-        # Filters the available media based on the selected entity
-        "filter_entity": {EntitySelector.selector_type}
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("accept"): [str],
-            vol.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("accept"): [str],
+            probatio.Optional("multiple", default=False): cv.boolean,
         }
     )
-    DATA_SCHEMA = vol.Schema(
+    DATA_SCHEMA = probatio.Schema(
         {
             # If accept is set, the entity_id field will not be present
-            vol.Optional("entity_id"): cv.entity_id_or_uuid,
+            probatio.Optional("entity_id"): cv.entity_id_or_uuid,
             # Although marked as optional in frontend, this field is required
-            vol.Required("media_content_id"): str,
+            probatio.Required("media_content_id"): str,
             # Although marked as optional in frontend, this field is required
-            vol.Required("media_content_type"): str,
-            vol.Remove("metadata"): dict,
+            probatio.Required("media_content_type"): str,
+            # Data used by frontend for decoration.
+            probatio.Optional("metadata"): dict,
         }
     )
 
     def __init__(self, config: MediaSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available media based on the selected entity
+            "filter_entity": {EntitySelector.selector_type}
+        }
 
-    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
+    def __call__(self, data: Any) -> dict[str, Any] | list[dict[str, Any]]:
         """Validate the passed selection."""
         item_schema_dict = {
             key: value
@@ -1085,12 +1403,12 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
         if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
-            item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
+            item_schema_dict[probatio.Required("entity_id")] = cv.entity_id_or_uuid
 
-        item_schema = vol.Schema(item_schema_dict)
+        item_schema = probatio.Schema(item_schema_dict)
 
         if not self.config["multiple"]:
-            media: dict[str, str] = item_schema(data)
+            media: dict[str, Any] = item_schema(data)
             return media
 
         # Backwards compatibility for places that now accept multiple items
@@ -1126,7 +1444,7 @@ def validate_slider(data: Any) -> Any:
         data["mode"] = "slider" if has_min_max else "box"
 
     if data["mode"] == "slider" and not has_min_max:
-        raise vol.Invalid("min and max are required in slider mode")
+        raise probatio.Invalid("min and max are required in slider mode")
 
     return data
 
@@ -1137,21 +1455,22 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 
     selector_type = "number"
 
-    CONFIG_SCHEMA = vol.All(
+    CONFIG_SCHEMA = probatio.All(
         make_selector_config_schema(
             {
-                vol.Optional("min"): vol.Coerce(float),
-                vol.Optional("max"): vol.Coerce(float),
+                probatio.Optional("min"): probatio.Coerce(float),
+                probatio.Optional("max"): probatio.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
                 # user input is not rounded
-                vol.Optional("step", default=1): vol.Any(
-                    "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
+                probatio.Optional("step", default=1): probatio.Any(
+                    "any",
+                    probatio.All(probatio.Coerce(float), probatio.Range(min=1e-3)),
                 ),
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE): vol.All(
-                    vol.Coerce(NumberSelectorMode), lambda val: val.value
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): str,
+                probatio.Optional(CONF_MODE): probatio.All(
+                    probatio.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
-                vol.Optional("translation_key"): str,
+                probatio.Optional("translation_key"): str,
             }
         ),
         validate_slider,
@@ -1163,15 +1482,269 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
-        value: float = vol.Coerce(float)(data)
+        value: float = probatio.Coerce(float)(data)
 
         if "min" in self.config and value < self.config["min"]:
-            raise vol.Invalid(f"Value {value} is too small")
+            raise probatio.Invalid(f"Value {value} is too small")
 
         if "max" in self.config and value > self.config["max"]:
-            raise vol.Invalid(f"Value {value} is too large")
+            raise probatio.Invalid(f"Value {value} is too large")
 
         return value
+
+
+class NumericThresholdSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a numeric threshold selector config."""
+
+    mode: Required[NumericThresholdMode]
+    unit_of_measurement: list[str | None]
+    number: NumberSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+
+
+class NumericThresholdMode(StrEnum):
+    """Possible modes for a numeric threshold selector."""
+
+    CROSSED = "crossed"  # value crossed a threshold
+    CHANGED = "changed"  # value changed and is matching the threshold
+    IS = "is"  # value is matching the threshold
+
+
+class NumericThresholdType(StrEnum):
+    """Possible threshold types for a numeric threshold selector."""
+
+    ABOVE = "above"
+    BELOW = "below"
+    BETWEEN = "between"
+    OUTSIDE = "outside"
+    ANY = "any"
+
+
+class NumericThresholdActiveChoice(StrEnum):
+    """Possible active choices for a numeric threshold value entry."""
+
+    NUMBER = "number"
+    ENTITY = "entity"
+
+
+def _extract_numeric_threshold_entry(data: dict[str, Any]) -> dict[str, Any]:
+    """Extract only the relevant fields from a threshold value entry.
+
+    When active_choice is present, keep only the chosen field and
+    unit_of_measurement (only for the number choice), then drop active_choice.
+    """
+    active_choice = data.get("active_choice")
+    if active_choice is None:
+        return data
+    if active_choice == NumericThresholdActiveChoice.ENTITY:
+        return {"entity": data["entity"]}
+    result: dict[str, Any] = {"number": data["number"]}
+    if "unit_of_measurement" in data:
+        result["unit_of_measurement"] = data["unit_of_measurement"]
+    return result
+
+
+def _validate_numeric_threshold_active_choice(
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate that active_choice matches an existing key in the entry."""
+    if "active_choice" not in data and "number" in data and "entity" in data:
+        raise probatio.Invalid(
+            "Value entry contains both 'number' and 'entity';"
+            " set 'active_choice' to disambiguate"
+        )
+    if "active_choice" not in data:
+        return data
+    active_choice = data["active_choice"]
+    if active_choice not in data:
+        raise probatio.Invalid(
+            f"active_choice is '{active_choice}' but '{active_choice}' key is missing"
+        )
+    return data
+
+
+_NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Optional("active_choice"): probatio.All(
+                probatio.Coerce(NumericThresholdActiveChoice), lambda val: val.value
+            ),
+            probatio.Optional("number"): probatio.Coerce(float),
+            probatio.Optional("entity"): cv.entity_id,
+            probatio.Optional("unit_of_measurement"): probatio.Any(str, None),
+        }
+    ),
+    probatio.Any(
+        probatio.Schema(
+            {probatio.Required("number"): object}, extra=probatio.ALLOW_EXTRA
+        ),
+        probatio.Schema(
+            {probatio.Required("entity"): object}, extra=probatio.ALLOW_EXTRA
+        ),
+        msg="Value entry must contain at least one of 'number' or 'entity'",
+    ),
+    _validate_numeric_threshold_active_choice,
+    _extract_numeric_threshold_entry,
+)
+
+
+def _validate_numeric_threshold_range[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that value_min is not greater than value_max for numeric entries."""
+    threshold_type = value.get("type")
+    if threshold_type not in (
+        NumericThresholdType.BETWEEN,
+        NumericThresholdType.OUTSIDE,
+    ):
+        return value
+    min_entry = value.get("value_min", {})
+    max_entry = value.get("value_max", {})
+    min_number = min_entry.get("number")
+    max_number = max_entry.get("number")
+    if min_number is not None and max_number is not None and min_number > max_number:
+        raise probatio.Invalid(
+            f"value_min ({min_number}) must not be greater than"
+            f" value_max ({max_number})"
+        )
+    return value
+
+
+_NUMERIC_THRESHOLD_VALUE_SCHEMA = probatio.All(
+    probatio.Any(
+        probatio.Schema(
+            {
+                probatio.Required("type"): probatio.In(
+                    [NumericThresholdType.ABOVE, NumericThresholdType.BELOW]
+                ),
+                probatio.Required("value"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
+        probatio.Schema(
+            {
+                probatio.Required("type"): probatio.In(
+                    [NumericThresholdType.BETWEEN, NumericThresholdType.OUTSIDE]
+                ),
+                probatio.Required("value_min"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+                probatio.Required("value_max"): _NUMERIC_THRESHOLD_VALUE_ENTRY_SCHEMA,
+            }
+        ),
+        probatio.Schema(
+            {
+                probatio.Required("type"): probatio.In([NumericThresholdType.ANY]),
+            }
+        ),
+    ),
+    _validate_numeric_threshold_range,
+)
+
+
+def _validate_numeric_threshold_unit[_T: dict[str, Any]](
+    allowed_units: list[str | None],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks unit_of_measurement against an allowed list."""
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            if "number" not in entry:
+                continue
+            if "unit_of_measurement" not in entry:
+                raise probatio.Invalid(
+                    f"Missing unit_of_measurement, expected one of {allowed_units}"
+                )
+            unit = entry["unit_of_measurement"]
+            if unit not in allowed_units:
+                raise probatio.Invalid(
+                    f"Invalid unit_of_measurement '{unit}',"
+                    f" expected one of {allowed_units}"
+                )
+        return value
+
+    return _validate
+
+
+def _validate_numeric_threshold_not_any[_T: dict[str, Any]](value: _T) -> _T:
+    """Validate that the threshold type is not 'any'."""
+    if value.get("type") == NumericThresholdType.ANY:
+        raise probatio.Invalid(
+            "Threshold type 'any' is only allowed when mode is 'changed'"
+        )
+    return value
+
+
+def _validate_numeric_threshold_number_range[_T: dict[str, Any]](
+    number_config: dict[str, Any],
+) -> Callable[[_T], _T]:
+    """Generate a validator that checks numeric values against min/max config."""
+    min_value: float | None = number_config.get("min")
+    max_value: float | None = number_config.get("max")
+
+    def _validate(value: _T) -> _T:
+        threshold_type = value.get("type")
+        if threshold_type in (
+            NumericThresholdType.ABOVE,
+            NumericThresholdType.BELOW,
+        ):
+            entries: tuple[dict[str, Any], ...] = (value.get("value", {}),)
+        else:
+            entries = (value.get("value_min", {}), value.get("value_max", {}))
+        for entry in entries:
+            if "number" not in entry:
+                continue
+            number = entry["number"]
+            if min_value is not None and number < min_value:
+                raise probatio.Invalid(
+                    f"Value {number} is less than the minimum {min_value}"
+                )
+            if max_value is not None and number > max_value:
+                raise probatio.Invalid(
+                    f"Value {number} is greater than the maximum {max_value}"
+                )
+        return value
+
+    return _validate
+
+
+@SELECTORS.register("numeric_threshold")
+class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
+    """Selector of a numeric threshold condition."""
+
+    selector_type = "numeric_threshold"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            probatio.Required("mode"): probatio.All(
+                probatio.Coerce(NumericThresholdMode), lambda val: val.value
+            ),
+            probatio.Optional("unit_of_measurement"): [probatio.Any(str, None)],
+            probatio.Optional("number"): NumberSelector.CONFIG_SCHEMA,
+            probatio.Optional("entity"): probatio.All(
+                cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+            ),
+        }
+    )
+
+    def __init__(self, config: NumericThresholdSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
+        mode = self.config["mode"]
+        if mode != NumericThresholdMode.CHANGED:
+            validators.append(_validate_numeric_threshold_not_any)
+        if allowed_units := self.config.get("unit_of_measurement"):
+            validators.append(_validate_numeric_threshold_unit(allowed_units))
+        if number_config := cast(dict[str, Any] | None, self.config.get("number")):
+            validators.append(_validate_numeric_threshold_number_range(number_config))
+        return probatio.All(*validators)(data)
 
 
 class ObjectSelectorField(TypedDict, total=False):
@@ -1200,17 +1773,19 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("fields"): {
+            probatio.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): vol.Any(Selector, validate_selector),
-                    vol.Optional("required"): bool,
-                    vol.Optional("label"): str,
+                    probatio.Required("selector"): probatio.Any(
+                        Selector, validate_selector
+                    ),
+                    probatio.Optional("required"): bool,
+                    probatio.Optional("label"): str,
                 }
             },
-            vol.Optional("multiple", default=False): bool,
-            vol.Optional("label_field"): str,
-            vol.Optional("description_field"): str,
-            vol.Optional("translation_key"): str,
+            probatio.Optional("multiple", default=False): bool,
+            probatio.Optional("label_field"): str,
+            probatio.Optional("description_field"): str,
+            probatio.Optional("translation_key"): str,
         }
     )
 
@@ -1218,19 +1793,16 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    @override
     def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
-        """Serialize ObjectSelector for voluptuous_serialize."""
+        """Serialize ObjectSelector for to_field_list."""
         _config = deepcopy(self.config)
         if "fields" in _config:
             for field_items in _config["fields"].values():
-                if isinstance(field_items["selector"], ObjectSelector):
-                    field_items["selector"] = field_items["selector"].serialize()
-                elif isinstance(field_items["selector"], Selector):
-                    field_items["selector"] = {
-                        field_items["selector"].selector_type: field_items[
-                            "selector"
-                        ].config
-                    }
+                if isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = field_items["selector"].serialize()[
+                        "selector"
+                    ]
         return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:
@@ -1240,22 +1812,26 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             return data
 
         if not isinstance(data, (list, dict)):
-            raise vol.Invalid("Value should be a dict or a list of dicts")
+            raise probatio.Invalid("Value should be a dict or a list of dicts")
         if isinstance(data, list) and not self.config["multiple"]:
-            raise vol.Invalid("Value should not be a list")
+            raise probatio.Invalid("Value should not be a list")
 
         test_data = data if isinstance(data, list) else [data]
 
         for _config in test_data:
             for field, field_data in self.config["fields"].items():
                 if field_data.get("required") and field not in _config:
-                    raise vol.Invalid(f"Field {field} is required")
+                    raise probatio.Invalid(f"Field {field} is required")
                 if field in _config:
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    field_selector = field_data["selector"]
+                    if isinstance(field_selector, Selector):
+                        field_selector(_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
-                    raise vol.Invalid(f"Field {key} is not allowed")
+                    raise probatio.Invalid(f"Field {key} is not allowed")
 
         return data
 
@@ -1285,10 +1861,10 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Required("data"): str,
-            vol.Optional("scale"): int,
-            vol.Optional("error_correction_level"): vol.All(
-                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
+            probatio.Required("data"): str,
+            probatio.Optional("scale"): int,
+            probatio.Optional("error_correction_level"): probatio.All(
+                probatio.Coerce(QrErrorCorrectionLevel), lambda val: val.value
             ),
         }
     )
@@ -1299,16 +1875,16 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        vol.Schema(vol.Any(str, None))(data)
+        probatio.Schema(probatio.Any(str, None))(data)
         return self.config["data"]
 
 
-select_option = vol.All(
+select_option = probatio.All(
     dict,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required("value"): str,
-            vol.Required("label"): str,
+            probatio.Required("value"): str,
+            probatio.Required("label"): str,
         }
     ),
 )
@@ -1341,20 +1917,22 @@ class SelectSelectorConfig(BaseSelectorConfig, total=False):
 
 @SELECTORS.register("select")
 class SelectSelector(Selector[SelectSelectorConfig]):
-    """Selector for an single-choice input select."""
+    """Selector for a single-choice input select."""
 
     selector_type = "select"
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Required("options"): vol.All(vol.Any([str], [select_option])),
-            vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.All(
-                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            probatio.Required("options"): probatio.All(
+                probatio.Any([str], [select_option])
             ),
-            vol.Optional("translation_key"): cv.string,
-            vol.Optional("sort", default=False): cv.boolean,
+            probatio.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("custom_value", default=False): cv.boolean,
+            probatio.Optional("mode"): probatio.All(
+                probatio.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
+            probatio.Optional("translation_key"): cv.string,
+            probatio.Optional("sort", default=False): cv.boolean,
         }
     )
 
@@ -1374,22 +1952,102 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                     for option in cast(Sequence[SelectOptionDict], config_options)
                 ]
 
-        parent_schema: vol.In | vol.Any = vol.In(options)
+        parent_schema: probatio.In | probatio.Any = probatio.In(options)
         if self.config["custom_value"]:
-            parent_schema = vol.Any(parent_schema, str)
+            parent_schema = probatio.Any(parent_schema, str)
 
         if not self.config["multiple"]:
-            return parent_schema(vol.Schema(str)(data))
+            return parent_schema(probatio.Schema(str)(data))
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [parent_schema(vol.Schema(str)(val)) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [parent_schema(probatio.Schema(str)(val)) for val in data]
+
+
+class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a serial port selector config."""
+
+    extra_recommended_domains: list[str]
+
+
+@SELECTORS.register("serial_port")
+class SerialPortSelector(Selector[SerialPortSelectorConfig]):
+    """Selector for a serial port."""
+
+    selector_type = "serial_port"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            probatio.Optional("extra_recommended_domains"): [str],
+        }
+    )
+
+    def __init__(self, config: SerialPortSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        serial: str = probatio.Schema(str)(data)
+        return serial
+
+
+class StateClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a sensor state class selector config."""
+
+    multiple: bool
+    state_classes: Sequence[str | SensorStateClass]
+
+
+@SELECTORS.register("state_class")
+class StateClassSelector(Selector[StateClassSelectorConfig]):
+    """Selector for sensor state class."""
+
+    selector_type = "state_class"
+
+    @staticmethod
+    def _valid_state_classes(options: list[str]) -> list[str]:
+        """Validate state classes and raise if invalid."""
+        probatio.In(_enum_options(Platform.SENSOR, "SensorStateClass"))(options)
+        return options
+
+    CONFIG_SCHEMA = probatio.All(
+        make_selector_config_schema(
+            {
+                probatio.Optional("multiple", default=False): cv.boolean,
+                probatio.Optional("state_classes"): probatio.All(
+                    cv.ensure_list, [str], [_valid_state_classes]
+                ),
+            },
+        ),
+    )
+
+    def __init__(self, config: StateClassSelectorConfig | None = None) -> None:
+        """Instantiate a state class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        state_classes_filter = self.config.get("state_classes")
+        valid_options = [
+            option
+            for option in _enum_options(Platform.SENSOR, "SensorStateClass")
+            if state_classes_filter is None or option in state_classes_filter
+        ]
+        options_schema = probatio.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(probatio.Schema(str)(data))
+        if not isinstance(data, list):
+            raise probatio.Invalid("Value should be a list")
+        return [options_schema(probatio.Schema(str)(val)) for val in data]
 
 
 class StateSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an state selector config."""
+    """Class to represent a state selector config."""
 
     entity_id: str
     hide_states: list[str]
+    attribute: str
     multiple: bool
 
 
@@ -1399,40 +2057,35 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
-    allowed_context_keys = {
-        # Filters the available states based on the selected entity
-        "filter_entity": {EntitySelector.selector_type},
-        # Filters the available states based on the selected target
-        "filter_target": {"target"},
-        # Only show the attribute values of a specific attribute
-        "filter_attribute": {AttributeSelector.selector_type},
-    }
-
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("entity_id"): cv.entity_id,
-            vol.Optional("hide_states"): [str],
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
-            vol.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("entity_id"): cv.entity_id,
+            probatio.Optional("hide_states"): [str],
+            probatio.Optional("attribute"): str,
+            probatio.Optional("multiple", default=False): cv.boolean,
         }
     )
 
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
+        self.allowed_context_keys = {
+            # Filters the available states based on the selected entity
+            "filter_entity": {EntitySelector.selector_type},
+            # Filters the available states based on the selected target
+            "filter_target": {"target"},
+            # Only show the attribute values of a specific attribute
+            "filter_attribute": {AttributeSelector.selector_type},
+        }
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            state: str = vol.Schema(str)(data)
+            state: str = probatio.Schema(str)(data)
             return state
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class StatisticSelectorConfig(BaseSelectorConfig, total=False):
@@ -1449,7 +2102,7 @@ class StatisticSelector(Selector[StatisticSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("multiple", default=False): cv.boolean,
         }
     )
 
@@ -1461,11 +2114,11 @@ class StatisticSelector(Selector[StatisticSelectorConfig]):
         """Validate the passed selection."""
 
         if not self.config["multiple"]:
-            stat: str = vol.Schema(str)(data)
+            stat: str = probatio.Schema(str)(data)
             return stat
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class TargetSelectorConfig(BaseSelectorConfig, total=False):
@@ -1473,6 +2126,7 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    primary_entities_only: bool
 
 
 @SELECTORS.register("target")
@@ -1486,19 +2140,20 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("entity"): vol.All(
+            probatio.Optional("entity"): probatio.All(
                 cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): vol.All(
+            probatio.Optional("device"): probatio.All(
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
+            probatio.Optional("primary_entities_only"): cv.boolean,
         }
     )
 
     # We want to transition to not including templates in the target selector.
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
+    TARGET_SELECTION_SCHEMA = probatio.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1511,12 +2166,12 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
 
 class TemplateSelectorConfig(BaseSelectorConfig):
-    """Class to represent an template selector config."""
+    """Class to represent a template selector config."""
 
 
 @SELECTORS.register("template")
 class TemplateSelector(Selector[TemplateSelectorConfig]):
-    """Selector for an template."""
+    """Selector for a template."""
 
     selector_type = "template"
 
@@ -1569,16 +2224,16 @@ class TextSelector(Selector[TextSelectorConfig]):
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("multiline", default=False): bool,
-            vol.Optional("prefix"): str,
-            vol.Optional("suffix"): str,
+            probatio.Optional("multiline", default=False): bool,
+            probatio.Optional("prefix"): str,
+            probatio.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.All(
-                vol.Coerce(TextSelectorType), lambda val: val.value
+            probatio.Optional("type"): probatio.All(
+                probatio.Coerce(TextSelectorType), lambda val: val.value
             ),
-            vol.Optional("autocomplete"): str,
-            vol.Optional("multiple", default=False): bool,
+            probatio.Optional("autocomplete"): str,
+            probatio.Optional("multiple", default=False): bool,
         }
     )
 
@@ -1589,11 +2244,11 @@ class TextSelector(Selector[TextSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            text: str = vol.Schema(str)(data)
+            text: str = probatio.Schema(str)(data)
             return text
         if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+            raise probatio.Invalid("Value should be a list")
+        return [probatio.Schema(str)(val) for val in data]
 
 
 class ThemeSelectorConfig(BaseSelectorConfig):
@@ -1602,13 +2257,13 @@ class ThemeSelectorConfig(BaseSelectorConfig):
 
 @SELECTORS.register("theme")
 class ThemeSelector(Selector[ThemeSelectorConfig]):
-    """Selector for an theme."""
+    """Selector for a theme."""
 
     selector_type = "theme"
 
     CONFIG_SCHEMA = make_selector_config_schema(
         {
-            vol.Optional("include_default", default=False): cv.boolean,
+            probatio.Optional("include_default", default=False): cv.boolean,
         }
     )
 
@@ -1618,7 +2273,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        theme: str = vol.Schema(str)(data)
+        theme: str = probatio.Schema(str)(data)
         return theme
 
 
@@ -1645,7 +2300,7 @@ class TimeSelector(Selector[TimeSelectorConfig]):
 
 
 class TriggerSelectorConfig(BaseSelectorConfig):
-    """Class to represent an trigger selector config."""
+    """Class to represent a trigger selector config."""
 
 
 @SELECTORS.register("trigger")
@@ -1662,7 +2317,7 @@ class TriggerSelector(Selector[TriggerSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return vol.Schema(cv.TRIGGER_SCHEMA)(data)
+        return probatio.Schema(cv.TRIGGER_SCHEMA)(data)
 
 
 dumper.add_representer(
