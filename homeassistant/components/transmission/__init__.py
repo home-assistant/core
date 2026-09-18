@@ -75,6 +75,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up the Transmission Component."""
 
+    _LOGGER.warning("DAT266 Test Regis")
+
     @callback
     def update_unique_id(
         entity_entry: er.RegistryEntry,
