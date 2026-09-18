@@ -28,6 +28,7 @@ async def test_get_states_by_tag_prefix(hass: HomeAssistant) -> None:
             CONF_PORT: 80,
             "relay_count": 1,
             "input_count": 1,
+            "relay_1": "bistable",
         },
     )
     entry.add_to_hass(hass)
