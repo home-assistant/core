@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import override
+from typing import Any, override
 
 from pyportainer import (
     DockerContainerState,
@@ -16,6 +16,7 @@ from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerError,
     PortainerEventListener,
     PortainerEventListenerResult,
     PortainerTimeoutError,
@@ -618,6 +619,22 @@ class PortainerCoordinator(
         )
         return local_image
 
+    async def _async_get_image_status(
+        self, endpoint_id: int, container_data: PortainerContainerData
+    ) -> PortainerImageUpdateStatus | None:
+        """Get the current image update status for a single container.
+
+        Used when an event arrives for a container id the background image
+        watcher has no result for yet, e.g. right after a recreate.
+        """
+        image = str(container_data.container_inspect.image)
+        try:
+            status = await self.portainer.container_image_status(endpoint_id, image)
+        except PortainerError:
+            _LOGGER.debug("Failed to check image %s on endpoint %s", image, endpoint_id)
+            return None
+        return status
+
     def _async_sync_event_listeners(
         self, mapped_endpoints: dict[int, PortainerCoordinatorData]
     ) -> None:
@@ -677,6 +694,20 @@ class PortainerCoordinator(
             else None
         )
 
+        # A recreated container keeps its name but gets a new container id, so
+        # the id is absent from the map built at the last full refresh. Docker
+        # includes the container name in the event attributes, so fall back to
+        # that and track the new id, otherwise the image update entity reports
+        # unknown until the next 24 hour watcher cycle.
+        if container_name is None and event.action == "start":
+            attributes = event.actor.attributes if event.actor else None
+            if attributes and (name := attributes.get("name")):
+                container_name = sanitize_container_name(name)
+                if actor_id is not None:
+                    self._container_ids_by_endpoint.setdefault(endpoint_id, {})[
+                        actor_id
+                    ] = container_name
+
         if (
             container_name is None
             or (endpoint_data := self.data.get(endpoint_id)) is None
@@ -685,9 +716,8 @@ class PortainerCoordinator(
             return
 
         updated_containers = dict(endpoint_data.containers)
-        updated_containers[container_name] = dataclasses.replace(
-            container_data,
-            last_docker_event=ContainerDockerEvent(
+        replacement_kwargs: dict[str, Any] = {
+            "last_docker_event": ContainerDockerEvent(
                 action=(
                     f"health_status_{event.action.rsplit(': ', 1)[-1]}"
                     if event.action.startswith("health_status")
@@ -695,6 +725,24 @@ class PortainerCoordinator(
                 ),
                 occurred_at=dt_util.utcnow(),
             ),
+        }
+
+        # A recreated container has a new id that the 24 hour image watcher has
+        # no result for yet, so the update entity would report unknown. Refresh
+        # the status for the new id now.
+        if (
+            event.action == "start"
+            and actor_id is not None
+            and self.watcher is not None
+            and (endpoint_id, actor_id) not in self.watcher.results
+        ):
+            if image_status := await self._async_get_image_status(
+                endpoint_id, container_data
+            ):
+                replacement_kwargs["image_status"] = image_status
+
+        updated_containers[container_name] = dataclasses.replace(
+            container_data, **replacement_kwargs
         )
         merged = dict(self.data)
         merged[endpoint_id] = dataclasses.replace(
