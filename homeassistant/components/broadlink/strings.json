@@ -88,6 +88,9 @@
     }
   },
   "exceptions": {
+    "command_not_found": {
+      "message": "Command not found: {commands}"
+    },
     "commands_not_found": {
       "message": "Commands not found: {commands}"
     },

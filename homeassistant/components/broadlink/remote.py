@@ -518,7 +518,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             if len(cmds_not_found) == len(commands):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="commands_not_found",
+                    translation_key=(
+                        "command_not_found"
+                        if len(cmds_not_found) == 1
+                        else "commands_not_found"
+                    ),
                     translation_placeholders={"commands": ", ".join(cmds_not_found)},
                 )
 

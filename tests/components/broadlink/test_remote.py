@@ -555,6 +555,11 @@ async def test_remote_rf_not_supported(
             id="unknown_device",
         ),
         pytest.param(
+            {"device": "tv", "command": "off"},
+            "Command not found: off",
+            id="unknown_command",
+        ),
+        pytest.param(
             {"device": "tv", "command": ["off", "mute"]},
             "Commands not found: off, mute",
             id="unknown_commands",
