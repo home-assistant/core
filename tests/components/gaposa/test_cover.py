@@ -5,21 +5,19 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
-    CoverEntityFeature,
 )
 from homeassistant.components.gaposa.const import MOTION_DELAY, UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -27,41 +25,22 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LIVING_ROOM_ENTITY = "cover.living_room"
 BEDROOM_ENTITY = "cover.bedroom"
 
 
-async def test_cover_entities_created(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Both mock motors should produce cover entities at setup."""
-    assert hass.states.get(LIVING_ROOM_ENTITY) is not None
-    assert hass.states.get(BEDROOM_ENTITY) is not None
-
-
-async def test_cover_initial_state_from_motor(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """The Living Room motor is UP, the Bedroom motor is DOWN."""
-    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
-    assert hass.states.get(BEDROOM_ENTITY).state == STATE_CLOSED
-
-
-async def test_cover_supported_features(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Open, close and stop are all supported; no position control."""
-    state = hass.states.get(LIVING_ROOM_ENTITY)
-    expected = (
-        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-    )
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected
-    assert ATTR_CURRENT_POSITION not in state.attributes
+    """Test all cover entities and their state at setup."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_open_cover_calls_motor_up(
@@ -260,6 +239,7 @@ async def test_cover_state_mapping(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_motors: list[MagicMock],
+    freezer: FrozenDateTimeFactory,
     motor_state: str,
     expected: str,
 ) -> None:
@@ -267,8 +247,8 @@ async def test_cover_state_mapping(
     motor = mock_motors[0]
     motor.state = motor_state
 
-    later = dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL + 1)
-    async_fire_time_changed(hass, later)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(LIVING_ROOM_ENTITY).state == expected
@@ -308,22 +288,19 @@ async def test_device_listener_pushes_state(
 async def test_motion_window_collapses_after_delay(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Past MOTION_DELAY, the cover should return to a steady state."""
-    now = dt_util.utcnow()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
 
-    with freeze_time(now):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: BEDROOM_ENTITY},
-            blocking=True,
-        )
+    freezer.tick(timedelta(seconds=MOTION_DELAY + 5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    later = now + timedelta(seconds=MOTION_DELAY + 5)
-    with freeze_time(later):
-        async_fire_time_changed(hass, later)
-        await hass.async_block_till_done()
-
-        state = hass.states.get(BEDROOM_ENTITY).state
-        assert state not in (STATE_OPENING, STATE_CLOSING)
+    state = hass.states.get(BEDROOM_ENTITY).state
+    assert state not in (STATE_OPENING, STATE_CLOSING)
