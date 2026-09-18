@@ -288,7 +288,7 @@ aioguardian==2026.01.1
 aioharmanluxury==0.2.3
 
 # homeassistant.components.harmony
-aioharmony==1.0.8
+aioharmony==1.0.10
 
 # homeassistant.components.hassio
 aiohasupervisor==0.6.0
