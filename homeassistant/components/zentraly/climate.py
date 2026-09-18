@@ -354,6 +354,12 @@ class ZentralyClimate(ClimateEntity):
     ) -> None:
         """Set new target temperature."""
 
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None and hvac_mode not in self.hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_action"
+            )
+
         temperature = kwargs[ATTR_TEMPERATURE]
 
         success = await self._climate_api.async_set_target_temperature(
@@ -377,7 +383,7 @@ class ZentralyClimate(ClimateEntity):
 
         self.async_write_ha_state()
 
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        if hvac_mode is not None:
             # Writing a setpoint selects manual mode on the thermostat.
             await self.async_set_hvac_mode(hvac_mode)
 

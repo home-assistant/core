@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import ENTITY_ID
@@ -378,3 +378,26 @@ async def test_action_waits_for_refresh(
         await hass.async_block_till_done()
     mock_climate_api.async_set_target_temperature.assert_awaited_once_with(22.0)
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0
+
+
+async def test_temperature_with_unsupported_mode(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+) -> None:
+    """Reject an unsupported mode before writing either value."""
+    before = hass.states.get(ENTITY_ID)
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 22.0,
+                ATTR_HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+    assert error.value.translation_key == "invalid_action"
+    mock_climate_api.async_set_target_temperature.assert_not_awaited()
+    mock_climate_api.async_set_operation_mode.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID) == before
