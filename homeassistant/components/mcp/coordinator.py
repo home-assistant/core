@@ -12,7 +12,7 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from mcp.types import InitializeResult
+from mcp.types import InitializeResult, ToolAnnotations
 import probatio
 
 # Imported by name because the tests patch it on this module.
@@ -121,8 +121,30 @@ async def mcp_client(
             raise main_error from streamable_err
 
 
+def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
+    """Return the annotations the remote server declares for a tool.
+
+    A hint the server leaves out keeps the conservative default.
+    """
+    if remote is None:
+        return llm.ToolAnnotations()
+    declared = {
+        field: value
+        for field, value in (
+            ("read_only", remote.readOnlyHint),
+            ("destructive", remote.destructiveHint),
+            ("idempotent", remote.idempotentHint),
+            ("open_world", remote.openWorldHint),
+        )
+        if value is not None
+    }
+    return llm.ToolAnnotations(**declared)
+
+
 class ModelContextProtocolTool(llm.Tool):
     """A Tool exposed over the Model Context Protocol."""
+
+    integration = DOMAIN
 
     def __init__(
         self,
@@ -132,11 +154,14 @@ class ModelContextProtocolTool(llm.Tool):
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
+        annotations: llm.ToolAnnotations | None = None,
     ) -> None:
         """Initialize the tool."""
         self.name = name
         self.description = description
         self.parameters = parameters
+        if annotations is not None:
+            self.annotations = annotations
         self.server_url = server_url
         self.config_entry = config_entry
         self.token_manager = token_manager
@@ -267,6 +292,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     self.config_entry.data[CONF_URL],
                     self.config_entry,
                     self.token_manager,
+                    _tool_annotations(tool.annotations),
                 )
             )
         return tools
