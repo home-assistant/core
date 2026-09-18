@@ -256,6 +256,11 @@ class LovelaceYAML(LovelaceConfig):
 
         is_updated = self._cache is not None
 
+        # Taken before anything is read: an edit made while loading must not be
+        # masked by a timestamp captured afterwards. Erring this way costs at
+        # most one extra reload.
+        last_update = time.time()
+
         try:
             config = load_yaml_dict(
                 self.path, Secrets(Path(self.hass.config.config_dir))
@@ -264,7 +269,7 @@ class LovelaceYAML(LovelaceConfig):
             raise ConfigNotFound from None
 
         json = cached_json_fragment(config)
-        self._cache = (config, time.time(), json, _referenced_files(self.path))
+        self._cache = (config, last_update, json, _referenced_files(self.path))
         return is_updated, config, json
 
 
@@ -277,6 +282,16 @@ _INCLUDE_DIR_TAGS = frozenset(
         "!include_dir_named",
     }
 )
+
+
+def _nearest_existing_dir(path: str) -> str:
+    """Return the closest ancestor of a path that exists."""
+    while not os.path.isdir(path):
+        parent = os.path.dirname(path)
+        if parent == path:
+            break
+        path = parent
+    return path
 
 
 def _walk_include_dir(directory: str) -> Iterator[tuple[str, list[str]]]:
@@ -301,11 +316,13 @@ def _scan_includes(node: yaml.nodes.Node, directory: str, files: set[str]) -> No
         if node.tag in _INCLUDE_FILE_TAGS:
             _collect_include_graph(os.path.join(directory, node.value), files)
         elif node.tag in _INCLUDE_DIR_TAGS:
-            for root, filenames in _walk_include_dir(
-                os.path.join(directory, node.value)
-            ):
-                # Track the directory itself: adding or removing a file changes
-                # its mtime, which the remaining files cannot reveal.
+            location = os.path.join(directory, node.value)
+            # Track the directory itself: adding or removing a file changes its
+            # mtime, which the remaining files cannot reveal. A directory that
+            # does not exist yet is loaded as empty, so track the nearest
+            # existing ancestor instead: creating it changes that ancestor.
+            files.add(_nearest_existing_dir(location))
+            for root, filenames in _walk_include_dir(location):
                 files.add(root)
                 for filename in filenames:
                     _collect_include_graph(filename, files)

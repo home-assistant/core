@@ -589,6 +589,59 @@ async def test_yaml_dashboard_follows_absolute_include(
     assert config["views"][0]["title"] == "updated"
 
 
+async def test_yaml_dashboard_reloads_when_include_dir_created(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test creating a not-yet-existing include directory invalidates the cache."""
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    _write(root, "views: !include_dir_list views\n")
+
+    # The directory does not exist yet, so the dashboard loads as empty.
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"] == []
+
+    # Its nearest existing ancestor is tracked in its place.
+    assert str(tmp_path) in dashboard._referenced_files(str(root))
+
+    root_mtime = root.stat().st_mtime
+    _write(views / "garage.yaml", "title: Garage\n")
+    os.utime(views / "garage.yaml", (root_mtime + 10, root_mtime + 10))
+    os.utime(views, (root_mtime + 10, root_mtime + 10))
+    os.utime(tmp_path, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 1
+
+
+async def test_yaml_dashboard_does_not_mask_edit_made_while_loading(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test an edit made during a load is not masked by the cache timestamp."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+    _write(root, "views:\n  - !include lovelace/garage.yaml\n")
+    _write(view, "title: original\n")
+
+    real_load = dashboard.load_yaml_dict
+
+    def load_then_edit(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Simulate the file changing after it is read but before caching."""
+        loaded = real_load(*args, **kwargs)
+        _write(view, "title: updated\n")
+        os.utime(view, (time.time(), time.time()))
+        return loaded
+
+    with patch.object(dashboard, "load_yaml_dict", side_effect=load_then_edit):
+        _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    # The edit landed after the timestamp was taken, so it must be picked up.
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
