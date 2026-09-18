@@ -1,0 +1,41 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Requires the companion brands alias from xiaomi_weather to the existing Xiaomi assets.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage:
+    status: done
+    comment: User and reconfigure flows have full line and branch coverage.
+  dependency-transparency:
+    status: todo
+    comment: The client is bundled; resolve the external-library requirement before submission.
+  docs-actions:
+    status: exempt
+    comment: Forecasts use the standard weather action.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-installation-instructions:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-removal-instructions:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
