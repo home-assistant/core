@@ -19,8 +19,8 @@ MOCK_STATUS_XML = """
 """
 
 
-async def test_monkey_patch_logic(hass: HomeAssistant) -> None:
-    """Test the monkey patch logic for get_states_by_tag_prefix."""
+async def test_get_states_by_tag_prefix(hass: HomeAssistant) -> None:
+    """Test the get_states_by_tag_prefix method provided by the package."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -72,8 +72,7 @@ async def test_monkey_patch_logic(hass: HomeAssistant) -> None:
         mock_request.return_value = "<response></response>"
         assert await api.get_states_by_tag_prefix("relay") is False
 
-        # Test hex parsing if applicable (though the code uses base 16 int conversion)
-        # The code: number = int(i.tag[len(tag) :], 16)
+        # Test hex parsing (base 16 int conversion)
         # If tag is "relay", and xml has <relayA>...</relayA>, A is 10.
         mock_request.return_value = "<response><relayA>on</relayA></response>"
         states = await api.get_states_by_tag_prefix("relay")
