@@ -14,6 +14,7 @@ from homeassistant.helpers.llm import (
     IntentTool,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
@@ -40,6 +41,8 @@ class TodoGetItemsTool(Tool):
         "'Read my grocery list'. "
         "Filters items by status (needs_action, completed, all)."
     )
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
 
     def __init__(self, todo_lists: list[str]) -> None:
         """Init the get items tool."""
