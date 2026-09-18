@@ -644,6 +644,37 @@ async def test_yaml_dashboard_does_not_mask_edit_made_while_loading(
     assert config["views"][0]["title"] == "updated"
 
 
+async def test_yaml_dashboard_normalises_include_paths(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a file reached by different spellings is tracked once."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+
+    # The same file, reached directly and via a parent-relative detour.
+    _write(
+        root,
+        "views:\n"
+        "  - !include lovelace/garage.yaml\n"
+        "  - !include lovelace/../lovelace/garage.yaml\n",
+    )
+    _write(view, "title: original\n")
+
+    files = dashboard._referenced_files(str(root))
+    assert str(view) in files
+    assert not any(".." in path for path in files)
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][1]["title"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][1]["title"] == "updated"
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:

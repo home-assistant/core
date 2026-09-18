@@ -314,9 +314,11 @@ def _scan_includes(node: yaml.nodes.Node, directory: str, files: set[str]) -> No
     """Walk a composed YAML node tree, following ``!include`` style tags."""
     if isinstance(node, yaml.nodes.ScalarNode):
         if node.tag in _INCLUDE_FILE_TAGS:
-            _collect_include_graph(os.path.join(directory, node.value), files)
+            _collect_include_graph(
+                os.path.normpath(os.path.join(directory, node.value)), files
+            )
         elif node.tag in _INCLUDE_DIR_TAGS:
-            location = os.path.join(directory, node.value)
+            location = os.path.normpath(os.path.join(directory, node.value))
             # Track the directory itself: adding or removing a file changes its
             # mtime, which the remaining files cannot reveal. A directory that
             # does not exist yet is loaded as empty, so track the nearest
@@ -342,6 +344,9 @@ def _collect_include_graph(path: str, files: set[str]) -> None:
     secret is resolved; only the tags are inspected. This does not rely on the
     loaded values carrying ``__config_file__``, which scalars cannot do.
     """
+    # Normalise first: the same file reached as ``a/../b.yaml`` and ``b.yaml``
+    # must compare equal, or the cycle check below lets it through twice.
+    path = os.path.normpath(path)
     if path in files:
         return
     files.add(path)
