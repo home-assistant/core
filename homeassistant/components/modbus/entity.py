@@ -1,9 +1,10 @@
 """Base implementation for all modbus platforms."""
 
 from abc import abstractmethod
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import copy
-from datetime import datetime, timedelta
+from datetime import datetime
 import struct
 from typing import Any, cast, override
 
@@ -21,7 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later
@@ -83,6 +84,7 @@ class ModbusBaseEntity(Entity):
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_call: Callable[[], None] | None = None
+        self._update_task: asyncio.Task[None] | None = None
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -109,11 +111,27 @@ class ModbusBaseEntity(Entity):
         await self._async_update()
         self.async_write_ha_state()
         if self._scan_interval > 0:
-            self._cancel_call = async_call_later(
-                self.hass,
-                timedelta(seconds=self._scan_interval),
-                self.async_local_update,
+            self._cancel_call = self._async_call_later(
+                self._scan_interval, self.async_local_update
             )
+
+    @callback
+    def _async_call_later(
+        self, delay: float, action: Callable[[], Coroutine[Any, Any, None]]
+    ) -> CALLBACK_TYPE:
+        """Run an update after a delay, in the background.
+
+        Startup and shutdown wait for foreground tasks, and the first update
+        waits for a device that may never connect.
+        """
+
+        @callback
+        def _run(_now: datetime) -> None:
+            self._update_task = self.hass.async_create_background_task(
+                action(), f"modbus {self._attr_name} update"
+            )
+
+        return async_call_later(self.hass, delay, _run)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -127,9 +145,11 @@ class ModbusBaseEntity(Entity):
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
+        if self._update_task and not self._update_task.done():
+            self._update_task.cancel()
         self._attr_available = False
 
-    async def async_await_connection(self, _now: Any) -> None:
+    async def async_await_connection(self) -> None:
         """Wait for first connect."""
         await self._hub.event_connected.wait()
         await self.async_local_update(cancel_pending_update=True)
@@ -137,10 +157,8 @@ class ModbusBaseEntity(Entity):
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
-            async_call_later(
-                self.hass,
-                self._hub.config_delay + 0.1,
-                self.async_await_connection,
+            self._async_call_later(
+                self._hub.config_delay + 0.1, self.async_await_connection
             )
         )
         self.async_on_remove(
