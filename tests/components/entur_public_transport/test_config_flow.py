@@ -16,6 +16,7 @@ from homeassistant.components.entur_public_transport.api import (
 )
 from homeassistant.components.entur_public_transport.config_flow import (
     EnturConfigFlow,
+    EnturStopPlaceSubentryFlow,
     _async_reconcile_subentry_entities,
     _combine_line_whitelist,
     _configured_platform_summary,
@@ -52,7 +53,12 @@ from homeassistant.components.entur_public_transport.const import (
     RECONFIGURE_ACTION_EDIT,
     RECONFIGURE_ACTION_REPLACE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, FlowType
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    FlowType,
+)
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -927,4 +933,224 @@ def test_config_flow_helpers_cover_selection_and_fallbacks() -> None:
     assert _stop_is_configured(entry, "NSR:StopPlace:1")
     assert not _stop_is_configured(
         entry, "NSR:StopPlace:1", exclude_subentry_id="stop-subentry"
+    )
+
+
+async def test_config_flow_defensive_paths(hass: HomeAssistant) -> None:
+    """Test API failures and invalid choices remain recoverable in the UI."""
+    place = EnturStopPlace(
+        stop_id="NSR:StopPlace:1",
+        name="Central station",
+        display_name="Central station",
+        locality="City",
+        transport_modes=("bus",),
+        role="standalone",
+    )
+
+    flow = EnturConfigFlow()
+    flow.hass = hass
+    flow.handler = DOMAIN
+    flow.context = {"source": SOURCE_USER}
+    await flow.async_step_select_stop({CONF_STOP_ID: "NSR:StopPlace:missing"})
+    flow._places = (place,)
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            side_effect=EnturApiError,
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
+            side_effect=EnturApiError,
+        ),
+    ):
+        result = await flow.async_step_select_stop({CONF_STOP_ID: place.stop_id})
+    assert result["step_id"] == "select_routes"
+
+    empty_flow = EnturConfigFlow()
+    empty_flow.hass = hass
+    empty_flow.handler = DOMAIN
+    empty_flow.context = {"source": SOURCE_USER}
+    assert (await empty_flow.async_step_select_routes())["type"] is FlowResultType.ABORT
+    assert (await empty_flow.async_step_select_platforms())[
+        "type"
+    ] is FlowResultType.ABORT
+    assert (await empty_flow.async_step_confirm())["type"] is FlowResultType.ABORT
+
+    flow._selected_place = place
+    result = await flow.async_step_select_platforms(
+        {CONF_PLATFORM_MODE: PLATFORM_MODE_SELECTED}
+    )
+    assert result["errors"] == {"base": "select_platform"}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_IDS: ["NSR:StopPlace:legacy"]},
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Central station",
+                "data": {CONF_STOP_ID: place.stop_id},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    duplicate_flow = EnturStopPlaceSubentryFlow()
+    duplicate_flow.hass = hass
+    duplicate_flow.handler = (entry.entry_id, "stop_place")
+    duplicate_flow.context = {"source": SOURCE_USER}
+    assert (await duplicate_flow.async_step_user({"place": place}))[
+        "reason"
+    ] == "already_configured"
+
+    reconfigure_flow = EnturStopPlaceSubentryFlow()
+    reconfigure_flow.hass = hass
+    reconfigure_flow.handler = (entry.entry_id, "stop_place")
+    reconfigure_flow.context = {
+        "source": SOURCE_RECONFIGURE,
+        "subentry_id": "stop-subentry",
+    }
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.async_get_stop_place",
+        side_effect=EnturApiError,
+    ):
+        result = await reconfigure_flow.async_step_reconfigure(
+            {CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_EDIT}
+        )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    empty_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "empty-subentry",
+                "subentry_type": "stop_place",
+                "title": "Empty stop",
+                "data": {},
+            }
+        ],
+    )
+    empty_entry.add_to_hass(hass)
+    empty_reconfigure_flow = EnturStopPlaceSubentryFlow()
+    empty_reconfigure_flow.hass = hass
+    empty_reconfigure_flow.handler = (empty_entry.entry_id, "stop_place")
+    empty_reconfigure_flow.context = {
+        "source": SOURCE_RECONFIGURE,
+        "subentry_id": "empty-subentry",
+    }
+    assert (
+        await empty_reconfigure_flow.async_step_reconfigure(
+            {CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_EDIT}
+        )
+    )["type"] is FlowResultType.ABORT
+
+    reconfigure_flow = EnturStopPlaceSubentryFlow()
+    reconfigure_flow.hass = hass
+    reconfigure_flow.handler = (entry.entry_id, "stop_place")
+    reconfigure_flow.context = {
+        "source": SOURCE_RECONFIGURE,
+        "subentry_id": "stop-subentry",
+    }
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_place",
+            return_value=place,
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            side_effect=EnturApiError,
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
+            side_effect=EnturApiError,
+        ),
+    ):
+        result = await reconfigure_flow.async_step_reconfigure(
+            {CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_EDIT}
+        )
+    assert result["step_id"] == "select_routes"
+
+    search_flow = EnturStopPlaceSubentryFlow()
+    search_flow.hass = hass
+    assert (await search_flow._async_step_search("user", {CONF_QUERY: "O"}))[
+        "errors"
+    ] == {"base": "query_too_short"}
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+        side_effect=EnturApiError,
+    ):
+        result = await search_flow._async_step_search("user", {CONF_QUERY: "Oslo"})
+    assert result["errors"] == {"base": "cannot_connect"}
+    with patch(
+        "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+        return_value=(),
+    ):
+        result = await search_flow._async_step_search("user", {CONF_QUERY: "Oslo"})
+    assert result["errors"] == {"base": "no_results"}
+
+    selection_flow = EnturStopPlaceSubentryFlow()
+    selection_flow.hass = hass
+    selection_flow._places = (place,)
+    selection_flow._existing_stop_id = place.stop_id
+    await selection_flow.async_step_select_stop({CONF_STOP_ID: "NSR:StopPlace:missing"})
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            side_effect=EnturApiError,
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
+            side_effect=EnturApiError,
+        ),
+    ):
+        result = await selection_flow.async_step_select_stop(
+            {CONF_STOP_ID: place.stop_id}
+        )
+    assert result["step_id"] == "select_routes"
+
+    empty_subentry_flow = EnturStopPlaceSubentryFlow()
+    empty_subentry_flow.hass = hass
+    assert (await empty_subentry_flow.async_step_select_routes())[
+        "type"
+    ] is FlowResultType.ABORT
+    assert (await empty_subentry_flow.async_step_select_platforms())[
+        "type"
+    ] is FlowResultType.ABORT
+    assert (await empty_subentry_flow.async_step_confirm())[
+        "type"
+    ] is FlowResultType.ABORT
+
+    selection_flow._selected_place = place
+    result = await selection_flow.async_step_select_platforms(
+        {CONF_PLATFORM_MODE: PLATFORM_MODE_SELECTED}
+    )
+    assert result["errors"] == {"base": "select_platform"}
+
+    configured_flow = EnturStopPlaceSubentryFlow()
+    configured_flow.hass = hass
+    configured_flow.handler = (entry.entry_id, "stop_place")
+    configured_flow.context = {
+        "source": SOURCE_RECONFIGURE,
+        "subentry_id": "stop-subentry",
+    }
+    configured_flow._selected_place = EnturStopPlace(
+        stop_id="NSR:StopPlace:legacy",
+        name="Legacy",
+        display_name="Legacy",
+        locality="City",
+        transport_modes=(),
+        role="standalone",
+    )
+    assert (await configured_flow.async_step_confirm({}))[
+        "reason"
+    ] == "already_configured"
+
+    _async_reconcile_subentry_entities(
+        hass,
+        entry,
+        entry.subentries["stop-subentry"],
+        place.stop_id,
+        PLATFORM_MODE_ALL,
+        [],
     )
