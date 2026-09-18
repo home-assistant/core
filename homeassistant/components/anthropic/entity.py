@@ -790,7 +790,9 @@ class AnthropicDeltaStream:
                         "content": cast(JsonArrayType, [x.to_dict() for x in content])
                     }
                     if isinstance(content, list)
-                    else cast(JsonObjectType, content.to_dict())
+                    else cast(JsonObjectType, content.to_dict()),
+                    error=not isinstance(content, list)
+                    and content.type.endswith("_tool_result_error"),
                 ),
             }
         )
