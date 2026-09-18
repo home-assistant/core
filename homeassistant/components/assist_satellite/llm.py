@@ -32,6 +32,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title="Broadcast message",
             integration=DOMAIN,
             annotations=LLM_ANNOTATIONS,
         )
