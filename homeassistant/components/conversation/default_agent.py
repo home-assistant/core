@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, assert_never, cast, override
+from typing import IO, Any, NamedTuple, assert_never, cast, override
 
 from gazetteer_matcher import FrameCandidate, GazetteerMatcher
 from hassil.expression import Expression, Group, ListReference
@@ -1768,48 +1768,67 @@ _NO_TARGET_ERRORS: dict[tuple[str, str, bool], ErrorKey] = {
 # The failing constraint is what the message should be about. Anything else the
 # caller happened to set would name the wrong thing: a DOMAIN failure alongside a
 # name means no entity of that domain exists, not that nothing has that name.
-_NO_TARGET_SUBJECTS: dict[intent.MatchFailedReason, tuple[str, ...]] = {
-    intent.MatchFailedReason.NAME: ("entity",),
-    intent.MatchFailedReason.AREA: ("entity", "device_class", "domain"),
-    intent.MatchFailedReason.FLOOR: ("entity", "device_class", "domain"),
-    intent.MatchFailedReason.DOMAIN: ("device_class", "domain"),
-    intent.MatchFailedReason.DEVICE_CLASS: ("device_class", "domain"),
-    intent.MatchFailedReason.ASSISTANT: ("entity", "device_class", "domain"),
+class _NoTargetOrder(NamedTuple):
+    """Which constraints an error may name, most specific first."""
+
+    subjects: tuple[str, ...]
+    """What was asked for."""
+
+    scopes: tuple[str, ...]
+    """Where it was asked for."""
+
+
+# The failing constraint is what the message should be about. Anything else the
+# caller happened to set would name the wrong thing: a DOMAIN failure alongside a
+# name means no entity of that domain exists, and a FLOOR failure alongside an
+# area means the floor held nothing, since the area is filtered after the floor.
+_ANY_TARGET = ("entity", "device_class", "domain")
+_ANY_SCOPE = ("area", "floor")
+_NO_TARGET_ORDER: dict[intent.MatchFailedReason, _NoTargetOrder] = {
+    intent.MatchFailedReason.NAME: _NoTargetOrder(("entity",), _ANY_SCOPE),
+    intent.MatchFailedReason.AREA: _NoTargetOrder(_ANY_TARGET, ("area",)),
+    intent.MatchFailedReason.FLOOR: _NoTargetOrder(_ANY_TARGET, ("floor",)),
+    intent.MatchFailedReason.DOMAIN: _NoTargetOrder(
+        ("device_class", "domain"), _ANY_SCOPE
+    ),
+    intent.MatchFailedReason.DEVICE_CLASS: _NoTargetOrder(
+        ("device_class", "domain"), _ANY_SCOPE
+    ),
+    intent.MatchFailedReason.ASSISTANT: _NoTargetOrder(_ANY_TARGET, _ANY_SCOPE),
 }
 
 
 def _get_no_target_response(
     constraints: intent.MatchTargetsConstraints,
-    subjects: tuple[str, ...],
+    order: _NoTargetOrder,
     *,
     exposed_only: bool,
 ) -> tuple[ErrorKey, dict[str, Any]]:
     """Return the error naming the failed constraint, scoped to an area or floor."""
-    available: dict[str, dict[str, Any]] = {}
+    subjects: dict[str, dict[str, Any]] = {}
     if constraints.name:
-        available["entity"] = {"entity": constraints.name}
+        subjects["entity"] = {"entity": constraints.name}
     if constraints.device_classes:
-        available["device_class"] = {
+        subjects["device_class"] = {
             "device_class": next(iter(constraints.device_classes))
         }
     if constraints.domains:
-        available["domain"] = {"domain": next(iter(constraints.domains))}
+        subjects["domain"] = {"domain": next(iter(constraints.domains))}
 
-    for kind in subjects:
-        if (args := available.get(kind)) is not None:
+    for kind in order.subjects:
+        if (args := subjects.get(kind)) is not None:
             break
     else:
         # The constraint that failed was not set, so there is nothing to name
         return ErrorKey.NO_INTENT, {}
 
-    if constraints.area_name:
-        scope = "area"
-        args["area"] = constraints.area_name
-    elif constraints.floor_name:
-        scope = "floor"
-        args["floor"] = constraints.floor_name
-    else:
-        scope = ""
+    scopes = {"area": constraints.area_name, "floor": constraints.floor_name}
+    scope = ""
+    for candidate in order.scopes:
+        if scopes[candidate]:
+            scope = candidate
+            args[candidate] = scopes[candidate]
+            break
 
     return _NO_TARGET_ERRORS[kind, scope, exposed_only], args
 
@@ -1862,7 +1881,7 @@ def _get_match_error_response(
         ):
             return _get_no_target_response(
                 constraints,
-                _NO_TARGET_SUBJECTS[reason],
+                _NO_TARGET_ORDER[reason],
                 exposed_only=reason is intent.MatchFailedReason.ASSISTANT,
             )
 

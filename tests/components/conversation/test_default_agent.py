@@ -1105,6 +1105,43 @@ def test_match_error_response_names_the_failed_constraint(
     assert _get_match_error_response(match_error) == (expected_key, expected_args)
 
 
+@pytest.mark.parametrize(
+    ("reason", "expected_key", "expected_args"),
+    [
+        pytest.param(
+            intent.MatchFailedReason.FLOOR,
+            ErrorKey.NO_ENTITY_IN_FLOOR,
+            {"entity": "test light", "floor": "ground"},
+            id="floor",
+        ),
+        pytest.param(
+            intent.MatchFailedReason.AREA,
+            ErrorKey.NO_ENTITY_IN_AREA,
+            {"entity": "test light", "area": "kitchen"},
+            id="area",
+        ),
+    ],
+)
+def test_match_error_response_names_the_failed_scope(
+    reason: intent.MatchFailedReason,
+    expected_key: ErrorKey,
+    expected_args: dict[str, str],
+) -> None:
+    """Test the reason picks the scope when both an area and a floor were asked for.
+
+    Floors are filtered before areas, so a floor failure says nothing about
+    whether the area would have matched.
+    """
+    match_error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, reason),
+        constraints=intent.MatchTargetsConstraints(
+            name="test light", area_name="kitchen", floor_name="ground"
+        ),
+    )
+
+    assert _get_match_error_response(match_error) == (expected_key, expected_args)
+
+
 def test_match_error_response_multiple_targets_without_name() -> None:
     """Test an ambiguous match with nothing named still reports the ambiguity.
 
