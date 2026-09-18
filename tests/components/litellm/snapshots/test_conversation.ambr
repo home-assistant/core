@@ -262,7 +262,7 @@
       ]),
     }),
     dict({
-      'content': '{"result":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
+      'content': '{"data":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
       'role': 'tool',
       'tool_call_id': 'mock_tool_call_id',
     }),
@@ -289,7 +289,7 @@
       ]),
     }),
     dict({
-      'content': '{"result":"value1","error":false}',
+      'content': '{"data":"value1","error":false}',
       'role': 'tool',
       'tool_call_id': 'call_call_1',
     }),
