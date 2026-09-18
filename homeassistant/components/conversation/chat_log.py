@@ -300,9 +300,8 @@ class ToolResultContent:
     def tool_result(self) -> JsonObjectType:
         """Return the data of the result.
 
-        Deprecated compatibility shim: the result is available as `result`,
-        which also says whether the call failed. It can be removed in HA Core
-        2027.11.
+        Deprecated compatibility shim: the result is available as `result`.
+        It can be removed in HA Core 2027.11.
         """
         frame.report_usage(
             "accesses `ToolResultContent.tool_result`, which is deprecated; "
@@ -323,7 +322,7 @@ class ToolResultContent:
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
             "result": asdict(self.result),
-            # Deprecated, and removed in HA Core 2027.11.
+            # Deprecated, can be removed in HA Core 2027.11.
             "tool_result": self.result.data,
             "created": self.created,
         }
