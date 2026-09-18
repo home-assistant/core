@@ -279,18 +279,20 @@ _INCLUDE_DIR_TAGS = frozenset(
 )
 
 
-def _yaml_files_in(directory: str) -> Iterator[str]:
-    """Yield the YAML files an ``!include_dir_*`` tag would pull in."""
+def _walk_include_dir(directory: str) -> Iterator[tuple[str, list[str]]]:
+    """Yield each directory an ``!include_dir_*`` tag walks and its YAML files."""
     for root, dirs, filenames in os.walk(directory, topdown=True):
         dirs[:] = [d for d in dirs if not d.startswith(".")]
-        for basename in sorted(filenames):
-            if (
-                basename.startswith(".")
-                or not basename.endswith(".yaml")
-                or basename == SECRET_YAML
-            ):
-                continue
-            yield os.path.join(root, basename)
+        yield (
+            root,
+            [
+                os.path.join(root, basename)
+                for basename in sorted(filenames)
+                if not basename.startswith(".")
+                and basename.endswith(".yaml")
+                and basename != SECRET_YAML
+            ],
+        )
 
 
 def _scan_includes(node: yaml.nodes.Node, directory: str, files: set[str]) -> None:
@@ -299,8 +301,14 @@ def _scan_includes(node: yaml.nodes.Node, directory: str, files: set[str]) -> No
         if node.tag in _INCLUDE_FILE_TAGS:
             _collect_include_graph(os.path.join(directory, node.value), files)
         elif node.tag in _INCLUDE_DIR_TAGS:
-            for filename in _yaml_files_in(os.path.join(directory, node.value)):
-                _collect_include_graph(filename, files)
+            for root, filenames in _walk_include_dir(
+                os.path.join(directory, node.value)
+            ):
+                # Track the directory itself: adding or removing a file changes
+                # its mtime, which the remaining files cannot reveal.
+                files.add(root)
+                for filename in filenames:
+                    _collect_include_graph(filename, files)
     elif isinstance(node, yaml.nodes.SequenceNode):
         for child in node.value:
             _scan_includes(child, directory, files)

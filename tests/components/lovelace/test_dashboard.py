@@ -455,6 +455,32 @@ async def test_yaml_dashboard_reloads_when_scalar_include_changes(
     assert config["panel"] is False
 
 
+async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test a file added to an included directory invalidates the cache.
+
+    The new file is not in the cached set, so the directory's own mtime is what
+    reveals it.
+    """
+    root = tmp_path / "ui-lovelace.yaml"
+    views = tmp_path / "views"
+    _write(root, "views: !include_dir_list views\n")
+    _write(views / "garage.yaml", "title: Garage\n")
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 1
+
+    root_mtime = root.stat().st_mtime
+    _write(views / "power.yaml", "title: Power\n")
+    os.utime(views / "power.yaml", (root_mtime + 10, root_mtime + 10))
+    os.utime(views, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert len(config["views"]) == 2
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
