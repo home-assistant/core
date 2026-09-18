@@ -116,7 +116,11 @@ async def test_tewke_observer(
 
     coordinator = MagicMock()
     coordinator.data = TewkeCoordinatorData(
-        config=ConfigData.model_construct(hardware_id="test_hardware"),  # type: ignore[call-arg]
+        config=ConfigData.model_construct(
+            hardware_id="test_hardware",
+            device_name="Test Name",
+            tewke_os_version="1.0.0",
+        ),  # type: ignore[call-arg]
         energy=None,
         energy_override=None,
         radar=None,
@@ -146,7 +150,11 @@ async def test_tewke_observer(
     # Mock wall_dock_id as None to hit the early return
     mock_tap.wall_dock_id = None
     observer.on_config_update(
-        ConfigData.model_construct(hardware_id="test_hardware")  # type: ignore[call-arg]
+        ConfigData.model_construct(
+            hardware_id="test_hardware",
+            device_name="Test Name",
+            tewke_os_version="1.0.0",
+        )  # type: ignore[call-arg]
     )
     mock_tap.wall_dock_id = "test_dock_id"
 

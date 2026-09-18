@@ -11,12 +11,11 @@ from pytewke.error import (
 )
 
 from homeassistant.core import HassJob, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DISPATCHER_ADD_SCENES, DOMAIN, LOGGER
-from .util import async_setup_observe
+from .const import DOMAIN, LOGGER
+from .util import async_setup_observe, reconcile_scenes
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -308,24 +307,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             LOGGER.debug("Energy override data not available from Tewke Tap: %s", err)
             energy_override = None
 
-        if self.data is not None:
-            current_scenes = self.data["scenes"]
-            new_scenes = {
-                scene_id: scene
-                for scene_id, scene in scenes.items()
-                if scene_id not in current_scenes
-            }
-            if new_scenes:
-                LOGGER.info(
-                    "Discovered new scenes during polling, automatically adding: %s",
-                    new_scenes,
-                )
-                self.hass.loop.call_soon(
-                    async_dispatcher_send,
-                    self.hass,
-                    f"{DISPATCHER_ADD_SCENES}_{self.config_entry.entry_id}",
-                    list(new_scenes.values()),
-                )
+        reconcile_scenes(self.hass, self.config_entry, self.data, scenes)
 
         new_data = TewkeCoordinatorData(
             scenes=dict(scenes),

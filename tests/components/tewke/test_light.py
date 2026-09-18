@@ -462,9 +462,7 @@ async def test_scene_update_none_scene(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("light.living_room_tewke_switch_morning").state == "unavailable"
-    )
+    assert hass.states.get("light.living_room_tewke_switch_morning") is None
 
 
 async def test_scene_turn_on_no_observe(

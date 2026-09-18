@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from tests.common import MockConfigEntry
+
 
 async def test_zeroconf_no_hardware_id(
     hass: HomeAssistant, mock_tap: AsyncMock
@@ -193,3 +195,32 @@ async def test_zeroconf_flow_wrong_device(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "cannot_connect"
     mock_tap.close.assert_called_once()
+
+
+async def test_zeroconf_duplicate(
+    hass: HomeAssistant, mock_tap: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test zeroconf discovery updates existing entry and aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ipaddress.ip_address("127.0.0.2"),
+            ip_addresses=[ipaddress.ip_address("127.0.0.2")],
+            port=5683,
+            hostname="tewke-2.local.",
+            type="._tewke-coap._udp.local.",
+            name="tewke-2._tewke-coap._udp.local.",
+            properties={
+                "hardwareId": "test_dock_id",
+                "name": "Tewke Switch",
+                "room": "Living Room",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"

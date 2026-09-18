@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from homeassistant.core import HomeAssistant
 
-    from .coordinator import TewkeCoordinator
+    from .coordinator import TewkeCoordinator, TewkeCoordinatorData
     from .data import TewkeConfigEntry
 
 
@@ -44,6 +44,49 @@ def _ha_to_tewke_brightness(value: int) -> int:
     return round(value / 255 * 100)
 
 
+def reconcile_scenes(
+    hass: HomeAssistant,
+    entry: TewkeConfigEntry,
+    data: TewkeCoordinatorData | None,
+    scenes: dict[str, Scene],
+) -> None:
+    """Reconcile scenes, removing deleted ones and dispatching new ones."""
+    if not data or "scenes" not in data:
+        return
+
+    current_scenes = data["scenes"]
+
+    # Handle scenes that are no longer provided by the device
+    removed_configured_ids = [sid for sid in current_scenes if sid not in scenes]
+    if removed_configured_ids:
+        LOGGER.info("Removing deleted scenes: %s", removed_configured_ids)
+
+        ent_reg = er.async_get(hass)
+        config_data = data["config"]
+        if config_data:
+            hardware_id = config_data.hardware_id
+            for sid in removed_configured_ids:
+                unique_id = f"{hardware_id}_{sid}"
+                entity_id = ent_reg.async_get_entity_id("light", DOMAIN, unique_id)
+                if entity_id:
+                    ent_reg.async_remove(entity_id)
+
+    # Add new scenes
+    new_scenes = {
+        scene_id: scene
+        for scene_id, scene in scenes.items()
+        if scene_id not in current_scenes
+    }
+
+    if new_scenes:
+        LOGGER.info("Discovered new scenes, automatically adding: %s", new_scenes)
+        async_dispatcher_send(
+            hass,
+            f"{DISPATCHER_ADD_SCENES}_{entry.entry_id}",
+            list(new_scenes.values()),
+        )
+
+
 class _TewkeObserver:
     """Observer for Tewke device callbacks."""
 
@@ -59,51 +102,10 @@ class _TewkeObserver:
         self.entry = entry
 
     def on_scene_update(self, scenes: dict[str, Scene]) -> None:
-        """Handle scene updates from the Tewke device.
-
-        This callback is triggered when the scenes on the device change.
-        It identifies new scenes, automatically adds them to the integration,
-        and removes deleted scenes.
-        """
+        """Handle scene updates from the Tewke device."""
         self.coordinator.reset_observation_timeout()
-        current_scenes = self.coordinator.data["scenes"]
 
-        # Handle scenes that are no longer provided by the device
-        removed_configured_ids = [sid for sid in current_scenes if sid not in scenes]
-        if removed_configured_ids:
-            LOGGER.info("Removing deleted scenes: %s", removed_configured_ids)
-
-            ent_reg = er.async_get(self.hass)
-            config_data = self.coordinator.data["config"]
-            if config_data:
-                hardware_id = config_data.hardware_id
-                for sid in removed_configured_ids:
-                    unique_id = f"{hardware_id}_{sid}"
-                    entity_id = ent_reg.async_get_entity_id("light", DOMAIN, unique_id)
-                    if entity_id:
-                        ent_reg.async_remove(entity_id)
-
-        # Add new scenes
-        new_scenes = {
-            scene_id: scene
-            for scene_id, scene in scenes.items()
-            if scene_id not in current_scenes
-        }
-
-        if new_scenes:
-            LOGGER.info("Discovered new scenes, automatically adding: %s", new_scenes)
-            self.coordinator.async_set_updated_data(
-                {
-                    **self.coordinator.data,
-                    "scenes": dict(scenes),
-                }
-            )
-            async_dispatcher_send(
-                self.hass,
-                f"{DISPATCHER_ADD_SCENES}_{self.entry.entry_id}",
-                list(new_scenes.values()),
-            )
-            return
+        reconcile_scenes(self.hass, self.entry, self.coordinator.data, scenes)
 
         self.coordinator.async_set_updated_data(
             {
@@ -165,6 +167,15 @@ class _TewkeObserver:
         self.coordinator.async_set_updated_data(
             {**self.coordinator.data, "config": config_data}
         )
+        new_name = config_data.device_name
+        if new_name and new_name != self.entry.data.get(CONF_NAME):
+            LOGGER.debug("Device renamed to %r, updating HA", new_name)
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                title=new_name,
+                data={**self.entry.data, CONF_NAME: new_name},
+            )
+
         device_registry = dr.async_get(self.hass)
         tap = self.entry.runtime_data.tap
         device_id = tap.wall_dock_id
@@ -176,14 +187,7 @@ class _TewkeObserver:
         )
 
         if device:
-            new_name = config_data.device_name
-            if new_name and new_name != self.entry.data.get(CONF_NAME):
-                LOGGER.debug("Device renamed to %r, updating HA", new_name)
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    title=new_name,
-                    data={**self.entry.data, CONF_NAME: new_name},
-                )
+            if new_name and new_name != device.name:
                 device_registry.async_update_device(device.id, name=new_name)
 
             new_version = config_data.tewke_os_version

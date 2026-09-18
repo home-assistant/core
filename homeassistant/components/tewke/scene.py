@@ -55,6 +55,9 @@ class TewkeSceneEntity(TewkeEntity):
         scene = self._scene
         if scene is not None:
             self._attr_name = scene.name
+            self._is_on = scene.is_active
+            if scene.brightness is not None:
+                self._brightness = scene.brightness
         super()._handle_coordinator_update()
 
     @property
@@ -69,11 +72,6 @@ class TewkeSceneEntity(TewkeEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True when the scene is active."""
-        scene = self._scene
-        if scene is not None:
-            self._is_on = scene.is_active
-            if scene.brightness is not None:
-                self._brightness = scene.brightness
         return self._is_on
 
     @property

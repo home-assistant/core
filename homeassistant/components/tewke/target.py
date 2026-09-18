@@ -62,6 +62,8 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         target = self._target
         if target is not None:
             self._attr_name = target.name
+            self._is_on = target.is_on
+            self._brightness = target.brightness
         super()._handle_coordinator_update()
 
     @property
@@ -77,10 +79,6 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True when the output is on."""
-        target = self._target
-        if target is not None:
-            self._is_on = target.is_on
-            self._brightness = target.brightness
         return self._is_on
 
     @property
