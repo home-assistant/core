@@ -244,12 +244,14 @@ async def test_prepare_chat_for_generation_passes_messages_through(
             agent_id="agent",
             tool_call_id="mock-tool-call-id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=llm.ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     chat_log.async_add_assistant_content_without_tools(
