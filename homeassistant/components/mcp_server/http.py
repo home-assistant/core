@@ -53,17 +53,15 @@ import pydantic
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    CONF_LLM_HASS_API,
+    CONTENT_TYPE_JSON,
+    HTTP_HEADER_HA_DEVICE_ID,
+)
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import (
-    CONF_ALL_LLM_APIS,
-    CONF_READ_ONLY,
-    CONF_REQUIRE_ADMIN,
-    DOMAIN,
-    HEADER_DEVICE_ID,
-)
+from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPRequestContext, MCPServerConfigEntry
@@ -290,7 +288,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
                 message,
                 ServerMessageMetadata(
                     request_context=MCPRequestContext(
-                        device_id=request.headers.get(HEADER_DEVICE_ID)
+                        device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
                     )
                 ),
             )
@@ -379,7 +377,7 @@ async def _async_handle_streamable_message(
                     message,
                     ServerMessageMetadata(
                         request_context=MCPRequestContext(
-                            device_id=request.headers.get(HEADER_DEVICE_ID)
+                            device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
                         )
                     ),
                 )
