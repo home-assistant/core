@@ -472,7 +472,7 @@ async def test_function_call(
         "role": "user",
         "content": [
             {
-                "content": '{"result":"Test response","error":false}',
+                "content": '{"data":"Test response","error":false}',
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -548,7 +548,7 @@ async def test_function_exception(
         "content": [
             {
                 "content": (
-                    '{"result":{"error":"HomeAssistantError",'
+                    '{"data":{"error":"HomeAssistantError",'
                     '"error_text":"Test tool exception"},"error":true}'
                 ),
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
