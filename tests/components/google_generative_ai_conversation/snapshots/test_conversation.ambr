@@ -26,16 +26,12 @@
         function_response=FunctionResponse(
           name='HassGetCurrentTime',
           response={
-            'data': {
-              'failed': [],
-              'success': []
-            },
-            'response_type': 'action_done',
-            'speech': {
-              'plain': {<... 2 items at Max depth ...>}
-            },
-            'speech_slots': {
-              'time': '16:24:17.813343'
+            'error': False,
+            'result': {
+              'data': {<... 2 items at Max depth ...>},
+              'response_type': 'action_done',
+              'speech': {<... 1 item at Max depth ...>},
+              'speech_slots': {<... 1 item at Max depth ...>}
             }
           }
         )
@@ -92,7 +88,10 @@
         function_response=FunctionResponse(
           name='test_tool',
           response={
-            'result': 'Test response'
+            'error': False,
+            'result': {
+              'result': 'Test response'
+            }
           }
         )
       ),
