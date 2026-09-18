@@ -355,7 +355,9 @@ async def test_llm_tool_annotations(
     """Test the annotations the remote server declares are carried over."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
         tools=[
-            SEARCH_MEMORY_TOOL.model_copy(update={"annotations": remote_annotations})
+            SEARCH_MEMORY_TOOL.model_copy(
+                update={"title": "Search memory", "annotations": remote_annotations}
+            )
         ]
     )
 
@@ -369,6 +371,7 @@ async def test_llm_tool_annotations(
     tool = api_instance.tools[0]
 
     assert tool.integration == "mcp"
+    assert tool.title == "Search memory"
     assert tool.annotations == expected_annotations
 
 

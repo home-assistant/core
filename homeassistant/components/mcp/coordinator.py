@@ -149,6 +149,7 @@ class ModelContextProtocolTool(llm.Tool):
     def __init__(
         self,
         name: str,
+        title: str | None,
         description: str | None,
         parameters: probatio.Schema,
         server_url: str,
@@ -158,6 +159,7 @@ class ModelContextProtocolTool(llm.Tool):
     ) -> None:
         """Initialize the tool."""
         self.name = name
+        self.title = title
         self.description = description
         self.parameters = parameters
         if annotations is not None:
@@ -287,6 +289,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             tools.append(
                 ModelContextProtocolTool(
                     tool.name,
+                    tool.title,
                     tool.description,
                     parameters,
                     self.config_entry.data[CONF_URL],
