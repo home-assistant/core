@@ -253,9 +253,15 @@ class IntentTool(Tool):
         self,
         name: str,
         intent_handler: intent.IntentHandler,
+        *,
+        integration: str | None = None,
+        annotations: ToolAnnotations | None = None,
     ) -> None:
         """Init the class."""
         self.name = name
+        self.integration = integration
+        if annotations is not None:
+            self.annotations = annotations
         self.intent_type = intent_handler.intent_type
         self.description = (
             intent_handler.description

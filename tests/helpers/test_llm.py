@@ -211,6 +211,29 @@ def test_tool_metadata_defaults() -> None:
     )
 
 
+def test_intent_tool_metadata() -> None:
+    """Test an intent tool takes the metadata of the integration exposing it."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+
+    annotations = llm.ToolAnnotations(read_only=True, open_world=False)
+    tool = llm.IntentTool(
+        "test_tool",
+        MyIntentHandler(),
+        integration="my_integration",
+        annotations=annotations,
+    )
+
+    assert tool.integration == "my_integration"
+    assert tool.annotations == annotations
+
+    # An intent tool that declares nothing keeps the unsafe defaults.
+    tool = llm.IntentTool("test_tool", MyIntentHandler())
+    assert tool.integration is None
+    assert tool.annotations == llm.ToolAnnotations()
+
+
 def test_namespaced_tool_keeps_metadata() -> None:
     """Test a namespaced tool carries the metadata of the tool it wraps."""
 
