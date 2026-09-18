@@ -565,6 +565,30 @@ async def test_yaml_dashboard_follows_nested_include_dirs(
     assert config["extra"]["items"]["e"]["title"] == "E"
 
 
+async def test_yaml_dashboard_follows_absolute_include(
+    hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
+) -> None:
+    """Test an include given as an absolute path is tracked."""
+    root = tmp_path / "ui-lovelace.yaml"
+    view = tmp_path / "lovelace" / "garage.yaml"
+
+    _write(root, f"views:\n  - !include {view}\n")
+    _write(view, "title: original\n")
+
+    assert str(view) in dashboard._referenced_files(str(root))
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "original"
+
+    root_mtime = root.stat().st_mtime
+    _write(view, "title: updated\n")
+    os.utime(view, (root_mtime + 10, root_mtime + 10))
+    assert root.stat().st_mtime == root_mtime
+
+    _, config, _ = yaml_dashboard._load_config(False)
+    assert config["views"][0]["title"] == "updated"
+
+
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
