@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, Literal, cast
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -110,8 +110,19 @@ async def test_poll_and_unload(
     assert client.await_count == 2
 
 
+@pytest.mark.parametrize(
+    "forecast_type",
+    [
+        pytest.param("daily", id="daily"),
+        pytest.param("hourly", id="hourly"),
+        pytest.param("twice_daily", id="twice-daily"),
+    ],
+)
 async def test_forecast_subscription(
-    hass: HomeAssistant, client: AsyncMock, entry: MockConfigEntry
+    hass: HomeAssistant,
+    client: AsyncMock,
+    entry: MockConfigEntry,
+    forecast_type: Literal["daily", "hourly", "twice_daily"],
 ) -> None:
     """Subscribers receive changed forecasts, with no extra network fetch."""
 
@@ -121,10 +132,12 @@ async def test_forecast_subscription(
     entity = hass.data[DATA_COMPONENT].get_entity("weather.beijing")
     assert isinstance(entity, XiaomiWeather)
     listener = Mock()
-    unsubscribe = entity.async_subscribe_forecast("daily", listener)
+    unsubscribe = entity.async_subscribe_forecast(forecast_type, listener)
     data = client.return_value
+    forecasts = getattr(data, forecast_type)
     client.return_value = replace(
-        data, daily=(replace(data.daily[0], temperature=30), *data.daily[1:])
+        data,
+        **{forecast_type: (replace(forecasts[0], temperature=30), *forecasts[1:])},
     )
     await cast(XiaomiWeatherConfigEntry, entry).runtime_data.async_refresh()
     await hass.async_block_till_done()
