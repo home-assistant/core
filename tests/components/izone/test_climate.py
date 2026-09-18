@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.izone.climate import ATTR_CONTROL_SETPOINT_SOURCE
+from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -240,9 +240,10 @@ async def test_control_zone_extra_attributes(
     mock_controller: Mock,
     mock_zones: list[Mock],
 ) -> None:
-    """Deprecated extras report the active zone; source points at its climate entity."""
+    """Legacy extras report the active zone; source points at its climate entity."""
     mock_controller.zone_ctrl = 0
     mock_zones[0].name = "Kitchen"
+    mock_zones[0].temp_current = 19.4
     mock_zones[0].temp_setpoint = 22.5
     mock_controller.control_setpoint_owner = mock_zones[0]
     mock_controller.control_setpoint = 22.5
@@ -253,26 +254,32 @@ async def test_control_zone_extra_attributes(
     assert entity.attributes["control_zone"] == 0
     assert entity.attributes["control_zone_name"] == "Kitchen"
     assert entity.attributes["control_zone_setpoint"] == 22.5
-    assert entity.attributes[ATTR_CONTROL_SETPOINT_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 19.4
+    # TARGET_TEMPERATURE feature is off; target is only on the legacy extra.
+    assert ATTR_TEMPERATURE not in entity.attributes
 
 
-async def test_control_setpoint_source_controller_owner(
+async def test_control_zone_source_controller_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
 ) -> None:
-    """Source is the controller climate entity when the controller owns the setpoint."""
+    """Source is omitted when the controller owns control; current uses return air."""
     mock_controller.control_setpoint_owner = mock_controller
     mock_controller.control_setpoint = mock_controller.temp_setpoint
+    mock_controller.temp_return = 21.0
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
-    assert entity.attributes[ATTR_CONTROL_SETPOINT_SOURCE] == CONTROLLER_ENTITY
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
+    assert entity.attributes[ATTR_TEMPERATURE] == 24.0
 
 
-async def test_control_setpoint_source_unmatched_owner(
+async def test_control_zone_source_unmatched_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
@@ -285,10 +292,10 @@ async def test_control_setpoint_source_unmatched_owner(
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
-    assert ATTR_CONTROL_SETPOINT_SOURCE not in entity.attributes
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
 
 
-async def test_control_setpoint_source_follows_entity_id_rename(
+async def test_control_zone_source_follows_entity_id_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
@@ -304,7 +311,7 @@ async def test_control_setpoint_source_follows_entity_id_rename(
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
-    assert entity.attributes[ATTR_CONTROL_SETPOINT_SOURCE] == ZONE_ENTITY
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == ZONE_ENTITY
 
     entity_registry.async_update_entity(
         ZONE_ENTITY, new_entity_id="climate.renamed_zone"
@@ -315,10 +322,10 @@ async def test_control_setpoint_source_follows_entity_id_rename(
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
-    assert entity.attributes[ATTR_CONTROL_SETPOINT_SOURCE] == "climate.renamed_zone"
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.renamed_zone"
 
 
-async def test_control_setpoint_source_follows_library_zone_owner(
+async def test_control_zone_source_follows_library_zone_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
@@ -342,7 +349,8 @@ async def test_control_setpoint_source_follows_library_zone_owner(
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
-    assert entity.attributes[ATTR_CONTROL_SETPOINT_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.kitchen"
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 19.4
 
 
 @pytest.mark.usefixtures("init_integration")
