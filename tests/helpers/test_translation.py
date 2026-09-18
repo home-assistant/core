@@ -821,7 +821,7 @@ async def test_english_cache_populated_for_partial_batch_overlap(
     component_strings = {
         "comp_a": {
             "en": {"issues": {"broken": {"title": "A is broken"}}},
-            "de": {"issues": {"broken": {"title": "A ist kaputt"}}},
+            "de": {"issues": {"broken": {"title": "A kaputt"}}},
         },
         "comp_b": {
             "en": {"issues": {"detached": {"title": "B detached"}}},
