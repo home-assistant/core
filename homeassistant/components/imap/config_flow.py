@@ -233,6 +233,11 @@ class ImapOptionsFlow(OptionsFlow):
             except AbortFlow as err:
                 errors = {"base": err.reason}
             else:
+                if (
+                    CONF_CUSTOM_EVENT_DATA_TEMPLATE not in user_input
+                    and CONF_CUSTOM_EVENT_DATA_TEMPLATE in entry_data
+                ):
+                    entry_data.pop(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
                 entry_data.update(user_input)
                 errors = await validate_input(self.hass, entry_data)
                 if not errors:
