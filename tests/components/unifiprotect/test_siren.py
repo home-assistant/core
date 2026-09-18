@@ -4,13 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import (
-    ModelType,
-    PublicBootstrap,
-    PublicSirenStatus,
-    Siren,
-    SirenDuration,
-)
+from uiprotect.data import ModelType, PublicSirenStatus, Siren, SirenDuration, WSAction
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -34,7 +28,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .utils import (
+    MockUFPFixture,
+    assert_entity_counts,
+    init_entry,
+    make_public_bootstrap,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -68,13 +67,7 @@ def _make_siren(*, is_active: bool = False) -> Mock:
 
 def _make_public_bootstrap(siren: Mock | None) -> Mock:
     """Build a public bootstrap mock with the given siren."""
-    pb = Mock(spec=PublicBootstrap)
-    pb.sirens = {siren.id: siren} if siren is not None else {}
-    pb.relays = {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
-    pb.fobs = {}
-    return pb
+    return make_public_bootstrap(sirens={siren.id: siren} if siren is not None else {})
 
 
 def _make_ws_msg(siren: Mock, *, deleted: bool = False) -> Mock:
@@ -673,3 +666,32 @@ async def test_siren_auto_off_timer_scheduled_at_startup(
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+async def test_siren_added_after_setup_in_hybrid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    siren: Mock,
+) -> None:
+    """A siren adopted after setup gets its entity in hybrid mode too.
+
+    The private bootstrap has no store for sirens, so the adopt path never
+    sees one; discovery goes through the public add signal in both modes.
+    """
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert entity_registry.async_get(SIREN_ENTITY_ID) is None
+
+    pb.sirens = {siren.id: siren}
+    msg = _make_ws_msg(siren)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(SIREN_ENTITY_ID) is not None

@@ -83,7 +83,9 @@ async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None
     response = await tool.async_call(
         hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
+    assert response == llm.ToolResult(
+        data={"error": ha_llm.NO_ENTITIES_PROMPT}, error=True
+    )
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
@@ -99,8 +101,8 @@ async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     response = await tool.async_call(
         hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response["success"] is True
-    assert "Kitchen Light" in response["result"]
+    assert response.error is False
+    assert "Kitchen Light" in response.data["result"]
 
 
 async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
@@ -261,145 +263,142 @@ async def test_get_live_context_tool_filter(
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(t for t in tools.tools if t.name == "homeassistant__GetLiveContext")
 
-    async def _get_live_context(tool_args: dict) -> dict:
+    async def _get_live_context(tool_args: dict) -> llm.ToolResult:
         return await tool.async_call(
             hass, llm.ToolInput("homeassistant__GetLiveContext", tool_args), llm_context
         )
 
     # Filter by area and domain (example 1)
     result = await _get_live_context({"area": "Office", "domain": "light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Filter by name (example 2)
     result = await _get_live_context({"name": "Front Door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Name filter is case insensitive
     result = await _get_live_context({"name": "front door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter matches area aliases
     result = await _get_live_context({"area": "workspace"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Domain filter accepts a list
     result = await _get_live_context({"domain": ["switch", "lock"]})
-    assert result["success"] is True
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Domain filter is case insensitive
     result = await _get_live_context({"domain": "Light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # No filters returns all exposed entities
     result = await _get_live_context({})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
 
     # Filter that matches nothing returns a descriptive error
     result = await _get_live_context({"name": "Does Not Exist"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities matched name 'Does Not Exist'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities matched name 'Does Not Exist'"},
+        error=True,
+    )
 
     # Name filter strips surrounding whitespace
     result = await _get_live_context({"name": "  Front Door  "})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter strips surrounding whitespace
     result = await _get_live_context({"area": "  Office  "})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Name filter accepts entity_id
     result = await _get_live_context({"name": office_light.entity_id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Area filter accepts area_id
     result = await _get_live_context({"area": office.id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Name filter matches entity aliases
     result = await _get_live_context({"name": "cooking lamp"})
-    assert result["success"] is True
-    assert "Kitchen Light" in result["result"]
-    assert "Office Light" not in result["result"]
+    assert result.error is False
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
 
     # Combining name + area narrows the result
     result = await _get_live_context({"name": "Office Light", "area": "Office"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Combining name + area returns the failing constraint in the error
     result = await _get_live_context({"name": "Office Light", "area": "Kitchen"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in area 'Kitchen'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in area 'Kitchen'"}, error=True
+    )
 
     # Unknown area distinguishes "invalid area" from "no entities in area"
     result = await _get_live_context({"area": "Garage"})
-    assert result == {
-        "success": False,
-        "error": "Area 'Garage' does not exist",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "Area 'Garage' does not exist"}, error=True
+    )
 
     # Unknown domain reports which domain(s) failed
     result = await _get_live_context({"domain": "fan"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in domain(s): fan",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in domain(s): fan"}, error=True
+    )
 
     # Entities sharing a name are all returned rather than failing as an
     # ambiguous match, since this tool only returns context.
     result = await _get_live_context({"name": "AC"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 2
-    assert "Office" in result["result"]
-    assert "Kitchen" in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 2
+    assert "Office" in result.data["result"]
+    assert "Kitchen" in result.data["result"]
 
     # Combining a shared name with an area narrows to the single match
     result = await _get_live_context({"name": "AC", "area": "Kitchen"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 1
-    assert "Kitchen" in result["result"]
-    assert "Office" not in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 1
+    assert "Kitchen" in result.data["result"]
+    assert "Office" not in result.data["result"]
 
 
 async def test_get_live_context_schema(
