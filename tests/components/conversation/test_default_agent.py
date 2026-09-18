@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.conversation import (
     DOMAIN,
     async_get_agent,
@@ -44,6 +45,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
@@ -1140,6 +1142,48 @@ def test_match_error_response_names_the_failed_scope(
     )
 
     assert _get_match_error_response(match_error) == (expected_key, expected_args)
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_error_multiple_targets_without_name_is_spoken(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test an ambiguous match with nothing named speaks a real response.
+
+    duplicate_targets is not an ErrorKey, so this asserts the rendered speech to
+    catch the key failing to resolve and falling back to the generic error.
+    """
+    area_kitchen = area_registry.async_update(
+        area_registry.async_get_or_create("kitchen_id").id, name="kitchen"
+    )
+    for object_id, name in (("1234", "Thermostat One"), ("5678", "Thermostat Two")):
+        entry = entity_registry.async_get_or_create("climate", "demo", object_id)
+        entry = entity_registry.async_update_entity(
+            entry.entity_id, name=name, area_id=area_kitchen.id
+        )
+        hass.states.async_set(
+            entry.entity_id,
+            "heat",
+            {
+                ATTR_FRIENDLY_NAME: name,
+                "current_temperature": 20,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+            },
+        )
+        expose_entity(hass, entry.entity_id, True)
+    await hass.async_block_till_done()
+
+    result = await conversation.async_converse(
+        hass, "what is the temperature in the kitchen", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, more than one device matched your request"
+    )
 
 
 def test_match_error_response_multiple_targets_without_name() -> None:
