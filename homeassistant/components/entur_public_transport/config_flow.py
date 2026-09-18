@@ -519,6 +519,8 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             )
         except EnturApiError:
             self._quays = ()
+            if self._existing_platform_mode == PLATFORM_MODE_SELECTED:
+                return self._show_reconfigure_form(errors={"base": "cannot_connect"})
         return await self.async_step_select_routes()
 
     def _show_reconfigure_form(
@@ -645,7 +647,11 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             self._selected_route_labels = _route_labels(
                 self._selected_line_whitelist,
                 self._routes,
-                self._existing_route_labels,
+                (
+                    self._existing_route_labels
+                    if self._selected_place.stop_id == self._existing_stop_id
+                    else None
+                ),
             )
             return await self.async_step_select_platforms()
 
@@ -653,7 +659,11 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             step_id="select_routes",
             data_schema=_route_schema(
                 self._routes,
-                selected_line_whitelist=self._existing_line_whitelist,
+                selected_line_whitelist=(
+                    self._existing_line_whitelist
+                    if self._selected_place.stop_id == self._existing_stop_id
+                    else []
+                ),
             ),
         )
 
