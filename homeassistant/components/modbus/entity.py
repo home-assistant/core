@@ -156,10 +156,8 @@ class ModbusBaseEntity(Entity):
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        self.async_on_remove(
-            self._async_call_later(
-                self._hub.config_delay + 0.1, self.async_await_connection
-            )
+        self._cancel_call = self._async_call_later(
+            self._hub.config_delay + 0.1, self.async_await_connection
         )
         self.async_on_remove(
             async_dispatcher_connect(

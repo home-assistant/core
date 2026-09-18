@@ -14,6 +14,7 @@ It uses binary_sensors/sensors to do black box testing of the read calls.
 """
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -1175,7 +1176,7 @@ async def test_pymodbus_close_fail(
 
 
 async def test_unreachable_device_does_not_hold_startup(
-    hass: HomeAssistant, mock_pymodbus
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
 ) -> None:
     """Test entities waiting for a device that never connects do not hold up startup."""
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
@@ -1205,6 +1206,67 @@ async def test_unreachable_device_does_not_hold_startup(
     # startup wraps up by waiting for foreground tasks, that wait must not be one
     async with asyncio.timeout(1):
         await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
+    """Let the entities start waiting for the first connection."""
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+
+async def _stop_hub(hass: HomeAssistant) -> None:
+    """Stop the hub, which also releases every wait for its connection."""
+    await hass.services.async_call(
+        DOMAIN, SERVICE_STOP, {ATTR_HUB: TEST_MODBUS_NAME}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "steps",
+    [
+        pytest.param(
+            [_stop_hub, _fire_first_connect_timer], id="stopped_before_the_wait"
+        ),
+        pytest.param(
+            [_fire_first_connect_timer, _stop_hub], id="stopped_while_waiting"
+        ),
+    ],
+)
+async def test_stop_cancels_pending_first_update(
+    hass: HomeAssistant,
+    mock_pymodbus: mock.AsyncMock,
+    steps: list[Callable[[HomeAssistant], Awaitable[None]]],
+) -> None:
+    """Test stopping the hub cancels an update still waiting for the first connection."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                    }
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.connect.return_value = False
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+
+    for step in steps:
+        await step(hass)
+
+    # an update that survived the stop would run against the closed hub and
+    # write the entity unavailable
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
