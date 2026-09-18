@@ -92,7 +92,7 @@ def number(value: object) -> float | None:
         return None
     try:
         result = float(value)
-    except ValueError:
+    except ValueError, OverflowError:
         return None
     return result if math.isfinite(result) and result != -999 else None
 

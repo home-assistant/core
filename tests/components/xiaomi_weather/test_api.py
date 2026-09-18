@@ -36,7 +36,20 @@ def test_live_fixture(payload: dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
-    "value", [None, "", "NaN", "inf", "-inf", -999, True, {}, "bad"]
+    "value",
+    [
+        None,
+        "",
+        "NaN",
+        "inf",
+        "-inf",
+        -999,
+        True,
+        {},
+        "bad",
+        pytest.param(10**400, id="positive-overflow"),
+        pytest.param(-(10**400), id="negative-overflow"),
+    ],
 )
 def test_invalid_numbers(value: object) -> None:
     """Test invalid numbers."""
