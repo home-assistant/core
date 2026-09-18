@@ -212,8 +212,8 @@ CONFIG_SCHEMA = probatio.Schema(
 def _single_line(value: str) -> str:
     """Return the value with its line breaks replaced by spaces.
 
-    Line protocol has no escape for a line break inside a string field, a
-    line break ends the point instead.
+    Line protocol has no escape for a line break, in a string field it ends
+    the point, and the escape the clients use for tags is not one either.
     """
     return " ".join(value.splitlines())
 
@@ -221,7 +221,7 @@ def _single_line(value: str) -> str:
 def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
-    tags = conf.get(CONF_TAGS)
+    tags = {key: _single_line(value) for key, value in conf[CONF_TAGS].items()}
     tags_attributes: list[str] = conf[CONF_TAGS_ATTRIBUTES]
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     measurement_attr: str = conf[CONF_MEASUREMENT_ATTR]
@@ -303,7 +303,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
         ignore_attributes.update(global_ignore_attributes)
         for key, value in state.attributes.items():
             if key in tags_attributes:
-                json[INFLUX_CONF_TAGS][key] = value
+                json[INFLUX_CONF_TAGS][key] = (
+                    _single_line(value) if isinstance(value, str) else value
+                )
             elif (
                 (key != CONF_UNIT_OF_MEASUREMENT or include_uom)
                 and (key != "device_class" or include_dc)
