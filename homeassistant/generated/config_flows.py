@@ -311,6 +311,7 @@ FLOWS = {
         "gpsd",
         "gpslogger",
         "gree",
+        "gree_infrared",
         "green_planet_energy",
         "greencell",
         "growatt_server",
