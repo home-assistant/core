@@ -555,10 +555,24 @@ async def async_setup_entry(
         entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
         async_add_entities(entities)
 
+    relay_output_unique_ids: set[str] = set()
+
+    @callback
+    def _add_relay_outputs(relay: Relay) -> None:
+        entities: list[ProtectRelayOutputSwitch] = []
+        for output in relay.outputs:
+            unique_id = f"{relay.mac}_relay_output_{output.id}"
+            if unique_id in relay_output_unique_ids:
+                continue
+            relay_output_unique_ids.add(unique_id)
+            entities.append(ProtectRelayOutputSwitch(data, relay, output))
+        if entities:
+            async_add_entities(entities)
+
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if isinstance(device, Relay):
-            async_add_entities(_relay_output_switches(data, device))
+            _add_relay_outputs(device)
             return
         async_add_entities(
             async_all_device_entities(
@@ -570,6 +584,9 @@ async def async_setup_entry(
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_outputs)
     )
     entities: list[BaseProtectEntity] = []
     entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
@@ -586,24 +603,9 @@ async def async_setup_entry(
             )
     async_add_entities(entities)
 
-    # Relays exist only in the public API; a relay adopted later arrives
-    # through the public add signal in either mode.
     if api.has_public_bootstrap:
-        relay_entities = [
-            entity
-            for relay in api.public_bootstrap.relays.values()
-            for entity in _relay_output_switches(data, relay)
-        ]
-        if relay_entities:
-            async_add_entities(relay_entities)
-
-
-@callback
-def _relay_output_switches(
-    data: ProtectData, relay: Relay
-) -> list[ProtectRelayOutputSwitch]:
-    """Build one switch per output channel of a relay."""
-    return [ProtectRelayOutputSwitch(data, relay, output) for output in relay.outputs]
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_outputs(relay)
 
 
 class ProtectRelayOutputSwitch(SwitchEntity):
