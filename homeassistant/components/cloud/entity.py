@@ -95,7 +95,7 @@ def _convert_content_to_param(
                         "call_id": content.tool_call_id,
                         "output": json_dumps(
                             {
-                                "result": content.result.data,
+                                "data": content.result.data,
                                 "error": content.result.error,
                             }
                         ),
