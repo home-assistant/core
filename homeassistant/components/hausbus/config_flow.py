@@ -44,11 +44,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
                 if search_task is not None:
                     search_task.cancel()
 
-                    # Whatever this raises - our own cancellation, or a
-                    # search failure (OSError/TimeoutError) that completed
-                    # the task independently at the same moment - must not
-                    # skip releasing home_server below, or its singleton's
-                    # socket and worker threads would leak.
+                    # A failed or cancelled search must not skip releasing HomeServer.
                     with contextlib.suppress(Exception, asyncio.CancelledError):
                         await search_task
             finally:
