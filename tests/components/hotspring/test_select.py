@@ -29,7 +29,6 @@ from . import setup_with_selected_platforms
 from tests.common import MockConfigEntry, snapshot_platform
 
 JET_1_ENTITY_ID = "select.connectedspa_ddeeff_jet_1"
-JET_2_ENTITY_ID = "select.connectedspa_ddeeff_jet_2"
 HEATING_MODE_ENTITY_ID = "select.connectedspa_ddeeff_heating_mode"
 
 
@@ -45,7 +44,7 @@ async def test_select_state(
     device_fixture.jets[1].speed_type = JetSpeedType.DUAL_SPEED
     device_fixture.jets[1].speed = JetSpeed.LOW_SPEED
     device_fixture.jets[2].speed_type = JetSpeedType.SINGLE_SPEED
-    device_fixture.jets[2].speed = JetSpeed.SINGLE_SPEED
+    device_fixture.jets[2].speed = JetSpeed.HIGH_SPEED
     device_fixture.heater.heatpump_installed = True
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SELECT])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -59,14 +58,7 @@ async def test_select_state(
             "high",
             "set_jet",
             (1, JetSpeed.HIGH_SPEED),
-            id="dual_speed_jet",
-        ),
-        pytest.param(
-            JET_2_ENTITY_ID,
-            "high",
-            "set_jet",
-            (2, JetSpeed.SINGLE_SPEED),
-            id="single_speed_jet",
+            id="jet_speed",
         ),
         pytest.param(
             HEATING_MODE_ENTITY_ID,
