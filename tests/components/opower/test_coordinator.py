@@ -868,6 +868,58 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     ]
 
 
+async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test reads with a component that belongs to no rate period are left out.
+
+    Such a read can add up as a whole while the periods it feeds would not,
+    since the component without a period is written nowhere.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(2)]
+    mock_opower_api.async_get_cost_reads.return_value = [
+        # Adds up, but one component has neither a day part nor a tier
+        CostRead(
+            start_time=hour[0],
+            end_time=hour[1],
+            consumption=3.0,
+            provided_cost=0.75,
+            read_components=[
+                _read_component("OFF_PEAK", 2.0, 0.5),
+                _read_component(None, 1.0, 0.25),
+            ],
+        ),
+        CostRead(
+            start_time=hour[1],
+            end_time=hour[1] + timedelta(hours=1),
+            consumption=1.0,
+            provided_cost=0.25,
+            read_components=[_read_component("OFF_PEAK", 1.0, 0.25)],
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    off_peak_id = "opower:pge_elec_111111_off_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {off_peak_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
+        (hour[1].timestamp(), 1.0, 1.0),
+    ]
+
+
 async def test_coordinator_rate_periods_skip_empty_periods(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -1045,6 +1097,84 @@ async def test_coordinator_rate_periods_backfilled_from_full_history(
         s["sum"] for s in stats["opower:pge_elec_111111_on_peak_energy_consumption"]
     ] == [1.0, 3.0, 7.0, 15.0]
     assert mock_opower_api.async_get_cost_reads.call_count == 3
+
+
+async def test_coordinator_rate_periods_resume_after_window_start(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a period without a point at the window start resumes from after it.
+
+    The reads at the start of the window may carry no components, e.g. bill
+    reads, so the period has no stored point there while the totals do. The
+    period must continue from its oldest stored point after the start, like
+    the totals do, instead of being taken for new and backfilled from the full
+    history on every refresh.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(4)]
+
+    def read(index: int, consumption: float, with_components: bool) -> CostRead:
+        return CostRead(
+            start_time=hour[index],
+            end_time=hour[index] + timedelta(hours=1),
+            consumption=consumption,
+            provided_cost=consumption / 4,
+            read_components=[_read_component("ON_PEAK", consumption, consumption / 4)]
+            if with_components
+            else [],
+        )
+
+    def mock_get_cost_reads(account, aggregate_type, start, end):
+        if aggregate_type != AggregateType.BILL:
+            return []
+        reads = [
+            read(0, 1.0, False),
+            read(1, 2.0, False),
+            read(2, 4.0, True),
+            read(3, 8.0, True),
+        ]
+        # Full history, or the recent window starting at a read without components
+        return reads if start is None else reads[1:]
+
+    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    account.read_resolution = ReadResolution.BILLING
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert mock_opower_api.async_get_cost_reads.call_count == 1
+
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    # The period resumed from its oldest point after the window start, so the
+    # full history was not fetched again
+    assert mock_opower_api.async_get_cost_reads.call_count == 2
+
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {"opower:pge_elec_111111_energy_consumption", on_peak_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert [s["sum"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.0,
+        3.0,
+        7.0,
+        15.0,
+    ]
+    assert [(s["start"], s["sum"]) for s in stats[on_peak_id]] == [
+        (hour[2].timestamp(), 4.0),
+        (hour[3].timestamp(), 12.0),
+    ]
 
 
 async def test_coordinator_rate_periods_rebuilt_after_partial_delete(

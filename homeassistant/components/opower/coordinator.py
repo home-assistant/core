@@ -107,8 +107,10 @@ def _period_components(cost_read: CostRead) -> list[ReadComponent]:
     Some utilities return daily components that do not add up to the read
     they belong to, while their hourly components do. Feeding those into the
     period statistics would store a breakdown that contradicts the totals,
-    so such reads are left out of the periods. Components that contribute
-    nothing are dropped, so a period that never moves is not created.
+    so such reads are left out of the periods. So is a read with a component
+    that belongs to no rate period, since the periods would not add up to
+    the read without it. Components that contribute nothing are dropped, so
+    a period that never moves is not created.
     """
     components = [
         component
@@ -117,6 +119,8 @@ def _period_components(cost_read: CostRead) -> list[ReadComponent]:
     ]
     if not cost_read.read_components:
         return components
+    if any(_rate_period_key(component) is None for component in components):
+        return []
     if not math.isclose(
         sum(component.consumption for component in cost_read.read_components),
         cost_read.consumption,
@@ -612,28 +616,34 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         The four statistics of a period are always written together, so they
         are only resumed together: all four must have a stored point at the
-        same time. A period without a stored point at start, e.g. a summer-only
-        period seen again after winter, continues from its last stored point
-        instead. A period that has never been stored, or whose statistics have
-        been partly deleted, starts from zero and keeps last_stats_time None so
-        it is backfilled from the full history.
+        same time. A period without a stored point at start continues from its
+        oldest stored point after start, the same way the totals do, e.g. a
+        period first seen after the reads at the start of the window. Failing
+        that it continues from its last stored point, e.g. a summer-only period
+        seen again after winter. A period that has never been stored, or whose
+        statistics have been partly deleted, starts from zero and keeps
+        last_stats_time None so it is backfilled from the full history.
         """
         statistic_ids = set().union(
             *(rate_period.statistic_ids() for rate_period in rate_periods.values())
         )
-        stats = await get_instance(self.hass).async_add_executor_job(
-            statistics_during_period,
-            self.hass,
-            start,
-            start + timedelta(seconds=1),
-            statistic_ids,
-            "hour",
-            None,
-            {"sum"},
-        )
+        stats: dict[str, list[Any]] = {}
+        for end in (start + timedelta(seconds=1), None):
+            stats |= await get_instance(self.hass).async_add_executor_job(
+                statistics_during_period,
+                self.hass,
+                start,
+                end,
+                statistic_ids - set(stats),
+                "hour",
+                None,
+                {"sum"},
+            )
+            if statistic_ids <= set(stats):
+                break
         for rate_period in rate_periods.values():
             if not rate_period.statistic_ids() <= set(stats):
-                # Not stored at start. Look for the last stored point instead.
+                # Not stored at or after start. Look for the last stored point.
                 last_stats: dict[str, list[Any]] = {}
                 for statistic_id in rate_period.statistic_ids():
                     last_stat = await get_instance(self.hass).async_add_executor_job(
