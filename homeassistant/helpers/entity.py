@@ -1506,10 +1506,10 @@ class Entity(
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass.
 
-        Called on every add attempt, before the entity is registered in the
-        entity registry and before its state is written, including for adds
-        which will be aborted, e.g. because the entity is disabled. Adding may
-        not complete; register cleanup with async_on_remove.
+        Called on every add attempt, before the registry entry is assigned to
+        this entity and before its state is written, including for adds which
+        will be aborted, e.g. because the entity is disabled. Adding may not
+        complete; register cleanup with async_on_remove.
 
         To be extended by integrations.
         """
