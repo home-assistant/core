@@ -32,10 +32,10 @@ JET_1_ENTITY_ID = "select.connectedspa_ddeeff_jet_1"
 HEATING_MODE_ENTITY_ID = "select.connectedspa_ddeeff_heating_mode"
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 async def test_select_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     device_fixture: Spa,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -124,10 +124,10 @@ async def test_select_option_error(
         )
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 async def test_unsupported_entities_not_added(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     device_fixture: Spa,
     entity_registry: er.EntityRegistry,
 ) -> None:
