@@ -214,7 +214,6 @@ def _stop_configurations(
                 line_whitelist=_string_values(config.get(CONF_WHITELIST_LINES)),
                 expand_platforms=bool(config[CONF_EXPAND_PLATFORMS]),
                 show_on_map=bool(config[CONF_SHOW_ON_MAP]),
-                device_stop_id=stop_ids[0] if len(stop_ids) == 1 else None,
             )
         )
 

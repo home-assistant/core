@@ -198,7 +198,6 @@ def test_legacy_yaml_and_ui_subentries_can_coexist() -> None:
             line_whitelist=("RUT:Line:legacy",),
             expand_platforms=True,
             show_on_map=False,
-            device_stop_id="NSR:StopPlace:legacy",
         ),
         EnturStopConfiguration(
             stops=("NSR:StopPlace:ui",),
