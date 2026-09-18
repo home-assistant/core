@@ -250,3 +250,50 @@ async def test_reconfigure_flow_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_config_entry.data == original_data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_clears_optional_fields(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test clearing optional fields drops them instead of storing blanks."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=AMS_NET_ID,
+        data={**USER_INPUT, CONF_LOCAL_NET_ID: LOCAL_NET_ID},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, CONF_IP_ADDRESS: "", CONF_LOCAL_NET_ID: ""},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_DEVICE: AMS_NET_ID, CONF_PORT: 851}
+    # An empty address would be passed through instead of derived from the NetID.
+    assert mock_pyads_connection.call_args == call(AMS_NET_ID, 851, None)
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pyads_connection")
+async def test_reconfigure_flow_updates_title(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to another PLC retitles the entry."""
+    mock_config_entry.add_to_hass(hass)
+    new_net_id = "192.168.1.20.1.1"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_DEVICE: new_net_id}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.title == new_net_id

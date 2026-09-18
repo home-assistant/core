@@ -29,6 +29,19 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _drop_blank_optionals(data: dict[str, Any]) -> dict[str, Any]:
+    """Drop optional fields left blank.
+
+    A cleared field is submitted as an empty string, which pyads would take
+    as an explicit value instead of falling back to its default.
+    """
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in (CONF_IP_ADDRESS, CONF_LOCAL_NET_ID) or value
+    }
+
+
 def _validate_connection(data: dict[str, Any]) -> None:
     """Open a connection and read the device state."""
     with local_net_id_probe(data.get(CONF_LOCAL_NET_ID)):
@@ -68,10 +81,13 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input = _drop_blank_optionals(user_input)
             if (error := await self._async_validate(user_input)) is None:
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), data=user_input
+                        self._get_reconfigure_entry(),
+                        title=user_input[CONF_DEVICE],
+                        data=user_input,
                     )
                 return self.async_create_entry(
                     title=user_input[CONF_DEVICE], data=user_input
@@ -98,6 +114,7 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import the ADS connection from configuration.yaml."""
+        import_data = _drop_blank_optionals(import_data)
         if (error := await self._async_validate(import_data)) is not None:
             return self.async_abort(reason=error)
         return self.async_create_entry(title=import_data[CONF_DEVICE], data=import_data)
