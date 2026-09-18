@@ -74,9 +74,7 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the alert in progress, or the most relevant upcoming one."""
         now = _tcl_now()
-        alerts = filter_tcl_active_alerts(
-            self.coordinator.data.get(self._subentry_id, []), now
-        )
+        alerts = filter_tcl_active_alerts(self.coordinator.data[self._subentry_id], now)
         if not alerts:
             return None
         ranked = sort_tcl_alerts_by_relevance(alerts, now)
@@ -98,6 +96,6 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
         window_end = end_date.astimezone(TZ_PARIS).replace(tzinfo=None)
         return [
             _calendar_event(alert)
-            for alert in self.coordinator.data.get(self._subentry_id, [])
+            for alert in self.coordinator.data[self._subentry_id]
             if alert.debut < window_end and alert.fin > window_start
         ]

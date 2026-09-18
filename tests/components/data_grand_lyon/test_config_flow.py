@@ -727,12 +727,22 @@ async def test_park_and_ride_subentry_picker_load_errors(
 # Line subentry tests
 
 
+@pytest.mark.parametrize(
+    ("submitted", "expected"),
+    [
+        pytest.param("C3", "C3", id="from_list"),
+        pytest.param(" C3 ", "C3", id="padded"),
+        pytest.param("ZI3", "ZI3", id="custom_value"),
+    ],
+)
 @pytest.mark.usefixtures("mock_tcl_client")
 async def test_line_subentry_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    submitted: str,
+    expected: str,
 ) -> None:
-    """Test adding a TCL line subentry."""
+    """Test adding a TCL line subentry, including codes absent from the CSV."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -745,63 +755,12 @@ async def test_line_subentry_flow(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_LINE: "C3"}
+        result["flow_id"], {CONF_LINE: submitted}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Line C3"
-    assert result["data"] == {CONF_LINE: "C3"}
-
-
-@pytest.mark.usefixtures("mock_tcl_client")
-async def test_line_subentry_flow_custom_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a line code absent from the pictogram CSV is accepted."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_LINE: "ZI3"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_LINE: "ZI3"}
-
-
-@pytest.mark.parametrize(
-    "line_code",
-    [
-        pytest.param(" C3 ", id="padded"),
-        pytest.param("C3", id="exact"),
-    ],
-)
-@pytest.mark.usefixtures("mock_tcl_client")
-async def test_line_subentry_flow_trims_line_code(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    line_code: str,
-) -> None:
-    """Test a line code with surrounding whitespace is trimmed before use."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, SUBENTRY_TYPE_LINE),
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_LINE: line_code}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Line C3"
-    assert result["data"] == {CONF_LINE: "C3"}
-    assert result["unique_id"] == "line_C3"
+    assert result["title"] == f"Line {expected}"
+    assert result["data"] == {CONF_LINE: expected}
+    assert result["unique_id"] == f"line_{expected}"
 
 
 @pytest.mark.parametrize(
