@@ -9,6 +9,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from aiohttp.hdrs import (
+    ACCESS_CONTROL_ALLOW_HEADERS,
+    ACCESS_CONTROL_ALLOW_ORIGIN,
+    ACCESS_CONTROL_REQUEST_HEADERS,
+    ACCESS_CONTROL_REQUEST_METHOD,
+    ORIGIN,
+)
 import mcp
 import mcp.client.session
 import mcp.client.sse
@@ -42,6 +49,7 @@ from homeassistant.helpers import (
     llm,
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -56,6 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 TEST_ENTITY = "light.kitchen"
 DEVICE_ID_META_KEY = "io.home-assistant/device_id"
 DEVICE_ID_HEADER = "Home-Assistant-Device-Id"
+TRUSTED_ORIGIN = "https://mcp.example.com"
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 type MCPClientFactory = Callable[
     [HomeAssistant, str, str],
@@ -106,8 +115,11 @@ class _StubTool(llm.Tool):
 
 
 @pytest.fixture
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def setup_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, hass_config: ConfigType
+) -> None:
     """Set up the config entry."""
+    assert await async_setup_component(hass, "http", hass_config)
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -161,6 +173,67 @@ async def sse_response_reader(
         line = (await anext(it)).decode()
         assert line == "\r\n"
         yield event, data
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{"http": {"cors_allowed_origins": [TRUSTED_ORIGIN]}}]
+)
+@pytest.mark.parametrize(
+    ("url", "method"),
+    [
+        pytest.param(STREAMABLE_API, "POST", id="streamable"),
+        pytest.param(
+            f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}", "POST", id="streamable-api"
+        ),
+        pytest.param(SSE_API, "GET", id="sse"),
+        pytest.param(
+            MESSAGES_API.format(session_id="test-session"), "POST", id="sse-messages"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("origin", "expected_status", "expected_origin", "device_header_allowed"),
+    [
+        pytest.param(TRUSTED_ORIGIN, HTTPStatus.OK, TRUSTED_ORIGIN, True, id="allowed"),
+        pytest.param(
+            "https://untrusted.example.com",
+            HTTPStatus.FORBIDDEN,
+            None,
+            False,
+            id="untrusted",
+        ),
+    ],
+)
+async def test_device_id_header_preflight(
+    hass_client_no_auth: ClientSessionGenerator,
+    url: str,
+    method: str,
+    origin: str,
+    expected_status: HTTPStatus,
+    expected_origin: str | None,
+    device_header_allowed: bool,
+) -> None:
+    """Allow the device header only for configured origins."""
+    client = await hass_client_no_auth()
+
+    response = await client.options(
+        url,
+        headers={
+            ORIGIN: origin,
+            ACCESS_CONTROL_REQUEST_METHOD: method,
+            ACCESS_CONTROL_REQUEST_HEADERS: (
+                "authorization,content-type,home-assistant-device-id"
+            ),
+        },
+    )
+
+    assert response.status == expected_status
+    assert response.headers.get(ACCESS_CONTROL_ALLOW_ORIGIN) == expected_origin
+    allowed_headers = {
+        header.strip().lower()
+        for header in response.headers.get(ACCESS_CONTROL_ALLOW_HEADERS, "").split(",")
+    }
+    assert ("home-assistant-device-id" in allowed_headers) is device_header_allowed
 
 
 async def test_http_sse(
