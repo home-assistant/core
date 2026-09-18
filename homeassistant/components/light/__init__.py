@@ -7,8 +7,8 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, Self, cast, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -84,7 +84,7 @@ def valid_supported_color_modes(
         or (ColorMode.ONOFF in color_modes and len(color_modes) > 1)
         or (ColorMode.WHITE in color_modes and not color_supported(color_modes))
     ):
-        raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
+        raise probatio.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
     return color_modes
 
 
@@ -173,44 +173,52 @@ COLOR_GROUP = "Color descriptors"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
-VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
-VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
-VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
-VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
-VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
+VALID_TRANSITION = probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=6553))
+VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255))
+VALID_BRIGHTNESS_PCT = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=0, max=100)
+)
+VALID_BRIGHTNESS_STEP = probatio.All(
+    probatio.Coerce(int), probatio.Clamp(min=-255, max=255)
+)
+VALID_BRIGHTNESS_STEP_PCT = probatio.All(
+    probatio.Coerce(float), probatio.Clamp(min=-100, max=100)
+)
+VALID_FLASH = probatio.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA: VolDictType = {
-    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
+    probatio.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
-    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
-    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
-    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-    vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
-    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple),
-        vol.ExactSequence(
+    probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    probatio.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    probatio.Exclusive(
+        ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS
+    ): VALID_BRIGHTNESS_STEP_PCT,
+    probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
+    probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple),
+        probatio.ExactSequence(
             (
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
             )
         ),
     ),
-    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
     ),
-    vol.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 4)
+    probatio.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 4)
     ),
-    vol.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 5)
+    probatio.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 5)
     ),
-    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
+    probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
+    probatio.Exclusive(ATTR_WHITE, COLOR_GROUP): probatio.Any(True, VALID_BRIGHTNESS),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -538,19 +546,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data
+        ),
         async_handle_light_on_service,
     )
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data
+        ),
         async_handle_light_off_service,
     )
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data
+        ),
         async_handle_toggle_service,
     )
 
@@ -571,10 +585,10 @@ def _coerce_none(value: str) -> None:
     """Coerce an empty string as None."""
 
     if not isinstance(value, str):
-        raise vol.Invalid("Expected a string")
+        raise probatio.Invalid("Expected a string")
 
     if value:
-        raise vol.Invalid("Not an empty string")
+        raise probatio.Invalid("Not an empty string")
 
 
 @dataclasses.dataclass
@@ -592,23 +606,23 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(
-        vol.Any(
-            vol.ExactSequence(
+    SCHEMA = probatio.Schema(
+        probatio.Any(
+            probatio.ExactSequence(
                 (
                     str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.byte, _coerce_none),
                 )
             ),
-            vol.ExactSequence(
+            probatio.ExactSequence(
                 (
                     str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
-                    vol.Any(VALID_TRANSITION, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.byte, _coerce_none),
+                    probatio.Any(VALID_TRANSITION, _coerce_none),
                 )
             ),
         )
@@ -664,7 +678,7 @@ class Profiles:
                         profile = Profile.from_csv_row(rec)
                         profiles[profile.name] = profile
 
-                except vol.MultipleInvalid as ex:
+                except probatio.MultipleInvalid as ex:
                     _LOGGER.error(
                         "Error parsing light profile row '%s' from %s: %s",
                         rec,
@@ -1027,7 +1041,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Validate the supported color modes."""
         try:
             valid_supported_color_modes(supported_color_modes)
-        except vol.Error as err:
+        except probatio.Error as err:
             raise HomeAssistantError(
                 f"{self.entity_id} ({type(self)}) sets invalid supported color modes "
                 f"{supported_color_modes}"

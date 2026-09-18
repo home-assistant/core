@@ -25,7 +25,7 @@ from .time_server import KNXTimeServerStoreModel
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 2
-STORAGE_VERSION_MINOR: Final = 4
+STORAGE_VERSION_MINOR: Final = 5
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
@@ -79,6 +79,10 @@ class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
         if old_major_version <= 2 and old_minor_version < 4:
             # version 2.4 introduced in 2026.5
             migration.migrate_2_3_to_2_4(old_data)
+
+        if old_major_version <= 2 and old_minor_version < 5:
+            # version 2.5 introduced in 2026.10
+            migration.migrate_2_4_to_2_5(old_data)
 
         return old_data
 

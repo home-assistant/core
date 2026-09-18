@@ -195,7 +195,7 @@ def browse_media(  # noqa: C901
             "children": [],
             "children_media_class": children_media_class,
         }
-        for item in hub.items:
+        for item in hub.items():
             if hub.type == "station":
                 if platform == "sonos":
                     continue
