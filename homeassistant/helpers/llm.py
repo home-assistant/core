@@ -670,6 +670,7 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}__{action}"
+        self.integration = domain
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.
