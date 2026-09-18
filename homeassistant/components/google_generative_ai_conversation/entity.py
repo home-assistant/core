@@ -273,7 +273,7 @@ def _create_google_tool_response_parts(
             name=tool_result.tool_name,
             response=_validate_tool_results(
                 {
-                    "result": tool_result.result.data,
+                    "data": tool_result.result.data,
                     "error": tool_result.result.error,
                 }
             ),
