@@ -918,6 +918,7 @@ def test_config_flow_helpers_cover_selection_and_fallbacks() -> None:
             {
                 "subentry_id": "stop-subentry",
                 "subentry_type": "stop_place",
+                "title": "Central station",
                 "data": {CONF_STOP_ID: "NSR:StopPlace:1"},
             }
         ],
