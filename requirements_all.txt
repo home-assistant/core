@@ -673,7 +673,7 @@ base36==0.1.1
 batinfo==0.4.2
 
 # homeassistant.components.beatbot
-beatbot-cloud==0.4.2
+beatbot-cloud==0.4.3
 
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
