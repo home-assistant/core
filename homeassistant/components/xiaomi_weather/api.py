@@ -382,8 +382,10 @@ class XiaomiLocationClient:
                 raise XiaomiWeatherError("Expected a location list")
             locations: dict[str, Location] = {}
             for item in payload:
+                if item.get("status", 0) != 0:
+                    continue
                 key = item["locationKey"]
-                if item.get("status", 0) != 0 or not key.startswith("weathercn:"):
+                if not key.startswith("weathercn:"):
                     continue
                 city_id = key.removeprefix("weathercn:")
                 latitude, longitude = (
