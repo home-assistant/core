@@ -42,10 +42,9 @@ def _migrate_data_size_units(
     The unit is derived from the configured base (GB/GiB) and the entity's
     current value, then written directly to the entity registry on every startup
     so the GB/GiB preference takes effect and the unit tracks the value (e.g. a
-    pool is shown in TiB once it exceeds 1 TiB). Only descriptions that opt into
-    this scaling (``suggested_unit_of_measurement in GB_SCALED_UNITS``) are
-    touched here; DATA_SIZE sensors with a deliberately fixed suggested unit
-    (e.g. app memory/block I/O in MiB) are never scaled.
+    DATA_SIZE sensor is shown in TiB once it exceeds 1 TiB). Only descriptions
+    that opt into this scaling (``suggested_unit_of_measurement in
+    GB_SCALED_UNITS``) are touched here.
     """
     data_unit = config_entry.options.get(
         CONF_DATA_UNIT, config_entry.data.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT)
@@ -137,7 +136,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Re-discover entities on every refresh (new interface/pool/dataset) without a reload.
+    # Re-discover entities on every refresh (new interface NICs) without a reload.
     @callback
     def _handle_coordinator_refresh() -> None:
         async_dispatcher_send(hass, SIGNAL_UPDATE_SENSORS, coordinator)
@@ -159,7 +158,6 @@ async def async_unload_entry(
     ):
         coordinator = get_truenas_coordinator(config_entry)
         if coordinator is not None:
-            await coordinator.stop_app_stats()
             await coordinator.api.close()
         if hasattr(config_entry, "runtime_data"):
             del config_entry.runtime_data

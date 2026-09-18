@@ -322,14 +322,13 @@ async def test_async_setup_entry_refresh_listener_dispatches_update_signal(
 async def test_async_unload_entry_stops_coordinator_on_success(
     hass: HomeAssistant,
 ) -> None:
-    """Unloading stops app-stats polling and closes the API connection on success."""
+    """Unloading closes the API connection on success."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
     entry.add_to_hass(hass)
     entry.mock_state(hass, ConfigEntryState.LOADED)
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
     coordinator = SimpleNamespace(
-        stop_app_stats=AsyncMock(),
         api=SimpleNamespace(close=AsyncMock()),
     )
     entry.runtime_data = coordinator
@@ -338,7 +337,6 @@ async def test_async_unload_entry_stops_coordinator_on_success(
         result = await hass.config_entries.async_unload(entry.entry_id)
 
     assert result is True
-    coordinator.stop_app_stats.assert_awaited_once()
     coordinator.api.close.assert_awaited_once()
     assert not hasattr(entry, "runtime_data")
 

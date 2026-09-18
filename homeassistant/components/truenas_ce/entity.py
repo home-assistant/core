@@ -30,8 +30,6 @@ from .coordinator import TrueNASCoordinator, get_truenas_coordinator
 
 _LOGGER = getLogger(__name__)
 
-_UNKNOWN_KEY = "<unknown>"
-
 
 def resolve_entry_identity(config_entry: ConfigEntry) -> str:
     """Return a stable per-entry identity string for unique_ids/device identifiers.
@@ -120,90 +118,7 @@ class TrueNASEntityDescription(EntityDescription):
     data_uid: str | None = None
     data_reference: str | None = None
     data_attributes_list: tuple[str, ...] = ()
-    data_dynamic_keys: bool = False
-    data_composite_references: tuple[str, ...] = ()
     func: str = ""
-
-    def __post_init__(self) -> None:
-        """Validate flag/reference combos; warns instead of raising so bad configs fail fast without crashing at import time."""
-        composite = self.data_composite_references or ()
-        has_composite = bool(composite)
-        dynamic = self.data_dynamic_keys
-
-        if has_composite and not dynamic:
-            _LOGGER.warning(
-                "Invalid TrueNASEntityDescription %r: "
-                "data_composite_references requires data_dynamic_keys=True",
-                getattr(self, "key", _UNKNOWN_KEY),
-            )
-            return
-
-        if has_composite and len(composite) != 2:
-            _LOGGER.warning(
-                "Invalid TrueNASEntityDescription %r: "
-                "data_composite_references must contain exactly two segments "
-                "(container_key, leaf_key)",
-                getattr(self, "key", _UNKNOWN_KEY),
-            )
-            return
-
-        if dynamic and not self.data_reference and not has_composite:
-            _LOGGER.warning(
-                "Invalid TrueNASEntityDescription %r: "
-                "data_dynamic_keys=True requires either data_reference or "
-                "data_composite_references",
-                getattr(self, "key", _UNKNOWN_KEY),
-            )
-
-
-def _composite_references(
-    identity: str,
-    description: TrueNASEntityDescription,
-    data: dict[str, Any],
-    honor_exclude: bool = True,
-) -> set[str]:
-    """Compute unique_ids for descriptions whose reference is nested in a list.
-
-    Builds ``identity-key-uid::leaf`` ids from ``data[uid][container_key][*][leaf_key]``,
-    e.g. per-NIC sensors. ``identity`` must be a stable per-entry identity
-    (see ``resolve_entry_identity``), not the user-editable display name.
-    """
-    ids: set[str] = set()
-    if len(description.data_composite_references) != 2:
-        return ids
-    container_key, leaf_key = description.data_composite_references
-    for uid, vals in data.items():
-        container = _get_composite_container(vals, container_key)
-        if container is None:
-            continue
-        for item in container:
-            ref = _extract_composite_ref(item, description, honor_exclude, leaf_key)
-            if ref is not None:
-                ids.add(format_unique_id(identity, description.key, f"{uid}::{ref}"))
-    return ids
-
-
-def _get_composite_container(vals: Any, container_key: str) -> list[Any] | None:
-    """Return the composite container list if present and valid, else None."""
-    if not isinstance(vals, dict):
-        return None
-    container = vals.get(container_key)
-    return container if isinstance(container, list) else None
-
-
-def _extract_composite_ref(
-    item: Any,
-    description: TrueNASEntityDescription,
-    honor_exclude: bool,
-    leaf_key: str,
-) -> str | None:
-    """Validate a composite item and return its leaf reference, or None."""
-    if not isinstance(item, dict):
-        return None
-    if honor_exclude and _is_uid_excluded(description, item):
-        return None
-    ref = item.get(leaf_key)
-    return ref if ref is not None else None
 
 
 def _skip_keyless_description(
@@ -257,8 +172,6 @@ def _collect_new_entities(
     """
     new_entities: list[TrueNASEntity] = []
     for entity_description in descriptions:
-        if entity_description.func == "TrueNASAppStatsSensor":
-            continue
         data = coordinator.data.get(entity_description.data_path or "")
         if data is None:
             continue
@@ -427,11 +340,10 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
 
         Default False preserves the "empty data means unavailable" contract
         above for every entity (in particular, a deleted disk/dataset/VM/
-        pool/app still goes unavailable immediately). Overridden only by
-        entities that restore a placeholder value across the startup window
-        before their first real data arrives -- see
-        ``TrueNASAppStatsSensor`` -- and even then only until that entity's
-        own ``_refresh_data`` observes real data for the first time.
+        pool/app still goes unavailable immediately). Reserved for future
+        entity subclasses that restore a placeholder value across the
+        startup window before their first real data arrives -- currently no
+        subclass overrides it.
         """
         return False
 
@@ -560,7 +472,7 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         HA's frontend already humanizes any key without an explicit
         ``state_attributes`` strings.json entry (e.g. "link_state" ->
         "Link State"); an explicit entry is only needed to override that
-        generic fallback, as done for "uuids".
+        generic fallback.
         """
         attributes = dict(super().extra_state_attributes or {})
         for variable in self.entity_description.data_attributes_list:

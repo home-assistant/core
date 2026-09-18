@@ -13,8 +13,6 @@ from homeassistant.components.truenas_ce.entity import (
     TrueNASEntityDescription,
     _append_if_new,
     _collect_new_entities,
-    _extract_composite_ref,
-    _get_composite_container,
     _is_uid_excluded,
     _new_referenced_entities,
     _skip_keyless_description,
@@ -72,58 +70,6 @@ def test_format_unique_id_distinguishes_case_variants() -> None:
 def test_format_device_identifier() -> None:
     """A device identifier is the stable per-entry identity, unmodified."""
     assert format_device_identifier("TrueNAS") == "TrueNAS"
-
-
-# ---------------------------
-#   _get_composite_container / _extract_composite_ref
-# ---------------------------
-def test_get_composite_container_non_dict_vals_returns_none() -> None:
-    """A non-dict vals object has no composite container to extract."""
-    assert _get_composite_container("not-a-dict", "networks") is None
-
-
-def test_extract_composite_ref_non_dict_item_returns_none() -> None:
-    """A non-dict item cannot yield a composite reference."""
-    assert (
-        _extract_composite_ref(
-            "not-a-dict", _REF_DESC, honor_exclude=True, leaf_key="x"
-        )
-        is None
-    )
-
-
-def test_extract_composite_ref_excluded_item_returns_none() -> None:
-    """An item matching data_exclude is skipped when honor_exclude is True."""
-    desc = TrueNASSensorEntityDescription(
-        key="net_rx",
-        name="RX",
-        data_path="app_stats",
-        data_dynamic_keys=True,
-        data_composite_references=("networks", "interface_name"),
-        data_exclude=("link_state", "DOWN"),
-    )
-    item = {"interface_name": "eth0", "link_state": "DOWN"}
-    ref = _extract_composite_ref(
-        item, desc, honor_exclude=True, leaf_key="interface_name"
-    )
-    assert ref is None
-
-
-def test_extract_composite_ref_honor_exclude_false_ignores_exclude() -> None:
-    """With honor_exclude False, an excluded item's reference is still returned."""
-    desc = TrueNASSensorEntityDescription(
-        key="net_rx",
-        name="RX",
-        data_path="app_stats",
-        data_dynamic_keys=True,
-        data_composite_references=("networks", "interface_name"),
-        data_exclude=("link_state", "DOWN"),
-    )
-    item = {"interface_name": "eth0", "link_state": "DOWN"}
-    ref = _extract_composite_ref(
-        item, desc, honor_exclude=False, leaf_key="interface_name"
-    )
-    assert ref == "eth0"
 
 
 # ---------------------------
@@ -235,16 +181,6 @@ def test_collect_new_entities_skips_non_dict_data_path_payload() -> None:
         func="TrueNASEntity",
     )
     coordinator = make_coordinator(data={"system_info": "not-a-dict"})
-    result = _collect_new_entities(coordinator, [desc], _dispatcher(), set())
-    assert not result
-
-
-def test_collect_new_entities_skips_app_stats_sensor_descriptions() -> None:
-    """App-stats sensor descriptions are handled elsewhere and skipped here."""
-    desc = TrueNASSensorEntityDescription(
-        key="k", name="N", data_path="disk", func="TrueNASAppStatsSensor"
-    )
-    coordinator = make_coordinator(data={"disk": {"d1": {}}})
     result = _collect_new_entities(coordinator, [desc], _dispatcher(), set())
     assert not result
 
@@ -746,8 +682,8 @@ def test_data_missing_is_available_hook_defaults_false() -> None:
     """The hook must default to False so ``bool(self._data)`` alone governs.
 
     Every entity that doesn't override it -- e.g. a deleted disk/dataset/VM/
-    pool/app stays unavailable immediately. Only TrueNASAppStatsSensor
-    overrides this, for its restore-on-restart fallback (see tests/test_sensor.py).
+    pool/app stays unavailable immediately. Currently no entity subclass
+    overrides this hook.
     """
     desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
     entity = _make_entity(data={}, description=desc)
@@ -758,7 +694,7 @@ def test_data_missing_is_available_hook_defaults_false() -> None:
 def test_data_missing_is_available_hook_override_reenables_availability() -> None:
     """A subclass opting into the hook stays available despite empty data.
 
-    This is the mechanism TrueNASAppStatsSensor's restore fallback relies on.
+    This is the mechanism a future restore-on-restart entity would rely on.
     """
     desc = TrueNASEntityDescription(key="arc_ratio", name="ARC Ratio", data_path="arc")
     entity = _make_entity(data={}, description=desc)

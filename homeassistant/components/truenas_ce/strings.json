@@ -45,74 +45,6 @@
   },
   "entity": {
     "sensor": {
-      "alerts": {
-        "name": "Alerts",
-        "state_attributes": {
-          "uuids": {
-            "name": "Alert UUIDs"
-          }
-        }
-      },
-      "app_stats_blkio_read": {
-        "name": "Block I/O Read"
-      },
-      "app_stats_blkio_write": {
-        "name": "Block I/O Write"
-      },
-      "app_stats_cpu": {
-        "name": "CPU"
-      },
-      "app_stats_memory": {
-        "name": "RAM"
-      },
-      "app_stats_network_rx": {
-        "name": "Network RX"
-      },
-      "app_stats_network_tx": {
-        "name": "Network TX"
-      },
-      "arc_data_hit_percent": {
-        "name": "Data hit ratio"
-      },
-      "arc_l2_hit_percent": {
-        "name": "L2 ARC hit ratio"
-      },
-      "arc_metadata_hit_percent": {
-        "name": "Metadata hit ratio"
-      },
-      "certificate_expiration_time": {
-        "name": "Expiration time"
-      },
-      "certificate_expiry": {
-        "name": "Time until expiry"
-      },
-      "directoryservices": {
-        "name": "Status"
-      },
-      "pool_allocated": {
-        "name": "Allocated"
-      },
-      "pool_errors": {
-        "name": "Errors"
-      },
-      "pool_fragmentation": {
-        "name": "Fragmentation"
-      },
-      "pool_free": {
-        "name": "Free"
-      },
-      "pool_scrub_end": {
-        "name": "Scrub finished"
-      },
-      "pool_scrub_start": {
-        "name": "Scrub started"
-      },
-      "pool_scrub_state": {
-        "name": "Scrub state"
-      },
-      "pool_size": {
-        "name": "Size"
-      },
       "system_cache_size_arc_value": {
         "name": "ARC size"
       },
@@ -140,9 +72,6 @@
       "system_memory_usage": {
         "name": "Memory usage"
       },
-      "system_smb_connections": {
-        "name": "SMB connections"
-      },
       "system_uptime": {
         "name": "Uptime"
       },
@@ -151,27 +80,6 @@
       },
       "traffic_tx": {
         "name": "TX"
-      },
-      "ups_charge": {
-        "name": "Charge"
-      },
-      "ups_current": {
-        "name": "Current"
-      },
-      "ups_frequency": {
-        "name": "Frequency"
-      },
-      "ups_load": {
-        "name": "Load"
-      },
-      "ups_runtime": {
-        "name": "Runtime"
-      },
-      "ups_temperature": {
-        "name": "Temperature"
-      },
-      "ups_voltage": {
-        "name": "Voltage"
       }
     }
   },
@@ -190,9 +98,6 @@
     },
     "interface_unavailable": {
       "message": "Network interface information was not received from TrueNAS ({host})"
-    },
-    "app_stats_unavailable": {
-      "message": "Could not establish the app.stats subscription with TrueNAS ({host}): {error}"
     }
   }
 }
