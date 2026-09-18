@@ -556,11 +556,14 @@ async def test_zeroconf_discovery_athena(hass: HomeAssistant) -> None:
     matching on that property is done by
     homeassistant/components/zeroconf/discovery.py before this integration's
     flow is ever reached, and is verified by hassfest and by the committed
-    homeassistant/generated/zeroconf.py, not by this test. What this test
-    pins down is that a real Athena hostname is parsed into the unique_id
-    that matches the processor's actual serial number, so that a discovered
-    entry and a manually-added one converge on the same config entry instead
-    of duplicating.
+    homeassistant/generated/zeroconf.py, not by this test. The hostname-derived
+    identity path this test exercises is already covered by
+    test_zeroconf_lutron_id_already_configured; what this test adds is a
+    regression fixture built from a real captured Athena advertisement (the
+    actual `_lutron._tcp.local.` service type, the `Lutron-093cbfd8.local.`
+    hostname with its 8-hex-char serial, and the real TXT record), confirming
+    that this real-world data flows through the existing hostname-derived
+    identity path the same way the synthetic fixtures do.
     """
     # 093cbfd8 is serial_to_unique_id(154976216), the real serial reported
     # by this Athena processor. If async_step_zeroconf's

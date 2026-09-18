@@ -15,7 +15,7 @@
         "title": "Failed to import Caséta bridge configuration."
       },
       "link": {
-        "description": "To pair with {name} ({host}), after submitting this form, press the black button on the back of the bridge.",
+        "description": "To pair with {name} ({host}), after submitting this form, press the pairing button on your bridge or processor.",
         "title": "Pair with the bridge"
       },
       "user": {
