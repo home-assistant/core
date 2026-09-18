@@ -692,7 +692,7 @@ class DefaultAgent(ConversationEntity):
                 agent_id=user_input.agent_id,
                 tool_call_id=tool_input.id,
                 tool_name=tool_input.tool_name,
-                tool_result=tool_result,
+                result=llm.ToolResult(data=tool_result),
             )
         )
 
@@ -1587,7 +1587,7 @@ class DefaultAgent(ConversationEntity):
                 agent_id=user_input.agent_id,
                 tool_call_id=tool_input.id,
                 tool_name=tool_input.tool_name,
-                tool_result=tool_result,
+                result=llm.ToolResult(data=tool_result),
             )
         )
 

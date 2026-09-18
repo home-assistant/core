@@ -80,10 +80,11 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": [ENTITY_ID], "status": ["needs_action"]}
-    assert result == {
-        "success": True,
-        "result": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}],
-    }
+    assert result == llm.ToolResult(
+        data={
+            "items": [{"uid": "1234", "status": "needs_action", "summary": "Buy milk"}]
+        }
+    )
 
 
 @pytest.mark.parametrize(
