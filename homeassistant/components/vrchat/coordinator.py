@@ -263,8 +263,8 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         """Set a user data dict to users dict."""
         user_id = data["id"]
         if user_id in self.users:
+            user = self.users[user_id]
             if overwrite:
-                user = self.users[user_id]
                 user.data = data
         else:
             user = VRChatUserDataCoordinator(self, data)
@@ -362,9 +362,20 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         if event_type == VRChatWebsocketEventType.FRIEND_DELETE:
             return
         if "user" in content:
-            self.set_user(content["user"])
+            self.create_task(
+                self._async_handle_new_user_event(
+                    user_id, cast(WebsocketUserEvent, data)
+                )
+            )
             return
         self.create_task(self.ensure_user(user_id))
+
+    async def _async_handle_new_user_event(
+        self, user_id: str, data: WebsocketUserEvent
+    ) -> None:
+        """Fetch initial user data before applying the complete event."""
+        user = await self.ensure_user(user_id)
+        await user.async_handle_event(data)
 
     def _handle_ws_world_content(self, content: dict[str, Any]) -> None:
         """Handle a WebSocket event's world content."""
@@ -637,9 +648,19 @@ class VRChatUserDataCoordinator(AsyncCleanups):
 
     async def update_user(self, data: vrchatapi.UpdateUserRequest):
         """Update user info."""
-        self.data = await self.account.use_api(
+        new_data = await self.account.use_api(
             lambda api: api.update_user(self.data["id"], data)
         )
+        old_data = self.data.copy()
+        presence = new_data.get("presence") or {}
+        if process_vrchat_string(new_data.get("location")) is not None or any(
+            process_vrchat_string(presence.get(key)) is not None
+            for key in ("location", "world", "instance")
+        ):
+            # Recalculate derived location fields when the response supplies presence.
+            for key in ("location", "worldId", "instanceId"):
+                old_data.pop(key, None)
+        self.data = {**old_data, **new_data}
 
     def setup_entities(
         self,

@@ -332,6 +332,88 @@ async def test_ensure_user_fetches_missing_user() -> None:
     coordinator.set_user.assert_called_once_with(FRIEND_USER, False)
 
 
+async def test_new_user_event_applies_event_data_after_fetch() -> None:
+    """Test a new user's event is applied after fetching complete user data."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.users = {}
+    user = Mock(async_handle_event=AsyncMock())
+    coordinator.ensure_user = AsyncMock(return_value=user)
+    coordinator.create_task = Mock()
+    data = {
+        "type": "friend-online",
+        "content": {
+            "userId": FRIEND_USER_ID,
+            "user": {"status": "active"},
+            "location": "wrld_test:instance",
+        },
+    }
+
+    coordinator._handle_ws_user_content("friend-online", data["content"], data)
+
+    event_task = coordinator.create_task.call_args.args[0]
+    await event_task
+
+    coordinator.ensure_user.assert_awaited_once_with(FRIEND_USER_ID)
+    user.async_handle_event.assert_awaited_once_with(data)
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_location", "expected_world_id", "expected_instance_id"),
+    [
+        pytest.param(
+            {"statusDescription": "updated"},
+            "wrld_test:instance",
+            "wrld_test",
+            "instance",
+            id="preserve-existing-location",
+        ),
+        pytest.param(
+            {"location": "offline"},
+            "offline",
+            "offline",
+            "offline",
+            id="apply-new-location",
+        ),
+    ],
+)
+async def test_update_user_merges_partial_response(
+    response: dict[str, str],
+    expected_location: str,
+    expected_world_id: str,
+    expected_instance_id: str,
+) -> None:
+    """Test status updates preserve or recalculate location data as needed."""
+    account = Mock(
+        current_user_data={"id": CURRENT_USER_ID},
+        use_api=AsyncMock(return_value=response),
+    )
+    user = object.__new__(VRChatUserDataCoordinator)
+    user.account = account
+    user.world = None
+    user._data = {
+        "id": CURRENT_USER_ID,
+        "location": "wrld_test:instance",
+        "worldId": "wrld_test",
+        "instanceId": "instance",
+        "status": "active",
+    }
+
+    with (
+        patch.object(VRChatUserDataCoordinator, "setup_entities"),
+        patch.object(VRChatUserDataCoordinator, "async_update_entities"),
+        patch.object(
+            VRChatUserDataCoordinator,
+            "device_entry",
+            new=property(lambda self: None),
+        ),
+    ):
+        await user.update_user(cast(vrchatapi.UpdateUserRequest, {}))
+
+    assert user.data["location"] == expected_location
+    assert user.data["worldId"] == expected_world_id
+    assert user.data["instanceId"] == expected_instance_id
+
+
 def test_available_notifies_users_on_change() -> None:
     """Test account availability changes notify all users."""
     first_user = Mock()
@@ -576,7 +658,7 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
         ),
         patch(
             "homeassistant.components.vrchat.coordinator.VRChatAPI.get_user",
-            new=AsyncMock(return_value=FRIEND_USER.copy()),
+            new=AsyncMock(side_effect=[FRIEND_USER.copy(), NEW_FRIEND_USER.copy()]),
         ),
         patch(
             "homeassistant.components.vrchat.coordinator.VRChatAPI.close",
@@ -632,11 +714,18 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             {
                 "type": "friend-active",
                 "content": json.dumps(
-                    {"userId": NEW_FRIEND_USER_ID, "user": NEW_FRIEND_USER}
+                    {
+                        "userId": NEW_FRIEND_USER_ID,
+                        "user": NEW_FRIEND_USER,
+                        "location": "wrld_test:instance",
+                    }
                 ),
             }
         )
         await hass.async_block_till_done()
+        assert coordinator.users[NEW_FRIEND_USER_ID].data["location"] == (
+            "wrld_test:instance"
+        )
         new_friend_status_entity_id = _entity_id(
             entity_registry,
             f"status.{CURRENT_USER_ID}:{NEW_FRIEND_USER_ID}",
