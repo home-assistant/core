@@ -92,6 +92,7 @@ class XiaomiCoordinator(DataUpdateCoordinator[dict[str, XiaomiDeviceInfo]]):
             mac = device.get("mac")
             if (
                 not isinstance(mac, str)
+                or not mac
                 or mac in devices
                 or not _is_online(device.get("online"))
             ):

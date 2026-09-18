@@ -121,7 +121,7 @@ class XiaomiClient:
         if xiaomi_code != 0:
             # A non-zero code means the stok (token) is rejected.
             raise XiaomiAuthError(
-                f"Receive wrong Xiaomi code {xiaomi_code}, expected 0"
+                f"Xiaomi API returned non-zero code {xiaomi_code}; token was rejected"
             )
         try:
             device_list = result["list"]

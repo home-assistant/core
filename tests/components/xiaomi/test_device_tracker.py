@@ -45,7 +45,7 @@ async def test_device_tracker_data_shape(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test offline, MAC-less and duplicate-MAC devices are filtered out."""
+    """Test offline, MAC-less (missing or empty) and duplicate-MAC devices are filtered out."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -55,7 +55,7 @@ async def test_device_tracker_data_shape(
         for entity in entity_registry.entities.values()
         if entity.domain == DEVICE_TRACKER_DOMAIN
     ]
-    # Offline device, MAC-less device and the dual-stack duplicate are dropped.
+    # Offline, MAC-less, empty-MAC and dual-stack duplicate devices are dropped.
     assert {entity.unique_id for entity in entities} == {
         f"{mock_config_entry.entry_id}_AA:BB:CC:DD:EE:FF",
         f"{mock_config_entry.entry_id}_11:22:33:44:55:66",

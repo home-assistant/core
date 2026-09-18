@@ -29,6 +29,8 @@ MOCK_DEVICE_LIST: list[dict[str, Any]] = [
     _create_device("AA:BB:CC:DD:EE:FF", "my-phone", 1, "2001:db8::10"),
     # No MAC address: must be skipped.
     _create_device(None, "no-mac", 1, "192.168.31.13"),
+    # Empty MAC address: must be skipped.
+    _create_device("", "empty-mac", 1, "192.168.31.14"),
 ]
 
 LATE_DEVICE = _create_device("33:44:55:66:77:88", "my-desktop", 1, "192.168.31.20")
