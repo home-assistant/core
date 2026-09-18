@@ -288,7 +288,7 @@ class KeyboardRemoteManager:
             if active is handler
         ]:
             del self._active_handlers_by_descriptor[descriptor]
-        await handler.async_device_stop_monitoring()
+        await handler.async_device_stop_monitoring(from_monitor_task=True)
 
     def register_handler(self, entry_id: str, handler: DeviceHandler) -> None:
         """Register a DeviceHandler for a config entry."""
@@ -633,7 +633,12 @@ class DeviceHandler:
         # keep firing, even though the entry now resolves a by-id path too.
         self._descriptor = self._device_descriptor or self._device_path or self.dev.path
 
-        self._monitor_task = self.hass.async_create_task(self._async_monitor_input())
+        # Not eager: a device that fails immediately would otherwise run the
+        # whole monitor body, including the teardown that clears this
+        # attribute, before the assignment below overwrites it again.
+        self._monitor_task = self.hass.async_create_task(
+            self._async_monitor_input(), eager_start=False
+        )
         self.hass.bus.async_fire(
             EVENT_KEYBOARD_REMOTE_CONNECTED,
             {
@@ -643,25 +648,35 @@ class DeviceHandler:
         )
         _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
 
-    async def async_device_stop_monitoring(self) -> None:
-        """Stop event monitoring task and fire disconnected event."""
+    async def async_device_stop_monitoring(
+        self, *, from_monitor_task: bool = False
+    ) -> None:
+        """Stop event monitoring task and fire disconnected event.
+
+        Pass from_monitor_task=True when the monitor task itself is tearing
+        down after a read failure. It cannot wait for its own completion, and
+        ungrabbing a device that just errored would only raise again.
+        """
         if self._monitor_task is None:
             return
 
         dev = self.dev
         assert dev is not None
 
-        with suppress(OSError):
-            await self.hass.async_add_executor_job(dev.ungrab)
+        if not from_monitor_task:
+            with suppress(OSError):
+                await self.hass.async_add_executor_job(dev.ungrab)
         # Remove reader and close device before cancelling the task to avoid
         # triggering unhandled exceptions inside evdev coroutines
         self.hass.loop.remove_reader(dev.fileno())
         dev.close()
-        if not self._monitor_task.done():
-            self._monitor_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await self._monitor_task
+        task = self._monitor_task
         self._monitor_task = None
+        if not from_monitor_task:
+            if not task.done():
+                task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
         self.hass.bus.async_fire(
             EVENT_KEYBOARD_REMOTE_DISCONNECTED,
             {
@@ -740,9 +755,7 @@ class DeviceHandler:
             await self._async_cancel_repeats(repeat_tasks)
             _LOGGER.debug("Stopped reading %s: %s", dev.name, err)
             if self._on_monitor_failure is not None:
-                # Run the teardown outside this task: it awaits this task, and
-                # awaiting itself from within would deadlock.
-                self.hass.async_create_task(self._on_monitor_failure(self))
+                await self._on_monitor_failure(self)
 
     async def _async_cancel_repeats(
         self, repeat_tasks: dict[int, asyncio.Task]

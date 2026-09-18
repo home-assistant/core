@@ -651,7 +651,7 @@ async def test_monitor_input_oserror_cleanup(
     mock_config_entry: MockConfigEntry,
     mock_input_device: MagicMock,
 ) -> None:
-    """Test OSError during monitoring cleans up repeat tasks."""
+    """Test OSError during monitoring releases the handler."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -667,9 +667,9 @@ async def test_monitor_input_oserror_cleanup(
     await handler.async_device_start_monitoring(mock_input_device)
     await hass.async_block_till_done()
 
-    # Monitor task should complete without raising
-    assert handler._monitor_task is not None
-    assert handler._monitor_task.done()
+    assert handler.is_monitoring is False
+    assert handler._monitor_task is None
+    assert handler.dev is None
 
 
 async def test_monitor_input_oserror_cancels_repeat_tasks(
