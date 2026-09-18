@@ -23,7 +23,6 @@ JET_SPEED_TO_OPTION: dict[JetSpeed, str] = {
     JetSpeed.OFF: OPTION_OFF,
     JetSpeed.LOW_SPEED: OPTION_LOW,
     JetSpeed.HIGH_SPEED: OPTION_HIGH,
-    JetSpeed.SINGLE_SPEED: OPTION_HIGH,
 }
 
 OPTION_TO_JET_SPEED: dict[str, JetSpeed] = {
@@ -109,10 +108,9 @@ class HotSpringJetSelectEntity(HotSpringEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected jet speed."""
-        speed = OPTION_TO_JET_SPEED[option]
-        if speed is JetSpeed.HIGH_SPEED and not self._jet.is_dual_speed:
-            speed = JetSpeed.SINGLE_SPEED
-        await self.coordinator.hotspring.set_jet(self._jet_id, speed)
+        await self.coordinator.hotspring.set_jet(
+            self._jet_id, OPTION_TO_JET_SPEED[option]
+        )
         self.coordinator.async_set_updated_data(
             cast(Spa, self.coordinator.hotspring.spa)
         )
