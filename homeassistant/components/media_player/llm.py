@@ -25,18 +25,19 @@ from .const import (
     INTENT_SET_VOLUME_RELATIVE,
 )
 
-# Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (
-    INTENT_MEDIA_NEXT,
-    INTENT_MEDIA_PAUSE,
-    INTENT_PLAYER_MUTE,
-    INTENT_PLAYER_UNMUTE,
-    INTENT_MEDIA_PREVIOUS,
-    INTENT_MEDIA_SEARCH_AND_PLAY,
-    INTENT_MEDIA_UNPAUSE,
-    INTENT_SET_VOLUME,
-    INTENT_SET_VOLUME_RELATIVE,
-)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_MEDIA_NEXT: "Next track",
+    INTENT_MEDIA_PAUSE: "Pause media",
+    INTENT_PLAYER_MUTE: "Mute player",
+    INTENT_PLAYER_UNMUTE: "Unmute player",
+    INTENT_MEDIA_PREVIOUS: "Previous track",
+    INTENT_MEDIA_SEARCH_AND_PLAY: "Search and play media",
+    INTENT_MEDIA_UNPAUSE: "Resume media",
+    INTENT_SET_VOLUME: "Set volume",
+    INTENT_SET_VOLUME_RELATIVE: "Change volume",
+}
 
 # Setting a value on the user's own player has no further effect when it is
 # repeated. Stepping through tracks or volume has an effect on every call, and
@@ -78,6 +79,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=LLM_INTENTS[handler.intent_type],
             integration=DOMAIN,
             annotations=INTENT_ANNOTATIONS[handler.intent_type],
         )
