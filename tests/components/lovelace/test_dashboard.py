@@ -367,17 +367,13 @@ async def test_lovelace_from_yaml(
 
 
 def _write(path: Path, content: str) -> None:
-    """Write a config file, making sure the mtime moves on."""
+    """Write a config file, creating parent directories as needed."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
 
 
 async def test_referenced_files_follows_real_includes(tmp_path: Path) -> None:
-    """Test the include graph is resolved from real files.
-
-    Uses the real loader tags rather than hand-built annotations, and covers a
-    scalar include, whose loaded value cannot carry ``__config_file__``.
-    """
+    """Test the include graph is resolved from real files."""
     root = tmp_path / "ui-lovelace.yaml"
     view = tmp_path / "lovelace" / "garage.yaml"
     scalar = tmp_path / "lovelace" / "enabled.yaml"
@@ -412,10 +408,7 @@ def yaml_dashboard(hass: HomeAssistant, tmp_path: Path) -> dashboard.LovelaceYAM
 async def test_yaml_dashboard_reloads_when_included_file_changes(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
-    """Test editing an included file invalidates the cache.
-
-    The dashboard file itself is never touched.
-    """
+    """Test editing an included file invalidates the cache."""
     root = tmp_path / "ui-lovelace.yaml"
     view = tmp_path / "lovelace" / "garage.yaml"
     _write(root, "views:\n  - !include lovelace/garage.yaml\n")
@@ -458,11 +451,7 @@ async def test_yaml_dashboard_reloads_when_scalar_include_changes(
 async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
-    """Test a file added to an included directory invalidates the cache.
-
-    The new file is not in the cached set, so the directory's own mtime is what
-    reveals it.
-    """
+    """Test a file added to an included directory invalidates the cache."""
     root = tmp_path / "ui-lovelace.yaml"
     views = tmp_path / "views"
     _write(root, "views: !include_dir_list views\n")
@@ -484,7 +473,7 @@ async def test_yaml_dashboard_reloads_when_file_added_to_include_dir(
 async def test_yaml_dashboard_reloads_when_included_file_removed(
     hass: HomeAssistant, tmp_path: Path, yaml_dashboard: dashboard.LovelaceYAML
 ) -> None:
-    """Test a removed included file forces a reload instead of serving a stale config."""
+    """Test a removed included file forces a reload."""
     root = tmp_path / "ui-lovelace.yaml"
     view = tmp_path / "lovelace" / "garage.yaml"
     _write(root, "views:\n  - !include lovelace/garage.yaml\n")
