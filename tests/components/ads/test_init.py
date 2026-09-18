@@ -1,7 +1,8 @@
 """Test the ADS integration setup."""
 
+import asyncio
 from collections.abc import Callable
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pyads
 import pytest
@@ -307,3 +308,68 @@ async def test_write_data_by_name_not_loaded(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+async def test_reload_resubscribe_error_is_contained(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing entity does not stop the others from resubscribing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+    for name in ("failing", "working"):
+        entity = AdsEntity(hub, name, f"GVL.{name}")
+        entity.hass = hass
+        entity.entity_id = f"binary_sensor.{name}"
+
+    with patch.object(
+        AdsEntity,
+        "async_added_to_hass",
+        AsyncMock(side_effect=[TypeError("closed"), None]),
+    ) as mock_added:
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_added.call_count == 2
+    assert "Error resubscribing binary_sensor.failing" in caplog.text
+
+
+async def test_unload_cancels_resubscribe_task(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+) -> None:
+    """Test unloading stops a resubscribe task still waiting on the PLC."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = AdsEntity(mock_config_entry.runtime_data, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    resubscribing = asyncio.Event()
+
+    async def _wait_forever(self: AdsEntity) -> None:
+        resubscribing.set()
+        await asyncio.Event().wait()
+
+    with patch.object(AdsEntity, "async_added_to_hass", _wait_forever):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await resubscribing.wait()
+        hub = mock_config_entry.runtime_data
+        task = hub.resubscribe_task
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert task.cancelled()
+    assert hub.resubscribe_task is None
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

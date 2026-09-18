@@ -1,5 +1,6 @@
 """Support for Automation Device Specification (ADS)."""
 
+import asyncio
 from collections import namedtuple
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -95,16 +96,29 @@ class AdsHub:
         self._client = ads_client
         self._client.open()
 
+        # Cancelled on unload, before the notifications are torn down.
+        self.resubscribe_task: asyncio.Task[None] | None = None
+
         # All ADS devices are registered here
         self._devices: list[AdsEntity] = []
         self._notification_items = {}
         self._lock = threading.Lock()
+        self._closed = False
+        # Separate from _lock, which is held across blocking PLC calls, so
+        # registering an entity never blocks the event loop.
+        self._devices_lock = threading.Lock()
 
     def shutdown(self):
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
-        for notification_item in self._notification_items.values():
+        with self._lock:
+            self._closed = True
+            notification_items = list(self._notification_items.values())
+            self._notification_items.clear()
+        # Deleting a notification waits for its in-flight callbacks, which take
+        # _lock themselves, so this has to run unlocked.
+        for notification_item in notification_items:
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
                 notification_item.hnotify,
@@ -116,28 +130,30 @@ class AdsHub:
                 )
             except pyads.ADSError as err:
                 _LOGGER.error(err)
-        self._notification_items.clear()
         try:
             self._client.close()
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
         # Entities cache this hub instance directly and won't pick up a new one.
-        for device in self._devices:
+        for device in self.devices:
             device.mark_unavailable()
 
     @property
     def devices(self) -> list[AdsEntity]:
         """Return the entities registered with this hub."""
-        return self._devices
+        with self._devices_lock:
+            return list(self._devices)
 
     def register_device(self, device: AdsEntity) -> None:
         """Register a new device."""
-        self._devices.append(device)
+        with self._devices_lock:
+            self._devices.append(device)
 
     def unregister_device(self, device: AdsEntity) -> None:
         """Unregister a device."""
-        self._devices.remove(device)
+        with self._devices_lock:
+            self._devices.remove(device)
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
@@ -163,21 +179,27 @@ class AdsHub:
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
+            if self._closed:
+                _LOGGER.debug("Not subscribing to %s, the hub is shut down", name)
+                return
             try:
-                hnotify, huser = self._client.add_device_notification(
+                handles = self._client.add_device_notification(
                     name, attr, self._device_notification_callback
                 )
             except pyads.ADSError as err:
                 _LOGGER.error("Error subscribing to %s: %s", name, err)
-            else:
-                hnotify = int(hnotify)
-                self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype, notification_callback
-                )
+                return
+            if handles is None:
+                # pyads returns None instead of raising once the port is closed.
+                _LOGGER.debug("Not subscribing to %s, the connection is closed", name)
+                return
+            hnotify, huser = handles
+            hnotify = int(hnotify)
+            self._notification_items[hnotify] = NotificationItem(
+                hnotify, huser, name, plc_datatype, notification_callback
+            )
 
-                _LOGGER.debug(
-                    "Added device notification %d for variable %s", hnotify, name
-                )
+            _LOGGER.debug("Added device notification %d for variable %s", hnotify, name)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""

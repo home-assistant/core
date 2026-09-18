@@ -159,3 +159,26 @@ def test_apply_local_net_id_restores_original(
     apply_local_net_id(None)
 
     mock_pyads_local_net_id.set_local_address.assert_called_with(AUTO_NET_ID)
+
+
+def test_add_device_notification_closed_connection(
+    hub: AdsHub, ads_client: MagicMock
+) -> None:
+    """Test subscribing on a closed connection does not register an item."""
+    ads_client.add_device_notification.return_value = None
+
+    hub.add_device_notification("GVL.test", pyads.PLCTYPE_INT, MagicMock())
+
+    assert not hub._notification_items
+
+
+def test_add_device_notification_after_shutdown(
+    hub: AdsHub, ads_client: MagicMock
+) -> None:
+    """Test a late subscription is refused once the hub is shut down."""
+    hub.shutdown()
+
+    hub.add_device_notification("GVL.test", pyads.PLCTYPE_INT, MagicMock())
+
+    ads_client.add_device_notification.assert_not_called()
+    assert not hub._notification_items

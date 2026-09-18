@@ -73,7 +73,8 @@ class AdsEntity(Entity):
 
     def mark_unavailable(self) -> None:
         """Mark the entity unavailable after its hub connection is closed."""
-        for key in self._state_dict:
+        # Notification callbacks add keys from another thread, so snapshot them.
+        for key in list(self._state_dict):
             self._state_dict[key] = None
         if self.hass is not None:
             self.schedule_update_ha_state()

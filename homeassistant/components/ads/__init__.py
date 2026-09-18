@@ -1,5 +1,9 @@
 """Support for Automation Device Specification (ADS)."""
 
+import asyncio
+from contextlib import suppress
+import logging
+
 import probatio
 import pyads
 
@@ -19,6 +23,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_DEVICES, DOMAIN, AdsType
 from .hub import AdsConfigEntry, AdsHub, apply_local_net_id
+
+_LOGGER = logging.getLogger(__name__)
 
 ADS_TYPEMAP = {
     AdsType.BOOL: pyads.PLCTYPE_BOOL,
@@ -179,9 +185,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 
         async def _async_resubscribe_devices() -> None:
             for device in devices:
-                await device.async_added_to_hass()
+                try:
+                    await device.async_added_to_hass()
+                except Exception:
+                    _LOGGER.exception("Error resubscribing %s", device.entity_id)
 
-        entry.async_create_task(
+        hub.resubscribe_task = entry.async_create_task(
             hass, _async_resubscribe_devices(), "ads resubscribe devices"
         )
 
@@ -197,6 +206,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
     """Unload an ADS config entry."""
     hub = entry.runtime_data
+    # Entry tasks are only cancelled once this returns, so the resubscribe task
+    # has to be stopped here or it would add notifications back during shutdown.
+    if task := hub.resubscribe_task:
+        hub.resubscribe_task = None
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
     hass.data.setdefault(DOMAIN, {})[DATA_DEVICES] = list(hub.devices)
     await hass.async_add_executor_job(hub.shutdown)
     return True
