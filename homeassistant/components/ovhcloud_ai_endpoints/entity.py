@@ -60,7 +60,7 @@ def _convert_content_to_chat_message(
             role="tool",
             tool_call_id=content.tool_call_id,
             content=json_dumps(
-                {"result": content.result.data, "error": content.result.error}
+                {"data": content.result.data, "error": content.result.error}
             ),
         )
 
