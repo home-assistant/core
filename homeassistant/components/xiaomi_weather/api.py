@@ -198,7 +198,7 @@ def parse_weather(payload: Any) -> WeatherData:
         twice_daily: list[ForecastData] = []
         if daily.get("status", 0) == 0:
             temperatures = daily.get("temperature", {})
-            if temperatures.get("unit", "℃") != "℃":
+            if values(temperatures) and temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected daily temperature unit")
             for index, item in enumerate(values(temperatures)):
                 high, low = number(item["from"]), number(item["to"])
@@ -253,7 +253,7 @@ def parse_weather(payload: Any) -> WeatherData:
         hours: list[ForecastData] = []
         temperatures = hourly.get("temperature", {})
         if hourly.get("status", 0) == 0 and values(temperatures):
-            if temperatures.get("unit", "℃") != "℃":
+            if temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected hourly temperature unit")
             start = timestamp(temperatures["pubTime"])
             winds = hourly_winds(hourly)
