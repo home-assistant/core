@@ -7,7 +7,7 @@ from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
 from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
@@ -56,7 +56,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         """Update data from the API handler."""
         try:
             await self._handler.update()
-        except EndpointNotFound:
+        except EndpointNotFound as err:
             if (
                 self._disable_polling_on_endpoint_not_found
                 and not self._endpoint_not_found_logged
@@ -67,7 +67,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     "UniFi %s endpoint is unavailable; disabling polling",
                     type(self._handler).__name__,
                 )
-            raise
+            raise UpdateFailed(str(err)) from err
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:

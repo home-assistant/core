@@ -151,7 +151,12 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
         await hass.async_block_till_done()
 
-    assert mock_update.call_count == 1
+        assert mock_update.call_count == 1
+
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count == 2
     assert traffic_rules_coordinator.update_interval == POLL_INTERVAL
     assert (
         caplog.text.count(
