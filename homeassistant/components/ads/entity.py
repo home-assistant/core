@@ -73,12 +73,17 @@ class AdsEntity(Entity):
 
     def mark_unavailable(self) -> None:
         """Mark the entity unavailable after its hub connection is closed."""
-        self._state_dict[STATE_KEY_STATE] = None
+        for key in self._state_dict:
+            self._state_dict[key] = None
         if self.hass is not None:
             self.schedule_update_ha_state()
 
-    async def async_resubscribe(self, ads_hub: AdsHub) -> None:
-        """Rebind this entity to a new hub and resubscribe after a reload."""
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister this entity from its hub when it is removed."""
+        self._ads_hub.unregister_device(self)
+
+    def rebind(self, ads_hub: AdsHub) -> None:
+        """Rebind this entity to a new hub after a reload."""
         self._ads_hub = ads_hub
         ads_hub.register_device(self)
-        await self.async_added_to_hass()

@@ -5,9 +5,12 @@ from unittest.mock import MagicMock
 import pyads
 import pytest
 
-from homeassistant.components.ads.hub import AdsHub, async_get_hub
+from homeassistant.components.ads.hub import AdsHub, apply_local_net_id, async_get_hub
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+
+from .conftest import MockPyadsLocalNetId
+from .const import AUTO_NET_ID, LOCAL_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -114,3 +117,45 @@ def test_shutdown_ignores_ads_errors(hub: AdsHub, ads_client: MagicMock) -> None
     hub.shutdown()
 
     assert not hub._notification_items
+
+
+def test_unregister_device(hub: AdsHub) -> None:
+    """Test a device is removed from the hub's registered devices."""
+    device = MagicMock()
+    hub.register_device(device)
+
+    hub.unregister_device(device)
+
+    assert device not in hub.devices
+
+
+def test_apply_local_net_id_noop_without_override(
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test clearing the local NetID is a no-op if it was never overridden."""
+    apply_local_net_id(None)
+
+    mock_pyads_local_net_id.open_port.assert_not_called()
+    mock_pyads_local_net_id.set_local_address.assert_not_called()
+
+
+def test_apply_local_net_id_sets_custom(
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test a configured local NetID is applied."""
+    apply_local_net_id(LOCAL_NET_ID)
+
+    mock_pyads_local_net_id.open_port.assert_called_once()
+    mock_pyads_local_net_id.set_local_address.assert_called_once_with(LOCAL_NET_ID)
+    mock_pyads_local_net_id.close_port.assert_called_once()
+
+
+def test_apply_local_net_id_restores_original(
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test the original NetID is restored once the custom one is cleared."""
+    apply_local_net_id(LOCAL_NET_ID)
+
+    apply_local_net_id(None)
+
+    mock_pyads_local_net_id.set_local_address.assert_called_with(AUTO_NET_ID)

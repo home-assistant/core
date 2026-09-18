@@ -25,6 +25,32 @@ NotificationItem = namedtuple(  # noqa: PYI024
     "NotificationItem", "hnotify huser name plc_datatype callback"
 )
 
+_original_local_net_id: str | None = None
+
+
+def apply_local_net_id(local_net_id: str | None) -> None:
+    """Set a custom local AMS NetID, or restore the original once cleared."""
+    global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
+    if local_net_id is None and _original_local_net_id is None:
+        return
+    pyads.open_port()
+    try:
+        # set_local_address() is process-wide; cache the original to restore it.
+        if _original_local_net_id is None:
+            _original_local_net_id = pyads.get_local_address().netid
+        pyads.set_local_address(local_net_id or _original_local_net_id)
+    finally:
+        pyads.close_port()
+
+
+def _reset_local_net_id_cache() -> None:
+    """Reset the cached original local AMS NetID.
+
+    Only meant for test isolation between config entries.
+    """
+    global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
+    _original_local_net_id = None
+
 
 class AdsHub:
     """Representation of an ADS connection."""
@@ -61,8 +87,7 @@ class AdsHub:
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-        # Entities cache this hub instance directly, so mark them unavailable
-        # here rather than leaving them stuck showing stale data after reload.
+        # Entities cache this hub instance directly and won't pick up a new one.
         for device in self._devices:
             device.mark_unavailable()
 
@@ -74,6 +99,10 @@ class AdsHub:
     def register_device(self, device: AdsEntity) -> None:
         """Register a new device."""
         self._devices.append(device)
+
+    def unregister_device(self, device: AdsEntity) -> None:
+        """Unregister a device."""
+        self._devices.remove(device)
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""

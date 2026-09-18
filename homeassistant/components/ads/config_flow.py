@@ -15,6 +15,7 @@ from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_LOCAL_NET_ID, DEFAULT_PORT, DOMAIN
+from .hub import apply_local_net_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 def _validate_connection(data: dict[str, Any]) -> None:
     """Open a connection and read the device state."""
-    if local_net_id := data.get(CONF_LOCAL_NET_ID):
-        pyads.open_port()
-        try:
-            pyads.set_local_address(local_net_id)
-        finally:
-            pyads.close_port()
+    apply_local_net_id(data.get(CONF_LOCAL_NET_ID))
     client = pyads.Connection(
         data[CONF_DEVICE], data[CONF_PORT], data.get(CONF_IP_ADDRESS)
     )

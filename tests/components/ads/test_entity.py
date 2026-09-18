@@ -1,6 +1,6 @@
 """Test the ADS entity base class."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.ads.const import STATE_KEY_STATE
 from homeassistant.components.ads.entity import AdsEntity
@@ -50,14 +50,33 @@ def test_mark_unavailable_schedules_update(hass: HomeAssistant) -> None:
     assert not entity.available
 
 
-async def test_async_resubscribe() -> None:
-    """Test resubscribing rebinds the entity to a new hub and resubscribes."""
+def test_mark_unavailable_clears_every_cached_state_field() -> None:
+    """Test marking unavailable clears secondary state, like a cover's position."""
+    entity = AdsEntity(MagicMock(spec=AdsHub), "test", "GVL.test")
+    entity._state_dict[STATE_KEY_STATE] = 1
+    entity._state_dict["position"] = 50
+
+    entity.mark_unavailable()
+
+    assert entity._state_dict == {STATE_KEY_STATE: None, "position": None}
+
+
+async def test_async_will_remove_from_hass() -> None:
+    """Test the entity unregisters itself from the hub when removed."""
+    hub = MagicMock(spec=AdsHub)
+    entity = AdsEntity(hub, "test", "GVL.test")
+
+    await entity.async_will_remove_from_hass()
+
+    hub.unregister_device.assert_called_once_with(entity)
+
+
+def test_rebind() -> None:
+    """Test rebinding an entity registers it with the new hub."""
     entity = AdsEntity(MagicMock(spec=AdsHub), "test", "GVL.test")
 
     new_hub = MagicMock(spec=AdsHub)
-    with patch.object(entity, "async_added_to_hass", AsyncMock()) as mock_added_to_hass:
-        await entity.async_resubscribe(new_hub)
+    entity.rebind(new_hub)
 
     assert entity._ads_hub is new_hub
     new_hub.register_device.assert_called_once_with(entity)
-    mock_added_to_hass.assert_awaited_once()

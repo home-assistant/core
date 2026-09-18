@@ -18,7 +18,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_DEVICES, DOMAIN, AdsType
-from .hub import AdsConfigEntry, AdsHub
+from .hub import AdsConfigEntry, AdsHub, apply_local_net_id
 
 ADS_TYPEMAP = {
     AdsType.BOOL: pyads.PLCTYPE_BOOL,
@@ -142,12 +142,7 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
 
 def _connect(entry: AdsConfigEntry) -> AdsHub:
     """Connect to the ADS device and verify it responds."""
-    if local_net_id := entry.data.get(CONF_LOCAL_NET_ID):
-        pyads.open_port()
-        try:
-            pyads.set_local_address(local_net_id)
-        finally:
-            pyads.close_port()
+    apply_local_net_id(entry.data.get(CONF_LOCAL_NET_ID))
     client = pyads.Connection(
         entry.data[CONF_DEVICE],
         entry.data[CONF_PORT],
@@ -176,14 +171,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
     entry.runtime_data = hub
 
     if DOMAIN in hass.data and (devices := hass.data[DOMAIN].pop(DATA_DEVICES, None)):
-        # YAML-configured entity platforms are not tied to the config entry's
-        # lifecycle, so a reload leaves them registered to the old, now shut
-        # down hub. Rebind and resubscribe them to the new one instead of
-        # leaving them stuck unavailable. Runs in the background so a reload
-        # does not block on every entity's notification round trip.
+        # Rebind synchronously so a concurrent reload sees every device on the
+        # hub, then resubscribe in the background since each one can take
+        # up to 10s.
+        for device in devices:
+            device.rebind(hub)
+
         async def _async_resubscribe_devices() -> None:
             for device in devices:
-                await device.async_resubscribe(hub)
+                await device.async_added_to_hass()
 
         entry.async_create_task(
             hass, _async_resubscribe_devices(), "ads resubscribe devices"
@@ -204,3 +200,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})[DATA_DEVICES] = list(hub.devices)
     await hass.async_add_executor_job(hub.shutdown)
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
+    """Restore the original local AMS NetID once the entry is removed."""
+    if entry.data.get(CONF_LOCAL_NET_ID):
+        await hass.async_add_executor_job(apply_local_net_id, None)
