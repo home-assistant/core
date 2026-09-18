@@ -34,6 +34,7 @@ class TodoGetItemsTool(Tool):
     """LLM Tool allowing querying a to-do list."""
 
     name = "todo__get_items"
+    title = "Get to-do list items"
     description = (
         "Query a to-do list to find out what items are on it. "
         "Use this to answer questions like "
