@@ -125,6 +125,7 @@ async def test_tool_annotations(hass: HomeAssistant) -> None:
     )
     tools = {tool.name: tool for tool in result.tools}
 
+    assert tools["intent__HassTurnOn"].title == "Turn on"
     assert tools["intent__HassTurnOn"].integration == "intent"
     assert tools["intent__HassTurnOn"].annotations == llm.ToolAnnotations(
         idempotent=True, open_world=False

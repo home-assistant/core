@@ -20,6 +20,7 @@ class GetDateTimeTool(Tool):
     """Tool for getting the current date and time."""
 
     name = "llm__GetDateTime"
+    title = "Get date and time"
     description = "Provides the current date and time."
     annotations = ToolAnnotations(read_only=True, open_world=False)
     integration = DOMAIN

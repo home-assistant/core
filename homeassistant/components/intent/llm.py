@@ -25,25 +25,28 @@ from homeassistant.helpers.llm import (
 from .const import DOMAIN
 from .timers import async_device_supports_timers
 
-# Generic intents exposed as LLM tools regardless of a timer-capable device.
-LLM_INTENTS = (
-    intent.INTENT_TURN_ON,
-    intent.INTENT_TURN_OFF,
-    intent.INTENT_CANCEL_ALL_TIMERS,
-    intent.INTENT_SET_POSITION,
-    intent.INTENT_STOP_MOVING,
-)
+# Generic intents exposed as LLM tools regardless of a timer-capable device,
+# with the title shown for each.
+LLM_INTENTS = {
+    intent.INTENT_TURN_ON: "Turn on",
+    intent.INTENT_TURN_OFF: "Turn off",
+    intent.INTENT_CANCEL_ALL_TIMERS: "Cancel all timers",
+    intent.INTENT_SET_POSITION: "Set position",
+    intent.INTENT_STOP_MOVING: "Stop moving",
+}
 
 # Timer intents, only exposed for a device that supports timers.
-TIMER_INTENTS = (
-    intent.INTENT_START_TIMER,
-    intent.INTENT_CANCEL_TIMER,
-    intent.INTENT_INCREASE_TIMER,
-    intent.INTENT_DECREASE_TIMER,
-    intent.INTENT_PAUSE_TIMER,
-    intent.INTENT_UNPAUSE_TIMER,
-    intent.INTENT_TIMER_STATUS,
-)
+TIMER_INTENTS = {
+    intent.INTENT_START_TIMER: "Start timer",
+    intent.INTENT_CANCEL_TIMER: "Cancel timer",
+    intent.INTENT_INCREASE_TIMER: "Add time to timer",
+    intent.INTENT_DECREASE_TIMER: "Remove time from timer",
+    intent.INTENT_PAUSE_TIMER: "Pause timer",
+    intent.INTENT_UNPAUSE_TIMER: "Resume timer",
+    intent.INTENT_TIMER_STATUS: "Get timer status",
+}
+
+INTENT_TITLES = LLM_INTENTS | TIMER_INTENTS
 
 # Every intent here acts on Home Assistant's own entities and timers, so none
 # of them reaches an open world.
@@ -108,6 +111,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=INTENT_TITLES[handler.intent_type],
             integration=DOMAIN,
             annotations=INTENT_ANNOTATIONS[handler.intent_type],
         )

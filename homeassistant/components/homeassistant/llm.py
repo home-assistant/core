@@ -219,6 +219,7 @@ class GetLiveContextTool(Tool):
     """
 
     name = "homeassistant__GetLiveContext"
+    title = "Get live context"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"
