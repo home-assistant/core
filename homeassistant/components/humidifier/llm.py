@@ -19,8 +19,12 @@ from .intent import INTENT_HUMIDITY, INTENT_MODE
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_MODE, INTENT_HUMIDITY)
+# Intents owned by this integration that are exposed as LLM tools, with the
+# title shown for each.
+LLM_INTENTS = {
+    INTENT_MODE: "Set humidifier mode",
+    INTENT_HUMIDITY: "Set humidity",
+}
 
 
 @callback
@@ -41,6 +45,7 @@ def async_get_tools(
         IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
+            title=LLM_INTENTS[handler.intent_type],
             integration=DOMAIN,
             annotations=LLM_ANNOTATIONS,
         )
