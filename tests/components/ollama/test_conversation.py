@@ -552,7 +552,7 @@ async def test_history_conversion(
             Message(
                 role="tool",
                 content=(
-                    '{"result":{"speech":{"plain":{"speech":"4:24 PM",'
+                    '{"data":{"speech":{"plain":{"speech":"4:24 PM",'
                     '"extra_data":null}},'
                     '"response_type":"action_done",'
                     '"speech_slots":{"time":"16:24:17.813343"},'
