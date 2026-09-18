@@ -1,7 +1,6 @@
 """Provides functionality to interact with humidifier devices."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import Any, final, override
 
@@ -34,6 +33,7 @@ from .const import (  # noqa: F401
     ATTR_TARGET_HUMIDITY_STEP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     MODE_AUTO,
     MODE_AWAY,
@@ -47,6 +47,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
+    HumidifierDeviceClass,
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
     HumidifierEntityStateAttribute,
@@ -60,17 +61,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
 
-
-class HumidifierDeviceClass(StrEnum):
-    """Device class for humidifiers."""
-
-    HUMIDIFIER = "humidifier"
-    DEHUMIDIFIER = "dehumidifier"
-
-
-DEVICE_CLASSES_SCHEMA = probatio.All(
-    probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
-)
 
 # DEVICE_CLASSES below is deprecated as of 2021.12
 # use the HumidifierDeviceClass enum instead.
