@@ -167,6 +167,12 @@ def async_get_exposed_entities(
                 if attr_name in interesting_attributes
             }
         ):
+            # The brightness attribute is on the 0-255 scale, while every tool
+            # that sets brightness takes a 0-100 percentage. A model that reads
+            # this value and works out a new one from it produces a percentage
+            # outside the tool's range, so render the percentage as well.
+            if isinstance(brightness := state.attributes.get("brightness"), int):
+                attributes["brightness_pct"] = str(round(brightness / 255 * 100))
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
