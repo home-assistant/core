@@ -6,7 +6,7 @@ from logging import getLogger
 import socket
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
@@ -51,28 +51,28 @@ _API_KEY_SELECTOR = selector.TextSelector(
 )
 
 
-def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
+def _base_schema(truenas_config: Mapping[str, Any]) -> probatio.Schema:
     """Generate base schema.
 
     The API key default is never pre-filled, unlike every other field:
     a secret would otherwise be embedded in the frontend's form state.
     """
     base_schema = {
-        vol.Required(
+        probatio.Required(
             CONF_HOST, default=truenas_config.get(CONF_HOST, DEFAULT_HOST)
         ): str,
-        vol.Required(CONF_API_KEY, default=""): _API_KEY_SELECTOR,
-        vol.Required(
+        probatio.Required(CONF_API_KEY, default=""): _API_KEY_SELECTOR,
+        probatio.Required(
             CONF_VERIFY_SSL,
             default=truenas_config.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
         ): bool,
-        vol.Required(
+        probatio.Required(
             CONF_DATA_UNIT,
             default=truenas_config.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT),
-        ): vol.In(ALLOWED_DATA_UNITS),
+        ): probatio.In(ALLOWED_DATA_UNITS),
     }
 
-    return vol.Schema(base_schema)
+    return probatio.Schema(base_schema)
 
 
 def _map_error_to_ha(errorcode: str) -> str:

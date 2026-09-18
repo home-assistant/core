@@ -513,6 +513,7 @@ class TrueNASAppStatsSensor(TrueNASEntity, RestoreSensor):
         # the very first refresh done during construction.
         self._restored_native_value: StateType | date | datetime | Decimal | None = None
         self._awaiting_first_app_stats_event = False
+        self._data: dict[str, Any] = {}
         super().__init__(coordinator, entity_description, uid)
 
     @override

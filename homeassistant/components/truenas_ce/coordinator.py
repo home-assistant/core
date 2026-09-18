@@ -89,6 +89,10 @@ def _seed_connection_failing(
     now-irrelevant target. A genuine HA restart also sees None, since
     hass.data is wiped with the process.
     """
+    # entry.runtime_data is instance-scoped and gets wiped on the very
+    # teardown/recreate cycle this marker is meant to survive -- see the
+    # docstring above.
+    # pylint: disable-next=home-assistant-use-runtime-data
     by_entry = hass.data.get(DOMAIN, {}).get(_DATA_CONNECTION_FAILING, {})
     marker = by_entry.get(config_entry.entry_id)
     if marker is None or marker[0] != _connection_fingerprint(config_entry):
@@ -107,6 +111,8 @@ def clear_persisted_connection_failing(hass: HomeAssistant, entry_id: str) -> No
     async_unload_entry entirely, and is instead handled by the fingerprint
     check in _seed_connection_failing.
     """
+    # Same cross-instance-persistence reasoning as _seed_connection_failing.
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data.get(DOMAIN, {}).get(_DATA_CONNECTION_FAILING, {}).pop(entry_id, None)
 
 
@@ -518,6 +524,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._connection_failing = value
         self._connection_failing_error = error if value else None
+        # Same cross-instance-persistence reasoning as _seed_connection_failing.
+        # pylint: disable-next=home-assistant-use-runtime-data
         by_entry = self.hass.data.setdefault(DOMAIN, {}).setdefault(
             _DATA_CONNECTION_FAILING, {}
         )
