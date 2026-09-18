@@ -279,6 +279,11 @@ class DisplayCategory:
     # Indicates a tablet computer.
     TABLET = "TABLET"
 
+    # Indicates endpoints that report humidity. Not listed in the Alexa
+    # display category documentation, but accepted, and it produces the
+    # correct rendering for a humidity-only endpoint.
+    HUMIDITY_SENSOR = "HUMIDITY_SENSOR"
+
     # Indicates endpoints that report the temperature only.
     TEMPERATURE_SENSOR = "TEMPERATURE_SENSOR"
 
@@ -937,14 +942,12 @@ class SensorCapabilities(AlexaEntity):
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         # Only temperature and humidity sensors are exposed; other sensor
-        # kinds have no matching Alexa interface. TEMPERATURE_SENSOR is
-        # defined for endpoints reporting temperature only, so a
-        # humidity-only endpoint falls back to OTHER.
+        # kinds have no matching Alexa interface.
         if (
             self.entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             == sensor.SensorDeviceClass.HUMIDITY
         ):
-            return [DisplayCategory.OTHER]
+            return [DisplayCategory.HUMIDITY_SENSOR]
         return [DisplayCategory.TEMPERATURE_SENSOR]
 
     @override
