@@ -3,7 +3,12 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from aioaxlevpp import AxleAuthenticationError, AxleClient, AxleError
+from aioaxlevpp import (
+    AxleAuthenticationError,
+    AxleClient,
+    AxleConnectionError,
+    AxleError,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -39,8 +44,10 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.get_event()
         except AxleAuthenticationError:
             return {"base": "invalid_auth"}
-        except AxleError:
+        except AxleConnectionError:
             return {"base": "cannot_connect"}
+        except AxleError:
+            return {"base": "cannot_retrieve"}
         return {}
 
     @override
