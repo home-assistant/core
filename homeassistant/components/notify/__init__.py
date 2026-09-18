@@ -1,7 +1,6 @@
 """Provides functionality to notify people."""
 
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final, override
@@ -33,6 +32,7 @@ from .const import (  # noqa: F401
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
+    NotifyEntityFeature,
 )
 from .legacy import (  # noqa: F401
     BaseNotificationService,
@@ -61,12 +61,6 @@ PLATFORM_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-
-
-class NotifyEntityFeature(IntFlag):
-    """Supported features of a notify entity."""
-
-    TITLE = 1
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

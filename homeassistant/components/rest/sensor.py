@@ -24,9 +24,9 @@ from homeassistant.helpers.trigger_template_entity import (
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
+from .coordinator import RestCoordinator
 from .data import RestData
 from .entity import (
     RestEntity,
@@ -76,7 +76,7 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         config: ConfigType,
         trigger_entity_config: ConfigType,
