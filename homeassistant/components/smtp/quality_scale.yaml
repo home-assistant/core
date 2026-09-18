@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration does not register additional actions
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: The integration does not poll
@@ -52,7 +50,7 @@ rules:
   diagnostics:
     status: exempt
     comment: |
-      The integration has no runtime data and the entry data is mostly sensitive data
+      The integration does not fetch data and the entry contains mostly sensitive information
   discovery-update-info:
     status: exempt
     comment: The integration cannot be discovered
