@@ -499,7 +499,8 @@
     dict({
       'content': list([
         dict({
-          'content': '{"data":"Test response","error":false}',
+          'content': '"Test response"',
+          'is_error': False,
           'tool_use_id': 'toolu_0123456789AbCdEfGhIjKlM',
           'type': 'tool_result',
         }),
@@ -665,12 +666,14 @@
           'type': 'text',
         }),
         dict({
-          'content': '{"data":{"success":true,"response":"Lights are off."},"error":false}',
+          'content': '{"success":true,"response":"Lights are off."}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id',
           'type': 'tool_result',
         }),
         dict({
-          'content': '{"data":{"success":false,"response":"Not enough milk."},"error":false}',
+          'content': '{"success":false,"response":"Not enough milk."}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id-2',
           'type': 'tool_result',
         }),
@@ -921,7 +924,8 @@
     dict({
       'content': list([
         dict({
-          'content': '{"data":{"speech_slots":{"time":"14:30:00"},"message":"Current time retrieved"},"error":false}',
+          'content': '{"speech_slots":{"time":"14:30:00"},"message":"Current time retrieved"}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id',
           'type': 'tool_result',
         }),
@@ -1007,7 +1011,8 @@
     dict({
       'content': list([
         dict({
-          'content': '{"data":{"speech":{"plain":{"speech":"The Hygrostat is set to 50%","extra_data":null}},"response_type":"action_done","data":{"success":[],"failed":[]}},"error":false}',
+          'content': '{"speech":{"plain":{"speech":"The Hygrostat is set to 50%","extra_data":null}},"response_type":"action_done","data":{"success":[],"failed":[]}}',
+          'is_error': False,
           'tool_use_id': 'toolu_01KNRWb3ZFufCa7WXtzCakhc',
           'type': 'tool_result',
         }),
