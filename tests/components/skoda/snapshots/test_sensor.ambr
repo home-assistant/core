@@ -51,168 +51,18 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.enyaq_coupe_api_key_expiration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_api_key_expiration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'API key expiration',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:api',
-    'original_name': 'API key expiration',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'api_key_expiration',
-    'unique_id': 'TMBJM7NP2M1TMP511_api_key_expiration',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_api_key_expiration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API key expiration',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:api',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_api_key_expiration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_api_rate_limit_reset-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_api_rate_limit_reset',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'API rate limit reset',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:timelapse',
-    'original_name': 'API rate limit reset',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rate_limit_reset_seconds',
-    'unique_id': 'TMBJM7NP2M1TMP511_rate_limit_reset_seconds',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_api_rate_limit_reset-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API rate limit reset',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timelapse',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_api_rate_limit_reset',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_api_requests_remaining-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_api_requests_remaining',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'API requests remaining',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:counter',
-    'original_name': 'API requests remaining',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rate_limit_remaining',
-    'unique_id': 'TMBJM7NP2M1TMP511_rate_limit_remaining',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_api_requests_remaining-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé API requests remaining',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_api_requests_remaining',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heating',
+        'ventilation',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -231,7 +81,7 @@
     'object_id_base': 'Auxiliary heating mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:heating-coil',
     'original_name': 'Auxiliary heating mode',
     'platform': 'skoda',
@@ -246,8 +96,13 @@
 # name: test_sensors[sensor.enyaq_coupe_auxiliary_heating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Auxiliary heating mode',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heating',
+        'ventilation',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.enyaq_coupe_auxiliary_heating_mode',
@@ -721,58 +576,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9618',
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_next_update-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.enyaq_coupe_next_update',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Next update',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:timer-sync-outline',
-    'original_name': 'Next update',
-    'platform': 'skoda',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'next_update_interval',
-    'unique_id': 'TMBJM7NP2M1TMP511_next_update_interval',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.enyaq_coupe_next_update-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Next update',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sync-outline',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.enyaq_coupe_next_update',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-01-10T12:05:00+00:00',
   })
 # ---
 # name: test_sensors[sensor.enyaq_coupe_registration_plate-entry]

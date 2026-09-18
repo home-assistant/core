@@ -1,17 +1,18 @@
 """Support for Škoda sensors."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
 import logging
-from typing import Any, override
+from typing import override
 
-from skoda_public_api.models.common import VehicleError
 from skoda_public_api.models.enums import (
     AirConditioningState,
+    AuxiliaryHeatingStartMode,
     ChargeType,
     ChargingState,
     TemperatureUnit,
+    VehicleCapability,
 )
 
 from homeassistant.components.sensor import (
@@ -29,8 +30,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .coordinator import SkodaUpdateCoordinator
@@ -41,523 +42,303 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+_COMBUSTION_CAR_TYPES = frozenset(
+    {
+        VehicleCapability.VEHICLE_TYPE_GASOLINE,
+        VehicleCapability.VEHICLE_TYPE_DIESEL,
+        VehicleCapability.VEHICLE_TYPE_HYBRID,
+        VehicleCapability.VEHICLE_TYPE_CNG,
+        VehicleCapability.VEHICLE_TYPE_LPG,
+    }
+)
 
-class Capability(StrEnum):
-    """Capabilities a Škoda vehicle may support."""
+_CHARGING_STATE_MAP = {
+    ChargingState.CHARGING: "charging",
+    ChargingState.CONNECT_CABLE: "connect_cable",
+    ChargingState.READY_FOR_CHARGING: "ready_for_charging",
+    ChargingState.CONSERVING: "conserving",
+    ChargingState.DISCHARGING: "discharging",
+    ChargingState.CHARGING_INTERRUPTED: "charging_interrupted",
+}
 
-    STATUS = "status"
-    ODOMETER = "odometer"
-    POSITION = "parking_position"
-    CHARGING = "charging"
-    CHARGING_PROFILES = "charging_profiles"
-    AIR_CONDITIONING = "air_conditioning"
-    VENTILATION = "active_ventilation"
-    AUXILIARY_HEATING = "auxiliary_heating"
-    FUEL_STATUS = "fuel_status"
-    ADBLUE = "ad_blue_range"
-    CT_ELECTRIC = "ct_electric"
-    CT_HYBRID = "ct_hybrid"
-    CT_GASOLINE = "ct_gasoline"
-    CT_DIESEL = "ct_diesel"
-    CT_CNG = "ct_cng"
-    CT_LPG = "ct_lpg"
-    SUNROOF = "sunroof"
+_CHARGE_TYPE_MAP = {
+    ChargeType.AC: "ac",
+    ChargeType.DC: "dc",
+    ChargeType.OFF: "off",
+}
 
-
-# Capabilities whose top-level API field can report a transient
-# "<FEATURE>_UNAVAILABLE" error (as opposed to a permanent "_UNSUPPORTED" or
-# "_DISABLED" one) in VehicleResponse.errors. These must still be treated as
-# supported when their field is empty for that reason, otherwise a temporary
-# hiccup in the first response would hide the entity for the entry's lifetime
-# (entities are only created once, at setup).
-_TRANSIENT_ERROR_PREFIXES: dict[Capability, str] = {
-    Capability.STATUS: "VEHICLE_STATUS",
-    Capability.ODOMETER: "ODOMETER",
-    Capability.POSITION: "PARKING_POSITION",
-    Capability.CHARGING: "CHARGING",
-    Capability.AIR_CONDITIONING: "AIR_CONDITIONING",
-    Capability.VENTILATION: "ACTIVE_VENTILATION",
-    Capability.AUXILIARY_HEATING: "AUXILIARY_HEATING",
-    Capability.FUEL_STATUS: "FUEL_STATUS",
+_AUXILIARY_HEATING_START_MODE_MAP = {
+    AuxiliaryHeatingStartMode.HEATING: "heating",
+    AuxiliaryHeatingStartMode.VENTILATION: "ventilation",
 }
 
 
-def extract_vehicle_capabilities(
-    data: dict[str, Any], errors: Sequence[VehicleError] = ()
-) -> set[Capability]:
-    """Extract the set of supported capabilities from a vehicle data dump."""
-    caps: set[Capability] = set()
-    unavailable = {
-        error.type.rsplit("_", 1)[0]
-        for error in errors
-        if error.type.endswith("_UNAVAILABLE")
-    }
+@dataclass(frozen=True, kw_only=True)
+class SkodaSensorEntityDescription(SensorEntityDescription):
+    """Describes a Škoda sensor entity."""
 
-    def supported(capability: Capability, present: bool) -> bool:
-        prefix = _TRANSIENT_ERROR_PREFIXES.get(capability)
-        return present or (prefix is not None and prefix in unavailable)
+    value_fn: Callable[[SkodaEntity], StateType | datetime]
+    unit_fn: Callable[[SkodaEntity], str] | None = None
+    required_capabilities: frozenset[VehicleCapability] = frozenset()
+    is_supported_fn: Callable[[set[VehicleCapability]], bool] | None = None
 
-    # Basic objects
-    status = data.get("status")
-    if supported(Capability.STATUS, bool(status)):
-        caps.add(Capability.STATUS)
-        detail = (status or {}).get("detail")
-        if detail and detail.get("sunroof"):
-            caps.add(Capability.SUNROOF)
-    if supported(Capability.ODOMETER, bool(data.get("odometer"))):
-        caps.add(Capability.ODOMETER)
-    if supported(Capability.POSITION, bool(data.get("parking_position"))):
-        caps.add(Capability.POSITION)
-    if supported(Capability.CHARGING, bool(data.get("charging"))):
-        caps.add(Capability.CHARGING)
-    if data.get("charging_profiles"):
-        caps.add(Capability.CHARGING_PROFILES)
-    if supported(Capability.AIR_CONDITIONING, bool(data.get("air_conditioning"))):
-        caps.add(Capability.AIR_CONDITIONING)
-    if supported(Capability.AUXILIARY_HEATING, bool(data.get("auxiliary_heating"))):
-        caps.add(Capability.AUXILIARY_HEATING)
-    if supported(Capability.VENTILATION, bool(data.get("active_ventilation"))):
-        caps.add(Capability.VENTILATION)
-    if supported(Capability.FUEL_STATUS, bool(data.get("fuel_status"))):
-        caps.add(Capability.FUEL_STATUS)
-    if data.get("ad_blue_range"):
-        caps.add(Capability.ADBLUE)
-
-    # Fuel
-    range_info = data.get("fuel_status") or {}
-    if range_info:
-        primary_engine = range_info.get("primary_engine_range") or range_info.get(
-            "primaryEngineRange"
-        )
-        secondary_engine = range_info.get("secondary_engine_range") or range_info.get(
-            "secondaryEngineRange"
-        )
-        engine_type_primary = (
-            primary_engine.get("engine_type") or primary_engine.get("engineType")
-            if isinstance(primary_engine, dict)
-            else getattr(primary_engine, "engine_type", None)
-            or getattr(primary_engine, "engineType", None)
-        )
-        engine_type_secondary = (
-            secondary_engine.get("engine_type") or secondary_engine.get("engineType")
-            if isinstance(secondary_engine, dict)
-            else getattr(secondary_engine, "engine_type", None)
-            or getattr(secondary_engine, "engineType", None)
-        )
-        primary_str = (engine_type_primary or "").upper()
-        secondary_str = (engine_type_secondary or "").upper()
-        if "ELECTRIC" in (primary_str, secondary_str):
-            caps.add(Capability.CT_ELECTRIC)
-        if range_info.get("car_type") is not None:
-            car_type = range_info.get("car_type")
-            if car_type == "HYBRID":
-                caps.add(Capability.CT_HYBRID)
-            if car_type == "GASOLINE":
-                caps.add(Capability.CT_GASOLINE)
-            if car_type == "DIESEL":
-                caps.add(Capability.CT_DIESEL)
-            if car_type == "CNG":
-                caps.add(Capability.CT_CNG)
-            if car_type == "LPG":
-                caps.add(Capability.CT_LPG)
-        if range_info.get("ad_blue_range") is not None:
-            caps.add(Capability.ADBLUE)
-
-    return caps
+    def is_supported(self, capabilities: set[VehicleCapability]) -> bool:
+        """Return whether the vehicle's capabilities satisfy this entity's requirements."""
+        if not self.required_capabilities <= capabilities:
+            return False
+        if self.is_supported_fn is not None:
+            return self.is_supported_fn(capabilities)
+        return True
 
 
-class CapabilitySelector:
-    """Class to select which entities will be added to Home Assistant based on vehicle capabilities."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        vehicle_data: Any,
-        errors: Sequence[VehicleError] = (),
-    ) -> None:
-        """Extract the vehicle capabilities from the provided data."""
-        self.hass = hass
-
-        if hasattr(vehicle_data, "model_dump"):
-            raw_data = vehicle_data.model_dump(by_alias=False)
-        elif hasattr(vehicle_data, "dict"):
-            raw_data = vehicle_data.dict()
-        elif isinstance(vehicle_data, dict):
-            raw_data = vehicle_data
-        else:
-            raw_data = {}
-
-        vin = getattr(vehicle_data, "vin", None)
-
-        self.car_capabilities: set[Capability] = extract_vehicle_capabilities(
-            raw_data, errors
-        )
-        _LOGGER.debug("[%s] CAPABILITIES: %s", vin, self.car_capabilities)
-        self.entities: list[Entity] = []
-
-    def _evaluate_capabilities(self, req: Any) -> bool:
-        """Evaluate if required capabilities match vehicle capabilities (supports AND/OR)."""
-        if not req:
-            return True
-
-        # Alone capabilities
-        if isinstance(req, (Capability, str)):
-            return req in self.car_capabilities
-
-        # Inner structure
-        if isinstance(req, (list, set, tuple)):
-            for item in req:
-                # Item is a group -> logic OR (one of them is enough)
-                if isinstance(item, (list, set, tuple)):
-                    if not any(sub_cap in self.car_capabilities for sub_cap in item):
-                        return False
-                # Item is an alone capability -> logic AND (vehicle has to have all)
-                elif isinstance(item, (Capability, str)):
-                    if item not in self.car_capabilities:
-                        return False
-            return True
-
-        return False
-
-    def add_entity(
-        self,
-        entity_cls: Callable[[SkodaUpdateCoordinator], Entity],
-        coordinator: SkodaUpdateCoordinator,
-    ) -> None:
-        """Add an entity if the vehicle matches required capability logic."""
-        raw_capabilities = getattr(entity_cls, "capabilities", None)
-
-        if callable(raw_capabilities):
-            try:
-                required_caps = raw_capabilities()
-            except (TypeError, ValueError) as err:
-                _LOGGER.error(
-                    "Error evaluating capabilities for %s: %s",
-                    entity_cls.__name__,
-                    err,
-                )
-                required_caps = None
-        else:
-            required_caps = raw_capabilities
-
-        if self._evaluate_capabilities(required_caps):
-            self.entities.append(entity_cls(coordinator))
-        else:
-            _LOGGER.debug(
-                "Entity %s skipped. Requirements %s do not match vehicle capabilities: %s",
-                entity_cls.__name__,
-                required_caps,
-                self.car_capabilities,
-            )
-
-    def get_entities(self) -> list[Entity]:
-        """Return the list of entities selected for the vehicle."""
-        return self.entities
+def _mileage_value(entity: SkodaEntity) -> int | None:
+    odometer = entity.open_api_odometer
+    if odometer and odometer.mileage_in_km is not None:
+        return odometer.mileage_in_km
+    return None
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: SkodaConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Škoda sensors from ConfigEntry runtime_data."""
-    coordinator = entry.runtime_data.coordinator
-    if coordinator.data and coordinator.data.vehicle_response:
-        vehicle_data = coordinator.data.vehicle_response.vehicle
-        errors = coordinator.data.vehicle_response.errors
-    else:
-        vehicle_data = None
-        errors = ()
-
-    selector = CapabilitySelector(hass, vehicle_data, errors)
-
-    selector.add_entity(MileAge, coordinator)
-    selector.add_entity(LastSynchronization, coordinator)
-    selector.add_entity(FuelLevel, coordinator)
-    selector.add_entity(BatteryPercentage, coordinator)
-    selector.add_entity(TotalRange, coordinator)
-    selector.add_entity(ElectricRange, coordinator)
-    selector.add_entity(RemainingACTime, coordinator)
-    selector.add_entity(ChargingPowerInKw, coordinator)
-    selector.add_entity(ChargingStateSensor, coordinator)
-    selector.add_entity(RemainingTimeToFullCharge, coordinator)
-    selector.add_entity(ChargeTypeSensor, coordinator)
-    selector.add_entity(AuxiliaryHeatingMode, coordinator)
-    selector.add_entity(AuxHeatingDuration, coordinator)
-    selector.add_entity(PresetTemperatureValue, coordinator)
-    selector.add_entity(APIKeyExpiration, coordinator)
-    selector.add_entity(RateLimitRemaining, coordinator)
-    selector.add_entity(RateLimitResetSeconds, coordinator)
-    selector.add_entity(NextUpdateInterval, coordinator)
-    selector.add_entity(LicencePlate, coordinator)
-
-    async_add_entities(selector.get_entities())
+def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
+    status = entity.open_api_vehicle_status
+    if status is not None and status.car_captured_timestamp:
+        timestamp_str = status.car_captured_timestamp
+        if isinstance(timestamp_str, str):
+            return datetime.fromisoformat(timestamp_str)
+        return timestamp_str
+    return None
 
 
-class SkodaSensor(SkodaEntity, SensorEntity):
-    """Base class for all Škoda sensor entities."""
+def _fuel_level_value(entity: SkodaEntity) -> int | None:
+    driving_range = entity.open_api_driving_range
+    if driving_range is not None:
+        # Display primary engine range
+        primary_engine = driving_range.primary_engine_range
+        if (
+            primary_engine is not None
+            and primary_engine.current_fuel_level_in_percent is not None
+        ):
+            return primary_engine.current_fuel_level_in_percent
 
-    def __init__(self, coordinator: SkodaUpdateCoordinator) -> None:
-        """Initialize the sensor with a coordinator and VIN."""
-        vin = coordinator.vin
-        super().__init__(coordinator, vin)
+        # Display secondary engine range
+        secondary_engine = driving_range.secondary_engine_range
+        if secondary_engine is not None:
+            return secondary_engine.current_fuel_level_in_percent
+
+    return None
 
 
-class MileAge(SkodaSensor):
-    """Vehicle total kms driven."""
+def _fuel_level_supported(capabilities: set[VehicleCapability]) -> bool:
+    """Require a combustion-capable car type in addition to FUEL_STATUS.
 
-    entity_description = SensorEntityDescription(
+    An electric vehicle also reports FUEL_STATUS but never a fuel level,
+    which would otherwise create a permanently unknown entity.
+    """
+    return bool(capabilities & _COMBUSTION_CAR_TYPES)
+
+
+def _battery_percentage_value(entity: SkodaEntity) -> int | None:
+    charging = entity.open_api_charging
+    if (
+        charging is not None
+        and charging.status is not None
+        and charging.status.battery is not None
+    ):
+        return charging.status.battery.state_of_charge_in_percent
+    return None
+
+
+def _total_range_value(entity: SkodaEntity) -> int | float | None:
+    driving_range = entity.open_api_driving_range
+    if driving_range is not None:
+        return driving_range.total_range_in_km
+    return None
+
+
+def _electric_range_value(entity: SkodaEntity) -> int | float | None:
+    charging = entity.open_api_charging
+    if (
+        charging is not None
+        and charging.status is not None
+        and charging.status.battery is not None
+        and charging.status.battery.remaining_cruising_range_in_meters is not None
+    ):
+        return charging.status.battery.remaining_cruising_range_in_meters / 1000
+    return None
+
+
+def _remaining_ac_time_value(entity: SkodaEntity) -> datetime | None:
+    ac = entity.open_api_air_conditioning
+    if not ac or ac.state in [
+        AirConditioningState.OFF,
+        AirConditioningState.UNKNOWN,
+        AirConditioningState.UNSUPPORTED,
+    ]:
+        return None
+
+    target_timestamp = ac.estimated_reach_of_target_temperature_at
+    if target_timestamp is None:
+        return None
+
+    if isinstance(target_timestamp, datetime):
+        return dt_util.as_utc(target_timestamp)
+
+    parsed_dt = dt_util.parse_datetime(str(target_timestamp))
+    return dt_util.as_utc(parsed_dt) if parsed_dt else None
+
+
+def _charging_power_value(entity: SkodaEntity) -> float | None:
+    charging = entity.open_api_charging
+    if not charging or not charging.status:
+        return None
+    if charging.status.state != ChargingState.CHARGING:
+        return None
+    return charging.status.charge_power_in_kw
+
+
+def _charging_state_value(entity: SkodaEntity) -> str | None:
+    charging = entity.open_api_charging
+    if not charging or not charging.status:
+        return None
+    return _CHARGING_STATE_MAP.get(charging.status.state)
+
+
+def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> float | None:
+    charging = entity.open_api_charging
+    if not charging or not charging.status:
+        return None
+    if charging.status.state != ChargingState.CHARGING:
+        return None
+    return charging.status.remaining_time_to_fully_charged_in_minutes
+
+
+def _charge_type_value(entity: SkodaEntity) -> str | None:
+    charging = entity.open_api_charging
+    if (
+        not charging
+        or not charging.status
+        or not charging.status.charge_type
+        or not charging.status.state
+    ):
+        return None
+
+    if charging.status.state != ChargingState.CHARGING:
+        return "not_charging"
+
+    return _CHARGE_TYPE_MAP.get(charging.status.charge_type)
+
+
+def _auxiliary_heating_mode_value(entity: SkodaEntity) -> str | None:
+    aux_heat = entity.open_api_auxiliary_heating
+    if aux_heat is None or aux_heat.start_mode is None:
+        return None
+    return _AUXILIARY_HEATING_START_MODE_MAP.get(aux_heat.start_mode)
+
+
+def _aux_heating_duration_value(entity: SkodaEntity) -> int | None:
+    aux_heat = entity.open_api_auxiliary_heating
+    if aux_heat is not None:
+        return aux_heat.duration_in_seconds
+    return None
+
+
+def _preset_temperature_value(entity: SkodaEntity) -> float | None:
+    ac = entity.open_api_air_conditioning
+    if not ac or ac.target_temperature is None:
+        return None
+    return ac.target_temperature.value
+
+
+def _preset_temperature_unit(entity: SkodaEntity) -> str:
+    ac = entity.open_api_air_conditioning
+    if (
+        ac
+        and ac.target_temperature
+        and ac.target_temperature.unit == TemperatureUnit.FAHRENHEIT
+    ):
+        return UnitOfTemperature.FAHRENHEIT
+    return UnitOfTemperature.CELSIUS
+
+
+def _licence_plate_value(entity: SkodaEntity) -> str | None:
+    vehicle = entity.open_api_vehicle
+    if vehicle and vehicle.license_plate:
+        return vehicle.license_plate
+    return None
+
+
+SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
+    SkodaSensorEntityDescription(
         key="mileage",
         translation_key="mileage",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:car-info",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        odometer = self.open_api_odometer
-        if odometer and odometer.mileage_in_km is not None:
-            return odometer.mileage_in_km
-
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.ODOMETER]
-
-
-class LastSynchronization(SkodaSensor):
-    """Last synchronization of data on the server."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.ODOMETER}),
+        value_fn=_mileage_value,
+    ),
+    SkodaSensorEntityDescription(
         key="timestamp_last_sync",
         translation_key="timestamp_last_sync",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:cloud-sync-outline",
-    )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        status = self.open_api_vehicle_status
-        if status is not None and status.car_captured_timestamp:
-            timestamp_str = status.car_captured_timestamp
-            if isinstance(timestamp_str, str):
-                return datetime.fromisoformat(timestamp_str)
-            return timestamp_str
-        return None
-
-
-class FuelLevel(SkodaSensor):
-    """Fuel level of an non-electric vehicles."""
-
-    entity_description = SensorEntityDescription(
+        value_fn=_last_synchronization_value,
+    ),
+    SkodaSensorEntityDescription(
         key="fuel_level",
         translation_key="fuel_level",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gas-station",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        driving_range = self.open_api_driving_range
-        if driving_range is not None:
-            # Display primary engine range
-            primary_engine = driving_range.primary_engine_range
-            if (
-                primary_engine is not None
-                and primary_engine.current_fuel_level_in_percent is not None
-            ):
-                return primary_engine.current_fuel_level_in_percent
-
-            # Display secondary engine range
-            secondary_engine = driving_range.secondary_engine_range
-            if secondary_engine is not None:
-                return secondary_engine.current_fuel_level_in_percent
-
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Any]:
-        """Return the capabilities required for this entity.
-
-        Requires a combustion-capable car type in addition to FUEL_STATUS,
-        since an electric vehicle also reports FUEL_STATUS but never a fuel
-        level, which would otherwise create a permanently unknown entity.
-        """
-        return [
-            Capability.FUEL_STATUS,
-            [
-                Capability.CT_GASOLINE,
-                Capability.CT_DIESEL,
-                Capability.CT_HYBRID,
-                Capability.CT_CNG,
-                Capability.CT_LPG,
-            ],
-        ]
-
-
-class BatteryPercentage(SkodaSensor):
-    """Battery percentage level - only for electric and hybrid vehicles."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.FUEL_STATUS}),
+        is_supported_fn=_fuel_level_supported,
+        value_fn=_fuel_level_value,
+    ),
+    SkodaSensorEntityDescription(
         key="battery_percentage",
         translation_key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         icon="mdi:battery",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        charging = self.open_api_charging
-        if (
-            charging is not None
-            and charging.status is not None
-            and charging.status.battery is not None
-        ):
-            return charging.status.battery.state_of_charge_in_percent
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class TotalRange(SkodaSensor):
-    """Total range of the vehicle."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_battery_percentage_value,
+    ),
+    SkodaSensorEntityDescription(
         key="remaining_range",
         translation_key="total_range",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:car-traction-control",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | float | None:
-        driving_range = self.open_api_driving_range
-        if driving_range is not None:
-            return driving_range.total_range_in_km
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.FUEL_STATUS]
-
-
-class ElectricRange(SkodaSensor):
-    """electric range of the vehicle."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.FUEL_STATUS}),
+        value_fn=_total_range_value,
+    ),
+    SkodaSensorEntityDescription(
         key="remaining_electric_range",
         translation_key="electric_range",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:car-traction-control",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | float | None:
-        charging = self.open_api_charging
-        if (
-            charging is not None
-            and charging.status is not None
-            and charging.status.battery is not None
-            and charging.status.battery.remaining_cruising_range_in_meters is not None
-        ):
-            return charging.status.battery.remaining_cruising_range_in_meters / 1000
-
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class RemainingACTime(SkodaSensor):
-    """Remaining time of the AC."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_electric_range_value,
+    ),
+    SkodaSensorEntityDescription(
         key="remaining_ac_time",
         translation_key="remaining_ac_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-digital",
-    )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        ac = self.open_api_air_conditioning
-        if not ac or ac.state in [
-            AirConditioningState.OFF,
-            AirConditioningState.UNKNOWN,
-            AirConditioningState.UNSUPPORTED,
-        ]:
-            return None
-
-        target_timestamp = ac.estimated_reach_of_target_temperature_at
-        if target_timestamp is None:
-            return None
-
-        if isinstance(target_timestamp, datetime):
-            return dt_util.as_utc(target_timestamp)
-
-        parsed_dt = dt_util.parse_datetime(str(target_timestamp))
-        return dt_util.as_utc(parsed_dt) if parsed_dt else None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.AIR_CONDITIONING]
-
-
-class ChargingPowerInKw(SkodaSensor):
-    """Sensor for charging power in Kw."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.AIR_CONDITIONING}),
+        value_fn=_remaining_ac_time_value,
+    ),
+    SkodaSensorEntityDescription(
         key="charging_power",
         translation_key="charging_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:lightning-bolt",
-    )
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        charging = self.open_api_charging
-        if not charging or not charging.status:
-            return None
-
-        if charging.status.state != ChargingState.CHARGING:
-            return None
-
-        return charging.status.charge_power_in_kw
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class ChargingStateSensor(SkodaSensor):
-    """Sensor for charging power in Kw."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_charging_power_value,
+    ),
+    SkodaSensorEntityDescription(
         key="charging_state",
         translation_key="charging_state",
         device_class=SensorDeviceClass.ENUM,
@@ -570,284 +351,109 @@ class ChargingStateSensor(SkodaSensor):
             "charging_interrupted",
         ],
         icon="mdi:battery-charging",
-    )
-
-    _STATE_MAP = {
-        ChargingState.CHARGING: "charging",
-        ChargingState.CONNECT_CABLE: "connect_cable",
-        ChargingState.READY_FOR_CHARGING: "ready_for_charging",
-        ChargingState.CONSERVING: "conserving",
-        ChargingState.DISCHARGING: "discharging",
-        ChargingState.CHARGING_INTERRUPTED: "charging_interrupted",
-    }
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        charging = self.open_api_charging
-        if not charging or not charging.status:
-            return None
-
-        return self._STATE_MAP.get(charging.status.state)
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class RemainingTimeToFullCharge(SkodaSensor):
-    """RemainingTime to fully charge battery."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_charging_state_value,
+    ),
+    SkodaSensorEntityDescription(
         key="remaining_time_to_full_battery",
         translation_key="remaining_time_to_full_battery",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         icon="mdi:battery-charging-medium",
-    )
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        charging = self.open_api_charging
-        if not charging or not charging.status:
-            return None
-
-        if charging.status.state != ChargingState.CHARGING:
-            return None
-
-        return charging.status.remaining_time_to_fully_charged_in_minutes
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class ChargeTypeSensor(SkodaSensor):
-    """Charge type - AC/DC/OFF."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_remaining_time_to_full_charge_value,
+    ),
+    SkodaSensorEntityDescription(
         key="charge_type",
         translation_key="charge_type",
         device_class=SensorDeviceClass.ENUM,
         options=["ac", "dc", "off", "not_charging"],
         icon="mdi:connection",
-    )
-
-    _CHARGE_TYPE_MAP = {
-        ChargeType.AC: "ac",
-        ChargeType.DC: "dc",
-        ChargeType.OFF: "off",
-    }
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        charging = self.open_api_charging
-        if (
-            not charging
-            or not charging.status
-            or not charging.status.charge_type
-            or not charging.status.state
-        ):
-            return None
-
-        if charging.status.state != ChargingState.CHARGING:
-            return "not_charging"
-
-        return self._CHARGE_TYPE_MAP.get(charging.status.charge_type)
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.CHARGING]
-
-
-class AuxiliaryHeatingMode(SkodaSensor):
-    """Entity that returns the Mode of Auxiliary heating."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
+        value_fn=_charge_type_value,
+    ),
+    SkodaSensorEntityDescription(
         key="auxiliary_heating_mode",
         translation_key="auxiliary_heating_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["heating", "ventilation"],
         icon="mdi:heating-coil",
-    )
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        aux_heat = self.open_api_auxiliary_heating
-
-        if aux_heat is not None and aux_heat.start_mode is not None:
-            val = getattr(aux_heat.start_mode, "value", aux_heat.start_mode)
-            return str(val) if val is not None else None
-
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.AUXILIARY_HEATING]
-
-
-class AuxHeatingDuration(SkodaSensor):
-    """Entity that returns the remaining time of active Heating in seconds."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.AUXILIARY_HEATING}),
+        value_fn=_auxiliary_heating_mode_value,
+    ),
+    SkodaSensorEntityDescription(
         key="aux_heating_duration",
         translation_key="aux_heating_duration",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         icon="mdi:fan-clock",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        aux_heat = self.open_api_auxiliary_heating
-
-        if aux_heat is not None:
-            return aux_heat.duration_in_seconds
-
-        return None
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.AUXILIARY_HEATING]
-
-
-class PresetTemperatureValue(SkodaSensor):
-    """Preset target cabin temperature."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.AUXILIARY_HEATING}),
+        value_fn=_aux_heating_duration_value,
+    ),
+    SkodaSensorEntityDescription(
         key="preset_temperature_value",
         translation_key="preset_temperature_value",
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
-    )
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str:
-        ac = self.open_api_air_conditioning
-        if (
-            ac
-            and ac.target_temperature
-            and ac.target_temperature.unit == TemperatureUnit.FAHRENHEIT
-        ):
-            return UnitOfTemperature.FAHRENHEIT
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        ac = self.open_api_air_conditioning
-        if not ac or ac.target_temperature is None:
-            return None
-
-        return ac.target_temperature.value
-
-    @staticmethod
-    def capabilities() -> list[Capability]:
-        """Return the capabilities required for this entity."""
-        return [Capability.AIR_CONDITIONING]
-
-
-class APIKeyExpiration(SkodaSensor):
-    """API key expiration timestamp."""
-
-    entity_description = SensorEntityDescription(
-        key="api_key_expiration",
-        translation_key="api_key_expiration",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        icon="mdi:api",
-    )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        if not self.api_key_expires_at:
-            return None
-        try:
-            return datetime.fromisoformat(self.api_key_expires_at)
-        except ValueError:
-            return None
-
-
-class RateLimitRemaining(SkodaSensor):
-    """Number of API requests remaining in the current window."""
-
-    entity_description = SensorEntityDescription(
-        key="rate_limit_remaining",
-        translation_key="rate_limit_remaining",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        icon="mdi:counter",
-    )
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        return self.rate_limit_remaining
-
-
-class RateLimitResetSeconds(SkodaSensor):
-    """Timestamp when the API rate limit resets."""
-
-    entity_description = SensorEntityDescription(
-        key="rate_limit_reset_seconds",
-        translation_key="rate_limit_reset_seconds",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        icon="mdi:timelapse",
-    )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        """Return the calculated UTC datetime of the rate limit reset."""
-        return self.coordinator.rate_limit_reset_time
-
-
-class NextUpdateInterval(SkodaSensor):
-    """Timestamp of the next coordinator update."""
-
-    entity_description = SensorEntityDescription(
-        key="next_update_interval",
-        translation_key="next_update_interval",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        icon="mdi:timer-sync-outline",
-    )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        """Return next expected refresh datetime in UTC."""
-        return self.coordinator.next_update_time
-
-
-class LicencePlate(SkodaSensor):
-    """Sensor for registration plate of the vehicle."""
-
-    entity_description = SensorEntityDescription(
+        required_capabilities=frozenset({VehicleCapability.AIR_CONDITIONING}),
+        value_fn=_preset_temperature_value,
+        unit_fn=_preset_temperature_unit,
+    ),
+    SkodaSensorEntityDescription(
         key="licence_plate",
+        translation_key="licence_plate",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:alpha-r-box-outline",
-        translation_key="licence_plate",
-    )
+        value_fn=_licence_plate_value,
+    ),
+)
+
+
+class SkodaSensor(SkodaEntity, SensorEntity):
+    """Generic Škoda sensor entity, driven entirely by its entity description."""
+
+    entity_description: SkodaSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: SkodaUpdateCoordinator,
+        description: SkodaSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor with a coordinator and its entity description."""
+        self.entity_description = description
+        super().__init__(coordinator, coordinator.vin)
 
     @property
     @override
-    def native_value(self) -> str | None:
-        oa_vehicle = self.open_api_vehicle
-        if oa_vehicle and oa_vehicle.license_plate:
-            return oa_vehicle.license_plate
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor, computed by the entity description."""
+        return self.entity_description.value_fn(self)
 
-        return None
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement, computed dynamically if the description asks for it."""
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self)
+        return super().native_unit_of_measurement
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SkodaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Škoda sensors from ConfigEntry runtime_data."""
+    coordinator = entry.runtime_data.coordinator
+    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
+    capabilities = (
+        vehicle_response.supported_capabilities() if vehicle_response else set()
+    )
+    vin = vehicle_response.vehicle.vin if vehicle_response else None
+    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
+
+    async_add_entities(
+        SkodaSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.is_supported(capabilities)
+    )

@@ -14,13 +14,10 @@ if TYPE_CHECKING:
 
 @dataclass
 class SkodaState:
-    """Vehicle state model reflecting OpenAPI status and response headers."""
+    """Vehicle state model reflecting OpenAPI status."""
 
     vin: str
     vehicle_response: VehicleResponse | None = None
-    api_key_expires_at: str | None = None
-    rate_limit_remaining: int | None = None
-    rate_limit_reset: int | None = None
 
 
 @dataclass

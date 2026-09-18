@@ -35,20 +35,21 @@
           "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home.",
           "vin": "The 17-character Vehicle Identification Number (VIN) of your vehicle."
         },
-        "description": "***Škoda Auto a.s.*** *in collaboration with* ***Mobility Lab VŠB TUO***.\n\nTo connect the vehicle, enter the **VIN** and **API key**.\n\nObtain your API key via the MyŠkoda application in section Profile -> Smart Home, or via the web portal:\n{portal_url}"
+        "description": "***Škoda Auto a.s.*** *in collaboration with* ***Mobility Lab VŠB TUO***.\n\nTo connect the vehicle, enter the **VIN** and **API key**.\n\nObtain your API key via the MyŠkoda application in section Profile -> Smart Home, or via the web portal:\n[{portal_url}]({portal_url})"
       }
     }
   },
   "entity": {
     "sensor": {
-      "api_key_expiration": {
-        "name": "API key expiration"
-      },
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"
       },
       "auxiliary_heating_mode": {
-        "name": "Auxiliary heating mode"
+        "name": "Auxiliary heating mode",
+        "state": {
+          "heating": "Heating",
+          "ventilation": "Ventilation"
+        }
       },
       "battery_percentage": {
         "name": "Battery state of charge"
@@ -88,17 +89,8 @@
       "mileage": {
         "name": "Mileage"
       },
-      "next_update_interval": {
-        "name": "Next update"
-      },
       "preset_temperature_value": {
         "name": "Target cabin temperature"
-      },
-      "rate_limit_remaining": {
-        "name": "API requests remaining"
-      },
-      "rate_limit_reset_seconds": {
-        "name": "API rate limit reset"
       },
       "remaining_ac_time": {
         "name": "Air conditioning remaining time"

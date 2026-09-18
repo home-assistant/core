@@ -115,7 +115,7 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_VEHICLE_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "portal_url": f"[{MYSKODA_URL}]({MYSKODA_URL})",
+                "portal_url": MYSKODA_URL,
             },
         )
 

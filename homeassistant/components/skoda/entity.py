@@ -1,7 +1,5 @@
 """Entity base for the Škoda integration."""
 
-from typing import override
-
 from skoda_public_api.models.active_ventilation import ActiveVentilation
 from skoda_public_api.models.air_conditioning import AirConditioning
 from skoda_public_api.models.auxiliary_heating import AuxiliaryHeating
@@ -27,35 +25,25 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
         """Initialize the entity with a unique ID based on VIN and entity key."""
         super().__init__(coordinator)
         self.vin = vin  # coordinator.vin
-
-        if not self.entity_description:
-            raise ValueError("Missing entity_description on class!")
-
-        if not self.entity_description.key:
-            raise ValueError("Entity description is missing a 'key'!")
-
         self._attr_unique_id = f"{vin}_{self.entity_description.key}"
 
-    @property
-    def api_key_expires_at(self) -> str | None:
-        """Return the API key expiration timestamp."""
-        if self.coordinator.data:
-            return self.coordinator.data.api_key_expires_at
-        return None
+        vehicle_name = "Škoda Vehicle"
+        if (
+            coordinator.data
+            and coordinator.data.vehicle_response
+            and coordinator.data.vehicle_response.vehicle
+        ):
+            vehicle_name = (
+                coordinator.data.vehicle_response.vehicle.name or f"Škoda {vin}"
+            )
 
-    @property
-    def rate_limit_remaining(self) -> int | None:
-        """Return the remaining rate limit requests."""
-        if self.coordinator.data:
-            return self.coordinator.data.rate_limit_remaining
-        return None
-
-    @property
-    def rate_limit_reset(self) -> int | None:
-        """Return seconds until the rate limit resets."""
-        if self.coordinator.data:
-            return self.coordinator.data.rate_limit_reset
-        return None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vin)},
+            name=vehicle_name,
+            manufacturer="Škoda Auto",
+            model=vehicle_name,
+            serial_number=vin,
+        )
 
     @property
     def open_api_vehicle(self) -> VehicleObject | None:
@@ -119,36 +107,3 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
         if self.coordinator.data and self.coordinator.data.vehicle_response:
             return self.coordinator.data.vehicle_response.vehicle.active_ventilation
         return None
-
-    @property
-    def is_charging_supported(self) -> bool:
-        """Universal decider method: Checks if the vehicle supports charging."""
-        return self.open_api_charging is not None
-
-    @property
-    def is_fuel_supported(self) -> bool:
-        """Universal decider method: Checks if the vehicle has a combustion engine (fuelStatus)."""
-        # Utilizes the open_api_driving_range property, which returns FuelStatus
-        return self.open_api_driving_range is not None
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Define the device information to group all entities under a single vehicle in the UI."""
-        vehicle_name = "Škoda Vehicle"
-        if (
-            self.coordinator.data
-            and self.coordinator.data.vehicle_response
-            and self.coordinator.data.vehicle_response.vehicle
-        ):
-            vehicle_name = (
-                self.coordinator.data.vehicle_response.vehicle.name
-                or f"Škoda {self.vin}"
-            )
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.vin)},
-            name=vehicle_name,
-            manufacturer="Škoda Auto",
-            model=vehicle_name,
-            serial_number=self.vin,
-        )
