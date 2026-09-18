@@ -263,7 +263,7 @@ async def test_get_live_context_tool_filter(
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(t for t in tools.tools if t.name == "homeassistant__GetLiveContext")
 
-    async def _get_live_context(tool_args: dict) -> dict:
+    async def _get_live_context(tool_args: dict) -> llm.ToolResult:
         return await tool.async_call(
             hass, llm.ToolInput("homeassistant__GetLiveContext", tool_args), llm_context
         )
