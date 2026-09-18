@@ -371,6 +371,35 @@ async def test_restore_missing_station(
     assert state.state == "not_home"
 
 
+async def test_restore_skips_unscoped_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device_registry_devices: dr.DeviceRegistry,
+    mock_repeater: MagicMock,
+) -> None:
+    """Test that a tracker unique_id without the entry prefix is not restored."""
+    entry = create_repeater_entry(hass)
+    entry.add_to_hass(hass)
+    # Pre-scoping unique_id format: the raw MAC without the entry prefix.
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        const.DOMAIN,
+        STATION_3_MAC,
+        config_entry=entry,
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # STATION_3 is not connected, so no scoped entity may be restored
+    # from the unscoped registry entry.
+    assert (
+        entity_registry.async_get_entity_id(
+            "device_tracker", const.DOMAIN, f"{entry.entry_id}_{STATION_3_MAC}"
+        )
+        is None
+    )
+
+
 async def test_unload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

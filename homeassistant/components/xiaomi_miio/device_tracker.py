@@ -29,22 +29,18 @@ async def async_setup_entry(
     # Restore entities for devices that were previously seen but are not
     # currently connected, so they keep reporting not_home instead of vanishing.
     entity_registry = er.async_get(hass)
+    # unique_id is f"{entry_id}_{mac}". format_mac passes unknown formats
+    # through unchanged, so the prefix is matched explicitly.
+    prefix = f"{entry.entry_id}_"
     restore_entities: list[XiaomiMiioRepeaterDevice] = []
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     ):
         if entity_entry.domain != "device_tracker" or not entity_entry.unique_id:
             continue
-        # unique_id is f"{entry_id}_{mac}"; entries without this entry's
-        # prefix are not station trackers and are skipped.
-        try:
-            mac = format_mac(entity_entry.unique_id.removeprefix(f"{entry.entry_id}_"))
-        except ValueError:
-            _LOGGER.debug(
-                "Skipping entity with invalid MAC address: %s",
-                entity_entry.unique_id,
-            )
+        if not entity_entry.unique_id.startswith(prefix):
             continue
+        mac = format_mac(entity_entry.unique_id.removeprefix(prefix))
         if mac not in tracked:
             tracked[mac] = entity = XiaomiMiioRepeaterDevice(coordinator, mac)
             restore_entities.append(entity)
