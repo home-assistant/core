@@ -44,11 +44,11 @@ PARALLEL_UPDATES = 0
 
 _COMBUSTION_CAR_TYPES = frozenset(
     {
-        VehicleCapability.CT_GASOLINE,
-        VehicleCapability.CT_DIESEL,
-        VehicleCapability.CT_HYBRID,
-        VehicleCapability.CT_CNG,
-        VehicleCapability.CT_LPG,
+        VehicleCapability.VEHICLE_TYPE_GASOLINE,
+        VehicleCapability.VEHICLE_TYPE_DIESEL,
+        VehicleCapability.VEHICLE_TYPE_HYBRID,
+        VehicleCapability.VEHICLE_TYPE_CNG,
+        VehicleCapability.VEHICLE_TYPE_LPG,
     }
 )
 
