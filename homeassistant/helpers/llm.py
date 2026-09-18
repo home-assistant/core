@@ -162,7 +162,7 @@ class ToolResult:
     error: bool = False
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ToolAnnotations:
     """Properties describing how a tool behaves.
 
