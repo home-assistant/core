@@ -2059,6 +2059,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
 /homeassistant/components/voip/ @synesthesiam @jaminh
 /tests/components/voip/ @synesthesiam @jaminh
+/homeassistant/components/volkszaehler/ @StefanSchoof
+/tests/components/volkszaehler/ @StefanSchoof
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn

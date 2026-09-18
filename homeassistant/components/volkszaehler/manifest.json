@@ -1,7 +1,7 @@
 {
   "domain": "volkszaehler",
   "name": "Volkszaehler",
-  "codeowners": [],
+  "codeowners": ["@StefanSchoof"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/volkszaehler",
   "integration_type": "device",
