@@ -16,6 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
@@ -39,6 +40,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Protect siren entities from a config entry."""
     data: ProtectData = entry.runtime_data
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        # A siren has no private counterpart, so the adopt path never offers
+        # one; it arrives through the public add signal in both modes.
+        if isinstance(device, Siren):
+            async_add_entities([ProtectSiren(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
 
     api = data.api
     if not api.has_public_bootstrap:
