@@ -30,14 +30,16 @@ NotificationItem = namedtuple(  # noqa: PYI024
 
 _original_local_net_id: str | None = None
 
-# set_local_address() is process-wide; serialize every override through this lock.
-_local_net_id_lock = threading.Lock()
+# set_local_address() rebinds the whole process, so a probe must never overlap a
+# hub's I/O; both take this lock. It is reentrant because connecting nests the
+# override, the port open and the state read underneath it.
+_ads_lock = threading.RLock()
 
 
 def apply_local_net_id(local_net_id: str | None) -> None:
     """Set a custom local AMS NetID, or restore the original once cleared."""
     global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
-    with _local_net_id_lock:
+    with _ads_lock:
         if local_net_id is None and _original_local_net_id is None:
             return
         pyads.open_port()
@@ -66,8 +68,9 @@ def local_net_id_probe(local_net_id: str | None) -> Iterator[None]:
     Restores whichever NetID was active beforehand, so a validation
     attempt never leaves process-wide ADS state changed.
     """
-    # The lock is held across the probe so another override cannot interleave.
-    with _local_net_id_lock:
+    # The lock is held across the probe so neither another override nor a hub's
+    # I/O can run while the candidate identity is active.
+    with _ads_lock:
         target_net_id = local_net_id or _original_local_net_id
         if target_net_id is None:
             yield
@@ -94,7 +97,6 @@ class AdsHub:
     def __init__(self, ads_client):
         """Initialize the ADS hub."""
         self._client = ads_client
-        self._client.open()
 
         # Cancelled on unload, before the notifications are torn down.
         self.resubscribe_task: asyncio.Task[None] | None = None
@@ -102,22 +104,24 @@ class AdsHub:
         # All ADS devices are registered here
         self._devices: list[AdsEntity] = []
         self._notification_items = {}
-        self._lock = threading.Lock()
         self._closed = False
-        # Separate from _lock, which is held across blocking PLC calls, so
+        # Separate from _ads_lock, which is held across blocking PLC calls, so
         # registering an entity never blocks the event loop.
         self._devices_lock = threading.Lock()
+
+        with _ads_lock:
+            self._client.open()
 
     def shutdown(self):
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
-        with self._lock:
+        with _ads_lock:
             self._closed = True
             notification_items = list(self._notification_items.values())
             self._notification_items.clear()
         # Deleting a notification waits for its in-flight callbacks, which take
-        # _lock themselves, so this has to run unlocked.
+        # _ads_lock themselves, so this has to run unlocked.
         for notification_item in notification_items:
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
@@ -158,7 +162,7 @@ class AdsHub:
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
 
-        with self._lock:
+        with _ads_lock:
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
@@ -167,18 +171,24 @@ class AdsHub:
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
 
-        with self._lock:
+        with _ads_lock:
             try:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
+
+    def read_state(self):
+        """Read the device state, raising if the device does not answer."""
+
+        with _ads_lock:
+            return self._client.read_state()
 
     def add_device_notification(self, name, plc_datatype, notification_callback):
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
-        with self._lock:
+        with _ads_lock:
             if self._closed:
                 _LOGGER.debug("Not subscribing to %s, the hub is shut down", name)
                 return
@@ -216,7 +226,7 @@ class AdsHub:
         data = (ctypes.c_ubyte * data_size).from_address(data_address)
 
         # Acquire notification item
-        with self._lock:
+        with _ads_lock:
             notification_item = self._notification_items.get(hnotify)
 
         if not notification_item:
@@ -256,6 +266,24 @@ class AdsHub:
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
+
+
+def connect(
+    device: str, port: int, ip_address: str | None, local_net_id: str | None
+) -> AdsHub:
+    """Connect to the ADS device and verify it responds."""
+    # Held across the whole handshake so a config flow probe cannot swap the
+    # local AMS NetID out from under the port open or the state read.
+    with _ads_lock:
+        apply_local_net_id(local_net_id)
+        hub = AdsHub(pyads.Connection(device, port, ip_address))
+        try:
+            hub.read_state()
+        except pyads.ADSError, RuntimeError:
+            # No notification is subscribed yet, so this cannot wait on a callback.
+            hub.shutdown()
+            raise
+        return hub
 
 
 type AdsConfigEntry = ConfigEntry[AdsHub]

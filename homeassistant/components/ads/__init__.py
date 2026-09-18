@@ -21,8 +21,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_DEVICES, DOMAIN, AdsType
-from .hub import AdsConfigEntry, AdsHub, apply_local_net_id
+from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_PREVIOUS_HUB, DOMAIN, AdsType
+from .hub import AdsConfigEntry, apply_local_net_id, connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,27 +146,16 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
     )
 
 
-def _connect(entry: AdsConfigEntry) -> AdsHub:
-    """Connect to the ADS device and verify it responds."""
-    apply_local_net_id(entry.data.get(CONF_LOCAL_NET_ID))
-    client = pyads.Connection(
-        entry.data[CONF_DEVICE],
-        entry.data[CONF_PORT],
-        entry.data.get(CONF_IP_ADDRESS),
-    )
-    hub = AdsHub(client)
-    try:
-        client.read_state()
-    except pyads.ADSError, RuntimeError:
-        hub.shutdown()
-        raise
-    return hub
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
     """Set up ADS from a config entry."""
     try:
-        hub = await hass.async_add_executor_job(_connect, entry)
+        hub = await hass.async_add_executor_job(
+            connect,
+            entry.data[CONF_DEVICE],
+            entry.data[CONF_PORT],
+            entry.data.get(CONF_IP_ADDRESS),
+            entry.data.get(CONF_LOCAL_NET_ID),
+        )
     except (pyads.ADSError, RuntimeError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -176,7 +165,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 
     entry.runtime_data = hub
 
-    if DOMAIN in hass.data and (devices := hass.data[DOMAIN].pop(DATA_DEVICES, None)):
+    if DOMAIN in hass.data and (
+        previous_hub := hass.data[DOMAIN].pop(DATA_PREVIOUS_HUB, None)
+    ):
+        # The previous hub stays the entities' registry while the entry is
+        # unloaded, so entities removed in the meantime are already gone here.
+        devices = previous_hub.devices
         # Rebind synchronously so a concurrent reload sees every device on the
         # hub, then resubscribe in the background since each one can take
         # up to 10s.
@@ -213,12 +207,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task
-    hass.data.setdefault(DOMAIN, {})[DATA_DEVICES] = list(hub.devices)
+    # Keep the hub as the registry for the YAML entities that outlive the entry,
+    # so they can be rebound once it is set up again.
+    hass.data.setdefault(DOMAIN, {})[DATA_PREVIOUS_HUB] = hub
     await hass.async_add_executor_job(hub.shutdown)
-    return True
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
-    """Restore the original local AMS NetID once the entry is removed."""
     if entry.data.get(CONF_LOCAL_NET_ID):
+        # The override is process-wide, so it must not outlive the connection.
         await hass.async_add_executor_job(apply_local_net_id, None)
+    return True

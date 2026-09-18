@@ -112,12 +112,12 @@ async def test_setup_with_local_net_id(
     mock_pyads_local_net_id.close_port.assert_called_once()
 
 
-async def test_remove_entry_restores_local_net_id(
+async def test_unload_restores_local_net_id(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
     mock_pyads_local_net_id: MockPyadsLocalNetId,
 ) -> None:
-    """Test removing the entry restores the original local AMS NetID."""
+    """Test unloading restores the original local AMS NetID."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=AMS_NET_ID,
@@ -132,27 +132,54 @@ async def test_remove_entry_restores_local_net_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     mock_pyads_local_net_id.set_local_address.assert_called_with(AUTO_NET_ID)
 
 
-async def test_remove_entry_without_local_net_id_is_noop(
+async def test_unload_without_local_net_id_is_noop(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyads_connection: MagicMock,
     mock_pyads_local_net_id: MockPyadsLocalNetId,
 ) -> None:
-    """Test removing an entry without a configured local NetID leaves pyads alone."""
+    """Test unloading an entry without a configured local NetID leaves pyads alone."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     mock_pyads_local_net_id.open_port.assert_not_called()
+
+
+async def test_entity_removed_while_unloaded_is_not_rebound(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+) -> None:
+    """Test an entity removed while the entry is unloaded is not resubscribed."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    original_hub = mock_config_entry.runtime_data
+    entity = AdsEntity(original_hub, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await entity.async_will_remove_from_hass()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity._ads_hub is original_hub
+    assert entity not in mock_config_entry.runtime_data.devices
 
 
 async def test_setup_not_ready(

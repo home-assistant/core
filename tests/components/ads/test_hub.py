@@ -1,11 +1,17 @@
 """Test the ADS hub."""
 
+import threading
 from unittest.mock import MagicMock
 
 import pyads
 import pytest
 
-from homeassistant.components.ads.hub import AdsHub, apply_local_net_id, async_get_hub
+from homeassistant.components.ads.hub import (
+    AdsHub,
+    apply_local_net_id,
+    async_get_hub,
+    local_net_id_probe,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 
@@ -159,6 +165,31 @@ def test_apply_local_net_id_restores_original(
     apply_local_net_id(None)
 
     mock_pyads_local_net_id.set_local_address.assert_called_with(AUTO_NET_ID)
+
+
+def test_probe_blocks_hub_io(
+    hub: AdsHub,
+    ads_client: MagicMock,
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test hub I/O cannot run while a probe holds a candidate local NetID."""
+    reading = threading.Event()
+
+    def _read() -> None:
+        reading.set()
+        hub.read_by_name("GVL.test", pyads.PLCTYPE_INT)
+
+    reader = threading.Thread(target=_read)
+    with local_net_id_probe(LOCAL_NET_ID):
+        reader.start()
+        reading.wait()
+        reader.join(timeout=0.1)
+
+        assert reader.is_alive()
+        ads_client.read_by_name.assert_not_called()
+
+    reader.join()
+    ads_client.read_by_name.assert_called_once()
 
 
 def test_add_device_notification_closed_connection(
