@@ -76,6 +76,29 @@ async def test_unload_entry(
     assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
 
 
+async def test_scheduled_refresh_is_not_forced(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a scheduled poll does not force a cache refresh.
+
+    BlinkPy propagates a forced refresh as ``force_cache=True`` to the sync
+    modules, which re-downloads media that is already cached. See #182552.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_blink_api.refresh.reset_mock()
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_blink_api.refresh.assert_awaited_once_with()
+
+
 async def test_migrate_V0(
     hass: HomeAssistant,
     mock_blink_api: MagicMock,
