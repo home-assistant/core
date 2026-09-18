@@ -260,15 +260,16 @@ async def test_user_flow_timeout_error_maps_to_ha_error(hass: HomeAssistant) -> 
     assert result["errors"] == {CONF_HOST: ERR_TIMEOUT}
 
 
-async def test_user_flow_disconnects_when_connection_test_raises(
+async def test_user_flow_shows_unknown_error_when_connection_test_raises(
     hass: HomeAssistant,
 ) -> None:
-    """An unexpected exception from connection_test() must not leak the socket.
+    """An unexpected exception from connection_test() degrades to a retryable error.
 
-    _validate_connection() previously only disconnected on the happy path;
-    an exception propagating out of connection_test() itself (rather than
-    the already-handled False-return case) skipped disconnect() and left
-    the WebSocket open.
+    _validate_connection() previously let such an exception propagate out of
+    the flow entirely (crashing it with an unhandled traceback) instead of
+    showing the user a normal, retryable "unknown" form error -- inconsistent
+    with every other connection helper here, which already catches and logs
+    broadly. It must also still disconnect, so the socket isn't leaked.
     """
     disconnect = AsyncMock(return_value=None)
     with (
@@ -281,10 +282,11 @@ async def test_user_flow_disconnects_when_connection_test_raises(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        with pytest.raises(RuntimeError, match="boom"):
-            await hass.config_entries.flow.async_configure(
-                result["flow_id"], _user_input()
-            )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input()
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "unknown"}
     disconnect.assert_awaited_once()
 
 
@@ -338,6 +340,36 @@ async def test_async_probe_candidate_false_when_unreachable() -> None:
         patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
     ):
         assert await config_flow._async_probe_candidate("192.168.1.50") is False
+
+
+async def test_async_probe_candidate_only_tries_wss() -> None:
+    """The probe constructs exactly one TrueNASAPI, with scheme="wss" -- never "ws".
+
+    Regression test: a candidate that only answers on plain ws can never
+    complete setup (the config flow has no scheme field and every later
+    connection defaults to wss), so probing ws during discovery would
+    misleadingly "find" a host that can't actually be used.
+    """
+
+    async def _fake_connect(
+        self: config_flow.TrueNASAPI, *, quiet: bool = False
+    ) -> bool:
+        self._error = ERR_CONNECTION_REFUSED
+        return False
+
+    with (
+        patch(f"{_API_PATH}.connect", _fake_connect),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+        patch(
+            "homeassistant.components.truenas_ce.config_flow.TrueNASAPI",
+            wraps=config_flow.TrueNASAPI,
+        ) as mock_api_cls,
+    ):
+        await config_flow._async_probe_candidate("192.168.1.50")
+
+    mock_api_cls.assert_called_once_with(
+        "192.168.1.50", "-", verify_ssl=False, scheme="wss"
+    )
 
 
 async def test_zeroconf_flow_confirms_and_creates_entry(hass: HomeAssistant) -> None:

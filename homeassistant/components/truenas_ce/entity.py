@@ -3,10 +3,8 @@
 from asyncio import Lock
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from functools import lru_cache
-import inspect
 from logging import getLogger
-from typing import Any, cast, override
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_NAME
@@ -82,18 +80,6 @@ def format_device_identifier(identity: str) -> str:
     other platforms (e.g. the statistics-cleanup button) reuse it.
     """
     return identity
-
-
-@lru_cache(maxsize=1)
-def _supports_via_device_id() -> bool:
-    """Whether the running HA Core's device registry accepts via_device_id.
-
-    Added in HA Core 2026.8; older cores raise TypeError on the kwarg.
-    """
-    return (
-        "via_device_id"
-        in inspect.signature(dr.DeviceRegistry.async_get_or_create).parameters
-    )
 
 
 def register_system_device(
@@ -550,27 +536,17 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
                 configuration_url=f"{http_scheme}://{self.coordinator.config_entry.data[CONF_HOST]}",
             )
 
-        # Plain dict, not DeviceInfo: via_device_id was only added to that
-        # TypedDict in HA Core 2026.8 (see _supports_via_device_id()), and
-        # DEVICE_INFO_TYPES only allows default_name/model/manufacturer with
-        # "connections", not "identifiers" -- so plain name/model/manufacturer
-        # keys are required here instead.
         system_info = self.coordinator.data["system_info"]
-        device_info: dict[str, Any] = {
-            "identifiers": {(dev_connection, f"{dev_connection_value}")},
-            "name": f"{self._inst} {dev_group}",
-            "model": f"{system_info['system_product']}",
-            "manufacturer": f"{system_info['system_manufacturer']}",
-        }
+        device_info = DeviceInfo(
+            identifiers={(dev_connection, f"{dev_connection_value}")},
+            name=f"{self._inst} {dev_group}",
+            model=f"{system_info['system_product']}",
+            manufacturer=f"{system_info['system_manufacturer']}",
+        )
         system_device_id = self.coordinator.system_device_id
-        if _supports_via_device_id() and system_device_id is not None:
+        if system_device_id is not None:
             device_info["via_device_id"] = system_device_id
-        else:
-            device_info["via_device"] = (
-                DOMAIN,
-                format_device_identifier(self._identity),
-            )
-        return cast(DeviceInfo, device_info)
+        return device_info
 
     @property
     @override

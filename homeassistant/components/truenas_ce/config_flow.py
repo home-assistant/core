@@ -125,8 +125,9 @@ async def _async_safe_disconnect(api: TrueNASAPI) -> None:
         await api.disconnect()
 
 
-# ws/wss already default to 80/443; an mDNS-advertised port matching one of
-# those adds nothing over probing the bare host.
+# 443 is the wss default; 80 is the web UI's plain-HTTP port, worthless to
+# retry now that only wss is probed. Either way, an mDNS announcement naming
+# one of them adds nothing over probing the bare host.
 _DEFAULT_WS_PORTS = frozenset({80, 443})
 
 
@@ -145,19 +146,19 @@ def _probe_candidates(host: str, port: int | None) -> list[str]:
 async def _async_probe_candidate(host: str) -> bool:
     """Return True only if ``host`` rejects a bogus API key as invalid.
 
-    Only a genuine TrueNAS JSON-RPC endpoint answers ``ERR_INVALID_KEY``.
+    Only a genuine TrueNAS JSON-RPC endpoint answers ``ERR_INVALID_KEY``. Only
+    ``wss`` is probed: validation and every later connection always default to
+    ``wss`` too (the config flow has no scheme field), so a candidate that only
+    answers on plain ``ws`` could never complete setup regardless.
     """
-    for scheme in ("wss", "ws"):
-        api = TrueNASAPI(host, "-", verify_ssl=False, scheme=scheme)
-        try:
-            # connect() returns False either way, so api.error (not the
-            # return value) is what distinguishes a rejected key from "unreachable".
-            await _async_try_connect(api, host, f"probe ({scheme}) is not reachable")
-            if api.error == ERR_INVALID_KEY:
-                return True
-        finally:
-            await _async_safe_disconnect(api)
-    return False
+    api = TrueNASAPI(host, "-", verify_ssl=False, scheme="wss")
+    try:
+        # connect() returns False either way, so api.error (not the return
+        # value) is what distinguishes a rejected key from "unreachable".
+        await _async_try_connect(api, host, "probe is not reachable")
+        return api.error == ERR_INVALID_KEY
+    finally:
+        await _async_safe_disconnect(api)
 
 
 async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
@@ -237,6 +238,14 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         errorcode = ""
         try:
             conn, errorcode = await api.connection_test()
+        except Exception:
+            # A bug inside aiotruenas itself must degrade to a retryable
+            # "unknown" form error, not crash the flow.
+            _LOGGER.exception(
+                "TrueNAS %s: connection_test() raised unexpectedly",
+                config.get(CONF_HOST, ""),
+            )
+        else:
             if conn:
                 system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
                 if system_id:
@@ -246,10 +255,8 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                         api, config.get(CONF_HOST, "")
                     )
         finally:
-            # connection_test() can propagate a non-TrueNASError (e.g. a bug
-            # inside aiotruenas itself); disconnecting here too, not just on
-            # the happy path, ensures an already-open WebSocket is never
-            # leaked when that happens.
+            # Runs on both the success and the swallowed-exception path, so
+            # an already-open WebSocket is never leaked either way.
             await _async_safe_disconnect(api)
 
         if not conn:

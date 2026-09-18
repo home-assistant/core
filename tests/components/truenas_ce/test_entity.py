@@ -462,40 +462,16 @@ def test_device_info_system_group_https_when_wss() -> None:
     assert entity.device_info["configuration_url"] == "https://truenas.local"
 
 
-def test_device_info_non_system_group_uses_via_device_id_when_supported() -> None:
-    """A non-system group links via via_device_id when HA Core supports it."""
+def test_device_info_non_system_group_uses_via_device_id() -> None:
+    """A non-system group links to the System device via via_device_id."""
     desc = TrueNASEntityDescription(
         key="disk_temp", name="Temperature", data_path="disk", ha_group="Disks"
     )
     entity = _make_entity(description=desc)
-    with patch(
-        "homeassistant.components.truenas_ce.entity._supports_via_device_id",
-        return_value=True,
-    ):
-        info = entity.device_info
+    info = entity.device_info
     assert info["name"] == "TrueNAS Disks"
     assert info["via_device_id"] == "test-system-device-id"
     assert "via_device" not in info
-
-
-def test_device_info_non_system_group_falls_back_to_via_device() -> None:
-    """Older HA Core (pre-2026.8) doesn't accept via_device_id -- see _supports_via_device_id().
-
-    These installs must keep getting the older identifiers-tuple form so
-    device linkage isn't silently lost.
-    """
-    desc = TrueNASEntityDescription(
-        key="disk_temp", name="Temperature", data_path="disk", ha_group="Disks"
-    )
-    entity = _make_entity(description=desc)
-    with patch(
-        "homeassistant.components.truenas_ce.entity._supports_via_device_id",
-        return_value=False,
-    ):
-        info = entity.device_info
-    assert info["name"] == "TrueNAS Disks"
-    assert info["via_device"] == ("truenas_ce", "TrueNAS")
-    assert "via_device_id" not in info
 
 
 def test_device_info_data_group_resolves_group_from_data() -> None:
