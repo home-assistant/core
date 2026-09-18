@@ -3,9 +3,19 @@
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
 from .const import DOMAIN
+
+# A broadcast announces something every time it is called and takes nothing
+# away, and it only reaches the user's own satellites.
+LLM_ANNOTATIONS = ToolAnnotations(destructive=False, open_world=False)
 
 
 @callback
@@ -19,7 +29,12 @@ def async_get_tools(
     # assist_satellite registers the broadcast intent when it is set up, and
     # this platform is only queried once that has happened.
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            integration=DOMAIN,
+            annotations=LLM_ANNOTATIONS,
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type == intent.INTENT_BROADCAST
     ]
