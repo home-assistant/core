@@ -1,0 +1,1 @@
+"""The Xiaomi Weather integration."""
