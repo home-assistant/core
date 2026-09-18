@@ -1,5 +1,6 @@
 """Client transport and parsing contract tests."""
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock
@@ -74,6 +75,31 @@ def test_optional_data(payload: dict[str, Any]) -> None:
     data = parse_weather({"current": payload["current"]})
     assert data.daily == ()
     assert data.hourly == ()
+
+
+@pytest.mark.parametrize(
+    ("key", "attribute"),
+    [
+        pytest.param("humidity", "humidity", id="humidity"),
+        pytest.param("pressure", "pressure", id="pressure"),
+        pytest.param("feelsLike", "apparent_temperature", id="feels-like"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(None, id="null"),
+        pytest.param([], id="list"),
+        pytest.param("invalid", id="string"),
+    ],
+)
+def test_malformed_optional_measurement(
+    payload: dict[str, Any], key: str, attribute: str, value: object
+) -> None:
+    """A malformed optional measurement must not discard valid weather data."""
+    expected = replace(parse_weather(payload), **{attribute: None})
+    payload["current"][key] = value
+    assert parse_weather(payload) == expected
 
 
 def test_unknown_condition(payload: dict[str, Any]) -> None:
