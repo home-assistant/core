@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
+async def test_binary_sensor_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the binary sensor setup and state."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -62,7 +64,6 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
 
         # Verify unique_id generation logic indirectly via registry or by checking the entity attribute if accessible
         # But we can check if the entity exists in registry
-        entity_registry = er.async_get(hass)
         entry_entity = entity_registry.async_get(entity_id)
         assert entry_entity
         assert entry_entity.unique_id == f"{entry.entry_id}_192.168.1.10_input_1"

@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_switch_setup_and_control(hass: HomeAssistant) -> None:
+async def test_switch_setup_and_control(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the switch setup, state, and control."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -67,7 +69,6 @@ async def test_switch_setup_and_control(hass: HomeAssistant) -> None:
         assert state.state == "on"
 
         # Verify unique_id generation logic
-        entity_registry = er.async_get(hass)
         entry_entity = entity_registry.async_get(entity_id)
         assert entry_entity
         assert entry_entity.unique_id == f"{entry.entry_id}_192.168.1.10_relay_1"
