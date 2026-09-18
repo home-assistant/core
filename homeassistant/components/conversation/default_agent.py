@@ -1444,8 +1444,8 @@ class DefaultAgent(ConversationEntity):
         else:
             response_key = error_key
 
-        # Most languages translate only some of the errors, so prefer their own
-        # generic one over the English default a missing key would otherwise give
+        # A new error reaches here before every language has translated it, so
+        # prefer the language's own generic error over the English default
         response_str = (
             lang_intents.error_responses.get(response_key)
             or lang_intents.error_responses.get(ErrorKey.NO_INTENT.value)
