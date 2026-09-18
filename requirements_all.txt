@@ -2663,7 +2663,7 @@ pysmlight==0.5.3
 pysnmp==7.1.27
 
 # homeassistant.components.snooz
-pysnooz==0.8.6
+pysnooz==0.10.0
 
 # homeassistant.components.soma
 pysoma==0.0.12
