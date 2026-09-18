@@ -419,6 +419,17 @@ async def test_service_delete_mealplan(
     )
     mock_mealie_client.delete_mealplan.assert_called_with("mealplan_id")
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DELETE_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_MEALPLAN_ID: 16,
+        },
+        blocking=True,
+    )
+    mock_mealie_client.delete_mealplan.assert_called_with("16")
+
 
 async def test_service_delete_mealplan_not_found(
     hass: HomeAssistant,
@@ -515,6 +526,23 @@ async def test_service_update_mealplan(
         "mealplan_id", date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
 
+    mock_mealie_client.update_mealplan.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_MEALPLAN,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_MEALPLAN_ID: 16,
+            ATTR_DATE: "2023-10-21",
+            ATTR_ENTRY_TYPE: "lunch",
+        }
+        | payload,
+        blocking=True,
+        return_response=False,
+    )
+    mock_mealie_client.update_mealplan.assert_called_with(
+        "16", date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+    )
 
 async def test_service_update_mealplan_invalid_entry_type(
     hass: HomeAssistant,
