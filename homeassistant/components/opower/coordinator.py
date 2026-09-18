@@ -107,10 +107,10 @@ def _period_components(cost_read: CostRead) -> list[ReadComponent]:
     Some utilities return daily components that do not add up to the read
     they belong to, while their hourly components do. Feeding those into the
     period statistics would store a breakdown that contradicts the totals,
-    so such reads are left out of the periods. So is a read with a component
-    that belongs to no rate period, since the periods would not add up to
-    the read without it. Components that contribute nothing are dropped, so
-    a period that never moves is not created.
+    so such reads contribute nothing to the periods. Nor does a read with a
+    component that belongs to no rate period, since the periods would not
+    add up to the read without it. Components that contribute nothing are
+    dropped, so a period that never moves is not created.
     """
     components = [
         component
@@ -500,8 +500,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 # stored statistics, so each skips the reads up to its own last
                 # stored point. A period that has none yet, e.g. right after
                 # upgrading, must not skip the reads the totals already have.
-                # A read whose components do not add up to it, or that has no
-                # components at all, contributes nothing to the periods.
+                # A read without a breakdown, e.g. a monthly bill, is skipped.
+                # A read whose breakdown does not add up to it gets a zero
+                # point in every period, so a read that stops adding up after
+                # a correction replaces its old point instead of keeping it.
                 components = _period_components(cost_read)
                 period_consumption = dict.fromkeys(rate_periods, 0.0)
                 period_cost = dict.fromkeys(rate_periods, 0.0)
@@ -511,7 +513,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     period_consumption[key] += component.consumption
                     period_cost[key] += component.cost
                 for key, rate_period in rate_periods.items():
-                    if not components or (
+                    if not cost_read.read_components or (
                         rate_period.last_stats_time is not None
                         and start.timestamp() <= rate_period.last_stats_time
                     ):
@@ -622,7 +624,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         that it continues from its last stored point, e.g. a summer-only period
         seen again after winter. A period that has never been stored, or whose
         statistics have been partly deleted, starts from zero and keeps
-        last_stats_time None so it is backfilled from the full history.
+        last_stats_time None so it is backfilled from the full history. The
+        backfill only writes; nothing is ever deleted on the user's behalf.
         """
         statistic_ids = set().union(
             *(rate_period.statistic_ids() for rate_period in rate_periods.values())
@@ -664,15 +667,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             ):
                 if records:
                     # Partly deleted, or out of step: start the period over from
-                    # zero. Clear what is left first, so rows the full history no
-                    # longer produces, e.g. hourly reads that have since been
-                    # replaced by daily reads, do not survive with stale sums.
+                    # zero. What is left is overwritten, not deleted.
                     _LOGGER.debug(
                         "Rebuilding rate period statistics %s",
                         sorted(rate_period.statistic_ids()),
-                    )
-                    get_instance(self.hass).async_clear_statistics(
-                        sorted(rate_period.statistic_ids())
                     )
                 continue
             rate_period.last_stats_time = float(records["consumption"][0]["start"])

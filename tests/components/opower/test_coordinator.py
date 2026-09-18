@@ -810,8 +810,8 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     """Test reads whose components do not add up to the read are left out.
 
     Some utilities return daily components that do not sum to the read while
-    the hourly ones do. Such reads must not feed the period statistics, and a
-    period only seen in such reads must not be created.
+    the hourly ones do. Such reads must feed nothing into the period
+    statistics, and a period only seen in such reads must not be created.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
     mock_opower_api.async_get_cost_reads.return_value = [
@@ -826,7 +826,7 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
                 _read_component("ON_PEAK", 1.0, 0.25),
             ],
         ),
-        # Does not add up: skipped, and its extra period is never created
+        # Does not add up: a zero point, and its extra period is never created
         CostRead(
             start_time=hour[1],
             end_time=hour[2],
@@ -864,6 +864,7 @@ async def test_coordinator_rate_periods_skip_reads_that_do_not_add_up(
     assert "opower:pge_elec_111111_part_peak_energy_consumption" not in stats
     assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
         (hour[0].timestamp(), 2.0, 2.0),
+        (hour[1].timestamp(), 0.0, 2.0),
         (hour[2].timestamp(), 1.0, 3.0),
     ]
 
@@ -874,7 +875,7 @@ async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test reads with a component that belongs to no rate period are left out.
+    """Test reads with a component that belongs to no rate period feed nothing.
 
     Such a read can add up as a whole while the periods it feeds would not,
     since the component without a period is written nowhere.
@@ -916,6 +917,7 @@ async def test_coordinator_rate_periods_skip_reads_with_unkeyed_components(
         {"state", "sum"},
     )
     assert [(s["start"], s["state"], s["sum"]) for s in stats[off_peak_id]] == [
+        (hour[0].timestamp(), 0.0, 0.0),
         (hour[1].timestamp(), 1.0, 1.0),
     ]
 
@@ -1188,7 +1190,8 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     The four statistics of a period are resumed together. If one of them is
     gone, e.g. deleted in Developer tools, the period starts over from the
     full history instead of resuming the others from a point the deleted one
-    no longer has.
+    no longer has. The rebuild overwrites what is left and deletes nothing:
+    a row the history no longer produces stays as it is.
     """
     hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(3)]
 
@@ -1214,7 +1217,7 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
     await async_wait_recording_done(hass)
 
     # The history no longer contains the first read, as happens when hourly
-    # reads age into daily reads. The rebuilt series must not keep its row.
+    # reads age into daily reads. Its old row is left alone.
     mock_opower_api.async_get_cost_reads.return_value = [read(1), read(2)]
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -1234,6 +1237,7 @@ async def test_coordinator_rate_periods_rebuilt_after_partial_delete(
         (hour[2].timestamp(), 1.25),
     ]
     assert [(s["start"], s["sum"]) for s in stats[consumption_id]] == [
+        (hour[0].timestamp(), 1.0),
         (hour[1].timestamp(), 2.0),
         (hour[2].timestamp(), 5.0),
     ]
