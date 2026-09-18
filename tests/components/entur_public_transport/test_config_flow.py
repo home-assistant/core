@@ -15,8 +15,22 @@ from homeassistant.components.entur_public_transport.api import (
     EnturStopPlace,
 )
 from homeassistant.components.entur_public_transport.config_flow import (
+    EnturConfigFlow,
     _async_reconcile_subentry_entities,
     _combine_line_whitelist,
+    _configured_platform_summary,
+    _configured_route_summary,
+    _parse_line_whitelist,
+    _place_description,
+    _platform_schema,
+    _platform_selection,
+    _platform_status,
+    _route_labels,
+    _route_schema,
+    _route_status,
+    _selection_option,
+    _stop_is_configured,
+    _stop_selector_schema,
 )
 from homeassistant.components.entur_public_transport.const import (
     CONF_EXPAND_PLATFORMS,
@@ -813,3 +827,103 @@ def test_combine_line_whitelist_parses_manual_multiline_ids() -> None:
         ["RUT:Line:1"],
         "SKY:Line:2" + chr(10) + "GOA:Line:3, RUT:Line:1",
     ) == ["RUT:Line:1", "SKY:Line:2", "GOA:Line:3"]
+
+
+def test_config_flow_helpers_cover_selection_and_fallbacks() -> None:
+    """Test the helper branches used to build Entur configuration forms."""
+    route = EnturRoute(line_id="RUT:Line:1", public_code="1", transport_mode="bus")
+    quay = EnturQuay(quay_id="NSR:Quay:1", name="Central station", public_code="A")
+    place = EnturStopPlace(
+        stop_id="NSR:StopPlace:1",
+        name="Central station",
+        display_name="Central station",
+        locality="",
+        transport_modes=(),
+        role="parent",
+        stop_place_types=(),
+    )
+
+    assert _parse_line_whitelist([" RUT:Line:1 ", "", "RUT:Line:1"]) == ["RUT:Line:1"]
+    assert _parse_line_whitelist("RUT:Line:1, SKY:Line:2") == [
+        "RUT:Line:1",
+        "SKY:Line:2",
+    ]
+    assert _selection_option("id", "Label") == {"value": "id", "label": "Label"}
+    assert _route_schema((), ["MANUAL:Line:1"])
+    assert _route_schema((route,), [route.line_id, "MANUAL:Line:1"])
+    assert _platform_schema((), PLATFORM_MODE_STOP_PLACE, [], False)
+    assert _platform_schema(
+        (quay,), PLATFORM_MODE_SELECTED, [quay.quay_id, "NSR:Quay:2"], True
+    )
+    assert _stop_selector_schema((place,))
+    assert EnturConfigFlow.async_get_supported_subentry_types(MockConfigEntry())
+
+    assert _platform_selection(
+        {CONF_PLATFORM_MODE: "invalid", CONF_QUAY_IDS: [quay.quay_id]}, (quay,)
+    ) == (PLATFORM_MODE_STOP_PLACE, [quay.quay_id])
+    assert _platform_selection(
+        {
+            CONF_PLATFORM_MODE: PLATFORM_MODE_SELECTED,
+            CONF_QUAY_IDS: [quay.quay_id, quay.quay_id, "NSR:Quay:2"],
+        },
+        (quay,),
+    ) == (PLATFORM_MODE_SELECTED, [quay.quay_id])
+    assert _route_status((route,), False).startswith("Choose routes")
+    assert _route_status((), True).startswith("The route list")
+    assert _route_status((), False).startswith("No routes")
+    assert _platform_status(PLATFORM_MODE_STOP_PLACE, [], (), False).startswith(
+        "One sensor for the whole"
+    )
+    assert _platform_status(PLATFORM_MODE_ALL, [], (), False).startswith(
+        "One sensor for the stop"
+    )
+    assert _platform_status(
+        PLATFORM_MODE_SELECTED, [quay.quay_id], (quay,), False
+    ).endswith("Central station.")
+    assert _platform_status(PLATFORM_MODE_SELECTED, [], (), True).startswith(
+        "The platform list"
+    )
+    assert (
+        _platform_status(PLATFORM_MODE_SELECTED, [], (), False)
+        == "Select at least one platform."
+    )
+    assert _configured_route_summary([], {}) == "All routes"
+    assert _configured_route_summary(["MANUAL:Line:1"], {}) == "1 MANUAL (1-MANUAL)"
+    assert (
+        _configured_platform_summary(PLATFORM_MODE_STOP_PLACE, []) == "Whole stop place"
+    )
+    assert _configured_platform_summary(PLATFORM_MODE_SELECTED, [quay.quay_id]) == (
+        "1 selected platform(s)"
+    )
+    assert _configured_platform_summary(PLATFORM_MODE_ALL, []) == "All active platforms"
+    assert _route_labels(
+        [route.line_id, "MANUAL:Line:1"], (route,), {"MANUAL:Line:1": "Manual"}
+    ) == {route.line_id: "1 RUT (1-RUT)", "MANUAL:Line:1": "Manual"}
+    assert _place_description(place, "Routes", "Platforms") == {
+        "name": "Central station",
+        "display_name": "Central station",
+        "locality": "Unknown",
+        "transport_modes": "Unknown",
+        "route_status": "Routes",
+        "platform_status": "Platforms",
+        "stop_id": "NSR:StopPlace:1",
+        "role": "transport hub",
+        "stop_place_types": "unknown",
+        "entur_url": "https://entur.no/nearby-stop-place-detail?id=NSR%3AStopPlace%3A1",
+    }
+
+    entry = MockConfigEntry(
+        data={CONF_STOP_IDS: ["NSR:StopPlace:legacy"]},
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "data": {CONF_STOP_ID: "NSR:StopPlace:1"},
+            }
+        ],
+    )
+    assert _stop_is_configured(entry, "NSR:StopPlace:legacy")
+    assert _stop_is_configured(entry, "NSR:StopPlace:1")
+    assert not _stop_is_configured(
+        entry, "NSR:StopPlace:1", exclude_subentry_id="stop-subentry"
+    )
