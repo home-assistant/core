@@ -5,8 +5,8 @@ import json
 from typing import Any
 from unittest.mock import call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.mqtt.const import DOMAIN
@@ -167,7 +167,7 @@ async def test_set_operation_mode_bad_attr_and_state(
 
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)  # type:ignore[arg-type]
     assert "string value is None at 'operation_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_WATER_HEATER)

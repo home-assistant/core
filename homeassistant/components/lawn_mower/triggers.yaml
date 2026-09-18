@@ -20,3 +20,4 @@ errored: *trigger_common
 paused_mowing: *trigger_common
 started_mowing: *trigger_common
 started_returning: *trigger_common
+became_idle: *trigger_common

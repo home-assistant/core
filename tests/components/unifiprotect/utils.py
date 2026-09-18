@@ -269,6 +269,7 @@ _PUBLIC_STORE_ATTRS: dict[ModelType, str] = {
     ModelType.SENSOR: "sensors",
     ModelType.CHIME: "chimes",
     ModelType.VIEWPORT: "viewers",
+    ModelType.FOB: "fobs",
 }
 
 

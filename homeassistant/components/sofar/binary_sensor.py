@@ -1,8 +1,10 @@
 """Support for Sofar binary sensors."""
 
 from dataclasses import dataclass
+from enum import IntFlag
 from typing import override
 
+from sofar_modbus.modern.enums import PowerControlFlags
 from sofar_modbus.modern.faults import FaultCategory
 
 from homeassistant.components.binary_sensor import (
@@ -52,6 +54,29 @@ FAULT_SENSOR_DESCRIPTIONS: tuple[SofarFaultBinarySensorDescription, ...] = tuple
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class SofarFlagBinarySensorDescription(
+    SofarEntityDescription, BinarySensorEntityDescription
+):
+    """Describe a Sofar binary sensor backed by one flags-register bit."""
+
+    attribute: str
+    flag: IntFlag
+
+
+FLAG_SENSOR_DESCRIPTIONS: tuple[SofarFlagBinarySensorDescription, ...] = (
+    SofarFlagBinarySensorDescription(
+        key="active_power_limit_enabled",
+        component="active_power_control",
+        translation_key="active_power_limit_enabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        attribute="power_control",
+        flag=PowerControlFlags.ACTIVE_POWER,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SofarConfigEntry,
@@ -63,6 +88,11 @@ async def async_setup_entry(
     async_add_entities(
         SofarFaultBinarySensor(runtime_data, description)
         for description in FAULT_SENSOR_DESCRIPTIONS
+        if description.component in served
+    )
+    async_add_entities(
+        SofarFlagBinarySensor(runtime_data, description)
+        for description in FLAG_SENSOR_DESCRIPTIONS
         if description.component in served
     )
 
@@ -80,3 +110,16 @@ class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):
             fault.category is self.entity_description.category
             for fault in component.active_faults
         )
+
+
+class SofarFlagBinarySensor(SofarEntity, BinarySensorEntity):
+    """Reports whether one bit of a flags register is set."""
+
+    entity_description: SofarFlagBinarySensorDescription
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        component = getattr(self.coordinator.device, self.entity_description.component)
+        flags = getattr(component, self.entity_description.attribute)
+        return self.entity_description.flag in flags
