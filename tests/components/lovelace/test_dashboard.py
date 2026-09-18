@@ -399,7 +399,9 @@ async def test_referenced_files_follows_real_includes(tmp_path: Path) -> None:
 
 
 @pytest.fixture
-def yaml_dashboard(hass: HomeAssistant, tmp_path: Path) -> dashboard.LovelaceYAML:
+def yaml_dashboard(
+    hass: HomeAssistant, tmp_path: Path
+) -> Generator[dashboard.LovelaceYAML]:
     """Return a YAML dashboard backed by a real config directory."""
     with patch.object(hass.config, "config_dir", str(tmp_path)):
         yield dashboard.LovelaceYAML(hass, None, {"filename": "ui-lovelace.yaml"})
