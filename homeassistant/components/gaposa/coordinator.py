@@ -1,6 +1,6 @@
 """Data update coordinator for the Gaposa integration."""
 
-from asyncio import timeout
+from asyncio import Lock, timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -44,7 +44,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         )
         self.devices: list[Device] = []
         self._listener: Callable[[], None] | None = None
-        self._updating = False
+        self._update_lock = Lock()
 
     @override
     async def _async_setup(self) -> None:
@@ -72,22 +72,24 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     @override
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
-        # Suppress pygaposa post-command listener pushes during scheduled refresh.
-        self._updating = True
-        try:
-            async with timeout(10):
-                await self.gaposa.update()
-        except (GaposaAuthException, FirebaseAuthException) as exc:
-            # Signal reauth (if configured) instead of tight retry —
-            # a fast retry loop cannot recover from bad credentials.
-            raise ConfigEntryAuthFailed(f"Gaposa authentication failed: {exc}") from exc
-        except (ClientError, TimeoutError, OSError) as exc:
-            raise UpdateFailed(
-                f"Error talking to Gaposa: {exc}",
-                retry_after=UPDATE_INTERVAL_FAST,
-            ) from exc
-        finally:
-            self._updating = False
+        # Held for the duration of the poll so _on_device_polled can
+        # suppress pygaposa's post-command listener pushes during a
+        # scheduled refresh.
+        async with self._update_lock:
+            try:
+                async with timeout(10):
+                    await self.gaposa.update()
+            except (GaposaAuthException, FirebaseAuthException) as exc:
+                # Signal reauth (if configured) instead of tight retry —
+                # a fast retry loop cannot recover from bad credentials.
+                raise ConfigEntryAuthFailed(
+                    f"Gaposa authentication failed: {exc}"
+                ) from exc
+            except (ClientError, TimeoutError, OSError) as exc:
+                raise UpdateFailed(
+                    f"Error talking to Gaposa: {exc}",
+                    retry_after=UPDATE_INTERVAL_FAST,
+                ) from exc
 
         # pygaposa polls the Firestore REST API internally after commands
         # (every 2 s for ~20 s). Register a listener on each device so
@@ -134,11 +136,11 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         waiting for the next scheduled coordinator refresh.
 
         Scheduled updates don't fire this — pygaposa's Gaposa.update()
-        defaults notifyListeners=False — but the _updating gate is
-        kept as a safety net in case a command-driven poll fires
-        while a scheduled refresh is also in flight.
+        defaults notifyListeners=False — but the lock gate is kept as
+        a safety net in case a command-driven poll fires while a
+        scheduled refresh is also in flight.
         """
-        if self._updating:
+        if self._update_lock.locked():
             return
         _LOGGER.debug("Gaposa device polled, pushing new data")
         self.async_set_updated_data(self._get_data_from_devices())
@@ -157,6 +159,5 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
                 device.removeListener(self._listener)
             self._listener = None
         self.devices = []
-        gaposa = self.__dict__.pop("gaposa", None)
-        if gaposa is not None:
+        if gaposa := self.__dict__.pop("gaposa", None):
             await gaposa.close()
