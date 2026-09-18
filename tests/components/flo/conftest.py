@@ -73,6 +73,13 @@ def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
         status=HTTPStatus.OK,
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
+    # Mocks Flo Detect events for flo.
+    aioclient_mock.get(
+        "https://api-gw.meetflo.com/api/v2/flodetect/events",
+        text=load_fixture("flo/flodetect_events_response.json"),
+        status=HTTPStatus.OK,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
     # Mocks the location info for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/locations/mmnnoopp",
