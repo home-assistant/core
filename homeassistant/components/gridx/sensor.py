@@ -122,7 +122,6 @@ SENSOR_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
             else None
         ),
     ),
-    # Battery
     GridxSensorEntityDescription(
         key="battery_state_of_charge",
         translation_key="battery_state_of_charge",
@@ -167,7 +166,6 @@ SENSOR_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_battery("remainingCharge"),
     ),
-    # EV charging station
     GridxSensorEntityDescription(
         key="ev_power",
         translation_key="ev_power",
