@@ -2,18 +2,12 @@
 
 import logging
 
-from marantz_rs232 import (
-    MarantzV2003Receiver,
-    MarantzV2007Receiver,
-    MarantzV2015Receiver,
-)
+from marantz_rs232 import MarantzV2007Receiver
 
 from homeassistant.config_entries import ConfigEntry
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "marantz_rs232"
+MODEL = "SR7002"
 
-type MarantzReceiver = (
-    MarantzV2015Receiver | MarantzV2007Receiver | MarantzV2003Receiver
-)
-type MarantzRS232ConfigEntry = ConfigEntry[MarantzReceiver]
+type MarantzRS232ConfigEntry = ConfigEntry[MarantzV2007Receiver]

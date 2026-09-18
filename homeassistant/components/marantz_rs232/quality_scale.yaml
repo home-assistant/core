@@ -8,6 +8,12 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -27,7 +33,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
 
