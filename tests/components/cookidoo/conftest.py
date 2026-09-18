@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Generator
 from dataclasses import asdict
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from cookidoo_api import (
@@ -66,10 +67,16 @@ def mock_cookidoo_class() -> Generator[MagicMock]:
 @pytest.fixture
 def notify_auth_data_update(
     mock_cookidoo: MagicMock,
-) -> Callable[[CookidooAuthData], None]:
-    """Emulate the library notifying its consumer of new tokens."""
+) -> Callable[[CookidooAuthData | None], None]:
+    """Emulate the library notifying its consumer of new tokens.
 
-    def _notify(auth_data: CookidooAuthData) -> None:
+    A token response without a refresh token leaves the library with nothing to
+    hand over, which is what passing None stands for.
+    """
+
+    def _notify(auth_data: CookidooAuthData | None) -> None:
+        if auth_data is None:
+            return
         mock_cookidoo.return_value.auth_data = auth_data
         mock_cookidoo.call_args.kwargs["on_auth_data_update"](auth_data)
 
@@ -78,7 +85,7 @@ def notify_auth_data_update(
 
 @pytest.fixture
 def login_success(
-    notify_auth_data_update: Callable[[CookidooAuthData], None],
+    notify_auth_data_update: Callable[[CookidooAuthData | None], None],
 ) -> Callable[[], None]:
     """Emulate a successful login: fresh tokens, handed to the consumer."""
 
@@ -134,6 +141,35 @@ def mock_cookidoo_client(
         for day in load_json_object_fixture("calendar_week.json", DOMAIN)["data"]
     ]
     return client
+
+
+@pytest.fixture
+def arrange_validation_tokens(
+    mock_cookidoo_client: AsyncMock,
+    notify_auth_data_update: Callable[[CookidooAuthData | None], None],
+) -> Callable[[CookidooAuthData | None, CookidooAuthData | None], None]:
+    """Arrange the tokens the config flow validation requests hand over.
+
+    The login hands over the first, and the additional items fetch that follows
+    it the second, which is how a request rotating the tokens mid-validation
+    presents itself. Either can be None, for a response without a token.
+    """
+
+    def _arrange(
+        login_tokens: CookidooAuthData | None,
+        rotated_tokens: CookidooAuthData | None,
+    ) -> None:
+        mock_cookidoo_client.login.side_effect = lambda: notify_auth_data_update(
+            login_tokens
+        )
+
+        async def _get_additional_items(*args: Any, **kwargs: Any) -> list:
+            notify_auth_data_update(rotated_tokens)
+            return []
+
+        mock_cookidoo_client.get_additional_items.side_effect = _get_additional_items
+
+    return _arrange
 
 
 @pytest.fixture(name="cookidoo_config_entry")

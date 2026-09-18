@@ -49,49 +49,27 @@ ROTATED_AUTH_DATA = CookidooAuthData(
 )
 
 
-def _tokens_from_the_login(
-    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
-) -> None:
-    """Leave the tokens the login hands over in place."""
-
-
-def _tokens_rotated_during_validation(
-    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
-) -> None:
-    """Emulate a validation request refreshing the access token."""
-
-    async def _rotate(*args: Any, **kwargs: Any) -> list:
-        notify(ROTATED_AUTH_DATA)
-        return []
-
-    client.get_additional_items.side_effect = _rotate
-
-
-def _no_tokens_from_the_login(
-    client: AsyncMock, notify: Callable[[CookidooAuthData], None]
-) -> None:
-    """Emulate a token response that carries no refresh token."""
-    client.login.side_effect = None
-
-
 @pytest.mark.parametrize(
-    ("arrange_client", "expected_token"),
+    ("login_tokens", "rotated_tokens", "expected_token"),
     [
-        pytest.param(_tokens_from_the_login, MOCK_TOKEN, id="tokens_from_the_login"),
+        pytest.param(AUTH_DATA, None, MOCK_TOKEN, id="tokens_from_the_login"),
         pytest.param(
-            _tokens_rotated_during_validation,
+            AUTH_DATA,
+            ROTATED_AUTH_DATA,
             asdict(ROTATED_AUTH_DATA),
             id="tokens_rotated_during_validation",
         ),
-        pytest.param(_no_tokens_from_the_login, {}, id="no_tokens_from_the_login"),
+        pytest.param(None, None, {}, id="no_tokens_from_the_login"),
     ],
 )
 async def test_flow_user_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_cookidoo_client: AsyncMock,
-    notify_auth_data_update: Callable[[CookidooAuthData], None],
-    arrange_client: Callable[[AsyncMock, Callable[[CookidooAuthData], None]], None],
+    arrange_validation_tokens: Callable[
+        [CookidooAuthData | None, CookidooAuthData | None], None
+    ],
+    login_tokens: CookidooAuthData | None,
+    rotated_tokens: CookidooAuthData | None,
     expected_token: dict[str, Any],
 ) -> None:
     """Test we get the user flow and create entry with success.
@@ -100,7 +78,7 @@ async def test_flow_user_success(
     the ones the login handed over, the ones a later request rotated them into,
     or none at all.
     """
-    arrange_client(mock_cookidoo_client, notify_auth_data_update)
+    arrange_validation_tokens(login_tokens, rotated_tokens)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

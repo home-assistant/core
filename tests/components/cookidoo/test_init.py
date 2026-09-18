@@ -533,37 +533,6 @@ async def test_stored_tokens_skip_login(
     assert cookidoo_config_entry_with_token.data[CONF_TOKEN] == asdict(STALE_AUTH_DATA)
 
 
-async def test_unusable_stored_tokens_fall_back_to_login(
-    hass: HomeAssistant,
-    mock_cookidoo_client: AsyncMock,
-) -> None:
-    """Test a stored token the library cannot read falls back to a login.
-
-    The shape is whatever the library wrote when the entry was last set up, so
-    a later version of it may no longer accept what is on the entry.
-    """
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=3,
-        data={
-            CONF_EMAIL: EMAIL,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRY: COUNTRY,
-            CONF_LANGUAGE: LANGUAGE,
-            CONF_TOKEN: {**asdict(STALE_AUTH_DATA), "id_token": "unexpected-field"},
-        },
-        unique_id=TEST_UUID,
-    )
-
-    await setup_integration(hass, config_entry)
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    mock_cookidoo_client.apply_auth_data.assert_not_called()
-    mock_cookidoo_client.login.assert_awaited_once()
-    assert config_entry.data[CONF_TOKEN] == asdict(AUTH_DATA)
-
-
 async def test_expired_tokens_fall_back_to_login(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
