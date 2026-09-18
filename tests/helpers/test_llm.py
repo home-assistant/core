@@ -205,6 +205,7 @@ def test_tool_metadata_defaults() -> None:
             return llm.ToolResult(data={})
 
     tool = MyTool()
+    assert tool.title is None
     assert tool.integration is None
     assert tool.annotations == llm.ToolAnnotations(
         read_only=False, destructive=True, idempotent=False, open_world=True
@@ -239,6 +240,7 @@ def test_namespaced_tool_keeps_metadata() -> None:
 
     class MyTool(llm.Tool):
         name = "test_tool"
+        title = "Test tool"
         annotations = llm.ToolAnnotations(read_only=True, open_world=False)
         integration = "my_integration"
 
@@ -251,6 +253,7 @@ def test_namespaced_tool_keeps_metadata() -> None:
     namespaced = llm.NamespacedTool("test_api", tool)
 
     assert namespaced.name == "test_api__test_tool"
+    assert namespaced.title == tool.title
     assert namespaced.annotations == tool.annotations
     assert namespaced.integration == tool.integration
 

@@ -55,6 +55,7 @@ def _format_tool(
         mcp_schema["required"] = required
     return types.Tool(
         name=tool.name,
+        title=tool.title,
         description=tool.description or "",
         inputSchema=mcp_schema,
         annotations=types.ToolAnnotations(
