@@ -73,6 +73,9 @@
       },
       "target_indoor_fan_speed": {
         "default": "mdi:fan-clock"
+      },
+      "time_remaining": {
+        "default": "mdi:progress-clock"
       }
     },
     "switch": {

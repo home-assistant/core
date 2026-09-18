@@ -676,7 +676,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen
-besen==0.4.5
+besen==0.4.6
 
 # homeassistant.components.bitvis
 bitvis-protobuf==2.0.4
@@ -809,7 +809,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.17.2
+cookidoo-api==0.18.4
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -1327,7 +1327,7 @@ holidays==0.104
 home-assistant-frontend==20260826.7
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.8.28
+home-assistant-intents==2026.9.17
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -2663,7 +2663,7 @@ pysmlight==0.5.3
 pysnmp==7.1.27
 
 # homeassistant.components.snooz
-pysnooz==0.8.6
+pysnooz==0.10.0
 
 # homeassistant.components.soma
 pysoma==0.0.12
