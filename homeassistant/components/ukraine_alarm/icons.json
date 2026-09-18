@@ -4,6 +4,12 @@
       "air": {
         "default": "mdi:cloud"
       },
+      "air_red": {
+        "default": "mdi:cloud-alert"
+      },
+      "air_yellow": {
+        "default": "mdi:cloud-alert-outline"
+      },
       "artillery": {
         "default": "mdi:tank"
       },

@@ -43,6 +43,12 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
+        key="water_pump_running",
+        translation_key="water_pump_running",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
         key="filter_cleaning_reminder",
         translation_key="filter_cleaning_reminder",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -81,6 +87,7 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         key="arofene_link",
         translation_key="arofene_link",
         device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="header_exist",

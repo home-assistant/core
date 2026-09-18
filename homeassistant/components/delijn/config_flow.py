@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pydelijn import (
     DeLijnAuthError,
     DeLijnClient,
@@ -11,7 +12,6 @@ from pydelijn import (
     DeLijnNotFoundError,
     Stop,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -105,7 +105,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -126,7 +126,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_API_KEY): str}),
+            probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             {CONF_API_KEY: reconfigure_entry.data[CONF_API_KEY]},
         )
         return self.async_show_form(
@@ -156,7 +156,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -352,10 +352,10 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_STOP): str,
-                    vol.Optional(CONF_LOCATION): LocationSelector(),
+                    probatio.Optional(CONF_STOP): str,
+                    probatio.Optional(CONF_LOCATION): LocationSelector(),
                 }
             ),
             errors=errors,
@@ -381,9 +381,9 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         ]
         return self.async_show_form(
             step_id="pick",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STOP): SelectSelector(
+                    probatio.Required(CONF_STOP): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN
                         )
@@ -436,20 +436,20 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_NUMBER_OF_DEPARTURES,
                         default=subentry.data.get(
                             CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
                         ),
-                    ): vol.All(
+                    ): probatio.All(
                         NumberSelector(
                             NumberSelectorConfig(
                                 min=1, max=20, mode=NumberSelectorMode.BOX
                             )
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
                 }
             ),
