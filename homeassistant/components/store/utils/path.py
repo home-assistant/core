@@ -9,7 +9,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from ..exceptions import StoreError
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 
 @lru_cache(maxsize=1)
@@ -33,11 +33,11 @@ def _get_safe_paths(
     }
 
 
-def is_safe(hacs: HacsBase, path: str | Path) -> bool:
+def is_safe(store: StoreManager, path: str | Path) -> bool:
     """Helper to check if path is safe to remove."""
-    configuration = hacs.configuration
+    configuration = store.configuration
     return Path(path).resolve().as_posix() not in _get_safe_paths(
-        hacs.core.config_path,
+        store.core.config_path,
         configuration.appdaemon_path,
         configuration.plugin_path,
         configuration.python_script_path,

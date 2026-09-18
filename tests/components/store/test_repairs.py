@@ -1,6 +1,6 @@
 """Tests for the Community store repairs."""
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.repairs import async_create_fix_flow
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ async def test_restart_required_fix_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    store: HacsBase,
+    store: StoreManager,
 ) -> None:
     """Test restarting Home Assistant from the repair."""
     assert await async_setup_component(hass, "repairs", {})
@@ -49,7 +49,7 @@ async def test_restart_required_fix_flow(
 
 
 async def test_restart_required_fix_flow_for_an_unknown_repository(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, store: HacsBase
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, store: StoreManager
 ) -> None:
     """Test the repair of a repository the store no longer knows."""
     assert await async_setup_component(hass, "repairs", {})

@@ -6,11 +6,12 @@ import tempfile
 from time import sleep
 from typing import TYPE_CHECKING
 
+from .logger import LOGGER
 from .path import is_safe
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
-    from ..repositories.base import HacsRepository
+    from ..base import StoreManager
+    from ..repositories.base import Repository
 
 
 DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/hacs_backup/"
@@ -21,13 +22,13 @@ class Backup:
 
     def __init__(
         self,
-        hacs: HacsBase,
+        store: StoreManager,
         local_path: str,
         backup_path: str = DEFAULT_BACKUP_PATH,
-        repository: HacsRepository | None = None,
+        repository: Repository | None = None,
     ) -> None:
         """Initialize."""
-        self.hacs = hacs
+        self.store = store
         self.repository = repository
         self.local_path = local_path
         self.backup_path = backup_path
@@ -43,7 +44,7 @@ class Backup:
         """Init backup dir."""
         if not os.path.exists(self.local_path):
             return False
-        if not is_safe(self.hacs, self.local_path):
+        if not is_safe(self.store, self.local_path):
             return False
         if os.path.exists(self.backup_path):
             shutil.rmtree(self.backup_path)
@@ -68,13 +69,13 @@ class Backup:
                 shutil.rmtree(self.local_path)
                 while os.path.exists(self.local_path):
                     sleep(0.1)
-            self.hacs.log.debug(
+            LOGGER.debug(
                 "Backup for %s, created in %s",
                 self.local_path,
                 self.backup_path_full,
             )
         except OSError as exception:
-            self.hacs.log.warning("Could not create backup: %s", exception)
+            LOGGER.warning("Could not create backup: %s", exception)
 
     def restore(self) -> None:
         """Restore from backup."""
@@ -91,7 +92,7 @@ class Backup:
                 while os.path.exists(self.local_path):
                     sleep(0.1)
             shutil.copytree(self.backup_path_full, self.local_path)
-        self.hacs.log.debug(
+        LOGGER.debug(
             "Restored %s, from backup %s", self.local_path, self.backup_path_full
         )
 
@@ -105,4 +106,4 @@ class Backup:
         # Wait for the folder to be removed
         while os.path.exists(self.backup_path):
             sleep(0.1)
-        self.hacs.log.debug("Backup dir %s cleared", self.backup_path)
+        LOGGER.debug("Backup dir %s cleared", self.backup_path)

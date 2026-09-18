@@ -1,4 +1,4 @@
-"""Diagnostics support for HACS."""
+"""Diagnostics support for the Community store."""
 
 from typing import Any
 
@@ -15,27 +15,27 @@ async def async_get_config_entry_diagnostics(
     entry: StoreConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hacs = entry.runtime_data
+    store = entry.runtime_data
 
     data: dict[str, Any] = {
         "entry": entry.as_dict(),
-        "hacs": {
-            "stage": hacs.stage,
-            "version": hacs.version,
-            "disabled_reason": hacs.system.disabled_reason,
-            "new": hacs.status.new,
-            "startup": hacs.status.startup,
-            "categories": hacs.common.categories,
-            "renamed_repositories": hacs.common.renamed_repositories,
-            "archived_repositories": hacs.common.archived_repositories,
-            "ignored_repositories": hacs.common.ignored_repositories,
-            "lovelace_mode": hacs.core.lovelace_mode,
+        "store": {
+            "stage": store.stage,
+            "version": store.version,
+            "disabled_reason": store.system.disabled_reason,
+            "new": store.status.new,
+            "startup": store.status.startup,
+            "categories": store.common.categories,
+            "renamed_repositories": store.common.renamed_repositories,
+            "archived_repositories": store.common.archived_repositories,
+            "ignored_repositories": store.common.ignored_repositories,
+            "lovelace_mode": store.core.lovelace_mode,
             "configuration": {},
         },
         "custom_repositories": [
             repo.data.full_name
-            for repo in hacs.repositories.list_all
-            if not hacs.repositories.is_default(str(repo.data.id))
+            for repo in store.repositories.list_all
+            if not store.repositories.is_default(str(repo.data.id))
         ],
         "repositories": [],
     }
@@ -48,9 +48,9 @@ async def async_get_config_entry_diagnostics(
         "release_limit",
         "theme",
     ):
-        data["hacs"]["configuration"][key] = getattr(hacs.configuration, key, None)
+        data["store"]["configuration"][key] = getattr(store.configuration, key, None)
 
-    for repository in hacs.repositories.list_downloaded:
+    for repository in store.repositories.list_downloaded:
         data["repositories"].append(
             {
                 "data": repository.data.to_json(),
@@ -59,10 +59,10 @@ async def async_get_config_entry_diagnostics(
                 "ref": repository.ref,
                 "paths": {
                     "localpath": repository.localpath.replace(
-                        hacs.core.config_path, "/config"
+                        store.core.config_path, "/config"
                     ),
                     "local": repository.content.path.local.replace(
-                        hacs.core.config_path, "/config"
+                        store.core.config_path, "/config"
                     ),
                     "remote": repository.content.path.remote,
                 },
@@ -70,7 +70,7 @@ async def async_get_config_entry_diagnostics(
         )
 
     try:
-        rate_limit_response = await hacs.githubapi.rate_limit()
+        rate_limit_response = await store.githubapi.rate_limit()
         data["rate_limit"] = rate_limit_response.data.as_dict
     except GitHubException as exception:
         data["rate_limit"] = str(exception)

@@ -28,8 +28,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         return {"Disabled": "The Community store is not loaded"}
 
-    hacs = async_get_store(hass)
-    response = await hacs.githubapi.rate_limit()
+    store = async_get_store(hass)
+    response = await store.githubapi.rate_limit()
 
     data = {
         "GitHub API": system_health.async_check_can_reach_url(
@@ -46,13 +46,13 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             hass, "https://data-v2.hacs.xyz/data.json", CLOUDFLARE_STATUS
         ),
         "GitHub API Calls Remaining": response.data.resources.core.remaining,
-        "Installed Version": hacs.version,
-        "Stage": hacs.stage,
-        "Available Repositories": len(hacs.repositories.list_all),
-        "Downloaded Repositories": len(hacs.repositories.list_downloaded),
+        "Installed Version": store.version,
+        "Stage": store.stage,
+        "Available Repositories": len(store.repositories.list_all),
+        "Downloaded Repositories": len(store.repositories.list_downloaded),
     }
 
-    if hacs.system.disabled:
-        data["Disabled"] = hacs.system.disabled_reason
+    if store.system.disabled:
+        data["Disabled"] = store.system.disabled_reason
 
     return data

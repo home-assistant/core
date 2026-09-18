@@ -1,4 +1,4 @@
-"""Class for themes in HACS."""
+"""Class for template repositories."""
 
 from typing import TYPE_CHECKING, override
 
@@ -7,18 +7,18 @@ from homeassistant.exceptions import HomeAssistantError
 from ..enums import RepositoryCategory, StoreSignal
 from ..exceptions import StoreError
 from ..utils.decorator import concurrent
-from .base import HacsRepository
+from .base import Repository
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 
-class HacsTemplateRepository(HacsRepository):
-    """Custom templates in HACS."""
+class TemplateRepository(Repository):
+    """Template repository."""
 
-    def __init__(self, hacs: HacsBase, full_name: str) -> None:
+    def __init__(self, store: StoreManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(hacs=hacs)
+        super().__init__(store=store)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.TEMPLATE
@@ -30,7 +30,7 @@ class HacsTemplateRepository(HacsRepository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.hacs.core.config_path}/custom_templates"
+        return f"{self.store.core.config_path}/custom_templates"
 
     @override
     async def async_post_installation(self) -> None:
@@ -59,7 +59,7 @@ class HacsTemplateRepository(HacsRepository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.hacs.status.startup:
+                if not self.store.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
@@ -79,7 +79,7 @@ class HacsTemplateRepository(HacsRepository):
         """Reload custom templates."""
         self.logger.debug("%s Reloading custom templates", self.string)
         try:
-            await self.hacs.hass.services.async_call(
+            await self.store.hass.services.async_call(
                 "homeassistant", "reload_custom_templates", {}
             )
         except HomeAssistantError:
@@ -100,7 +100,7 @@ class HacsTemplateRepository(HacsRepository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.hacs.async_dispatch(
+            self.store.async_dispatch(
                 StoreSignal.REPOSITORY,
                 {
                     "id": 1337,

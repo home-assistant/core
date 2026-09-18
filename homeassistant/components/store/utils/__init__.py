@@ -1,1 +1,1 @@
-"""Initialize HACS utils."""
+"""Utilities for the Community store."""

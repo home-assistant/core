@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
-from . import CategoryTestData, category_test_data_parametrized, get_hacs
+from . import CategoryTestData, category_test_data_parametrized, get_store
 from .const import REPOSITORY_INTEGRATION_ID
 
 
@@ -29,16 +29,16 @@ async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> No
     assert await async_setup_component(hass, "python_script", {})
 
 
-async def _reload(hass: HomeAssistant, store: HacsBase) -> HacsBase:
+async def _reload(hass: HomeAssistant, store: StoreManager) -> StoreManager:
     """Reload the config entry and return the store object that replaced it."""
     await hass.config_entries.async_reload(store.configuration.config_entry.entry_id)
     await hass.async_block_till_done()
-    return get_hacs(hass)
+    return get_store(hass)
 
 
 @pytest.fixture
 async def switch_entity(
-    hass: HomeAssistant, store: HacsBase, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
 ) -> str:
     """Return the enabled pre-release switch of a downloaded integration."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -52,7 +52,7 @@ async def switch_entity(
     )
     entity_registry.async_update_entity(entity_id, disabled_by=None)
 
-    await _reload(hass, get_hacs(hass))
+    await _reload(hass, get_store(hass))
 
     return entity_id
 
@@ -60,7 +60,7 @@ async def switch_entity(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_switch_entity(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     entity_registry: er.EntityRegistry,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
@@ -81,7 +81,7 @@ async def test_switch_entity(
 
 
 async def test_switch_is_disabled_by_default(
-    hass: HomeAssistant, store: HacsBase, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that a repository without pre-releases hides the switch."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -101,7 +101,7 @@ async def test_switch_is_disabled_by_default(
 
 
 async def test_switch_is_enabled_for_a_pre_release(
-    hass: HomeAssistant, store: HacsBase, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that a repository already on pre-releases shows the switch."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -120,7 +120,7 @@ async def test_switch_is_enabled_for_a_pre_release(
 
 async def test_switch_turn_on_and_off(hass: HomeAssistant, switch_entity: str) -> None:
     """Test opting a repository in to and out of pre-releases."""
-    repository = get_hacs(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert hass.states.get(switch_entity).state == STATE_OFF
 
     await hass.services.async_call(
@@ -148,7 +148,7 @@ async def test_switch_keeps_the_last_fetched_time(
     hass: HomeAssistant, switch_entity: str
 ) -> None:
     """Test that toggling the switch does not lose the last fetch time."""
-    repository = get_hacs(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     last_fetched = repository.data.last_fetched
 
     await hass.services.async_call(
@@ -165,7 +165,7 @@ async def test_switch_becomes_unavailable(
     hass: HomeAssistant, switch_entity: str
 ) -> None:
     """Test that removing a repository makes its switch unavailable."""
-    store = get_hacs(hass)
+    store = get_store(hass)
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = False
     repository.data.last_fetched = None

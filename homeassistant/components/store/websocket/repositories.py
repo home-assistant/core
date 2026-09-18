@@ -11,6 +11,7 @@ from ..base import async_get_store
 from ..enums import StoreSignal
 from ..exceptions import StoreError
 from ..utils import regex
+from ..utils.logger import LOGGER
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -24,13 +25,13 @@ if TYPE_CHECKING:
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repositories_list(
+async def store_repositories_list(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """List repositories."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
@@ -43,7 +44,7 @@ async def hacs_repositories_list(
                     "can_download": repo.can_download,
                     "category": repo.data.category,
                     "country": repo.repository_manifest.country,
-                    "custom": not hacs.repositories.is_default(str(repo.data.id)),
+                    "custom": not store.repositories.is_default(str(repo.data.id)),
                     "description": repo.data.description,
                     "domain": repo.data.domain,
                     "downloads": repo.data.downloads,
@@ -63,8 +64,8 @@ async def hacs_repositories_list(
                     "status": repo.display_status,
                     "topics": repo.data.topics,
                 }
-                for repo in hacs.repositories.list_all
-                if repo.data.category in msg.get("categories", hacs.common.categories)
+                for repo in store.repositories.list_all
+                if repo.data.category in msg.get("categories", store.common.categories)
                 and not repo.ignored_by_country_configuration
                 and repo.data.last_fetched
             ],
@@ -81,16 +82,16 @@ async def hacs_repositories_list(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repositories_clear_new(
+async def store_repositories_clear_new(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Clear new repositories for specific categories."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
 
     if repo := msg.get("repository"):
-        if (repository := hacs.repositories.get_by_id(repo)) is None:
+        if (repository := store.repositories.get_by_id(repo)) is None:
             connection.send_error(
                 msg["id"],
                 "repository_not_found",
@@ -100,15 +101,15 @@ async def hacs_repositories_clear_new(
         repository.data.new = False
 
     else:
-        for repo in hacs.repositories.list_all:
+        for repo in store.repositories.list_all:
             if repo.data.new and repo.data.category in msg.get("categories", []):
-                hacs.log.debug(
+                LOGGER.debug(
                     "Clearing new flag from '%s'",
                     repo.data.full_name,
                 )
                 repo.data.new = False
-    hacs.async_dispatch(StoreSignal.REPOSITORY, {})
-    await hacs.data.async_write()
+    store.async_dispatch(StoreSignal.REPOSITORY, {})
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
@@ -119,17 +120,17 @@ async def hacs_repositories_clear_new(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repositories_removed(
+async def store_repositories_removed(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Get information about removed repositories."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
     content = [
         repo.to_json()
-        for repo in hacs.repositories.list_removed
-        if repo.repository not in hacs.common.ignored_repositories
+        for repo in store.repositories.list_removed
+        if repo.repository not in store.common.ignored_repositories
     ]
     connection.send_message(websocket_api.result_message(msg["id"], content))
 
@@ -143,13 +144,13 @@ async def hacs_repositories_removed(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repositories_add(
+async def store_repositories_add(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Add custom repositoriy."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
     repository = regex.extract_repository_from_url(msg["repository"])
     category = msg["category"]
 
@@ -161,24 +162,24 @@ async def hacs_repositories_add(
         )
         return
 
-    if repository in hacs.common.skip:
-        hacs.common.skip.remove(repository)
+    if repository in store.common.skip:
+        store.common.skip.remove(repository)
 
-    if renamed := hacs.common.renamed_repositories.get(repository):
+    if renamed := store.common.renamed_repositories.get(repository):
         repository = renamed
 
-    if category not in hacs.common.categories:
-        hacs.log.error("%s is not a valid category for %s", category, repository)
+    if category not in store.common.categories:
+        LOGGER.error("%s is not a valid category for %s", category, repository)
 
-    elif not hacs.repositories.get_by_full_name(repository):
+    elif not store.repositories.get_by_full_name(repository):
         try:
-            await hacs.async_register_repository(
+            await store.async_register_repository(
                 repository_full_name=repository,
                 category=category,
             )
 
         except StoreError as exception:
-            hacs.async_dispatch(
+            store.async_dispatch(
                 StoreSignal.ERROR,
                 {
                     "action": "add_repository",
@@ -188,7 +189,7 @@ async def hacs_repositories_add(
             )
 
     else:
-        hacs.async_dispatch(
+        store.async_dispatch(
             StoreSignal.ERROR,
             {
                 "action": "add_repository",
@@ -207,14 +208,14 @@ async def hacs_repositories_add(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repositories_remove(
+async def store_repositories_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Remove custom repositoriy."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -224,6 +225,6 @@ async def hacs_repositories_remove(
         return
 
     repository.remove()
-    await hacs.data.async_write()
+    await store.data.async_write()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))

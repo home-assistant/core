@@ -3,20 +3,20 @@
 import pytest
 
 from homeassistant.components.store.base import (
-    HacsBase,
-    HacsConfiguration,
-    HacsRepositories,
+    Repositories,
+    StoreConfiguration,
+    StoreManager,
 )
 from homeassistant.components.store.enums import RepositoryCategory
 from homeassistant.components.store.exceptions import StoreError
-from homeassistant.components.store.repositories.base import HacsRepository
+from homeassistant.components.store.repositories.base import Repository
 
 from .const import DEFAULT_CATEGORIES
 
 
 def test_configuration_defaults() -> None:
     """Test the configuration defaults and what a dict can set."""
-    configuration = HacsConfiguration()
+    configuration = StoreConfiguration()
     configuration.update_from_dict({"token": "xxxxxxxxxx"})
 
     assert isinstance(configuration.to_json(), dict)
@@ -37,7 +37,7 @@ def test_configuration_defaults() -> None:
 )
 def test_configuration_ignores_option(option: str) -> None:
     """Test the options that are accepted but never stored."""
-    configuration = HacsConfiguration()
+    configuration = StoreConfiguration()
 
     configuration.update_from_dict({option: True})
 
@@ -46,7 +46,7 @@ def test_configuration_ignores_option(option: str) -> None:
 
 def test_configuration_rejects_non_dict() -> None:
     """Test updating from something that is not a dict."""
-    configuration = HacsConfiguration()
+    configuration = StoreConfiguration()
 
     with pytest.raises(StoreError):
         configuration.update_from_dict(None)
@@ -54,10 +54,10 @@ def test_configuration_rejects_non_dict() -> None:
 
 @pytest.mark.usefixtures("init_integration")
 async def test_repository_lookups(
-    store: HacsBase, mock_repository: HacsRepository
+    store: StoreManager, mock_repository: Repository
 ) -> None:
     """Test looking a repository up by id and by name."""
-    store.repositories = HacsRepositories()
+    store.repositories = Repositories()
     assert store.repositories.get_by_id(None) is None
     assert store.repositories.get_by_full_name(None) is None
 
@@ -74,10 +74,10 @@ async def test_repository_lookups(
 
 @pytest.mark.usefixtures("init_integration")
 async def test_category_downloaded(
-    store: HacsBase, mock_repository: HacsRepository
+    store: StoreManager, mock_repository: Repository
 ) -> None:
     """Test only the category of a downloaded repository counts as downloaded."""
-    store.repositories = HacsRepositories()
+    store.repositories = Repositories()
     mock_repository.data.id = "1337"
     mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
@@ -89,7 +89,7 @@ async def test_category_downloaded(
 
 @pytest.mark.usefixtures("init_integration")
 async def test_repository_id_is_set_once(
-    store: HacsBase, mock_repository: HacsRepository
+    store: StoreManager, mock_repository: Repository
 ) -> None:
     """Test a repository id can be set once and then never changes."""
     mock_repository.data.id = "0"
@@ -109,7 +109,7 @@ async def test_repository_id_is_set_once(
 
 @pytest.mark.usefixtures("init_integration")
 async def test_unregister_repository(
-    store: HacsBase, mock_repository: HacsRepository
+    store: StoreManager, mock_repository: Repository
 ) -> None:
     """Test unregistering a repository twice does not raise."""
     mock_repository.data.id = "42"
@@ -123,7 +123,7 @@ async def test_unregister_repository(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_active_categories(store: HacsBase) -> None:
+async def test_active_categories(store: StoreManager) -> None:
     """Test which categories are active for the default options."""
     assert store.common.categories == DEFAULT_CATEGORIES | {
         RepositoryCategory.APPDAEMON,

@@ -5,10 +5,10 @@ from pathlib import Path
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import pytest
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.enums import RepositoryFile
 from homeassistant.components.store.exceptions import StoreError
-from homeassistant.components.store.repositories.base import HacsRepository
+from homeassistant.components.store.repositories.base import Repository
 from homeassistant.components.store.utils import filters, path, regex, version
 from homeassistant.components.store.utils.decorator import return_none_on_exception
 from homeassistant.components.store.utils.url import (
@@ -97,7 +97,7 @@ def test_github_archive(version_string: str, variant: str, expected: str) -> Non
     )
 
 
-async def test_is_safe(store: HacsBase) -> None:
+async def test_is_safe(store: StoreManager) -> None:
     """Test that the directories the store manages are never removable."""
     config_path = store.core.config_path
     configuration = store.configuration
@@ -191,7 +191,7 @@ def test_version_left_higher_or_equal_then_right(
     ],
 )
 def test_version_to_download(
-    mock_repository: HacsRepository,
+    mock_repository: Repository,
     default_branch: str | None,
     last_version: str | None,
     selected_tag: str | None,
@@ -206,7 +206,7 @@ def test_version_to_download(
 
 
 def test_version_to_download_clears_redundant_selected_tag(
-    mock_repository: HacsRepository,
+    mock_repository: Repository,
 ) -> None:
     """Test that selecting the latest version stops pinning the repository."""
     mock_repository.data.last_version = "3"
@@ -216,7 +216,7 @@ def test_version_to_download_clears_redundant_selected_tag(
     assert mock_repository.data.selected_tag is None
 
 
-def test_version_to_download_forced_branch(mock_repository: HacsRepository) -> None:
+def test_version_to_download_forced_branch(mock_repository: Repository) -> None:
     """Test that a forced branch overrules everything else."""
     mock_repository.ref = "my-ref"
     assert mock_repository.version_to_download() == "3"

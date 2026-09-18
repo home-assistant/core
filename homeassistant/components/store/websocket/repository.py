@@ -10,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from ..base import async_get_store
 from ..enums import StoreSignal
 from ..exceptions import StoreError
+from ..utils.logger import LOGGER
 from ..utils.version import version_left_higher_then_right
 
 if TYPE_CHECKING:
@@ -24,15 +25,15 @@ if TYPE_CHECKING:
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_info(
+async def store_repository_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Return information about a repository."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
     repository_id = msg["repository_id"]
-    repository = hacs.repositories.get_by_id(repository_id)
+    repository = store.repositories.get_by_id(repository_id)
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -50,7 +51,7 @@ async def hacs_repository_info(
 
     if repository.data.new:
         repository.data.new = False
-        await hacs.data.async_write()
+        await store.data.async_write()
 
     connection.send_message(
         websocket_api.result_message(
@@ -64,7 +65,7 @@ async def hacs_repository_info(
                 "category": repository.data.category,
                 "config_flow": repository.data.config_flow,
                 "country": repository.repository_manifest.country,
-                "custom": not hacs.repositories.is_default(str(repository.data.id)),
+                "custom": not store.repositories.is_default(str(repository.data.id)),
                 "default_branch": repository.data.default_branch,
                 "description": repository.data.description,
                 "domain": repository.data.domain,
@@ -103,16 +104,16 @@ async def hacs_repository_info(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_ignore(
+async def store_repository_ignore(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Ignore a repository."""
-    hacs = async_get_store(hass)
+    store = async_get_store(hass)
     repository_id = msg["repository"]
-    hacs.log.info("Ignoring %s", repository_id)
-    repository = hacs.repositories.get_by_id(repository_id)
+    LOGGER.info("Ignoring %s", repository_id)
+    repository = store.repositories.get_by_id(repository_id)
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -121,9 +122,9 @@ async def hacs_repository_ignore(
         )
         return
 
-    hacs.common.ignored_repositories.add(repository.data.full_name)
+    store.common.ignored_repositories.add(repository.data.full_name)
 
-    await hacs.data.async_write()
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
@@ -136,14 +137,14 @@ async def hacs_repository_ignore(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_state(
+async def store_repository_state(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Set the state of a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -154,7 +155,7 @@ async def hacs_repository_state(
 
     repository.state = msg["state"]
 
-    await hacs.data.async_write()
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
@@ -167,14 +168,14 @@ async def hacs_repository_state(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_version(
+async def store_repository_version(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Set the version of a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -191,7 +192,7 @@ async def hacs_repository_version(
     await repository.update_repository(force=True)
     repository.state = None
 
-    await hacs.data.async_write()
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
@@ -204,14 +205,14 @@ async def hacs_repository_version(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_beta(
+async def store_repository_beta(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Show or hide beta versions of a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -225,7 +226,7 @@ async def hacs_repository_beta(
     await repository.update_repository(force=True)
     repository.state = None
 
-    await hacs.data.async_write()
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
@@ -238,14 +239,14 @@ async def hacs_repository_beta(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_download(
+async def store_repository_download(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Set the version of a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -258,10 +259,10 @@ async def hacs_repository_download(
         was_installed = repository.data.installed
         await repository.async_download_repository(ref=msg.get("version"))
         if not was_installed:
-            hacs.async_dispatch(StoreSignal.RELOAD, {"force": True})
-            await hacs.async_recreate_entities()
+            store.async_dispatch(StoreSignal.RELOAD, {"force": True})
+            await store.async_recreate_entities()
 
-        await hacs.data.async_write()
+        await store.data.async_write()
         connection.send_message(websocket_api.result_message(msg["id"], {}))
     except StoreError as exception:
         repository.logger.error("%s %s", repository.string, exception)
@@ -276,14 +277,14 @@ async def hacs_repository_download(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_remove(
+async def store_repository_remove(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Remove a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -299,7 +300,7 @@ async def hacs_repository_remove(
         repository.logger.error("%s %s", repository.string, exception)
     await repository.uninstall()
 
-    await hacs.data.async_write()
+    await store.data.async_write()
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
@@ -311,14 +312,14 @@ async def hacs_repository_remove(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_refresh(
+async def store_repository_refresh(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Refresh a repository."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -328,9 +329,9 @@ async def hacs_repository_refresh(
         return
 
     await repository.update_repository(ignore_issues=True, force=True)
-    await hacs.data.async_write()
+    await store.data.async_write()
     # Update state of update entity
-    hacs.coordinators[repository.data.category].async_update_listeners()
+    store.coordinators[repository.data.category].async_update_listeners()
 
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
@@ -343,14 +344,14 @@ async def hacs_repository_refresh(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_release_notes(
+async def store_repository_release_notes(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Return release notes."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -386,14 +387,14 @@ async def hacs_repository_release_notes(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def hacs_repository_releases(
+async def store_repository_releases(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Return releases."""
-    hacs = async_get_store(hass)
-    repository = hacs.repositories.get_by_id(msg["repository_id"])
+    store = async_get_store(hass)
+    repository = store.repositories.get_by_id(msg["repository_id"])
     if repository is None:
         connection.send_error(
             msg["id"],
@@ -405,7 +406,7 @@ async def hacs_repository_releases(
     try:
         releases = await repository.async_get_releases()
     except StoreError as exception:
-        hacs.log.exception("Could not get the releases for %s", repository.string)
+        LOGGER.exception("Could not get the releases for %s", repository.string)
         connection.send_error(msg["id"], "unknown", str(exception))
         return
 

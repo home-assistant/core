@@ -1,4 +1,4 @@
-"""HACS Configuration Schemas."""
+"""Configuration schemas for the Community store."""
 
 # Configuration:
 APPDAEMON = "appdaemon"

@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import DisabledReason
 from homeassistant.core import HomeAssistant
@@ -44,11 +44,11 @@ async def test_system_health(hass: HomeAssistant) -> None:
 
 
 async def test_system_health_when_disabled(
-    hass: HomeAssistant, store: HacsBase
+    hass: HomeAssistant, store: StoreManager
 ) -> None:
     """Test that a disabled store reports why."""
     assert await async_setup_component(hass, "system_health", {})
-    store.disable_hacs(DisabledReason.RATE_LIMIT)
+    store.disable(DisabledReason.RATE_LIMIT)
 
     info = await _resolved_info(hass)
 
@@ -56,7 +56,7 @@ async def test_system_health_when_disabled(
 
 
 async def test_system_health_after_unload(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, store: HacsBase
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, store: StoreManager
 ) -> None:
     """Test the system health after the store was unloaded."""
     assert await async_setup_component(hass, "system_health", {})

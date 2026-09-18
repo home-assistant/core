@@ -1,4 +1,4 @@
-"""Custom logger for HACS."""
+"""Logger for the Community store."""
 
 import logging
 

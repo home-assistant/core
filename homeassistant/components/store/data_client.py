@@ -1,4 +1,4 @@
-"""HACS Data client."""
+"""Client for the catalog data."""
 
 from typing import Any
 
@@ -19,8 +19,8 @@ CRITICAL_REMOVED_VALIDATORS: dict[str | None, vol.Schema] = {
 }
 
 
-class HacsDataClient:
-    """HACS Data client."""
+class CatalogClient:
+    """Fetch the catalog data the store is built from."""
 
     def __init__(self, session: ClientSession, client_name: str) -> None:
         """Initialize."""
@@ -53,7 +53,7 @@ class HacsDataClient:
             raise StoreError("Timeout of 60s reached") from None
         except Exception as exception:
             raise StoreError(
-                f"Error fetching data from HACS: {exception}"
+                f"Error fetching data from the catalog: {exception}"
             ) from exception
 
         self._etags[endpoint] = response.headers.get("etag")

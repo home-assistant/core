@@ -1,4 +1,4 @@
-"""HACS Decorators."""
+"""Decorators for the Community store."""
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, overload
 from ..const import DEFAULT_CONCURRENT_BACKOFF_TIME, DEFAULT_CONCURRENT_TASKS
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 
 def concurrent[**P, T](
@@ -25,14 +25,14 @@ def concurrent[**P, T](
     ) -> Callable[P, Coroutine[Any, Any, T]]:
         @wraps(function)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            hacs: HacsBase | None = getattr(args[0], "hacs", None)
+            store: StoreManager | None = getattr(args[0], "store", None)
 
             async with max_concurrent:
                 result = await function(*args, **kwargs)
                 if (
-                    hacs is None
-                    or hacs.queue is None
-                    or hacs.queue.has_pending_tasks
+                    store is None
+                    or store.queue is None
+                    or store.queue.has_pending_tasks
                     or "update" not in function.__name__
                 ):
                     await asyncio.sleep(backoff_time)

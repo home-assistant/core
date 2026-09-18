@@ -1,4 +1,4 @@
-"""Data handler for HACS."""
+"""Data handler for the Community store."""
 
 import asyncio
 import contextlib
@@ -8,10 +8,10 @@ from typing import Any
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from ..base import HacsBase
+from ..base import StoreManager
 from ..const import LEGACY_HACS_REPOSITORY_ID
 from ..enums import StoreSignal
-from ..repositories.base import TOPIC_FILTER, HacsManifest, HacsRepository
+from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
 from .logger import LOGGER
 from .path import is_safe
 from .storage import (
@@ -60,13 +60,13 @@ EXPORTED_DOWNLOADED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
 )
 
 
-class HacsData:
-    """HacsData class."""
+class StoreData:
+    """Handles the stored data of the store."""
 
-    def __init__(self, hacs: HacsBase) -> None:
+    def __init__(self, store: StoreManager) -> None:
         """Initialize."""
         self.logger = LOGGER
-        self.hacs = hacs
+        self.store = store
         self.content: dict[str, Any] = {}
 
     async def async_force_write(self, _: Event | None = None) -> None:
@@ -75,18 +75,18 @@ class HacsData:
 
     async def async_write(self, force: bool = False) -> None:
         """Write content to the store files."""
-        if not force and self.hacs.system.disabled:
+        if not force and self.store.system.disabled:
             return
 
-        self.logger.debug("<HacsData async_write> Saving data")
+        self.logger.debug("Saving data")
 
         await async_save_to_storage(
-            self.hacs.hass,
+            self.store.hass,
             "common",
             {
-                "archived_repositories": self.hacs.common.archived_repositories,
-                "renamed_repositories": self.hacs.common.renamed_repositories,
-                "ignored_repositories": self.hacs.common.ignored_repositories,
+                "archived_repositories": self.store.common.archived_repositories,
+                "renamed_repositories": self.store.common.renamed_repositories,
+                "ignored_repositories": self.store.common.ignored_repositories,
             },
         )
         await self._async_store_content_and_repos()
@@ -97,16 +97,16 @@ class HacsData:
         """Store the main repos file and each repo that is out of date."""
         # Repositories
         self.content = {}
-        for repository in self.hacs.repositories.list_all:
-            if repository.data.category in self.hacs.common.categories:
+        for repository in self.store.repositories.list_all:
+            if repository.data.category in self.store.common.categories:
                 self.async_store_repository_data(repository)
 
-        await async_save_to_storage(self.hacs.hass, "repositories", self.content)
+        await async_save_to_storage(self.store.hass, "repositories", self.content)
         for event in (StoreSignal.REPOSITORY, StoreSignal.CONFIG):
-            self.hacs.async_dispatch(event, {})
+            self.store.async_dispatch(event, {})
 
     @callback
-    def async_store_repository_data(self, repository: HacsRepository) -> None:
+    def async_store_repository_data(self, repository: Repository) -> None:
         """Store the repository data."""
         data: dict[str, Any] = {
             "repository_manifest": repository.repository_manifest.manifest
@@ -129,17 +129,19 @@ class HacsData:
 
     async def restore(self) -> bool:
         """Restore saved data."""
-        self.hacs.status.new = False
+        self.store.status.new = False
         repositories: dict[str, Any] = {}
         common: dict[str, Any] = {}
 
         with contextlib.suppress(HomeAssistantError):
-            common = await async_load_from_storage(self.hacs.hass, "common") or {}
+            common = await async_load_from_storage(self.store.hass, "common") or {}
 
         try:
-            repositories = await async_load_from_storage(self.hacs.hass, "repositories")
+            repositories = await async_load_from_storage(
+                self.store.hass, "repositories"
+            )
             if not repositories and (
-                data := await async_load_legacy_data(self.hacs.hass)
+                data := await async_load_legacy_data(self.store.hass)
             ):
                 for category, entries in data.get("repositories", {}).items():
                     for repository in entries:
@@ -149,40 +151,40 @@ class HacsData:
                         }
 
         except HomeAssistantError as exception:
-            self.hacs.log.error(
+            LOGGER.error(
                 "Could not read %s, restore the file from a backup - %s",
-                self.hacs.hass.config.path(".storage/store.repositories"),
+                self.store.hass.config.path(".storage/store.repositories"),
                 exception,
             )
             return False
 
         if not common and not repositories:
             # Assume new install
-            self.hacs.status.new = True
+            self.store.status.new = True
             return True
 
-        self.logger.info("<HacsData restore> Restore started")
+        self.logger.info("Restore started")
 
-        self.hacs.common.archived_repositories = set()
-        self.hacs.common.ignored_repositories = set()
-        self.hacs.common.renamed_repositories = {}
+        self.store.common.archived_repositories = set()
+        self.store.common.ignored_repositories = set()
+        self.store.common.renamed_repositories = {}
 
         # Clear out doubble renamed values
         renamed = common.get("renamed_repositories", {})
         for entry in renamed:
             value = renamed.get(entry)
             if value not in renamed:
-                self.hacs.common.renamed_repositories[entry] = value
+                self.store.common.renamed_repositories[entry] = value
 
         # Clear out doubble archived values
         for entry in common.get("archived_repositories", set()):
-            if entry not in self.hacs.common.archived_repositories:
-                self.hacs.common.archived_repositories.add(entry)
+            if entry not in self.store.common.archived_repositories:
+                self.store.common.archived_repositories.add(entry)
 
         # Clear out doubble ignored values
         for entry in common.get("ignored_repositories", set()):
-            if entry not in self.hacs.common.ignored_repositories:
-                self.hacs.common.ignored_repositories.add(entry)
+            if entry not in self.store.common.ignored_repositories:
+                self.store.common.ignored_repositories.add(entry)
 
         try:
             await self.register_unknown_repositories(repositories)
@@ -191,18 +193,16 @@ class HacsData:
                 if entry == "0":
                     # Ignore repositories with ID 0
                     self.logger.debug(
-                        "<HacsData restore> Found repository with ID %s - %s",
+                        "Found repository with ID %s - %s",
                         entry,
                         repo_data,
                     )
                     continue
                 self.async_restore_repository(entry, repo_data)
 
-            self.logger.info("<HacsData restore> Restore done")
+            self.logger.info("Restore done")
         except Exception as exception:
-            self.logger.critical(
-                "<HacsData restore> [%s] Restore Failed!", exception, exc_info=exception
-            )
+            self.logger.critical("[%s] Restore failed", exception, exc_info=exception)
             return False
         return True
 
@@ -217,10 +217,10 @@ class HacsData:
             if (
                 entry in ("0", LEGACY_HACS_REPOSITORY_ID)
                 or repo_category is None
-                or self.hacs.repositories.is_registered(repository_id=entry)
+                or self.store.repositories.is_registered(repository_id=entry)
             ):
                 continue
-            await self.hacs.async_register_repository(
+            await self.store.async_register_repository(
                 repository_full_name=repo_data["full_name"],
                 category=repo_category,
                 check=False,
@@ -236,23 +236,21 @@ class HacsData:
     ) -> None:
         """Restore repository."""
         if entry == LEGACY_HACS_REPOSITORY_ID:
-            # The old HACS self-repository is not managed by the store
+            # The store is part of Home Assistant, it does not manage itself
             return
 
-        repository: HacsRepository | None = None
+        repository: Repository | None = None
         if full_name := repository_data.get("full_name"):
-            repository = self.hacs.repositories.get_by_full_name(full_name)
+            repository = self.store.repositories.get_by_full_name(full_name)
         if not repository:
-            repository = self.hacs.repositories.get_by_id(entry)
+            repository = self.store.repositories.get_by_id(entry)
         if not repository:
             return
 
         try:
-            self.hacs.repositories.set_repository_id(repository, entry)
+            self.store.repositories.set_repository_id(repository, entry)
         except ValueError as exception:
-            self.logger.warning(
-                "<HacsData async_restore_repository> duplicate IDs %s", exception
-            )
+            self.logger.warning("Duplicate IDs %s", exception)
             return
 
         # Restore repository attributes
@@ -286,7 +284,7 @@ class HacsData:
         if last_fetched := repository_data.get("last_fetched"):
             repository.data.last_fetched = datetime.fromtimestamp(last_fetched, UTC)
 
-        repository.repository_manifest = HacsManifest.from_dict(
+        repository.repository_manifest = RepositoryManifest.from_dict(
             repository_data.get("manifest")
             or repository_data.get("repository_manifest")
             or {}
@@ -296,7 +294,7 @@ class HacsData:
             repository.data.prerelease = None
 
         if repository.localpath is not None and is_safe(
-            self.hacs, repository.localpath
+            self.store, repository.localpath
         ):
             # Set local path
             repository.content.path.local = repository.localpath

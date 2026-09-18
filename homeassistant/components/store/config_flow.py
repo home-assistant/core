@@ -1,4 +1,4 @@
-"""Adds config flow for HACS."""
+"""Config flow for the Community store."""
 
 import asyncio
 from collections.abc import Mapping
@@ -31,8 +31,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow for HACS."""
+class StoreConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Config flow for the Community store."""
 
     VERSION = 1
 
@@ -190,13 +190,13 @@ class HacsFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> HacsOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> StoreOptionsFlow:
         """Create the options flow."""
-        return HacsOptionsFlowHandler()
+        return StoreOptionsFlow()
 
 
-class HacsOptionsFlowHandler(OptionsFlow):
-    """HACS config flow options handler."""
+class StoreOptionsFlow(OptionsFlow):
+    """Options flow for the Community store."""
 
     async def async_step_init(
         self, _user_input: dict[str, Any] | None = None
@@ -217,13 +217,13 @@ class HacsOptionsFlowHandler(OptionsFlow):
         if not entries:
             return self.async_abort(reason="not_setup")
 
-        hacs = entries[0].runtime_data
-        if hacs.queue.has_pending_tasks:
+        store = entries[0].runtime_data
+        if store.queue.has_pending_tasks:
             return self.async_abort(reason="pending_tasks")
 
         schema = {
-            vol.Optional(COUNTRY, default=hacs.configuration.country): vol.In(LOCALE),
-            vol.Optional(APPDAEMON, default=hacs.configuration.appdaemon): bool,
+            vol.Optional(COUNTRY, default=store.configuration.country): vol.In(LOCALE),
+            vol.Optional(APPDAEMON, default=store.configuration.appdaemon): bool,
         }
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(schema))

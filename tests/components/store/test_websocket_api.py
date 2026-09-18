@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import RepositoryCategory, StoreSignal
 from homeassistant.components.store.exceptions import StoreError
@@ -197,7 +197,7 @@ async def test_repository_info(
 
 
 async def test_repository_info_clears_new(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that looking at a repository stops it from being new."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -214,7 +214,7 @@ async def test_repository_info_clears_new(
 
 async def test_repository_info_survives_a_broken_update(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -236,7 +236,7 @@ async def test_repository_info_survives_a_broken_update(
 
 
 async def test_repositories_list(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test listing every known repository."""
     client = await hass_ws_client(hass)
@@ -269,7 +269,7 @@ async def test_repositories_list_by_category(
 
 
 async def test_repositories_list_skips_other_countries(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that a repository for another country is not listed."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -287,7 +287,7 @@ async def test_repositories_list_skips_other_countries(
 
 
 async def test_repositories_removed(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test listing the repositories that were removed from the store."""
     removed = store.repositories.removed_repository("removed/repository")
@@ -306,7 +306,7 @@ async def test_repositories_removed(
 
 
 async def test_repositories_removed_skips_ignored(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that an ignored repository is not reported as removed."""
     store.repositories.removed_repository("removed/repository")
@@ -323,7 +323,7 @@ async def test_repositories_removed_skips_ignored(
 
 
 async def test_repositories_clear_new_for_categories(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test clearing the new flag of a whole category."""
     integration = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -342,7 +342,7 @@ async def test_repositories_clear_new_for_categories(
 
 
 async def test_repositories_clear_new_for_one_repository(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test clearing the new flag of a single repository."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -361,7 +361,7 @@ async def test_repositories_clear_new_for_one_repository(
 
 
 async def test_repositories_add_existing(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test adding a repository the store already knows."""
     client = await hass_ws_client(hass)
@@ -428,7 +428,7 @@ async def test_repositories_add_invalid_url(
 
 
 async def test_repositories_remove(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test unregistering a repository from the store."""
     client = await hass_ws_client(hass)
@@ -442,7 +442,7 @@ async def test_repositories_remove(
 
 
 async def test_repository_ignore(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test ignoring a repository."""
     client = await hass_ws_client(hass)
@@ -456,7 +456,7 @@ async def test_repository_ignore(
 
 
 async def test_repository_state(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test setting the state the frontend shows for a repository."""
     client = await hass_ws_client(hass)
@@ -474,7 +474,7 @@ async def test_repository_state(
 
 
 async def test_repository_version(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test pinning a repository to a version."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -495,7 +495,7 @@ async def test_repository_version(
 
 
 async def test_repository_version_default_branch(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that selecting the default branch stops pinning the repository."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -516,7 +516,7 @@ async def test_repository_version_default_branch(
 
 
 async def test_repository_beta(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test opting a repository in to pre-releases."""
     client = await hass_ws_client(hass)
@@ -534,7 +534,7 @@ async def test_repository_beta(
 
 
 async def test_repository_refresh(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test refreshing a single repository."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -555,7 +555,7 @@ async def test_repository_refresh(
 
 
 async def test_repository_download(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test downloading a repository."""
     client = await hass_ws_client(hass)
@@ -569,7 +569,7 @@ async def test_repository_download(
 
 
 async def test_repository_download_failure(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test a download that can not be completed."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -593,7 +593,7 @@ async def test_repository_download_failure(
 
 
 async def test_repository_remove(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test removing a downloaded repository."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -613,7 +613,7 @@ async def test_repository_remove(
 
 
 async def test_repository_release_notes(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the release notes of the versions newer than the downloaded one."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -634,7 +634,7 @@ async def test_repository_release_notes(
 
 
 async def test_repository_release_notes_without_a_download(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that a repository that is not downloaded lists every release."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -654,7 +654,7 @@ async def test_repository_release_notes_without_a_download(
 
 
 async def test_repository_releases(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test listing the releases of a repository."""
     client = await hass_ws_client(hass)
@@ -677,7 +677,7 @@ async def test_repository_releases(
 
 
 async def test_repository_releases_failure(
-    hass: HomeAssistant, store: HacsBase, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test releases that can not be fetched."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)

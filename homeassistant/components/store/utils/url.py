@@ -1,4 +1,4 @@
-"""Various URL utils for HACS."""
+"""URL utilities for the Community store."""
 
 import re
 from typing import Literal

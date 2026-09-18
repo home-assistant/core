@@ -1,7 +1,7 @@
-"""HACS gives you a powerful UI to handle downloads of all your custom needs.
+"""The Community store integration.
 
-For more details about this integration, please refer to the documentation at
-https://hacs.xyz/
+Handles downloads of custom integrations, dashboard resources, themes,
+templates, python scripts and AppDaemon apps from GitHub.
 """
 
 from aiogithubapi import (
@@ -31,13 +31,14 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 
-from .base import HacsBase, StoreConfigEntry
+from .base import StoreConfigEntry, StoreManager
 from .const import CLIENT_NAME, DOMAIN, LEGACY_HACS_SYSTEM_ID
-from .data_client import HacsDataClient
+from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, StoreStage
 from .exceptions import StoreError
-from .migration import async_migrate_from_hacs, async_remove_duplicate_entries
-from .utils.data import HacsData
+from .migration import async_adopt_legacy_install, async_remove_duplicate_entries
+from .utils.data import StoreData
+from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
 from .utils.storage import STORAGE_CACHE_KEY
 from .websocket import async_register_websocket_commands
@@ -47,8 +48,8 @@ PLATFORMS = [Platform.SWITCH, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-class HacsRedirectView(HomeAssistantView):
-    """Redirect the paths below the old HACS panel to the store panel."""
+class LegacyPanelRedirectView(HomeAssistantView):
+    """Redirect the paths below the panel of the custom integration."""
 
     url = "/hacs/{tail:.*}"
     name = "hacs:redirect"
@@ -69,9 +70,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Community store integration."""
     await async_remove_duplicate_entries(hass)
 
-    # HACS lived at /hacs, which is what bookmarks and links still point at
+    # The custom integration lived at /hacs, where bookmarks still point
     hass.http.register_redirect("/hacs", "/store")
-    hass.http.register_view(HacsRedirectView)
+    hass.http.register_view(LegacyPanelRedirectView)
 
     return True
 
@@ -81,15 +82,15 @@ async def _async_initialize_integration(
     config_entry: StoreConfigEntry,
 ) -> bool:
     """Initialize the integration."""
-    config_entry.runtime_data = hacs = HacsBase()
-    hacs.enable_hacs()
+    config_entry.runtime_data = store = StoreManager()
+    store.enable()
 
     if config_entry.source == SOURCE_IMPORT:
         # Import is not supported
         hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
         return False
 
-    hacs.configuration.update_from_dict(
+    store.configuration.update_from_dict(
         {
             "config_entry": config_entry,
             **config_entry.data,
@@ -97,31 +98,31 @@ async def _async_initialize_integration(
         },
     )
 
-    hacs.set_stage(None)
+    store.set_stage(None)
 
-    hacs.log.info("Starting Community store")
+    LOGGER.info("Starting Community store")
 
     clientsession = async_get_clientsession(hass)
 
-    hacs.version = AwesomeVersion(HAVERSION)
-    hacs.hass = hass
-    hacs.queue = QueueManager(hass=hass)
-    hacs.data = HacsData(hacs=hacs)
-    hacs.data_client = HacsDataClient(
+    store.version = AwesomeVersion(HAVERSION)
+    store.hass = hass
+    store.queue = QueueManager(hass=hass)
+    store.data = StoreData(store=store)
+    store.data_client = CatalogClient(
         session=clientsession,
         client_name=CLIENT_NAME,
     )
-    hacs.system.running = True
-    hacs.session = clientsession
+    store.system.running = True
+    store.session = clientsession
 
-    hacs.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
-    hacs.core.config_path = hacs.hass.config.path()
+    store.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
+    store.core.config_path = store.hass.config.path()
 
-    hacs.core.ha_version = AwesomeVersion(HAVERSION)
+    store.core.ha_version = AwesomeVersion(HAVERSION)
 
     # Legacy GitHub client
-    hacs.github = GitHub(
-        hacs.configuration.token,
+    store.github = GitHub(
+        store.configuration.token,
         clientsession,
         headers={
             "User-Agent": CLIENT_NAME,
@@ -130,22 +131,22 @@ async def _async_initialize_integration(
     )
 
     # New GitHub client
-    hacs.githubapi = GitHubAPI(
-        token=hacs.configuration.token,
+    store.githubapi = GitHubAPI(
+        token=store.configuration.token,
         session=clientsession,
         client_name=CLIENT_NAME,
     )
 
-    hacs.enable_hacs()
+    store.enable()
 
     try:
-        if not await hacs.data.restore():
+        if not await store.data.restore():
             raise ConfigEntryNotReady("Could not restore the stored data")
 
-        hacs.set_active_categories()
+        store.set_active_categories()
 
         async_register_websocket_commands(hass)
-        await hacs.async_setup_frontend_endpoint_plugin()
+        await store.async_setup_frontend_endpoint_plugin()
     except GitHubAuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"
@@ -155,26 +156,26 @@ async def _async_initialize_integration(
             f"Could not set up the Community store: {exception}"
         ) from exception
 
-    hacs.set_stage(StoreStage.SETUP)
+    store.set_stage(StoreStage.SETUP)
 
     # Setting up can leave the store disabled, an invalid token is for the user
     # to fix, anything else is worth another try.
-    if hacs.system.disabled_reason is DisabledReason.INVALID_TOKEN:
+    if store.system.disabled_reason is DisabledReason.INVALID_TOKEN:
         raise ConfigEntryAuthFailed("The GitHub token is no longer valid")
 
-    if hacs.system.disabled:
+    if store.system.disabled:
         raise ConfigEntryNotReady(
-            f"The Community store is disabled: {hacs.system.disabled_reason}"
+            f"The Community store is disabled: {store.system.disabled_reason}"
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    hacs.set_stage(StoreStage.WAITING)
-    hacs.log.info(
+    store.set_stage(StoreStage.WAITING)
+    LOGGER.info(
         "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
 
-    async_at_start(hass=hass, at_start_cb=hacs.startup_tasks)
+    async_at_start(hass=hass, at_start_cb=store.startup_tasks)
 
     return True
 
@@ -185,7 +186,7 @@ async def async_setup_entry(
     """Set up this integration using UI."""
     # Runs before the update listener is added, trimming the options must not
     # trigger a reload while the entry is still being set up.
-    async_migrate_from_hacs(hass, config_entry)
+    async_adopt_legacy_install(hass, config_entry)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     return await _async_initialize_integration(hass=hass, config_entry=config_entry)
@@ -195,28 +196,28 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: StoreConfigEntry
 ) -> bool:
     """Handle removal of an entry."""
-    hacs = config_entry.runtime_data
+    store = config_entry.runtime_data
 
-    if hacs.queue.has_pending_tasks:
-        hacs.log.warning("Pending tasks, can not unload, try again later.")
+    if store.queue.has_pending_tasks:
+        LOGGER.warning("Pending tasks, can not unload, try again later")
         return False
 
     # Clear out pending queue
-    hacs.queue.clear()
+    store.queue.clear()
 
-    for task in hacs.recurring_tasks:
+    for task in store.recurring_tasks:
         # Cancel all pending tasks
         task()
 
     # Store data
-    await hacs.data.async_write(force=True)
+    await store.data.async_write(force=True)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    hacs.set_stage(None)
-    hacs.disable_hacs(DisabledReason.REMOVED)
+    store.set_stage(None)
+    store.disable(DisabledReason.REMOVED)
 
     hass.data.pop(STORAGE_CACHE_KEY, None)
 
@@ -236,7 +237,7 @@ async def async_remove_config_entry_device(
     device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    hacs = config_entry.runtime_data
+    store = config_entry.runtime_data
     repository_id = None
     for identifier in device_entry.identifiers:
         if (
@@ -260,8 +261,8 @@ async def async_remove_config_entry_device(
             translation_key="device_of_the_store",
         )
 
-    if hacs.repositories.is_downloaded(repository_id) and (
-        repository := hacs.repositories.get_by_id(repository_id)
+    if store.repositories.is_downloaded(repository_id) and (
+        repository := store.repositories.get_by_id(repository_id)
     ):
         raise HomeAssistantError(
             translation_domain=DOMAIN,

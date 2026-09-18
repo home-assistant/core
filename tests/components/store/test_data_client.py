@@ -7,14 +7,14 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.exceptions import NotModifiedError, StoreError
 from homeassistant.core import HomeAssistant
 
 from . import (
     CategoryTestData,
     category_test_data_parametrized,
-    get_hacs,
+    get_store,
     mocked_response,
 )
 from .conftest import StoreResponses
@@ -42,7 +42,7 @@ def _without_description(data: dict[str, Any]) -> dict[str, Any]:
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_get_data(
-    store: HacsBase,
+    store: StoreManager,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -56,7 +56,7 @@ async def test_get_data(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_get_repositories(
-    store: HacsBase,
+    store: StoreManager,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -70,13 +70,15 @@ async def test_get_repositories(
     ("exception", "message"),
     [
         pytest.param(
-            Exception("Test"), "Error fetching data from HACS: Test", id="exception"
+            Exception("Test"),
+            "Error fetching data from the catalog: Test",
+            id="exception",
         ),
         pytest.param(TimeoutError, "Timeout of 60s reached", id="timeout"),
     ],
 )
 async def test_request_exceptions(
-    store: HacsBase,
+    store: StoreManager,
     response_mocker: StoreResponses,
     exception: Exception,
     message: str,
@@ -113,7 +115,7 @@ async def test_request_exceptions(
     ],
 )
 async def test_request_status_handling(
-    store: HacsBase,
+    store: StoreManager,
     response_mocker: StoreResponses,
     status: HTTPStatus,
     expectation: AbstractContextManager[Any],
@@ -129,7 +131,7 @@ async def test_request_status_handling(
 
 
 async def test_etag_is_sent_back(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test that the etag of a response is used for the next request."""
     url = "https://data-v2.hacs.xyz/integration/repositories.json"
@@ -179,7 +181,7 @@ async def test_etag_is_sent_back(
     ],
 )
 async def test_invalid_data_is_discarded(
-    store: HacsBase,
+    store: StoreManager,
     response_mocker: StoreResponses,
     section: str,
     data: dict[str, Any] | list[Any],
@@ -195,7 +197,7 @@ async def test_invalid_data_is_discarded(
 
 
 async def test_unknown_section_can_not_be_validated(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test that a section without a schema is refused."""
     url = "https://data-v2.hacs.xyz/unknown/data.json"
@@ -229,7 +231,7 @@ async def test_invalid_repository_data_is_not_registered(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert not store.system.disabled
     assert store.stage == "running"
     assert store.repositories.get_by_full_name(category_test_data["repository"]) is None

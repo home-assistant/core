@@ -9,12 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from homeassistant.components.store.base import HacsBase, async_get_store
+from homeassistant.components.store.base import StoreManager, async_get_store
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import RepositoryCategory
 from homeassistant.components.store.repositories.base import (
-    HacsManifest,
-    HacsRepository,
+    Repository,
+    RepositoryManifest,
 )
 from homeassistant.components.store.utils.logger import LOGGER
 from homeassistant.core import HomeAssistant
@@ -134,23 +134,23 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def get_hacs(hass: HomeAssistant) -> HacsBase:
+def get_store(hass: HomeAssistant) -> StoreManager:
     """Return the store object of the loaded config entry."""
     return async_get_store(hass)
 
 
 def dummy_repository_base(
-    hacs: HacsBase, repository: HacsRepository | None = None
-) -> HacsRepository:
+    store: StoreManager, repository: Repository | None = None
+) -> Repository:
     """Return a repository with just enough data to be usable in tests."""
     if repository is None:
-        repository = HacsRepository(hacs)
+        repository = Repository(store)
         repository.data.full_name = "test/test"
         repository.data.full_name_lower = "test/test"
 
-    repository.hacs = hacs
-    repository.hacs.hass = hacs.hass
-    repository.hacs.core.config_path = hacs.hass.config.path()
+    repository.store = store
+    repository.store.hass = store.hass
+    repository.store.core.config_path = store.hass.config.path()
     repository.logger = LOGGER
     repository.data.domain = "test"
     repository.data.last_version = "3"
@@ -161,7 +161,7 @@ def dummy_repository_base(
     repository.data.update_data(
         load_json_object_fixture("repository_data.json", DOMAIN)
     )
-    repository.hacs_manifest = HacsManifest.from_dict({})
+    repository.hacs_manifest = RepositoryManifest.from_dict({})
 
     async def update_repository(*args: Any, **kwargs: Any) -> None:
         """Do nothing, the repository data is already set."""

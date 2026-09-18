@@ -7,7 +7,7 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
 
-class HacsUpdateCoordinator(BaseDataUpdateCoordinatorProtocol):
+class StoreUpdateCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Dispatch updates to update entities."""
 
     def __init__(self) -> None:

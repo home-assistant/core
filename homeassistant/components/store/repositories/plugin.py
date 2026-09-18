@@ -1,4 +1,4 @@
-"""Class for plugins in HACS."""
+"""Class for dashboard resource repositories."""
 
 import re
 from typing import TYPE_CHECKING, override
@@ -8,20 +8,20 @@ from homeassistant.components import lovelace
 from ..enums import RepositoryCategory, StoreSignal
 from ..exceptions import StoreError
 from ..utils.decorator import concurrent
-from .base import HacsRepository
+from .base import Repository
 
 HACSTAG_REPLACER = re.compile(r"\D+")
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 
-class HacsPluginRepository(HacsRepository):
-    """Plugins in HACS."""
+class PluginRepository(Repository):
+    """Dashboard resource repository."""
 
-    def __init__(self, hacs: HacsBase, full_name: str) -> None:
+    def __init__(self, store: StoreManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(hacs=hacs)
+        super().__init__(store=store)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.file_name = ""
@@ -32,7 +32,7 @@ class HacsPluginRepository(HacsRepository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.hacs.core.config_path}/www/community/{self.data.full_name.split('/')[-1]}"
+        return f"{self.store.core.config_path}/www/community/{self.data.full_name.split('/')[-1]}"
 
     @override
     async def validate_repository(self) -> bool:
@@ -54,14 +54,14 @@ class HacsPluginRepository(HacsRepository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.hacs.status.startup:
+                if not self.store.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
-        await self.hacs.async_setup_frontend_endpoint_plugin()
+        await self.store.async_setup_frontend_endpoint_plugin()
         await self.update_dashboard_resources()
 
     @override
@@ -91,7 +91,7 @@ class HacsPluginRepository(HacsRepository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.hacs.async_dispatch(
+            self.store.async_dispatch(
                 StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
@@ -172,7 +172,7 @@ class HacsPluginRepository(HacsRepository):
         self,
     ) -> lovelace.resources.ResourceStorageCollection | None:
         """Get the resource handler."""
-        if (lovelace_data := self.hacs.hass.data.get(lovelace.LOVELACE_DATA)) is None:
+        if (lovelace_data := self.store.hass.data.get(lovelace.LOVELACE_DATA)) is None:
             self.logger.warning(
                 "%s Can not access the lovelace integration data", self.string
             )

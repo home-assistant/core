@@ -19,34 +19,6 @@
       'title': '',
       'unique_id': '12345',
     }),
-    'hacs': dict({
-      'archived_repositories': list([
-      ]),
-      'categories': list([
-        'appdaemon',
-        'integration',
-        'plugin',
-        'template',
-        'theme',
-      ]),
-      'configuration': dict({
-        'appdaemon': True,
-        'country': 'ALL',
-        'debug': False,
-        'python_script': False,
-        'release_limit': 5,
-        'theme': False,
-      }),
-      'disabled_reason': None,
-      'ignored_repositories': list([
-      ]),
-      'lovelace_mode': 'storage',
-      'new': False,
-      'renamed_repositories': dict({
-      }),
-      'stage': 'running',
-      'startup': False,
-    }),
     'rate_limit': dict({
       'rate': dict({
         'limit': 5000,
@@ -236,6 +208,34 @@
         }),
       }),
     ]),
+    'store': dict({
+      'archived_repositories': list([
+      ]),
+      'categories': list([
+        'appdaemon',
+        'integration',
+        'plugin',
+        'template',
+        'theme',
+      ]),
+      'configuration': dict({
+        'appdaemon': True,
+        'country': 'ALL',
+        'debug': False,
+        'python_script': False,
+        'release_limit': 5,
+        'theme': False,
+      }),
+      'disabled_reason': None,
+      'ignored_repositories': list([
+      ]),
+      'lovelace_mode': 'storage',
+      'new': False,
+      'renamed_repositories': dict({
+      }),
+      'stage': 'running',
+      'startup': False,
+    }),
   })
 # ---
 # name: test_diagnostics_without_a_rate_limit

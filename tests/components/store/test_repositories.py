@@ -16,20 +16,20 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.store.base import HacsBase, RemovedRepository
+from homeassistant.components.store.base import RemovedRepository, StoreManager
 from homeassistant.components.store.const import MAX_DOWNLOAD_SIZE
 from homeassistant.components.store.enums import RepositoryCategory, StoreSignal
 from homeassistant.components.store.exceptions import StoreError
 from homeassistant.components.store.repositories.base import (
     FileInformation,
-    HacsManifest,
-    HacsRepository,
+    Repository,
     RepositoryData,
+    RepositoryManifest,
 )
 from homeassistant.components.store.repositories.integration import (
-    HacsIntegrationRepository,
+    IntegrationRepository,
 )
-from homeassistant.components.store.repositories.plugin import HacsPluginRepository
+from homeassistant.components.store.repositories.plugin import PluginRepository
 from homeassistant.components.store.utils.validate import Validate
 from homeassistant.components.store.utils.workarounds import LegacyTreeFile
 from homeassistant.core import HomeAssistant
@@ -94,7 +94,7 @@ def _downloaded_files(config_dir: Path) -> list[str]:
 
 def test_manifest_defaults() -> None:
     """Test the defaults of a hacs.json that only carries a name."""
-    manifest = HacsManifest.from_dict({"name": "TEST"})
+    manifest = RepositoryManifest.from_dict({"name": "TEST"})
 
     assert manifest.manifest == {"name": "TEST"}
     assert manifest.name == "TEST"
@@ -111,7 +111,7 @@ def test_manifest_defaults() -> None:
 def test_manifest_rejects_none() -> None:
     """Test that a missing hacs.json is not silently accepted."""
     with pytest.raises(StoreError):
-        HacsManifest.from_dict(None)
+        RepositoryManifest.from_dict(None)
 
 
 def test_repository_data_guards_generated_fields() -> None:
@@ -172,10 +172,10 @@ def test_removed_repository(data: dict[str, Any]) -> None:
     ],
 )
 async def test_can_download(
-    store: HacsBase, ha_version: str, required_version: str, expected: bool
+    store: StoreManager, ha_version: str, required_version: str, expected: bool
 ) -> None:
     """Test whether a repository can be downloaded on this Home Assistant."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.releases = True
     repository.repository_manifest.homeassistant = required_version
     store.core.ha_version = AwesomeVersion(ha_version)
@@ -183,12 +183,12 @@ async def test_can_download(
     assert repository.can_download is expected
 
 
-async def test_can_download_without_requirement(store: HacsBase) -> None:
+async def test_can_download_without_requirement(store: StoreManager) -> None:
     """Test that a repository without a requirement can always be downloaded."""
-    assert HacsRepository(store).can_download
+    assert Repository(store).can_download
 
 
-async def test_display_status(store: HacsBase) -> None:
+async def test_display_status(store: StoreManager) -> None:
     """Test the status the frontend shows for a repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     assert repository.display_status == "default"
@@ -216,15 +216,15 @@ async def test_display_status(store: HacsBase) -> None:
     assert repository.display_status == "installed"
 
 
-async def test_pending_update(store: HacsBase) -> None:
+async def test_pending_update(store: StoreManager) -> None:
     """Test when a repository counts as having an update pending."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     store.core.ha_version = AwesomeVersion("0.109.0")
     repository.repository_manifest.homeassistant = "0.110.0"
     repository.data.releases = True
     assert not repository.pending_update
 
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.installed = True
     repository.data.default_branch = "main"
     repository.data.selected_tag = "main"
@@ -247,7 +247,7 @@ async def test_pending_update(store: HacsBase) -> None:
     ],
 )
 def test_should_try_releases(
-    mock_repository: HacsRepository,
+    mock_repository: Repository,
     ref: str,
     category: str,
     releases: bool,
@@ -264,7 +264,7 @@ def test_should_try_releases(
     assert mock_repository.should_try_releases is expected
 
 
-def test_gather_files_to_download(mock_repository: HacsRepository) -> None:
+def test_gather_files_to_download(mock_repository: Repository) -> None:
     """Test gathering the files of a plain repository."""
     mock_repository.content.path.remote = ""
     mock_repository.tree = _tree(("test/path/file.file", False))
@@ -274,7 +274,7 @@ def test_gather_files_to_download(mock_repository: HacsRepository) -> None:
     ]
 
 
-def test_gather_files_single_file_repository(mock_repository: HacsRepository) -> None:
+def test_gather_files_single_file_repository(mock_repository: Repository) -> None:
     """Test that a single file repository only downloads its one file."""
     mock_repository.content.single = True
     mock_repository.data.file_name = "test.file"
@@ -291,7 +291,7 @@ def test_gather_files_single_file_repository(mock_repository: HacsRepository) ->
 
 
 def test_gather_plugin_files_from_root(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
 ) -> None:
     """Test that a plugin in the repository root only takes the root scripts."""
     mock_repository_plugin.content.path.remote = ""
@@ -309,7 +309,7 @@ def test_gather_plugin_files_from_root(
 
 
 def test_gather_plugin_files_from_dist(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
 ) -> None:
     """Test that a plugin in dist takes everything below dist."""
     mock_repository_plugin.content.path.remote = "dist"
@@ -328,7 +328,7 @@ def test_gather_plugin_files_from_dist(
 
 
 def test_gather_plugin_files_multiple_in_root(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
 ) -> None:
     """Test that the dependencies next to a plugin are downloaded too."""
     mock_repository_plugin.content.path.remote = ""
@@ -346,7 +346,7 @@ def test_gather_plugin_files_multiple_in_root(
 
 
 def test_gather_plugin_files_from_release(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
 ) -> None:
     """Test that a plugin release serves its assets instead of the tree."""
     mock_repository_plugin.data.file_name = "test.js"
@@ -365,7 +365,7 @@ def test_gather_plugin_files_from_release(
     assert files == ["test.js", "test.png"]
 
 
-def test_gather_zip_release(mock_repository_plugin: HacsRepository) -> None:
+def test_gather_zip_release(mock_repository_plugin: Repository) -> None:
     """Test that a zip release only serves the archive."""
     mock_repository_plugin.data.file_name = "test.zip"
     mock_repository_plugin.repository_manifest.zip_release = True
@@ -379,7 +379,7 @@ def test_gather_zip_release(mock_repository_plugin: HacsRepository) -> None:
     assert files == ["test.zip"]
 
 
-def test_gather_theme_files_in_root(mock_repository_theme: HacsRepository) -> None:
+def test_gather_theme_files_in_root(mock_repository_theme: Repository) -> None:
     """Test that a theme in the repository root only takes one yaml file."""
     mock_repository_theme.repository_manifest.content_in_root = True
     mock_repository_theme.content.path.remote = ""
@@ -395,7 +395,7 @@ def test_gather_theme_files_in_root(mock_repository_theme: HacsRepository) -> No
     assert files == ["test.yaml"]
 
 
-def test_gather_appdaemon_files(mock_repository_appdaemon: HacsRepository) -> None:
+def test_gather_appdaemon_files(mock_repository_appdaemon: Repository) -> None:
     """Test that an AppDaemon app takes everything below its apps directory."""
     mock_repository_appdaemon.tree = _tree(
         ("test.py", False),
@@ -448,7 +448,7 @@ def test_gather_appdaemon_files(mock_repository_appdaemon: HacsRepository) -> No
     ],
 )
 def test_find_target_asset(
-    mock_repository: HacsRepository,
+    mock_repository: Repository,
     file_name: str | None,
     manifest_filename: str | None,
     asset_names: tuple[str, ...],
@@ -475,7 +475,7 @@ def test_find_target_asset(
     ],
 )
 def test_find_target_asset_plugin_patterns(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
     asset_names: tuple[str, ...],
     expected: str,
 ) -> None:
@@ -490,7 +490,7 @@ def test_find_target_asset_plugin_patterns(
 
 
 def test_find_target_asset_prefers_configured_filename(
-    mock_repository_plugin: HacsRepository,
+    mock_repository_plugin: Repository,
 ) -> None:
     """Test that the configured filename wins over the plugin name patterns."""
     mock_repository_plugin.data.full_name = "user/test-card"
@@ -509,13 +509,13 @@ def test_find_target_asset_prefers_configured_filename(
     [pytest.param([], id="empty"), pytest.param(None, id="none")],
 )
 def test_find_target_asset_without_assets(
-    mock_repository: HacsRepository, assets: list[GitHubReleaseAssetModel] | None
+    mock_repository: Repository, assets: list[GitHubReleaseAssetModel] | None
 ) -> None:
     """Test a release that carries no assets at all."""
     assert mock_repository._find_target_asset(assets) is None
 
 
-async def test_download_count_from_release(store: HacsBase) -> None:
+async def test_download_count_from_release(store: StoreManager) -> None:
     """Test that the download count comes from the matching release asset."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.file_name = "main.zip"
@@ -545,10 +545,10 @@ async def test_download_count_from_release(store: HacsBase) -> None:
     ],
 )
 async def test_get_hacs_json(
-    store: HacsBase, version: str, expected: str | None
+    store: StoreManager, version: str, expected: str | None
 ) -> None:
     """Test reading the hacs.json of a specific version."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     manifest = await repository.get_hacs_json(version=version)
@@ -556,9 +556,9 @@ async def test_get_hacs_json(
     assert (manifest.name if manifest else None) == expected
 
 
-async def test_get_hacs_json_swallows_exceptions(store: HacsBase) -> None:
+async def test_get_hacs_json_swallows_exceptions(store: StoreManager) -> None:
     """Test that a broken hacs.json never propagates out."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     with patch.object(
@@ -567,7 +567,7 @@ async def test_get_hacs_json_swallows_exceptions(store: HacsBase) -> None:
         assert await repository.get_hacs_json(version="1.0.0") is None
 
     with patch(
-        "homeassistant.components.store.repositories.base.HacsManifest.from_dict",
+        "homeassistant.components.store.repositories.base.RepositoryManifest.from_dict",
         side_effect=ValueError("Invalid manifest"),
     ):
         assert await repository.get_hacs_json(version="1.0.0") is None
@@ -581,18 +581,18 @@ async def test_get_hacs_json_swallows_exceptions(store: HacsBase) -> None:
     ],
 )
 async def test_get_hacs_json_raw(
-    store: HacsBase, version: str, expected: dict[str, Any] | None
+    store: StoreManager, version: str, expected: dict[str, Any] | None
 ) -> None:
     """Test reading the raw hacs.json of a specific version."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     assert await repository.get_hacs_json_raw(version=version) == expected
 
 
-async def test_get_hacs_json_raw_swallows_exceptions(store: HacsBase) -> None:
+async def test_get_hacs_json_raw_swallows_exceptions(store: StoreManager) -> None:
     """Test that an unreadable hacs.json never propagates out."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     with patch.object(store, "async_download_file", side_effect=Exception("boom")):
@@ -623,10 +623,10 @@ async def test_get_hacs_json_raw_swallows_exceptions(store: HacsBase) -> None:
     ],
 )
 async def test_get_documentation(
-    store: HacsBase, data: dict[str, Any], snapshot: SnapshotAssertion
+    store: StoreManager, data: dict[str, Any], snapshot: SnapshotAssertion
 ) -> None:
     """Test which version of the documentation is served."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
     for key, value in data.items():
         setattr(repository.data, key, value)
@@ -634,17 +634,17 @@ async def test_get_documentation(
     assert await repository.get_documentation(filename="README.md") == snapshot
 
 
-async def test_get_documentation_without_filename(store: HacsBase) -> None:
+async def test_get_documentation_without_filename(store: StoreManager) -> None:
     """Test that no filename means no documentation."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     assert await repository.get_documentation() is None
 
 
-async def test_get_documentation_without_version(store: HacsBase) -> None:
+async def test_get_documentation_without_version(store: StoreManager) -> None:
     """Test that a repository with nothing to point at has no documentation."""
-    repository = HacsRepository(store)
+    repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
     repository.ref = None
 
@@ -666,7 +666,7 @@ async def test_get_documentation_without_version(store: HacsBase) -> None:
 )
 async def test_register_repository(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
     category: RepositoryCategory,
@@ -739,7 +739,7 @@ async def test_register_repository(
 )
 async def test_register_repository_failures(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
     exception: str,
@@ -772,7 +772,7 @@ async def test_register_repository_failures(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_validate_repository(
-    store: HacsBase, category_test_data: CategoryTestData
+    store: StoreManager, category_test_data: CategoryTestData
 ) -> None:
     """Test validating the structure of a repository of every category."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
@@ -794,7 +794,7 @@ async def test_validate_repository(
     ),
 )
 async def test_validate_repository_without_content(
-    store: HacsBase, category_test_data: CategoryTestData
+    store: StoreManager, category_test_data: CategoryTestData
 ) -> None:
     """Test that a repository without the expected content is refused."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
@@ -810,7 +810,7 @@ async def test_validate_repository_without_content(
         await repository.validate_repository()
 
 
-async def test_validate_integration_without_content(store: HacsBase) -> None:
+async def test_validate_integration_without_content(store: StoreManager) -> None:
     """Test an integration repository without a custom_components directory."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
@@ -826,7 +826,7 @@ async def test_validate_integration_without_content(store: HacsBase) -> None:
         await repository.validate_repository()
 
 
-async def test_validate_plugin_without_content(store: HacsBase) -> None:
+async def test_validate_plugin_without_content(store: StoreManager) -> None:
     """Test a dashboard plugin repository without a script to serve."""
     repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     await repository.update_repository(force=True)
@@ -849,7 +849,7 @@ async def test_validate_plugin_without_content(store: HacsBase) -> None:
     ),
 )
 async def test_validate_repository_with_content_in_root(
-    store: HacsBase, category_test_data: CategoryTestData
+    store: StoreManager, category_test_data: CategoryTestData
 ) -> None:
     """Test a repository that keeps its content in the repository root."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
@@ -865,7 +865,7 @@ async def test_validate_repository_with_content_in_root(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_update_repository_without_a_tree(
-    store: HacsBase, category_test_data: CategoryTestData
+    store: StoreManager, category_test_data: CategoryTestData
 ) -> None:
     """Test that a refresh that finds no files keeps the known tree."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
@@ -880,7 +880,7 @@ async def test_update_repository_without_a_tree(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_download_repository(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
     category_test_data: CategoryTestData,
@@ -907,7 +907,7 @@ async def test_download_repository(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_update_repository(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     category_test_data: CategoryTestData,
 ) -> None:
@@ -934,7 +934,7 @@ async def test_update_repository(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_remove_repository(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
     category_test_data: CategoryTestData,
@@ -968,7 +968,7 @@ async def test_remove_repository(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_repository_releases(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
     response_mocker: StoreResponses,
     category_test_data: CategoryTestData,
@@ -1004,7 +1004,7 @@ async def test_repository_releases(
 
 
 async def test_download_zip_release(
-    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
 ) -> None:
     """Test downloading a release that ships a zip archive."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1032,7 +1032,7 @@ async def test_download_zip_release(
 
 
 async def test_download_zip_release_failure(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test a zip release that can not be downloaded."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1052,7 +1052,7 @@ async def test_download_zip_release_failure(
     assert validate.errors == [f"Failed to download {url}"]
 
 
-async def test_download_repository_zip_without_ref(store: HacsBase) -> None:
+async def test_download_repository_zip_without_ref(store: StoreManager) -> None:
     """Test that a repository archive needs something to download."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = ""
@@ -1062,7 +1062,7 @@ async def test_download_repository_zip_without_ref(store: HacsBase) -> None:
 
 
 async def test_download_zip_release_escaping_member(
-    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
 ) -> None:
     """Test a zip release that tries to write outside the repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1084,7 +1084,7 @@ async def test_download_zip_release_escaping_member(
 
 
 async def test_download_zip_release_too_large(
-    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
 ) -> None:
     """Test a zip release that expands to more than the limit."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1108,7 +1108,7 @@ async def test_download_zip_release_too_large(
 
 
 async def test_download_repository_zip_escaping_member(
-    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
 ) -> None:
     """Test a repository archive that tries to write outside the repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1134,7 +1134,7 @@ async def test_download_repository_zip_escaping_member(
 
 
 async def test_download_content_outside_the_repository(
-    store: HacsBase, response_mocker: StoreResponses, config_dir: Path
+    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
 ) -> None:
     """Test a file name that tries to write outside the repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1153,7 +1153,7 @@ async def test_download_content_outside_the_repository(
 
 
 async def test_install_rejects_escaping_persistent_directory(
-    store: HacsBase, config_dir: Path
+    store: StoreManager, config_dir: Path
 ) -> None:
     """Test a hacs.json pointing its persistent directory out of the repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1170,7 +1170,7 @@ async def test_install_rejects_escaping_persistent_directory(
 
 
 async def test_download_declines_a_declared_size_over_the_limit(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test that a response declaring more than the limit is not read."""
     url = "https://example.com/big"
@@ -1185,7 +1185,7 @@ async def test_download_declines_a_declared_size_over_the_limit(
 
 
 async def test_download_discards_content_over_the_limit(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test that a response larger than the limit is thrown away."""
     url = "https://example.com/big"
@@ -1202,7 +1202,7 @@ async def test_download_discards_content_over_the_limit(
     ),
 )
 async def test_remove_refuses_escaping_file_name(
-    store: HacsBase, config_dir: Path, category_test_data: CategoryTestData
+    store: StoreManager, config_dir: Path, category_test_data: CategoryTestData
 ) -> None:
     """Test that a crafted file name can not delete a file of its own choosing."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
@@ -1218,7 +1218,7 @@ async def test_remove_refuses_escaping_file_name(
 
 async def test_integration_restart_required_issue(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -1237,7 +1237,7 @@ async def test_integration_restart_required_issue(
     )
 
 
-async def test_integration_manifest_missing_key(store: HacsBase) -> None:
+async def test_integration_manifest_missing_key(store: StoreManager) -> None:
     """Test an integration manifest without a domain."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
@@ -1262,7 +1262,7 @@ async def test_integration_manifest_missing_key(store: HacsBase) -> None:
     ],
 )
 async def test_integration_manifest_invalid_domain(
-    store: HacsBase, domain: Any
+    store: StoreManager, domain: Any
 ) -> None:
     """Test that a manifest can not name a directory of its own choosing."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1278,12 +1278,14 @@ async def test_integration_manifest_invalid_domain(
         await repository.validate_repository()
 
 
-async def test_integration_domain_owned_by_another_repository(store: HacsBase) -> None:
+async def test_integration_domain_owned_by_another_repository(
+    store: StoreManager,
+) -> None:
     """Test that a download can not take over the directory of another one."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = "example"
 
-    other = HacsIntegrationRepository(store, "test/other")
+    other = IntegrationRepository(store, "test/other")
     other.data.id = "1337"
     other.data.domain = "example"
     other.data.installed = True
@@ -1293,7 +1295,7 @@ async def test_integration_domain_owned_by_another_repository(store: HacsBase) -
         await repository.async_pre_install()
 
 
-async def test_integration_manifest_missing_file(store: HacsBase) -> None:
+async def test_integration_manifest_missing_file(store: StoreManager) -> None:
     """Test an integration that has no manifest.json in its tree."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.tree = []
@@ -1303,7 +1305,7 @@ async def test_integration_manifest_missing_file(store: HacsBase) -> None:
 
 
 async def test_integration_manifest_for_version(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test reading the integration manifest of a specific version."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1320,7 +1322,7 @@ async def test_integration_manifest_for_version(
     }
 
 
-async def test_integration_manifest_for_missing_version(store: HacsBase) -> None:
+async def test_integration_manifest_for_missing_version(store: StoreManager) -> None:
     """Test the integration manifest of a version that was never published."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
@@ -1330,7 +1332,7 @@ async def test_integration_manifest_for_missing_version(store: HacsBase) -> None
 
 async def test_template_reloads_custom_templates(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that removing a template repository reloads the custom templates."""
@@ -1355,7 +1357,7 @@ async def test_template_reloads_custom_templates(
 
 
 @pytest.fixture
-async def downloaded_plugin(store: HacsBase) -> HacsPluginRepository:
+async def downloaded_plugin(store: StoreManager) -> PluginRepository:
     """Return a downloaded dashboard plugin repository."""
     repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     await repository.async_install()
@@ -1374,7 +1376,7 @@ async def downloaded_plugin(store: HacsBase) -> HacsPluginRepository:
     ],
 )
 async def test_dashboard_namespace(
-    downloaded_plugin: HacsPluginRepository, repository_name: str, namespace: str
+    downloaded_plugin: PluginRepository, repository_name: str, namespace: str
 ) -> None:
     """Test the namespace a plugin serves its files under."""
     downloaded_plugin.data.full_name = repository_name
@@ -1393,7 +1395,7 @@ async def test_dashboard_namespace(
     ],
 )
 async def test_dashboard_hacstag(
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
     downloaded: str | None,
     selected: str | None,
     available: str | None,
@@ -1412,7 +1414,7 @@ async def test_dashboard_hacstag(
     )
 
 
-async def test_dashboard_url(downloaded_plugin: HacsPluginRepository) -> None:
+async def test_dashboard_url(downloaded_plugin: PluginRepository) -> None:
     """Test the URL a dashboard resource is registered with."""
     assert (
         downloaded_plugin.generate_dashboard_resource_url()
@@ -1421,7 +1423,7 @@ async def test_dashboard_url(downloaded_plugin: HacsPluginRepository) -> None:
 
 
 async def test_dashboard_url_with_invalid_file_name(
-    downloaded_plugin: HacsPluginRepository, caplog: pytest.LogCaptureFixture
+    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that a plugin pointing at a subdirectory is flattened and logged."""
     downloaded_plugin.data.file_name = "dist/plugin-basic.js"
@@ -1433,7 +1435,7 @@ async def test_dashboard_url_with_invalid_file_name(
     assert "have defined an invalid file name dist/plugin-basic.js" in caplog.text
 
 
-async def test_resource_handler(downloaded_plugin: HacsPluginRepository) -> None:
+async def test_resource_handler(downloaded_plugin: PluginRepository) -> None:
     """Test that the dashboard resources are reachable in storage mode."""
     assert downloaded_plugin._get_resource_handler() is not None
 
@@ -1454,7 +1456,7 @@ async def test_resource_handler(downloaded_plugin: HacsPluginRepository) -> None
 )
 async def test_resource_handler_wrong_store(
     hass: HomeAssistant,
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
     attribute: str,
     value: Any,
@@ -1469,7 +1471,7 @@ async def test_resource_handler_wrong_store(
 
 async def test_resource_handler_yaml_mode(
     hass: HomeAssistant,
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that YAML mode dashboards have no resources to update."""
@@ -1481,7 +1483,7 @@ async def test_resource_handler_yaml_mode(
 
 async def test_resource_handler_without_resources(
     hass: HomeAssistant,
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a dashboard without any resource collection."""
@@ -1493,7 +1495,7 @@ async def test_resource_handler_without_resources(
 
 async def test_resource_handler_without_lovelace(
     hass: HomeAssistant,
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the dashboard integration not being loaded at all."""
@@ -1504,7 +1506,7 @@ async def test_resource_handler_without_lovelace(
 
 
 async def test_add_dashboard_resource(
-    downloaded_plugin: HacsPluginRepository, caplog: pytest.LogCaptureFixture
+    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test registering the dashboard resource of a plugin."""
     resources = downloaded_plugin._get_resource_handler()
@@ -1522,7 +1524,7 @@ async def test_add_dashboard_resource(
 
 
 async def test_update_dashboard_resource(
-    downloaded_plugin: HacsPluginRepository, caplog: pytest.LogCaptureFixture
+    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that a new version replaces the registered dashboard resource."""
     resources = downloaded_plugin._get_resource_handler()
@@ -1543,7 +1545,7 @@ async def test_update_dashboard_resource(
 
 
 async def test_remove_dashboard_resource(
-    downloaded_plugin: HacsPluginRepository, caplog: pytest.LogCaptureFixture
+    downloaded_plugin: PluginRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that removing a plugin unregisters its dashboard resource."""
     resources = downloaded_plugin._get_resource_handler()
@@ -1559,7 +1561,7 @@ async def test_remove_dashboard_resource(
 
 
 async def test_dashboard_resources_ignore_prefix_matches(
-    downloaded_plugin: HacsPluginRepository,
+    downloaded_plugin: PluginRepository,
 ) -> None:
     """Test that a plugin whose name is a prefix of another is left alone."""
     resources = downloaded_plugin._get_resource_handler()
@@ -1577,22 +1579,22 @@ async def test_dashboard_resources_ignore_prefix_matches(
     assert [resource["url"] for resource in resources.async_items()] == [other_url]
 
 
-async def test_repository_ignored_by_country(mock_repository: HacsRepository) -> None:
+async def test_repository_ignored_by_country(mock_repository: Repository) -> None:
     """Test that the configured country filters repositories out."""
-    mock_repository.hacs.configuration.country = "ALL"
+    mock_repository.store.configuration.country = "ALL"
     assert not mock_repository.ignored_by_country_configuration
 
     mock_repository.repository_manifest.country = ["NO"]
     assert not mock_repository.ignored_by_country_configuration
 
-    mock_repository.hacs.configuration.country = "SE"
+    mock_repository.store.configuration.country = "SE"
     assert mock_repository.ignored_by_country_configuration
 
-    mock_repository.hacs.configuration.country = "NO"
+    mock_repository.store.configuration.country = "NO"
     assert not mock_repository.ignored_by_country_configuration
 
 
-async def test_uninstall_without_a_domain(store: HacsBase) -> None:
+async def test_uninstall_without_a_domain(store: StoreManager) -> None:
     """Test that an integration without a domain can not be removed."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = None
@@ -1602,7 +1604,7 @@ async def test_uninstall_without_a_domain(store: HacsBase) -> None:
 
 
 async def test_hacs_json_of_a_removed_version(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test the manifest of a version that has no hacs.json."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
@@ -1613,7 +1615,7 @@ async def test_hacs_json_of_a_removed_version(
 
 
 async def test_ensure_download_capabilities_rejects_new_core_requirement(
-    store: HacsBase, response_mocker: StoreResponses
+    store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test refusing a version that needs a newer Home Assistant."""
     repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)

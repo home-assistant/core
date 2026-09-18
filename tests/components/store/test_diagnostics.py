@@ -44,7 +44,7 @@ async def test_diagnostics(
 
     # The categories and the repositories come out of sets, so they need an
     # order before they can be compared
-    diagnostics["hacs"]["categories"] = sorted(diagnostics["hacs"]["categories"])
+    diagnostics["store"]["categories"] = sorted(diagnostics["store"]["categories"])
     diagnostics["custom_repositories"].sort()
     diagnostics["repositories"].sort(key=lambda repo: repo["data"]["full_name"])
 

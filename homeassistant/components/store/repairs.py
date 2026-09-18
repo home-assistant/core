@@ -1,4 +1,4 @@
-"""Repairs platform for HACS."""
+"""Repairs platform for the Community store."""
 
 from typing import Any
 
@@ -32,8 +32,8 @@ class RestartRequiredFixFlow(RepairsFlow):
             await self.hass.services.async_call("homeassistant", "restart")
             return self.async_create_entry(title="", data={})
 
-        hacs = async_get_store(self.hass)
-        integration = hacs.repositories.get_by_id(self.issue_id.split("_")[2])
+        store = async_get_store(self.hass)
+        integration = store.repositories.get_by_id(self.issue_id.split("_")[2])
 
         return self.async_show_form(
             step_id="confirm_restart",

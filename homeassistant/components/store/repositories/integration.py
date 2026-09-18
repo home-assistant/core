@@ -1,4 +1,4 @@
-"""Class for integrations in HACS."""
+"""Class for integration repositories."""
 
 import re
 from typing import TYPE_CHECKING, Any, override
@@ -16,10 +16,11 @@ from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
 from ..utils.json import json_loads_object
-from .base import HacsRepository
+from ..utils.logger import LOGGER
+from .base import Repository
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 VALID_DOMAIN = re.compile(r"^[a-z0-9_]+$")
 
@@ -36,12 +37,12 @@ def _validated_domain(domain: Any) -> str:
     return domain
 
 
-class HacsIntegrationRepository(HacsRepository):
-    """Integrations in HACS."""
+class IntegrationRepository(Repository):
+    """Integration repository."""
 
-    def __init__(self, hacs: HacsBase, full_name: str) -> None:
+    def __init__(self, store: StoreManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(hacs=hacs)
+        super().__init__(store=store)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.INTEGRATION
@@ -52,7 +53,7 @@ class HacsIntegrationRepository(HacsRepository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.hacs.core.config_path}/custom_components/{self.data.domain}"
+        return f"{self.store.core.config_path}/custom_components/{self.data.domain}"
 
     @override
     async def async_pre_install(self) -> None:
@@ -60,7 +61,7 @@ class HacsIntegrationRepository(HacsRepository):
         if not self.data.domain:
             return
 
-        for repository in self.hacs.repositories.list_downloaded:
+        for repository in self.store.repositories.list_downloaded:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.INTEGRATION
@@ -83,7 +84,7 @@ class HacsIntegrationRepository(HacsRepository):
         if self.pending_restart:
             self.logger.debug("%s Creating restart_required issue", self.string)
             async_create_issue(
-                hass=self.hacs.hass,
+                hass=self.store.hass,
                 domain=DOMAIN,
                 issue_id=f"restart_required_{self.data.id}_{self.ref}",
                 is_fixable=True,
@@ -139,7 +140,7 @@ class HacsIntegrationRepository(HacsRepository):
                 self.validate.errors.append(
                     f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
                 )
-                self.hacs.log.error(
+                LOGGER.error(
                     "Missing expected key '%s' in '%s'",
                     exception,
                     RepositoryFile.MAINIFEST_JSON,
@@ -151,7 +152,7 @@ class HacsIntegrationRepository(HacsRepository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.hacs.status.startup:
+                if not self.store.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
@@ -184,7 +185,7 @@ class HacsIntegrationRepository(HacsRepository):
                 self.validate.errors.append(
                     f"Missing expected key '{exception}' in {RepositoryFile.MAINIFEST_JSON}"
                 )
-                self.hacs.log.error(
+                LOGGER.error(
                     "Missing expected key '%s' in '%s'",
                     exception,
                     RepositoryFile.MAINIFEST_JSON,
@@ -195,7 +196,7 @@ class HacsIntegrationRepository(HacsRepository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.hacs.async_dispatch(
+            self.store.async_dispatch(
                 StoreSignal.REPOSITORY,
                 {
                     "id": 1337,
@@ -208,8 +209,8 @@ class HacsIntegrationRepository(HacsRepository):
     async def reload_custom_components(self) -> None:
         """Reload custom_components (and config flows)in HA."""
         self.logger.info("Reloading custom_component cache")
-        async_clear_custom_components_cache(self.hacs.hass)
-        await async_get_custom_components(self.hacs.hass)
+        async_clear_custom_components_cache(self.store.hass)
+        await async_get_custom_components(self.store.hass)
         self.logger.info("Custom_component cache reloaded")
 
     async def async_get_integration_manifest(
@@ -232,8 +233,8 @@ class HacsIntegrationRepository(HacsRepository):
             "%s Getting %s for ref=%s", self.string, manifest_path, target_ref
         )
 
-        response = await self.hacs.async_github_api_method(
-            method=self.hacs.githubapi.repos.contents.get,
+        response = await self.store.async_github_api_method(
+            method=self.store.githubapi.repos.contents.get,
             repository=self.data.full_name,
             path=manifest_path,
             params={"ref": target_ref},
@@ -261,7 +262,7 @@ class HacsIntegrationRepository(HacsRepository):
             "%s Getting manifest.json for version=%s", self.string, version
         )
         try:
-            result = await self.hacs.async_download_file(
+            result = await self.store.async_download_file(
                 f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/{manifest_path}",
                 nolog=True,
             )

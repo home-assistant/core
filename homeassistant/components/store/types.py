@@ -1,4 +1,4 @@
-"""Custom HACS types."""
+"""Types for the Community store."""
 
 from typing import TypedDict
 

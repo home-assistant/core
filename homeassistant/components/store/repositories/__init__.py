@@ -4,25 +4,25 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ..enums import RepositoryCategory
-from .appdaemon import HacsAppdaemonRepository
-from .base import HacsRepository
-from .integration import HacsIntegrationRepository
-from .plugin import HacsPluginRepository
-from .python_script import HacsPythonScriptRepository
-from .template import HacsTemplateRepository
-from .theme import HacsThemeRepository
+from .appdaemon import AppdaemonRepository
+from .base import Repository
+from .integration import IntegrationRepository
+from .plugin import PluginRepository
+from .python_script import PythonScriptRepository
+from .template import TemplateRepository
+from .theme import ThemeRepository
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
-# The category classes all take (hacs, full_name), which the base class does not.
+# The category classes all take (store, full_name), which the base class does not.
 REPOSITORY_CLASSES: dict[
-    RepositoryCategory, Callable[[HacsBase, str], HacsRepository]
+    RepositoryCategory, Callable[[StoreManager, str], Repository]
 ] = {
-    RepositoryCategory.THEME: HacsThemeRepository,
-    RepositoryCategory.INTEGRATION: HacsIntegrationRepository,
-    RepositoryCategory.PYTHON_SCRIPT: HacsPythonScriptRepository,
-    RepositoryCategory.APPDAEMON: HacsAppdaemonRepository,
-    RepositoryCategory.PLUGIN: HacsPluginRepository,
-    RepositoryCategory.TEMPLATE: HacsTemplateRepository,
+    RepositoryCategory.THEME: ThemeRepository,
+    RepositoryCategory.INTEGRATION: IntegrationRepository,
+    RepositoryCategory.PYTHON_SCRIPT: PythonScriptRepository,
+    RepositoryCategory.APPDAEMON: AppdaemonRepository,
+    RepositoryCategory.PLUGIN: PluginRepository,
+    RepositoryCategory.TEMPLATE: TemplateRepository,
 }

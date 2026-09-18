@@ -1,4 +1,4 @@
-"""HACS Base entities."""
+"""Base entities for the Community store."""
 
 from typing import TYPE_CHECKING, override
 
@@ -8,39 +8,37 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import HacsUpdateCoordinator
+from .coordinator import StoreUpdateCoordinator
 
 if TYPE_CHECKING:
-    from .base import HacsBase
-    from .repositories.base import HacsRepository
+    from .base import StoreManager
+    from .repositories.base import Repository
 
 
-class HacsBaseEntity(Entity):
-    """Base HACS entity."""
+class StoreEntity(Entity):
+    """Base entity for the Community store."""
 
-    repository: HacsRepository
+    repository: Repository
     _attr_should_poll = False
 
-    def __init__(self, hacs: HacsBase) -> None:
+    def __init__(self, store: StoreManager) -> None:
         """Initialize."""
-        self.hacs = hacs
+        self.store = store
 
 
-class HacsRepositoryEntity(
-    BaseCoordinatorEntity[HacsUpdateCoordinator], HacsBaseEntity
-):
+class RepositoryEntity(BaseCoordinatorEntity[StoreUpdateCoordinator], StoreEntity):
     """Base repository entity."""
 
     def __init__(
         self,
-        hacs: HacsBase,
-        repository: HacsRepository,
+        store: StoreManager,
+        repository: Repository,
     ) -> None:
         """Initialize."""
         BaseCoordinatorEntity.__init__(
-            self, hacs.coordinators[repository.data.category]
+            self, store.coordinators[repository.data.category]
         )
-        HacsBaseEntity.__init__(self, hacs=hacs)
+        StoreEntity.__init__(self, store=store)
         self.repository = repository
         self._attr_unique_id = str(repository.data.id)
         self._repo_last_fetched = repository.data.last_fetched
@@ -49,14 +47,14 @@ class HacsRepositoryEntity(
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.hacs.repositories.is_downloaded(
+        return self.store.repositories.is_downloaded(
             repository_id=str(self.repository.data.id)
         )
 
     @property
     @override
     def device_info(self) -> DeviceInfo:
-        """Return device information about HACS."""
+        """Return device information about the store itself."""
 
         def _manufacturer() -> str:
             if authors := self.repository.data.authors:

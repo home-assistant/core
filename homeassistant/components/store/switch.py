@@ -1,4 +1,4 @@
-"""Switch entities for HACS."""
+"""Switch entities for the Community store."""
 
 from typing import Any, override
 
@@ -7,9 +7,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import HacsBase, StoreConfigEntry
-from .entity import HacsRepositoryEntity
-from .repositories.base import HacsRepository
+from .base import StoreConfigEntry, StoreManager
+from .entity import RepositoryEntity
+from .repositories.base import Repository
 
 
 async def async_setup_entry(
@@ -18,23 +18,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup switch platform."""
-    hacs = entry.runtime_data
+    store = entry.runtime_data
     async_add_entities(
-        HacsRepositoryPreReleaseSwitchEntity(hacs=hacs, repository=repository)
-        for repository in hacs.repositories.list_downloaded
+        RepositoryPreReleaseSwitchEntity(store=store, repository=repository)
+        for repository in store.repositories.list_downloaded
     )
 
 
-class HacsRepositoryPreReleaseSwitchEntity(HacsRepositoryEntity, SwitchEntity):
-    """Pre-release switch entities for repositories downloaded with HACS."""
+class RepositoryPreReleaseSwitchEntity(RepositoryEntity, SwitchEntity):
+    """Pre-release switch entity for a downloaded repository."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
     _attr_translation_key = "pre-release"
 
-    def __init__(self, hacs: HacsBase, repository: HacsRepository) -> None:
+    def __init__(self, store: StoreManager, repository: Repository) -> None:
         """Initialize the repository pre-release switch."""
-        super().__init__(hacs, repository)
+        super().__init__(store, repository)
         self._attr_entity_registry_enabled_default = self.repository.data.show_beta
 
     @property
@@ -67,6 +67,6 @@ class HacsRepositoryPreReleaseSwitchEntity(HacsRepositoryEntity, SwitchEntity):
         self.coordinator.async_update_listeners()
         self.repository.data.last_fetched = _last_fetch  # Restore last fetched
 
-        # Write the HACS data and update the entity state
-        await self.hacs.data.async_write()
+        # Write the store data and update the entity state
+        await self.store.data.async_write()
         self.async_write_ha_state()

@@ -8,10 +8,10 @@ import re
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.enums import StoreSignal
-from homeassistant.components.store.repositories.base import HacsRepository
+from homeassistant.components.store.repositories.base import Repository
 from homeassistant.components.update import (
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -27,7 +27,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     CategoryTestData,
     category_test_data_parametrized,
-    get_hacs,
+    get_store,
     mocked_response,
 )
 from .conftest import StoreResponses
@@ -46,8 +46,8 @@ async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> No
 
 @pytest.fixture
 async def downloaded_repository(
-    hass: HomeAssistant, store: HacsBase, category_test_data: CategoryTestData
-) -> HacsRepository:
+    hass: HomeAssistant, store: StoreManager, category_test_data: CategoryTestData
+) -> Repository:
     """Return a downloaded repository with its entities loaded."""
     repository = store.repositories.get_by_full_name(category_test_data["repository"])
     repository.data.installed = True
@@ -56,14 +56,14 @@ async def downloaded_repository(
     await hass.config_entries.async_reload(store.configuration.config_entry.entry_id)
     await hass.async_block_till_done()
 
-    return get_hacs(hass).repositories.get_by_full_name(
+    return get_store(hass).repositories.get_by_full_name(
         category_test_data["repository"]
     )
 
 
 @pytest.fixture
 async def integration_update_entity(
-    hass: HomeAssistant, store: HacsBase, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
 ) -> str:
     """Return the update entity of a downloaded integration repository."""
     repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
@@ -82,7 +82,7 @@ async def integration_update_entity(
 async def test_update_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: HacsRepository,
+    downloaded_repository: Repository,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -115,15 +115,15 @@ async def test_update_device_info(
 
 
 async def test_update_entity_becomes_unavailable(
-    hass: HomeAssistant, store: HacsBase, integration_update_entity: str
+    hass: HomeAssistant, store: StoreManager, integration_update_entity: str
 ) -> None:
     """Test that removing a repository makes its update entity unavailable."""
     assert hass.states.get(integration_update_entity).state == "off"
 
-    repository = get_hacs(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = False
     repository.data.last_fetched = None
-    get_hacs(hass).coordinators[repository.data.category].async_update_listeners()
+    get_store(hass).coordinators[repository.data.category].async_update_listeners()
     await hass.async_block_till_done()
 
     assert hass.states.get(integration_update_entity).state == "unavailable"
@@ -160,13 +160,13 @@ async def test_update_entity_picture_for_other_categories(
 
 
 async def test_update_entity_release_summary(
-    hass: HomeAssistant, store: HacsBase, integration_update_entity: str
+    hass: HomeAssistant, store: StoreManager, integration_update_entity: str
 ) -> None:
     """Test that a repository waiting for a restart says so."""
-    repository = get_hacs(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.pending_restart = True
     repository.data.last_fetched = None
-    get_hacs(hass).coordinators[repository.data.category].async_update_listeners()
+    get_store(hass).coordinators[repository.data.category].async_update_listeners()
     await hass.async_block_till_done()
 
     assert hass.states.get(integration_update_entity).attributes["release_summary"] == (
@@ -221,7 +221,7 @@ async def test_update_entity_ignores_other_repositories(
 async def test_install(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    downloaded_repository: HacsRepository,
+    downloaded_repository: Repository,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test installing a specific version through the update entity."""
@@ -294,7 +294,7 @@ async def test_install_version_without_a_manifest(
         HomeAssistantError,
         match=re.escape(
             f"Downloading {REPOSITORY_INTEGRATION} failed: The version 3.0.0 "
-            "for this integration can not be used with HACS."
+            "for this integration can not be used."
         ),
     ):
         await hass.services.async_call(
@@ -375,7 +375,7 @@ async def test_release_notes(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the release notes shown for an available update."""
-    repository = get_hacs(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed_version = "0.9.0"
 
     client = await hass_ws_client(hass)
@@ -395,7 +395,7 @@ async def test_release_notes_while_pending_restart(
     integration_update_entity: str,
 ) -> None:
     """Test that a repository waiting for a restart has no release notes."""
-    get_hacs(hass).repositories.get_by_id(
+    get_store(hass).repositories.get_by_id(
         REPOSITORY_INTEGRATION_ID
     ).pending_restart = True
 

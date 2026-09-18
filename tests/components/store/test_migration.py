@@ -9,7 +9,7 @@ from homeassistant.components.store.const import (
     LEGACY_HACS_REPOSITORY_ID,
     LEGACY_HACS_SYSTEM_ID,
 )
-from homeassistant.components.store.migration import HACS_DOMAIN
+from homeassistant.components.store.migration import LEGACY_HACS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -37,7 +37,7 @@ ISSUE_IDS = (f"restart_required_{REPOSITORY_INTEGRATION_ID}", "removed")
 @pytest.fixture
 def ignore_translations_for_mock_domains() -> list[str]:
     """The seeded repair issues belong to the HACS custom integration."""
-    return [HACS_DOMAIN]
+    return [LEGACY_HACS_DOMAIN]
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def _seed_repository_device(
     """Create the device HACS made for a downloaded repository."""
     return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(HACS_DOMAIN, REPOSITORY_INTEGRATION_ID)},
+        identifiers={(LEGACY_HACS_DOMAIN, REPOSITORY_INTEGRATION_ID)},
         name="Basic integration",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
@@ -78,7 +78,7 @@ def _seed_system_device(
     """Create the HACS system device and the entities of HACS itself."""
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(HACS_DOMAIN, LEGACY_HACS_SYSTEM_ID)},
+        identifiers={(LEGACY_HACS_DOMAIN, LEGACY_HACS_SYSTEM_ID)},
         name="HACS",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
@@ -89,7 +89,7 @@ def _seed_system_device(
     ):
         entity_registry.async_get_or_create(
             domain,
-            HACS_DOMAIN,
+            LEGACY_HACS_DOMAIN,
             LEGACY_HACS_REPOSITORY_ID,
             config_entry=entry,
             device_id=device.id,
@@ -111,7 +111,7 @@ def _seed_repository_entities(
     ):
         entity_registry.async_get_or_create(
             domain,
-            HACS_DOMAIN,
+            LEGACY_HACS_DOMAIN,
             REPOSITORY_INTEGRATION_ID,
             config_entry=entry,
             device_id=device.id,
@@ -124,7 +124,7 @@ def _seed_issues(hass: HomeAssistant) -> None:
     for issue_id in ISSUE_IDS:
         ir.async_create_issue(
             hass,
-            HACS_DOMAIN,
+            LEGACY_HACS_DOMAIN,
             issue_id,
             is_fixable=issue_id.startswith("restart_required"),
             severity=ir.IssueSeverity.WARNING,
@@ -173,7 +173,7 @@ async def test_takeover(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert "Took over the existing HACS installation" in caplog.text
+    assert "Took over the existing installation" in caplog.text
 
     # The entities keep their entity id and are served by the store now
     update_entity = entity_registry.async_get(UPDATE_ENTITY_ID)
@@ -200,7 +200,9 @@ async def test_takeover(
     assert entity_registry.async_get(SELF_SWITCH_ENTITY_ID) is None
 
     # No repair issue is left behind
-    assert not [domain for domain, _ in issue_registry.issues if domain == HACS_DOMAIN]
+    assert not [
+        domain for domain, _ in issue_registry.issues if domain == LEGACY_HACS_DOMAIN
+    ]
 
     # The options that only ever meant something to HACS are dropped
     assert mock_config_entry.options == {"country": "ALL", "appdaemon": True}
@@ -231,7 +233,7 @@ async def test_takeover_runs_once(
     await hass.async_block_till_done()
 
     assert _registry_state(hass, mock_config_entry) == before
-    assert "Took over the existing HACS installation" not in caplog.text
+    assert "Took over the existing installation" not in caplog.text
 
 
 @pytest.mark.usefixtures("stored_repositories")

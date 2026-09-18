@@ -1,4 +1,4 @@
-"""Class for appdaemon apps in HACS."""
+"""Class for AppDaemon app repositories."""
 
 from typing import TYPE_CHECKING, override
 
@@ -6,18 +6,18 @@ from ..enums import RepositoryCategory, StoreSignal
 from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
-from .base import HacsRepository
+from .base import Repository
 
 if TYPE_CHECKING:
-    from ..base import HacsBase
+    from ..base import StoreManager
 
 
-class HacsAppdaemonRepository(HacsRepository):
-    """Appdaemon apps in HACS."""
+class AppdaemonRepository(Repository):
+    """AppDaemon app repository."""
 
-    def __init__(self, hacs: HacsBase, full_name: str) -> None:
+    def __init__(self, store: StoreManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(hacs=hacs)
+        super().__init__(store=store)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.APPDAEMON
@@ -28,7 +28,7 @@ class HacsAppdaemonRepository(HacsRepository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.hacs.core.config_path}/appdaemon/apps/{self.data.name}"
+        return f"{self.store.core.config_path}/appdaemon/apps/{self.data.name}"
 
     @override
     async def validate_repository(self) -> bool:
@@ -42,7 +42,7 @@ class HacsAppdaemonRepository(HacsRepository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.hacs.status.startup:
+                if not self.store.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
@@ -68,7 +68,7 @@ class HacsAppdaemonRepository(HacsRepository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.hacs.async_dispatch(
+            self.store.async_dispatch(
                 StoreSignal.REPOSITORY,
                 {
                     "id": 1337,

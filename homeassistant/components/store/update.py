@@ -1,4 +1,4 @@
-"""Update entities for HACS."""
+"""Update entities for the Community store."""
 
 from typing import Any, override
 
@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .base import StoreConfigEntry
 from .const import DOMAIN
-from .entity import HacsRepositoryEntity
+from .entity import RepositoryEntity
 from .enums import RepositoryCategory, StoreSignal
 from .exceptions import StoreError
 
@@ -21,15 +21,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup update platform."""
-    hacs = entry.runtime_data
+    store = entry.runtime_data
     async_add_entities(
-        HacsRepositoryUpdateEntity(hacs=hacs, repository=repository)
-        for repository in hacs.repositories.list_downloaded
+        RepositoryUpdateEntity(store=store, repository=repository)
+        for repository in store.repositories.list_downloaded
     )
 
 
-class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
-    """Update entities for repositories downloaded with HACS."""
+class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
+    """Update entity for a downloaded repository."""
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
@@ -123,7 +123,7 @@ class HacsRepositoryUpdateEntity(HacsRepositoryEntity, UpdateEntity):
         if self.latest_version not in self.repository.data.published_tags:
             releases = await self.repository.get_releases(
                 prerelease=self.repository.data.show_beta,
-                returnlimit=self.hacs.configuration.release_limit,
+                returnlimit=self.store.configuration.release_limit,
             )
             if releases:
                 self.repository.data.releases = True

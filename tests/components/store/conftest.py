@@ -14,21 +14,21 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN, VERSION_STORAGE
 from homeassistant.components.store.repositories import (
-    HacsAppdaemonRepository,
-    HacsIntegrationRepository,
-    HacsPluginRepository,
-    HacsPythonScriptRepository,
-    HacsTemplateRepository,
-    HacsThemeRepository,
+    AppdaemonRepository,
+    IntegrationRepository,
+    PluginRepository,
+    PythonScriptRepository,
+    TemplateRepository,
+    ThemeRepository,
 )
-from homeassistant.components.store.repositories.base import HacsRepository
+from homeassistant.components.store.repositories.base import Repository
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import dummy_repository_base, get_hacs, setup_integration
+from . import dummy_repository_base, get_store, setup_integration
 from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN
 
 from tests.common import (
@@ -221,48 +221,48 @@ async def init_integration(
 
 
 @pytest.fixture
-def store(hass: HomeAssistant, init_integration: MockConfigEntry) -> HacsBase:
+def store(hass: HomeAssistant, init_integration: MockConfigEntry) -> StoreManager:
     """Return the store object of a set up integration."""
-    return get_hacs(hass)
+    return get_store(hass)
 
 
 @pytest.fixture
-def mock_repository(store: HacsBase) -> HacsRepository:
+def mock_repository(store: StoreManager) -> Repository:
     """Return a bare repository."""
     return dummy_repository_base(store)
 
 
 @pytest.fixture
-def mock_repository_appdaemon(store: HacsBase) -> HacsRepository:
+def mock_repository_appdaemon(store: StoreManager) -> Repository:
     """Return an AppDaemon repository."""
-    return dummy_repository_base(store, HacsAppdaemonRepository(store, "test/test"))
+    return dummy_repository_base(store, AppdaemonRepository(store, "test/test"))
 
 
 @pytest.fixture
-def mock_repository_integration(store: HacsBase) -> HacsRepository:
+def mock_repository_integration(store: StoreManager) -> Repository:
     """Return an integration repository."""
-    return dummy_repository_base(store, HacsIntegrationRepository(store, "test/test"))
+    return dummy_repository_base(store, IntegrationRepository(store, "test/test"))
 
 
 @pytest.fixture
-def mock_repository_plugin(store: HacsBase) -> HacsRepository:
+def mock_repository_plugin(store: StoreManager) -> Repository:
     """Return a dashboard plugin repository."""
-    return dummy_repository_base(store, HacsPluginRepository(store, "test/test"))
+    return dummy_repository_base(store, PluginRepository(store, "test/test"))
 
 
 @pytest.fixture
-def mock_repository_python_script(store: HacsBase) -> HacsRepository:
+def mock_repository_python_script(store: StoreManager) -> Repository:
     """Return a python script repository."""
-    return dummy_repository_base(store, HacsPythonScriptRepository(store, "test/test"))
+    return dummy_repository_base(store, PythonScriptRepository(store, "test/test"))
 
 
 @pytest.fixture
-def mock_repository_template(store: HacsBase) -> HacsRepository:
+def mock_repository_template(store: StoreManager) -> Repository:
     """Return a template repository."""
-    return dummy_repository_base(store, HacsTemplateRepository(store, "test/test"))
+    return dummy_repository_base(store, TemplateRepository(store, "test/test"))
 
 
 @pytest.fixture
-def mock_repository_theme(store: HacsBase) -> HacsRepository:
+def mock_repository_theme(store: StoreManager) -> Repository:
     """Return a theme repository."""
-    return dummy_repository_base(store, HacsThemeRepository(store, "test/test"))
+    return dummy_repository_base(store, ThemeRepository(store, "test/test"))

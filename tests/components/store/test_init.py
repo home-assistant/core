@@ -12,13 +12,13 @@ from homeassistant.components.store import async_remove_config_entry_device
 from homeassistant.components.store.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
 from homeassistant.components.store.enums import DisabledReason
 from homeassistant.components.store.exceptions import StoreError
-from homeassistant.components.store.utils.data import HacsData
+from homeassistant.components.store.utils.data import StoreData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import assert_api_usage, get_hacs, setup_integration
+from . import assert_api_usage, get_store, setup_integration
 from .const import (
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
@@ -39,7 +39,7 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not get_hacs(hass).system.disabled
+    assert not get_store(hass).system.disabled
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,7 +76,7 @@ async def test_setup_failure(
     """Test a failure while setting up leaves the entry for core to handle."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(HacsData, "restore", side_effect=side_effect):
+    with patch.object(StoreData, "restore", side_effect=side_effect):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
@@ -89,7 +89,7 @@ async def test_setup_retries_without_restored_data(
     """Test data that can not be restored is retried instead of disabling."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(HacsData, "restore", return_value=False):
+    with patch.object(StoreData, "restore", return_value=False):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -118,14 +118,14 @@ async def test_setup_with_a_disabled_store(
 ) -> None:
     """Test a store that ends up disabled while setting up fails the setup."""
 
-    async def _disable(self: HacsData) -> bool:
+    async def _disable(self: StoreData) -> bool:
         """Restore the data, but leave the store disabled."""
-        self.hacs.disable_hacs(reason)
+        self.store.disable(reason)
         return True
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(HacsData, "restore", _disable):
+    with patch.object(StoreData, "restore", _disable):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
@@ -139,7 +139,7 @@ async def test_setup_asks_to_reauthenticate_for_an_invalid_token(
     mock_config_entry.add_to_hass(hass)
 
     with patch.object(
-        HacsData,
+        StoreData,
         "restore",
         side_effect=GitHubAuthenticationException("Bad credentials"),
     ):
@@ -160,7 +160,7 @@ async def test_entities_for_downloaded_repositories(
     """Test each downloaded repository gets an update and a switch entity."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
@@ -205,7 +205,7 @@ async def test_stored_repository_ids(
     """Test the stored repository ids survive a restore."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert store.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
 

@@ -17,7 +17,7 @@ from homeassistant.components.store.utils.storage import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_hacs, setup_integration
+from . import get_store, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -188,7 +188,7 @@ async def test_hacs_data_is_adopted(
     assert hacs_storage["store.common"]["data"] == HACS_COMMON
     assert hacs_storage["store.critical"]["data"] == HACS_CRITICAL
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
@@ -235,8 +235,8 @@ async def test_own_data_wins(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert not get_hacs(hass).repositories.list_downloaded
-    assert not get_hacs(hass).common.archived_repositories
+    assert not get_store(hass).repositories.list_downloaded
+    assert not get_store(hass).common.archived_repositories
 
 
 @pytest.mark.usefixtures("hass_storage")
@@ -247,7 +247,7 @@ async def test_fresh_install(
     """Test an installation without any stored data at all."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert store.status.new is True
     assert not store.repositories.list_downloaded
 
@@ -275,7 +275,7 @@ async def test_legacy_hacs_data_fallback(
 
     await setup_integration(hass, mock_config_entry)
 
-    store = get_hacs(hass)
+    store = get_store(hass)
     assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
         REPOSITORY_INTEGRATION
     }

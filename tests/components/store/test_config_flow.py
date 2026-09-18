@@ -8,7 +8,7 @@ from aiogithubapi import GitHubException
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.store.base import HacsBase
+from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
@@ -260,7 +260,7 @@ async def test_reauth_flow(
 
 async def test_options_flow(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the options flow."""
@@ -309,7 +309,7 @@ async def test_options_flow_not_set_up(
 
 async def test_options_flow_pending_tasks(
     hass: HomeAssistant,
-    store: HacsBase,
+    store: StoreManager,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the options flow aborts while the store still has work queued."""

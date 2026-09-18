@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.store.base import HacsBase, HacsRepositories
+from homeassistant.components.store.base import Repositories, StoreManager
 from homeassistant.components.store.const import DOMAIN
-from homeassistant.components.store.repositories.base import HacsRepository
-from homeassistant.components.store.utils.data import HacsData
+from homeassistant.components.store.repositories.base import Repository
+from homeassistant.components.store.utils.data import StoreData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -39,8 +39,8 @@ async def _mocked_repositories(hass: HomeAssistant, key: str) -> Any:
 
 @pytest.mark.usefixtures("init_integration")
 async def test_write_downloaded_repository(
-    store: HacsBase,
-    mock_repository: HacsRepository,
+    store: StoreManager,
+    mock_repository: Repository,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test a downloaded repository ends up in the stored data."""
@@ -58,14 +58,14 @@ async def test_write_downloaded_repository(
 
 @pytest.mark.usefixtures("stored_repositories", "init_integration")
 async def test_write_without_repositories(
-    store: HacsBase,
+    store: StoreManager,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test writing with nothing registered empties the stored data."""
     assert hass_storage[f"{DOMAIN}.repositories"]["data"]
 
     store.system.disabled_reason = None
-    store.repositories = HacsRepositories()
+    store.repositories = Repositories()
 
     await store.data.async_write()
 
@@ -74,11 +74,11 @@ async def test_write_without_repositories(
 
 @pytest.mark.usefixtures("init_integration")
 async def test_restore(
-    store: HacsBase,
+    store: StoreManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test restoring registers the repositories and their attributes."""
-    data = HacsData(store)
+    data = StoreData(store)
 
     with patch(
         "homeassistant.components.store.utils.data.async_load_from_storage",
@@ -98,9 +98,9 @@ async def test_restore(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_restore_skips_placeholder_repository(store: HacsBase) -> None:
+async def test_restore_skips_placeholder_repository(store: StoreManager) -> None:
     """Test the placeholder repository id is not restored."""
-    data = HacsData(store)
+    data = StoreData(store)
 
     async def mocked_load(hass: HomeAssistant, key: str) -> Any:
         """Return a stored repository carrying the placeholder id."""
@@ -119,11 +119,11 @@ async def test_restore_skips_placeholder_repository(store: HacsBase) -> None:
 
 @pytest.mark.usefixtures("init_integration")
 async def test_restore_unreadable_data(
-    store: HacsBase,
+    store: StoreManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an unreadable repositories file fails the restore."""
-    data = HacsData(store)
+    data = StoreData(store)
 
     with patch(
         "homeassistant.components.store.utils.data.async_load_from_storage",
