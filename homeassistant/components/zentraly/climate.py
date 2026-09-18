@@ -26,7 +26,7 @@ from .actions import translate_action_errors
 from .const import DOMAIN, SCAN_INTERVAL
 from .models import ZentralyConfigEntry, ZentralyDevice
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

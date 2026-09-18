@@ -340,3 +340,41 @@ async def test_unload(
     await hass.async_block_till_done()
     assert mock_climate_api.async_get_current_temperature.await_count == reads
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_action_waits_for_refresh(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """A pending refresh cannot overwrite the state from a subsequent action."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read() -> float:
+        started.set()
+        await release.wait()
+        return 19.0
+
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    connection_state(True)
+    await started.wait()
+    action = hass.async_create_task(
+        hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
+    )
+    try:
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        mock_climate_api.async_set_target_temperature.assert_not_awaited()
+        assert not action.done()
+    finally:
+        release.set()
+        await action
+        await hass.async_block_till_done()
+    mock_climate_api.async_set_target_temperature.assert_awaited_once_with(22.0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.0
