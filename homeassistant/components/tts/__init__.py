@@ -19,8 +19,8 @@ from typing import Any, Final, Protocol
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -71,6 +71,7 @@ from .models import Voice
 
 __all__ = [
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_BITRATE",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_BYTES",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
@@ -99,6 +100,7 @@ ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
 ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
+ATTR_PREFERRED_BITRATE = "preferred_bitrate"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -108,6 +110,7 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_RATE,
     ATTR_PREFERRED_SAMPLE_CHANNELS,
     ATTR_PREFERRED_SAMPLE_BYTES,
+    ATTR_PREFERRED_BITRATE,
 }
 
 CONF_LANG = "language"
@@ -122,7 +125,7 @@ _RE_VOICE_FILE = re.compile(
 )
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
-SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
+SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema({})
 
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
@@ -317,6 +320,7 @@ async def _async_convert_audio(
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
     to_sample_bytes: int | None = None,
+    to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
@@ -325,6 +329,10 @@ async def _async_convert_audio(
     command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
     if from_extension:
         command.extend(["-f", from_extension])
+
+    if is_input_gen and from_extension == "wav":
+        # The container is known, so minimize probing latency for live TTS audio.
+        command.extend(["-probesize", "32"])
 
     if is_input_gen:
         # Async generator
@@ -341,8 +349,13 @@ async def _async_convert_audio(
     if to_sample_channels is not None:
         command.extend(["-ac", str(to_sample_channels)])
     if to_extension == "mp3":
-        # Max quality for MP3.
-        command.extend(["-q:a", "0"])
+        if to_bitrate is not None:
+            # Constant bitrate. Some hardware decoders cannot handle the
+            # variable bitrate that -q:a produces.
+            command.extend(["-b:a", f"{to_bitrate}k"])
+        else:
+            # Max quality for MP3.
+            command.extend(["-q:a", "0"])
     if to_sample_bytes == 2:
         # 16-bit samples.
         command.extend(["-sample_fmt", "s16"])
@@ -435,11 +448,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "speak",
         {
-            vol.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
-            vol.Optional(ATTR_LANGUAGE): cv.string,
-            vol.Optional(ATTR_OPTIONS): dict,
+            probatio.Required(ATTR_MEDIA_PLAYER_ENTITY_ID): cv.comp_entity_ids,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_CACHE, default=DEFAULT_CACHE): cv.boolean,
+            probatio.Optional(ATTR_LANGUAGE): cv.string,
+            probatio.Optional(ATTR_OPTIONS): dict,
         },
         "async_speak",
     )
@@ -584,6 +597,7 @@ class ResultStream:
                 ATTR_PREFERRED_SAMPLE_RATE,
                 ATTR_PREFERRED_SAMPLE_CHANNELS,
                 ATTR_PREFERRED_SAMPLE_BYTES,
+                ATTR_PREFERRED_BITRATE,
             )
         )
 
@@ -629,6 +643,7 @@ class ResultStream:
             to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
             to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
+            to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
         async for chunk in converted_audio:
             yield chunk
@@ -1078,6 +1093,14 @@ class SpeechManager:
         if sample_bytes is not None:
             sample_bytes = int(sample_bytes)
 
+        if ATTR_PREFERRED_BITRATE in supported_options:
+            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+        else:
+            bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
+
+        if bitrate is not None:
+            bitrate = int(bitrate)
+
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
@@ -1130,6 +1153,7 @@ class SpeechManager:
             or (sample_rate is not None)
             or (sample_channels is not None)
             or (sample_bytes is not None)
+            or (bitrate is not None)
         )
 
         if needs_conversion:
@@ -1141,6 +1165,7 @@ class SpeechManager:
                 to_sample_rate=sample_rate,
                 to_sample_channels=sample_channels,
                 to_sample_bytes=sample_bytes,
+                to_bitrate=bitrate,
             )
 
         async for chunk in data_gen:
@@ -1350,8 +1375,8 @@ class TextToSpeechView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
-        vol.Optional("country"): str,
-        vol.Optional("language"): str,
+        probatio.Optional("country"): str,
+        probatio.Optional("language"): str,
     }
 )
 @callback
@@ -1402,7 +1427,7 @@ def websocket_list_engines(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/get",
-        vol.Required("engine_id"): str,
+        probatio.Required("engine_id"): str,
     }
 )
 @callback
@@ -1447,8 +1472,8 @@ def websocket_get_engine(
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/voices",
-        vol.Required("engine_id"): str,
-        vol.Required("language"): str,
+        probatio.Required("engine_id"): str,
+        probatio.Required("language"): str,
     }
 )
 @callback

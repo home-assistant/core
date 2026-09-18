@@ -6,6 +6,7 @@ from ouman_eh_800_api import (
     L1BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -95,6 +96,11 @@ async def test_async_set_valve_position(
             OumanClientCommunicationError("Network error: Connection refused"),
             "Error communicating with API",
             id="communication_failure",
+        ),
+        pytest.param(
+            OumanClientError("Endpoint ID missing from response"),
+            "Unexpected response from device",
+            id="unexpected_response",
         ),
     ],
 )

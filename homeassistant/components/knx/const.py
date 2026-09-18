@@ -124,6 +124,7 @@ SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+REPAIR_ISSUE_ENTITY_VALIDATION_ERROR: Final = "entity_validation_error"
 REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR: Final = "telegram_backend_error"
 
 
@@ -164,7 +165,7 @@ class KNXConfigEntryOptions(TypedDict, total=False):
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    # YAML uses Enum.name (with probatio.Upper), UI uses Enum.value for lookup
     ABSOLUTE = "7.600"
     ABSOLUTE_FLOAT = "9"
     RELATIVE = "5.001"
@@ -197,6 +198,11 @@ SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.WEATHER,
 }
 
+# read-only platforms raising when added with `EntityCategory.CONFIG`
+PLATFORMS_WITHOUT_CONFIG_CATEGORY: Final = frozenset(
+    {Platform.BINARY_SENSOR, Platform.SENSOR}
+)
+
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -209,10 +215,12 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.WEATHER,
 }
 
 # Map KNX controller modes to HA modes. This list might not be complete.
@@ -283,3 +291,16 @@ class SceneConf:
     """Common config keys for scene."""
 
     SCENE_NUMBER: Final = "scene_number"
+
+
+class SelectConf:
+    """Config keys for select."""
+
+    # shared between YAML and UI
+    OPTIONS: Final = "options"
+    OPTION: Final = "option"
+    # UI only
+    OPTIONS_SOURCE: Final = "options_source"
+    GA_ENUM: Final = "ga_enum"
+    GA_CUSTOM: Final = "ga_custom"
+    CUSTOM_OPTIONS: Final = "custom_options"

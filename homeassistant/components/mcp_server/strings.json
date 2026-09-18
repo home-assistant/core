@@ -17,5 +17,23 @@
         "description": "See the [integration documentation]({more_info_url}) for setup instructions."
       }
     }
+  },
+  "options": {
+    "error": {
+      "llm_api_required": "[%key:component::mcp_server::config::error::llm_api_required%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "require_admin": "Require an administrator account"
+        },
+        "data_description": {
+          "llm_hass_api": "[%key:component::mcp_server::config::step::user::data_description::llm_hass_api%]",
+          "require_admin": "Only allow administrator accounts to use the Model Context Protocol endpoint."
+        },
+        "description": "[%key:component::mcp_server::config::step::user::description%]"
+      }
+    }
   }
 }

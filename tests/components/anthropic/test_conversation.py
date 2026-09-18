@@ -14,7 +14,11 @@ from anthropic.types import (
     DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
+    MessageDeltaUsage,
     PlainTextSource,
+    RawMessageDeltaEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -29,14 +33,15 @@ from anthropic.types import (
     WebSearchResultBlock,
     WebSearchToolResultError,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 from freezegun import freeze_time
 from httpx import URL, Request, Response
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
@@ -62,6 +67,7 @@ from homeassistant.components.anthropic.entity import (
     ContentDetails,
     _convert_content,
 )
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.llm import LLMTools
@@ -261,6 +267,71 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    trace.async_clear_traces()
+
+    async def mock_stream(**kwargs: Any):
+        """Stream a single response carrying distinct cache read and creation usage."""
+        yield RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model=kwargs["model"],
+                usage=Usage(
+                    input_tokens=100,
+                    output_tokens=0,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                ),
+            ),
+        )
+        for event in create_content_block(0, ["ok"]):
+            yield event
+        yield RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=10),
+        )
+        yield RawMessageStopEvent(type="message_stop")
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        side_effect=mock_stream,
+    ):
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    trace_obj = next(iter(trace.async_get_traces()))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        event["data"]["stats"]
+        for event in events
+        if event.get("event_type") == "agent_detail"
+        and event.get("data", {}).get("stats")
+    )
+    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
+    # cache_creation_input_tokens (20); only the read count should surface as cached.
+    assert stats == {
+        "input_tokens": 100,
+        "cached_input_tokens": 80,
+        "output_tokens": 10,
+    }
+
+
 async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -359,8 +430,8 @@ async def test_function_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.return_value = "Test response"
 
@@ -439,8 +510,8 @@ async def test_function_exception(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
@@ -882,8 +953,8 @@ async def test_extended_thinking_tool_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.return_value = "Test response"
 
@@ -1714,9 +1785,9 @@ async def test_tool_search(
     } in tools
     for tool in tools:
         if tool["name"] in (
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "tool_search_tool_bm25",
         ):
             assert "defer_loading" not in tool
@@ -2094,13 +2165,17 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="mock-tool-call-id",
                 tool_name="HassTurnOff",
-                tool_result={"success": True, "response": "Lights are off."},
+                result=llm.ToolResult(
+                    data={"success": True, "response": "Lights are off."}
+                ),
             ),
             conversation.chat_log.ToolResultContent(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="mock-tool-call-id-2",
                 tool_name="MakeCoffee",
-                tool_result={"success": False, "response": "Not enough milk."},
+                result=llm.ToolResult(
+                    data={"success": False, "response": "Not enough milk."}
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
@@ -2135,24 +2210,26 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="srvtoolu_12345ABC",
                 tool_name="web_search",
-                tool_result={
-                    "content": [
-                        {
-                            "type": "web_search_result",
-                            "title": "Today's News - Example.com",
-                            "url": "https://www.example.com/todays-news",
-                            "page_age": "2 days ago",
-                            "encrypted_content": "ABCDEFG",
-                        },
-                        {
-                            "type": "web_search_result",
-                            "title": "Breaking News - NewsSite.com",
-                            "url": "https://www.newssite.com/breaking-news",
-                            "page_age": None,
-                            "encrypted_content": "ABCDEFG",
-                        },
-                    ]
-                },
+                result=llm.ToolResult(
+                    data={
+                        "content": [
+                            {
+                                "type": "web_search_result",
+                                "title": "Today's News - Example.com",
+                                "url": "https://www.example.com/todays-news",
+                                "page_age": "2 days ago",
+                                "encrypted_content": "ABCDEFG",
+                            },
+                            {
+                                "type": "web_search_result",
+                                "title": "Breaking News - NewsSite.com",
+                                "url": "https://www.newssite.com/breaking-news",
+                                "page_age": None,
+                                "encrypted_content": "ABCDEFG",
+                            },
+                        ]
+                    }
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
@@ -2232,21 +2309,23 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="srvtoolu_12345ABC",
                 tool_name="web_fetch",
-                tool_result={
-                    "type": "web_fetch_result",
-                    "url": "https://www.home-assistant.io/latest-release-notes/",
-                    "content": {
-                        "type": "document",
-                        "source": {
-                            "type": "text",
-                            "media_type": "text/plain",
-                            "data": "Home Assistant new version is out!\nMany new features.\nAnthropic integration now supports web fetch tool.\nEnjoy the release!",
+                result=llm.ToolResult(
+                    data={
+                        "type": "web_fetch_result",
+                        "url": "https://www.home-assistant.io/latest-release-notes/",
+                        "content": {
+                            "type": "document",
+                            "source": {
+                                "type": "text",
+                                "media_type": "text/plain",
+                                "data": "Home Assistant new version is out!\nMany new features.\nAnthropic integration now supports web fetch tool.\nEnjoy the release!",
+                            },
+                            "title": "Latest Home Assistant Release Notes",
+                            "citations": {"enabled": True},
                         },
-                        "title": "Latest Home Assistant Release Notes",
-                        "citations": {"enabled": True},
-                    },
-                    "retrieved_at": "2026-04-04T10:30:00Z",
-                },
+                        "retrieved_at": "2026-04-04T10:30:00Z",
+                    }
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
@@ -2292,10 +2371,12 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="mock-tool-call-id",
                 tool_name="GetCurrentTime",
-                tool_result={
-                    "speech_slots": {"time": datetime.time(14, 30, 0)},
-                    "message": "Current time retrieved",
-                },
+                result=llm.ToolResult(
+                    data={
+                        "speech_slots": {"time": datetime.time(14, 30, 0)},
+                        "message": "Current time retrieved",
+                    }
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
@@ -2324,22 +2405,27 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
                 tool_name="tool_search",
-                tool_result={
-                    "tool_references": [
-                        {
-                            "tool_name": "HassHumidifierSetpoint",
-                            "type": "tool_reference",
-                        },
-                        {"tool_name": "HassHumidifierMode", "type": "tool_reference"},
-                        {
-                            "tool_name": "HassClimateSetTemperature",
-                            "type": "tool_reference",
-                        },
-                        {"tool_name": "HassFanSetSpeed", "type": "tool_reference"},
-                        {"tool_name": "HassSetVolume", "type": "tool_reference"},
-                    ],
-                    "type": "tool_search_tool_search_result",
-                },
+                result=llm.ToolResult(
+                    data={
+                        "tool_references": [
+                            {
+                                "tool_name": "HassHumidifierSetpoint",
+                                "type": "tool_reference",
+                            },
+                            {
+                                "tool_name": "HassHumidifierMode",
+                                "type": "tool_reference",
+                            },
+                            {
+                                "tool_name": "HassClimateSetTemperature",
+                                "type": "tool_reference",
+                            },
+                            {"tool_name": "HassFanSetSpeed", "type": "tool_reference"},
+                            {"tool_name": "HassSetVolume", "type": "tool_reference"},
+                        ],
+                        "type": "tool_search_tool_search_result",
+                    }
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
@@ -2356,16 +2442,18 @@ async def test_container_reused(
                 agent_id="conversation.claude_conversation",
                 tool_call_id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
                 tool_name="HassHumidifierSetpoint",
-                tool_result={
-                    "speech": {
-                        "plain": {
-                            "speech": "The Hygrostat is set to 50%",
-                            "extra_data": None,
-                        }
-                    },
-                    "response_type": "action_done",
-                    "data": {"success": [], "failed": []},
-                },
+                result=llm.ToolResult(
+                    data={
+                        "speech": {
+                            "plain": {
+                                "speech": "The Hygrostat is set to 50%",
+                                "extra_data": None,
+                            }
+                        },
+                        "response_type": "action_done",
+                        "data": {"success": [], "failed": []},
+                    }
+                ),
             ),
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",

@@ -21,6 +21,7 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     MAX_UPDATE_INTERVAL,
     MIN_UPDATE_INTERVAL,
@@ -72,7 +73,6 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
         api_key: str,
         latitude: float,
         longitude: float,
-        update_interval: timedelta,
         use_nearest: bool,
     ) -> None:
         """Initialize."""
@@ -81,40 +81,40 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
         # Currently, Airly only supports Polish and English
         language = "pl" if hass.config.language == "pl" else "en"
         self.airly = Airly(api_key, session, language=language)
-        self.use_nearest = use_nearest
+
+        if use_nearest:
+            self.measurements = self.airly.create_measurements_session_nearest(
+                latitude, longitude, max_distance_km=5
+            )
+        else:
+            self.measurements = self.airly.create_measurements_session_point(
+                latitude, longitude
+            )
 
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(minutes=MIN_UPDATE_INTERVAL),
         )
 
     @override
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Update data via library."""
         data: dict[str, str | float | int] = {}
-        if self.use_nearest:
-            measurements = self.airly.create_measurements_session_nearest(
-                self.latitude, self.longitude, max_distance_km=5
-            )
-        else:
-            measurements = self.airly.create_measurements_session_point(
-                self.latitude, self.longitude
-            )
-        async with timeout(20):
-            try:
-                await measurements.update()
-            except (AirlyError, ClientConnectorError) as error:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_error",
-                    translation_placeholders={
-                        "entry": self.config_entry.title,
-                        "error": repr(error),
-                    },
-                ) from error
+        try:
+            async with timeout(DEFAULT_TIMEOUT):
+                await self.measurements.update()
+        except (AirlyError, ClientConnectorError, TimeoutError) as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": repr(error),
+                },
+            ) from error
 
         _LOGGER.debug(
             "Requests remaining: %s/%s",
@@ -130,9 +130,9 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
                 self.airly.requests_remaining,
             )
 
-        values = measurements.current["values"]
-        index = measurements.current["indexes"][0]
-        standards = measurements.current["standards"]
+        values = self.measurements.current["values"]
+        index = self.measurements.current["indexes"][0]
+        standards = self.measurements.current["standards"]
 
         if index["description"] == NO_AIRLY_SENSORS:
             raise UpdateFailed(

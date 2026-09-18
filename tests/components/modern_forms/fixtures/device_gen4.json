@@ -1,0 +1,8 @@
+{
+  "systemType": "FAN_G4",
+  "deviceName": "ModernFormsFan",
+  "iotmVer": "01.03.0025",
+  "scmVer": "01.03.3008",
+  "owner": "someone@somewhere.com",
+  "staMac": "AA:BB:CC:00:11:22"
+}

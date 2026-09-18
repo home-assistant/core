@@ -601,6 +601,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
     SensorDeviceClass.PRESSURE: (
+        UnitOfPressure.ATM,
         UnitOfPressure.BAR,
         UnitOfPressure.CBAR,
         UnitOfPressure.HPA,

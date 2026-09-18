@@ -13,8 +13,8 @@ from aiohttp.web_exceptions import (
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.request_context import current_request
@@ -72,7 +72,7 @@ async def test_handling_invalid_data(mock_request: Mock) -> None:
         await request_handler_factory(
             mock_request.app[KEY_HASS],
             Mock(requires_auth=False),
-            AsyncMock(side_effect=vol.Invalid("yo")),
+            AsyncMock(side_effect=probatio.Invalid("yo")),
         )(mock_request)
 
 
