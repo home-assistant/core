@@ -100,12 +100,15 @@ def _mileage_value(entity: SkodaEntity) -> int | None:
 
 def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
     status = entity.open_api_vehicle_status
-    if status is not None and status.car_captured_timestamp:
-        timestamp_str = status.car_captured_timestamp
-        if isinstance(timestamp_str, str):
-            return datetime.fromisoformat(timestamp_str)
-        return timestamp_str
-    return None
+    if status is None or not status.car_captured_timestamp:
+        return None
+
+    timestamp = status.car_captured_timestamp
+    if isinstance(timestamp, datetime):
+        return dt_util.as_utc(timestamp)
+
+    parsed_dt = dt_util.parse_datetime(str(timestamp))
+    return dt_util.as_utc(parsed_dt) if parsed_dt else None
 
 
 def _fuel_level_value(entity: SkodaEntity) -> int | None:
@@ -272,6 +275,7 @@ SENSOR_TYPES: tuple[SkodaSensorEntityDescription, ...] = (
         translation_key="mileage",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:car-info",
         required_capabilities=frozenset({VehicleCapability.ODOMETER}),
         value_fn=_mileage_value,

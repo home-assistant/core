@@ -43,7 +43,6 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate credentials and VIN by requesting the vehicle status from OpenAPI."""
         session = async_get_clientsession(self.hass)
         client = OpenAPIClient(api_key=api_key, session=session)
-        # calling an endpoint /api/v1/vehicle/{vin}
         return await client.get_vehicle(vin)
 
     async def _async_validate(

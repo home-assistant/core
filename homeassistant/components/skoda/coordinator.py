@@ -64,7 +64,3 @@ class SkodaUpdateCoordinator(DataUpdateCoordinator[SkodaState]):
             raise UpdateFailed(
                 f"Error communicating with Škoda API for VIN {self.vin}: {err}"
             ) from err
-        except Exception as err:
-            raise UpdateFailed(
-                f"Unexpected error fetching data for VIN {self.vin}: {err}"
-            ) from err

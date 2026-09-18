@@ -267,22 +267,27 @@ def test_remaining_ac_time_returns_none_without_target_timestamp() -> None:
 
 
 def test_last_synchronization_parses_string_timestamp() -> None:
-    """A string timestamp from the API is parsed into a datetime."""
+    """A string timestamp from the API is parsed into a timezone-aware UTC datetime."""
     status = SimpleNamespace(car_captured_timestamp="2024-01-10T10:00:00+00:00")
     coordinator = _make_vehicle_status_coordinator(status)
     sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
 
-    assert sensor.native_value == datetime.fromisoformat("2024-01-10T10:00:00+00:00")
+    assert sensor.native_value == dt_util.as_utc(
+        datetime.fromisoformat("2024-01-10T10:00:00+00:00")
+    )
 
 
-def test_last_synchronization_returns_timestamp_object_as_is() -> None:
-    """A timestamp that is already a datetime object is returned unchanged."""
-    timestamp = datetime(2024, 1, 10, 10, 0, 0)
+def test_last_synchronization_converts_naive_timestamp_object_to_utc() -> None:
+    """A timestamp that is already a datetime object is still normalized to UTC."""
+    timestamp = datetime(2024, 1, 10, 10, 0, 0, tzinfo=dt_util.UTC)
     status = SimpleNamespace(car_captured_timestamp=timestamp)
     coordinator = _make_vehicle_status_coordinator(status)
     sensor = SkodaSensor(coordinator, _description("timestamp_last_sync"))
 
-    assert sensor.native_value == timestamp
+    native_value = sensor.native_value
+    assert isinstance(native_value, datetime)
+    assert native_value == dt_util.as_utc(timestamp)
+    assert native_value.tzinfo is not None
 
 
 def test_charging_power_returns_none_when_not_charging() -> None:
