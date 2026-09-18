@@ -1,15 +1,21 @@
 """Tests for taking over an existing HACS installation."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
+from homeassistant.components import lovelace
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.store.const import (
     DOMAIN,
     LEGACY_HACS_REPOSITORY_ID,
     LEGACY_HACS_SYSTEM_ID,
 )
-from homeassistant.components.store.migration import LEGACY_HACS_DOMAIN
+from homeassistant.components.store.migration import (
+    LEGACY_HACS_DOMAIN,
+    async_migrate_dashboard_resources,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -339,3 +345,88 @@ async def test_duplicate_entries_removed(
     assert hass.config_entries.async_entries(DOMAIN) == [oldest]
     assert oldest.data == {CONF_TOKEN: TOKEN}
     assert oldest.state is ConfigEntryState.LOADED
+
+
+LEGACY_RESOURCE_URL = "/hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100"
+MIGRATED_RESOURCE_URL = "/local/community/plugin-basic/plugin-basic.js?v=1296267100"
+MODERN_RESOURCE_URL = "/local/community/plugin-other/plugin-other.js?v=42100"
+
+
+@pytest.fixture
+def lovelace_resources(hass_storage: dict[str, Any]) -> list[dict[str, str]]:
+    """Seed the dashboard resources with a legacy and an already moved entry."""
+    items = [
+        {"id": "1", "type": "module", "url": LEGACY_RESOURCE_URL},
+        {"id": "2", "type": "module", "url": MODERN_RESOURCE_URL},
+        {"id": "3", "type": "module", "url": "/hacsfiles/plugin-plain/plugin-plain.js"},
+        {"id": "4", "type": "module", "url": "/local/own.js"},
+    ]
+    hass_storage["lovelace_resources"] = {
+        "version": 1,
+        "key": "lovelace_resources",
+        "data": {"items": items},
+    }
+    return items
+
+
+def _resource_urls(hass: HomeAssistant) -> list[str]:
+    """Return the URL of every registered dashboard resource."""
+    return [item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()]
+
+
+@pytest.mark.usefixtures("lovelace_resources")
+async def test_dashboard_resource_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the resources of the custom integration move to the served path."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _resource_urls(hass) == [
+        MIGRATED_RESOURCE_URL,
+        MODERN_RESOURCE_URL,
+        "/local/community/plugin-plain/plugin-plain.js",
+        "/local/own.js",
+    ]
+    assert "Moved 2 dashboard resource(s) to /local/community" in caplog.text
+
+
+@pytest.mark.usefixtures("lovelace_resources")
+async def test_dashboard_resource_migration_is_idempotent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a second run leaves the moved resources alone."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = _resource_urls(hass)
+    caplog.clear()
+
+    await async_migrate_dashboard_resources(hass)
+
+    assert _resource_urls(hass) == migrated
+    assert "dashboard resource(s)" not in caplog.text
+
+
+async def test_dashboard_resource_migration_in_yaml_mode(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the resources of a YAML dashboard are the user's own file."""
+    items = [{"id": "1", "type": "module", "url": LEGACY_RESOURCE_URL}]
+    hass.data[LOVELACE_DATA].resources = lovelace.resources.ResourceYAMLCollection(
+        items
+    )
+    caplog.clear()
+
+    await async_migrate_dashboard_resources(hass)
+
+    assert _resource_urls(hass) == [LEGACY_RESOURCE_URL]
+    assert "dashboard resource(s)" not in caplog.text

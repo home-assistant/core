@@ -22,7 +22,6 @@ from aiogithubapi import (
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.persistent_notification import (
     async_create as async_create_persistent_notification,
 )
@@ -35,7 +34,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV, URL_BASE
+from .const import DOMAIN, HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV
 from .coordinator import StoreUpdateCoordinator
 from .data_client import CatalogClient
 from .enums import (
@@ -167,8 +166,7 @@ class StoreStatus:
 
     startup: bool = True
     new: bool = False
-    active_frontend_endpoint_plugin: bool = False
-    active_frontend_endpoint_theme: bool = False
+    created_www_directory: bool = False
     inital_fetch_done: bool = False
 
 
@@ -1088,31 +1086,6 @@ class StoreManager:
         if was_installed:
             LOGGER.critical("Restarting Home Assistant")
             self.hass.async_create_task(self.hass.async_stop(100))
-
-    async def async_setup_frontend_endpoint_plugin(self) -> None:
-        """Setup the http endpoints for plugins if its not already handled."""
-        if self.status.active_frontend_endpoint_plugin or not await async_exists(
-            self.hass, self.hass.config.path("www/community")
-        ):
-            return
-
-        LOGGER.info("Setting up plugin endpoint")
-        use_cache = self.core.lovelace_mode == "storage"
-        LOGGER.info(
-            "Dashboard resources in %s mode, cache: %s",
-            self.core.lovelace_mode,
-            use_cache,
-        )
-
-        await self.hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    URL_BASE, self.hass.config.path("www/community"), use_cache
-                )
-            ]
-        )
-
-        self.status.active_frontend_endpoint_plugin = True
 
 
 type StoreConfigEntry = ConfigEntry[StoreManager]

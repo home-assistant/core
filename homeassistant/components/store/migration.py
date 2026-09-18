@@ -6,6 +6,9 @@ behind are still filed under the `"hacs"` domain. They are adopted here on the
 first setup after the upgrade.
 """
 
+from urllib.parse import parse_qsl, urlencode
+
+from homeassistant.components import lovelace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
@@ -15,7 +18,13 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from .const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, LEGACY_HACS_SYSTEM_ID
+from .const import (
+    DASHBOARD_RESOURCE_BASE,
+    DOMAIN,
+    LEGACY_DASHBOARD_RESOURCE_BASE,
+    LEGACY_HACS_REPOSITORY_ID,
+    LEGACY_HACS_SYSTEM_ID,
+)
 from .utils.logger import LOGGER
 
 LEGACY_HACS_DOMAIN = "hacs"
@@ -211,3 +220,56 @@ async def async_remove_duplicate_entries(hass: HomeAssistant) -> None:
             kept.entry_id,
         )
         await hass.config_entries.async_remove(entry.entry_id)
+
+
+def _migrated_resource_url(url: str) -> str:
+    """Return the URL of a dashboard resource below the path we serve now."""
+    path, _, query = url.partition("?")
+    path = (
+        f"{DASHBOARD_RESOURCE_BASE}{path.removeprefix(LEGACY_DASHBOARD_RESOURCE_BASE)}"
+    )
+
+    if not query:
+        return path
+
+    parameters = [
+        ("v" if key == "hacstag" else key, value)
+        for key, value in parse_qsl(query, keep_blank_values=True)
+    ]
+
+    return f"{path}?{urlencode(parameters)}"
+
+
+async def async_migrate_dashboard_resources(hass: HomeAssistant) -> None:
+    """Point the dashboard resources at the path the frontend serves.
+
+    The store used to serve www/community itself, the frontend serves the very
+    same directory as /local. Only a storage collection can be rewritten, a
+    YAML one is the user's own file.
+    """
+    if (lovelace_data := hass.data.get(lovelace.LOVELACE_DATA)) is None:
+        return
+
+    resources = lovelace_data.resources
+    if not isinstance(resources, lovelace.resources.ResourceStorageCollection):
+        return
+
+    if not resources.loaded:
+        await resources.async_load()
+
+    migrated = 0
+    for item in list(resources.async_items()):
+        if not item["url"].startswith(f"{LEGACY_DASHBOARD_RESOURCE_BASE}/"):
+            continue
+
+        await resources.async_update_item(
+            item["id"], {"url": _migrated_resource_url(item["url"])}
+        )
+        migrated += 1
+
+    if migrated:
+        LOGGER.info(
+            "Moved %s dashboard resource(s) to %s",
+            migrated,
+            DASHBOARD_RESOURCE_BASE,
+        )

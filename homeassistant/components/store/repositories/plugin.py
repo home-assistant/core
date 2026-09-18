@@ -4,13 +4,15 @@ import re
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components import lovelace
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
+from ..const import DASHBOARD_RESOURCE_BASE, DOMAIN
 from ..enums import RepositoryCategory, StoreSignal
 from ..exceptions import StoreError
 from ..utils.decorator import concurrent
 from .base import Repository
 
-HACSTAG_REPLACER = re.compile(r"\D+")
+VERSION_TAG_REPLACER = re.compile(r"\D+")
 
 if TYPE_CHECKING:
     from ..base import StoreManager
@@ -61,8 +63,21 @@ class PluginRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
-        await self.store.async_setup_frontend_endpoint_plugin()
         await self.update_dashboard_resources()
+
+        # The frontend only registers /local when www/ existed at startup, so a
+        # resource downloaded into a www/ this session created is served after
+        # a restart, not before.
+        if self.store.status.created_www_directory:
+            async_create_issue(
+                hass=self.store.hass,
+                domain=DOMAIN,
+                issue_id=f"restart_required_{self.data.id}_{self.ref}",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="restart_required",
+                translation_placeholders={"name": self.display_name},
+            )
 
     @override
     async def async_post_uninstall(self) -> None:
@@ -142,21 +157,21 @@ class PluginRepository(Repository):
                 self.content.path.remote = "dist"
                 return
 
-    def generate_dashboard_resource_hacstag(self) -> str:
-        """Get the HACS tag used by dashboard resources."""
+    def generate_dashboard_resource_tag(self) -> str:
+        """Get the cache busting tag used by dashboard resources."""
         version = (
             self.display_installed_version
             or self.data.selected_tag
             or self.display_available_version
         )
-        return f"{self.data.id}{HACSTAG_REPLACER.sub('', version)}"
+        return f"{self.data.id}{VERSION_TAG_REPLACER.sub('', version)}"
 
     def generate_dashboard_resource_namespace(self) -> str:
         """Get the dashboard resource namespace."""
-        return f"/hacsfiles/{self.data.full_name.split('/')[1]}"
+        return f"{DASHBOARD_RESOURCE_BASE}/{self.data.full_name.split('/')[1]}"
 
     def generate_dashboard_resource_url(self) -> str:
-        """Get the dashboard resource namespace."""
+        """Get the dashboard resource URL."""
         filename = self.data.file_name
         if "/" in filename:
             self.logger.warning(
@@ -165,7 +180,7 @@ class PluginRepository(Repository):
             filename = filename.split("/")[-1]
         return (
             f"{self.generate_dashboard_resource_namespace()}/{filename}"
-            f"?hacstag={self.generate_dashboard_resource_hacstag()}"
+            f"?v={self.generate_dashboard_resource_tag()}"
         )
 
     def _get_resource_handler(

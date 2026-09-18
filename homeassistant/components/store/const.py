@@ -8,8 +8,10 @@ DOMAIN = "store"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantCommunityStore/{HAVERSION}"
 
-# Kept for compatibility with the HACS install, migrates in a later release
-URL_BASE = "/hacsfiles"
+# Downloaded dashboard resources live in www/community, which the frontend
+# serves as /local.
+DASHBOARD_RESOURCE_BASE = "/local/community"
+LEGACY_DASHBOARD_RESOURCE_BASE = "/hacsfiles"
 
 TV = TypeVar("TV")
 

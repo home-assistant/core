@@ -1,6 +1,7 @@
 """Tests for the Community store setup."""
 
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -352,3 +353,34 @@ async def test_old_panel_paths_redirect_without_a_session(
 
     assert response.status == HTTPStatus.MOVED_PERMANENTLY
     assert response.headers["Location"] == "/store/repository/1296269"
+
+
+async def test_www_directory_created(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a missing www directory is created for the next start."""
+    assert not (config_dir / "www").exists()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (config_dir / "www").is_dir()
+    assert get_store(hass).status.created_www_directory is True
+    assert "dashboard resources are served after a restart" in caplog.text
+
+
+async def test_www_directory_left_alone(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an existing www directory is not reported as created."""
+    await hass.async_add_executor_job((config_dir / "www").mkdir)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert get_store(hass).status.created_www_directory is False
+    assert "dashboard resources are served after a restart" not in caplog.text

@@ -4,6 +4,9 @@ Handles downloads of custom integrations, dashboard resources, themes,
 templates, python scripts and AppDaemon apps from GitHub.
 """
 
+from functools import partial
+import os
+
 from aiogithubapi import (
     AIOGitHubAPIException,
     GitHub,
@@ -36,8 +39,13 @@ from .const import CLIENT_NAME, DOMAIN, LEGACY_HACS_SYSTEM_ID
 from .data_client import CatalogClient
 from .enums import DisabledReason, LovelaceMode, StoreStage
 from .exceptions import StoreError
-from .migration import async_adopt_legacy_install, async_remove_duplicate_entries
+from .migration import (
+    async_adopt_legacy_install,
+    async_migrate_dashboard_resources,
+    async_remove_duplicate_entries,
+)
 from .utils.data import StoreData
+from .utils.file_system import async_exists
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
 from .utils.storage import STORAGE_CACHE_KEY
@@ -73,6 +81,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # The custom integration lived at /hacs, where bookmarks still point
     hass.http.register_redirect("/hacs", "/store")
     hass.http.register_view(LegacyPanelRedirectView)
+
+    return True
+
+
+async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
+    """Create the www directory when it is missing, return if it was created.
+
+    The frontend only registers /local when www/ exists at startup, so creating
+    it here makes the next start serve what the store downloads into it.
+    """
+    www_directory = hass.config.path("www")
+    if await async_exists(hass, www_directory):
+        return False
+
+    await hass.async_add_executor_job(
+        partial(os.makedirs, www_directory, exist_ok=True)
+    )
+    LOGGER.info(
+        "Created %s, dashboard resources are served after a restart", www_directory
+    )
 
     return True
 
@@ -117,6 +145,7 @@ async def _async_initialize_integration(
 
     store.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
     store.core.config_path = store.hass.config.path()
+    store.status.created_www_directory = await _async_ensure_www_directory(hass)
 
     store.core.ha_version = AwesomeVersion(HAVERSION)
 
@@ -146,7 +175,6 @@ async def _async_initialize_integration(
         store.set_active_categories()
 
         async_register_websocket_commands(hass)
-        await store.async_setup_frontend_endpoint_plugin()
     except GitHubAuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"
@@ -187,6 +215,7 @@ async def async_setup_entry(
     # Runs before the update listener is added, trimming the options must not
     # trigger a reload while the entry is still being set up.
     async_adopt_legacy_install(hass, config_entry)
+    await async_migrate_dashboard_resources(hass)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
     return await _async_initialize_integration(hass=hass, config_entry=config_entry)

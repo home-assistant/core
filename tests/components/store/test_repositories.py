@@ -1367,10 +1367,10 @@ async def downloaded_plugin(store: StoreManager) -> PluginRepository:
 @pytest.mark.parametrize(
     ("repository_name", "namespace"),
     [
-        pytest.param(REPOSITORY_PLUGIN, "/hacsfiles/plugin-basic", id="basic"),
+        pytest.param(REPOSITORY_PLUGIN, "/local/community/plugin-basic", id="basic"),
         pytest.param(
             "hacs-test-org/plugin-advanced",
-            "/hacsfiles/plugin-advanced",
+            "/local/community/plugin-advanced",
             id="advanced",
         ),
     ],
@@ -1394,7 +1394,7 @@ async def test_dashboard_namespace(
         pytest.param("1.7-dev09-r2", None, None, "17092", id="non-numeric"),
     ],
 )
-async def test_dashboard_hacstag(
+async def test_dashboard_resource_tag(
     downloaded_plugin: PluginRepository,
     downloaded: str | None,
     selected: str | None,
@@ -1409,7 +1409,7 @@ async def test_dashboard_hacstag(
     downloaded_plugin.data.selected_tag = selected
 
     assert (
-        downloaded_plugin.generate_dashboard_resource_hacstag()
+        downloaded_plugin.generate_dashboard_resource_tag()
         == f"{downloaded_plugin.data.id}{expected}"
     )
 
@@ -1418,7 +1418,7 @@ async def test_dashboard_url(downloaded_plugin: PluginRepository) -> None:
     """Test the URL a dashboard resource is registered with."""
     assert (
         downloaded_plugin.generate_dashboard_resource_url()
-        == "/hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100"
+        == "/local/community/plugin-basic/plugin-basic.js?v=1296267100"
     )
 
 
@@ -1430,9 +1430,34 @@ async def test_dashboard_url_with_invalid_file_name(
 
     assert (
         downloaded_plugin.generate_dashboard_resource_url()
-        == "/hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100"
+        == "/local/community/plugin-basic/plugin-basic.js?v=1296267100"
     )
     assert "have defined an invalid file name dist/plugin-basic.js" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("created_www_directory", "expect_issue"),
+    [
+        pytest.param(True, True, id="www-created-this-session"),
+        pytest.param(False, False, id="www-already-served"),
+    ],
+)
+async def test_dashboard_resource_restart_issue(
+    store: StoreManager,
+    issue_registry: ir.IssueRegistry,
+    created_www_directory: bool,
+    expect_issue: bool,
+) -> None:
+    """Test that a resource in a www directory we created asks for a restart."""
+    store.status.created_www_directory = created_www_directory
+    repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+
+    await repository.async_install()
+
+    issue = issue_registry.async_get_issue(
+        "store", f"restart_required_{repository.data.id}_{repository.ref}"
+    )
+    assert (issue is not None) is expect_issue
 
 
 async def test_resource_handler(downloaded_plugin: PluginRepository) -> None:
@@ -1519,7 +1544,7 @@ async def test_add_dashboard_resource(
     ]
     assert (
         "Adding dashboard resource"
-        " /hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267100" in caplog.text
     )
 
 
@@ -1536,8 +1561,8 @@ async def test_update_dashboard_resource(
 
     assert (
         "Updating existing dashboard resource from"
-        " /hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100 to"
-        " /hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267110" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267100 to"
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267110" in caplog.text
     )
     assert [resource["url"] for resource in resources.async_items()] == [
         downloaded_plugin.generate_dashboard_resource_url()
@@ -1555,7 +1580,7 @@ async def test_remove_dashboard_resource(
 
     assert (
         "Removing dashboard resource"
-        " /hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100" in caplog.text
+        " /local/community/plugin-basic/plugin-basic.js?v=1296267100" in caplog.text
     )
     assert resources.async_items() == []
 
@@ -1567,7 +1592,7 @@ async def test_dashboard_resources_ignore_prefix_matches(
     resources = downloaded_plugin._get_resource_handler()
     resources.data.clear()
 
-    other_url = "/hacsfiles/plugin-basic-extra/plugin-basic-extra.js?hacstag=42100"
+    other_url = "/local/community/plugin-basic-extra/plugin-basic-extra.js?v=42100"
     await resources.async_create_item({"res_type": "module", "url": other_url})
 
     await downloaded_plugin.update_dashboard_resources()
