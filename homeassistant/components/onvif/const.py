@@ -21,6 +21,10 @@ CONF_ENABLE_WEBHOOKS = "enable_webhooks"
 CONF_MORE_OPTIONS = "more_options"
 DEFAULT_ENABLE_WEBHOOKS = True
 
+# The library reads a snapshot without a timeout of its own, and a camera whose
+# snapshot never ends would otherwise hold setup for aiohttp's five minute default
+SNAPSHOT_TIMEOUT = 10
+
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
 ATTR_ZOOM = "zoom"
