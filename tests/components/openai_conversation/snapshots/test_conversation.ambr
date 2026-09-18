@@ -14,7 +14,7 @@
     }),
     dict({
       'call_id': 'ci_A',
-      'output': '{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]}',
+      'output': '{"result":{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]},"error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -204,7 +204,7 @@
     }),
     dict({
       'call_id': 'mock-tool-call-id',
-      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}}',
+      'output': '{"result":{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}},"error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -240,7 +240,7 @@
     }),
     dict({
       'call_id': 'call_call_1',
-      'output': '"value1"',
+      'output': '{"result":"value1","error":false}',
       'type': 'function_call_output',
     }),
     dict({
@@ -251,7 +251,7 @@
     }),
     dict({
       'call_id': 'call_call_2',
-      'output': '"value2"',
+      'output': '{"result":"value2","error":false}',
       'type': 'function_call_output',
     }),
     dict({
