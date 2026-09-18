@@ -108,10 +108,6 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
         )
 
-        # Frozen at init: RAS / master unit / missing AUTO CTS (see pizone).
-        if controller.control_setpoint_owner is controller:
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
         self._state_to_pizone = {
             HVACMode.COOL: Controller.Mode.COOL,
             HVACMode.HEAT: Controller.Mode.HEAT,
@@ -138,6 +134,20 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         self.zones = {}
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(coordinator, self, zone)
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features.
+
+        TARGET_TEMPERATURE follows live ownership: writable only when the
+        controller owns the unit target (return-air / unit CTS). When a zone
+        owns control, omit it so a late set cannot race onto the wrong zone.
+        """
+        features = self._attr_supported_features
+        if self.controller.control_setpoint_owner is self.controller:
+            return features | ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
 
     @property
     @override
@@ -275,7 +285,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     def _active_control_zone(self) -> Zone | None:
         """Return the pizone zone currently driving the unit, if any."""
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         owner = self.controller.control_setpoint_owner
         return owner if isinstance(owner, Zone) else None
@@ -297,7 +307,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         return self.controller.control_setpoint
 
@@ -308,7 +318,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Either from control zone or master unit.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self.controller.temp_setpoint
         return self.controller.control_setpoint
 

@@ -239,6 +239,55 @@ async def test_target_temperature_when_zone_owns(
     ) == 0
 
 
+async def test_target_temperature_feature_follows_live_ownership(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """TARGET_TEMPERATURE tracks ownership changes after setup."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == ClimateEntityFeature.TARGET_TEMPERATURE
+
+    mock_controller.control_setpoint_owner = mock_zones[0]
+    mock_controller.control_setpoint = mock_zones[0].temp_setpoint
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == 0
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == ZONE_ENTITY
+
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert (
+        entity.attributes["supported_features"]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    ) == ClimateEntityFeature.TARGET_TEMPERATURE
+    assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+
+
 async def test_control_zone_extra_attributes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
