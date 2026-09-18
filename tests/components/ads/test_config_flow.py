@@ -1,7 +1,7 @@
 """Test the ADS config flow."""
 
 from collections.abc import Callable
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pyads
 import pytest
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MockPyadsLocalNetId
-from .const import AMS_NET_ID, LOCAL_NET_ID
+from .const import AMS_NET_ID, AUTO_NET_ID, LOCAL_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -56,9 +56,38 @@ async def test_user_flow_with_local_net_id(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_LOCAL_NET_ID] == LOCAL_NET_ID
-    mock_pyads_local_net_id.open_port.assert_called_once()
-    mock_pyads_local_net_id.set_local_address.assert_called_once_with(LOCAL_NET_ID)
-    mock_pyads_local_net_id.close_port.assert_called_once()
+    assert mock_pyads_local_net_id.open_port.call_count == 2
+    assert mock_pyads_local_net_id.set_local_address.call_args_list == [
+        call(LOCAL_NET_ID),
+        call(AUTO_NET_ID),
+    ]
+    assert mock_pyads_local_net_id.close_port.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_local_net_id_restored_after_connect_error(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_pyads_local_net_id: MockPyadsLocalNetId,
+) -> None:
+    """Test a failed validation still restores the prior local AMS NetID."""
+    mock_pyads_connection.return_value.read_state.side_effect = pyads.ADSError(
+        text="timeout"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**USER_INPUT, CONF_LOCAL_NET_ID: LOCAL_NET_ID}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_pyads_local_net_id.set_local_address.call_args_list == [
+        call(LOCAL_NET_ID),
+        call(AUTO_NET_ID),
+    ]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

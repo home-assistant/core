@@ -1,6 +1,8 @@
 """Support for Automation Device Specification (ADS)."""
 
 from collections import namedtuple
+from collections.abc import Iterator
+from contextlib import contextmanager
 import ctypes
 import logging
 import struct
@@ -50,6 +52,32 @@ def _reset_local_net_id_cache() -> None:
     """
     global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
     _original_local_net_id = None
+
+
+@contextmanager
+def local_net_id_probe(local_net_id: str | None) -> Iterator[None]:
+    """Temporarily apply a local AMS NetID to probe a connection.
+
+    Restores whichever NetID was active beforehand, so a validation
+    attempt never leaves process-wide ADS state changed.
+    """
+    if local_net_id is None:
+        yield
+        return
+    pyads.open_port()
+    try:
+        previous_net_id = pyads.get_local_address().netid
+        pyads.set_local_address(local_net_id)
+    finally:
+        pyads.close_port()
+    try:
+        yield
+    finally:
+        pyads.open_port()
+        try:
+            pyads.set_local_address(previous_net_id)
+        finally:
+            pyads.close_port()
 
 
 class AdsHub:
