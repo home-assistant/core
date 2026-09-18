@@ -18,6 +18,9 @@ SUPPORTED_DEVICE_TYPES: Final[frozenset[str]] = frozenset(
         "VenusA",
         "VenusD",
         "VenusE 3.0",
+        "Venus A",
+        "Venus D",
+        "Venus E 3.0",
     }
 )
 
