@@ -255,11 +255,13 @@ class IntentTool(Tool):
         name: str,
         intent_handler: intent.IntentHandler,
         *,
+        title: str | None = None,
         integration: str | None = None,
         annotations: ToolAnnotations | None = None,
     ) -> None:
         """Init the class."""
         self.name = name
+        self.title = title
         self.integration = integration
         if annotations is not None:
             self.annotations = annotations

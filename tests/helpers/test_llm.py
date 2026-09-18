@@ -222,15 +222,18 @@ def test_intent_tool_metadata() -> None:
     tool = llm.IntentTool(
         "test_tool",
         MyIntentHandler(),
+        title="Test tool",
         integration="my_integration",
         annotations=annotations,
     )
 
+    assert tool.title == "Test tool"
     assert tool.integration == "my_integration"
     assert tool.annotations == annotations
 
     # An intent tool that declares nothing keeps the unsafe defaults.
     tool = llm.IntentTool("test_tool", MyIntentHandler())
+    assert tool.title is None
     assert tool.integration is None
     assert tool.annotations == llm.ToolAnnotations()
 
