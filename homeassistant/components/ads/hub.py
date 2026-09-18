@@ -29,20 +29,24 @@ NotificationItem = namedtuple(  # noqa: PYI024
 
 _original_local_net_id: str | None = None
 
+# set_local_address() is process-wide; serialize every override through this lock.
+_local_net_id_lock = threading.Lock()
+
 
 def apply_local_net_id(local_net_id: str | None) -> None:
     """Set a custom local AMS NetID, or restore the original once cleared."""
     global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
-    if local_net_id is None and _original_local_net_id is None:
-        return
-    pyads.open_port()
-    try:
-        # set_local_address() is process-wide; cache the original to restore it.
-        if _original_local_net_id is None:
-            _original_local_net_id = pyads.get_local_address().netid
-        pyads.set_local_address(local_net_id or _original_local_net_id)
-    finally:
-        pyads.close_port()
+    with _local_net_id_lock:
+        if local_net_id is None and _original_local_net_id is None:
+            return
+        pyads.open_port()
+        try:
+            # Cache the original NetID so it can be restored once cleared.
+            if _original_local_net_id is None:
+                _original_local_net_id = pyads.get_local_address().netid
+            pyads.set_local_address(local_net_id or _original_local_net_id)
+        finally:
+            pyads.close_port()
 
 
 def _reset_local_net_id_cache() -> None:
@@ -61,24 +65,26 @@ def local_net_id_probe(local_net_id: str | None) -> Iterator[None]:
     Restores whichever NetID was active beforehand, so a validation
     attempt never leaves process-wide ADS state changed.
     """
-    target_net_id = local_net_id or _original_local_net_id
-    if target_net_id is None:
-        yield
-        return
-    pyads.open_port()
-    try:
-        previous_net_id = pyads.get_local_address().netid
-        pyads.set_local_address(target_net_id)
-    finally:
-        pyads.close_port()
-    try:
-        yield
-    finally:
+    # The lock is held across the probe so another override cannot interleave.
+    with _local_net_id_lock:
+        target_net_id = local_net_id or _original_local_net_id
+        if target_net_id is None:
+            yield
+            return
         pyads.open_port()
         try:
-            pyads.set_local_address(previous_net_id)
+            previous_net_id = pyads.get_local_address().netid
+            pyads.set_local_address(target_net_id)
         finally:
             pyads.close_port()
+        try:
+            yield
+        finally:
+            pyads.open_port()
+            try:
+                pyads.set_local_address(previous_net_id)
+            finally:
+                pyads.close_port()
 
 
 class AdsHub:
