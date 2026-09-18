@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from random import randint
 from typing import Any, cast, override
 
+from aiohttp import ClientError
 from enturclient import EnturPublicTransportData
 import probatio
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -147,9 +149,12 @@ async def _async_setup(
             web_session=async_get_clientsession(hass),
         )
 
-        if stop_config.expand_platforms:
-            await data.expand_all_quays()
-        await data.update()
+        try:
+            if stop_config.expand_platforms:
+                await data.expand_all_quays()
+            await data.update()
+        except (ClientError, TimeoutError) as err:
+            raise PlatformNotReady from err
 
         proxy = EnturProxy(data)
         device_name = None

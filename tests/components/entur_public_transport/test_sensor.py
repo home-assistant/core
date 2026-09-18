@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
 import probatio
 import pytest
 
@@ -22,6 +23,7 @@ from homeassistant.components.entur_public_transport.sensor import (
     due_in_minutes,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 
 def test_platform_schema_defaults() -> None:
@@ -119,6 +121,33 @@ async def test_async_setup_platform_creates_entities(
     assert [entity.unique_id for entity in entities] == [None, None]
     assert [entity.device_info for entity in entities] == [None, None]
     assert add_entities.call_args.args[1] is True
+
+
+@pytest.mark.parametrize("method", ["expand_all_quays", "update"])
+async def test_async_setup_retries_after_entur_connection_error(
+    hass: HomeAssistant,
+    method: str,
+) -> None:
+    """Test temporary Entur errors leave the platform ready to retry."""
+    api = Mock()
+    api.expand_all_quays = AsyncMock()
+    api.update = AsyncMock()
+    getattr(api, method).side_effect = ClientError
+    add_entities = Mock()
+    config = PLATFORM_SCHEMA(
+        {"platform": "entur_public_transport", "stop_ids": ["NSR:StopPlace:1"]}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.EnturPublicTransportData",
+            return_value=api,
+        ),
+        pytest.raises(PlatformNotReady),
+    ):
+        await _async_setup(hass, config, add_entities)
+
+    add_entities.assert_not_called()
 
 
 def test_subentries_keep_route_filters_per_stop() -> None:
