@@ -200,7 +200,6 @@ def parse_weather(payload: Any) -> WeatherData:
             temperatures = daily.get("temperature", {})
             if temperatures.get("unit", "℃") != "℃":
                 raise XiaomiWeatherError("Unexpected daily temperature unit")
-            codes = values(daily.get("weather", {}))
             for index, item in enumerate(values(temperatures)):
                 high, low = number(item["from"]), number(item["to"])
                 if (
@@ -210,7 +209,7 @@ def parse_weather(payload: Any) -> WeatherData:
                     continue
                 local = datetime.fromisoformat(suns[index]["from"])
                 date = timestamp(local.replace(hour=0, minute=0, second=0).isoformat())
-                code = codes[index]["from"] if index < len(codes) else None
+                code = daily_value(daily.get("weather"), index, "from")
                 if high is not None:
                     days.append(
                         ForecastData(

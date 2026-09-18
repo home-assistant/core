@@ -206,6 +206,36 @@ def test_failed_conditions(
     )
 
 
+@pytest.mark.parametrize(
+    "condition_entry",
+    [
+        pytest.param(None, id="null"),
+        pytest.param({}, id="missing-condition"),
+        pytest.param("invalid", id="invalid-type"),
+        pytest.param({"status": 1, "from": "0", "to": "0"}, id="failed-entry"),
+    ],
+)
+def test_malformed_daily_condition(
+    payload: dict[str, Any], condition_entry: object
+) -> None:
+    """Keep valid weather and forecast periods when a condition is malformed."""
+    expected = parse_weather(payload)
+    payload["forecastDaily"]["weather"]["value"][0] = condition_entry
+
+    data = parse_weather(payload)
+
+    assert data.temperature == expected.temperature
+    assert len(data.daily) == len(expected.daily)
+    assert data.daily[0].temperature == expected.daily[0].temperature
+    assert data.daily[0].low == expected.daily[0].low
+    assert data.daily[0].condition is None
+    assert data.daily[1:] == expected.daily[1:]
+    assert len(data.twice_daily) == len(expected.twice_daily)
+    assert data.twice_daily[0].condition is None
+    assert data.twice_daily[1].condition is None
+    assert data.hourly == expected.hourly
+
+
 def test_misaligned_hourly_weather(payload: dict[str, Any]) -> None:
     """Test misaligned hourly weather."""
     payload["forecastHourly"]["weather"]["pubTime"] = "2026-09-08T14:00:00+08:00"
