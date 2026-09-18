@@ -353,6 +353,49 @@ async def test_control_zone_source_follows_library_zone_owner(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 19.4
 
 
+async def test_const_control_zone_current_temperature_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """CONST CtrlZone is unexpected: current unknown, source still set, log once."""
+    bypass = create_mock_zone(
+        index=1,
+        name="Bypass",
+        temp_current=None,
+        zone_type=Zone.Type.CONST,
+    )
+    mock_controller.zones_total = 2
+    mock_controller.zones = [
+        create_mock_zone(index=0, name="Kitchen", temp_current=19.4),
+        bypass,
+    ]
+    mock_controller.zone_ctrl = 1
+    mock_controller.control_setpoint_owner = bypass
+    mock_controller.control_setpoint = None
+    mock_controller.temp_return = 22.0
+
+    with caplog.at_level(logging.ERROR):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = hass.states.get(CONTROLLER_ENTITY)
+    assert entity is not None
+    assert entity.attributes[ATTR_CONTROL_ZONE_SOURCE] == "climate.bypass"
+    assert entity.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert "Unexpected iZone control zone" in caplog.text
+    assert "attach diagnostics" in caplog.text
+    assert caplog.text.count("Unexpected iZone control zone") == 1
+
+    # Property reads again without re-logging.
+    climate = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
+    assert climate is not None
+    with caplog.at_level(logging.ERROR):
+        assert climate.current_temperature is None
+    assert caplog.text.count("Unexpected iZone control zone") == 1
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_refresh_failure_makes_entities_unavailable(
     hass: HomeAssistant,

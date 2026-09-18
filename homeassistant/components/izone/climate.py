@@ -97,6 +97,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         controller = coordinator.controller
         self._unknown_fan_logged = False
         self._unknown_mode_logged = False
+        self._unexpected_control_zone_logged = False
 
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
@@ -238,14 +239,35 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature.
 
-        Follows the active control zone's room sensor when a zone owns control;
-        otherwise the unit return-air (or supply in free air / eco).
+        Follows the active control zone's room sensor when an AUTO zone owns
+        control; otherwise the unit return-air (or supply in free air / eco).
+
+        A non-climate (CONST/OPCL) control zone, or an AUTO zone without a
+        room reading, is unexpected device behaviour — report unknown and log
+        once so it can be investigated.
         """
         if self.controller.free_air:
             return self.controller.temp_supply
         owner = self.controller.control_setpoint_owner
         if isinstance(owner, Zone):
-            return owner.temp_current
+            if owner.type is Zone.Type.AUTO and owner.temp_current is not None:
+                return owner.temp_current
+            if not self._unexpected_control_zone_logged:
+                _LOGGER.error(
+                    "Unexpected iZone control zone on controller %s: "
+                    "zone index %s type %s temp %s; current temperature "
+                    "unavailable. The bridge is not expected to select a "
+                    "non-climate zone (or an AUTO zone without a room sensor) "
+                    "as CtrlZone. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues "
+                    "and attach diagnostics",
+                    self.controller.device_uid,
+                    owner.index,
+                    owner.type.value,
+                    owner.temp_current,
+                )
+                self._unexpected_control_zone_logged = True
+            return None
         return self.controller.temp_return
 
     def _active_control_zone(self) -> Zone | None:
