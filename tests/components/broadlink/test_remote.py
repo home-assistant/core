@@ -13,6 +13,7 @@ from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkRMUpdateManager
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
+    SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
     SERVICE_TURN_OFF,
@@ -440,3 +441,123 @@ async def test_remote_send_unknown_command(
         )
 
     assert mock_setup.api.send_data.call_count == 0
+
+
+async def test_remote_send_command_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device error while sending is reported to the caller."""
+    device = get_device("Entrance")
+    mock_api = device.get_mock_api()
+    mock_api.send_data.side_effect = BroadlinkException("Send failed")
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+    entity_id = _get_remote_entity_id(
+        hass,
+        device_registry,
+        entity_registry,
+        mock_setup.entry.unique_id,
+        mock_setup.entry.entry_id,
+    )
+
+    with pytest.raises(HomeAssistantError, match="Failed to send command"):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEND_COMMAND,
+            {"entity_id": entity_id, "command": "b64:" + IR_PACKET},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(RF_PACKET).decode()},
+            id="send",
+        ),
+        pytest.param(
+            SERVICE_LEARN_COMMAND,
+            {"device": "fan", "command": "light", "command_type": "rf"},
+            id="learn",
+        ),
+    ],
+)
+async def test_remote_rf_not_supported(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test RF actions on a model without RF raise a validation error."""
+    device = get_device("Entrance")
+    mock_api = device.get_mock_api()
+    del mock_api.sweep_frequency
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+    entity_id = _get_remote_entity_id(
+        hass,
+        device_registry,
+        entity_registry,
+        mock_setup.entry.unique_id,
+        mock_setup.entry.entry_id,
+    )
+
+    with pytest.raises(ServiceValidationError, match="doesn't support RF commands"):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            service,
+            {"entity_id": entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert mock_api.send_data.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("service_data", "message"),
+    [
+        pytest.param(
+            {"device": "fan", "command": "on"},
+            "Device not found: fan",
+            id="unknown_device",
+        ),
+        pytest.param(
+            {"device": "tv", "command": ["off", "mute"]},
+            "Commands not found: off, mute",
+            id="unknown_commands",
+        ),
+    ],
+)
+async def test_remote_delete_command_not_found(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    service_data: dict[str, Any],
+    message: str,
+) -> None:
+    """Test deleting a device or commands that were never learned raises."""
+    device = get_device("Entrance")
+    hass_storage[f"broadlink_remote_{device.mac}_codes"] = {
+        "version": 1,
+        "data": {"tv": {"on": IR_PACKET}},
+    }
+    mock_setup = await device.setup_entry(hass)
+    entity_id = _get_remote_entity_id(
+        hass,
+        device_registry,
+        entity_registry,
+        mock_setup.entry.unique_id,
+        mock_setup.entry.entry_id,
+    )
+
+    with pytest.raises(ServiceValidationError, match=message):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_DELETE_COMMAND,
+            {"entity_id": entity_id, **service_data},
+            blocking=True,
+        )
