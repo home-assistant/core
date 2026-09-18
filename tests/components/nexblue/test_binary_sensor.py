@@ -41,12 +41,12 @@ async def test_binary_sensor_entities_snapshot(
     )
 
 
-async def test_cable_lock_state_is_off_when_charger_is_unlocked(
+async def test_cable_lock_state_is_on_when_charger_is_unlocked(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test cable lock state is off when the cable is unlocked."""
+    """Test cable lock state is on when the cable is unlocked."""
     mock_client.async_get_charger_status.return_value = replace(
         CHARGER_STATUS, is_lock=False
     )
@@ -55,15 +55,15 @@ async def test_cable_lock_state_is_off_when_charger_is_unlocked(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.nb123456_cable_lock_state").state == "off"
+    assert hass.states.get("binary_sensor.nb123456_cable_lock_state").state == "on"
 
 
-async def test_availability_is_off_when_charger_is_disabled(
+async def test_charging_enabled_is_off_when_charger_is_disabled(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test charger availability is off when the charger is disabled."""
+    """Test charging enabled is off when the charger is disabled."""
     mock_client.async_get_charger_status.return_value = replace(
         CHARGER_STATUS, is_disable=True
     )
@@ -72,7 +72,7 @@ async def test_availability_is_off_when_charger_is_disabled(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.nb123456_availability").state == "off"
+    assert hass.states.get("binary_sensor.nb123456_charging_enabled").state == "off"
 
 
 async def test_binary_sensors_unavailable_when_coordinator_update_fails(
@@ -93,6 +93,6 @@ async def test_binary_sensors_unavailable_when_coordinator_update_fails(
         == STATE_UNAVAILABLE
     )
     assert (
-        hass.states.get("binary_sensor.nb123456_availability").state
+        hass.states.get("binary_sensor.nb123456_charging_enabled").state
         == STATE_UNAVAILABLE
     )

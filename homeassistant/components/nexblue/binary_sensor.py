@@ -3,6 +3,7 @@
 from typing import override
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -19,6 +20,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_lock",
         translation_key="is_lock",
+        device_class=BinarySensorDeviceClass.LOCK,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
@@ -86,4 +88,4 @@ class NexBlueBinarySensor(
         assert status is not None
         if self.entity_description.key == "is_disable":
             return not status.is_disable
-        return status.is_lock
+        return not status.is_lock
