@@ -509,6 +509,11 @@ async def test_remote_send_command_failure(
             id="send_rm4_packet",
         ),
         pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(b"\xb4" + RF_PACKET[1:]).decode()},
+            id="send_315mhz_packet",
+        ),
+        pytest.param(
             SERVICE_LEARN_COMMAND,
             {"device": "fan", "command": "light", "command_type": "rf"},
             id="learn",

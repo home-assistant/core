@@ -246,7 +246,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        rf_flags = {RF_PACKET_TYPE_RM4, 0xB2, 0xD7}
+        rf_flags = {RF_PACKET_TYPE_RM4, 0xB2, 0xB4, 0xD7}
         if not hasattr(device.api, "sweep_frequency") and any(
             c[0] in rf_flags for codes in code_list for c in codes
         ):
