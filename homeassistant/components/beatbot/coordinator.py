@@ -126,14 +126,19 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             if count >= _MISSING_DEVICE_CONFIRMATIONS:
                 confirmed_removed.add(device_id)
             elif device_id in previous_data:
-                # Keep the last-known device until absence is confirmed. This
-                # prevents entity callbacks from reading a missing data key.
-                result[device_id] = previous_data[device_id]
+                # Retained so entity callbacks never read a missing data
+                # key, but neither discovery nor the batch state
+                # confirmed it, so its cached state is not online.
+                retained = previous_data[device_id]
+                retained.is_online = False
+                result[device_id] = retained
 
         for device_id in confirmed_removed:
             # Keep it alive until reload unloads the existing platform entities.
             if device_id in previous_data:
-                result[device_id] = previous_data[device_id]
+                retained = previous_data[device_id]
+                retained.is_online = False
+                result[device_id] = retained
             self._remove_device_from_registries(device_id)
             self._missing_device_counts.pop(device_id, None)
 

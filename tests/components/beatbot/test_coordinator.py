@@ -244,12 +244,15 @@ async def test_poll_keeps_device_until_three_successful_discovery_misses(
 
     assert first == {"dev-1": device}
     assert second == {"dev-1": device}
+    assert first["dev-1"].is_online is False
+    assert second["dev-1"].is_online is False
     coordinator._remove_device_from_registries.assert_not_called()
     coordinator._schedule_entry_reload.assert_not_called()
 
     third = await coordinator._async_update_data()
 
     assert third == {"dev-1": device}
+    assert third["dev-1"].is_online is False
     coordinator._remove_device_from_registries.assert_called_once_with("dev-1")
     coordinator._schedule_entry_reload.assert_called_once()
 

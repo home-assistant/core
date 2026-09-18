@@ -81,10 +81,9 @@ class BeatbotEventClient:
         try:
             await self._client.async_run()
         except BeatbotAuthenticationError:
-            _LOGGER.warning(
-                "Beatbot event stream authorization failed; starting reauthentication"
-            )
-            self._entry.async_start_reauth(self._hass)
+            _LOGGER.warning("Beatbot event stream authorization failed")
+            # No-op until the config flow implements reauthentication.
+            self._entry.async_start_reauth_if_available(self._hass)
 
     async def _async_refresh_token(self, rejected_access_token: str) -> str:
         """Refresh a rejected token through the session's shared rotation lock."""

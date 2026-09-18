@@ -132,14 +132,14 @@ async def test_unknown_event_does_not_route(
 async def test_library_authentication_error_starts_reauth(
     hass: HomeAssistant, event_client: tuple[BeatbotEventClient, Mock]
 ) -> None:
-    """Start reauthentication when the library reports terminal auth failure."""
+    """Request reauthentication when the library reports terminal auth failure."""
     client, _ = event_client
     client._client.async_run = AsyncMock(side_effect=BeatbotAuthenticationError)
-    client._entry.async_start_reauth = Mock()
+    client._entry.async_start_reauth_if_available = Mock()
 
     await client._run()
 
-    client._entry.async_start_reauth.assert_called_once_with(hass)
+    client._entry.async_start_reauth_if_available.assert_called_once_with(hass)
 
 
 @pytest.mark.parametrize(
