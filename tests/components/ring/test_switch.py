@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -60,6 +61,10 @@ class ChimeCapabilityLostDoorbell:
 
     @property
     def existing_doorbell_type_enabled(self) -> bool:
+        """Mimic ring_doorbell raising when the chime type becomes unknown."""
+        raise KeyError(3)
+
+    async def async_set_existing_doorbell_type_enabled(self, value: bool) -> None:
         """Mimic ring_doorbell raising when the chime type becomes unknown."""
         raise KeyError(3)
 
@@ -228,14 +233,37 @@ async def test_switch_setup_succeeds_with_unknown_chime_type(
 
 
 @pytest.mark.usefixtures("mock_ring_client", "create_deprecated_siren_entity")
-async def test_in_home_chime_off_when_type_becomes_unknown(
+async def test_in_home_chime_unknown_when_type_becomes_unreadable(
     hass: HomeAssistant, mock_ring_devices: Any
 ) -> None:
-    """Test that an in-home chime switch reads as off when its type becomes unknown."""
+    """Test that an in-home chime switch reads as unknown when its type becomes unreadable."""
     mock_ring_devices.all_devices.append(ChimeCapabilityLostDoorbell())
 
     await setup_platform(hass, Platform.SWITCH)
 
     state = hass.states.get("switch.chime_capability_lost_doorbell_in_home_chime")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_ring_client", "create_deprecated_siren_entity")
+async def test_in_home_chime_toggle_errors_when_type_unreadable(
+    hass: HomeAssistant, mock_ring_devices: Any
+) -> None:
+    """Test that toggling raises a translated error when the chime type becomes unreadable."""
+    mock_ring_devices.all_devices.append(ChimeCapabilityLostDoorbell())
+
+    await setup_platform(hass, Platform.SWITCH)
+
+    state = hass.states.get("switch.chime_capability_lost_doorbell_in_home_chime")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": state.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
