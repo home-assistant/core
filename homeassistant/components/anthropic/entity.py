@@ -304,7 +304,12 @@ def _convert_content(  # noqa: C901
                 tool_result_block = {
                     "type": "tool_result",
                     "tool_use_id": content.tool_call_id,
-                    "content": json_dumps(content.result.data),
+                    "content": json_dumps(
+                        {
+                            "result": content.result.data,
+                            "error": content.result.error,
+                        }
+                    ),
                 }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
