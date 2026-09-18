@@ -142,7 +142,6 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
-                    CONF_MIDDLEWARE: user_input[CONF_MIDDLEWARE],
                 }
             )
             if error := await _async_validate_input_errors(self.hass, user_input):
