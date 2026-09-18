@@ -507,9 +507,9 @@ class LineSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 return self._create_line(line_code)
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_LINE): SelectSelector(
+                probatio.Required(CONF_LINE): SelectSelector(
                     SelectSelectorConfig(
                         options=sorted({line.code_ligne for line in self._lines}),
                         mode=SelectSelectorMode.DROPDOWN,
