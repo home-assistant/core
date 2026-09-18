@@ -14,7 +14,13 @@ from homeassistant.helpers import (
     floor_registry as fr,
     intent,
 )
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
 from .const import DOMAIN
 from .timers import async_device_supports_timers
@@ -38,6 +44,29 @@ TIMER_INTENTS = (
     intent.INTENT_UNPAUSE_TIMER,
     intent.INTENT_TIMER_STATUS,
 )
+
+# Every intent here acts on Home Assistant's own entities and timers, so none
+# of them reaches an open world.
+_CONTROL = ToolAnnotations(idempotent=True, open_world=False)
+_CUMULATIVE = ToolAnnotations(open_world=False)
+_READ_ONLY = ToolAnnotations(read_only=True, open_world=False)
+
+# A timer intent that adds or removes time has an effect each time it is
+# called, so it is not idempotent.
+INTENT_ANNOTATIONS = {
+    intent.INTENT_TURN_ON: _CONTROL,
+    intent.INTENT_TURN_OFF: _CONTROL,
+    intent.INTENT_SET_POSITION: _CONTROL,
+    intent.INTENT_STOP_MOVING: _CONTROL,
+    intent.INTENT_CANCEL_ALL_TIMERS: _CONTROL,
+    intent.INTENT_CANCEL_TIMER: _CONTROL,
+    intent.INTENT_PAUSE_TIMER: _CONTROL,
+    intent.INTENT_UNPAUSE_TIMER: _CONTROL,
+    intent.INTENT_START_TIMER: _CUMULATIVE,
+    intent.INTENT_INCREASE_TIMER: _CUMULATIVE,
+    intent.INTENT_DECREASE_TIMER: _CUMULATIVE,
+    intent.INTENT_TIMER_STATUS: _READ_ONLY,
+}
 
 DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
     "When controlling Home Assistant always call the intent tools. "
@@ -76,7 +105,13 @@ def async_get_tools(
     ]
 
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler) for handler in handlers
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            integration=DOMAIN,
+            annotations=INTENT_ANNOTATIONS[handler.intent_type],
+        )
+        for handler in handlers
     ]
     if not tools:
         return None

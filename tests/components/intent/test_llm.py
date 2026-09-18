@@ -111,6 +111,33 @@ async def test_timer_intents_offered_for_timer_device(hass: HomeAssistant) -> No
     assert "intent__HassTimerStatus" in names
 
 
+async def test_tool_annotations(hass: HomeAssistant) -> None:
+    """Test the intent tools declare how they behave."""
+
+    @callback
+    def handle_timer(*args: object) -> None:
+        pass
+
+    async_register_timer_handler(hass, "test_device", handle_timer)
+
+    result = await llm_component.async_get_tools(
+        hass, _llm_context(device_id="test_device"), "assist"
+    )
+    tools = {tool.name: tool for tool in result.tools}
+
+    assert tools["intent__HassTurnOn"].integration == "intent"
+    assert tools["intent__HassTurnOn"].annotations == llm.ToolAnnotations(
+        idempotent=True, open_world=False
+    )
+    # Adding time has an effect on every call.
+    assert tools["intent__HassIncreaseTimer"].annotations == llm.ToolAnnotations(
+        open_world=False
+    )
+    assert tools["intent__HassTimerStatus"].annotations == llm.ToolAnnotations(
+        read_only=True, open_world=False
+    )
+
+
 async def test_set_position_requires_exposed_cover(hass: HomeAssistant) -> None:
     """Test intent__HassSetPosition is only exposed when a cover/valve is exposed."""
     assert "intent__HassSetPosition" in await _tool_names(hass)

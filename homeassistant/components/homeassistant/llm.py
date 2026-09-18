@@ -27,11 +27,13 @@ from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
+from .const import DOMAIN
 from .exposed_entities import async_should_expose
 
 # Domains bucketed out of the exposed-entity overview.
@@ -234,6 +236,8 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
     parameters = probatio.Schema(
         {
             probatio.Optional(
