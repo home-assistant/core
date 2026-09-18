@@ -83,7 +83,7 @@ rules:
     comment: Discovery guidance is documented, but a complete troubleshooting section is not provided.
   docs-use-cases: done
   dynamic-devices:
-    status: todo
+    status: exempt
     comment: This contribution supports one thermostat per entry, without dynamic child-device discovery.
   entity-category:
     status: done
@@ -99,7 +99,7 @@ rules:
     comment: The primary climate entity has no separate name and uses the device name.
   exception-translations: done
   icon-translations:
-    status: todo
+    status: exempt
     comment: The climate entity uses the standard platform icons without custom icons.
   reconfiguration-flow:
     status: todo
@@ -108,8 +108,8 @@ rules:
     status: todo
     comment: No integration-specific repair flows are implemented.
   stale-devices:
-    status: todo
-    comment: Removal is currently supported by deleting the config entry, without stale-device handling.
+    status: exempt
+    comment: Each config entry represents one thermostat and cannot accumulate stale child devices.
 
   # Platinum
   async-dependency: done

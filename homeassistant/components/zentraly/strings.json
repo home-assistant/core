@@ -52,7 +52,7 @@
       "message": "The device at {host} does not match the configured Zentraly device."
     },
     "unsupported_model": {
-      "message": "The Zentraly device model {device_id} is not supported."
+      "message": "The Zentraly device with ID {device_id} is not supported."
     }
   }
 }
