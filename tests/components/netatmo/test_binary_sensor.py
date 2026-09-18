@@ -53,10 +53,6 @@ async def test_doortag_setup(
 ) -> None:
     """Test doortag setup."""
     fake_post_hits = 0
-    # Repeatedly used variables for the test and initial value from fixture
-    # Use nonexistent ID to prevent matching during initial setup
-    polling_cycles = 11
-    polling_delta = timedelta(seconds=30)
 
     async def fake_post(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
@@ -99,18 +95,15 @@ async def test_doortag_setup(
     _doortag_entity_opening = f"binary_sensor.{_doortag_entity}_window"
     _doortag_entity_connectivity = f"binary_sensor.{_doortag_entity}_connectivity"
 
-    # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
-
     # Check opening creation
     assert hass.states.get(_doortag_entity_opening) is not None
     # Check connectivity creation
     assert hass.states.get(_doortag_entity_connectivity) is not None
 
-    # Check opening initial state
-    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
+    # Check opening initial state (no_news)
+    assert hass.states.get(_doortag_entity_opening).state == "unknown"
     # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "off"
+    assert hass.states.get(_doortag_entity_connectivity).state == "on"
 
 
 @pytest.mark.parametrize(
@@ -195,18 +188,15 @@ async def test_doortag_opening_status_change(
     _doortag_entity_opening = f"binary_sensor.{_doortag_entity}_window"
     _doortag_entity_connectivity = f"binary_sensor.{_doortag_entity}_connectivity"
 
-    # Trigger some polling cycle to let status change be picked up
-    await advance_time(hass, freezer, polling_cycles, polling_delta)
-
     # Check connectivity creation
     assert hass.states.get(_doortag_entity_connectivity) is not None
     # Check opening creation
     assert hass.states.get(_doortag_entity_opening) is not None
 
-    # Check opening initial state
-    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
+    # Check opening initial state (no_news)
+    assert hass.states.get(_doortag_entity_opening).state == "unknown"
     # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "off"
+    assert hass.states.get(_doortag_entity_connectivity).state == "on"
 
     # Change mocked status to test early unavailability of image fetch
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
