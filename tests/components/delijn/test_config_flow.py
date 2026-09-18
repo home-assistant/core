@@ -21,6 +21,7 @@ from homeassistant.components.delijn.const import (
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryState,
     ConfigFlowResult,
 )
 from homeassistant.const import (
@@ -166,6 +167,58 @@ async def test_reauth_reloads_exactly_once(
     assert mock_delijn_client.get_passages.call_count == 1
 
 
+async def test_reauth_after_failed_setup_reloads_entry(
+    hass: HomeAssistant,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test a successful reauth loads an entry whose first setup failed.
+
+    An auth failure during the coordinator's first refresh exits setup
+    before the update listener is registered, so a plain data update would
+    never reload the entry; it must reload explicitly instead.
+    """
+    mock_delijn_client.get_passages.side_effect = DeLijnAuthError
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry_with_subentry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_delijn_client.get_passages.side_effect = None
+    result = await mock_config_entry_with_subentry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+
+async def test_reauth_unchanged_key_reloads_exactly_once(
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test reauth with the same key still reloads exactly once.
+
+    Re-entering the current key doesn't change the entry, so the update
+    listener never fires; the flow must reload explicitly instead.
+    """
+    mock_delijn_client.get_passages.reset_mock()
+
+    result = await load_integration.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_delijn_client.get_passages.call_count == 1
+
+
 async def test_reauth_duplicate_key(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
@@ -276,6 +329,58 @@ async def test_main_reconfigure_reloads_exactly_once(
     assert mock_delijn_client.get_passages.call_count == 1
 
 
+async def test_main_reconfigure_after_failed_setup_reloads_entry(
+    hass: HomeAssistant,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test a successful reconfigure loads an entry whose first setup failed.
+
+    An auth failure during the coordinator's first refresh exits setup
+    before the update listener is registered, so a plain data update would
+    never reload the entry; it must reload explicitly instead.
+    """
+    mock_delijn_client.get_passages.side_effect = DeLijnAuthError
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry_with_subentry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_delijn_client.get_passages.side_effect = None
+    result = await mock_config_entry_with_subentry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+
+async def test_main_reconfigure_unchanged_key_reloads_exactly_once(
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test reconfigure with the same key still reloads exactly once.
+
+    Re-entering the current key doesn't change the entry, so the update
+    listener never fires; the flow must reload explicitly instead.
+    """
+    mock_delijn_client.get_passages.reset_mock()
+
+    result = await load_integration.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_delijn_client.get_passages.call_count == 1
+
+
 async def test_main_reconfigure_duplicate_key(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
@@ -327,6 +432,26 @@ async def test_main_reconfigure_errors(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": expected_error}
     assert mock_config_entry.data[CONF_API_KEY] == "test-api-key"
+
+
+async def test_main_reconfigure_suggests_attempted_key_after_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test the redisplayed form suggests the attempted key, not the stored one."""
+    mock_config_entry.add_to_hass(hass)
+    mock_delijn_client.get_stops_near.side_effect = DeLijnAuthError
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "attempted-key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    api_key_key = next(iter(result["data_schema"].schema))
+    assert api_key_key.description["suggested_value"] == "attempted-key"
 
 
 async def test_subentry_stop_number(

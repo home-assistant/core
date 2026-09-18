@@ -108,11 +108,9 @@ def _is_stop_on_any_entry(hass: HomeAssistant, stop_number: str) -> bool:
 def _get_failed_import_stops(hass: HomeAssistant) -> set[tuple[str, str]]:
     """Return the set of (api_key, stop_id) pairs that failed to import.
 
-    Shared across YAML platform blocks and keyed by account so that one
-    account's success can't hide another account's still-failing stop.
-    This cannot live on a single config entry's runtime_data since it
-    tracks failures across separate accounts (API keys) and even across a
-    YAML block whose entry doesn't exist yet.
+    Keyed by account so one account's success can't hide another's
+    still-failing stop. Can't live on a config entry's runtime_data since
+    it spans accounts, and a failing stop's entry may not exist yet.
     """
     # pylint: disable-next=home-assistant-use-runtime-data
     return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_FAILED_IMPORT_STOPS, set())
@@ -132,10 +130,10 @@ def _clear_failed_import_stop(failed_stops: set[tuple[str, str]], stop_id: str) 
 def _get_import_lock(hass: HomeAssistant) -> asyncio.Lock:
     """Return the lock serializing YAML platform imports across all blocks.
 
-    Concurrent import blocks that share an API key could otherwise both
-    pass validation for the same stop and race to add it as a subentry;
-    the loser's ``async_add_subentry`` call raises ``AbortFlow``, aborting
-    that block's import before its repair-issue bookkeeping runs.
+    Without it, concurrent blocks sharing an API key could both pass
+    validation for the same stop and race to add it as a subentry; the
+    loser's ``async_add_subentry`` call raises ``AbortFlow``, aborting that
+    block's import before its repair-issue bookkeeping runs.
     """
     # pylint: disable-next=home-assistant-use-runtime-data
     return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
@@ -161,16 +159,14 @@ async def _async_add_subentries_to_entry(
 ) -> None:
     """Add subentries to an existing entry with exactly one reload.
 
-    Unloading first (when currently loaded) removes the update listener
-    registered via ``entry.async_on_unload``, so the additions below don't
-    each queue their own reload; a single explicit reload applies them all.
+    Unloading first (when loaded) removes the update listener registered
+    via ``entry.async_on_unload``, so the additions below don't each queue
+    their own reload; one explicit reload applies them all.
 
-    Unloading awaits, so a concurrent subentry flow (e.g. from the UI)
-    could add one of these stops in the meantime, on this entry or on a
-    different one (sensor unique ids are global); ``async_add_subentry``
-    raises ``AbortFlow`` on a duplicate unique_id, so every stop is
-    re-checked against all entries' subentries immediately before it is
-    added, and skipped if it's already configured anywhere.
+    Unloading awaits, so a concurrent subentry flow could add one of these
+    stops meanwhile, on this entry or another (sensor unique ids are
+    global); ``async_add_subentry`` raises ``AbortFlow`` on a duplicate, so
+    each stop is re-checked against all entries immediately before adding.
     """
     if entry.state is ConfigEntryState.LOADED:
         await hass.config_entries.async_unload(entry.entry_id)
@@ -200,27 +196,13 @@ async def async_setup_platform(
 
     One main entry is used per API key; each configured stop becomes a
     subentry of it. Subentries can only be created from a user-initiated
-    flow, so each stop is validated here and added directly.
+    flow, so each stop is validated here (the only part that awaits) and
+    then committed as subentries all at once, so the entry is set up
+    exactly once instead of once per stop.
 
-    Adding a subentry to an already-loaded entry queues a reload via the
-    entry's update listener; importing several stops one at a time would
-    then queue one reload per stop, each re-fetching every stop from the
-    API. Every stop is therefore validated first (the only part that
-    awaits), and the resulting subentries are only ever added by
-    ``_async_add_subentries_to_entry``, which guarantees exactly one setup
-    of the complete final state: a brand new entry is created with all of
-    its subentries atomically via ``async_create_entry(subentries=...)``, so
-    the entry is set up once with everything already present; adding stops
-    to an entry that already exists removes its update listener by
-    unloading first, so nothing reloads until the explicit reload at the end.
-
-    Multiple YAML platform blocks run as separate, concurrently scheduled
-    setup tasks. With the same API key and an overlapping stop, both could
-    otherwise pass validation before either commits it, and the loser of
-    the resulting ``async_add_subentry`` race would raise ``AbortFlow``,
-    aborting that whole block's import before its repair-issue bookkeeping
-    ran. The entire import body therefore runs under a single lock shared
-    by all blocks.
+    The whole import runs under a lock shared by all YAML platform blocks:
+    two blocks sharing an API key could otherwise both pass validation for
+    the same stop and race to add it.
     """
     async with _get_import_lock(hass):
         await _async_import_platform(hass, config)
