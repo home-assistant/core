@@ -13,7 +13,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     HVACAction,
     HVACMode,
 )
@@ -69,12 +73,19 @@ THERMOSTAT_HEATING = FixtureDevice(
     "io://1234-5678-5010/386310#1",
     "climate.study_thermostat",
 )
+# ogp:Oven / DynamicOven (Brandt BNT-series smart oven)
+OVEN = FixtureDevice(
+    "setup/cloud_brandt_bnt1936.json",
+    "ogp://1234-5678-1936/16000211",
+    "climate.home_kitchen_oven",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
     THERMOSTAT_HEATING,
+    OVEN,
 ]
 
 
@@ -390,3 +401,162 @@ async def test_thermostat_heating_set_preset_mode(
         command_name="setDerogation",
         parameters=parameters,
     )
+
+
+async def test_oven_set_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting a temperature issues setTargetTemperature."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": OVEN.entity_id, ATTR_TEMPERATURE: 200.0},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=OVEN.device_url,
+        command_name="setTargetTemperature",
+        parameters=[200.0],
+    )
+
+
+async def test_oven_set_preset_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test selecting a cooking mode issues setMode with that mode."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": OVEN.entity_id, ATTR_PRESET_MODE: "conventional"},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=OVEN.device_url,
+        command_name="setMode",
+        parameters=["conventional"],
+    )
+
+
+async def test_oven_turn_on_off_via_hvac_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test HVACMode.HEAT starts the oven and HVACMode.OFF stops it."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": OVEN.entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=OVEN.device_url,
+        command_name="stop",
+        parameters=[],
+    )
+
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": OVEN.entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    assert_command_call(
+        mock_client,
+        device_url=OVEN.device_url,
+        command_name="start",
+        parameters=[],
+    )
+
+
+async def test_oven_reflects_running_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the entity reproduces the captured oven (started, fanCooking, 180 C)."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    state = hass.states.get(OVEN.entity_id)
+    assert state is not None
+    # Oven is started -> HEAT, and target is reached -> holding (idle).
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert state.attributes[ATTR_TEMPERATURE] == 180
+    assert state.attributes[ATTR_MIN_TEMP] == 35
+    assert state.attributes[ATTR_MAX_TEMP] == 250
+    assert state.attributes[ATTR_PRESET_MODE] == "fanCooking"
+    assert len(state.attributes[ATTR_PRESET_MODES]) == 14
+    assert "conventional" in state.attributes[ATTR_PRESET_MODES]
+
+
+async def test_oven_hvac_action_transitions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test hvac_action follows target-reached and started/stopped state changes."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    # Still running but target no longer reached -> actively heating.
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_TARGET_TEMPERATURE_REACHED,
+                        "type": 6,
+                        "value": False,
+                    }
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(OVEN.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+    # Oven stopped -> OFF / no action.
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_STARTED_STOPPED,
+                        "type": 3,
+                        "value": "stopped",
+                    }
+                ],
+            )
+        ],
+    )
+    state = hass.states.get(OVEN.entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
