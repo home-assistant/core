@@ -3,24 +3,104 @@
     "abort": {
       "immich_required": "Set up the Immich integration first.",
       "immich_not_ready": "The Immich integration is not ready.",
+      "no_albums": "No Immich albums are available.",
+      "memories_unsupported": "Memories require a newer shared Immich client.",
       "already_configured": "A frame with this name is already configured."
     },
     "error": {
       "immich_unavailable": "The selected Immich account is no longer available.",
-      "name_required": "Enter a name for this frame."
+      "immich_auth": "The Immich account rejected this request.",
+      "albums_unavailable": "Immich albums could not be loaded.",
+      "album_unavailable": "One or more selected albums are no longer available.",
+      "album_required": "Select at least one album.",
+      "name_required": "Enter a name for this frame.",
+      "smart_query_required": "Enter keywords for the smart search."
     },
     "step": {
       "user": {
         "title": "Set up an Immich frame",
-        "description": "Choose an existing Immich account and name this frame.",
+        "description": "Choose an existing Immich account, photo source, and frame name.",
         "data": {
           "immich_entry_id": "Immich account",
-          "frame_name": "Frame name"
+          "frame_name": "Frame name",
+          "source": "Photo source"
         },
         "data_description": {
           "immich_entry_id": "The Immich account that supplies the photos.",
-          "frame_name": "The name shown for this frame in Home Assistant."
+          "frame_name": "The name shown for this frame in Home Assistant.",
+          "source": "Choose the library, albums, memories, or keywords used for rotation."
         }
+      },
+      "album": {
+        "title": "Choose albums",
+        "data": {"album_ids": "Albums"},
+        "data_description": {"album_ids": "One or more albums used by this frame."}
+      },
+      "smart": {
+        "title": "Choose keywords",
+        "data": {"smart_query": "Keywords"},
+        "data_description": {"smart_query": "Describe the photos to show, such as beach sunset."}
+      },
+      "memories": {
+        "title": "Configure memories",
+        "data": {
+          "memory_window_days": "Memory window",
+          "fallback_to_all": "Fall back to all photos"
+        },
+        "data_description": {
+          "memory_window_days": "How many days before and after today to search.",
+          "fallback_to_all": "Use the normal library when no memories match."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Immich frame",
+        "data": {
+          "frame_name": "Frame name",
+          "source": "Photo source"
+        }
+      },
+      "init": {
+        "title": "Configure Immich frame",
+        "data": {
+          "source": "Photo source",
+          "mode": "Portrait mode",
+          "orientation": "Orientation",
+          "time_range": "Time range",
+          "pair_window_days": "Pairing window",
+          "screen_shape": "Screen shape"
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "immich_not_ready": "The Immich integration is not ready.",
+      "memories_unsupported": "Memories require a newer shared Immich client."
+    },
+    "error": {
+      "album_unavailable": "One or more selected albums are no longer available."
+    },
+    "step": {
+      "init": {
+        "title": "Configure Immich frame",
+        "data": {
+          "source": "Photo source",
+          "mode": "Portrait mode",
+          "orientation": "Orientation",
+          "time_range": "Time range",
+          "pair_window_days": "Pairing window",
+          "screen_shape": "Screen shape",
+          "photo_fit": "Photo fitting",
+          "interval": "Rotation interval"
+        }
+      },
+      "album": {
+        "title": "Choose albums",
+        "data": {"album_ids": "Albums"}
+      },
+      "smart": {
+        "title": "Choose keywords",
+        "data": {"smart_query": "Keywords"}
       }
     }
   },
@@ -29,22 +109,30 @@
       "image": {
         "name": "Image",
         "state_attributes": {
-          "open_in_immich": {
-            "name": "Open in Immich"
-          }
+          "open_in_immich": {"name": "Open in Immich"}
         }
       }
+    },
+    "button": {
+      "next": {"name": "Next photo"},
+      "previous": {"name": "Previous photo"},
+      "refresh": {"name": "Refresh photo"},
+      "clear_cache": {"name": "Clear cache"}
+    },
+    "switch": {"slideshow": {"name": "Slideshow"}},
+    "sensor": {
+      "photo_date": {"name": "Photo date"},
+      "photo_location": {"name": "Photo location"},
+      "photo_people": {"name": "Photo people"},
+      "matching_assets": {"name": "Matching photos"},
+      "frame_status": {"name": "Frame status"}
     }
   },
   "exceptions": {
-    "immich_not_ready": {
-      "message": "The Immich integration is not ready."
-    },
-    "no_photos": {
-      "message": "Immich has no available photos for this frame."
-    },
-    "cannot_connect": {
-      "message": "Unable to connect to Immich."
-    }
+    "immich_not_ready": {"message": "The Immich integration is not ready."},
+    "no_photos": {"message": "Immich has no available photos for this frame."},
+    "cannot_connect": {"message": "Unable to connect to Immich."},
+    "unsupported_source": {"message": "This photo source is not supported by the installed Immich client."},
+    "invalid_image": {"message": "Immich returned an image that could not be rendered."}
   }
 }

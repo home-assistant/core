@@ -7,12 +7,23 @@ from homeassistant.helpers.typing import ConfigType
 
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
-PLATFORMS = [Platform.IMAGE]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.BUTTON, Platform.SWITCH]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("immich_frames")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Immich Frames integration."""
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -> bool:
+    """Migrate an older frame entry to the current source model."""
+    if entry.version < 2:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, "source": "all"},
+            version=2,
+        )
     return True
 
 

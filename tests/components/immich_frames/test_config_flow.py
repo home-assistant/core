@@ -3,6 +3,8 @@
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_SOURCE,
+    DEFAULT_SOURCE,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -40,10 +42,9 @@ async def test_user_creates_frame(
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Living room"
-    assert result["data"] == {
-        CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-        CONF_FRAME_NAME: "Living room",
-    }
+    assert result["data"][CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
+    assert result["data"][CONF_FRAME_NAME] == "Living room"
+    assert result["data"][CONF_SOURCE] == DEFAULT_SOURCE
 
 
 async def test_user_aborts_when_immich_is_not_loaded(hass: HomeAssistant) -> None:

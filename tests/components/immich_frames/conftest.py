@@ -1,8 +1,10 @@
 """Fixtures for Immich Frames tests."""
 
+from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from PIL import Image
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN as IMMICH_DOMAIN
@@ -23,11 +25,15 @@ from tests.components.immich.const import MOCK_SEARCH_ASSETS
 @pytest.fixture
 def mock_immich_api() -> SimpleNamespace:
     """Return a mocked API exposed by the parent Immich integration."""
+    image = BytesIO()
+    Image.new("RGB", (4, 3), "red").save(image, "JPEG")
     return SimpleNamespace(
         search=SimpleNamespace(
             async_get_all=AsyncMock(return_value=MOCK_SEARCH_ASSETS)
         ),
-        assets=SimpleNamespace(async_view_asset=AsyncMock(return_value=b"jpeg-bytes")),
+        assets=SimpleNamespace(
+            async_view_asset=AsyncMock(return_value=image.getvalue())
+        ),
     )
 
 
@@ -59,11 +65,17 @@ def parent_immich_entry(
 @pytest.fixture
 def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
     """Ignore an unrelated missing translation in the current Core checkout."""
-    translations = ["component.immich."]
+    translations: list[str] = []
     if request.node.name in {
+        "test_user_requires_immich",
         "test_user_creates_frame",
+        "test_user_aborts_when_immich_is_not_loaded",
         "test_setup_entry_creates_image",
         "test_diagnostics_exclude_image_bytes",
     }:
+        translations.append("component.immich.")
+    if request.node.name in {"test_user_creates_frame", "test_setup_entry_creates_image", "test_diagnostics_exclude_image_bytes"}:
         translations.append("component.image.")
+        translations.append("component.button.")
+        translations.append("component.switch.")
     return translations

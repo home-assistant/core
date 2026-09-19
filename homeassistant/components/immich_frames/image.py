@@ -7,12 +7,10 @@ from urllib.parse import quote
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import ImmichFramesDataUpdateCoordinator
+from .entity import ImmichFramesEntity
 
 
 async def async_setup_entry(
@@ -24,9 +22,7 @@ async def async_setup_entry(
     async_add_entities([ImmichFrameImage(entry.runtime_data)])
 
 
-class ImmichFrameImage(
-    CoordinatorEntity[ImmichFramesDataUpdateCoordinator], ImageEntity
-):
+class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     """Display the current image selected from Immich."""
 
     _attr_has_entity_name = True
@@ -35,21 +31,8 @@ class ImmichFrameImage(
 
     def __init__(self, coordinator: ImmichFramesDataUpdateCoordinator) -> None:
         """Initialize the image entity."""
-        CoordinatorEntity.__init__(self, coordinator)
+        ImmichFramesEntity.__init__(self, coordinator, "image")
         ImageEntity.__init__(self, coordinator.hass)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_image"
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the frame device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
-            name=self.coordinator.config_entry.title,
-            manufacturer="Immich",
-            model="Photo frame",
-            configuration_url=self.coordinator.immich_entry.runtime_data.configuration_url,
-        )
 
     @property
     @override
