@@ -40,7 +40,9 @@ rules:
     status: exempt
     comment: The integration has only stateless entities
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration has only stateless entities
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
