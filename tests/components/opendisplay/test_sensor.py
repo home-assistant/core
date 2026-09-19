@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 from opendisplay import voltage_to_percent
+from opendisplay.models.advertisement import SHT40_DEFAULT_MSD_START
 from opendisplay.models.enums import CapacityEstimator, PowerMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,7 +20,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import DEVICE_CONFIG, TEST_ADDRESS, VALID_SERVICE_INFO, make_service_info
+from . import (
+    DEVICE_CONFIG,
+    TEST_ADDRESS,
+    VALID_SERVICE_INFO,
+    make_sensor_device_config,
+    make_service_info,
+    make_sht40_dynamic_data,
+    make_sht40_sensor,
+    make_v1_service_info,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.components.bluetooth import (
@@ -30,11 +40,21 @@ from tests.components.bluetooth import (
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
+CHIP_TEMPERATURE_ENTITY_ID = "sensor.opendisplay_1234_chip_temperature"
+SHT40_TEMPERATURE_ENTITY_ID = "sensor.opendisplay_1234_temperature"
+SHT40_HUMIDITY_ENTITY_ID = "sensor.opendisplay_1234_humidity"
+
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Only set up the sensor platform."""
     return [Platform.SENSOR]
+
+
+@pytest.fixture
+def mock_sht40_device(mock_opendisplay_device: MagicMock) -> None:
+    """Configure the mock device with one SHT40 in the default slot."""
+    mock_opendisplay_device.config = make_sensor_device_config([make_sht40_sensor()])
 
 
 async def test_sensors_before_data(
@@ -45,11 +65,8 @@ async def test_sensors_before_data(
     await setup_entry()
 
     # All sensors exist but coordinator has no data yet
-    assert hass.states.get("sensor.opendisplay_1234_temperature") is not None
-    assert (
-        hass.states.get("sensor.opendisplay_1234_temperature").state
-        == STATE_UNAVAILABLE
-    )
+    assert hass.states.get(CHIP_TEMPERATURE_ENTITY_ID) is not None
+    assert hass.states.get(CHIP_TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_sensor_entities_usb_device(
@@ -93,6 +110,91 @@ async def test_sensor_entities_battery_device(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_sht40_device")
+async def test_sht40_sensor_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    setup_entry: Callable[[], Awaitable[None]],
+) -> None:
+    """Test the ambient sensor entities of an attached SHT40."""
+    await setup_entry()
+
+    inject_bluetooth_service_info(
+        hass, make_v1_service_info(make_sht40_dynamic_data(21.5, 48.2))
+    )
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("msd_data_start_byte", "start_byte"),
+    [
+        pytest.param(0, SHT40_DEFAULT_MSD_START, id="zero_means_default_slot"),
+        pytest.param(0xFF, SHT40_DEFAULT_MSD_START, id="unset_means_default_slot"),
+        pytest.param(1, 1, id="explicit_slot"),
+    ],
+)
+async def test_sht40_reading_offset_from_device_config(
+    hass: HomeAssistant,
+    mock_opendisplay_device: MagicMock,
+    setup_entry: Callable[[], Awaitable[None]],
+    msd_data_start_byte: int,
+    start_byte: int,
+) -> None:
+    """The reading is decoded at the offset the device config declares."""
+    mock_opendisplay_device.config = make_sensor_device_config(
+        [make_sht40_sensor(msd_data_start_byte=msd_data_start_byte)]
+    )
+
+    await setup_entry()
+
+    inject_bluetooth_service_info(
+        hass, make_v1_service_info(make_sht40_dynamic_data(21.5, 48.2, start_byte))
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SHT40_TEMPERATURE_ENTITY_ID).state == "21.5"
+    assert hass.states.get(SHT40_HUMIDITY_ENTITY_ID).state == "48.2"
+
+
+@pytest.mark.parametrize(
+    "dynamic_data",
+    [
+        pytest.param(b"\x00" * 11, id="never_written"),
+        pytest.param(b"\x00" * 7 + b"\xff\xff\xff" + b"\x00", id="read_failed"),
+    ],
+)
+@pytest.mark.usefixtures("mock_sht40_device")
+async def test_sht40_without_valid_reading(
+    hass: HomeAssistant,
+    setup_entry: Callable[[], Awaitable[None]],
+    dynamic_data: bytes,
+) -> None:
+    """A slot holding no measurement leaves the sensors unknown."""
+    await setup_entry()
+
+    inject_bluetooth_service_info(hass, make_v1_service_info(dynamic_data))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SHT40_TEMPERATURE_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(SHT40_HUMIDITY_ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_no_sht40_sensors_without_configured_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: Callable[[], Awaitable[None]],
+) -> None:
+    """No ambient sensors are created when the device has no SHT40."""
+    await setup_entry()
+
+    assert entity_registry.async_get(SHT40_TEMPERATURE_ENTITY_ID) is None
+    assert entity_registry.async_get(SHT40_HUMIDITY_ENTITY_ID) is None
+
+
 async def test_battery_sensors_not_created_for_usb_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -118,7 +220,7 @@ async def test_no_sensors_for_non_flex_devices(
     mock_opendisplay_device.is_flex = False
     await setup_entry()
 
-    assert entity_registry.async_get("sensor.opendisplay_1234_temperature") is None
+    assert entity_registry.async_get(CHIP_TEMPERATURE_ENTITY_ID) is None
     assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
     assert entity_registry.async_get("sensor.opendisplay_1234_battery_voltage") is None
 
@@ -138,7 +240,7 @@ async def test_coordinator_ignores_unknown_manufacturer(
     await hass.async_block_till_done()
 
     # Coordinator has no data; device is visible but no OpenDisplay data parsed
-    assert hass.states.get("sensor.opendisplay_1234_temperature").state == STATE_UNKNOWN
+    assert hass.states.get(CHIP_TEMPERATURE_ENTITY_ID).state == STATE_UNKNOWN
 
 
 async def test_sensor_goes_unavailable_when_device_disappears(
@@ -152,10 +254,7 @@ async def test_sensor_goes_unavailable_when_device_disappears(
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.opendisplay_1234_temperature").state
-        != STATE_UNAVAILABLE
-    )
+    assert hass.states.get(CHIP_TEMPERATURE_ENTITY_ID).state != STATE_UNAVAILABLE
 
     # Must exceed both the connectable stale threshold (195s) and the
     # unavailability polling interval (300s) to trigger the callback.
@@ -175,10 +274,7 @@ async def test_sensor_goes_unavailable_when_device_disappears(
         )
         await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.opendisplay_1234_temperature").state
-        == STATE_UNAVAILABLE
-    )
+    assert hass.states.get(CHIP_TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
