@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This gateway is already configured"
+    },
+    "error": {
+      "api_disabled": "Open Integration is off on the device",
+      "cannot_connect": "Cannot reach the device. Enable Open Integration on the panel, then retry.",
+      "invalid_auth": "Invalid token",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Paste the token shown on the device after Open Integration is enabled."
+        },
+        "description": "Add {name} at {host}. Paste the token from the device screen.",
+        "title": "Discovered {name}"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Token"
+        },
+        "data_description": {
+          "host": "LAN IP of the panel, not the Home Assistant address.",
+          "port": "Local API port. Default is 8765.",
+          "token": "Paste the token shown on the device after Open Integration is enabled."
+        },
+        "description": "Enter the gateway IP and the Bearer token shown on the device after Open Integration is enabled. Token is not in mDNS."
+      }
+    }
+  }
+}
