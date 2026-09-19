@@ -141,7 +141,7 @@
           'error_code': 'unavailable',
           'type': 'bash_code_execution_tool_result_error',
         }),
-        'error': False,
+        'error': True,
       }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
@@ -500,6 +500,7 @@
       'content': list([
         dict({
           'content': '"Test response"',
+          'is_error': False,
           'tool_use_id': 'toolu_0123456789AbCdEfGhIjKlM',
           'type': 'tool_result',
         }),
@@ -666,11 +667,13 @@
         }),
         dict({
           'content': '{"success":true,"response":"Lights are off."}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id',
           'type': 'tool_result',
         }),
         dict({
           'content': '{"success":false,"response":"Not enough milk."}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id-2',
           'type': 'tool_result',
         }),
@@ -922,6 +925,7 @@
       'content': list([
         dict({
           'content': '{"speech_slots":{"time":"14:30:00"},"message":"Current time retrieved"}',
+          'is_error': False,
           'tool_use_id': 'mock-tool-call-id',
           'type': 'tool_result',
         }),
@@ -1008,6 +1012,7 @@
       'content': list([
         dict({
           'content': '{"speech":{"plain":{"speech":"The Hygrostat is set to 50%","extra_data":null}},"response_type":"action_done","data":{"success":[],"failed":[]}}',
+          'is_error': False,
           'tool_use_id': 'toolu_01KNRWb3ZFufCa7WXtzCakhc',
           'type': 'tool_result',
         }),
@@ -1439,7 +1444,7 @@
           'error_message': 'Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)',
           'type': 'text_editor_code_execution_tool_result_error',
         }),
-        'error': False,
+        'error': True,
       }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
@@ -1696,7 +1701,7 @@
           'error_code': 'too_many_requests',
           'type': 'tool_search_tool_result_error',
         }),
-        'error': False,
+        'error': True,
       }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
@@ -2037,7 +2042,7 @@
           'error_code': 'url_not_allowed',
           'type': 'web_fetch_tool_result_error',
         }),
-        'error': False,
+        'error': True,
       }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
@@ -2574,7 +2579,7 @@
           'error_code': 'too_many_requests',
           'type': 'web_search_tool_result_error',
         }),
-        'error': False,
+        'error': True,
       }),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
