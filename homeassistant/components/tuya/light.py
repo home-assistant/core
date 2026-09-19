@@ -29,11 +29,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaLightEntityDescription(LightEntityDescription):
+class TuyaLightEntityDescription(TuyaEntityDescription, LightEntityDescription):
     """Describe an Tuya light entity."""
 
     brightness_max: DPCode | None = None

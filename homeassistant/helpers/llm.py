@@ -163,12 +163,29 @@ class ToolResult:
     error: bool = False
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ToolAnnotations:
+    """Properties describing how a tool behaves.
+
+    The defaults describe the least safe case, so a tool that declares nothing
+    is taken to write, to be destructive, and to reach outside Home Assistant.
+    """
+
+    read_only: bool = False
+    destructive: bool = True
+    idempotent: bool = False
+    open_world: bool = True
+
+
 class Tool:
     """LLM Tool base class."""
 
     name: str
+    title: str | None = None
     description: str | None = None
     parameters: probatio.Schema = probatio.Schema({})
+    annotations: ToolAnnotations = ToolAnnotations()
+    integration: str | None = None
 
     @abstractmethod
     async def async_call(
@@ -259,9 +276,16 @@ class IntentTool(Tool):
         self,
         name: str,
         intent_handler: intent.IntentHandler,
+        *,
+        title: str | None = None,
+        integration: str | None = None,
+        annotations: ToolAnnotations = ToolAnnotations(),
     ) -> None:
         """Init the class."""
         self.name = name
+        self.title = title
+        self.integration = integration
+        self.annotations = annotations
         self.intent_type = intent_handler.intent_type
         self.description = (
             intent_handler.description
@@ -357,8 +381,11 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
+        self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
+        self.annotations = tool.annotations
+        self.integration = tool.integration
         self.tool = tool
 
     @override
@@ -664,6 +691,7 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}__{action}"
+        self.integration = domain
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.
