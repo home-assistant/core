@@ -4257,6 +4257,12 @@
           "config_flow": true,
           "iot_class": "assumed_state",
           "name": "Marantz Infrared"
+        },
+        "marantz_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Marantz RS-232"
         }
       }
     },
