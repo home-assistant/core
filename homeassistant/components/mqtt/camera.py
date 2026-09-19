@@ -9,7 +9,7 @@ import probatio
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera, CameraEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,7 +20,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import CONF_TOPIC
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
-from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .schemas import mqtt_entity_common_schema
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Required(CONF_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_IMAGE_ENCODING): "b64",
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+).extend(mqtt_entity_common_schema(Platform.CAMERA).schema)
 
 PLATFORM_SCHEMA_MODERN = probatio.All(
     PLATFORM_SCHEMA_BASE.schema,
