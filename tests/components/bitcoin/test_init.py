@@ -1,5 +1,7 @@
 """Tests for the Bitcoin integration setup."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -21,3 +23,14 @@ async def test_load_unload_entry(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_exchangerates")
+async def test_setup_retries_when_api_unreachable(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_statistics: MagicMock
+) -> None:
+    """Test setup is retried when blockchain.com cannot be reached."""
+    mock_statistics.side_effect = OSError("boom")
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

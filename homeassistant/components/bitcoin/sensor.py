@@ -3,7 +3,6 @@
 from datetime import timedelta
 import logging
 
-from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -11,20 +10,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
-from .config_flow import API_ERRORS
+from . import BitcoinConfigEntry, BitcoinData
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,10 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 BREAKS_IN_HA_VERSION = "2027.4.0"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-# Every sensor polls on its own, so without this each cycle would hit
-# blockchain.com once per sensor instead of once in total.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -216,15 +209,11 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BitcoinConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bitcoin sensors from a config entry."""
-    data = BitcoinData()
-    try:
-        await hass.async_add_executor_job(data.update)
-    except API_ERRORS as err:
-        raise PlatformNotReady(f"Cannot reach blockchain.com: {err}") from err
+    data = entry.runtime_data
 
     currency = entry.data[CONF_CURRENCY]
     if currency not in data.ticker:
@@ -232,10 +221,7 @@ async def async_setup_entry(
         currency = DEFAULT_CURRENCY
 
     async_add_entities(
-        (
-            BitcoinSensor(data, currency, description, entry.entry_id)
-            for description in SENSOR_TYPES
-        ),
+        (BitcoinSensor(data, currency, description) for description in SENSOR_TYPES),
         True,
     )
 
@@ -247,17 +233,12 @@ class BitcoinSensor(SensorEntity):
     _attr_icon = "mdi:currency-btc"
 
     def __init__(
-        self,
-        data: BitcoinData,
-        currency: str,
-        description: SensorEntityDescription,
-        entry_id: str,
+        self, data: BitcoinData, currency: str, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
         self._currency = currency
-        self._attr_unique_id = f"{entry_id}_{description.key}"
 
     def update(self) -> None:
         """Get the latest data and updates the states."""
@@ -309,17 +290,3 @@ class BitcoinSensor(SensorEntity):
             self._attr_native_value = f"{stats.miners_revenue_btc * 1e-8:.1f}"
         elif sensor_type == "market_price_usd":
             self._attr_native_value = f"{stats.market_price_usd:.2f}"
-
-
-class BitcoinData:
-    """Get the latest data and update the states."""
-
-    stats: statistics.Stats
-    ticker: dict[str, exchangerates.Currency]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
-        """Get the latest data from blockchain.com."""
-
-        self.stats = statistics.get()
-        self.ticker = exchangerates.get_ticker()
