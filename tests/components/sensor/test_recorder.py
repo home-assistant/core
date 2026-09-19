@@ -379,6 +379,119 @@ async def test_compile_hourly_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_compile_hourly_statistics_unhashable_attribute(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test statistics are compiled when another sensor has an unhashable attribute.
+
+    State attributes are not validated, so an integration can set any of these to a
+    value which is not hashable. Statistics compilation uses them as dict keys and set
+    members, so the resulting TypeError escapes the session which has already inserted
+    this cycle's statistics for every sensor, discarding all of them.
+    """
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": "°C",
+    }
+    with freeze_time(zero) as freezer:
+        await async_record_states(hass, freezer, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        await async_record_states(
+            hass, freezer, zero, "sensor.broken", {**attributes, attribute: value}
+        )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    # The unrelated sensor's statistics must not be discarded
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "sensor.test1" in stats
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_list_statistic_ids_unhashable_attribute(
+    hass: HomeAssistant,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test listing statistic ids when a sensor has an unhashable attribute."""
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": "°C",
+    }
+    hass.states.async_set("sensor.test1", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.broken", 10, attributes={**attributes, attribute: value}
+    )
+    await async_wait_recording_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert [entry["statistic_id"] for entry in statistic_ids] == ["sensor.test1"]
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_validate_statistics_unhashable_attribute(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test validating statistics when a sensor has an unhashable attribute."""
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    hass.states.async_set(
+        "sensor.broken",
+        10,
+        attributes={
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+            attribute: value,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await assert_validation_result(hass, client, {}, {})
+
+
 async def test_compile_hourly_statistics_angle(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
