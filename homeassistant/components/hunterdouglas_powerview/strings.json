@@ -61,6 +61,11 @@
       "signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
+    },
+    "switch": {
+      "schedule": {
+        "name": "{schedule_name} schedule"
+      }
     }
   }
 }
