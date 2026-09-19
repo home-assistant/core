@@ -208,10 +208,10 @@ async def test_unavailable_when_picture_setting_is_not_available(
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
-async def test_restore_value_when_tv_is_off(
+async def test_restore_value_when_active_tv_omits_setting(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the last value is restored when the TV is off at startup."""
+    """Test that the last value is restored when an active TV omits the setting."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -265,3 +265,43 @@ async def test_restore_value_when_tv_is_off(
         assert state.attributes["min"] == 0
         assert state.attributes["max"] == 100
         assert state.attributes["step"] == 1
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_unavailable_when_setting_is_not_reported_and_not_restored(
+    hass: HomeAssistant,
+) -> None:
+    """Test that numbers the TV does not report are unavailable without a restored value."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=INPUTS),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        # The TV does not report contrast, and there is no restored value
+        patch("pybravia.BraviaClient.get_picture_setting", return_value=[]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("number.bravia_tv_model_picture_contrast")
+        assert state is not None
+        assert state.state == "unavailable"

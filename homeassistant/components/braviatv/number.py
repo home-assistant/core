@@ -137,7 +137,12 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], RestoreNumbe
         return (
             super().available
             and self.coordinator.is_on
-            and (setting is None or setting["isAvailable"])
+            and (
+                # Controls the TV does not report are only available while a
+                # restored value exists
+                (setting is not None and setting["isAvailable"])
+                or (setting is None and self._attr_native_value is not None)
+            )
         )
 
     @property

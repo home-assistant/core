@@ -245,3 +245,43 @@ async def test_restore_option(
         state = hass.states.get("select.bravia_tv_model_picture_mode")
         assert state is not None
         assert state.state == "cinema"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_unavailable_when_setting_is_not_reported_and_not_restored(
+    hass: HomeAssistant,
+) -> None:
+    """Test that selects the TV does not report are unavailable without a restored option."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=INPUTS),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        # The TV does not report hdrMode, and there is no restored option
+        patch("pybravia.BraviaClient.get_picture_setting", return_value=[]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("select.bravia_tv_model_hdr_mode")
+        assert state is not None
+        assert state.state == "unavailable"

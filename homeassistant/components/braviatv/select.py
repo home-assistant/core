@@ -140,7 +140,12 @@ class BraviaTVSelect(
         return (
             super().available
             and self.coordinator.is_on
-            and (setting is None or setting["isAvailable"])
+            and (
+                # Controls the TV does not report are only available while a
+                # restored option exists
+                (setting is not None and setting["isAvailable"])
+                or (setting is None and self._attr_current_option is not None)
+            )
         )
 
     @property
