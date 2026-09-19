@@ -314,7 +314,7 @@ async def test_function_call(
         {probatio.Optional("param1", description="Test parameters"): str},
         extra=probatio.ALLOW_EXTRA,
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
