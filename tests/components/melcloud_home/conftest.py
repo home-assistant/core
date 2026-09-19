@@ -1,9 +1,15 @@
 """Common fixtures for the MELCloud Home tests."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import AsyncIterator, Generator
 from unittest.mock import AsyncMock, patch
 
-from aiomelcloudhome import MELCloudHome, UserContext
+from aiomelcloudhome import (
+    MELCloudHome,
+    MELCloudHomeWebSocket,
+    UnitStateDelta,
+    UserContext,
+)
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
 
@@ -37,9 +43,35 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_melcloud_client() -> Generator[AsyncMock]:
+def websocket_updates() -> asyncio.Queue[UnitStateDelta | Exception]:
+    """Queue driving the mocked websocket stream."""
+    return asyncio.Queue()
+
+
+@pytest.fixture
+def mock_websocket(
+    websocket_updates: asyncio.Queue[UnitStateDelta | Exception],
+) -> AsyncMock:
+    """Mock the MELCloud Home websocket."""
+    websocket = AsyncMock(MELCloudHomeWebSocket)
+
+    async def stream() -> AsyncIterator[UnitStateDelta]:
+        while True:
+            update = await websocket_updates.get()
+            if isinstance(update, Exception):
+                raise update
+            yield update
+            websocket_updates.task_done()
+
+    websocket.stream = stream
+    return websocket
+
+
+@pytest.fixture
+def mock_melcloud_client(mock_websocket: AsyncMock) -> Generator[AsyncMock]:
     """Mock MELCloud Home client."""
     client = AsyncMock(MELCloudHome)
+    client.websocket.return_value = mock_websocket
     client.get_context.return_value = UserContext.model_validate(
         load_json_object_fixture("context.json", DOMAIN)
     )
