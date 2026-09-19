@@ -240,6 +240,52 @@ async def test_switch_frame_carries_the_climate_state(
 
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
 @pytest.mark.usefixtures("init_integration")
+async def test_switch_frame_carries_changes_made_while_off(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test a switch resends the temperature and fan set while the unit is off.
+
+    Neither change sends a frame of its own, but both are what the climate entity
+    shows, so a frame going out for another reason has to carry them.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 27},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_MEDIUM},
+        blocking=True,
+    )
+    assert not mock_infrared_emitter_entity.send_command_calls
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _XFAN_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.COOL,
+            temperature=27,
+            fan=GreeAcFanSpeed.MEDIUM,
+            blow=True,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+@pytest.mark.usefixtures("init_integration")
 async def test_climate_frame_carries_the_switch_state(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,

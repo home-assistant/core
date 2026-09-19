@@ -224,6 +224,18 @@ class GreeAcClimateEntity(
         if power:
             self._last_active_hvac_mode = hvac_mode
 
+    async def _async_record_state(self, temp: int, fan_mode: str) -> None:
+        """Record a change made while the unit is off, without sending a frame.
+
+        The switches build their frame from the shared state, so a change left out
+        of it would go out on the next toggle carrying the value this entity no
+        longer shows.
+        """
+        async with self._runtime_data.send_lock:
+            self._runtime_data.ac_state = self._state_for(
+                False, self._last_active_hvac_mode, temp, fan_mode
+            )
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
@@ -249,6 +261,8 @@ class GreeAcClimateEntity(
             await self._async_send_state(
                 effective_mode, temp, self._attr_fan_mode or FAN_AUTO
             )
+        else:
+            await self._async_record_state(temp, self._attr_fan_mode or FAN_AUTO)
 
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
@@ -263,6 +277,10 @@ class GreeAcClimateEntity(
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
             await self._async_send_state(
                 hvac_mode, int(self._attr_target_temperature or MIN_TEMP), fan_mode
+            )
+        else:
+            await self._async_record_state(
+                int(self._attr_target_temperature or MIN_TEMP), fan_mode
             )
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
