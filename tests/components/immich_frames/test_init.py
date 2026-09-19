@@ -129,7 +129,7 @@ async def test_coordinator_uses_cache_and_controls(
     )
     entry.add_to_hass(hass)
     coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
-    cached = (MOCK_SEARCH_ASSETS[0], b"cached")
+    cached = (MOCK_SEARCH_ASSETS[0], b"cached", dt_util.utcnow())
     with patch.object(coordinator._cache, "read", return_value=cached):
         await coordinator._async_setup()
     assert coordinator.data is not None

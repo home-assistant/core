@@ -14,7 +14,7 @@ from aioimmich.assets.models import AssetType, ExifInfo, ImmichAsset
 from .const import CONF_INTERVAL
 from .rendering import image_size
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 RENDER_VERSION = 1
 
 
@@ -57,7 +57,7 @@ class FrameCache:
 
     def read(
         self, options: dict[str, Any], parent_entry_id: str
-    ) -> tuple[ImmichAsset, bytes] | None:
+    ) -> tuple[ImmichAsset, bytes, datetime] | None:
         """Read a valid cached asset and rendered image."""
         try:
             state = json.loads(self.path.read_text())
@@ -68,7 +68,11 @@ class FrameCache:
                 or state["sha256"] != hashlib.sha256(image).hexdigest()
             ):
                 return None
-            return _asset_from_state(state["asset"]), image
+            return (
+                _asset_from_state(state["asset"]),
+                image,
+                datetime.fromisoformat(state["rendered_at"]),
+            )
         except OSError, KeyError, TypeError, ValueError:
             return None
 
@@ -78,6 +82,7 @@ class FrameCache:
         image: bytes,
         options: dict[str, Any],
         parent_entry_id: str,
+        rendered_at: datetime,
     ) -> None:
         """Atomically write a verified cached frame."""
         if image_size(image) not in {
@@ -92,6 +97,7 @@ class FrameCache:
             "asset": asset.to_dict(),
             "image": base64.b64encode(image).decode("ascii"),
             "sha256": hashlib.sha256(image).hexdigest(),
+            "rendered_at": rendered_at.isoformat(),
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary: str | None = None

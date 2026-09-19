@@ -90,7 +90,11 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
         "test_album_flow_aborts_when_no_albums",
         "test_smart_flow_requires_a_query",
         "test_album_flow_reports_auth_and_connection_errors",
+        "test_user_source_preflight_reports_unavailable_assets",
+        "test_smart_source_preflight_reports_immich_errors",
         "test_options_flow_validates_empty_and_missing_parent_albums",
+        "test_options_flow_rejects_pairs_only_landscape",
+        "test_options_album_flow_reports_immich_errors",
         "test_options_flow_requires_smart_query",
         "test_reconfigure_flow_handles_album_and_smart_sources",
     }:

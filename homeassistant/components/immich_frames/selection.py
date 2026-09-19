@@ -1,5 +1,6 @@
 """Photo selection rules for Immich Frames."""
 
+from bisect import bisect_left, bisect_right
 from calendar import monthrange
 from datetime import UTC, datetime
 import random
@@ -161,11 +162,39 @@ def candidates_with_companion(
         window = max(0, int(float(str(raw_window))))
     except TypeError, ValueError:
         window = DEFAULT_PAIR_WINDOW
-    return [
-        asset
-        for asset in candidates
-        if choose_companion(asset, candidates, window) is not None
-    ]
+    portrait = sorted(
+        (asset for asset in candidates if _orientation(asset) == ORIENTATION_PORTRAIT),
+        key=lambda asset: _as_utc(asset.local_datetime).timestamp(),
+    )
+    timestamps = [_as_utc(asset.local_datetime).timestamp() for asset in portrait]
+    by_checksum: dict[str, list[float]] = {}
+    by_asset_id: dict[str, list[float]] = {}
+    by_identity: dict[tuple[str, str], list[float]] = {}
+    for asset, timestamp in zip(portrait, timestamps, strict=True):
+        by_checksum.setdefault(asset.checksum, []).append(timestamp)
+        by_asset_id.setdefault(asset.asset_id, []).append(timestamp)
+        by_identity.setdefault((asset.asset_id, asset.checksum), []).append(timestamp)
+
+    def count_in_window(values: list[float], start: float, end: float) -> int:
+        """Count sorted timestamps in an inclusive range."""
+        return bisect_right(values, end) - bisect_left(values, start)
+
+    result: list[ImmichAsset] = []
+    seconds = window * 86400
+    for asset in candidates:
+        if _orientation(asset) != ORIENTATION_PORTRAIT:
+            continue
+        timestamp = _as_utc(asset.local_datetime).timestamp()
+        start, end = timestamp - seconds, timestamp + seconds
+        total = count_in_window(timestamps, start, end)
+        same_checksum = count_in_window(by_checksum.get(asset.checksum, []), start, end)
+        same_asset = count_in_window(by_asset_id.get(asset.asset_id, []), start, end)
+        same_identity = count_in_window(
+            by_identity.get((asset.asset_id, asset.checksum), []), start, end
+        )
+        if total - same_checksum - same_asset + same_identity > 0:
+            result.append(asset)
+    return result
 
 
 def choose_companion(

@@ -101,11 +101,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self.immich_entry.entry_id,
         )
         if cached is not None:
-            asset, image = cached
+            asset, image, rendered_at = cached
             self.data = ImmichFramesData(
                 asset=asset,
                 image=image,
-                updated_at=dt_util.utcnow(),
+                updated_at=rendered_at,
                 photos=(asset,),
                 connected=False,
                 using_cache=True,
@@ -204,6 +204,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 result.image,
                 self.options,
                 self.immich_entry.entry_id,
+                result.updated_at,
             )
         except OSError, ValueError:
             _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)

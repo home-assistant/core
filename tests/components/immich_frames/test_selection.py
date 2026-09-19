@@ -29,6 +29,7 @@ from homeassistant.components.immich_frames.selection import (
     _filter_assets,
     _orientation,
     async_get_candidates,
+    candidates_with_companion,
     choose_asset,
     choose_companion,
     selected_photos,
@@ -163,3 +164,20 @@ def test_pair_modes_select_a_valid_companion() -> None:
     assert selected_photos(primary, [primary], {CONF_MODE: "single"}) == (primary,)
     with pytest.raises(LookupError):
         selected_photos(primary, [primary], {CONF_MODE: MODE_PAIRS_ONLY})
+
+
+def test_pairs_only_candidates_are_filtered_without_duplicate_companions() -> None:
+    """Pairs-only candidates retain only portraits with a valid partner."""
+    primary, companion = (copy(asset) for asset in MOCK_SEARCH_ASSETS[:2])
+    for asset in (primary, companion):
+        asset.exif_info = ExifInfo(exif_image_width=100, exif_image_height=200)
+        asset.local_datetime = primary.local_datetime
+    companion.checksum = "different"
+
+    assert candidates_with_companion([primary, companion], {CONF_PAIR_WINDOW: 2}) == [
+        primary,
+        companion,
+    ]
+    assert (
+        candidates_with_companion([primary, copy(primary)], {CONF_PAIR_WINDOW: 2}) == []
+    )

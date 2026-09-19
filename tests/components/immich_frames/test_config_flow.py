@@ -1,7 +1,7 @@
 """Test the Immich Frames config flow."""
 
 from aiohttp import ClientError
-from aioimmich.exceptions import ImmichUnauthorizedError
+from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
 from homeassistant.components.immich_frames.const import (
@@ -18,6 +18,8 @@ from homeassistant.components.immich_frames.const import (
     DEFAULT_SOURCE,
     DOMAIN,
     MODE_PAIRS,
+    MODE_PAIRS_ONLY,
+    ORIENTATION_LANDSCAPE,
     ORIENTATION_PORTRAIT,
     PHOTO_FIT_CROP,
     SOURCE_ALBUM,
@@ -206,6 +208,64 @@ async def test_album_flow_reports_auth_and_connection_errors(
     )
     assert result["errors"]["base"] == "albums_unavailable"
 
+    api.albums.async_get_all_albums.side_effect = ImmichError(
+        {"message": "server", "correlationId": "test"}
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: SOURCE_ALBUM,
+        },
+    )
+    assert result["errors"]["base"] == "albums_unavailable"
+
+
+async def test_user_source_preflight_reports_unavailable_assets(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Source access is checked before a frame entry is created."""
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_get_all.side_effect = ClientError("offline")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
+
+
+async def test_smart_source_preflight_reports_immich_errors(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Smart-source errors are shown before a frame entry is created."""
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_smart_search.side_effect = ImmichError(
+        {"message": "server", "correlationId": "test"}
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: SOURCE_SMART,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SMART_QUERY: "beach sunset"}
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
+
 
 async def test_user_creates_smart_frame(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
@@ -358,6 +418,54 @@ async def test_options_flow_validates_empty_and_missing_parent_albums(
     )
     assert result["type"] == "abort"
     assert result["reason"] == "immich_not_ready"
+
+
+async def test_options_flow_rejects_pairs_only_landscape(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Pairs-only mode requires an orientation that can be paired."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Pair validation",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Pair validation",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    values = _options_input(DEFAULT_SOURCE)
+    values[CONF_MODE] = MODE_PAIRS_ONLY
+    values[CONF_ORIENTATION] = ORIENTATION_LANDSCAPE
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], values
+    )
+    assert result["errors"][CONF_ORIENTATION] == "pairs_only_portrait_required"
+
+
+async def test_options_album_flow_reports_immich_errors(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options album loading maps upstream failures to a translated error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Album error",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Album error",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    parent_immich_entry.runtime_data.api.albums.async_get_all_albums.side_effect = (
+        ImmichError({"message": "server", "correlationId": "test"})
+    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_ALBUM)
+    )
+    assert result["errors"]["base"] == "albums_unavailable"
 
 
 async def test_options_flow_configures_smart_source(

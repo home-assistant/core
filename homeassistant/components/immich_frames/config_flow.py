@@ -4,8 +4,9 @@ from typing import Any, override
 from uuid import uuid4
 
 from aioimmich import Immich
+from aioimmich.assets.models import AssetType
 from aioimmich.const import CONNECT_ERRORS
-from aioimmich.exceptions import ImmichUnauthorizedError
+from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import probatio
 
 from homeassistant import config_entries
@@ -29,6 +30,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_ID,
+    CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
     CONF_MODE,
     CONF_ORIENTATION,
@@ -47,7 +49,10 @@ from .const import (
     DEFAULT_TIME_RANGE,
     DOMAIN,
     MODE_OPTIONS,
+    MODE_PAIRS_ONLY,
+    ORIENTATION_ANY,
     ORIENTATION_OPTIONS,
+    ORIENTATION_PORTRAIT,
     PHOTO_FIT_CROP,
     PHOTO_FIT_FULL,
     SCREEN_SIZES,
@@ -106,35 +111,43 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_IMMICH_ENTRY_ID: parent_id,
                     CONF_SOURCE: user_input[CONF_SOURCE],
                 }
+                if self._data[CONF_SOURCE] == SOURCE_ALL:
+                    if error := await self._async_validate_source():
+                        return self.async_show_form(
+                            step_id="user",
+                            data_schema=self._user_schema(entries),
+                            errors={"base": error},
+                        )
                 return await self._async_continue_source()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_IMMICH_ENTRY_ID): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                SelectOptionDict(
-                                    value=entry.entry_id, label=entry.title
-                                )
-                                for entry in entries.values()
-                            ],
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Required(
-                        CONF_SOURCE, default=DEFAULT_SOURCE
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(FRAME_SOURCE_OPTIONS),
-                            translation_key=CONF_SOURCE,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
+            data_schema=self._user_schema(entries),
             errors=errors,
+        )
+
+    @staticmethod
+    def _user_schema(entries: dict[str, ConfigEntry]) -> probatio.Schema:
+        """Return the initial account and source schema."""
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_IMMICH_ENTRY_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=entry.entry_id, label=entry.title)
+                            for entry in entries.values()
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                probatio.Required(CONF_SOURCE, default=DEFAULT_SOURCE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(FRAME_SOURCE_OPTIONS),
+                        translation_key=CONF_SOURCE,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
         )
 
     async def _async_continue_source(self) -> ConfigFlowResult:
@@ -158,6 +171,9 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             albums = await api.albums.async_get_all_albums()
         except ImmichUnauthorizedError:
             errors["base"] = "immich_auth"
+            albums = []
+        except ImmichError:
+            errors["base"] = "albums_unavailable"
             albums = []
         except CONNECT_ERRORS:
             errors["base"] = "albums_unavailable"
@@ -206,7 +222,10 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_SMART_QUERY] = "smart_query_required"
             else:
                 self._data[CONF_SMART_QUERY] = query
-                return await self._async_finish_create()
+                if error := await self._async_validate_source():
+                    errors["base"] = error
+                else:
+                    return await self._async_finish_create()
         return self.async_show_form(
             step_id="smart",
             data_schema=probatio.Schema({probatio.Required(CONF_SMART_QUERY): str}),
@@ -266,6 +285,29 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return getattr(getattr(entry, "runtime_data", None), "api", None)
 
+    async def _async_validate_source(self) -> str | None:
+        """Validate access to the selected source before creating an entry."""
+        api = self._parent_api()
+        if api is None:
+            return "immich_not_ready"
+        try:
+            if self._data[CONF_SOURCE] == SOURCE_SMART:
+                await api.search.async_smart_search(
+                    str(self._data[CONF_SMART_QUERY]),
+                    page_size=1,
+                    max_pages=1,
+                    asset_type=AssetType.IMAGE,
+                )
+            else:
+                await api.search.async_get_all(page_size=1, max_pages=1)
+        except ImmichUnauthorizedError:
+            return "immich_auth"
+        except CONNECT_ERRORS:
+            return "assets_unavailable"
+        except ImmichError:
+            return "assets_unavailable"
+        return None
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -300,14 +342,28 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
     def __init__(self, config_entry: ImmichFramesConfigEntry) -> None:
         """Initialize the options flow."""
         self._entry = config_entry
-        self._data: dict[str, Any] = dict(config_entry.options)
+        self._data: dict[str, Any] = {
+            **config_entry.data,
+            **config_entry.options,
+        }
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure source and display settings."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._data.update(user_input)
+            if self._data[CONF_MODE] == MODE_PAIRS_ONLY and self._data[
+                CONF_ORIENTATION
+            ] not in (ORIENTATION_ANY, ORIENTATION_PORTRAIT):
+                errors[CONF_ORIENTATION] = "pairs_only_portrait_required"
+            if errors:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self._settings_schema(),
+                    errors=errors,
+                )
             source = user_input[CONF_SOURCE]
             if source == SOURCE_ALBUM:
                 return await self.async_step_album()
@@ -334,6 +390,9 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
             albums = await api.albums.async_get_all_albums()
         except ImmichUnauthorizedError:
             errors["base"] = "immich_auth"
+            albums = []
+        except ImmichError:
+            errors["base"] = "albums_unavailable"
             albums = []
         except CONNECT_ERRORS:
             errors["base"] = "albums_unavailable"
@@ -469,4 +528,11 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
 
     def _finish(self) -> ConfigFlowResult:
         """Save options and reload the frame."""
-        return self.async_create_entry(title="", data=self._data)
+        return self.async_create_entry(
+            title="",
+            data={
+                key: value
+                for key, value in self._data.items()
+                if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
+            },
+        )
