@@ -3201,7 +3201,7 @@ stookwijzer==1.6.1
 streamlabswater==1.0.1
 
 # homeassistant.components.subaru
-subarulink==0.7.19
+subarulink==0.7.21
 
 # homeassistant.components.sunsynk
 sunsynk-api-client==1.4.0
