@@ -185,7 +185,7 @@ async def test_browse_media_album_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert result.identifier is None
+    assert result.identifier == "mocked_syno_dsm_entry"
     assert len(result.children) == 0
 
 
@@ -305,7 +305,7 @@ async def test_browse_media_get_items_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert result.identifier is None
+    assert result.identifier == "mocked_syno_dsm_entry/1"
     assert len(result.children) == 0
 
     # exception in get_items_from_album()
@@ -316,7 +316,7 @@ async def test_browse_media_get_items_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert result.identifier is None
+    assert result.identifier == "mocked_syno_dsm_entry/1"
     assert len(result.children) == 0
 
     # exception in get_items_from_shared_space()
@@ -327,7 +327,7 @@ async def test_browse_media_get_items_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert result.identifier is None
+    assert result.identifier == "mocked_syno_dsm_entry/shared"
     assert len(result.children) == 0
 
 
