@@ -24,6 +24,7 @@ from homeassistant.components.immich_frames.coordinator import (
     ImmichFramesData,
     ImmichFramesDataUpdateCoordinator,
 )
+from homeassistant.components.immich_frames.image import ImmichFrameImage
 from homeassistant.components.immich_frames.selection import UnsupportedSourceError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
@@ -67,6 +68,32 @@ async def test_setup_entry_creates_image(
     )
     assert device
     assert device.entry_type is dr.DeviceEntryType.SERVICE
+
+
+async def test_setup_entry_allows_no_matching_photos(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+) -> None:
+    """A valid frame can load while its current filters match no photos."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Empty frame",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Empty frame",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+        new=AsyncMock(return_value=[]),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("image.empty_frame_image").state == "unavailable"
 
 
 async def test_setup_entry_translates_parent_not_ready(
@@ -245,6 +272,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     ):
         result = await coordinator._async_update_data()
     assert result.status == "ready"
+    assert coordinator._last_cache_write_at == result.updated_at
     assert render.call_args.args[2] == PHOTO_FIT_CROP
 
     companion = copy(portrait)
@@ -281,7 +309,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         ),
         patch(
             "homeassistant.components.immich_frames.coordinator.render",
-            side_effect=ValueError("bad"),
+            side_effect=OSError("bad image"),
         ),
     ):
         coordinator._invalidate_candidate_cache()
@@ -382,6 +410,7 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
     assert coordinator._refresh_parent() is True
     assert coordinator._account_state_invalidated is True
     assert coordinator.data is not None
+    assert coordinator.current_data is None
     assert coordinator._candidate_cache is None
     assert coordinator._recent_ids == set()
     with pytest.raises(UpdateFailed):
@@ -390,6 +419,19 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
             RuntimeError("replacement account unavailable"),
             status="upstream_error",
         )
+
+
+async def test_image_does_not_serve_previous_account_data(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """An invalidated account cannot expose the previous image payload."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    image = ImmichFrameImage(coordinator)
+    coordinator._account_state_invalidated = True
+
+    assert image.image_last_updated is None
+    assert image.extra_state_attributes == {}
+    assert await image.async_image() is None
 
 
 def _coordinator_for_test(

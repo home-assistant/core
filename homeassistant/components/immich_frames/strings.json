@@ -11,6 +11,7 @@
       "albums_unavailable": "Immich albums could not be loaded.",
       "assets_unavailable": "Immich photos could not be loaded.",
       "immich_auth": "The Immich account rejected this request.",
+      "immich_not_ready": "The Immich integration is not ready.",
       "immich_unavailable": "The selected Immich account is no longer available.",
       "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
       "smart_query_required": "Enter keywords for the smart search."
@@ -101,6 +102,7 @@
       "albums_unavailable": "Immich albums could not be loaded.",
       "assets_unavailable": "Immich photos could not be loaded.",
       "immich_auth": "The Immich account rejected this request.",
+      "immich_not_ready": "The Immich integration is not ready.",
       "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
       "smart_query_required": "Enter keywords for the smart search."
     },

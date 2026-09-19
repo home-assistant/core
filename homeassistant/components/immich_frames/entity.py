@@ -39,9 +39,8 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Return false when the last update could not reach Immich."""
-        return super().available and (
-            self.coordinator.data is None or self.coordinator.data.connected
-        )
+        data = self.coordinator.current_data
+        return super().available and data is not None and data.connected
 
     @override
     async def async_update(self) -> None:

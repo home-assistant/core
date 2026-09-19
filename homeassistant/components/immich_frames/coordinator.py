@@ -161,12 +161,17 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 for asset in photos
             ]
             fit = str(self.options.get(CONF_PHOTO_FIT, DEFAULT_PHOTO_FIT))
-            image, _layout = await self.hass.async_add_executor_job(
-                render,
-                payloads,
-                screen_shape(self.options.get(CONF_SCREEN_SHAPE)),
-                fit,
-            )
+            try:
+                image, _layout = await self.hass.async_add_executor_job(
+                    render,
+                    payloads,
+                    screen_shape(self.options.get(CONF_SCREEN_SHAPE)),
+                    fit,
+                )
+            except (OSError, ValueError) as err:
+                return self._cached_or_raise(
+                    "invalid_image", err, status="invalid_image"
+                )
         except ImmichUnauthorizedError as err:
             self.immich_entry.async_start_reauth(self.hass)
             return self._cached_or_raise(
@@ -220,7 +225,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 )
             except OSError, ValueError:
                 _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
-            else:
+            finally:
                 self._last_cache_write_at = result.updated_at
         return result
 
@@ -266,6 +271,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Force the next update to retrieve the current candidate set."""
         self._candidate_cache = None
         self._candidate_cache_updated_at = None
+
+    @property
+    def current_data(self) -> ImmichFramesData | None:
+        """Return data only while it belongs to the current Immich account."""
+        if self._account_state_invalidated:
+            return None
+        return self.data
 
     def _cache_write_due(self, rendered_at: datetime) -> bool:
         """Return whether the persistent cache should be refreshed."""
