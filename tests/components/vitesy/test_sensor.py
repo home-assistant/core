@@ -1,11 +1,11 @@
 """Test the Vitesy sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiovitesy.api import VitesyDevice
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,8 +25,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.vitesy.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -40,7 +39,7 @@ async def test_sensor_unavailable_when_device_disconnected(
     """Test sensors go unavailable when the device reports as disconnected."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(AIR_QUALITY_SCORE).state == "49"
+    assert hass.states.get(AIR_QUALITY_SCORE).state == "49.0458333333333"
 
     mock_devices[DEVICE_ID].connected = False
     await mock_config_entry.runtime_data.async_refresh()

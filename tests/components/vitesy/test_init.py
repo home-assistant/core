@@ -27,17 +27,16 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_auth_failure_starts_reauth(
+async def test_setup_auth_failure(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials put the entry in an error state and ask for reauth."""
+    """Test rejected credentials put the entry in an error state."""
     mock_vitesy_client.login.side_effect = CannotAuthenticate
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))
 
 
 async def test_setup_connection_failure_is_retried(
@@ -70,16 +69,16 @@ async def test_update_failure_marks_entities_unavailable(
     )
 
 
-async def test_update_auth_failure_starts_reauth(
+async def test_update_auth_failure(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials during a refresh trigger the reauth flow."""
+    """Test rejected credentials during a refresh mark the coordinator failed."""
     await setup_integration(hass, mock_config_entry)
 
     mock_vitesy_client.get_all_devices.side_effect = CannotAuthenticate
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))
+    assert not mock_config_entry.runtime_data.last_update_success

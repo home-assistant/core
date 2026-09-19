@@ -25,6 +25,9 @@
     'name': None,
     'object_id_base': 'Air quality score',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -50,7 +53,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '49',
+    'state': '49.0458333333333',
   })
 # ---
 # name: test_all_entities[sensor.kitchen_shelfy_battery-entry]

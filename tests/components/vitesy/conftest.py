@@ -1,15 +1,19 @@
 """Common fixtures for the Vitesy tests."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
 from aiovitesy.api import VitesyDevice
 import pytest
 
 from homeassistant.components.vitesy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import AsyncMock, Generator, MockConfigEntry, patch
+from tests.common import MockConfigEntry
 
 DEVICE_ID = "80:65:99:34:F9:B4"
 EMAIL = "test@example.com"
+USER_ID = "u1"
 
 
 @pytest.fixture
@@ -74,6 +78,7 @@ def mock_vitesy_client(
     ):
         client = mock_client.return_value
         client.login = AsyncMock(return_value=None)
+        client.get_user = AsyncMock(return_value={"id": USER_ID})
         client.get_all_devices = AsyncMock(return_value=mock_devices)
         yield client
 
@@ -85,5 +90,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=EMAIL,
         data={CONF_EMAIL: EMAIL, CONF_PASSWORD: "hunter2"},
-        unique_id=EMAIL,
+        unique_id=USER_ID,
     )

@@ -45,17 +45,18 @@ def _reading(device: VitesyDevice, group: str, reading_id: str) -> float | None:
     for entry in device.measurement.get(group, ()):
         if entry.get("id") == reading_id:
             value = entry.get("value")
-            return value.get("avg") if isinstance(value, dict) else value
+            value = value.get("avg") if isinstance(value, dict) else value
+            return value if isinstance(value, (int, float)) else None
     return None
 
 
-def _air_quality_score(device: VitesyDevice) -> int | None:
+def _air_quality_score(device: VitesyDevice) -> float | None:
     """Return the air quality score.
 
     The Hub reports it as a 0-1 fraction; Vitesy's canonical scale is 0-100.
     """
     score = device.measurement.get("score")
-    return round(score * 100) if score is not None else None
+    return score * 100 if score is not None else None
 
 
 def _maintenance_due(component: str) -> Callable[[VitesyDevice], datetime | None]:
@@ -81,6 +82,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="air_quality_score",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=_air_quality_score,
     ),
     VitesySensorEntityDescription(

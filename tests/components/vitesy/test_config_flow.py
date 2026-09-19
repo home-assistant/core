@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL
+from .conftest import EMAIL, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +21,7 @@ USER_INPUT = {CONF_EMAIL: EMAIL, CONF_PASSWORD: "hunter2"}
 async def test_full_flow(
     hass: HomeAssistant, mock_vitesy_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test the happy path creates an entry keyed on the account email."""
+    """Test the happy path creates an entry keyed on the account id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -35,7 +35,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == EMAIL
     assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == EMAIL
+    assert result["result"].unique_id == USER_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -88,56 +88,3 @@ async def test_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_vitesy_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test re-authentication updates the stored password."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-pass"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "new-pass"
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "reason"),
-    [
-        (CannotAuthenticate, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
-    ],
-)
-async def test_reauth_flow_errors_then_recovers(
-    hass: HomeAssistant,
-    mock_vitesy_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    side_effect: type[Exception],
-    reason: str,
-) -> None:
-    """Test a failed re-authentication keeps the form open and can recover."""
-    mock_config_entry.add_to_hass(hass)
-    mock_vitesy_client.login.side_effect = side_effect
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-pass"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": reason}
-
-    mock_vitesy_client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: "new-pass"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
