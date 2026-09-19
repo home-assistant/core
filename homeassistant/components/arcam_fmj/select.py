@@ -30,13 +30,14 @@ def _room_eq_names(coordinator: ArcamFmjCoordinator) -> tuple[str, ...]:
         tuple(
             name or default
             for name, default in zip(
-                names[: len                (_DEFAULT_ROOM_EQ_NAMES)],
+                names[: len(_DEFAULT_ROOM_EQ_NAMES)],
                 _DEFAULT_ROOM_EQ_NAMES,
                 strict=False,
             )
-    ) 
+        )
         + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
     )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,7 +64,13 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return available room-EQ options."""
-        return ["Off", *_room_eq_names(self.coordinator), "Not calculated"]
+        options = ["Off", *_room_eq_names(self.coordinator)]
+        if (
+            self.coordinator.state.get_room_equalization()
+            == RoomEqMode.NOT_CALCULATED
+        ):
+            options.append("Not calculated")
+        return options
 
     @property
     @override
@@ -72,19 +79,19 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
         mode = self.coordinator.state.get_room_equalization()
         if mode is None:
             return None
-        if mode == RoomEqMode.OFF:
-            return "Off"
         if mode in (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3):
             index = mode.value - RoomEqMode.EQ1.value
             return _room_eq_names(self.coordinator)[index]
-        if mode == RoomEqMode.NOT_CALCULATED:
-            return "Not calculated"
+        return {
+            RoomEqMode.OFF: "Off",
+            RoomEqMode.NOT_CALCULATED: "Not calculated",
+        }.get(mode)
 
     @convert_exception
     @override
     async def async_select_option(self, option: str) -> None:
         """Select a Dirac room-EQ profile on the receiver."""
-        mode: RoomEqMode | None
+        mode: RoomEqMode | None = None
         if option == "Off":
             mode = RoomEqMode.OFF
         elif option == "Not calculated":
