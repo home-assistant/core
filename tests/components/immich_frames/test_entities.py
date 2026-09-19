@@ -1,7 +1,6 @@
 """Test Immich Frames entity behavior."""
 
 from copy import copy
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -26,9 +25,12 @@ from homeassistant.components.immich_frames.sensor import (
 )
 from homeassistant.components.immich_frames.switch import SlideshowSwitch
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-from tests.components.immich.const import MOCK_SEARCH_ASSETS
+from tests.components.immich import const as immich_const
+
+MOCK_SEARCH_ASSETS = immich_const.MOCK_SEARCH_ASSETS
 
 
 def _coordinator(
@@ -51,7 +53,7 @@ def _coordinator(
     coordinator.data = ImmichFramesData(
         asset=asset,
         image=b"image",
-        updated_at=datetime.now(UTC),
+        updated_at=dt_util.utcnow(),
         matching_assets=3,
     )
     return coordinator
@@ -72,7 +74,7 @@ async def test_metadata_entities_and_controls(
     coordinator.data = None
     assert PhotoSensor(coordinator, "status", lambda data: data).native_value is None
     coordinator.data = ImmichFramesData(
-        asset=MOCK_SEARCH_ASSETS[0], image=b"image", updated_at=datetime.now(UTC)
+        asset=MOCK_SEARCH_ASSETS[0], image=b"image", updated_at=dt_util.utcnow()
     )
 
     image = ImmichFrameImage(coordinator)

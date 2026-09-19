@@ -1,12 +1,14 @@
 """Constants for Immich Frames."""
 
+from homeassistant.const import CONF_MODE, CONF_SOURCE
+
+__all__ = ("CONF_MODE", "CONF_SOURCE")
+
 DOMAIN = "immich_frames"
 CONF_IMMICH_ENTRY_ID = "immich_entry_id"
 CONF_FRAME_NAME = "frame_name"
-CONF_SOURCE = "source"
 CONF_ALBUM_IDS = "album_ids"
 CONF_SMART_QUERY = "smart_query"
-CONF_MODE = "mode"
 CONF_ORIENTATION = "orientation"
 CONF_TIME_RANGE = "time_range"
 CONF_PAIR_WINDOW = "pair_window_days"

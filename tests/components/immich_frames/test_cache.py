@@ -1,7 +1,6 @@
 """Test Immich Frames cache integrity and invalidation."""
 
 from copy import copy
-from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 
@@ -12,8 +11,11 @@ import pytest
 from homeassistant.components.immich_frames.cache import FrameCache
 from homeassistant.components.immich_frames.const import CONF_SCREEN_SHAPE
 from homeassistant.components.immich_frames.rendering import render
+from homeassistant.util import dt as dt_util
 
-from tests.components.immich.const import MOCK_SEARCH_ASSETS
+from tests.components.immich import const as immich_const
+
+MOCK_SEARCH_ASSETS = immich_const.MOCK_SEARCH_ASSETS
 
 
 def test_cache_round_trip_and_settings_invalidation(tmp_path: Path) -> None:
@@ -40,7 +42,7 @@ def test_cache_handles_exif_variants_and_invalid_output(tmp_path: Path) -> None:
     """Cache serialization handles optional and timestamped EXIF metadata."""
     cache = FrameCache(tmp_path / "frame.json")
     asset = copy(MOCK_SEARCH_ASSETS[0])
-    asset.exif_info = ExifInfo(date_time_original=datetime.now(UTC))
+    asset.exif_info = ExifInfo(date_time_original=dt_util.utcnow())
     payload = BytesIO()
     Image.new("RGB", (16, 12), "blue").save(payload, "JPEG")
     image, _ = render([payload.getvalue()], "landscape", "show_full")

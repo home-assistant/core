@@ -96,7 +96,9 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @override
     @callback
-    def async_get_options_flow(config_entry: ImmichFramesConfigEntry):
+    def async_get_options_flow(
+        config_entry: ImmichFramesConfigEntry,
+    ) -> ImmichFramesOptionsFlow:
         """Return the frame options flow."""
         return ImmichFramesOptionsFlow(config_entry)
 

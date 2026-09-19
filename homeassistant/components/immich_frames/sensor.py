@@ -6,6 +6,7 @@ from typing import Any, override
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 from .entity import ImmichFramesEntity
@@ -82,7 +83,7 @@ class PhotoSensor(ImmichFramesEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the current metadata value."""
         if self.coordinator.data is None:
             return None

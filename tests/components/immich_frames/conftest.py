@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.immich.const import ALBUM_DATA, MOCK_SEARCH_ASSETS
+from tests.components.immich import const as immich_const
 
 
 @pytest.fixture
@@ -29,12 +29,14 @@ def mock_immich_api() -> SimpleNamespace:
     Image.new("RGB", (4, 3), "red").save(image, "JPEG")
     return SimpleNamespace(
         search=SimpleNamespace(
-            async_get_all=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
-            async_get_all_by_album_ids=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
-            async_smart_search=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
+            async_get_all=AsyncMock(return_value=immich_const.MOCK_SEARCH_ASSETS),
+            async_get_all_by_album_ids=AsyncMock(
+                return_value=immich_const.MOCK_SEARCH_ASSETS
+            ),
+            async_smart_search=AsyncMock(return_value=immich_const.MOCK_SEARCH_ASSETS),
         ),
         albums=SimpleNamespace(
-            async_get_all_albums=AsyncMock(return_value=[ALBUM_DATA])
+            async_get_all_albums=AsyncMock(return_value=[immich_const.ALBUM_DATA])
         ),
         assets=SimpleNamespace(
             async_view_asset=AsyncMock(return_value=image.getvalue())

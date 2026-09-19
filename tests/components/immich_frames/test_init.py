@@ -24,7 +24,9 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-from tests.components.immich.const import MOCK_SEARCH_ASSETS
+from tests.components.immich import const as immich_const
+
+MOCK_SEARCH_ASSETS = immich_const.MOCK_SEARCH_ASSETS
 
 
 async def test_setup_entry_creates_image(

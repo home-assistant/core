@@ -7,7 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
-PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.BUTTON, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.IMAGE, Platform.SENSOR, Platform.SWITCH]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("immich_frames")
 
 

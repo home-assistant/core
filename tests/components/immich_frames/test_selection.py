@@ -33,8 +33,11 @@ from homeassistant.components.immich_frames.selection import (
     choose_companion,
     selected_photos,
 )
+from homeassistant.util import dt as dt_util
 
-from tests.components.immich.const import MOCK_SEARCH_ASSETS
+from tests.components.immich import const as immich_const
+
+MOCK_SEARCH_ASSETS = immich_const.MOCK_SEARCH_ASSETS
 
 
 @pytest.mark.asyncio
@@ -48,7 +51,7 @@ async def test_album_source_uses_selected_albums() -> None:
     candidates = await async_get_candidates(
         api,
         {CONF_SOURCE: SOURCE_ALBUM, CONF_ALBUM_IDS: ["album-1"]},
-        datetime.now(UTC),
+        dt_util.utcnow(),
     )
 
     assert candidates == MOCK_SEARCH_ASSETS
@@ -66,7 +69,7 @@ async def test_smart_source_uses_image_search() -> None:
     candidates = await async_get_candidates(
         api,
         {CONF_SOURCE: SOURCE_SMART, "smart_query": "beach"},
-        datetime.now(UTC),
+        dt_util.utcnow(),
     )
 
     assert candidates == MOCK_SEARCH_ASSETS
@@ -78,7 +81,7 @@ async def test_memories_source_is_not_offered_without_client_support() -> None:
     """Do not silently call an undocumented Immich endpoint."""
     with pytest.raises(UnsupportedSourceError):
         await async_get_candidates(
-            SimpleNamespace(), {CONF_SOURCE: "memories"}, datetime.now(UTC)
+            SimpleNamespace(), {CONF_SOURCE: "memories"}, dt_util.utcnow()
         )
 
 
@@ -107,7 +110,7 @@ def test_orientation_and_calendar_cutoff_helpers() -> None:
     assert _cutoff(datetime(2024, 3, 31, tzinfo=UTC), "1_month") == datetime(
         2024, 2, 29, tzinfo=UTC
     )
-    assert _cutoff(datetime.now(UTC), "all_time") is None
+    assert _cutoff(dt_util.utcnow(), "all_time") is None
 
 
 def test_filter_assets_excludes_unsafe_and_mismatched_candidates() -> None:
