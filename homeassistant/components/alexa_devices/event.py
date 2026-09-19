@@ -1,10 +1,6 @@
 """Support for events."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Final, override
-
-from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -23,18 +19,10 @@ from .utils import async_remove_entities
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True, kw_only=True)
-class AmazonEventEntityDescription(EventEntityDescription):
-    """Alexa Devices event entity description."""
-
-    is_supported_fn: Callable[[AmazonDevice], bool] = lambda device: True
-
-
 EVENTS: Final = {
-    AmazonEventEntityDescription(
+    EventEntityDescription(
         key="voice_event",
         translation_key="voice_event",
-        is_supported_fn=lambda device: device.voice_control_supported,
     ),
 }
 
@@ -69,7 +57,7 @@ async def async_setup_entry(
                 AlexaVoiceEvent(coordinator, serial_num, event_desc)
                 for event_desc in EVENTS
                 for serial_num in new_devices
-                if event_desc.is_supported_fn(coordinator.data[serial_num])
+                if coordinator.data[serial_num].voice_control_supported
             )
 
     _check_device()
