@@ -249,7 +249,8 @@
       "id": "2d558dbf-5361-4ef2-9d86-4161f5eb6146",
       "title": "",
       "text": "Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.",
-      "ingredientReferences": []
+      "ingredientReferences": [],
+      "noteReferences": ["f5e3f4d1-2a6f-4f3c-8a1d-7b9c5e2d4f60"]
     },
     {
       "id": "dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a",
@@ -313,7 +314,23 @@
     "locked": false
   },
   "assets": [],
-  "notes": [],
+  "notes": [
+    {
+      "id": "f5e3f4d1-2a6f-4f3c-8a1d-7b9c5e2d4f60",
+      "title": "Baking tip",
+      "text": "Use room-temperature ingredients for a smoother batter."
+    },
+    {
+      "id": "a1c7e9b2-4d5f-4680-9a3b-2e6f8c1d7b40",
+      "title": "Glaze tip",
+      "text": "The glaze should be thick enough to coat the back of a spoon before pouring."
+    },
+    {
+      "id": "c8d2f6a4-1b7e-4930-85c9-3e5a2d8f6b10",
+      "title": "Serving tip",
+      "text": "Let the glaze set completely before slicing the cake."
+    }
+  ],
   "extras": {
     "Energy Consumption": "5"
   },
