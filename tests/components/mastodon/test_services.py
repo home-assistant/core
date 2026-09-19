@@ -1,6 +1,7 @@
 """Tests for the Mastodon services."""
 
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from mastodon.Mastodon import (
@@ -624,7 +625,9 @@ async def test_service_post_local_media_source(
 
     assert mock_mastodon_client.media_post.call_count == 2
     mock_mastodon_client.media_post.assert_any_call(
-        media_file=b"I play the sax\n",
+        media_file=Path(
+            "tests/testing_config/media/Epic Sax Guy 10 Hours.mp4"
+        ).resolve(),
         mime_type="video/mp4",
         description="I play the sax",
         focus=(-0.5, 0.5),
@@ -632,7 +635,7 @@ async def test_service_post_local_media_source(
         thumbnail_mime_type=None,
     )
     mock_mastodon_client.media_post.assert_any_call(
-        media_file=b"\xff\xd8\xff\xdb\n",
+        media_file=Path("tests/testing_config/media/screenshot.jpg").resolve(),
         mime_type="image/jpeg",
         description=None,
         focus=(0, 0),
@@ -1228,7 +1231,12 @@ async def test_service_entry_availability(
                     "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_AVATAR: b"\xff\xd8\xff\xdb\n", ATTR_AVATAR_MIME_TYPE: "image/jpeg"},
+            {
+                ATTR_AVATAR: Path(
+                    "tests/testing_config/media/screenshot.jpg"
+                ).resolve(),
+                ATTR_AVATAR_MIME_TYPE: "image/jpeg",
+            },
         ),
         (
             {
@@ -1264,7 +1272,12 @@ async def test_service_entry_availability(
                     "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_HEADER: b"\xff\xd8\xff\xdb\n", ATTR_HEADER_MIME_TYPE: "image/jpeg"},
+            {
+                ATTR_HEADER: Path(
+                    "tests/testing_config/media/screenshot.jpg"
+                ).resolve(),
+                ATTR_HEADER_MIME_TYPE: "image/jpeg",
+            },
         ),
     ],
 )

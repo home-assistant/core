@@ -5,6 +5,7 @@ from enum import StrEnum
 from functools import partial
 from math import isfinite
 import mimetypes
+from pathlib import Path
 from typing import Any
 
 from mastodon import Mastodon
@@ -570,7 +571,7 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
 
 async def _resolve_media(
     hass: HomeAssistant, media_source: dict[str, str]
-) -> tuple[bytes, str | None]:
+) -> tuple[bytes | Path, str | None]:
     """Resolve media from a media source."""
     media_content_id: str = media_source["media_content_id"]
     if media_content_id.startswith("media-source://camera/"):
@@ -596,4 +597,4 @@ async def _resolve_media(
             translation_placeholders={"media_content_id": media_content_id},
         )
 
-    return await hass.async_add_executor_job(media.path.read_bytes), media.mime_type
+    return media.path, media.mime_type

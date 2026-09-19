@@ -114,7 +114,7 @@
       "message": "Thumbnail is only allowed with audio media."
     },
     "media_thumbnail_not_an_image": {
-      "message": "Thumbnail has mime type {mime_type}. Only image allowed."
+      "message": "Thumbnail has mime type {mime_type}. Only images are allowed."
     },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
@@ -267,7 +267,7 @@
           "name": "Language"
         },
         "media": {
-          "description": "Attach up to 4 images, videos, or 1 audio file, to the post.",
+          "description": "Attach up to 4 images, videos, or 1 audio file to the post.",
           "name": "Media"
         },
         "media_description": {
