@@ -4,7 +4,7 @@ from typing import Any, override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -131,6 +131,30 @@ class BraviaTVSelect(
         ):
             self._attr_current_option = last_state.state
             self._attr_options = [last_state.state]
+        self._sync_fallback()
+
+    @callback
+    def _sync_fallback(self) -> None:
+        """Sync fallback data with the latest known values.
+
+        The properties only read coordinator data, so without syncing the
+        fallback attributes an entity reverts to its startup-restored option
+        and option list whenever a later refresh omits the live setting.
+        """
+        if (
+            setting := _get_enum_picture_setting(
+                self.coordinator, self.entity_description.key
+            )
+        ) is not None:
+            self._attr_current_option = str(setting["currentValue"])
+            self._attr_options = _get_picture_setting_options(setting)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._sync_fallback()
+        self.async_write_ha_state()
 
     @property
     @override

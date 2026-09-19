@@ -1,15 +1,17 @@
 """Test the BraviaTV select platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
+from homeassistant.components.braviatv.coordinator import SCAN_INTERVAL
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 
 BRAVIA_SYSTEM_INFO = {
     "product": "TV",
@@ -285,3 +287,62 @@ async def test_unavailable_when_setting_is_not_reported_and_not_restored(
         state = hass.states.get("select.bravia_tv_model_hdr_mode")
         assert state is not None
         assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_keeps_latest_option_when_setting_is_omitted_after_refresh(
+    hass: HomeAssistant,
+) -> None:
+    """Test the fallback option tracks the latest reported setting, not startup restore."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string",
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_restore_cache(
+        hass,
+        (State("select.bravia_tv_model_picture_mode", "cinema"),),
+    )
+
+    mock_picture_setting = AsyncMock(return_value=ENUM_SETTINGS)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=INPUTS),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch("pybravia.BraviaClient.get_picture_setting", mock_picture_setting),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("select.bravia_tv_model_picture_mode")
+        assert state is not None
+        assert state.state == "vivid"
+        assert state.attributes["options"] == ["vivid", "standard", "cinema"]
+
+        # A later refresh omits the setting, so the entity must fall back to
+        # the latest reported option and option list rather than the
+        # startup-restored ones
+        mock_picture_setting.return_value = []
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("select.bravia_tv_model_picture_mode")
+        assert state is not None
+        assert state.state == "vivid"
+        assert state.attributes["options"] == ["vivid", "standard", "cinema"]

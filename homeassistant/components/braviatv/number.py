@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -128,6 +128,33 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], RestoreNumbe
                 last_number_data.native_max_value or DEFAULT_MAX_VALUE
             )
             self._attr_native_step = last_number_data.native_step or DEFAULT_STEP
+        self._sync_fallback()
+
+    @callback
+    def _sync_fallback(self) -> None:
+        """Sync fallback data with the latest known values.
+
+        The properties only read coordinator data, so without syncing the
+        fallback attributes an entity reverts to its startup-restored values
+        whenever a later refresh omits the live setting.
+        """
+        if (
+            setting := _get_numeric_picture_setting(
+                self.coordinator, self.entity_description.key
+            )
+        ) is not None:
+            candidate = setting["candidate"][0]
+            self._attr_native_value = float(setting["currentValue"])
+            self._attr_native_min_value = float(candidate["min"])
+            self._attr_native_max_value = float(candidate["max"])
+            self._attr_native_step = float(candidate.get("step", 1))
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._sync_fallback()
+        self.async_write_ha_state()
 
     @property
     @override
