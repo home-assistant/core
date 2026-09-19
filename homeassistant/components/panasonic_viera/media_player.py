@@ -109,6 +109,27 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._remote.muted
 
+    @property
+    @override
+    def source(self) -> str | None:
+        """Return the selected PAC input."""
+        return self._remote.source
+
+    @property
+    @override
+    def source_list(self) -> list[str] | None:
+        """Return PAC inputs when they are supported by the TV."""
+        return self._remote.sources
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the features exposed by this TV model."""
+        features = self._attr_supported_features
+        if self._remote.sources is not None:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
+
     async def async_update(self) -> None:
         """Retrieve the latest data."""
         await self._remote.async_update()
@@ -142,6 +163,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._remote.async_set_volume(volume)
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Select a source through PAC."""
+        await self._remote.async_set_input(source)
 
     @override
     async def async_media_play_pause(self) -> None:
