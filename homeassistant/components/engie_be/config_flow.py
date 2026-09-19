@@ -11,7 +11,7 @@ from aioengiebelgium import (
     EngieBeMfaError,
     MfaMethod,
 )
-import probatio as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
@@ -26,7 +26,7 @@ _MFA_METHOD_SELECTOR = selector.SelectSelector(
         translation_key="mfa_method",
     )
 )
-_CODE_SCHEMA = vol.Schema({vol.Required("code"): str})
+_CODE_SCHEMA = probatio.Schema({probatio.Required("code"): str})
 
 
 class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -99,11 +99,11 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(
                         CONF_MFA_METHOD, default=MfaMethod.SMS.value
                     ): _MFA_METHOD_SELECTOR,
                 }
