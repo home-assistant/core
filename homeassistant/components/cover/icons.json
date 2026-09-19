@@ -62,6 +62,9 @@
         "closed": "mdi:circle-slice-8"
       }
     },
+    "desk": {
+      "default": "mdi:desk"
+    },
     "door": {
       "default": "mdi:door-open",
       "state": {
@@ -98,6 +101,12 @@
         "closed": "mdi:window-shutter",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
+      }
+    },
+    "sofa": {
+      "default": "mdi:sofa",
+      "state": {
+        "closed": "mdi:sofa-outline"
       }
     },
     "window": {

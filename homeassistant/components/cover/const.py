@@ -72,11 +72,13 @@ class CoverDeviceClass(StrEnum):
     BLIND = "blind"
     CURTAIN = "curtain"
     DAMPER = "damper"
+    DESK = "desk"
     DOOR = "door"
     GARAGE = "garage"
     GATE = "gate"
     SHADE = "shade"
     SHUTTER = "shutter"
+    SOFA = "sofa"
     WINDOW = "window"
 
 
