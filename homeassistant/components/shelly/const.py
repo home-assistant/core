@@ -90,6 +90,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
+# Interval for checking the BLU TRV firmware repository for a newer version
+BLU_TRV_UPDATE_CHECK_INTERVAL: Final = 3600
+
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
 # Multiplier used to calculate the "update_interval" for shelly devices.
@@ -310,6 +313,9 @@ VIRTUAL_NUMBER_MODE_MAP = {
 API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
+
+# Firmware ID looks like "20260724-105432/v1.5.0@aa8644cc"
+FW_ID_VERSION_PATTERN = re.compile(r"/(?P<version>[^@]+)")
 
 # Mapping for units that require conversion to a Home Assistant recognized unit
 # e.g. "m3/min" to "m³/min"
