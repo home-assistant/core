@@ -129,6 +129,13 @@ async def test_daily_forecast_night_low_above_day_high(
             "Koninklijk Meteorologisch Instituut van België",
             id="follow_home_assistant",
         ),
+        pytest.param(
+            "nl",
+            {},
+            "Foo",
+            "Koninklijk Meteorologisch Instituut van België",
+            id="follow_home_assistant_by_default",
+        ),
     ],
 )
 @pytest.mark.freeze_time("2024-01-23T14:15:00+01:00")
