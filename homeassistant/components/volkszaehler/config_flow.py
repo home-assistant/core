@@ -126,7 +126,6 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: import_data[CONF_HOST],
                 CONF_PORT: import_data[CONF_PORT],
-                CONF_MIDDLEWARE: DEFAULT_MIDDLEWARE,
             },
             subentries=[channel_subentry.as_dict()],
         )

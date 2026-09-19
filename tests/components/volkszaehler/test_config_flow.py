@@ -161,7 +161,6 @@ async def test_import(hass: HomeAssistant, mock_api: AsyncMock) -> None:
     assert entry.data == {
         CONF_HOST: "importhost",
         CONF_PORT: 80,
-        CONF_MIDDLEWARE: True,
     }
     assert entry.title == "importhost"
     assert len(entry.subentries) == 1
@@ -302,8 +301,7 @@ async def test_import_same_host_different_port_creates_new_entry(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
     assert any(
-        entry.data == {CONF_HOST: "localhost", CONF_PORT: 8080, CONF_MIDDLEWARE: True}
-        for entry in entries
+        entry.data == {CONF_HOST: "localhost", CONF_PORT: 8080} for entry in entries
     )
 
     assert mock_api.get_data.call_count == 3
