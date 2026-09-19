@@ -5,14 +5,70 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.openai_conversation.entity import (
+    _convert_content_to_param,
     _format_structured_output,
     async_prepare_files_for_prompt,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.helpers import llm, selector
+from homeassistant.util.json import JsonObjectType
+
+
+@pytest.mark.parametrize(
+    ("code", "outputs", "error", "external"),
+    [
+        pytest.param(None, None, False, True, id="no_output"),
+        pytest.param(
+            "raise ValueError()",
+            [{"type": "logs", "logs": "ValueError"}],
+            True,
+            True,
+            id="failed",
+        ),
+        pytest.param(
+            "plt.show()",
+            [{"type": "image", "url": "https://example.com/plot.png"}],
+            False,
+            True,
+            id="image",
+        ),
+        pytest.param("print(1)", None, False, False, id="custom_function"),
+    ],
+)
+def test_convert_code_interpreter(
+    code: str | None,
+    outputs: list[JsonObjectType] | None,
+    error: bool,
+    external: bool,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Restore native external calls while preserving custom function calls."""
+    content = [
+        conversation.AssistantContent(
+            agent_id="conversation.openai_conversation",
+            tool_calls=[
+                llm.ToolInput(
+                    id="ci_A",
+                    tool_name="code_interpreter",
+                    tool_args={"code": code, "container": "cntr_A"},
+                    external=external,
+                )
+            ],
+        ),
+        conversation.ToolResultContent(
+            agent_id="conversation.openai_conversation",
+            tool_call_id="ci_A",
+            tool_name="code_interpreter",
+            result=llm.ToolResult(data={"output": outputs}, error=error),
+        ),
+    ]
+
+    assert _convert_content_to_param(content) == snapshot
 
 
 async def test_format_structured_output() -> None:

@@ -713,11 +713,11 @@ async def test_web_search_remove_citations_gpt5(
     assert result.response.speech["plain"]["speech"] == "The match ended 0-2."
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_code_interpreter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream,
+    mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -777,6 +777,9 @@ async def test_code_interpreter(
     )
 
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
+    assert mock_create_stream.mock_calls[1][2]["tools"] == [
+        {"type": "code_interpreter", "container": {"type": "auto"}}
+    ]
 
 
 async def test_flex_tier_retry(
