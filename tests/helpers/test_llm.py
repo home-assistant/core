@@ -157,8 +157,40 @@ async def test_call_non_intent_tool_preserves_blank_arguments(
 
     result = await instance.async_call_tool(llm.ToolInput(tool.name, tool_args))
 
-    assert result == {"tool_args": tool_args}
+    assert result.data == {"tool_args": tool_args}
     assert tool.async_call.await_args.args[1].tool_args is tool_args
+
+
+@pytest.mark.parametrize(
+    ("tool_return_value", "expected"),
+    [
+        pytest.param(
+            {"answer": 42},
+            llm.ToolResult(data={"answer": 42}),
+            id="plain-json-object",
+        ),
+        pytest.param(
+            llm.ToolResult(data={"answer": 42}, error=True),
+            llm.ToolResult(data={"answer": 42}, error=True),
+            id="tool-result",
+        ),
+    ],
+)
+async def test_call_tool_result(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_return_value: llm.ToolResult | JsonObjectType,
+    expected: llm.ToolResult,
+) -> None:
+    """Test a tool result is returned as is and a JSON object is wrapped."""
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value=tool_return_value)
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert await instance.async_call_tool(llm.ToolInput(tool.name, {})) == expected
 
 
 @pytest.mark.parametrize("namespaced", [False, True])
@@ -295,7 +327,7 @@ async def test_assist_api(
         assistant="conversation",
         device_id=None,
     )
-    assert response == {
+    assert response.data == {
         "data": {
             "failed": [],
             "success": [],
@@ -353,7 +385,7 @@ async def test_assist_api(
         assistant="conversation",
         device_id=device.id,
     )
-    assert response == {
+    assert response.data == {
         "data": {
             "failed": [],
             "success": [],
@@ -789,10 +821,7 @@ Static Context: An overview of the areas and the devices in this smart home:
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="homeassistant__GetLiveContext", tool_args={})
     )
-    assert result == {
-        "success": True,
-        "result": exposed_entities_prompt,
-    }
+    assert result.data == {"result": exposed_entities_prompt}
 
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
@@ -970,10 +999,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "success": True,
-        "result": {"drinks": 2},
-    }
+    assert response.data == {"result": {"drinks": 2}}
 
     # Test script with no response
     tool_input = llm.ToolInput(
@@ -995,10 +1021,7 @@ async def test_action_tool(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "success": True,
-        "result": {},
-    }
+    assert response.data == {"result": {}}
 
     # Test reload script with new parameters
     config = {
@@ -1394,12 +1417,12 @@ This is prompt 2
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
-    assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
+    assert result.data == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
         llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
-    assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+    assert result.data == {"result": {"Tool_2": {"arg2": "value2"}}}
 
 
 async def test_deprecated_async_render_no_api_prompt(

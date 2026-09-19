@@ -720,6 +720,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/gree_infrared/ @Dr-Blank
+/tests/components/gree_infrared/ @Dr-Blank
 /homeassistant/components/green_planet_energy/ @petschni
 /tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greencell/ @BrzezowskiGC
@@ -1437,8 +1439,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev
 /tests/components/picnic/ @corneyl @codesalatdev
-/homeassistant/components/picotts/ @rooggiieerr
-/tests/components/picotts/ @rooggiieerr
+/homeassistant/components/picotts/ @rrooggiieerr
+/tests/components/picotts/ @rrooggiieerr
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
@@ -2057,6 +2059,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
 /homeassistant/components/voip/ @synesthesiam @jaminh
 /tests/components/voip/ @synesthesiam @jaminh
+/homeassistant/components/volkszaehler/ @StefanSchoof
+/tests/components/volkszaehler/ @StefanSchoof
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn

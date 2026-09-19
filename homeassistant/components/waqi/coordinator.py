@@ -44,4 +44,4 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
                 self.subentry.data[CONF_STATION_NUMBER]
             )
         except WAQIError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(str(exc)) from exc
