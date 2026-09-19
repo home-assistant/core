@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.util import dt as dt_util
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.wallbox.const import CHARGER_JWT_TTL
 from homeassistant.config_entries import ConfigEntryState
@@ -60,7 +61,7 @@ async def test_wallbox_refresh_failed_error_auth(
 
     data = dict(entry.data)
     data[CHARGER_JWT_TTL] = (
-        datetime.timestamp(datetime.now() - timedelta(hours=1)) * 1000  # pylint: disable=home-assistant-enforce-naive-now
+        data[CHARGER_JWT_TTL] = (time.time() - 3600) * 1000
     )
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -119,7 +120,7 @@ async def test_wallbox_refresh_failed_too_many_requests(
     assert entry.state is ConfigEntryState.LOADED
 
     with patch.object(mock_wallbox, "getChargerStatus", side_effect=http_429_error):
-        async_fire_time_changed(hass, datetime.now() + timedelta(seconds=120), True)  # pylint: disable=home-assistant-enforce-naive-now
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120), True)
         await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -135,7 +136,7 @@ async def test_wallbox_refresh_failed_connection_error(
     assert entry.state is ConfigEntryState.LOADED
 
     with patch.object(mock_wallbox, "pauseChargingSession", side_effect=http_403_error):
-        async_fire_time_changed(hass, datetime.now() + timedelta(seconds=120), True)  # pylint: disable=home-assistant-enforce-naive-now
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120), True)
         await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
