@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.diagnostics import (
+    SOURCE_COMMAND,
     SOURCE_ENABLED,
     SOURCE_POLLING,
     SOURCE_STREAMING,
@@ -60,7 +61,7 @@ async def test_diagnostics_streaming_vehicle(
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
 ) -> None:
-    """Test a streaming vehicle reports only streaming entities and never polls.
+    """Test a streaming vehicle reports no polling entities and never polls.
 
     Streaming entities must not carry a coordinator listener context: giving
     them one would make the vehicle coordinator start polling, which is the
@@ -73,7 +74,7 @@ async def test_diagnostics_streaming_vehicle(
 
     entities = diag["vehicles"][0]["entities"]
     assert entities
-    assert set(entities.values()) == {SOURCE_STREAMING}
+    assert set(entities.values()) == {SOURCE_STREAMING, SOURCE_COMMAND}
 
     mock_vehicle_data.reset_mock()
     freezer.tick(VEHICLE_INTERVAL)
@@ -95,7 +96,7 @@ async def test_diagnostics_streaming_and_polling_vehicles(
 
     A vehicle either polls for its data or streams it, never both, so the
     polling vehicle's data entities are reported as polling while the
-    streaming vehicle reports nothing but streaming, with neither vehicle's
+    streaming vehicle's are reported as streaming, with neither vehicle's
     source leaking into the other's diagnostics.
     """
     products = deepcopy(PRODUCTS)
@@ -131,11 +132,12 @@ async def test_diagnostics_streaming_and_polling_vehicles(
     assert len(sources) == 2
     # The polling vehicle's data entities keep its coordinator polling...
     assert SOURCE_POLLING in sources[POLLED_NAME]
-    # ...while the streaming vehicle reports only streaming, so neither
-    # vehicle's source leaks into the other's diagnostics.
-    assert sources[STREAM_NAME] == {SOURCE_STREAMING}
-    # No entity falls back to enabled: every one maps to a live source.
-    assert sources[POLLED_NAME] <= {SOURCE_POLLING, SOURCE_STREAMING}
+    # ...while the streaming vehicle reports no polling, so neither vehicle's
+    # source leaks into the other's diagnostics.
+    assert sources[STREAM_NAME] == {SOURCE_STREAMING, SOURCE_COMMAND}
+    # No entity that reads state falls back to enabled: every one maps to a
+    # live source, and the stateless command entities to neither.
+    assert sources[POLLED_NAME] <= {SOURCE_POLLING, SOURCE_COMMAND}
 
 
 @pytest.mark.parametrize(
@@ -183,17 +185,32 @@ async def test_diagnostics_listener_that_cannot_poll(
     mock_vehicle_data.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("platforms", "expected_sources"),
+    [
+        pytest.param([Platform.BUTTON], {SOURCE_COMMAND}, id="command_only"),
+        pytest.param([], set(), id="no_entities"),
+    ],
+)
 @pytest.mark.usefixtures("mock_legacy")
-async def test_diagnostics_no_entities(
+async def test_diagnostics_entity_sources(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    platforms: list[Platform],
+    expected_sources: set[str],
 ) -> None:
-    """Test diagnostics when no entities are enabled."""
+    """Test the sources reported for the entities a vehicle actually has.
 
-    entry = await setup_platform(hass, platforms=[])
+    Buttons subscribe to neither the vehicle coordinator nor a streaming
+    field, so even on a polling vehicle they have no state to attribute to
+    either source, and a vehicle with no platforms loaded reports nothing.
+    """
+
+    entry = await setup_platform(hass, platforms)
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    assert diag["vehicles"][0]["entities"] == {}
+
+    assert set(diag["vehicles"][0]["entities"].values()) == expected_sources
 
 
 @pytest.mark.usefixtures("mock_legacy")

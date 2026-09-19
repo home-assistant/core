@@ -3,14 +3,14 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import TeslemetryConfigEntry
 from .const import DOMAIN
-from .entity import TeslemetryVehicleStreamEntity
+from .entity import TeslemetryVehicleCommandEntity, TeslemetryVehicleStreamEntity
 from .models import TeslemetryVehicleData
 
 VEHICLE_REDACT = [
@@ -33,9 +33,11 @@ ENERGY_INFO_REDACT = ["installation_date"]
 
 SOURCE_POLLING = "polling"
 SOURCE_STREAMING = "streaming"
+SOURCE_COMMAND = "command"
 SOURCE_ENABLED = "enabled"
 
 
+@callback
 def _async_vehicle_entity_sources(
     entity_entries: list[er.RegistryEntry],
     entities: dict[str, Entity],
@@ -48,9 +50,10 @@ def _async_vehicle_entity_sources(
     off - and polling left enabled on the config entry, so listeners are only
     reported as "polling" when both hold, mirroring the guards in
     DataUpdateCoordinator._schedule_refresh. "streaming" entities belong to the
-    telemetry stream family. Anything else enabled in the registry, a listener
-    that cannot cause a refresh or an entity whose platform is not loaded, is
-    reported as "enabled" rather than attributed to either source.
+    telemetry stream family. "command" entities only send commands and read no
+    state at all, so no source can be attributed to them. Anything else enabled
+    in the registry, a listener that cannot cause a refresh or an entity whose
+    platform is not loaded, is reported as "enabled".
     """
     coordinator = vehicle.coordinator
     polling_ids: set[str] = set()
@@ -68,10 +71,13 @@ def _async_vehicle_entity_sources(
     for entry in entity_entries:
         if entry.disabled_by or not entry.unique_id.startswith(prefix):
             continue
+        entity = entities.get(entry.entity_id)
         if entry.entity_id in polling_ids:
             sources[entry.entity_id] = SOURCE_POLLING
-        elif isinstance(entities.get(entry.entity_id), TeslemetryVehicleStreamEntity):
+        elif isinstance(entity, TeslemetryVehicleStreamEntity):
             sources[entry.entity_id] = SOURCE_STREAMING
+        elif isinstance(entity, TeslemetryVehicleCommandEntity):
+            sources[entry.entity_id] = SOURCE_COMMAND
         else:
             sources[entry.entity_id] = SOURCE_ENABLED
     return dict(sorted(sources.items()))
