@@ -165,7 +165,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        presets = self._state.get_preset_details()
+        presets = self._state.get_preset_details() or {}
 
         radio = [
             BrowseMedia(

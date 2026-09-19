@@ -166,14 +166,14 @@
     "unsupported_media": {
       "message": "Unsupported media: {media}."
     },
+   "unsupported_room_equalization": {
+      "message": "Unsupported room equalization option: {room_equalization}."
+    },
     "unsupported_sound_mode": {
       "message": "Unsupported sound mode: {sound_mode}."
     },
     "unsupported_source": {
       "message": "Unsupported source: {source}."
-    },
-    "unsupported_room_equalization": {
-      "message": "Unsupported room equalization option: {room_equalization}."
     }
   }
 }

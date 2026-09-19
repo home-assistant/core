@@ -26,15 +26,17 @@ ROOM_EQ_DESCRIPTION = SelectEntityDescription(
 def _room_eq_names(coordinator: ArcamFmjCoordinator) -> tuple[str, ...]:
     """Return a name for each available Room EQ profile slot."""
     names = coordinator.state.get_room_eq_names() or []
-    return tuple(
-        name or default
-        for name, default in zip(
-            names[: len(_DEFAULT_ROOM_EQ_NAMES)],
-            _DEFAULT_ROOM_EQ_NAMES,
-            strict=False,
-        )
-    ) + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
-
+    return (
+        tuple(
+            name or default
+            for name, default in zip(
+                names[: len                (_DEFAULT_ROOM_EQ_NAMES)],
+                _DEFAULT_ROOM_EQ_NAMES,
+                strict=False,
+            )
+    ) 
+        + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
+    )
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,7 +63,7 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return available room-EQ options."""
-        return ["Off", *_room_eq_names(self.coordinator)]
+        return ["Off", *_room_eq_names(self.coordinator), "Not calculated"]
 
     @property
     @override
@@ -76,15 +78,17 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
             index = mode.value - RoomEqMode.EQ1.value
             return _room_eq_names(self.coordinator)[index]
         if mode == RoomEqMode.NOT_CALCULATED:
-            return None
-        return None
+            return "Not calculated"
 
     @convert_exception
     @override
     async def async_select_option(self, option: str) -> None:
         """Select a Dirac room-EQ profile on the receiver."""
+        mode: RoomEqMode | None
         if option == "Off":
             mode = RoomEqMode.OFF
+        elif option == "Not calculated":
+            mode = RoomEqMode.NOT_CALCULATED
         else:
             available_names = _room_eq_names(self.coordinator)
             mode = next(
