@@ -197,6 +197,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Platforms set up concurrently; re-push so controller climate can
+    # resolve zone entity_ids for control_zone_source after that gather.
+    coordinator.async_set_updated_data(controller)
 
     return True
 
