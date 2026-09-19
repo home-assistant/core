@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This podcast feed is already configured."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_feed": "The URL does not contain a playable podcast feed.",
+      "invalid_url": "Enter a valid HTTP or HTTPS URL without credentials.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The full RSS or Atom feed URL for the podcast."
+        },
+        "description": "Enter the podcast feed URL."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "latest_episode": {
+        "state_attributes": {
+          "duration_seconds": {
+            "name": "Duration"
+          },
+          "episode_id": {
+            "name": "Episode ID"
+          },
+          "event_type": {
+            "state": {
+              "new_episode": "New episode"
+            }
+          },
+          "media_content_id": {
+            "name": "Media content ID"
+          },
+          "published": {
+            "name": "Published"
+          },
+          "title": {
+            "name": "Title"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "episode_unavailable": {
+      "message": "The podcast episode is no longer available."
+    },
+    "feed_unavailable": {
+      "message": "The podcast feed is currently unavailable."
+    },
+    "invalid_feed": {
+      "message": "The configured URL does not contain a playable podcast feed."
+    },
+    "not_configured": {
+      "message": "No podcast feeds are configured."
+    },
+    "path_not_found": {
+      "message": "The podcast media source path was not found."
+    }
+  }
+}

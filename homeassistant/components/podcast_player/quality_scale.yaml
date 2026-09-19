@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not provide configuration options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Podcast feeds do not require account authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Podcast feeds are configured by URL and are not discoverable.
+  discovery:
+    status: exempt
+    comment: Podcast feeds are configured by URL and are not discoverable.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: The integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one fixed podcast service.
+  entity-category:
+    status: exempt
+    comment: The latest episode event is the integration's primary entity.
+  entity-device-class:
+    status: exempt
+    comment: No event device class represents a podcast episode.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration provides only one primary entity per config entry.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The event entity uses the default event icon.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no cases requiring a repair issue.
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents one fixed podcast service.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
