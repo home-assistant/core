@@ -314,6 +314,26 @@
       "uv_mode": {
         "name": "UV mode"
       }
+    },
+    "time": {
+      "filtration_start": {
+        "name": "Timer {number} - filtration start"
+      },
+      "filtration_stop": {
+        "name": "Timer {number} - filtration stop"
+      },
+      "relay_aux_start": {
+        "name": "Timer Aux {number} ({subtimer}) - start"
+      },
+      "relay_aux_stop": {
+        "name": "Timer Aux {number} ({subtimer}) - stop"
+      },
+      "relay_light_start": {
+        "name": "Light timer - start"
+      },
+      "relay_light_stop": {
+        "name": "Light timer - stop"
+      }
     }
   },
   "exceptions": {
