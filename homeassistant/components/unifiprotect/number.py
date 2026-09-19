@@ -4,14 +4,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast, override
+from typing import override
 
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicLight,
-    SensorFeatureCapability,
-)
+from uiprotect.data.public_devices import PublicLight, SensorFeatureCapability
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
@@ -44,12 +40,6 @@ class ProtectNumberEntityDescription(
     ufp_max: int | float
     ufp_min: int | float
     ufp_step: int | float
-
-
-def _get_pir_duration_public(obj: PublicDeviceModel) -> int | None:
-    # Public API reports the PIR auto-shutoff duration in milliseconds.
-    duration = cast(PublicLight, obj).light_device_settings.pir_duration
-    return None if duration is None else round(duration / 1000)
 
 
 async def _set_pir_duration(obj: PublicLight, value: float) -> None:
@@ -185,7 +175,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
-        ufp_public_value_fn=_get_pir_duration_public,
+        ufp_public_value="light_device_settings.pir_duration_seconds",
         ufp_set_method_fn=_set_pir_duration,
         ufp_perm=PermRequired.WRITE,
     ),

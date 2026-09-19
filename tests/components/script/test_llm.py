@@ -84,7 +84,7 @@ async def test_script_tool_call(hass: HomeAssistant) -> None:
     response = await tool.async_call(
         hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
     )
-    assert response == {"success": True, "result": {"drinks": 2}}
+    assert response == llm.ToolResult(data={"result": {"drinks": 2}})
 
 
 async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> None:
