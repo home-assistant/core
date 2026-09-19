@@ -25,7 +25,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -150,7 +150,9 @@ async def test_call_non_intent_tool_preserves_blank_arguments(
     tool_args = {"name": "", "response": " ", "other": None}
     tool = MagicMock(spec=llm.Tool)
     tool.name = "test_tool"
-    tool.async_call = AsyncMock(return_value={"tool_args": tool_args})
+    tool.async_call = AsyncMock(
+        return_value=llm.ToolResult(data={"tool_args": tool_args})
+    )
     instance = llm.APIInstance(
         MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
     )
@@ -161,36 +163,71 @@ async def test_call_non_intent_tool_preserves_blank_arguments(
     assert tool.async_call.await_args.args[1].tool_args is tool_args
 
 
-@pytest.mark.parametrize(
-    ("tool_return_value", "expected"),
-    [
-        pytest.param(
-            {"answer": 42},
-            llm.ToolResult(data={"answer": 42}),
-            id="plain-json-object",
-        ),
-        pytest.param(
-            llm.ToolResult(data={"answer": 42}, error=True),
-            llm.ToolResult(data={"answer": 42}, error=True),
-            id="tool-result",
-        ),
-    ],
-)
 async def test_call_tool_result(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    tool_return_value: llm.ToolResult | JsonObjectType,
-    expected: llm.ToolResult,
+    hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test a tool result is returned as is and a JSON object is wrapped."""
+    """Test a tool result is returned as is."""
+    expected = llm.ToolResult(data={"answer": 42}, error=True)
     tool = MagicMock(spec=llm.Tool)
     tool.name = "test_tool"
-    tool.async_call = AsyncMock(return_value=tool_return_value)
+    tool.async_call = AsyncMock(return_value=expected)
     instance = llm.APIInstance(
         MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
     )
 
     assert await instance.async_call_tool(llm.ToolInput(tool.name, {})) == expected
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_call_tool_deprecated_json_object(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test returning a JSON object from a tool is reported."""
+    tool = MagicMock(spec=llm.Tool)
+    tool.name = "test_tool"
+    tool.async_call = AsyncMock(return_value={"answer": 42})
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    with pytest.raises(RuntimeError, match="returns a JSON object from a tool"):
+        await instance.async_call_tool(llm.ToolInput(tool.name, {}))
+
+
+async def test_call_tool_deprecated_json_object_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration tool returning a JSON object is logged, not raised."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    class CustomTool(llm.Tool):
+        """Tool provided by a custom integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> JsonObjectType:
+            """Return a plain JSON object."""
+            return {"answer": 42}
+
+    # The tool call has returned by the time it is reported, so the domain is
+    # taken from the tool rather than the stack.
+    CustomTool.__module__ = "custom_components.my_custom.llm"
+    tool = CustomTool()
+    instance = llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+    )
+
+    assert await instance.async_call_tool(
+        llm.ToolInput(tool.name, {})
+    ) == llm.ToolResult(data={"answer": 42})
+    assert "returns a JSON object from a tool" in caplog.text
 
 
 @pytest.mark.parametrize("namespaced", [False, True])
@@ -1381,8 +1418,10 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
 
         async def async_call(
             self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
-        ) -> JsonObjectType:
-            return {"result": {tool_input.tool_name: tool_input.tool_args}}
+        ) -> llm.ToolResult:
+            return llm.ToolResult(
+                data={"result": {tool_input.tool_name: tool_input.tool_args}}
+            )
 
     api1 = MyAPI(hass=hass, id="api-1", name="API 1")
     api1.prompt = "This is prompt 1"
