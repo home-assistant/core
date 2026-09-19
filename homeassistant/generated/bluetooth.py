@@ -818,6 +818,26 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 13,
     },
     {
+        "connectable": True,
+        "domain": "meross",
+        "service_data_uuid": "0000be30-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "meross",
+        "service_data_uuid": "0000be30-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "meross",
+        "service_uuid": "99e7be30-0001-4c6b-98a2-70fcb3471a72",
+    },
+    {
+        "connectable": True,
+        "domain": "meross",
+        "local_name": "Meross-*",
+    },
+    {
         "connectable": False,
         "domain": "moat",
         "local_name": "Moat_S*",
