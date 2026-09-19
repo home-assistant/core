@@ -415,10 +415,10 @@ async def test_call_async_migrate_entry_failure_exception(
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
-async def test_call_async_migrate_entry_failure_not_bool(
+async def test_call_config_entry_methods_success_on_returning_none(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
-    """Test migration fails if boolean not returned."""
+    """Test config entry methods success on returning None."""
     entry = MockConfigEntry(
         domain="comp", version=major_version, minor_version=minor_version
     )
@@ -426,7 +426,8 @@ async def test_call_async_migrate_entry_failure_not_bool(
     assert not entry.supports_unload
 
     mock_migrate_entry = AsyncMock(return_value=None)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -434,6 +435,7 @@ async def test_call_async_migrate_entry_failure_not_bool(
             "comp",
             async_setup_entry=mock_setup_entry,
             async_migrate_entry=mock_migrate_entry,
+            async_unload_entry=mock_unload_entry,
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -452,9 +454,18 @@ async def test_call_async_migrate_entry_failure_not_bool(
         result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 0
-    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
-    assert not entry.supports_unload
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_unload_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.supports_unload
+
+    result = await hass.config_entries.async_unload(entry.entry_id)
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_unload_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.supports_unload
 
 
 async def test_migrate_from_higher_version_not_supported(

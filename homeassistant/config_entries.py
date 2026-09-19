@@ -982,13 +982,8 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value,assignment]
+                setup_result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
 
-            if not isinstance(result, bool):
-                logger.error(  # type: ignore[unreachable]
-                    "%s.async_setup_entry did not return boolean", integration.domain
-                )
-                result = False
         except (
             asyncio.CancelledError,
             SystemExit,
@@ -999,7 +994,8 @@ class ConfigEntry[_DataT = Any]:
             )
             if retry_later:
                 return
-
+        else:
+            result = bool(setup_result in [True, None])
         finally:
             if not result and domain_is_integration:
                 await self._async_process_on_unload(hass)
@@ -1126,21 +1122,21 @@ class ConfigEntry[_DataT = Any]:
 
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
-        try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
-            assert isinstance(result, bool)
+        result = False
+        try:
+            unload_result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
             # Only do side effects if we unloaded the integration
-            if domain_is_integration:  # type: ignore[unreachable]
-                if result:  # type: ignore[unused-ignore]
+            if domain_is_integration:
+                if unload_result in [True, None]:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
 
                     self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 else:
-                    self._async_set_state(
+                    self._async_set_state(  # type: ignore[unreachable]
                         hass, ConfigEntryState.FAILED_UNLOAD, "Unload failed"
                     )
 
@@ -1153,7 +1149,9 @@ class ConfigEntry[_DataT = Any]:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
-        return result  # type: ignore[unreachable]
+        else:
+            result = bool(unload_result in [True, None])
+        return result
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1281,13 +1279,10 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        if not isinstance(result, bool):
-            self.logger.error(
-                "%s.async_migrate_entry did not return boolean", self.domain
-            )
-            return False
-        if result:  # type: ignore[unreachable]
+        migration_result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
+
+        result = bool(migration_result in [True, None])
+        if result:
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
         return result
