@@ -11,6 +11,10 @@ updates:
       - github_actions
     cooldown:
       default-days: 7
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
     ignore:
       # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
       - dependency-name: "github/gh-aw-actions/**"

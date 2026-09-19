@@ -433,7 +433,7 @@ async def test_function_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
@@ -473,6 +473,7 @@ async def test_function_call(
         "content": [
             {
                 "content": '"Test response"',
+                "is_error": False,
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -550,6 +551,7 @@ async def test_function_exception(
                 "content": (
                     '{"error":"HomeAssistantError","error_text":"Test tool exception"}'
                 ),
+                "is_error": True,
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -956,7 +958,7 @@ async def test_extended_thinking_tool_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 

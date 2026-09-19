@@ -29,7 +29,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
@@ -148,7 +147,7 @@ class ModelContextProtocolTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
@@ -188,7 +187,10 @@ class ModelContextProtocolTool(llm.Tool):
             raise HomeAssistantError(
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return llm.ToolResult(
+            data=result.model_dump(exclude_unset=True, exclude_none=True),
+            error=bool(result.isError),
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):

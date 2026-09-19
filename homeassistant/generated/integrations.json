@@ -5225,6 +5225,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "onida_infrared": {
+      "name": "Onida Infrared",
+      "integration_type": "virtual",
+      "supported_by": "gree_infrared"
+    },
     "onkyo": {
       "name": "Onkyo",
       "integration_type": "device",
