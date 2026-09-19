@@ -9,7 +9,7 @@ from typing import Any, override
 from aioimmich import Immich
 from aioimmich.assets.models import ImmichAsset
 from aioimmich.const import CONNECT_ERRORS
-from aioimmich.exceptions import ImmichUnauthorizedError
+from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +81,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self.paused = False
         self._connected: bool | None = None
         self._recent_ids: set[str] = set()
-        self._history: list[ImmichFramesData] = []
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -112,7 +111,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 using_cache=True,
                 status="cached",
             )
-            self._history.append(self.data)
             self._recent_ids.add(asset.asset_id)
 
     @override
@@ -161,6 +159,8 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 status="authentication_required",
                 connection_failed=True,
             )
+        except ImmichError as err:
+            return self._cached_or_raise("upstream_error", err, status="upstream_error")
         except CONNECT_ERRORS as err:
             return self._cached_or_raise(
                 "cannot_connect",
@@ -190,8 +190,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             _LOGGER.info("Immich connection restored for %s", self.config_entry.title)
         self._connected = True
         self._recent_ids.update(asset.asset_id for asset in photos)
-        self._history.append(result)
-        del self._history[:-20]
         try:
             await self.hass.async_add_executor_job(
                 self._cache.write,
@@ -262,12 +260,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Advance to another photo."""
         self.paused = False
         await self.async_refresh()
-
-    async def async_previous(self) -> None:
-        """Return to the previous rendered photo."""
-        if len(self._history) > 1:
-            self._history.pop()
-            self.async_set_updated_data(self._history[-1])
 
     async def async_clear_cache(self) -> None:
         """Clear the persistent image cache."""

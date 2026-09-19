@@ -6,13 +6,19 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from aioimmich.assets.models import ExifInfo
-from aioimmich.exceptions import ImmichUnauthorizedError
+from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
-from homeassistant.components.immich_frames import async_remove_entry
+from homeassistant.components.immich_frames import (
+    async_migrate_entry,
+    async_remove_entry,
+    async_setup_entry,
+)
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_SOURCE,
+    DEFAULT_SOURCE,
 )
 from homeassistant.components.immich_frames.coordinator import (
     ImmichFramesData,
@@ -21,6 +27,7 @@ from homeassistant.components.immich_frames.coordinator import (
 from homeassistant.components.immich_frames.selection import UnsupportedSourceError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -54,6 +61,23 @@ async def test_setup_entry_creates_image(
     assert entry.runtime_data.api.assets.async_view_asset.await_count == 1
 
 
+async def test_setup_entry_translates_parent_not_ready(
+    hass: HomeAssistant,
+) -> None:
+    """A frame retries until its parent Immich entry is loaded."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Waiting frame",
+        data={CONF_IMMICH_ENTRY_ID: "missing-parent"},
+    )
+    entry.add_to_hass(hass)
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await async_setup_entry(hass, entry)
+
+    assert exc_info.value.translation_key == "immich_not_ready"
+
+
 async def test_remove_entry_clears_cached_image(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -70,6 +94,25 @@ async def test_remove_entry_clears_cached_image(
     await async_remove_entry(hass, entry)
 
     assert not await hass.async_add_executor_job(lambda: Path(cache_path).exists())
+
+
+async def test_migrate_entry_adds_default_source(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Version one entries gain the current default source."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Migrated frame",
+        data={CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, entry)
+
+    assert entry.version == 2
+    assert entry.data[CONF_SOURCE] == DEFAULT_SOURCE
+    assert entry.data[CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
 
 
 async def test_coordinator_uses_cache_and_controls(
@@ -103,10 +146,6 @@ async def test_coordinator_uses_cache_and_controls(
     assert result.status == "no_matching_photos"
     assert result.connected is True
 
-    with patch.object(coordinator, "async_set_updated_data") as set_data:
-        coordinator._history.append(result)
-        await coordinator.async_previous()
-        set_data.assert_called_once()
     with patch.object(coordinator._cache, "clear") as clear_cache:
         await coordinator.async_clear_cache()
         clear_cache.assert_called_once()
@@ -140,6 +179,20 @@ async def test_coordinator_starts_parent_reauth_and_translates_unsupported_error
     ):
         await coordinator._async_update_data()
     start_reauth.assert_called_once_with(hass)
+
+    with (
+        patch(
+            "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+            new=AsyncMock(
+                side_effect=ImmichError(
+                    {"message": "server error", "correlationId": "test"}
+                )
+            ),
+        ),
+        pytest.raises(UpdateFailed) as exc_info,
+    ):
+        await coordinator._async_update_data()
+    assert exc_info.value.translation_key == "upstream_error"
 
     with (
         patch(
@@ -204,8 +257,6 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         coordinator.async_update_settings({"interval": 60})
         assert refresh.await_count == 2
         schedule_reload.assert_called_once()
-    coordinator._history.clear()
-    await coordinator.async_previous()
     assert coordinator._orientation_is_portrait(portrait) is True
     assert coordinator._orientation_is_portrait(MOCK_SEARCH_ASSETS[0]) is False
 

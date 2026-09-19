@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .cache import FrameCache
-from .const import CONF_IMMICH_ENTRY_ID
+from .const import CONF_IMMICH_ENTRY_ID, CONF_SOURCE, DEFAULT_SOURCE, DOMAIN
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
 PLATFORMS = [Platform.IMAGE]
@@ -29,7 +29,7 @@ async def async_migrate_entry(
     if entry.version < 2:
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, "source": "all"},
+            data={**entry.data, CONF_SOURCE: DEFAULT_SOURCE},
             version=2,
         )
     return True
@@ -41,7 +41,10 @@ async def async_setup_entry(
     """Set up an Immich frame."""
     immich_entry = hass.config_entries.async_get_entry(entry.data[CONF_IMMICH_ENTRY_ID])
     if immich_entry is None or immich_entry.state is not ConfigEntryState.LOADED:
-        raise ConfigEntryNotReady("The parent Immich entry is not ready")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="immich_not_ready",
+        )
     coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

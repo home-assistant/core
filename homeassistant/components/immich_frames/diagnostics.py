@@ -2,9 +2,13 @@
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_SMART_QUERY
 from .coordinator import ImmichFramesConfigEntry
+
+TO_REDACT = {CONF_SMART_QUERY}
 
 
 async def async_get_config_entry_diagnostics(
@@ -14,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     data = entry.runtime_data.data
     asset = data.asset
     return {
-        "entry": entry.as_dict(),
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "frame": {
             "asset_type": asset.asset_type.value,
             "is_offline": asset.is_offline,

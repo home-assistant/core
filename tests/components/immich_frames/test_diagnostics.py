@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_SMART_QUERY,
 )
 from homeassistant.components.immich_frames.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -25,6 +26,7 @@ async def test_diagnostics_exclude_image_bytes(
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
             CONF_FRAME_NAME: "Living room",
         },
+        options={CONF_SMART_QUERY: "private person"},
     )
     entry.add_to_hass(hass)
 
@@ -38,3 +40,4 @@ async def test_diagnostics_exclude_image_bytes(
     assert "image" not in diagnostics["frame"]
     assert "asset_id" not in diagnostics["frame"]
     assert "local_datetime" not in diagnostics["frame"]
+    assert diagnostics["entry"]["options"][CONF_SMART_QUERY] == "**REDACTED**"
