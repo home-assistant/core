@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
 )
-from homeassistant.helpers import instance_id
+from homeassistant.helpers import device_registry as dr, instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -28,7 +28,6 @@ from homeassistant.helpers.service_info.ssdp import (
 from homeassistant.util.network import is_host_valid
 
 from .const import (
-    ATTR_CID,
     ATTR_MAC,
     CONF_NICKNAME,
     CONF_USE_PSK,
@@ -41,7 +40,7 @@ from .const import (
 class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bravia TV integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -84,12 +83,13 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_connect_device()
 
         system_info = await self.client.get_system_info()
-        cid = system_info[ATTR_CID].lower()
-
+        mac = system_info[ATTR_MAC]
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
-        await self.async_set_unique_id(cid)
-        self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(dr.format_mac(mac))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.device_config[CONF_HOST]}
+        )
 
         return self.async_create_entry(
             title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
