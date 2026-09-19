@@ -222,6 +222,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._mjpeg_url = properties[CONF_MJPEG_URL]
         self._still_image_url = properties[CONF_STILL_IMAGE_URL]
         self._authentication = properties[CONF_AUTHENTICATION]
+        self._auth_headers = {}
 
         if (
             self._authentication == HTTP_BASIC_AUTHENTICATION
