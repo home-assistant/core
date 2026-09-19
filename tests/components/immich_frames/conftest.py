@@ -81,7 +81,6 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
         "test_diagnostics_exclude_image_bytes",
         "test_user_creates_album_frame",
         "test_user_creates_smart_frame",
-        "test_reconfigure_flow_handles_album_and_smart_sources",
         "test_options_flow_updates_display_settings",
         "test_reconfigure_flow_updates_frame_name",
         "test_options_flow_configures_album_source",

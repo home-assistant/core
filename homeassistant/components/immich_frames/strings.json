@@ -68,15 +68,15 @@
       }
     }
   },
-    "entity": {
-        "image": {
+  "entity": {
+    "image": {
       "image": {
         "name": "Image",
         "state_attributes": {
           "open_in_immich": { "name": "Open in Immich" }
         }
       }
-        }
+    }
   },
   "exceptions": {
     "cannot_connect": { "message": "Unable to connect to Immich." },
@@ -106,7 +106,7 @@
       },
       "init": {
         "data": {
-                    "mode": "Portrait mode",
+          "mode": "Portrait mode",
           "orientation": "Orientation",
           "pair_window_days": "Pairing window",
           "photo_fit": "Photo fitting",
@@ -115,7 +115,7 @@
           "time_range": "Time range"
         },
         "data_description": {
-                    "mode": "Allow single portrait photos, paired photos, or pairs only.",
+          "mode": "Allow single portrait photos, paired photos, or pairs only.",
           "orientation": "Limit candidates to a particular image orientation.",
           "pair_window_days": "Maximum date difference between paired portraits.",
           "photo_fit": "Crop photos or show the complete image with padding.",
@@ -135,54 +135,54 @@
     }
   },
   "selector": {
-        "source": {
-            "options": {
-                "all": "All photos",
-                "album": "Albums",
-                "smart": "Keywords"
-            }
-        },
-        "mode": {
-            "options": {
-                "single": "Single portrait photos only",
-                "pairs": "Single and paired portrait photos",
-                "pairs_only": "Paired portrait photos only"
-            }
-        },
-        "orientation": {
-            "options": {
-                "any": "Mixed orientations",
-                "portrait": "Portrait photos only",
-                "landscape": "Landscape photos only",
-                "square": "Square photos only"
-            }
-        },
-        "time_range": {
-            "options": {
-                "all_time": "All time",
-                "1_month": "1 month",
-                "3_months": "3 months",
-                "6_months": "6 months",
-                "1_year": "1 year",
-                "2_years": "2 years",
-                "3_years": "3 years",
-                "4_years": "4 years",
-                "5_years": "5 years",
-                "10_years": "10 years"
-            }
-        },
-        "screen_shape": {
-            "options": {
-                "landscape": "Landscape (1280 × 800)",
-                "portrait": "Portrait (800 × 1280)",
-                "square": "Square (720 × 720)"
-            }
-        },
-        "photo_fit": {
-            "options": {
-                "crop": "Crop to frame",
-                "show_full": "Show full photo"
-            }
-        }
+    "mode": {
+      "options": {
+        "pairs": "Single and paired portrait photos",
+        "pairs_only": "Paired portrait photos only",
+        "single": "Single portrait photos only"
+      }
+    },
+    "orientation": {
+      "options": {
+        "any": "Mixed orientations",
+        "landscape": "Landscape photos only",
+        "portrait": "Portrait photos only",
+        "square": "Square photos only"
+      }
+    },
+    "photo_fit": {
+      "options": {
+        "crop": "Crop to frame",
+        "show_full": "Show full photo"
+      }
+    },
+    "screen_shape": {
+      "options": {
+        "landscape": "Landscape (1280 × 800)",
+        "portrait": "Portrait (800 × 1280)",
+        "square": "Square (720 × 720)"
+      }
+    },
+    "source": {
+      "options": {
+        "album": "Albums",
+        "all": "All photos",
+        "smart": "Keywords"
+      }
+    },
+    "time_range": {
+      "options": {
+        "1_month": "1 month",
+        "1_year": "1 year",
+        "2_years": "2 years",
+        "3_months": "3 months",
+        "3_years": "3 years",
+        "4_years": "4 years",
+        "5_years": "5 years",
+        "6_months": "6 months",
+        "10_years": "10 years",
+        "all_time": "All time"
+      }
     }
+  }
 }
