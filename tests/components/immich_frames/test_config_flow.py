@@ -1,12 +1,13 @@
 """Test the Immich Frames config flow."""
 
+from aiohttp import ClientError
+from aioimmich.exceptions import ImmichUnauthorizedError
 import pytest
 
 from homeassistant.components.immich_frames.const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
-    CONF_INTERVAL,
     CONF_MODE,
     CONF_ORIENTATION,
     CONF_PAIR_WINDOW,
@@ -27,6 +28,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
 
 from tests.common import MockConfigEntry
+
+
+def _options_input(source: str) -> dict[str, object]:
+    """Return valid common options for source-specific flow tests."""
+    return {
+        CONF_SOURCE: source,
+        CONF_MODE: "single",
+        CONF_ORIENTATION: "any",
+        "time_range": "all_time",
+        CONF_PAIR_WINDOW: 2,
+        CONF_SCREEN_SHAPE: "landscape",
+        CONF_PHOTO_FIT: "show_full",
+    }
 
 
 async def test_user_requires_immich(hass: HomeAssistant) -> None:
@@ -178,6 +192,42 @@ async def test_album_flow_aborts_when_no_albums(
     assert result["reason"] == "no_albums"
 
 
+async def test_album_flow_reports_auth_and_connection_errors(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Album loading errors are shown without losing the flow."""
+    api = parent_immich_entry.runtime_data.api
+    api.albums.async_get_all_albums.side_effect = ImmichUnauthorizedError(
+        {"message": "bad", "correlationId": "test"}
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Auth album",
+            CONF_SOURCE: SOURCE_ALBUM,
+        },
+    )
+    assert result["errors"]["base"] == "immich_auth"
+
+    api.albums.async_get_all_albums.side_effect = ClientError("offline")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Offline album",
+            CONF_SOURCE: SOURCE_ALBUM,
+        },
+    )
+    assert result["errors"]["base"] == "albums_unavailable"
+
+
 async def test_user_creates_smart_frame(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -250,13 +300,11 @@ async def test_options_flow_updates_display_settings(
             CONF_PAIR_WINDOW: 3,
             CONF_SCREEN_SHAPE: "portrait",
             CONF_PHOTO_FIT: PHOTO_FIT_CROP,
-            CONF_INTERVAL: 60,
         },
     )
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_MODE] == MODE_PAIRS
-    assert result["data"][CONF_INTERVAL] == 60
 
 
 async def test_options_flow_configures_album_source(
@@ -284,7 +332,6 @@ async def test_options_flow_configures_album_source(
             CONF_PAIR_WINDOW: 2,
             CONF_SCREEN_SHAPE: "landscape",
             CONF_PHOTO_FIT: "show_full",
-            CONF_INTERVAL: 30,
         },
     )
     assert result["type"] == "form"
@@ -293,6 +340,47 @@ async def test_options_flow_configures_album_source(
     )
     assert result["type"] == "create_entry"
     assert result["data"][CONF_ALBUM_IDS]
+
+
+async def test_options_flow_validates_empty_and_missing_parent_albums(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options reject empty album selections and unavailable parents."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Album validation",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Album validation",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_ALBUM)
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_ALBUM_IDS: []}
+    )
+    assert result["errors"]["base"] == "album_required"
+
+    missing_parent = MockConfigEntry(
+        domain=DOMAIN,
+        title="Missing parent",
+        data={
+            CONF_IMMICH_ENTRY_ID: "missing",
+            CONF_FRAME_NAME: "Missing parent",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    missing_parent.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(missing_parent.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_ALBUM)
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "immich_not_ready"
 
 
 async def test_options_flow_configures_smart_source(
@@ -320,7 +408,6 @@ async def test_options_flow_configures_smart_source(
             CONF_PAIR_WINDOW: 2,
             CONF_SCREEN_SHAPE: "landscape",
             CONF_PHOTO_FIT: "show_full",
-            CONF_INTERVAL: 30,
         },
     )
     assert result["type"] == "form"
@@ -329,6 +416,30 @@ async def test_options_flow_configures_smart_source(
     )
     assert result["type"] == "create_entry"
     assert result["data"][CONF_SMART_QUERY] == "mountains"
+
+
+async def test_options_flow_requires_smart_query(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options reject a whitespace-only Smart Search query."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Smart validation",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Smart validation",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_SMART)
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SMART_QUERY: "  "}
+    )
+    assert result["errors"][CONF_SMART_QUERY] == "smart_query_required"
 
 
 async def test_reconfigure_flow_updates_frame_name(
@@ -359,3 +470,36 @@ async def test_reconfigure_flow_updates_frame_name(
 
     assert result["type"] == "abort"
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_handles_album_and_smart_sources(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Reconfiguration exercises each source-specific branch."""
+    for source, source_input in (
+        (SOURCE_ALBUM, {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}),
+        (SOURCE_SMART, {CONF_SMART_QUERY: "mountains"}),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title=f"Reconfigure {source}",
+            data={
+                CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+                CONF_FRAME_NAME: f"Reconfigure {source}",
+                CONF_SOURCE: DEFAULT_SOURCE,
+            },
+        )
+        entry.add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": entry.entry_id},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_FRAME_NAME: entry.title, CONF_SOURCE: source},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], source_input
+        )
+        assert result["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done()

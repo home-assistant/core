@@ -7,6 +7,7 @@ __all__ = ("CONF_MODE", "CONF_SOURCE")
 DOMAIN = "immich_frames"
 CONF_IMMICH_ENTRY_ID = "immich_entry_id"
 CONF_FRAME_NAME = "frame_name"
+CONF_FRAME_ID = "frame_id"
 CONF_ALBUM_IDS = "album_ids"
 CONF_SMART_QUERY = "smart_query"
 CONF_ORIENTATION = "orientation"

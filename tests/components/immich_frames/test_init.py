@@ -19,7 +19,6 @@ from homeassistant.components.immich_frames.coordinator import (
 from homeassistant.components.immich_frames.selection import UnsupportedSourceError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -82,7 +81,7 @@ async def test_coordinator_uses_cache_and_controls(
     ):
         result = await coordinator._async_update_data()
     assert result.status == "no_matching_photos"
-    assert result.connected is False
+    assert result.connected is True
 
     with patch.object(coordinator, "async_set_updated_data") as set_data:
         coordinator._history.append(result)
@@ -93,7 +92,7 @@ async def test_coordinator_uses_cache_and_controls(
         clear_cache.assert_called_once()
 
 
-async def test_coordinator_translates_auth_and_unsupported_errors(
+async def test_coordinator_starts_parent_reauth_and_translates_unsupported_errors(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
     """Authentication remains actionable while unsupported sources are cached."""
@@ -116,9 +115,11 @@ async def test_coordinator_translates_auth_and_unsupported_errors(
                 )
             ),
         ),
-        pytest.raises(ConfigEntryAuthFailed),
+        patch.object(parent_immich_entry, "async_start_reauth") as start_reauth,
+        pytest.raises(UpdateFailed),
     ):
         await coordinator._async_update_data()
+    start_reauth.assert_called_once_with(hass)
 
     with (
         patch(

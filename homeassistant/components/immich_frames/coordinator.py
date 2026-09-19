@@ -13,22 +13,20 @@ from aioimmich.exceptions import ImmichUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .cache import FrameCache
 from .const import (
     CONF_IMMICH_ENTRY_ID,
-    CONF_INTERVAL,
     CONF_MODE,
     CONF_PHOTO_FIT,
     CONF_SCREEN_SHAPE,
-    DEFAULT_INTERVAL,
     DEFAULT_MODE,
     DEFAULT_PHOTO_FIT,
     DOMAIN,
     MODE_PAIRS,
+    MODE_PAIRS_ONLY,
     PHOTO_FIT_FULL,
     screen_shape,
 )
@@ -36,6 +34,7 @@ from .rendering import render
 from .selection import (
     UnsupportedSourceError,
     async_get_candidates,
+    candidates_with_companion,
     choose_asset,
     selected_photos,
 )
@@ -86,15 +85,12 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
-        interval = max(
-            10, min(86400, int(self.options.get(CONF_INTERVAL, DEFAULT_INTERVAL)))
-        )
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=interval),
+            update_interval=timedelta(seconds=30),
         )
 
     @override
@@ -133,7 +129,12 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 return self._cached_or_raise(
                     "no_photos", LookupError("no photos"), status="no_matching_photos"
                 )
-            primary = choose_asset(candidates, self.options, self._recent_ids)
+            selection_candidates = candidates
+            if str(self.options.get(CONF_MODE, DEFAULT_MODE)) == MODE_PAIRS_ONLY:
+                selection_candidates = candidates_with_companion(
+                    candidates, self.options
+                )
+            primary = choose_asset(selection_candidates, self.options, self._recent_ids)
             photos = selected_photos(primary, candidates, self.options)
             payloads = [
                 await self.api.assets.async_view_asset(asset.asset_id, size="preview")
@@ -153,14 +154,19 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 fit,
             )
         except ImmichUnauthorizedError as err:
-            self._connected = False
-            raise ConfigEntryAuthFailed(
-                translation_domain="immich",
-                translation_key="auth_error",
-            ) from err
+            self.immich_entry.async_start_reauth(self.hass)
+            return self._cached_or_raise(
+                "cannot_connect",
+                err,
+                status="authentication_required",
+                connection_failed=True,
+            )
         except CONNECT_ERRORS as err:
             return self._cached_or_raise(
-                "cannot_connect", err, status="upstream_unavailable"
+                "cannot_connect",
+                err,
+                status="upstream_unavailable",
+                connection_failed=True,
             )
         except UnsupportedSourceError as err:
             return self._cached_or_raise(
@@ -204,15 +210,17 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         error: Exception,
         *,
         status: str,
+        connection_failed: bool = False,
     ) -> ImmichFramesData:
         """Use the last rendered image when a recoverable update fails."""
         if self.data is not None:
-            if self._connected is not False:
+            if connection_failed and self._connected is not False:
                 _LOGGER.warning("Immich is unavailable for %s", self.config_entry.title)
-            self._connected = False
+            if connection_failed:
+                self._connected = False
             return replace(
                 self.data,
-                connected=False,
+                connected=not connection_failed,
                 using_cache=True,
                 status=status,
             )
@@ -243,7 +251,12 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
 
     async def async_refresh_now(self) -> None:
         """Refresh immediately."""
-        await self.async_refresh()
+        paused = self.paused
+        self.paused = False
+        try:
+            await self.async_refresh()
+        finally:
+            self.paused = paused
 
     async def async_next(self) -> None:
         """Advance to another photo."""

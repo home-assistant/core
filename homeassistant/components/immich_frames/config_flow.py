@@ -1,8 +1,9 @@
 """Config and options flows for Immich Frames."""
 
-from collections.abc import Mapping
 from typing import Any, override
+from uuid import uuid4
 
+from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichUnauthorizedError
 import probatio
@@ -30,9 +31,9 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_ALBUM_IDS,
+    CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
-    CONF_INTERVAL,
     CONF_MODE,
     CONF_ORIENTATION,
     CONF_PAIR_WINDOW,
@@ -41,7 +42,6 @@ from .const import (
     CONF_SMART_QUERY,
     CONF_SOURCE,
     CONF_TIME_RANGE,
-    DEFAULT_INTERVAL,
     DEFAULT_MODE,
     DEFAULT_ORIENTATION,
     DEFAULT_PAIR_WINDOW,
@@ -50,6 +50,10 @@ from .const import (
     DEFAULT_SOURCE,
     DEFAULT_TIME_RANGE,
     DOMAIN,
+    MODE_OPTIONS,
+    ORIENTATION_OPTIONS,
+    PHOTO_FIT_CROP,
+    PHOTO_FIT_FULL,
     SCREEN_SIZES,
     SOURCE_ALBUM,
     SOURCE_ALL,
@@ -58,29 +62,9 @@ from .const import (
 )
 from .coordinator import ImmichFramesConfigEntry
 
-SOURCE_LABELS = {
-    SOURCE_ALL: "All photos",
-    SOURCE_ALBUM: "Albums",
-    SOURCE_SMART: "Keywords",
-}
-MODE_LABELS = {
-    "single": "Single portrait photos only",
-    "pairs": "Single and paired portrait photos",
-    "pairs_only": "Paired portrait photos only",
-}
-ORIENTATION_LABELS = {
-    "any": "Mixed orientations",
-    "portrait": "Portrait photos only",
-    "landscape": "Landscape photos only",
-    "square": "Square photos only",
-}
-
-
-def _options(values: Mapping[str, str]) -> list[SelectOptionDict]:
-    """Create selector options with stable values."""
-    return [
-        SelectOptionDict(value=value, label=label) for value, label in values.items()
-    ]
+FRAME_SOURCE_OPTIONS = (SOURCE_ALL, SOURCE_ALBUM, SOURCE_SMART)
+PHOTO_FIT_OPTIONS = (PHOTO_FIT_CROP, PHOTO_FIT_FULL)
+SCREEN_SHAPE_OPTIONS = tuple(SCREEN_SIZES)
 
 
 class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -153,7 +137,8 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SOURCE, default=DEFAULT_SOURCE
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=_options(SOURCE_LABELS),
+                            options=list(FRAME_SOURCE_OPTIONS),
+                            translation_key=CONF_SOURCE,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
@@ -248,15 +233,18 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PAIR_WINDOW: DEFAULT_PAIR_WINDOW,
             CONF_SCREEN_SHAPE: DEFAULT_SCREEN_SHAPE,
             CONF_PHOTO_FIT: DEFAULT_PHOTO_FIT,
-            "interval": DEFAULT_INTERVAL,
         }
         if self._reconfigure_entry is not None:
+            data[CONF_FRAME_ID] = self._reconfigure_entry.data.get(
+                CONF_FRAME_ID, uuid4().hex
+            )
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
                 data_updates=data,
                 title=data[CONF_FRAME_NAME],
             )
-        unique_id = f"{data[CONF_IMMICH_ENTRY_ID]}|{data[CONF_FRAME_NAME]}"
+        data[CONF_FRAME_ID] = uuid4().hex
+        unique_id = f"{data[CONF_IMMICH_ENTRY_ID]}|{data[CONF_FRAME_ID]}"
         return await self._async_create_unique_entry(unique_id, data)
 
     async def _async_create_unique_entry(
@@ -275,7 +263,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.state is ConfigEntryState.LOADED
         }
 
-    def _parent_api(self):
+    def _parent_api(self) -> Immich | None:
         """Return the selected parent client, if available."""
         entry = self.hass.config_entries.async_get_entry(
             self._data.get(CONF_IMMICH_ENTRY_ID, "")
@@ -301,7 +289,8 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             default=self._data.get(CONF_SOURCE, DEFAULT_SOURCE),
                         ): SelectSelector(
                             SelectSelectorConfig(
-                                options=_options(SOURCE_LABELS),
+                                options=list(FRAME_SOURCE_OPTIONS),
+                                translation_key=CONF_SOURCE,
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
@@ -347,35 +336,26 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
         api = getattr(getattr(parent, "runtime_data", None), "api", None)
         if api is None:
             return self.async_abort(reason="immich_not_ready")
-        albums = await api.albums.async_get_all_albums()
+        errors: dict[str, str] = {}
+        try:
+            albums = await api.albums.async_get_all_albums()
+        except ImmichUnauthorizedError:
+            errors["base"] = "immich_auth"
+            albums = []
+        except CONNECT_ERRORS:
+            errors["base"] = "albums_unavailable"
+            albums = []
+        if not albums and not errors:
+            return self.async_abort(reason="no_albums")
         if user_input is not None:
             album_ids = user_input.get(CONF_ALBUM_IDS, [])
-            if not {album.album_id for album in albums}.issuperset(album_ids):
-                return self.async_show_form(
-                    step_id="album",
-                    data_schema=probatio.Schema(
-                        {
-                            probatio.Required(
-                                CONF_ALBUM_IDS,
-                                default=self._data.get(CONF_ALBUM_IDS, []),
-                            ): SelectSelector(
-                                SelectSelectorConfig(
-                                    options=[
-                                        SelectOptionDict(
-                                            value=a.album_id, label=a.album_name
-                                        )
-                                        for a in albums
-                                    ],
-                                    multiple=True,
-                                    mode=SelectSelectorMode.DROPDOWN,
-                                )
-                            )
-                        }
-                    ),
-                    errors={"base": "album_unavailable"},
-                )
-            self._data.update(user_input)
-            return self._finish()
+            if not album_ids:
+                errors["base"] = "album_required"
+            elif not {album.album_id for album in albums}.issuperset(album_ids):
+                errors["base"] = "album_unavailable"
+            else:
+                self._data.update(user_input)
+                return self._finish()
         return self.async_show_form(
             step_id="album",
             data_schema=probatio.Schema(
@@ -394,15 +374,21 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     )
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_smart(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure smart-search source options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self._data.update(user_input)
-            return self._finish()
+            query = user_input[CONF_SMART_QUERY].strip()
+            if not query:
+                errors[CONF_SMART_QUERY] = "smart_query_required"
+            else:
+                self._data[CONF_SMART_QUERY] = query
+                return self._finish()
         return self.async_show_form(
             step_id="smart",
             data_schema=probatio.Schema(
@@ -412,9 +398,10 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     ): str
                 }
             ),
+            errors=errors,
         )
 
-    def _settings_schema(self):
+    def _settings_schema(self) -> probatio.Schema:
         """Return common display settings."""
         return probatio.Schema(
             {
@@ -422,7 +409,8 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     CONF_SOURCE, default=self._data.get(CONF_SOURCE, DEFAULT_SOURCE)
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(SOURCE_LABELS),
+                        options=list(FRAME_SOURCE_OPTIONS),
+                        translation_key=CONF_SOURCE,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -430,7 +418,9 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     CONF_MODE, default=self._data.get(CONF_MODE, DEFAULT_MODE)
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(MODE_LABELS), mode=SelectSelectorMode.DROPDOWN
+                        options=list(MODE_OPTIONS),
+                        translation_key=CONF_MODE,
+                        mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
                 probatio.Required(
@@ -438,7 +428,8 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     default=self._data.get(CONF_ORIENTATION, DEFAULT_ORIENTATION),
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(ORIENTATION_LABELS),
+                        options=list(ORIENTATION_OPTIONS),
+                        translation_key=CONF_ORIENTATION,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -447,9 +438,8 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     default=self._data.get(CONF_TIME_RANGE, DEFAULT_TIME_RANGE),
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(
-                            {key: key.replace("_", " ") for key in TIME_RANGE_MONTHS}
-                        ),
+                        options=list(TIME_RANGE_MONTHS),
+                        translation_key=CONF_TIME_RANGE,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -466,12 +456,8 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     default=self._data.get(CONF_SCREEN_SHAPE, DEFAULT_SCREEN_SHAPE),
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(
-                            {
-                                shape: f"{shape.title()} ({size[0]} × {size[1]})"
-                                for shape, size in SCREEN_SIZES.items()
-                            }
-                        ),
+                        options=list(SCREEN_SHAPE_OPTIONS),
+                        translation_key=CONF_SCREEN_SHAPE,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -480,18 +466,9 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                     default=self._data.get(CONF_PHOTO_FIT, DEFAULT_PHOTO_FIT),
                 ): SelectSelector(
                     SelectSelectorConfig(
-                        options=_options(
-                            {"crop": "Crop to frame", "show_full": "Show full photo"}
-                        ),
+                        options=list(PHOTO_FIT_OPTIONS),
+                        translation_key=CONF_PHOTO_FIT,
                         mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-                probatio.Required(
-                    CONF_INTERVAL,
-                    default=self._data.get(CONF_INTERVAL, DEFAULT_INTERVAL),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=10, max=86400, step=1, mode=NumberSelectorMode.BOX
                     )
                 ),
             }

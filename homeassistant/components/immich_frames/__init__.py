@@ -1,13 +1,16 @@
 """The Immich Frames integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import CONF_IMMICH_ENTRY_ID
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
-PLATFORMS = [Platform.BUTTON, Platform.IMAGE, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.IMAGE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("immich_frames")
 
 
@@ -33,6 +36,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> bool:
     """Set up an Immich frame."""
+    immich_entry = hass.config_entries.async_get_entry(entry.data[CONF_IMMICH_ENTRY_ID])
+    if immich_entry is None or immich_entry.state is not ConfigEntryState.LOADED:
+        raise ConfigEntryNotReady("The parent Immich entry is not ready")
     coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

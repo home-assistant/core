@@ -96,7 +96,7 @@ def _filter_assets(
         if cutoff is not None and captured < _as_utc(cutoff):
             continue
         detected = _orientation(asset)
-        if orientation != ORIENTATION_ANY and detected not in (orientation, None):
+        if orientation not in (ORIENTATION_ANY, detected):
             continue
         if captured > current:
             continue
@@ -152,6 +152,22 @@ def choose_asset(
     return random.SystemRandom().choice(available or candidates)
 
 
+def candidates_with_companion(
+    candidates: list[ImmichAsset], options: dict[str, object]
+) -> list[ImmichAsset]:
+    """Return candidates that can satisfy pairs-only mode."""
+    raw_window = options.get(CONF_PAIR_WINDOW, DEFAULT_PAIR_WINDOW)
+    try:
+        window = max(0, int(float(str(raw_window))))
+    except TypeError, ValueError:
+        window = DEFAULT_PAIR_WINDOW
+    return [
+        asset
+        for asset in candidates
+        if choose_companion(asset, candidates, window) is not None
+    ]
+
+
 def choose_companion(
     primary: ImmichAsset, candidates: list[ImmichAsset], window_days: int
 ) -> ImmichAsset | None:
@@ -164,8 +180,12 @@ def choose_companion(
         if asset.asset_id != primary.asset_id
         and _orientation(asset) == ORIENTATION_PORTRAIT
         and asset.checksum != primary.checksum
-        and abs((_as_utc(asset.local_datetime) - _as_utc(primary.local_datetime)).days)
-        <= window_days
+        and abs(
+            (
+                _as_utc(asset.local_datetime) - _as_utc(primary.local_datetime)
+            ).total_seconds()
+        )
+        <= window_days * 86400
     ]
     return min(
         eligible,
@@ -188,9 +208,10 @@ def selected_photos(
     if mode not in (MODE_PAIRS, MODE_PAIRS_ONLY):
         return (primary,)
     raw_window = options.get(CONF_PAIR_WINDOW, DEFAULT_PAIR_WINDOW)
-    window = (
-        int(raw_window) if isinstance(raw_window, (int, str)) else DEFAULT_PAIR_WINDOW
-    )
+    try:
+        window = max(0, int(float(str(raw_window))))
+    except TypeError, ValueError:
+        window = DEFAULT_PAIR_WINDOW
     companion = choose_companion(primary, candidates, window)
     if companion is None and mode == MODE_PAIRS_ONLY:
         raise LookupError("no companion")

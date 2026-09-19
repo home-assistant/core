@@ -81,6 +81,7 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
         "test_diagnostics_exclude_image_bytes",
         "test_user_creates_album_frame",
         "test_user_creates_smart_frame",
+        "test_reconfigure_flow_handles_album_and_smart_sources",
         "test_options_flow_updates_display_settings",
         "test_reconfigure_flow_updates_frame_name",
         "test_options_flow_configures_album_source",
@@ -89,18 +90,29 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
         "test_album_flow_validates_empty_and_unknown_albums",
         "test_album_flow_aborts_when_no_albums",
         "test_smart_flow_requires_a_query",
+        "test_album_flow_reports_auth_and_connection_errors",
+        "test_options_flow_validates_empty_and_missing_parent_albums",
+        "test_options_flow_requires_smart_query",
+        "test_reconfigure_flow_handles_album_and_smart_sources",
     }:
         translations.append("component.immich.")
-    if request.node.name == "test_reconfigure_flow_updates_frame_name":
+    if request.node.name in {
+        "test_reconfigure_flow_updates_frame_name",
+        "test_reconfigure_flow_handles_album_and_smart_sources",
+    }:
         translations.append("component.homeassistant.")
+    if request.node.name in {
+        "test_options_flow_validates_empty_and_missing_parent_albums",
+        "test_options_flow_requires_smart_query",
+    }:
+        translations.append("component.immich_frames.")
     if request.node.name in {
         "test_user_creates_frame",
         "test_setup_entry_creates_image",
         "test_diagnostics_exclude_image_bytes",
         "test_user_creates_album_frame",
         "test_user_creates_smart_frame",
+        "test_reconfigure_flow_handles_album_and_smart_sources",
     }:
         translations.append("component.image.")
-        translations.append("component.button.")
-        translations.append("component.switch.")
     return translations

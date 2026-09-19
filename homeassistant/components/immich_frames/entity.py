@@ -33,3 +33,11 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
             model="Photo frame",
             configuration_url=self.coordinator.immich_entry.runtime_data.configuration_url,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return false when the last update could not reach Immich."""
+        return super().available and (
+            self.coordinator.data is None or self.coordinator.data.connected
+        )
