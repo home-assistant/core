@@ -53,7 +53,7 @@
 # name: test_climate_entities[climate.test_controller_residential_thermostat_v2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 72,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
