@@ -1,6 +1,6 @@
 """Test the Model Context Protocol Server init module."""
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from http import HTTPStatus
 import json
@@ -9,6 +9,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from aiohttp.hdrs import (
+    ACCESS_CONTROL_ALLOW_HEADERS,
+    ACCESS_CONTROL_ALLOW_ORIGIN,
+    ACCESS_CONTROL_REQUEST_HEADERS,
+    ACCESS_CONTROL_REQUEST_METHOD,
+    ORIGIN,
+)
 import mcp
 import mcp.client.session
 import mcp.client.sse
@@ -42,6 +49,7 @@ from homeassistant.helpers import (
     llm,
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -55,10 +63,15 @@ _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
 DEVICE_ID_META_KEY = "io.home-assistant/device_id"
+DEVICE_ID_HEADER = "Home-Assistant-Device-Id"
+TRUSTED_ORIGIN = "https://mcp.example.com"
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 type MCPClientFactory = Callable[
     [HomeAssistant, str, str],
     AbstractAsyncContextManager[mcp.client.session.ClientSession],
+]
+type MCPRequestSender = Callable[
+    [JsonObjectType, dict[str, str]], Awaitable[JsonObjectType]
 ]
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
@@ -102,8 +115,11 @@ class _StubTool(llm.Tool):
 
 
 @pytest.fixture
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def setup_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, hass_config: ConfigType
+) -> None:
     """Set up the config entry."""
+    assert await async_setup_component(hass, "http", hass_config)
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -157,6 +173,67 @@ async def sse_response_reader(
         line = (await anext(it)).decode()
         assert line == "\r\n"
         yield event, data
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{"http": {"cors_allowed_origins": [TRUSTED_ORIGIN]}}]
+)
+@pytest.mark.parametrize(
+    ("url", "method"),
+    [
+        pytest.param(STREAMABLE_API, "POST", id="streamable"),
+        pytest.param(
+            f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}", "POST", id="streamable-api"
+        ),
+        pytest.param(SSE_API, "GET", id="sse"),
+        pytest.param(
+            MESSAGES_API.format(session_id="test-session"), "POST", id="sse-messages"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("origin", "expected_status", "expected_origin", "device_header_allowed"),
+    [
+        pytest.param(TRUSTED_ORIGIN, HTTPStatus.OK, TRUSTED_ORIGIN, True, id="allowed"),
+        pytest.param(
+            "https://untrusted.example.com",
+            HTTPStatus.FORBIDDEN,
+            None,
+            False,
+            id="untrusted",
+        ),
+    ],
+)
+async def test_device_id_header_preflight(
+    hass_client_no_auth: ClientSessionGenerator,
+    url: str,
+    method: str,
+    origin: str,
+    expected_status: HTTPStatus,
+    expected_origin: str | None,
+    device_header_allowed: bool,
+) -> None:
+    """Allow the device header only for configured origins."""
+    client = await hass_client_no_auth()
+
+    response = await client.options(
+        url,
+        headers={
+            ORIGIN: origin,
+            ACCESS_CONTROL_REQUEST_METHOD: method,
+            ACCESS_CONTROL_REQUEST_HEADERS: (
+                "authorization,content-type,home-assistant-device-id"
+            ),
+        },
+    )
+
+    assert response.status == expected_status
+    assert response.headers.get(ACCESS_CONTROL_ALLOW_ORIGIN) == expected_origin
+    allowed_headers = {
+        header.strip().lower()
+        for header in response.headers.get(ACCESS_CONTROL_ALLOW_HEADERS, "").split(",")
+    }
+    assert ("home-assistant-device-id" in allowed_headers) is device_header_allowed
 
 
 async def test_http_sse(
@@ -417,6 +494,62 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
 
 
+@pytest.fixture
+async def mcp_request_sender(
+    mcp_protocol: str,
+    hass_client: ClientSessionGenerator,
+) -> AsyncGenerator[MCPRequestSender]:
+    """Send raw requests, preserving metadata values and per-request headers."""
+    client = await hass_client()
+    endpoint_url = STREAMABLE_API
+    sse_response = None
+    reader = None
+    if mcp_protocol == "sse":
+        sse_response = await client.get(
+            SSE_API, headers={DEVICE_ID_HEADER: "connection-device"}
+        )
+        assert sse_response.status == HTTPStatus.OK
+        reader = sse_response_reader(sse_response)
+        event, endpoint_url = await anext(reader)
+        assert event == "endpoint"
+
+    async def send_request(
+        message: JsonObjectType, headers: dict[str, str]
+    ) -> JsonObjectType:
+        response = await client.post(
+            endpoint_url,
+            json={"jsonrpc": "2.0", "id": "request-id", **message},
+            headers={"Accept": CONTENT_TYPE_JSON, **headers},
+        )
+        assert response.status == HTTPStatus.OK
+        if reader is None:
+            return await response.json()
+        event, data = await anext(reader)
+        assert event == "message"
+        return json.loads(data)
+
+    await send_request(INITIALIZE_MESSAGE, {DEVICE_ID_HEADER: "initialize-device"})
+    if reader is not None:
+        response = await client.post(
+            endpoint_url,
+            json={"jsonrpc": "2.0", "method": "notifications/initialized"},
+        )
+        assert response.status == HTTPStatus.OK
+
+    try:
+        yield send_request
+    finally:
+        if sse_response is not None:
+            sse_response.close()
+
+
+@pytest.mark.parametrize(
+    ("metadata", "headers"),
+    [
+        pytest.param({DEVICE_ID_META_KEY: "test-device"}, {}, id="metadata"),
+        pytest.param({}, {DEVICE_ID_HEADER: "test-device"}, id="header"),
+    ],
+)
 @pytest.mark.parametrize(
     ("mcp_request", "result_type"),
     [
@@ -466,35 +599,100 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     ],
 )
 async def test_request_device_id(
-    hass: HomeAssistant,
-    mcp_url: str,
-    mcp_client: MCPClientFactory,
-    hass_supervisor_access_token: str,
+    mcp_request_sender: MCPRequestSender,
     mcp_request: mcp.types.ClientRequest,
     result_type: type[mcp.types.Result],
+    metadata: dict[str, str],
+    headers: dict[str, str],
 ) -> None:
     """Apply the caller device to each request without retaining it in the session."""
-    request_data = mcp_request.model_dump(by_alias=True, exclude_none=True)
-    request_data.setdefault("params", {})["_meta"] = {DEVICE_ID_META_KEY: "test-device"}
+    request_data = mcp_request.model_dump(mode="json", by_alias=True, exclude_none=True)
+    request_data.setdefault("params", {})["_meta"] = metadata
 
     with patch(
         "homeassistant.helpers.llm.async_get_api", wraps=llm.async_get_api
     ) as mock_get_api:
-        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-            await session.send_request(
-                mcp.types.ClientRequest.model_validate(request_data), result_type
-            )
-            assert mock_get_api.await_count > 0
-            device_contexts = [call.args[2] for call in mock_get_api.await_args_list]
-            assert {context.device_id for context in device_contexts} == {"test-device"}
-            mock_get_api.reset_mock()
+        response = await mcp_request_sender(request_data, headers)
+        result_type.model_validate(response["result"])
+        assert mock_get_api.await_count > 0
+        device_contexts = [call.args[2] for call in mock_get_api.await_args_list]
+        assert {context.device_id for context in device_contexts} == {"test-device"}
+        mock_get_api.reset_mock()
 
-            await session.send_request(mcp_request, result_type)
+        request_data = mcp_request.model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+        response = await mcp_request_sender(
+            request_data, {DEVICE_ID_HEADER: "other-device"}
+        )
+        result_type.model_validate(response["result"])
+        assert mock_get_api.await_count > 0
+        changed_contexts = [call.args[2] for call in mock_get_api.await_args_list]
+        assert {context.device_id for context in changed_contexts} == {"other-device"}
+        mock_get_api.reset_mock()
+
+        response = await mcp_request_sender(request_data, {})
+        result_type.model_validate(response["result"])
 
     assert mock_get_api.await_count > 0
     contexts = [call.args[2] for call in mock_get_api.await_args_list]
     assert {context.device_id for context in contexts} == {None}
     assert {context.device_id for context in device_contexts} == {"test-device"}
+    assert {context.device_id for context in changed_contexts} == {"other-device"}
+
+
+@pytest.mark.parametrize(
+    ("metadata", "headers", "expected_device_id"),
+    [
+        pytest.param(
+            {DEVICE_ID_META_KEY: "metadata-device"},
+            {DEVICE_ID_HEADER: "header-device"},
+            "metadata-device",
+            id="metadata-precedence",
+        ),
+        pytest.param(
+            {DEVICE_ID_META_KEY: None},
+            {DEVICE_ID_HEADER: "header-device"},
+            None,
+            id="null-metadata-precedence",
+        ),
+        pytest.param(
+            {DEVICE_ID_META_KEY: ""},
+            {DEVICE_ID_HEADER: "header-device"},
+            "",
+            id="empty-metadata-precedence",
+        ),
+        pytest.param(
+            {"other": "value"},
+            {DEVICE_ID_HEADER: "header-device"},
+            "header-device",
+            id="unrelated-metadata-fallback",
+        ),
+        pytest.param(
+            {},
+            {"home-assistant-device-id": "header-device"},
+            "header-device",
+            id="lowercase-header",
+        ),
+    ],
+)
+async def test_request_device_id_header_precedence(
+    mcp_request_sender: MCPRequestSender,
+    metadata: dict[str, str | None],
+    headers: dict[str, str],
+    expected_device_id: str | None,
+) -> None:
+    """Use the header only when caller device metadata is absent."""
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", wraps=llm.async_get_api
+    ) as mock_get_api:
+        response = await mcp_request_sender(
+            {"method": "tools/list", "params": {"_meta": metadata}}, headers
+        )
+
+    mcp.types.ListToolsResult.model_validate(response["result"])
+    mock_get_api.assert_awaited_once()
+    assert mock_get_api.await_args.args[2].device_id == expected_device_id
 
 
 @pytest.mark.parametrize(
@@ -506,27 +704,29 @@ async def test_request_device_id(
     ],
 )
 async def test_request_metadata_without_device_id(
-    hass: HomeAssistant,
-    mcp_url: str,
-    mcp_client: MCPClientFactory,
-    hass_supervisor_access_token: str,
+    mcp_request_sender: MCPRequestSender,
     metadata: dict[str, str | None],
 ) -> None:
-    """Metadata without a caller device keeps the default LLM context."""
+    """Requests do not inherit device headers from the connection or initialize."""
     with patch(
         "homeassistant.helpers.llm.async_get_api", wraps=llm.async_get_api
     ) as mock_get_api:
-        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-            await session.list_tools(
-                params=mcp.types.PaginatedRequestParams(
-                    _meta=mcp.types.RequestParams.Meta.model_validate(metadata)
-                )
-            )
+        response = await mcp_request_sender(
+            {"method": "tools/list", "params": {"_meta": metadata}}, {}
+        )
 
+    mcp.types.ListToolsResult.model_validate(response["result"])
     mock_get_api.assert_awaited_once()
     assert mock_get_api.await_args.args[2].device_id is None
 
 
+@pytest.mark.parametrize(
+    "headers",
+    [
+        pytest.param({}, id="no-header"),
+        pytest.param({DEVICE_ID_HEADER: "header-device"}, id="valid-header"),
+    ],
+)
 @pytest.mark.parametrize(
     "device_id",
     [
@@ -537,39 +737,47 @@ async def test_request_metadata_without_device_id(
     ],
 )
 async def test_request_invalid_device_id(
-    hass: HomeAssistant,
-    mcp_url: str,
-    mcp_client: MCPClientFactory,
-    hass_supervisor_access_token: str,
+    mcp_request_sender: MCPRequestSender,
     device_id: int | bool | list[str] | dict[str, str],
+    headers: dict[str, str],
 ) -> None:
-    """Reject caller device metadata with an invalid type."""
-    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        with pytest.raises(
-            McpError, match="io.home-assistant/device_id must be a string"
-        ):
-            await session.list_tools(
-                params=mcp.types.PaginatedRequestParams(
-                    _meta=mcp.types.RequestParams.Meta.model_validate(
-                        {DEVICE_ID_META_KEY: device_id}
-                    )
-                )
-            )
+    """Reject invalid caller device metadata even when a valid header is supplied."""
+    response = await mcp_request_sender(
+        {"method": "tools/list", "params": {"_meta": {DEVICE_ID_META_KEY: device_id}}},
+        headers,
+    )
+
+    assert (
+        mcp.types.JSONRPCError.model_validate(response).error.message
+        == "io.home-assistant/device_id must be a string"
+    )
 
 
+@pytest.mark.parametrize(
+    "headers",
+    [
+        pytest.param({}, id="no-header"),
+        pytest.param({DEVICE_ID_HEADER: "header-device"}, id="valid-header"),
+    ],
+)
 async def test_tool_call_invalid_device_id(
     hass: HomeAssistant,
-    mcp_url: str,
-    mcp_client: MCPClientFactory,
-    hass_supervisor_access_token: str,
+    mcp_request_sender: MCPRequestSender,
+    headers: dict[str, str],
 ) -> None:
     """Invalid caller metadata returns a tool error without performing the action."""
-    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.call_tool(
-            name="intent__HassTurnOn",
-            arguments={"name": "kitchen light"},
-            meta={DEVICE_ID_META_KEY: 123},
-        )
+    response = await mcp_request_sender(
+        {
+            "method": "tools/call",
+            "params": {
+                "name": "intent__HassTurnOn",
+                "arguments": {"name": "kitchen light"},
+                "_meta": {DEVICE_ID_META_KEY: 123},
+            },
+        },
+        headers,
+    )
+    result = mcp.types.CallToolResult.model_validate(response["result"])
 
     assert result.isError
     assert result.content == [
