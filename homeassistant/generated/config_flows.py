@@ -372,6 +372,7 @@ FLOWS = {
         "imeon_inverter",
         "imgw_pib",
         "immich",
+        "immich_frames",
         "imou",
         "improv_ble",
         "incomfort",
