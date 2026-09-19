@@ -367,3 +367,36 @@ async def test_reconfigure_two_entries_to_the_same_irk_at_once(
     assert second.data == {"irk": other_irk}
     assert result_1["reason"] == "reconfigure_successful"
     assert first.data == {"irk": NEW_IRK}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reconfigure_to_the_irk_it_already_has(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test giving a device its own IRK changes nothing and keeps it loaded."""
+    await async_mock_config_entry(hass, NEW_IRK)
+    entry = hass.config_entries.async_get_entry(NEW_IRK)
+    before = {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+
+    _inject_new_irk_device(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with patch.object(
+        hass.config_entries, "async_unload", wraps=hass.config_entries.async_unload
+    ) as unload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"irk": NEW_IRK}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert unload.call_count == 0
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data == {"irk": NEW_IRK}
+    assert {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == before
