@@ -138,6 +138,12 @@
       "boombox": {
         "default": "mdi:volume-high"
       },
+      "disable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug-off"
+      },
+      "enable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug"
+      },
       "enable_keyless_driving": {
         "default": "mdi:car-key"
       },
