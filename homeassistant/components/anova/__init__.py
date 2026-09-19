@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,13 +60,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
     entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    coordinators[0].async_start_disconnect_listener()
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Disconnect from WS
+        for coordinator in entry.runtime_data.coordinators:
+            await coordinator.async_shutdown()
+        ws_handler = entry.runtime_data.api.websocket_handler
+        if ws_handler is not None and ws_handler._message_listener is not None:  # noqa: SLF001
+            ws_handler._message_listener.cancel()  # noqa: SLF001
         await entry.runtime_data.api.disconnect_websocket()
     return unload_ok
 
