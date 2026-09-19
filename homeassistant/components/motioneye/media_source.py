@@ -99,8 +99,8 @@ class MotionEyeMediaProxyView(HomeAssistantView):
         kind: str,
         preview: str,
         path: str,
-    ) -> web.Response:
-        """Return saved media fetched with the authenticated motionEye session."""
+    ) -> web.StreamResponse:
+        """Stream saved media fetched with the authenticated motionEye session."""
         entry = self.hass.config_entries.async_get_entry(config_id)
         if (
             not entry
@@ -117,20 +117,47 @@ class MotionEyeMediaProxyView(HomeAssistantView):
                 path.encode("ascii"), altchars=b"-_", validate=True
             ).decode("utf-8")
             camera = int(camera_id)
-        except Error, UnicodeDecodeError, UnicodeEncodeError, ValueError:
+        except (Error, UnicodeDecodeError, UnicodeEncodeError, ValueError):
             return web.Response(status=400)
 
-        data = await cast(Any, entry.runtime_data.client).async_get_media(
+        range_header = request.headers.get("Range")
+
+        async with cast(
+            Any, entry.runtime_data.client
+        ).async_get_media_stream(
             camera,
             media_path,
             image=kind == "images",
             preview=preview == "1",
-        )
+            range_header=range_header,
+        ) as upstream:
+            headers = {}
+            for header in (
+                "Accept-Ranges",
+                "Content-Length",
+                "Content-Range",
+                "Content-Type",
+            ):
+                if value := upstream.headers.get(header):
+                    headers[header] = value
 
-        return web.Response(
-            body=data,
-            content_type="image/jpeg" if preview == "1" else MIME_TYPE_MAP[kind],
-        )
+            response = web.StreamResponse(
+                status=upstream.status,
+                headers=headers,
+            )
+
+            if "Content-Type" not in headers:
+                response.content_type = (
+                    "image/jpeg" if preview == "1" else MIME_TYPE_MAP[kind]
+                )
+
+            await response.prepare(request)
+
+            async for chunk in upstream.content.iter_chunked(64 * 1024):
+                await response.write(chunk)
+
+            await response.write_eof()
+            return response
 
 
 # Hierarchy:
