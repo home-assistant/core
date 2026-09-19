@@ -984,6 +984,8 @@ class ConfigEntry[_DataT = Any]:
             ):
                 setup_result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
 
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
             if setup_result is None:
                 result = True
             elif not isinstance(setup_result, bool):  # type: ignore[unreachable]
@@ -1142,8 +1144,10 @@ class ConfigEntry[_DataT = Any]:
                 result = unload_result  # type: ignore[unreachable]
 
             # Only do side effects if we unloaded the integration
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
             if domain_is_integration:
-                if result is not False:  # type: ignore[unused-ignore]
+                if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
@@ -1293,6 +1297,8 @@ class ConfigEntry[_DataT = Any]:
             return False
 
         migration_result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
+        # Custom components can continue to return a boolean
+        # See https://github.com/home-assistant/architecture/discussions/1463
         if migration_result is None:
             result = True
         else:
