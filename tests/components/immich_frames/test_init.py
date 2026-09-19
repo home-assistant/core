@@ -24,6 +24,7 @@ from homeassistant.components.immich_frames.coordinator import (
 )
 from homeassistant.components.immich_frames.selection import UnsupportedSourceError
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -340,6 +341,25 @@ async def test_coordinator_reuses_candidates_until_invalidated(
     assert first is second
     assert third == first
     assert get_candidates.await_count == 2
+
+
+async def test_coordinator_discards_account_bound_state_when_parent_changes(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """A parent account change cannot reuse the old account's frame state."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    coordinator._candidate_cache = list(MOCK_SEARCH_ASSETS)
+    coordinator._candidate_cache_updated_at = dt_util.utcnow()
+
+    hass.config_entries.async_update_entry(
+        parent_immich_entry,
+        data={**parent_immich_entry.data, CONF_API_KEY: "replacement-key"},
+    )
+
+    assert coordinator._refresh_parent() is True
+    assert coordinator.data is None
+    assert coordinator._candidate_cache is None
+    assert coordinator._recent_ids == set()
 
 
 def _coordinator_for_test(

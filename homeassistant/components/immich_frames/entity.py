@@ -41,3 +41,7 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
         return super().available and (
             self.coordinator.data is None or self.coordinator.data.connected
         )
+
+    async def async_update(self) -> None:
+        """Refresh the coordinator and invalidate its candidate index."""
+        await self.coordinator.async_refresh_now()

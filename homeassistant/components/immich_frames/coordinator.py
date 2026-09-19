@@ -16,6 +16,7 @@ from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -74,13 +75,18 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         immich_entry = hass.config_entries.async_get_entry(
             self.options[CONF_IMMICH_ENTRY_ID]
         )
-        if immich_entry is None or not getattr(immich_entry, "runtime_data", None):
-            raise UpdateFailed(
+        if (
+            immich_entry is None
+            or immich_entry.state is not ConfigEntryState.LOADED
+            or not getattr(immich_entry, "runtime_data", None)
+        ):
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="immich_not_ready",
             )
         self.immich_entry = immich_entry
         self.api: Immich = immich_entry.runtime_data.api
+        self._parent_identity_value = self._parent_identity(immich_entry)
         self.paused = False
         self._connected: bool | None = None
         self._recent_ids: set[str] = set()
@@ -105,7 +111,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._cache.read,
             self.options,
             self.immich_entry.entry_id,
-            self._parent_identity(),
+            self._parent_identity_value,
         )
         if cached is not None:
             asset, image, rendered_at = cached
@@ -204,7 +210,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 result.image,
                 self.options,
                 self.immich_entry.entry_id,
-                self._parent_identity(),
+                self._parent_identity_value,
                 result.updated_at,
             )
         except OSError, ValueError:
@@ -213,11 +219,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
 
     def _refresh_parent(self) -> bool:
         """Refresh the parent entry and client after a parent reload."""
-        previous_identity = (
-            self._parent_identity()
-            if getattr(self.immich_entry, "runtime_data", None)
-            else None
-        )
         immich_entry = self.hass.config_entries.async_get_entry(
             self.options[CONF_IMMICH_ENTRY_ID]
         )
@@ -227,10 +228,16 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             or not getattr(immich_entry, "runtime_data", None)
         ):
             return False
+        parent_identity = self._parent_identity(immich_entry)
+        if parent_identity != self._parent_identity_value:
+            self._invalidate_candidate_cache()
+            self._recent_ids.clear()
+            self._recent_order.clear()
+            self.data = None
+            self._connected = None
+            self._parent_identity_value = parent_identity
         self.immich_entry = immich_entry
         self.api = immich_entry.runtime_data.api
-        if self._parent_identity() != previous_identity:
-            self._invalidate_candidate_cache()
         return True
 
     async def _async_get_candidates(self) -> list[ImmichAsset]:
@@ -252,11 +259,12 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._candidate_cache = None
         self._candidate_cache_updated_at = None
 
-    def _parent_identity(self) -> str:
+    def _parent_identity(self, entry: ConfigEntry | None = None) -> str:
         """Return a non-secret identity for the configured Immich account."""
-        endpoint = str(self.immich_entry.runtime_data.configuration_url)
+        parent_entry = entry or self.immich_entry
+        endpoint = str(parent_entry.runtime_data.configuration_url)
         key_fingerprint = hashlib.sha256(
-            str(self.immich_entry.data.get(CONF_API_KEY, "")).encode()
+            str(parent_entry.data.get(CONF_API_KEY, "")).encode()
         ).hexdigest()
         return f"{endpoint}|{key_fingerprint}"
 
