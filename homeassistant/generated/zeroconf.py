@@ -780,6 +780,12 @@ ZEROCONF = {
                 "SYSTYPE": "ra2select*",
             },
         },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
+            },
+        },
     ],
     "_mass._tcp.local.": [
         {
