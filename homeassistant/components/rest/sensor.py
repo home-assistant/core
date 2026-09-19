@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 from xml.parsers.expat import ExpatError
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -24,9 +24,9 @@ from homeassistant.helpers.trigger_template_entity import (
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
+from .coordinator import RestCoordinator
 from .data import RestData
 from .entity import (
     RestEntity,
@@ -38,7 +38,7 @@ from .util import parse_json_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA}),
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )
@@ -76,7 +76,7 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         config: ConfigType,
         trigger_entity_config: ConfigType,

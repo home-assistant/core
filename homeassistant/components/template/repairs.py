@@ -1,6 +1,6 @@
 """Repairs platform for the template integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -62,9 +62,9 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="select_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DEVICE_ID,
                         description={
                             "suggested_value": entry.options.get(CONF_DEVICE_ID)

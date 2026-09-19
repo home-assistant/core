@@ -1,0 +1,17 @@
+{
+  "result": null,
+  "uiText": null,
+  "destination": {
+    "id": "AAAAAAAAAAAAAAAA",
+    "name": "Xbox One S",
+    "powerState": "ConnectedStandby",
+    "consoleType": "XboxOneS",
+    "osVersion": "10.0.26100.9426"
+  },
+  "userInfo": null,
+  "opId": "11111111111111111111111111111111",
+  "status": {
+    "errorCode": "OK",
+    "errorMessage": null
+  }
+}
