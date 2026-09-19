@@ -892,6 +892,6 @@ async def test_model_args(
 
     model_args = mock_create_stream.call_args.kwargs.copy()
     model_args.pop("input")
-    assert model_args.pop("user") == result.conversation_id
+    assert model_args.pop("safety_identifier") == result.conversation_id
     assert model_args.pop("prompt_cache_key") == subentry.subentry_id
     assert model_args == snapshot
