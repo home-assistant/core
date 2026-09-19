@@ -138,6 +138,18 @@ def assert_entity_counts(
     assert len(hass.states.async_all(platform.value)) == enabled
 
 
+def registered_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
 def normalize_name(name: str) -> str:
     """Normalize name."""
 
