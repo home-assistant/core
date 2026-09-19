@@ -4,6 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 from math import isfinite
+import mimetypes
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,7 @@ from mastodon.Mastodon import (
 )
 import probatio
 
-from homeassistant.components import camera, image
+from homeassistant.components import camera, image, tts
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
 from homeassistant.core import (
@@ -46,6 +47,8 @@ from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
     ATTR_FIELDS,
+    ATTR_FOCUS_X,
+    ATTR_FOCUS_Y,
     ATTR_HEADER,
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
@@ -54,17 +57,20 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
+    ATTR_MEDIA_SOURCE,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
     ATTR_QUOTED_STATUS,
     ATTR_STATUS,
+    ATTR_THUMBNAIL,
     ATTR_VALUE,
     ATTR_VISIBILITY,
     DOMAIN,
     LOGGER,
 )
 from .coordinator import MastodonConfigEntry
+from .issue import async_deprecated_media_path
 from .utils import get_media_type
 
 MAX_DURATION_SECONDS = 315360000  # 10 years
@@ -116,6 +122,23 @@ SERVICE_UNMUTE_ACCOUNT_SCHEMA = probatio.Schema(
     }
 )
 SERVICE_POST = "post"
+SCHEMA_MEDIA = probatio.Schema(
+    {
+        probatio.Required(ATTR_MEDIA_SOURCE): MediaSelector(
+            {"accept": ["image/*", "video/*", "audio/*", "application/*"]}
+        ),
+        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
+        probatio.Optional(ATTR_FOCUS_X): probatio.All(
+            float, probatio.Range(min=-1, max=1)
+        ),
+        probatio.Optional(ATTR_FOCUS_Y): probatio.All(
+            float, probatio.Range(min=-1, max=1)
+        ),
+        probatio.Optional(ATTR_THUMBNAIL): MediaSelector(
+            {"accept": ["image/*", "video/*", "application/*"]}
+        ),
+    }
+)
 SERVICE_POST_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
@@ -129,7 +152,14 @@ SERVICE_POST_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_IDEMPOTENCY_KEY): str,
         probatio.Optional(ATTR_CONTENT_WARNING): str,
         probatio.Optional(ATTR_LANGUAGE): str,
-        probatio.Optional(ATTR_MEDIA): str,
+        probatio.Optional(ATTR_MEDIA): probatio.Any(
+            probatio.All(
+                cv.ensure_list,
+                probatio.Length(max=4),
+                [SCHEMA_MEDIA],
+            ),
+            str,
+        ),
         probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
         probatio.Optional(ATTR_MEDIA_WARNING): bool,
         probatio.Optional(ATTR_IN_REPLY_TO): str,
@@ -308,6 +338,7 @@ async def _async_unmute_account(call: ServiceCall) -> ServiceResponse:
 
 async def _async_post(call: ServiceCall) -> ServiceResponse:
     """Post a status."""
+
     entry: MastodonConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -328,8 +359,65 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
-    media_path: str | None = call.data.get(ATTR_MEDIA)
+
+    if isinstance(media_path := call.data.get(ATTR_MEDIA), str):
+        async_deprecated_media_path(call.hass)
+    else:
+        media_path = None
+
+    media: list[dict[str, Any]] = (
+        []
+        if isinstance(call.data.get(ATTR_MEDIA), str)
+        else call.data.get(ATTR_MEDIA, [])
+    )
+
+    resolved: list[dict[str, Any]] = []
+    for media_item in media:
+        content, mime_type = await _resolve_media(
+            call.hass, media_item[ATTR_MEDIA_SOURCE]
+        )
+
+        if mime_type and mime_type.startswith("audio/") and len(media) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_audio_not_allowed_with_other_media",
+            )
+        if (
+            mime_type
+            and not mime_type.startswith("audio/")
+            and media_item.get(ATTR_THUMBNAIL)
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_thumbnail_not_allowed",
+            )
+        thumbnail_content, thumbnail_mime_type = (
+            (None, None)
+            if not media_item.get(ATTR_THUMBNAIL)
+            else await _resolve_media(call.hass, media_item[ATTR_THUMBNAIL])
+        )
+        if thumbnail_mime_type and not thumbnail_mime_type.startswith("image/"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_thumbnail_not_an_image",
+                translation_placeholders={"mime_type": thumbnail_mime_type},
+            )
+        resolved.append(
+            {
+                "media_file": content,
+                "mime_type": mime_type,
+                "description": media_item.get(ATTR_MEDIA_DESCRIPTION),
+                "focus": (
+                    media_item.get(ATTR_FOCUS_X, 0),
+                    media_item.get(ATTR_FOCUS_Y, 0),
+                ),
+                "thumbnail": thumbnail_content,
+                "thumbnail_mime_type": thumbnail_mime_type,
+            }
+        )
+
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
+
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
     in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
     quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
@@ -356,6 +444,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             sensitive=media_warning,
             in_reply_to_id=in_reply_to,
             quoted_status_id=quoted_status,
+            media=resolved,
         )
     )
     if call.return_response:
@@ -368,7 +457,7 @@ def _post(
 ) -> Status | ScheduledStatus:
     """Post to Mastodon."""
 
-    media_data: MediaAttachment | None = None
+    media_data: list[MediaAttachment] = []
 
     media_path = kwargs.get("media_path")
     if media_path:
@@ -382,10 +471,12 @@ def _post(
         media_type = get_media_type(media_path)
         media_description = kwargs.get("media_description")
         try:
-            media_data = client.media_post(
-                media_file=media_path,
-                mime_type=media_type,
-                description=media_description,
+            media_data.append(
+                client.media_post(
+                    media_file=media_path,
+                    mime_type=media_type,
+                    description=media_description,
+                )
             )
 
         except MastodonAPIError as err:
@@ -395,17 +486,26 @@ def _post(
                 translation_placeholders={"media_path": media_path},
             ) from err
 
+    for media in kwargs.get("media", []):
+        try:
+            media_data.append(client.media_post(**media))
+        except MastodonAPIError as err:
+            LOGGER.debug("Full exception:", exc_info=err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_upload_media",
+            ) from err
+
     kwargs.pop("media_path", None)
     kwargs.pop("media_description", None)
+    kwargs.pop("media", None)
 
-    media_ids: str | None = None
-    if media_data:
-        media_ids = media_data.id
     try:
         response: Status | ScheduledStatus = client.status_post(
-            media_ids=media_ids, **kwargs
+            media_ids=media_data, **kwargs
         )
     except MastodonAPIError as err:
+        LOGGER.debug("Full exception:", exc_info=err)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
@@ -483,6 +583,10 @@ async def _resolve_media(
         entity_id = media_content_id.removeprefix("media-source://image/")
         img = await image.async_get_image(hass, entity_id)
         return img.content, img.content_type
+
+    if media_content_id.startswith("media-source://tts/"):
+        ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
+        return audio, mimetypes.types_map.get(f".{ext}")
 
     media = await async_resolve_media(hass, media_source["media_content_id"], None)
 

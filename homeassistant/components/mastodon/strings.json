@@ -104,8 +104,17 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
+    "media_audio_not_allowed_with_other_media": {
+      "message": "Audio media is not allowed with other media."
+    },
     "media_source_not_supported": {
       "message": "Media source {media_content_id} is not supported."
+    },
+    "media_thumbnail_not_allowed": {
+      "message": "Thumbnail is only allowed with audio media."
+    },
+    "media_thumbnail_not_an_image": {
+      "message": "Thumbnail has mime type {mime_type}. Only images are allowed."
     },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
@@ -131,8 +140,17 @@
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
     },
+    "unable_to_upload_media": {
+      "message": "Unable to upload media."
+    },
     "update_failed": {
       "message": "Update failed."
+    }
+  },
+  "issues": {
+    "deprecated_media_path": {
+      "description": "Using an absolute path in `{option}` for the `{action}` action is deprecated and will no longer be supported in a future release.\n\nPlease update your automations and scripts to use the new schema with media source selectors.\n\n## Example automation:\n\n{example_yaml}",
+      "title": "Deprecated absolute path in `{action}` action"
     }
   },
   "selector": {
@@ -145,6 +163,30 @@
         "value": {
           "description": "The value for this field.",
           "name": "Value"
+        }
+      }
+    },
+    "media": {
+      "fields": {
+        "focus_x": {
+          "description": "Sets the horizontal focal point used when previewing or cropping an image. Use -1.0 for the far left, 0.0 for the center, and 1.0 for the far right.",
+          "name": "Horizontal focus"
+        },
+        "focus_y": {
+          "description": "Sets the vertical focal point used when previewing or cropping an image. Use -1.0 for the top, 0.0 for the center, and 1.0 for the bottom.",
+          "name": "Vertical focus"
+        },
+        "media_description": {
+          "description": "Alternative text describing the media for people who are blind or visually impaired. Providing alt text improves accessibility and may be required by some Mastodon instances.",
+          "name": "Alt text"
+        },
+        "media_source": {
+          "description": "Image, video, or audio to attach to the post. If a camera source is selected, a snapshot of its current view is captured when the post is sent.",
+          "name": "Media source"
+        },
+        "thumbnail": {
+          "description": "Custom thumbnail for an audio attachment. If a camera source is selected, a snapshot of its current view is captured when the post is sent.",
+          "name": "Thumbnail"
         }
       }
     },
@@ -225,7 +267,7 @@
           "name": "Language"
         },
         "media": {
-          "description": "Attach an image or video to the post.",
+          "description": "Attach up to 4 images, videos, or 1 audio file to the post.",
           "name": "Media"
         },
         "media_description": {
