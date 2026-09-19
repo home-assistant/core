@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -210,6 +210,8 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
 
         self.data_key = data_key
         self.entity_description = description
+        self._total_seen_nonzero = False
+        self._remember_total()
 
         meter = coordinator.meter
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
@@ -232,3 +234,32 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         return self.entity_description.value_fn(
             self.coordinator.data, self.data_key, self.entity_description.scale
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the entity is available.
+
+        A total-increasing register cannot drop to 0 once it has counted. The
+        API occasionally delivers such a zero reading; passing it on would make
+        the recorder treat it as a meter reset and, once the real value returns,
+        book the whole register as new consumption in the long-term statistics.
+        """
+        return super().available and not (
+            self._total_seen_nonzero and self.native_value == 0
+        )
+
+    def _remember_total(self) -> None:
+        """Remember once a total-increasing register has counted."""
+        if (
+            self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING
+            and self.native_value
+        ):
+            self._total_seen_nonzero = True
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._remember_total()
+        super()._handle_coordinator_update()
