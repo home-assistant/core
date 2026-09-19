@@ -3,7 +3,7 @@
 from collections.abc import Hashable
 from dataclasses import dataclass
 from enum import StrEnum, unique
-from typing import Annotated
+from typing import Annotated, Any
 
 import probatio
 from probatio import Key
@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_PLATFORM,
+    EntityCategory,
     Platform,
 )
 from homeassistant.helpers import selector
@@ -135,8 +136,31 @@ SyncState = Annotated[bool | str | int, SyncStateSelector()]
 SyncStateAllowFalse = Annotated[bool | str | int, SyncStateSelector(allow_false=True)]
 
 
+@dataclass(kw_only=True, slots=True)
+class BaseEntityConfig:
+    """Common UI configuration of a KNX entity."""
+
+    name: str | None = None
+    device_info: str | None = None
+    entity_category: EntityCategory | None = None
+
+    @property
+    def xknx_name(self) -> str:
+        """Name of the xknx device, empty when HA names the entity after its device."""
+        return self.name or ""
+
+
+def _to_base_entity_config(data: dict[str, Any]) -> BaseEntityConfig:
+    return BaseEntityConfig(**data)
+
+
 def base_entity_schema(platform: Platform) -> probatio.All:
-    """Return the base entity schema for a platform."""
+    """Return the base entity schema for a platform.
+
+    Stays a mapping schema: the entity part isn't serialized for the frontend
+    and its category validation depends on the platform. The dataclass is
+    constructed from the validated mapping.
+    """
     return probatio.All(
         {
             probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
@@ -160,7 +184,20 @@ def base_entity_schema(platform: Platform) -> probatio.All:
             ),
             msg="One of `Device` or `Name` is required",
         ),
+        _to_base_entity_config,
     )
+
+
+@dataclass(kw_only=True, slots=True)
+class KnxEntityData[KnxT]:
+    """Validated UI entity data: the common `entity` and the platform `knx` part."""
+
+    entity: BaseEntityConfig
+    knx: KnxT
+
+
+def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
+    return KnxEntityData(entity=data[CONF_ENTITY], knx=data[DOMAIN])
 
 
 @dataclass(kw_only=True, slots=True)
@@ -1118,14 +1155,17 @@ ENTITY_STORE_DATA_SCHEMA = probatio.All(
         {
             platform: probatio.Schema(
                 {
-                    probatio.Required(CONF_DATA): probatio.Schema(
-                        {
-                            probatio.Required(CONF_ENTITY): base_entity_schema(
-                                platform
-                            ),
-                            probatio.Required(DOMAIN): knx_schema,
-                        },
-                        extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                    probatio.Required(CONF_DATA): probatio.All(
+                        probatio.Schema(
+                            {
+                                probatio.Required(CONF_ENTITY): base_entity_schema(
+                                    platform
+                                ),
+                                probatio.Required(DOMAIN): knx_schema,
+                            },
+                            extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                        ),
+                        _to_entity_data,
                     ),
                 },
                 extra=probatio.ALLOW_EXTRA,  # eg. "type" from WS-endpoint when validating directly
