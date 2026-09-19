@@ -855,6 +855,8 @@ async def async_setup_entry(
 class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
     """Representation of a SMA sensor."""
 
+    _attr_device_info: DeviceInfo
+
     def __init__(
         self,
         coordinator: SMADataUpdateCoordinator,
@@ -897,9 +899,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
     @override
     def name(self) -> str:
         """Return the name of the sensor prefixed with the device name."""
-        if self._attr_device_info is None or not (
-            name_prefix := self._attr_device_info.get("name")
-        ):
+        if not (name_prefix := self._attr_device_info.get("name")):
             name_prefix = "SMA"
 
         return f"{name_prefix} {super().name}"

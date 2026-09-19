@@ -244,8 +244,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
         # Use a fallback list of sources
         except ValueError:
             # Try to get software version from device
-            if self.device_info:
-                sw_version = self.device_info.get("sw_version")
+            sw_version = self._attr_device_info.get("sw_version")
             if not sw_version:
                 sw_version = self._software_status.software_version
 
