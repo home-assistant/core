@@ -98,8 +98,8 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 )
 _HASS_LOADER = "template.hass_loader"
 
-# Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+# Match ints and floats, including scientific notation. -1.0, 1, +5, 5.0, 1e3
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?(?:[eE][+-]?\d+)?$")
 
 EVAL_CACHE_SIZE = 512
 
@@ -251,7 +251,7 @@ def _parse_result(render_result: str) -> Any:
     path, which handles the edge cases ("", ".", "+") identically.
     """
     if _IS_NUMERIC.match(render_result):
-        if "." in render_result:
+        if "." in render_result or "e" in render_result.lower():
             try:
                 return float(render_result)
             except ValueError:
@@ -283,7 +283,7 @@ def _cached_parse_result(render_result: str) -> Any:
     # render, by not returning right here. The evaluation of strings
     # resulting in strings impacts quotes, to avoid unexpected
     # output; use the original render instead of the evaluated one.
-    # Complex and scientific values are also unexpected. Filter them out.
+    # Complex values are unexpected. Filter them out.
     if (
         # Filter out string and complex numbers
         not isinstance(result, (str, complex))
