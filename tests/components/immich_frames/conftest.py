@@ -1,6 +1,8 @@
 """Fixtures for Immich Frames tests."""
 
+from collections.abc import AsyncIterator
 from io import BytesIO
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -20,6 +22,15 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.immich import const as immich_const
+
+
+@pytest.fixture(autouse=True)
+async def clean_frame_caches(hass: HomeAssistant) -> AsyncIterator[None]:
+    """Remove frame cache files created by each test."""
+    yield
+    storage_path = Path(hass.config.path(".storage"))
+    for cache_path in storage_path.glob("immich_frames_*.json"):
+        await hass.async_add_executor_job(cache_path.unlink, True)
 
 
 @pytest.fixture
