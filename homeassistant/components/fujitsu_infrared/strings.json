@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
+    },
+    "error": {
+      "no_hvac_modes": "Select at least one supported mode."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "hvac_modes": "Supported modes",
+          "infrared_emitter_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]",
+          "protocol": "Temperature steps"
+        },
+        "data_description": {
+          "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
+          "infrared_emitter_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used.",
+          "protocol": "Half degrees are only carried by the extended message format. Select it if your remote's display shows half degrees, such as 24.5."
+        },
+        "description": "Select an infrared emitter and the modes your Fujitsu AC supports.",
+        "title": "Set up Fujitsu AC"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "fujitsu_ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "hvac_modes": {
+      "options": {
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat": "Heat",
+        "heat_cool": "Heat/Cool"
+      }
+    },
+    "protocol": {
+      "options": {
+        "extended": "Half degrees",
+        "standard": "Whole degrees"
+      }
+    }
+  }
+}
