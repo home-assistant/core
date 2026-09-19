@@ -3,7 +3,6 @@
 from copy import deepcopy
 from typing import Any
 
-from jsonschema import Draft202012Validator
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -43,12 +42,13 @@ def test_optional_fields(field: dict[str, Any], snapshot: SnapshotAssertion) -> 
     }
     adjust_schema(schema)
 
-    Draft202012Validator.check_schema(schema)
-    validator = Draft202012Validator(schema)
-    assert validator.is_valid({"value": None})
-    assert validator.is_valid({"value": "a"})
-    assert not validator.is_valid({})
-    assert not validator.is_valid({"value": []})
+    validator = probatio.from_json_schema(schema)
+    validator({"value": None})
+    validator({"value": "a"})
+    with pytest.raises(probatio.Invalid):
+        validator({})
+    with pytest.raises(probatio.Invalid):
+        validator({"value": []})
     assert schema == snapshot
 
 
@@ -80,9 +80,8 @@ def test_nested_references(snapshot: SnapshotAssertion) -> None:
     }
     adjust_schema(schema)
 
-    Draft202012Validator.check_schema(schema)
-    validator = Draft202012Validator(schema)
-    assert validator.is_valid(
+    validator = probatio.from_json_schema(schema)
+    validator(
         {
             "node": {
                 "value": "a",
@@ -92,7 +91,8 @@ def test_nested_references(snapshot: SnapshotAssertion) -> None:
             }
         }
     )
-    assert not validator.is_valid({"node": {"value": "a"}})
+    with pytest.raises(probatio.Invalid):
+        validator({"node": {"value": "a"}})
     assert schema == snapshot
 
 
@@ -111,9 +111,10 @@ def test_recursive_reference_description(caplog: pytest.LogCaptureFixture) -> No
         "anyOf": [{"$ref": "#"}, {"type": "null"}],
         "description": "The next node",
     }
-    validator = Draft202012Validator(schema)
-    assert validator.is_valid({"child": {"child": None}})
-    assert not validator.is_valid({"child": {"child": "invalid"}})
+    validator = probatio.from_json_schema(schema)
+    validator({"child": {"child": None}})
+    with pytest.raises(probatio.Invalid):
+        validator({"child": {"child": "invalid"}})
     assert "Removed reference annotations" not in caplog.text
 
 
@@ -141,9 +142,10 @@ def test_reference_annotations(
 
     assert schema == snapshot
     assert caplog.messages == snapshot(name="logs")
-    validator = Draft202012Validator(schema)
-    assert validator.is_valid({"value": "a"})
-    assert not validator.is_valid({"value": "c"})
+    validator = probatio.from_json_schema(schema)
+    validator({"value": "a"})
+    with pytest.raises(probatio.Invalid):
+        validator({"value": "c"})
 
 
 @pytest.mark.parametrize(
@@ -233,7 +235,6 @@ def test_selector_schemas(
     schema = _format_structured_output(
         probatio.Schema({probatio.Optional("value"): field}), None
     )
-    Draft202012Validator.check_schema(schema)
     assert schema == snapshot
 
 
@@ -325,7 +326,6 @@ def test_recoverable_schemas(
     """Recover safely and let the API decide whether it supports new features."""
     schema = {"type": "object", "properties": {"value": field}, "required": ["value"]}
     adjust_schema(schema)
-    Draft202012Validator.check_schema(schema)
     assert schema == snapshot
 
 
@@ -390,7 +390,9 @@ def test_reference_targets(
         "required": ["alias"],
     }
     adjust_schema(schema)
-    validator = Draft202012Validator(schema)
-    assert validator.is_valid({"value": None, "alias": "a"})
-    assert not validator.is_valid({"value": None, "alias": 1})
-    assert not validator.is_valid({"value": None, "alias": None})
+    validator = probatio.from_json_schema(schema)
+    validator({"value": None, "alias": "a"})
+    with pytest.raises(probatio.Invalid):
+        validator({"value": None, "alias": 1})
+    with pytest.raises(probatio.Invalid):
+        validator({"value": None, "alias": None})
