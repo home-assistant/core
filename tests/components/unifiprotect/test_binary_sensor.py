@@ -1194,3 +1194,24 @@ async def test_public_only_binary_sensor_sense_registry_cleanup(
     await setup_public_only()
 
     assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_object_detected_needs_advertised_types(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A camera advertising no smart detection types gets no object detected sensor.
+
+    The gate reads the advertised types, not the private ``has_smart_detect``
+    flag, so that both device models answer it the same way.
+    """
+    doorbell.feature_flags.has_smart_detect = True
+    doorbell.feature_flags.smart_detect_types = []
+
+    await init_entry(hass, ufp, [doorbell])
+
+    keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac)
+    assert "motion" in keys
+    assert "smart_obj_any" not in keys
