@@ -1,7 +1,10 @@
 """Test Local Media Source."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 import logging
-from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -75,6 +78,42 @@ TEST_IMAGES = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MockStreamContent:
+    """Mock an aiohttp streaming response body."""
+
+    def __init__(self, data: bytes) -> None:
+        """Initialize mock streaming content."""
+        self.data = data
+
+    async def iter_chunked(self, size: int) -> AsyncIterator[bytes]:
+        """Yield response data in chunks."""
+        for offset in range(0, len(self.data), size):
+            yield self.data[offset : offset + size]
+
+
+def mock_media_stream(
+    client,
+    data: bytes,
+    *,
+    status: int = 200,
+    headers: dict[str, str] | None = None,
+) -> MagicMock:
+    """Mock motionEye saved-media streaming."""
+    stream_mock = MagicMock()
+
+    @asynccontextmanager
+    async def stream(*args, **kwargs):
+        yield SimpleNamespace(
+            status=status,
+            headers=headers or {},
+            content=MockStreamContent(data),
+        )
+
+    stream_mock.side_effect = stream
+    client.async_get_media_stream = stream_mock
+    return stream_mock
 
 
 @pytest.fixture(autouse=True)
@@ -396,7 +435,11 @@ async def test_media_proxy_image(
 ) -> None:
     """Test fetching saved image media through the Home Assistant proxy."""
     client = create_mock_motioneye_client()
-    client.async_get_media = AsyncMock(return_value=b"image")
+    stream_mock = mock_media_stream(
+        client,
+        b"image",
+        headers={"Content-Type": "image/jpeg", "Content-Length": "5"},
+    )
     config = await setup_mock_motioneye_config_entry(hass, client=client)
     await async_get_media_source(hass)
 
@@ -407,9 +450,14 @@ async def test_media_proxy_image(
 
     assert response.status == 200
     assert response.content_type == "image/jpeg"
+    assert response.headers["Content-Length"] == "5"
     assert await response.read() == b"image"
-    client.async_get_media.assert_awaited_once_with(
-        1, "/foo.jpg", image=True, preview=False
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.jpg",
+        image=True,
+        preview=False,
+        range_header=None,
     )
 
 
@@ -418,7 +466,7 @@ async def test_media_proxy_movie_preview(
 ) -> None:
     """Test fetching a movie preview through the Home Assistant proxy."""
     client = create_mock_motioneye_client()
-    client.async_get_media = AsyncMock(return_value=b"preview")
+    stream_mock = mock_media_stream(client, b"preview")
     config = await setup_mock_motioneye_config_entry(hass, client=client)
     await async_get_media_source(hass)
 
@@ -430,8 +478,88 @@ async def test_media_proxy_movie_preview(
     assert response.status == 200
     assert response.content_type == "image/jpeg"
     assert await response.read() == b"preview"
-    client.async_get_media.assert_awaited_once_with(
-        1, "/foo.mp4", image=False, preview=True
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.mp4",
+        image=False,
+        preview=True,
+        range_header=None,
+    )
+
+
+async def test_media_proxy_movie_range(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test forwarding a Range request and partial-content response."""
+    client = create_mock_motioneye_client()
+    stream_mock = mock_media_stream(
+        client,
+        b"0123",
+        status=206,
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": "4",
+            "Content-Range": "bytes 0-3/10",
+            "Content-Type": "video/mp4",
+        },
+    )
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/movies/0/L2Zvby5tcDQ=",
+        headers={"Range": "bytes=0-3"},
+    )
+
+    assert response.status == 206
+    assert response.content_type == "video/mp4"
+    assert response.headers["Accept-Ranges"] == "bytes"
+    assert response.headers["Content-Length"] == "4"
+    assert response.headers["Content-Range"] == "bytes 0-3/10"
+    assert await response.read() == b"0123"
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.mp4",
+        image=False,
+        preview=False,
+        range_header="bytes=0-3",
+    )
+
+
+async def test_media_proxy_movie_range_not_satisfiable(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test forwarding an unsatisfiable Range response."""
+    client = create_mock_motioneye_client()
+    stream_mock = mock_media_stream(
+        client,
+        b"",
+        status=416,
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Range": "bytes */10",
+        },
+    )
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/movies/0/L2Zvby5tcDQ=",
+        headers={"Range": "bytes=100-200"},
+    )
+
+    assert response.status == 416
+    assert response.headers["Accept-Ranges"] == "bytes"
+    assert response.headers["Content-Range"] == "bytes */10"
+    assert await response.read() == b""
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.mp4",
+        image=False,
+        preview=False,
+        range_header="bytes=100-200",
     )
 
 
@@ -440,6 +568,7 @@ async def test_media_proxy_rejects_non_ascii_path(
 ) -> None:
     """Test rejecting a malformed non-ASCII encoded media path."""
     client = create_mock_motioneye_client()
+    stream_mock = mock_media_stream(client, b"")
     config = await setup_mock_motioneye_config_entry(hass, client=client)
     await async_get_media_source(hass)
 
@@ -449,7 +578,7 @@ async def test_media_proxy_rejects_non_ascii_path(
     )
 
     assert response.status == 400
-    client.async_get_media.assert_not_awaited()
+    stream_mock.assert_not_called()
 
 
 async def test_media_proxy_rejects_invalid_base64_path(
@@ -457,6 +586,7 @@ async def test_media_proxy_rejects_invalid_base64_path(
 ) -> None:
     """Test rejecting malformed ASCII Base64 media path."""
     client = create_mock_motioneye_client()
+    stream_mock = mock_media_stream(client, b"")
     config = await setup_mock_motioneye_config_entry(hass, client=client)
     await async_get_media_source(hass)
 
@@ -466,13 +596,16 @@ async def test_media_proxy_rejects_invalid_base64_path(
     )
 
     assert response.status == 400
-    client.async_get_media.assert_not_awaited()
+    stream_mock.assert_not_called()
 
 
 async def test_media_proxy_rejects_config_entry_from_other_domain(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test rejecting a config entry from another domain."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
     config = MockConfigEntry(
         domain="test",
         state=ConfigEntryState.LOADED,
