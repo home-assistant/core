@@ -21,6 +21,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "event_in_progress": {
+        "name": "Event in progress"
+      }
+    },
     "sensor": {
       "end": {
         "name": "Event end"
