@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 
+from aioamazondevices.const.devices import DEVICE_TYPE_AQM
 from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
     NOTIFICATION_REMINDER,
@@ -119,6 +120,83 @@ TEST_DEVICE_2 = AmazonDevice(
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=True,
+)
+
+TEST_DEVICE_AQM_SN = "aqm_test_serial_number"
+TEST_DEVICE_AQM = AmazonDevice(
+    account_name="Air Quality Monitor Test",
+    # Air Quality Monitors are discovered via a separate GraphQL endpoint and
+    # never expose voice, media or notification capabilities.
+    capabilities=[],
+    device_family="AIR_QUALITY_MONITOR",
+    device_type=DEVICE_TYPE_AQM,
+    household_device=False,
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members={TEST_DEVICE_AQM_SN: DEVICE_TYPE_AQM},
+    parent_clusters=[],
+    online=True,
+    serial_number=TEST_DEVICE_AQM_SN,
+    manufacturer="Amazon",
+    model="Air Quality Monitor",
+    hardware_version=None,
+    software_version="aqm_test_software_version",
+    entity_id="66666666-7777-8888-9999-000000000000",
+    endpoint_id="G1234567890123456789012345678C",
+    sensors={
+        "Humidity": AmazonDeviceSensor(
+            name="Humidity",
+            value="45",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="%",
+        ),
+        "VOC": AmazonDeviceSensor(
+            name="VOC",
+            value="120",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
+        "PM25": AmazonDeviceSensor(
+            name="PM25",
+            value="8",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="MicroGramsPerCubicMeter",
+        ),
+        "PM10": AmazonDeviceSensor(
+            name="PM10",
+            value="12",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="MicroGramsPerCubicMeter",
+        ),
+        "CO": AmazonDeviceSensor(
+            name="CO",
+            value="0.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="ppm",
+        ),
+        "Air Quality": AmazonDeviceSensor(
+            name="Air Quality",
+            value="42",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
+    },
+    notifications_supported=False,
+    notifications={},
+    media_player_supported=False,
+    communication_settings={},
+    voice_control_supported=False,
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
