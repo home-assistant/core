@@ -183,7 +183,6 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 
     _attr_supported_features = UpdateEntityFeature.INSTALL
     entity_description: RpcBluTrvUpdateDescription
-    _id: int
 
     def __init__(
         self,
@@ -249,6 +248,10 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.installed_version,
             self.latest_version,
         )
+
+        if TYPE_CHECKING:
+            assert self._id is not None
+
         await self.coordinator.device.blu_trv_update_firmware(self._id)
 
 
