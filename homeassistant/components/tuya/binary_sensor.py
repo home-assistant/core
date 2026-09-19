@@ -138,6 +138,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="temp_error",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_E2",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="E2",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key=f"{DPCode.FAULT}_CL",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
