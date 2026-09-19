@@ -17,6 +17,7 @@ from .const import (
     METADATA,
     METADATA_ENERGY,
     METADATA_LEGACY,
+    METADATA_OLD_FIRMWARE,
     PRODUCTS,
     PRODUCTS_ENERGY,
     SITE_INFO,
@@ -88,6 +89,16 @@ def mock_legacy():
     """Mock Tesla Fleet Api products method."""
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=METADATA_LEGACY
+    ) as mock_products:
+        yield mock_products
+
+
+@pytest.fixture
+def mock_old_firmware():
+    """Mock a non-polling vehicle whose firmware predates ChargeLimitSoc streaming."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=METADATA_OLD_FIRMWARE,
     ) as mock_products:
         yield mock_products
 
