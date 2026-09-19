@@ -3,7 +3,6 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.structures import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -49,11 +48,10 @@ async def test_all_entities(
 
 async def test_switch_dnd(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test switching DND."""
+    """Test switching DND updates state optimistically."""
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
@@ -67,34 +65,6 @@ async def test_switch_dnd(
     )
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
-
-    device_data = deepcopy(TEST_DEVICE_1)
-    device_data.sensors = {
-        "dnd": AmazonDeviceSensor(
-            name="dnd",
-            value=True,
-            error=False,
-            error_msg=None,
-            error_type=None,
-            scale=None,
-        ),
-        "temperature": AmazonDeviceSensor(
-            name="temperature",
-            value="22.5",
-            error=False,
-            error_msg=None,
-            error_type=None,
-            scale="CELSIUS",
-        ),
-    }
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_1_SN: device_data
-    }
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_ON
 
@@ -105,35 +75,70 @@ async def test_switch_dnd(
         blocking=True,
     )
 
-    device_data.sensors = {
-        "dnd": AmazonDeviceSensor(
-            name="dnd",
-            value=False,
-            error=False,
-            error_msg=None,
-            error_type=None,
-            scale=None,
-        ),
-        "temperature": AmazonDeviceSensor(
-            name="temperature",
-            value="22.5",
-            error=False,
-            error_msg=None,
-            error_type=None,
-            scale="CELSIUS",
-        ),
-    }
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_1_SN: device_data
-    }
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 2
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_OFF
+
+
+async def test_switch_dnd_pushed_event(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the DND switch reflects state pushed by the Amazon API."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_OFF
+
+    mock_amazon_devices_client.on_dnd_event.append.assert_called_once()
+    event_handler = mock_amazon_devices_client.on_dnd_event.append.call_args.args[0]
+
+    await event_handler({TEST_DEVICE_1_SN: True})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
+
+    await event_handler({TEST_DEVICE_1_SN: False})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_OFF
+
+
+async def test_switch_dnd_not_created_without_synced_state(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the DND switch is not created until a DND state has been synced."""
+    mock_amazon_devices_client.sync_dnd_state = AsyncMock()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_switch_dnd_created_by_late_pushed_event(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the DND switch is created by a push arriving after initial sync failed."""
+    mock_amazon_devices_client.sync_dnd_state = AsyncMock()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+    mock_amazon_devices_client.on_dnd_event.append.assert_called_once()
+    event_handler = mock_amazon_devices_client.on_dnd_event.append.call_args.args[0]
+    await event_handler({TEST_DEVICE_1_SN: True})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
 
 
 async def test_offline_device(
