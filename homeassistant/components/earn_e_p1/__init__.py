@@ -1,14 +1,13 @@
 """The EARN-E P1 Meter integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, DOMAIN, EARN_E_P1_DATA
 from .coordinator import EarnEP1Coordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -23,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
     mac = entry.data.get(CONF_MAC)
 
     # Get or create shared listener
-    if DOMAIN not in hass.data:
+    if (listener := hass.data.get(EARN_E_P1_DATA)) is None:
         listener = EarnEP1Listener()
         try:
             await listener.start()
@@ -31,9 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
             raise ConfigEntryNotReady(
                 f"Cannot start UDP listener on port {DEFAULT_PORT}: {err}"
             ) from err
-        hass.data[DOMAIN] = listener
+        hass.data[EARN_E_P1_DATA] = listener
 
-    listener = hass.data[DOMAIN]
     coordinator = EarnEP1Coordinator(hass, entry, host, serial, listener, mac)
     coordinator.start()
 
@@ -49,12 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> 
         entry.runtime_data.stop()
 
         # Stop shared listener if no other entries are loaded
-        other_loaded = any(
-            e.state is ConfigEntryState.LOADED and e.entry_id != entry.entry_id
-            for e in hass.config_entries.async_entries(DOMAIN)
-        )
-        if not other_loaded:
-            await hass.data[DOMAIN].stop()
-            hass.data.pop(DOMAIN)
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            await hass.data.pop(EARN_E_P1_DATA).stop()
 
     return unload_ok
