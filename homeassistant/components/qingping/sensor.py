@@ -35,6 +35,8 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from . import QingpingConfigEntry
 from .device import device_key_to_bluetooth_entity_key
 
+PARALLEL_UPDATES = 0
+
 SENSOR_DESCRIPTIONS = {
     (QingpingSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{QingpingSensorDeviceClass.BATTERY}_{Units.PERCENTAGE}",
