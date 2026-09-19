@@ -93,6 +93,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._recent_order: deque[str] = deque()
         self._candidate_cache: list[ImmichAsset] | None = None
         self._candidate_cache_updated_at: datetime | None = None
+        self._account_state_invalidated = False
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -199,6 +200,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             connected=True,
             status="ready",
         )
+        self._account_state_invalidated = False
         if self._connected is False:
             _LOGGER.info("Immich connection restored for %s", self.config_entry.title)
         self._connected = True
@@ -233,7 +235,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._invalidate_candidate_cache()
             self._recent_ids.clear()
             self._recent_order.clear()
-            self.data = None
+            self._account_state_invalidated = True
             self._connected = None
             self._parent_identity_value = parent_identity
         self.immich_entry = immich_entry
@@ -286,7 +288,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             return
         self._recent_ids.clear()
         self._recent_order.clear()
-        if self.data is not None:
+        if self.data is not None and not self._account_state_invalidated:
             self._remember_assets(self.data.photos or (self.data.asset,))
 
     def _cached_or_raise(

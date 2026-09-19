@@ -357,7 +357,8 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
     )
 
     assert coordinator._refresh_parent() is True
-    assert coordinator.data is None
+    assert coordinator._account_state_invalidated is True
+    assert coordinator.data is not None
     assert coordinator._candidate_cache is None
     assert coordinator._recent_ids == set()
 
