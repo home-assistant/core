@@ -742,6 +742,7 @@ FLOWS = {
         "smlight",
         "smtp",
         "snapcast",
+        "snmp",
         "snoo",
         "snooz",
         "sofar",
