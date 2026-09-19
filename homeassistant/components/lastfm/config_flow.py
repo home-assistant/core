@@ -6,6 +6,7 @@ from functools import partial
 import logging
 from typing import Any, override
 
+import probatio
 from pylast import (
     LastFMNetwork,
     MalformedResponseError,
@@ -15,7 +16,6 @@ from pylast import (
     User,
     WSError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -54,13 +54,13 @@ PLACEHOLDERS = {
     "privacy_settings_url": "https://www.last.fm/settings/privacy",
 }
 
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
+CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_API_SECRET): TextSelector(
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(CONF_API_SECRET): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_MAIN_USER): str,
+        probatio.Required(CONF_MAIN_USER): str,
     }
 )
 
@@ -242,7 +242,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if (error := await self._async_start_web_auth()) == "cannot_connect":
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
                 errors={"base": error},
             )
         if error is not None:
@@ -435,9 +435,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )
@@ -499,9 +499,9 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )

@@ -12,9 +12,7 @@
       "ipv6_not_supported": "IPv6 is not supported.",
       "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
       "no_wifi_networks": "No Wi-Fi networks found during scan.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wifi_provisioned": "Wi-Fi credentials for {ssid} have been provisioned to {name}. The device is connecting to Wi-Fi and will complete setup automatically."
     },
@@ -529,6 +527,9 @@
       "session_energy": {
         "name": "Session energy"
       },
+      "storage_free_space": {
+        "name": "Free storage space"
+      },
       "temperature_with_channel_name": {
         "name": "{channel_name} temperature"
       },
@@ -656,6 +657,9 @@
     },
     "firmware_unsupported": {
       "message": "{device} is running an unsupported firmware, please update the firmware"
+    },
+    "http_call_error": {
+      "message": "HTTP call error occurred for {device}"
     },
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"

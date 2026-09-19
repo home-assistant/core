@@ -4,6 +4,7 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
+import probatio
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
@@ -11,7 +12,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -102,7 +102,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_VICARE_MODE,
-        {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
+        {probatio.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
     )
 
@@ -220,12 +220,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                     phase = None
                     with suppress(PyViCareNotSupportedFeatureError):
                         phase = compressor.getPhase()
+                    # Devices do not agree on how to spell the phase, and
+                    # some do not expose one at all, so a running compressor
+                    # heats unless it says it is cooling.
                     if phase == "cooling":
                         cooling_active = True
-                    elif phase == "heating" or phase is None:
-                        # Phase is unset on hybrid devices that do not
-                        # expose it: fall back to HEATING to match the
-                        # pre-cooling-support behaviour.
+                    else:
                         heating_active = True
 
             if cooling_active:

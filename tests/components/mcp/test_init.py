@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import httpx
 from mcp import McpError
 from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -300,7 +300,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'query'")
+        probatio.Invalid, match=re.escape("required key not provided at 'query'")
     ):
         tool.parameters({})
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
@@ -309,7 +309,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'context'")
+        probatio.Invalid, match=re.escape("required key not provided at 'context'")
     ):
         tool.parameters({})
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {
@@ -317,8 +317,42 @@ async def test_llm_get_api_tools(
     }
 
 
+@pytest.mark.parametrize(
+    ("call_tool_result", "expected_result"),
+    [
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="User was born in February")]
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "User was born in February", "type": "text"}]
+                }
+            ),
+            id="success",
+        ),
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="Memory search failed")],
+                isError=True,
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "Memory search failed", "type": "text"}],
+                    "isError": True,
+                },
+                error=True,
+            ),
+            id="error",
+        ),
+    ],
+)
 async def test_call_tool(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    call_tool_result: CallToolResult,
+    expected_result: llm.ToolResult,
 ) -> None:
     """Test calling an MCP Tool through the LLM API."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
@@ -337,9 +371,7 @@ async def test_call_tool(
     tool = api_instance.tools[0]
     assert tool.name == "search_memory"
 
-    mock_mcp_client.return_value.call_tool.return_value = CallToolResult(
-        content=[TextContent(type="text", text="User was born in February")]
-    )
+    mock_mcp_client.return_value.call_tool.return_value = call_tool_result
     result = await tool.async_call(
         hass,
         llm.ToolInput(
@@ -347,9 +379,7 @@ async def test_call_tool(
         ),
         create_llm_context(),
     )
-    assert result == {
-        "content": [{"text": "User was born in February", "type": "text"}]
-    }
+    assert result == expected_result
 
 
 async def test_call_tool_fails(
