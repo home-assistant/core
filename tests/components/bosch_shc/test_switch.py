@@ -157,6 +157,30 @@ async def test_presence_simulation_system(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [{"presence_simulation_system": presence_simulation_system_device(enabled=False)}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_presence_simulation_system_push_update(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A controller-side push update reaches the switch without polling."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.presence_simulation_system
+    service = device.device_services[0]
+    on_state_changed = service.subscribe_callback.call_args.args[1]
+
+    device.enabled = True
+    on_state_changed()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.presence_simulation").state == "on"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"presence_simulation_system": None}],
     indirect=True,
 )

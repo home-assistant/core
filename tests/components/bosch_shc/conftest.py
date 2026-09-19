@@ -18,6 +18,7 @@ from boschshcpy import (
     ShutterControlService,
     ThermostatService,
 )
+from boschshcpy.services_impl import PresenceSimulationConfigurationService
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -268,7 +269,11 @@ def presence_simulation_system_device(
     device.serial = f"serial-{device_id}"
     device.manufacturer = "Bosch"
     device.device_model = "PRESENCE_SIMULATION_SERVICE"
-    device.device_services = []
+    device.device_services = [
+        create_autospec(
+            PresenceSimulationConfigurationService, instance=True, spec_set=True
+        )
+    ]
     device.deleted = False
     device.status = "AVAILABLE"
     device.enabled = enabled
