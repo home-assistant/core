@@ -857,6 +857,7 @@ FLOWS = {
         "uptime_kuma",
         "uptimerobot",
         "v2c",
+        "vacmaster_cardio54",
         "vallox",
         "vegehub",
         "velbus",
