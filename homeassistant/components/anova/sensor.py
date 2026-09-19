@@ -116,6 +116,8 @@ def setup_coordinator(
     def _async_sensor_listener() -> None:
         """Listen for new sensor data and add sensors if they did not exist."""
         if not coordinator.sensor_data_set:
+            if coordinator.data is None:
+                return
             valid_entities: set[AnovaSensor] = set()
             for description in SENSOR_DESCRIPTIONS:
                 if description.value_fn(coordinator.data.sensor) is not None:
@@ -141,4 +143,6 @@ class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state."""
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data.sensor)
