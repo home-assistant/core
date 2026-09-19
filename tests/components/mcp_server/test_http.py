@@ -902,7 +902,9 @@ async def test_mcp_tool_call_unicode(
     mock_api.api.name = "Assist"
     mock_api.tools = []
     mock_api.custom_serializer = None
-    mock_api.async_call_tool.return_value = {"message": "这是一个测试"}
+    mock_api.async_call_tool.return_value = llm.ToolResult(
+        data={"message": "这是一个测试"}
+    )
 
     # We need to ensure when the server calls llm.async_get_api, it gets our mock
     # async_get_api is awaited, so we need an AsyncMock
@@ -924,6 +926,43 @@ async def test_mcp_tool_call_unicode(
     response_text = result.content[0].text
     assert "这是一个测试" in response_text
     assert "\\u" not in response_text
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
+@pytest.mark.parametrize(
+    ("tool_result", "expected_is_error"),
+    [
+        pytest.param(llm.ToolResult(data={"ok": True}), False, id="success"),
+        pytest.param(
+            llm.ToolResult(data={"error": "nope"}, error=True), True, id="error"
+        ),
+    ],
+)
+async def test_mcp_tool_call_error_flag(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+    tool_result: llm.ToolResult,
+    expected_is_error: bool,
+) -> None:
+    """Test a failed tool result is reported to the client as an error."""
+    mock_api = AsyncMock()
+    mock_api.api.name = "Assist"
+    mock_api.tools = []
+    mock_api.custom_serializer = None
+    mock_api.async_call_tool.return_value = tool_result
+
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
+        mock_get_api.return_value = mock_api
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            result = await session.call_tool(name="AnyTool", arguments={})
+
+    assert result.isError == expected_is_error
+    assert result.content[0].text == json.dumps(tool_result.data)
 
 
 async def test_streamable_api_id_exposes_registered_api(

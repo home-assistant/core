@@ -317,8 +317,42 @@ async def test_llm_get_api_tools(
     }
 
 
+@pytest.mark.parametrize(
+    ("call_tool_result", "expected_result"),
+    [
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="User was born in February")]
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "User was born in February", "type": "text"}]
+                }
+            ),
+            id="success",
+        ),
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="Memory search failed")],
+                isError=True,
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "Memory search failed", "type": "text"}],
+                    "isError": True,
+                },
+                error=True,
+            ),
+            id="error",
+        ),
+    ],
+)
 async def test_call_tool(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    call_tool_result: CallToolResult,
+    expected_result: llm.ToolResult,
 ) -> None:
     """Test calling an MCP Tool through the LLM API."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
@@ -337,9 +371,7 @@ async def test_call_tool(
     tool = api_instance.tools[0]
     assert tool.name == "search_memory"
 
-    mock_mcp_client.return_value.call_tool.return_value = CallToolResult(
-        content=[TextContent(type="text", text="User was born in February")]
-    )
+    mock_mcp_client.return_value.call_tool.return_value = call_tool_result
     result = await tool.async_call(
         hass,
         llm.ToolInput(
@@ -347,9 +379,7 @@ async def test_call_tool(
         ),
         create_llm_context(),
     )
-    assert result == {
-        "content": [{"text": "User was born in February", "type": "text"}]
-    }
+    assert result == expected_result
 
 
 async def test_call_tool_fails(

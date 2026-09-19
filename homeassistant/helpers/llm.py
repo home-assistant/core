@@ -154,6 +154,14 @@ class ToolInput:
     external: bool = False
 
 
+@dataclass(slots=True)
+class ToolResult:
+    """Result of a tool call."""
+
+    data: JsonObjectType
+    error: bool = False
+
+
 class Tool:
     """LLM Tool base class."""
 
@@ -164,7 +172,7 @@ class Tool:
     @abstractmethod
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult | JsonObjectType:
         """Call the tool."""
         raise NotImplementedError
 
@@ -184,7 +192,7 @@ class APIInstance:
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
 
-    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
+    async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""
         from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationTraceEventType,
@@ -202,7 +210,10 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        return await tool.async_call(self.api.hass, tool_input, self.llm_context)
+        result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
+        if isinstance(result, ToolResult):
+            return result
+        return ToolResult(data=result)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -255,7 +266,11 @@ class IntentTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Handle the intent."""
-        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+        slots = {
+            key: {"value": val}
+            for key, val in tool_input.tool_args.items()
+            if not intent.is_blank_slot_value(val)
+        }
 
         if self.extra_slots and llm_context.device_id:
             device_reg = dr.async_get(hass)
@@ -327,7 +342,7 @@ class NamespacedTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult | JsonObjectType:
         """Handle the intent."""
         return await self.tool.async_call(
             hass,
