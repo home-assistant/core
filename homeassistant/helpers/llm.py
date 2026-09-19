@@ -25,6 +25,7 @@ from . import (
     config_validation as cv,
     device_registry as dr,
     floor_registry as fr,
+    frame,
     intent,
     selector,
     service,
@@ -213,7 +214,28 @@ class APIInstance:
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
             return result
+        frame.report_usage(
+            "returns a JSON object from a tool, which is deprecated; return a "
+            "ToolResult instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+            # The tool call has returned, so its frame is gone from the stack.
+            integration_domain=_tool_integration_domain(tool),
+        )
         return ToolResult(data=result)
+
+
+def _tool_integration_domain(tool: Tool) -> str | None:
+    """Return the domain of the integration that provides the tool."""
+    while isinstance(tool, NamespacedTool):
+        tool = tool.tool
+    module = type(tool).__module__
+    for prefix in ("custom_components.", "homeassistant.components."):
+        if module.startswith(prefix):
+            return module.removeprefix(prefix).partition(".")[0]
+    return None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -264,7 +286,7 @@ class IntentTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Handle the intent."""
         slots = {
             key: {"value": val}
@@ -305,7 +327,7 @@ class IntentTool(Tool):
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
         )
-        return IntentResponseDict(intent_response)
+        return ToolResult(data=IntentResponseDict(intent_response))
 
 
 class IntentResponseDict(dict):
@@ -655,7 +677,7 @@ class ActionTool(Tool):
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Call the action."""
 
         for field, validator in self.parameters.schema.items():
@@ -696,4 +718,4 @@ class ActionTool(Tool):
             return_response=True,
         )
 
-        return {"success": True, "result": result}
+        return ToolResult(data={"result": result})

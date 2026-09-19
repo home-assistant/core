@@ -2,10 +2,11 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientConnectorError
 from airly.exceptions import AirlyError
+from airly.measurements import Measurement
 import pytest
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
@@ -14,10 +15,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import API_NEAREST_URL, API_POINT_URL
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_API_KEY: "foo",
@@ -36,14 +34,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 async def test_invalid_api_key(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
 ) -> None:
     """Test that errors are shown when API key is invalid."""
-    aioclient_mock.get(
-        API_POINT_URL,
-        exc=AirlyError(
-            HTTPStatus.UNAUTHORIZED, {"message": "Invalid authentication credentials"}
-        ),
+    point_measurements = (
+        mock_airly_client.create_measurements_session_point.return_value
+    )
+    point_measurements.update.side_effect = AirlyError(
+        HTTPStatus.UNAUTHORIZED, {"message": "Invalid authentication credentials"}
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -59,10 +58,7 @@ async def test_invalid_api_key(
 
     assert result["errors"] == {"base": "invalid_api_key"}
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
-    )
+    point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
@@ -77,16 +73,17 @@ async def test_invalid_api_key(
 
 
 async def test_invalid_location(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+    mock_airly_measurements: Measurement,
+    mock_airly_no_station_measurements: Measurement,
 ) -> None:
     """Test that errors are shown when location is invalid."""
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
+    mock_airly_client.create_measurements_session_point.return_value.current = (
+        mock_airly_no_station_measurements
     )
-
-    aioclient_mock.get(
-        API_NEAREST_URL,
-        exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}),
+    mock_airly_client.create_measurements_session_nearest.return_value.update.side_effect = AirlyError(
+        HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -102,9 +99,8 @@ async def test_invalid_location(
 
     assert result["errors"] == {"base": "wrong_location"}
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    mock_airly_client.create_measurements_session_point.return_value.current = (
+        mock_airly_measurements
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -120,16 +116,16 @@ async def test_invalid_location(
 
 
 async def test_invalid_location_for_point_and_nearest(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+    mock_airly_no_station_measurements: Measurement,
 ) -> None:
     """Test an abort when the location is wrong for the point and nearest methods."""
-
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
+    mock_airly_client.create_measurements_session_point.return_value.current = (
+        mock_airly_no_station_measurements
     )
-
-    aioclient_mock.get(
-        API_NEAREST_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
+    mock_airly_client.create_measurements_session_nearest.return_value.current = (
+        mock_airly_no_station_measurements
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -148,12 +144,10 @@ async def test_invalid_location_for_point_and_nearest(
 
 
 async def test_duplicate_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
 ) -> None:
     """Test that errors are shown when duplicates are added."""
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
-    )
     MockConfigEntry(domain=DOMAIN, unique_id="12.3-45.6", data=CONFIG).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -172,13 +166,10 @@ async def test_duplicate_error(
 
 
 async def test_create_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
 ) -> None:
     """Test that the user step works."""
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -199,17 +190,13 @@ async def test_create_entry(
 
 
 async def test_create_entry_with_nearest_method(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+    mock_airly_no_station_measurements: Measurement,
 ) -> None:
     """Test that the user step works with nearest method."""
-
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
-    )
-
-    aioclient_mock.get(
-        API_NEAREST_URL,
-        text=await async_load_fixture(hass, "valid_station.json", DOMAIN),
+    mock_airly_client.create_measurements_session_point.return_value.current = (
+        mock_airly_no_station_measurements
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -240,7 +227,7 @@ async def test_create_entry_with_nearest_method(
 )
 async def test_cannot_connect(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_airly_client: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -252,19 +239,20 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("airly.measurements.MeasurementsSession.update", side_effect=exception):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG
-        )
+    point_measurements = (
+        mock_airly_client.create_measurements_session_point.return_value
+    )
+    point_measurements.update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["errors"] == {"base": error}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
-    )
+    point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
@@ -285,7 +273,7 @@ async def test_cannot_connect(
 )
 async def test_unknown_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    mock_airly_client: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -297,19 +285,20 @@ async def test_unknown_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("airly.measurements.MeasurementsSession.update", side_effect=exception):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG
-        )
+    point_measurements = (
+        mock_airly_client.create_measurements_session_point.return_value
+    )
+    point_measurements.update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["errors"] == {"base": error}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
-    )
+    point_measurements.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
