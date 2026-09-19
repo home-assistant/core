@@ -6,10 +6,15 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.private_ble_device import const
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
+from . import async_mock_config_entry
+
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
@@ -162,3 +167,112 @@ async def test_flow_works_by_base64(hass: HomeAssistant) -> None:
     assert result["title"] == "Test Test Test"
     assert result["data"] == {"irk": "00000000000000000000000000000000"}
     assert result["result"].unique_id == "00000000000000000000000000000000"
+
+
+OLD_IRK = "11111111111111111111111111111111"
+NEW_IRK = "00000000000000000000000000000000"  # resolves 40:01:02:0a:c4:a6
+
+
+def _inject_new_irk_device(hass: HomeAssistant) -> None:
+    inject_bluetooth_service_info(
+        hass,
+        BluetoothServiceInfo(
+            name="Test Test Test",
+            address="40:01:02:0a:c4:a6",
+            rssi=-63,
+            service_data={},
+            manufacturer_data={},
+            service_uuids=[],
+            source="local",
+        ),
+    )
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reconfigure_replaces_irk(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a new IRK keeps the entities and device, only their ids move."""
+    await async_mock_config_entry(hass, OLD_IRK)
+    entry = hass.config_entries.async_get_entry(OLD_IRK)
+    before = {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert before and all(OLD_IRK in uid for uid in before.values())
+    device = device_registry.async_get_device_by_identifier(
+        (const.DOMAIN, OLD_IRK), entry.entry_id
+    )
+    # Another integration attached to the same identifier stays as it is.
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other.entry_id, identifiers={(const.DOMAIN, OLD_IRK)}
+    )
+
+    _inject_new_irk_device(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": f"irk:{NEW_IRK}"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {"irk": NEW_IRK}
+    assert entry.unique_id == NEW_IRK
+    assert entry.state is ConfigEntryState.LOADED
+    after = {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert after == {
+        entity_id: uid.replace(OLD_IRK, NEW_IRK) for entity_id, uid in before.items()
+    }
+    assert device_registry.async_get(device.id).identifiers == {(const.DOMAIN, NEW_IRK)}
+    assert device_registry.async_get(other_device.id).identifiers == {
+        (const.DOMAIN, OLD_IRK)
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+@pytest.mark.parametrize(
+    ("irk", "error"),
+    [
+        ("irk:000000", "irk_not_valid"),
+        ("irk:22222222222222222222222222222222", "irk_not_found"),
+    ],
+)
+async def test_reconfigure_errors(hass: HomeAssistant, irk: str, error: str) -> None:
+    """Test a bad or unseen IRK is refused and the entry keeps its own."""
+    await async_mock_config_entry(hass, OLD_IRK)
+    entry = hass.config_entries.async_get_entry(OLD_IRK)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": irk}
+    )
+    assert_form_error(result, "irk", error)
+    assert entry.data == {"irk": OLD_IRK}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reconfigure_to_an_irk_in_use(hass: HomeAssistant) -> None:
+    """Test an IRK another entry already tracks is refused."""
+    await async_mock_config_entry(hass, OLD_IRK)
+    await async_mock_config_entry(hass, NEW_IRK)
+    entry = hass.config_entries.async_get_entry(OLD_IRK)
+
+    _inject_new_irk_device(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"irk": NEW_IRK}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {"irk": OLD_IRK}
