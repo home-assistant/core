@@ -188,7 +188,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             brightness = to_lutron_level(brightness)
 
         await self._smartbridge.set_warm_dim(
-            self.device_id, brightness, **set_warm_dim_kwargs
+            self.device_id, True, value=brightness, **set_warm_dim_kwargs
         )
 
     @override
