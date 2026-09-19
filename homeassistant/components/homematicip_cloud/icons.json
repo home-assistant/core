@@ -29,6 +29,9 @@
     "dump_hap_config": {
       "service": "mdi:database-export"
     },
+    "pull_latch": {
+      "service": "mdi:door-open"
+    },
     "reset_energy_counter": {
       "service": "mdi:reload"
     },
