@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .const import TEST_DEVICE_1_SN, TEST_VOCAL_RECORD_EVENT
+from .const import (
+    TEST_DEVICE_1_SN,
+    TEST_DEVICE_AQM,
+    TEST_DEVICE_AQM_SN,
+    TEST_VOCAL_RECORD_EVENT,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -124,3 +129,19 @@ async def test_voice_event_removed_for_unsupported_device(
 
     assert not hass.states.get(entity.entity_id)
     assert entity_registry.async_get(entity.entity_id) is None
+
+
+async def test_voice_event_not_created_for_aqm_device(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no voice event entity is created for an Air Quality Monitor device."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM
+    }
+
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.get("event.air_quality_monitor_test_voice_event")

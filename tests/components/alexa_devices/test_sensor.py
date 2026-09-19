@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1_SN, TEST_DEVICE_AQM, TEST_DEVICE_AQM_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -179,3 +179,21 @@ async def test_sensor_unavailable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_aqm_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor entities for an Air Quality Monitor device."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM
+    }
+
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

@@ -40,7 +40,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1_SN, TEST_DEVICE_AQM, TEST_DEVICE_AQM_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -183,6 +183,21 @@ async def test_media_player_not_created_for_unsupported_device(
     await _setup_media_player_platform(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_media_player_not_created_for_aqm_device(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No media player entity is created for an Air Quality Monitor device."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM
+    }
+
+    await _setup_media_player_platform(hass, mock_config_entry)
+
+    assert hass.states.get("media_player.air_quality_monitor_test") is None
 
 
 @pytest.mark.parametrize(
