@@ -1,10 +1,12 @@
 """Support for Hot Spring select entities."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import cast, override
 
-from hotspring import HeatingMode, Jet, JetSpeed, Spa
+from hotspring import HeatingMode, HotSpring, JetSpeed, Spa
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,6 +59,64 @@ OPTION_TO_HEATING_MODE: dict[str, HeatingMode] = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class HotSpringSelectEntityDescription(SelectEntityDescription):
+    """Class describing Hot Spring select entities."""
+
+    current_option_fn: Callable[[Spa], str | None]
+    select_option_fn: Callable[[HotSpring, str], Awaitable[None]]
+    options_fn: Callable[[Spa], list[str]]
+    exists_fn: Callable[[Spa], bool] = lambda _: True
+
+
+def _heating_mode_options(spa: Spa) -> list[str]:
+    """Return available heating mode options."""
+    options = [
+        OPTION_HEAT_SAVER,
+        OPTION_HEAT_WITH_BOOST,
+        OPTION_AUTO_SAVER,
+        OPTION_AUTO_WITH_BOOST,
+    ]
+    if spa.heater.heatpump_installed:
+        options.append(OPTION_CHILL)
+    return options
+
+
+ENTITY_DESCRIPTIONS: tuple[HotSpringSelectEntityDescription, ...] = (
+    HotSpringSelectEntityDescription(
+        key="heating_mode",
+        translation_key="heating_mode",
+        entity_category=EntityCategory.CONFIG,
+        exists_fn=lambda spa: spa.heater.heating_mode in HEATING_MODE_TO_OPTION,
+        options_fn=_heating_mode_options,
+        current_option_fn=lambda spa: HEATING_MODE_TO_OPTION.get(
+            spa.heater.heating_mode
+        ),
+        select_option_fn=lambda hotspring, option: hotspring.set_heating_mode(
+            OPTION_TO_HEATING_MODE[option]
+        ),
+    ),
+)
+
+
+def _get_jet_description(jet_id: int) -> HotSpringSelectEntityDescription:
+    """Return a select entity description for a jet pump."""
+    return HotSpringSelectEntityDescription(
+        key=f"jet_{jet_id}",
+        translation_key="jet",
+        translation_placeholders={"jet": str(jet_id)},
+        options_fn=lambda spa: (
+            DUAL_SPEED_OPTIONS
+            if spa.jets[jet_id].is_dual_speed
+            else SINGLE_SPEED_OPTIONS
+        ),
+        current_option_fn=lambda spa: JET_SPEED_TO_OPTION.get(spa.jets[jet_id].speed),
+        select_option_fn=lambda hotspring, option: hotspring.set_jet(
+            jet_id, OPTION_TO_JET_SPEED[option]
+        ),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HotSpringConfigEntry,
@@ -64,92 +124,51 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hot Spring select entities."""
     coordinator = entry.runtime_data
-    entities: list[SelectEntity] = [
-        HotSpringJetSelectEntity(coordinator, jet.jet_id)
+    entities: list[HotSpringSelectEntity] = [
+        HotSpringSelectEntity(coordinator, _get_jet_description(jet.jet_id))
         for jet in coordinator.data.jets.values()
         if jet.is_enabled
     ]
-    if coordinator.data.heater.heating_mode in HEATING_MODE_TO_OPTION:
-        entities.append(HotSpringHeatingModeSelectEntity(coordinator))
-
+    entities.extend(
+        HotSpringSelectEntity(coordinator, description)
+        for description in ENTITY_DESCRIPTIONS
+        if description.exists_fn(coordinator.data)
+    )
     async_add_entities(entities)
 
 
-class HotSpringJetSelectEntity(HotSpringEntity, SelectEntity):
-    """Defines a Hot Spring jet select entity."""
+class HotSpringSelectEntity(HotSpringEntity, SelectEntity):
+    """Defines a Hot Spring select entity."""
 
-    _attr_translation_key = "jet"
-
-    def __init__(
-        self,
-        coordinator: HotSpringDataUpdateCoordinator,
-        jet_id: int,
-    ) -> None:
-        """Initialize the jet select entity."""
-        super().__init__(coordinator, f"jet_{jet_id}")
-        self._jet_id = jet_id
-        self._attr_translation_placeholders = {"jet": str(jet_id)}
-        self._attr_options = (
-            DUAL_SPEED_OPTIONS if self._jet.is_dual_speed else SINGLE_SPEED_OPTIONS
-        )
-
-    @property
-    def _jet(self) -> Jet:
-        """Return the jet data."""
-        return self.coordinator.data.jets[self._jet_id]
-
-    @property
-    @override
-    def current_option(self) -> str | None:
-        """Return the current jet speed option."""
-        return JET_SPEED_TO_OPTION.get(self._jet.speed)
-
-    @hotspring_exception_handler
-    @override
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected jet speed."""
-        await self.coordinator.hotspring.set_jet(
-            self._jet_id, OPTION_TO_JET_SPEED[option]
-        )
-        self.coordinator.async_set_updated_data(
-            cast(Spa, self.coordinator.hotspring.spa)
-        )
-
-
-class HotSpringHeatingModeSelectEntity(HotSpringEntity, SelectEntity):
-    """Defines a Hot Spring heating mode select entity."""
-
-    _attr_translation_key = "heating_mode"
-    _attr_entity_category = EntityCategory.CONFIG
+    entity_description: HotSpringSelectEntityDescription
 
     def __init__(
         self,
         coordinator: HotSpringDataUpdateCoordinator,
+        description: HotSpringSelectEntityDescription,
     ) -> None:
-        """Initialize the heating mode select entity."""
-        super().__init__(coordinator, "heating_mode")
-        options = [
-            OPTION_HEAT_SAVER,
-            OPTION_HEAT_WITH_BOOST,
-            OPTION_AUTO_SAVER,
-            OPTION_AUTO_WITH_BOOST,
-        ]
-        if coordinator.data.heater.heatpump_installed:
-            options.append(OPTION_CHILL)
-        self._attr_options = options
+        """Initialize the select entity."""
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return a set of selectable options."""
+        return self.entity_description.options_fn(self.coordinator.data)
 
     @property
     @override
     def current_option(self) -> str | None:
-        """Return the current heating mode."""
-        return HEATING_MODE_TO_OPTION.get(self.coordinator.data.heater.heating_mode)
+        """Return the current select option."""
+        return self.entity_description.current_option_fn(self.coordinator.data)
 
     @hotspring_exception_handler
     @override
     async def async_select_option(self, option: str) -> None:
-        """Change the heating mode."""
-        await self.coordinator.hotspring.set_heating_mode(
-            OPTION_TO_HEATING_MODE[option]
+        """Change the selected option."""
+        await self.entity_description.select_option_fn(
+            self.coordinator.hotspring, option
         )
         self.coordinator.async_set_updated_data(
             cast(Spa, self.coordinator.hotspring.spa)
