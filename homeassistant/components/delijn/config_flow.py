@@ -78,31 +78,6 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "unknown"}
         return {}
 
-    def _async_update_key_and_finish(
-        self, entry: ConfigEntry, api_key: str, *, reason: str
-    ) -> ConfigFlowResult:
-        """Update the API key and finish, reloading only if nothing else would.
-
-        The registered update listener reloads automatically once the
-        entry's data actually changes. An explicit reload is needed
-        instead when that won't happen on its own: the key is unchanged,
-        or no listener is registered yet, which happens when the entry's
-        last setup failed before reaching that registration (e.g. a
-        reauth triggered by an auth failure during its first refresh).
-
-        Whether a listener will react has to be read before updating: the
-        update runs any listener eagerly, so by the time the update call
-        returns, a reload it triggered may already be under way and have
-        unregistered the listener again.
-        """
-        listener_will_reload = bool(entry.update_listeners)
-        changed = self.hass.config_entries.async_update_entry(
-            entry, data=entry.data | {CONF_API_KEY: api_key}
-        )
-        if not (changed and listener_will_reload):
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return self.async_abort(reason=reason)
-
     @classmethod
     @callback
     @override
@@ -146,8 +121,8 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_KEY: api_key})
             errors = await self._async_validate_api_key(api_key)
             if not errors:
-                return self._async_update_key_and_finish(
-                    reconfigure_entry, api_key, reason="reconfigure_successful"
+                return self.async_update_and_abort(
+                    reconfigure_entry, data_updates={CONF_API_KEY: api_key}
                 )
 
         schema = self.add_suggested_values_to_schema(
@@ -181,8 +156,8 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_KEY: api_key})
             errors = await self._async_validate_api_key(api_key)
             if not errors:
-                return self._async_update_key_and_finish(
-                    self._get_reauth_entry(), api_key, reason="reauth_successful"
+                return self.async_update_and_abort(
+                    self._get_reauth_entry(), data_updates={CONF_API_KEY: api_key}
                 )
 
         return self.async_show_form(
