@@ -13,6 +13,7 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
 from homeassistant.const import (
+    PERCENTAGE,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     STATE_UNKNOWN,
@@ -2681,6 +2682,53 @@ async def test_temp_sensor(hass: HomeAssistant) -> None:
     properties.assert_equal(
         "Alexa.TemperatureSensor", "temperature", {"value": 42.0, "scale": "FAHRENHEIT"}
     )
+
+
+async def test_humidity_sensor(hass: HomeAssistant) -> None:
+    """Test humidity sensor discovery."""
+    device = (
+        "sensor.test_humidity",
+        "59",
+        {
+            "friendly_name": "Test Humidity Sensor",
+            "unit_of_measurement": PERCENTAGE,
+            "device_class": "humidity",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "sensor#test_humidity"
+    assert appliance["displayCategories"][0] == "HUMIDITY_SENSOR"
+    assert appliance["friendlyName"] == "Test Humidity Sensor"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.HumiditySensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    humidity_sensor_capability = get_capability(capabilities, "Alexa.HumiditySensor")
+    assert humidity_sensor_capability is not None
+    properties = humidity_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "relativeHumidity"} in properties["supported"]
+
+    properties = await reported_properties(hass, "sensor#test_humidity")
+    properties.assert_equal("Alexa.HumiditySensor", "relativeHumidity", {"value": 59.0})
+
+
+async def test_battery_percentage_sensor_not_exposed_as_humidity(
+    hass: HomeAssistant,
+) -> None:
+    """Test percentage sensors that are not humidity are not discovered."""
+    device = (
+        "sensor.test_battery",
+        "80",
+        {
+            "friendly_name": "Test Battery Sensor",
+            "unit_of_measurement": PERCENTAGE,
+            "device_class": "battery",
+        },
+    )
+    await discovery_test(device, hass, expected_endpoints=0)
 
 
 async def test_contact_sensor(hass: HomeAssistant) -> None:
