@@ -1,4 +1,4 @@
-"""Tests for the raw HTTP client library checker."""
+"""Tests for the raw HTTP request checker."""
 
 from pathlib import Path
 
@@ -17,26 +17,32 @@ _COMPONENTS_PATH = Path(__file__).parents[2] / "homeassistant" / "components"
 def http_library_checker_fixture(
     linter: UnittestLinter,
 ) -> HassEnforceHttpLibraryChecker:
-    """Fixture to provide a raw HTTP client library checker."""
+    """Fixture to provide a raw HTTP request checker."""
     return HassEnforceHttpLibraryChecker(linter)
 
 
 @pytest.mark.parametrize(
     "code",
     [
-        pytest.param("import requests", id="import_requests"),
-        pytest.param("import httpx", id="import_httpx"),
-        pytest.param("import aiohttp", id="import_aiohttp"),
-        pytest.param("import aiohttp.client", id="import_aiohttp_submodule"),
-        pytest.param("from requests import get", id="from_requests"),
-        pytest.param("from httpx import AsyncClient", id="from_httpx"),
-        pytest.param("from aiohttp import ClientSession", id="from_aiohttp_client"),
+        pytest.param("import requests\n\nrequests.get(url)", id="requests_get"),
+        pytest.param("import requests\n\nrequests.Session()", id="requests_session"),
+        pytest.param("import requests as req\n\nreq.post(url)", id="requests_aliased"),
+        pytest.param("import httpx\n\nhttpx.get(url)", id="httpx_get"),
+        pytest.param("import httpx\n\nhttpx.AsyncClient()", id="httpx_async_client"),
         pytest.param(
-            "from aiohttp import web, ClientError", id="from_aiohttp_web_and_client"
+            "import aiohttp\n\naiohttp.ClientSession()", id="aiohttp_own_session"
         ),
         pytest.param(
-            "from aiohttp.client_exceptions import ClientError",
-            id="from_aiohttp_client_exceptions",
+            "import aiohttp\n\naiohttp.request('GET', url)", id="aiohttp_request"
+        ),
+        pytest.param("from requests import get\n\nget(url)", id="from_requests_get"),
+        pytest.param(
+            "from aiohttp import ClientSession\n\nClientSession()",
+            id="from_aiohttp_client_session",
+        ),
+        pytest.param(
+            "import aiohttp.web\n\naiohttp.ClientSession()",
+            id="aiohttp_web_import_still_flags_client",
         ),
     ],
 )
@@ -45,7 +51,7 @@ def test_flagged(
     http_library_checker: HassEnforceHttpLibraryChecker,
     code: str,
 ) -> None:
-    """Test imports that should be flagged."""
+    """Test raw requests that should be flagged."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
     walk_checker(linter, http_library_checker, root_node)
 
@@ -57,12 +63,31 @@ def test_flagged(
 @pytest.mark.parametrize(
     "code",
     [
-        pytest.param("from aiohttp import web", id="aiohttp_web_import"),
-        pytest.param("import aiohttp.web", id="aiohttp_web_module"),
-        pytest.param("from aiohttp.web import Request", id="aiohttp_web_from"),
-        pytest.param("import homeassistant.helpers.aiohttp_client", id="helper"),
-        pytest.param("from . import requests", id="relative_import"),
-        pytest.param("import my_device_library", id="library"),
+        pytest.param(
+            "from aiohttp import ClientSession\n\n"
+            "def f(session: ClientSession) -> None: ...",
+            id="client_session_type_hint",
+        ),
+        pytest.param(
+            "import aiohttp\n\ndef f(session: aiohttp.ClientSession) -> None: ...",
+            id="client_session_type_hint_attribute",
+        ),
+        pytest.param(
+            "from aiohttp import ClientError\n\n"
+            "try:\n    pass\nexcept ClientError:\n    pass",
+            id="catch_client_error",
+        ),
+        pytest.param("import httpx\n\nx: httpx.Response = resp", id="httpx_type_hint"),
+        pytest.param(
+            "from aiohttp import web\n\nweb.Application()", id="aiohttp_web_server"
+        ),
+        pytest.param(
+            "session = async_get_clientsession(hass)\nsession.get(url)",
+            id="injected_session_get",
+        ),
+        pytest.param(
+            "import my_device_library\n\nmy_device_library.get(url)", id="library"
+        ),
     ],
 )
 def test_not_flagged(
@@ -70,7 +95,7 @@ def test_not_flagged(
     http_library_checker: HassEnforceHttpLibraryChecker,
     code: str,
 ) -> None:
-    """Test imports that should not be flagged."""
+    """Test usages that should not be flagged."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
 
     with assert_no_messages(linter):
@@ -82,23 +107,26 @@ def test_reports_library_name(
     http_library_checker: HassEnforceHttpLibraryChecker,
 ) -> None:
     """Test that the offending library name is included in the message."""
-    root_node = astroid.parse("import requests", "homeassistant.components.pylint_test")
+    root_node = astroid.parse(
+        "import requests\n\nrequests.get(url)", "homeassistant.components.pylint_test"
+    )
     http_library_checker.visit_module(root_node)
-    import_node = root_node.body[0]
+    http_library_checker.visit_import(root_node.body[0])
+    call_node = root_node.body[1].value
 
     with assert_adds_messages(
         linter,
         MessageTest(
             msg_id="hass-integration-raw-http-client",
-            node=import_node,
+            node=call_node,
             args=("requests",),
-            line=1,
+            line=3,
             col_offset=0,
-            end_line=1,
-            end_col_offset=15,
+            end_line=3,
+            end_col_offset=17,
         ),
     ):
-        http_library_checker.visit_import(import_node)
+        http_library_checker.visit_call(call_node)
 
 
 def test_grandfathered_domain_ignored(
@@ -106,7 +134,9 @@ def test_grandfathered_domain_ignored(
     http_library_checker: HassEnforceHttpLibraryChecker,
 ) -> None:
     """Test that grandfathered integrations are not flagged."""
-    root_node = astroid.parse("import requests", "homeassistant.components.abode")
+    root_node = astroid.parse(
+        "import requests\n\nrequests.get(url)", "homeassistant.components.abode"
+    )
 
     with assert_no_messages(linter):
         walk_checker(linter, http_library_checker, root_node)
@@ -117,7 +147,9 @@ def test_non_integration_module_ignored(
     http_library_checker: HassEnforceHttpLibraryChecker,
 ) -> None:
     """Test that non-integration modules are ignored."""
-    root_node = astroid.parse("import requests", "tests.components.pylint_test")
+    root_node = astroid.parse(
+        "import requests\n\nrequests.get(url)", "tests.components.pylint_test"
+    )
 
     with assert_no_messages(linter):
         walk_checker(linter, http_library_checker, root_node)

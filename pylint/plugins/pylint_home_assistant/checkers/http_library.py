@@ -1,4 +1,4 @@
-"""Checker to keep raw HTTP client usage out of integrations.
+"""Checker to keep raw HTTP requests out of integrations.
 
 Integrations must not talk to their device or service directly with an HTTP
 client. All device- and service-specific communication belongs in a library
@@ -6,11 +6,13 @@ published on PyPI, which is then added as a manifest requirement.
 
 https://developers.home-assistant.io/docs/creating_component_code_review/#5-communication-with-devicesservices
 
-The ``aiohttp`` server framework (``aiohttp.web``) is allowed, as it is used to
-serve HTTP endpoints (views, webhooks) rather than to call out to a device or
-service.
+This flags *making* requests and *creating* a client session with ``requests``,
+``httpx`` or ``aiohttp`` (e.g. ``requests.get(...)``, ``httpx.AsyncClient(...)``,
+``aiohttp.ClientSession(...)``). It deliberately does not flag imports used only
+for typing or exception handling: type-hinting an injected
+``aiohttp.ClientSession`` and catching ``aiohttp.ClientError`` are good practice.
 
-Integrations that already used a raw HTTP client before this check existed are
+Integrations that already made raw requests before this check existed are
 grandfathered in via ``GRANDFATHERED_DOMAINS``; that list must only shrink.
 """
 
@@ -21,81 +23,96 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.module_info import parse_module
 from pylint_home_assistant.http_library_exemptions import GRANDFATHERED_DOMAINS
 
-_HTTP_CLIENT_LIBRARIES = frozenset({"aiohttp", "httpx", "requests"})
-
-
-def _flagged_library(module: str, imported_names: list[str] | None) -> str | None:
-    """Return the flagged HTTP client library for an import, or None.
-
-    *module* is the dotted module being imported (e.g. ``aiohttp.client``).
-    *imported_names* are the names imported from it for ``from`` imports
-    (e.g. ``["ClientSession"]``), or None for plain ``import`` statements.
-    """
-    top, _, remainder = module.partition(".")
-    if top not in _HTTP_CLIENT_LIBRARIES:
-        return None
-
-    if top != "aiohttp":
-        return top
-
-    # aiohttp.web is the server framework, not a client; always allowed.
-    first_segment = remainder.partition(".")[0]
-    if first_segment == "web":
-        return None
-    # ``from aiohttp import web`` is the server framework too.
-    if module == "aiohttp" and imported_names is not None:
-        if all(name == "web" for name in imported_names):
-            return None
-
-    return "aiohttp"
+_REQUEST_METHODS = frozenset(
+    {"request", "get", "post", "put", "patch", "delete", "head", "options"}
+)
+# Callables per library that perform a request or create a client session.
+_FLAGGED_OPERATIONS: dict[str, frozenset[str]] = {
+    "requests": _REQUEST_METHODS | {"Session"},
+    "httpx": _REQUEST_METHODS | {"stream", "Client", "AsyncClient"},
+    "aiohttp": frozenset({"ClientSession", "request"}),
+}
 
 
 class HassEnforceHttpLibraryChecker(BaseChecker):
-    """Checker that forbids raw HTTP client usage in integrations."""
+    """Checker that forbids raw HTTP requests in integrations."""
 
     name = "hass_enforce_http_library"
     priority = -1
     msgs = {
         "W7438": (
-            "Integration uses the `%s` HTTP client directly; device and service "
+            "Integration makes raw HTTP requests with `%s`; device and service "
             "communication must go through a library published on PyPI",
             "hass-integration-raw-http-client",
-            "Used when an integration imports `requests`, `httpx` or the "
-            "`aiohttp` client instead of delegating device or service "
-            "communication to a library hosted on PyPI.",
+            "Used when an integration makes requests or creates a client session "
+            "with `requests`, `httpx` or `aiohttp` instead of delegating device "
+            "or service communication to a library hosted on PyPI.",
         ),
     }
     options = ()
 
     _check_module: bool
+    _module_aliases: dict[str, str]
+    _imported_callables: dict[str, str]
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Track whether the current module should be checked."""
+        """Reset per-module state and decide whether to check the module."""
         parsed = parse_module(node.name)
         self._check_module = (
             parsed is not None and parsed.domain not in GRANDFATHERED_DOMAINS
         )
+        # Local name -> library for `import requests`/`import aiohttp`.
+        self._module_aliases = {}
+        # Local name -> library for `from requests import get`.
+        self._imported_callables = {}
 
     def visit_import(self, node: nodes.Import) -> None:
-        """Check `import aiohttp`/`import requests` style imports."""
+        """Track `import requests`/`import aiohttp as x` bindings."""
         if not self._check_module:
             return
-        for name, _alias in node.names:
-            if library := _flagged_library(name, None):
+        for name, alias in node.names:
+            parts = name.split(".")
+            library = parts[0]
+            if library not in _FLAGGED_OPERATIONS:
+                continue
+            if len(parts) == 1:
+                self._module_aliases[alias or name] = library
+            elif alias is None:
+                # e.g. `import aiohttp.web` also binds the top-level package.
+                self._module_aliases[library] = library
+
+    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
+        """Track `from requests import get` style bindings."""
+        if not self._check_module or node.level:
+            return
+        library = node.modname.split(".")[0]
+        if library not in _FLAGGED_OPERATIONS:
+            return
+        flagged = _FLAGGED_OPERATIONS[library]
+        for name, alias in node.names:
+            if name in flagged:
+                self._imported_callables[alias or name] = library
+
+    def visit_call(self, node: nodes.Call) -> None:
+        """Flag calls that make a request or create a client session."""
+        if not self._check_module:
+            return
+        func = node.func
+        if isinstance(func, nodes.Attribute):
+            expr = func.expr
+            if (
+                isinstance(expr, nodes.Name)
+                and (library := self._module_aliases.get(expr.name))
+                and func.attrname in _FLAGGED_OPERATIONS[library]
+            ):
                 self.add_message(
                     "hass-integration-raw-http-client", node=node, args=(library,)
                 )
-                return
-
-    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
-        """Check `from aiohttp import ClientSession` style imports."""
-        if not self._check_module or node.level:
-            return
-        imported_names = [name for name, _alias in node.names]
-        if library := _flagged_library(node.modname, imported_names):
-            self.add_message(
-                "hass-integration-raw-http-client", node=node, args=(library,)
-            )
+        elif isinstance(func, nodes.Name):
+            if library := self._imported_callables.get(func.name):
+                self.add_message(
+                    "hass-integration-raw-http-client", node=node, args=(library,)
+                )
 
 
 def register(linter: PyLinter) -> None:
