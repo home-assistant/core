@@ -400,6 +400,43 @@ async def test_period_window_skips_sensors(
     assert entity_entries == []
 
 
+async def test_period_window_refresh_makes_existing_sensors_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test existing sensors become unavailable after the period expires."""
+    freezer.move_to("2026-08-12T12:00:00+02:00")
+    mock_engie_client.return_value.async_get_prices.return_value = build_prices(
+        valid_from=date(2026, 8, 1), valid_to=date(2026, 8, 13)
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    enabled_entity_entries = [
+        entity_entry
+        for entity_entry in entity_entries
+        if entity_entry.disabled_by is None
+    ]
+    assert enabled_entity_entries
+
+    freezer.tick(timedelta(days=1, seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_entry in enabled_entity_entries:
+        assert entity_registry.async_get(entity_entry.entity_id) is not None
+        state = hass.states.get(entity_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
+
 def _degraded_slots_empty() -> EngieBePricesData:
     """Return prices data with no slots or EANs at all."""
     return EngieBePricesData(slots={}, eans=())

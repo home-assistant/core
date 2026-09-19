@@ -211,7 +211,9 @@ async def test_two_accounts_get_distinct_entries(
 
 
 async def test_jwt_subject_missing_shows_form_error(
-    hass: HomeAssistant, mock_engie_client: MagicMock
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that a missing JWT subject shows a form error on the MFA step."""
     mock_engie_client.return_value.subject = None
@@ -230,3 +232,10 @@ async def test_jwt_subject_missing_shows_form_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_engie_client.return_value.subject = SUBJECT
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.called
