@@ -4,8 +4,13 @@
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "api_error": "Error while communicating with SwitchBot API: {error_detail}",
       "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "switchbot_unsupported_type": "Unsupported SwitchBot type.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "error": {
       "auth_failed": "Authentication failed: {error_detail}",
@@ -23,7 +28,7 @@
           "password": "[%key:component::switchbot::config::step::encrypted_auth::data_description::password%]",
           "username": "[%key:component::switchbot::config::step::encrypted_auth::data_description::username%]"
         },
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive."
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive. OAuth sign-in is recommended when available."
       },
       "confirm": {
         "description": "Do you want to set up {name}?"
@@ -37,13 +42,14 @@
           "password": "The password of your SwitchBot account",
           "username": "The username of your SwitchBot account"
         },
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive."
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive. OAuth sign-in is recommended when available."
       },
       "encrypted_choose_method": {
-        "description": "An encrypted SwitchBot device can be set up in Home Assistant in two different ways.\n\nYou can enter the key ID and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
+        "description": "An encrypted SwitchBot device can be set up by signing in with OAuth, entering your SwitchBot app username and password, or entering the encryption key manually. Credentials and OAuth tokens are only used during setup and are not saved.",
         "menu_options": {
-          "encrypted_auth": "SwitchBot account (recommended)",
-          "encrypted_key": "Enter encryption key manually"
+          "encrypted_auth": "Sign in with username and password",
+          "encrypted_key": "Enter encryption key manually",
+          "encrypted_oauth": "Sign in with SwitchBot OAuth (recommended)"
         }
       },
       "encrypted_key": {
@@ -75,9 +81,10 @@
         }
       },
       "user": {
-        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Sign in to download device information and automate discovery, or continue without signing in. OAuth is recommended and its tokens are not saved.",
         "menu_options": {
-          "cloud_login": "Sign in to SwitchBot account",
+          "cloud_login": "Sign in with username and password",
+          "oauth_login": "Sign in with SwitchBot OAuth (recommended)",
           "select_device": "Continue without signing in"
         }
       }
