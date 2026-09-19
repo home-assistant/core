@@ -1,20 +1,15 @@
 """ISEO Argo BLE Lock — Home Assistant integration."""
 
-from cryptography.hazmat.primitives.asymmetric.ec import SECP224R1, derive_private_key
-from iseo_argo_ble import IseoClient
-
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_UUID
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
+from .coordinator import IseoConfigEntry, IseoCoordinator, async_build_client
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type IseoConfigEntry = ConfigEntry[IseoClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
@@ -28,21 +23,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
             translation_placeholders={"address": address},
         )
 
-    priv_int = int(entry.data[CONF_PRIV_SCALAR], 16)
-    priv = await hass.async_add_executor_job(derive_private_key, priv_int, SECP224R1())
-    uuid_bytes = bytes.fromhex(entry.data[CONF_UUID])
-
-    client = IseoClient(
-        address=address,
-        uuid_bytes=uuid_bytes,
-        identity_priv=priv,
-        subtype=DEFAULT_USER_SUBTYPE,
-        ble_device=ble_device,
-    )
-
-    entry.runtime_data = client
+    client = await async_build_client(hass, entry.data, ble_device)
+    coordinator = IseoCoordinator(hass, entry, client)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(coordinator.async_start())
     return True
 
 

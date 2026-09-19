@@ -5,12 +5,7 @@ from typing import Any, override
 import uuid as uuid_module
 
 from cryptography.hazmat.primitives.asymmetric import ec
-from iseo_argo_ble import (
-    IseoAuthError,
-    IseoClient,
-    IseoConnectionError,
-    is_iseo_advertisement,
-)
+from iseo_argo_ble import IseoAuthError, IseoConnectionError, is_iseo_advertisement
 import probatio
 
 from homeassistant.components.bluetooth import (
@@ -29,7 +24,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_PRIV_SCALAR, DEFAULT_USER_SUBTYPE, DOMAIN
+from .const import CONF_PRIV_SCALAR, DOMAIN, GATEWAY_NAME
+from .coordinator import async_build_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +73,15 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_name: str = ""
         self._uuid_hex: str = ""
         self._priv_scalar: str = ""
-        self._gw_priv: ec.EllipticCurvePrivateKey | None = None
+
+    @property
+    def _entry_data(self) -> dict[str, str]:
+        """Return the config entry data for the identity being enrolled."""
+        return {
+            CONF_ADDRESS: self._address,
+            CONF_UUID: self._uuid_hex,
+            CONF_PRIV_SCALAR: self._priv_scalar,
+        }
 
     @override
     async def async_step_user(
@@ -100,7 +104,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._uuid_hex = new_uuid.hex()
             self._priv_scalar = hex(priv_int)
-            self._gw_priv = priv
 
             return await self.async_step_gw_register()
 
@@ -159,7 +162,6 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_name = discovery_info.name or discovery_info.address
         self._uuid_hex = new_uuid.hex()
         self._priv_scalar = hex(priv_int)
-        self._gw_priv = priv
 
         self.context["title_placeholders"] = {"name": self._device_name}
         return await self.async_step_bluetooth_confirm()
@@ -189,16 +191,11 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "cannot_connect"
             else:
-                assert self._gw_priv is not None
-                client = IseoClient(
-                    address=self._address,
-                    uuid_bytes=bytes.fromhex(self._uuid_hex),
-                    identity_priv=self._gw_priv,
-                    subtype=DEFAULT_USER_SUBTYPE,
-                    ble_device=ble_device,
+                client = await async_build_client(
+                    self.hass, self._entry_data, ble_device
                 )
                 try:
-                    await client.setup_gateway(name="Home Assistant")
+                    await client.setup_gateway(name=GATEWAY_NAME)
                     return self._async_create_iseo_entry()
                 except IseoConnectionError:
                     errors["base"] = "cannot_connect"
@@ -218,9 +215,5 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the final config entry."""
         return self.async_create_entry(
             title=self._device_name or f"ISEO Lock ({self._address})",
-            data={
-                CONF_ADDRESS: self._address,
-                CONF_UUID: self._uuid_hex,
-                CONF_PRIV_SCALAR: self._priv_scalar,
-            },
+            data=self._entry_data,
         )
