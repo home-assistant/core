@@ -49,6 +49,7 @@ def mock_config_entry() -> MockConfigEntry:
         data=VALID_CONFIG,
         entry_id="test_entry_id",
         version=2,
+        minor_version=2,
     )
 
 
@@ -61,6 +62,7 @@ def mock_auth_config_entry() -> MockConfigEntry:
         data=VALID_CONFIG_WITH_AUTH,
         entry_id="test_entry_id",
         version=2,
+        minor_version=2,
     )
 
 
