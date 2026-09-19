@@ -89,6 +89,16 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_types.append("long_press")
             event_types.append("long_release")
 
+        if self.entity_description.device_class == EventDeviceClass.DOORBELL:
+            # the doorbell device class requires the standard 'ring' event type,
+            # even if the device only reports multi-press events
+            event_types = [
+                "ring" if event_type == "initial_press" else event_type
+                for event_type in event_types
+            ]
+            if "ring" not in event_types:
+                event_types.insert(0, "ring")
+
         self._attr_event_types = event_types
 
     @override
@@ -138,6 +148,12 @@ class MatterEventEntity(MatterEntity, EventEntity):
             )
             return
 
+        if (
+            event_type == "initial_press"
+            and self.entity_description.device_class == EventDeviceClass.DOORBELL
+        ):
+            event_type = "ring"
+
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
             # some remotes send events that they do not report as supported (sigh...)
@@ -150,6 +166,25 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="Doorbell",
+            device_class=EventDeviceClass.DOORBELL,
+            translation_key="doorbell",
+        ),
+        entity_class=MatterEventEntity,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.FeatureMap,
+        ),
+        device_type=(device_types.Doorbell,),
+        optional_attributes=(
+            clusters.Switch.Attributes.NumberOfPositions,
+            clusters.FixedLabel.Attributes.LabelList,
+        ),
+        allow_multi=True,  # also used for sensor (current position) entity
+    ),
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=MatterEventEntityDescription(
