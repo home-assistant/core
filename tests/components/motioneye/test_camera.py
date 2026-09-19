@@ -16,6 +16,7 @@ from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_MOTION_DETECTION,
     KEY_NAME,
+    KEY_STREAMING_AUTH_MODE,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
@@ -322,6 +323,60 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
 
     await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert authorization == "Basic dXNlcjpwYXNzd29yZA=="
+
+
+async def test_stream_auth_header_cleared_when_auth_disabled(
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
+) -> None:
+    """Test stale Basic auth header is cleared when stream auth is disabled."""
+    authorizations: list[str | None] = []
+
+    async def stream_handler(request: web.Request) -> web.Response:
+        authorizations.append(request.headers.get("Authorization"))
+        return web.Response(body="")
+
+    app = web.Application()
+    app.add_routes([web.get("/", stream_handler)])
+    stream_server = await aiohttp_server(app)
+
+    client = create_mock_motioneye_client()
+    client.get_camera_stream_url = Mock(
+        return_value=f"http://127.0.0.1:{stream_server.port}/"
+    )
+
+    config_entry = create_mock_motioneye_config_entry(
+        hass,
+        data={
+            CONF_URL: f"http://127.0.0.1:{stream_server.port}",
+            CONF_SURVEILLANCE_USERNAME: "user",
+            CONF_SURVEILLANCE_PASSWORD: "password",
+        },
+    )
+
+    cameras = copy.deepcopy(TEST_CAMERAS)
+    client.async_get_cameras = AsyncMock(return_value=cameras)
+
+    await setup_mock_motioneye_config_entry(
+        hass, config_entry=config_entry, client=client
+    )
+    await hass.async_block_till_done()
+
+    await async_get_mjpeg_stream(
+        hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID
+    )
+    assert authorizations == ["Basic dXNlcjpwYXNzd29yZA=="]
+
+    cameras = copy.deepcopy(TEST_CAMERAS)
+    cameras[KEY_CAMERAS][0][KEY_STREAMING_AUTH_MODE] = None
+    client.async_get_cameras = AsyncMock(return_value=cameras)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    await async_get_mjpeg_stream(
+        hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID
+    )
+    assert authorizations == ["Basic dXNlcjpwYXNzd29yZA==", None]
 
 
 async def test_state_attributes(hass: HomeAssistant) -> None:
