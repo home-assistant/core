@@ -49,7 +49,7 @@ rules:
     status: exempt
     comment: The receiver cannot be discovered through a generic serial adapter.
   docs-data-update: done
-  docs-examples: done
+  docs-examples: todo # Deferred from the initial contribution.
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
