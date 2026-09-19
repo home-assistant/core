@@ -12,7 +12,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "middleware": "Use middleware",
+          "middleware": "Use middleware.php",
           "port": "[%key:common::config_flow::data::port%]",
           "uuid": "UUID"
         },
