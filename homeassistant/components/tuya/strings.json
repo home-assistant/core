@@ -790,6 +790,9 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
+      "indexed_apparent_power": {
+        "name": "Apparent power channel {index}"
+      },
       "indexed_current": {
         "name": "Current channel {index}"
       },
@@ -811,6 +814,12 @@
       },
       "indexed_power": {
         "name": "Power channel {index}"
+      },
+      "indexed_power_factor": {
+        "name": "Power factor channel {index}"
+      },
+      "indexed_reactive_power": {
+        "name": "Reactive power channel {index}"
       },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
