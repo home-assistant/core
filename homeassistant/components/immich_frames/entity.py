@@ -42,6 +42,7 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
         data = self.coordinator.current_data
         return (
             super().available
+            and self.coordinator.parent_available
             and data is not None
             and data.connected
             and data.status == "ready"

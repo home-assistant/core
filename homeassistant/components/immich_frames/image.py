@@ -42,7 +42,10 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
         data = self.coordinator.current_data
         return (
             data.updated_at
-            if data and data.connected and data.status == "ready"
+            if self.coordinator.parent_available
+            and data
+            and data.connected
+            and data.status == "ready"
             else None
         )
 
@@ -51,7 +54,12 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the selected asset link."""
         data = self.coordinator.current_data
-        if data is None or not data.connected or data.status != "ready":
+        if (
+            not self.coordinator.parent_available
+            or data is None
+            or not data.connected
+            or data.status != "ready"
+        ):
             return {}
         base_url = self.coordinator.configuration_url
         if base_url is None:
@@ -64,5 +72,10 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
         """Return the selected Immich image."""
         data = self.coordinator.current_data
         return (
-            data.image if data and data.connected and data.status == "ready" else None
+            data.image
+            if self.coordinator.parent_available
+            and data
+            and data.connected
+            and data.status == "ready"
+            else None
         )

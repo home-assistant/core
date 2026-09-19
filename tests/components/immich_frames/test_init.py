@@ -507,8 +507,7 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
     )
 
     with patch.object(coordinator._cache, "clear") as clear_cache:
-        assert coordinator._refresh_parent() is True
-        await coordinator._async_clear_account_cache()
+        assert await coordinator._refresh_parent() is True
     clear_cache.assert_called_once_with()
     assert coordinator._account_state_invalidated is True
     assert coordinator.data is not None
@@ -580,6 +579,26 @@ async def test_entities_guard_parent_runtime_data_after_unload(
     assert coordinator.configuration_url is None
     assert image.device_info["configuration_url"] is None
     assert image.extra_state_attributes == {}
+    assert image.available is False
+    assert image.image_last_updated is None
+    assert await image.async_image() is None
+
+
+async def test_parent_removal_invalidates_cached_frame(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Removing the parent cannot leave the previous image publicly available."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    image = ImmichFrameImage(coordinator)
+
+    with patch.object(coordinator._cache, "clear") as clear_cache:
+        await hass.config_entries.async_remove(parent_immich_entry.entry_id)
+        assert await coordinator._refresh_parent() is False
+
+    clear_cache.assert_called_once_with()
+    assert coordinator.current_data is None
+    assert image.available is False
+    assert await image.async_image() is None
 
 
 def _coordinator_for_test(

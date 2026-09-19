@@ -146,8 +146,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Fetch, render, and cache the next frame."""
         if self.paused and self.data is not None:
             return self.data
-        if not self._refresh_parent():
-            await self._async_clear_account_cache()
+        if not await self._refresh_parent():
             return self._cached_or_raise(
                 "immich_not_ready",
                 RuntimeError("The parent Immich entry is not ready"),
@@ -200,8 +199,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             if self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
                 self.immich_entry.async_start_reauth(self.hass)
             else:
-                self._refresh_parent()
-                await self._async_clear_account_cache()
+                await self._refresh_parent()
             return self._cached_or_raise(
                 "cannot_connect",
                 err,
@@ -260,7 +258,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             return await self._handle_parent_change()
         return result
 
-    def _refresh_parent(self) -> bool:
+    async def _refresh_parent(self) -> bool:
         """Refresh the parent entry and client after a parent reload."""
         immich_entry = self.hass.config_entries.async_get_entry(
             self.options[CONF_IMMICH_ENTRY_ID]
@@ -270,6 +268,9 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             or immich_entry.state is not ConfigEntryState.LOADED
             or not getattr(immich_entry, "runtime_data", None)
         ):
+            self._account_state_invalidated = True
+            self._account_cache_clear_pending = True
+            await self._async_clear_account_cache()
             return False
         runtime_data = immich_entry.runtime_data
         parent_identity = self._parent_identity(immich_entry, runtime_data)
@@ -286,6 +287,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self.immich_entry = immich_entry
         self._parent_runtime_data = runtime_data
         self.api = runtime_data.api
+        await self._async_clear_account_cache()
         return True
 
     async def _async_clear_account_cache(self) -> None:
@@ -324,6 +326,18 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         if self._account_state_invalidated:
             return None
         return self.data
+
+    @property
+    def parent_available(self) -> bool:
+        """Return whether the linked Immich entry can currently serve data."""
+        parent_entry = self.hass.config_entries.async_get_entry(
+            self.options[CONF_IMMICH_ENTRY_ID]
+        )
+        return bool(
+            parent_entry is not None
+            and parent_entry.state is ConfigEntryState.LOADED
+            and getattr(parent_entry, "runtime_data", None)
+        )
 
     @property
     def configuration_url(self) -> str | None:
@@ -369,8 +383,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
 
     async def _handle_parent_change(self) -> ImmichFramesData:
         """Discard an in-flight result when the parent changes underneath it."""
-        self._refresh_parent()
-        await self._async_clear_account_cache()
+        await self._refresh_parent()
         return self._cached_or_raise(
             "immich_not_ready",
             RuntimeError("The parent Immich entry changed during refresh"),
