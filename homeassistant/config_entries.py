@@ -982,13 +982,20 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value,assignment]
+                setup_result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
 
-            if not isinstance(result, bool):
-                logger.error(  # type: ignore[unreachable]
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
+            if setup_result is None:
+                result = True
+            elif not isinstance(setup_result, bool):  # type: ignore[unreachable]
+                logger.error(
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+            else:
+                result = setup_result
+
         except (
             asyncio.CancelledError,
             SystemExit,
@@ -1126,13 +1133,21 @@ class ConfigEntry[_DataT = Any]:
 
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
-        try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
+        result = False
+        try:
+            unload_result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
+
+            if unload_result is None:
+                result = True
+            else:
+                result = unload_result  # type: ignore[unreachable]
             assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
-            if domain_is_integration:  # type: ignore[unreachable]
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
+            if domain_is_integration:
                 if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
@@ -1153,7 +1168,8 @@ class ConfigEntry[_DataT = Any]:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
-        return result  # type: ignore[unreachable]
+
+        return result
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1281,13 +1297,14 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        if not isinstance(result, bool):
-            self.logger.error(
-                "%s.async_migrate_entry did not return boolean", self.domain
-            )
-            return False
-        if result:  # type: ignore[unreachable]
+        migration_result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
+        # Custom components can continue to return a boolean
+        # See https://github.com/home-assistant/architecture/discussions/1463
+        if migration_result is None:
+            result = True
+        else:
+            result = migration_result  # type: ignore[unreachable]
+        if result:
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
         return result
