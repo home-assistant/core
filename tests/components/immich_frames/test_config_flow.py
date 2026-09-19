@@ -287,8 +287,19 @@ async def test_album_flow_reports_auth_and_connection_errors(
         result = await flow.async_step_album({CONF_ALBUM_IDS: ["album-1"]})
         assert result["errors"]["base"] == expected_error
     api.albums.async_get_all_albums.side_effect = None
-    result = await flow.async_step_album(
-        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: SOURCE_ALBUM,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]},
     )
     assert result["type"] == "create_entry"
 
