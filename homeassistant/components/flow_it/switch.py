@@ -2,7 +2,6 @@
 
 from typing import Any, override
 
-from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -12,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FlowItConfigEntry, FlowItCoordinator
+from .coordinator import FlowItConfigEntry
 from .entity import FlowItVmcEntity
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
@@ -46,15 +45,6 @@ class FlowItVmcFlowSwitch(FlowItVmcEntity, SwitchEntity):
     """Flow-it flow switch entity."""
 
     entity_description: SwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: FlowItCoordinator,
-        vmc: FlowItVMCMachine,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, vmc, description)
 
     @override
     @property
