@@ -42,6 +42,7 @@ from .selection import (
 
 _LOGGER = logging.getLogger(__name__)
 RECENT_HISTORY_LIMIT = 20
+CANDIDATE_CACHE_INTERVAL = timedelta(minutes=5)
 
 
 @dataclass
@@ -84,6 +85,8 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._connected: bool | None = None
         self._recent_ids: set[str] = set()
         self._recent_order: deque[str] = deque()
+        self._candidate_cache: list[ImmichAsset] | None = None
+        self._candidate_cache_updated_at: datetime | None = None
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -131,9 +134,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             )
 
         try:
-            candidates = await async_get_candidates(
-                self.api, self.options, dt_util.utcnow()
-            )
+            candidates = await self._async_get_candidates()
             if not candidates:
                 return self._cached_or_raise(
                     "no_photos", LookupError("no photos"), status="no_matching_photos"
@@ -212,6 +213,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
 
     def _refresh_parent(self) -> bool:
         """Refresh the parent entry and client after a parent reload."""
+        previous_identity = (
+            self._parent_identity()
+            if getattr(self.immich_entry, "runtime_data", None)
+            else None
+        )
         immich_entry = self.hass.config_entries.async_get_entry(
             self.options[CONF_IMMICH_ENTRY_ID]
         )
@@ -223,7 +229,28 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             return False
         self.immich_entry = immich_entry
         self.api = immich_entry.runtime_data.api
+        if self._parent_identity() != previous_identity:
+            self._invalidate_candidate_cache()
         return True
+
+    async def _async_get_candidates(self) -> list[ImmichAsset]:
+        """Return candidates, refreshing the bounded index when it expires."""
+        now = dt_util.utcnow()
+        if (
+            self._candidate_cache is not None
+            and self._candidate_cache_updated_at is not None
+            and now - self._candidate_cache_updated_at < CANDIDATE_CACHE_INTERVAL
+        ):
+            return self._candidate_cache
+        candidates = await async_get_candidates(self.api, self.options, now)
+        self._candidate_cache = candidates
+        self._candidate_cache_updated_at = now
+        return candidates
+
+    def _invalidate_candidate_cache(self) -> None:
+        """Force the next update to retrieve the current candidate set."""
+        self._candidate_cache = None
+        self._candidate_cache_updated_at = None
 
     def _parent_identity(self) -> str:
         """Return a non-secret identity for the configured Immich account."""
@@ -265,7 +292,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Use the last rendered image when a recoverable update fails."""
         if self.data is not None:
             if connection_failed and self._connected is not False:
-                _LOGGER.warning("Immich is unavailable for %s", self.config_entry.title)
+                _LOGGER.info("Immich is unavailable for %s", self.config_entry.title)
             if connection_failed:
                 self._connected = False
             return replace(
@@ -303,6 +330,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Refresh immediately."""
         paused = self.paused
         self.paused = False
+        self._invalidate_candidate_cache()
         try:
             await self.async_refresh()
         finally:

@@ -243,6 +243,28 @@ async def test_user_source_preflight_reports_unavailable_assets(
     assert result["errors"]["base"] == "assets_unavailable"
 
 
+async def test_album_source_preflight_reports_unavailable_assets(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Album access is checked after the selected albums are validated."""
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_get_all_by_album_ids.side_effect = ClientError("offline")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: SOURCE_ALBUM,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
+
+
 async def test_smart_source_preflight_reports_immich_errors(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -342,6 +364,30 @@ async def test_options_flow_updates_display_settings(
 
     assert result["type"] == "create_entry"
     assert result["data"][CONF_MODE] == MODE_PAIRS
+
+
+async def test_options_flow_preflights_all_source(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options do not save when the all-photos source cannot be reached."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unavailable options",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Unavailable options",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    parent_immich_entry.runtime_data.api.search.async_get_all.side_effect = ClientError(
+        "offline"
+    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(DEFAULT_SOURCE)
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
 
 
 async def test_options_flow_configures_album_source(
@@ -503,6 +549,33 @@ async def test_options_flow_configures_smart_source(
     assert result["data"][CONF_SMART_QUERY] == "mountains"
 
 
+async def test_options_smart_source_preflight_reports_unavailable_assets(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options validate Smart Search before saving the query."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unavailable smart options",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Unavailable smart options",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    parent_immich_entry.runtime_data.api.search.async_smart_search.side_effect = (
+        ClientError("offline")
+    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_SMART)
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SMART_QUERY: "mountains"}
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
+
+
 async def test_options_flow_requires_smart_query(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -555,6 +628,33 @@ async def test_reconfigure_flow_keeps_generated_frame_name(
 
     assert result["type"] == "abort"
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_all_source_preflight_reports_unavailable_assets(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Reconfiguration validates all-photos access before saving."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unavailable reconfigure",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Unavailable reconfigure",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    parent_immich_entry.runtime_data.api.search.async_get_all.side_effect = ClientError(
+        "offline"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
 
 
 async def test_reconfigure_flow_handles_album_and_smart_sources(

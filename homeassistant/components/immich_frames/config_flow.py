@@ -68,6 +68,36 @@ PHOTO_FIT_OPTIONS = (PHOTO_FIT_CROP, PHOTO_FIT_FULL)
 SCREEN_SHAPE_OPTIONS = tuple(SCREEN_SIZES)
 
 
+async def _async_validate_source(
+    api: Immich | None, data: dict[str, Any]
+) -> str | None:
+    """Validate access to the selected source before saving it."""
+    if api is None:
+        return "immich_not_ready"
+    try:
+        source = data[CONF_SOURCE]
+        if source == SOURCE_SMART:
+            await api.search.async_smart_search(
+                str(data[CONF_SMART_QUERY]),
+                page_size=1,
+                max_pages=1,
+                asset_type=AssetType.IMAGE,
+            )
+        elif source == SOURCE_ALBUM:
+            await api.search.async_get_all_by_album_ids(
+                data.get(CONF_ALBUM_IDS, []), page_size=1, max_pages=1
+            )
+        else:
+            await api.search.async_get_all(page_size=1, max_pages=1)
+    except ImmichUnauthorizedError:
+        return "immich_auth"
+    except CONNECT_ERRORS:
+        return "assets_unavailable"
+    except ImmichError:
+        return "assets_unavailable"
+    return None
+
+
 class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle configuration of a frame linked to an Immich account."""
 
@@ -194,7 +224,10 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "album_unavailable"
             else:
                 self._data[CONF_ALBUM_IDS] = album_ids
-                return await self._async_finish_create()
+                if error := await self._async_validate_source():
+                    errors["base"] = error
+                else:
+                    return await self._async_finish_create()
         return self.async_show_form(
             step_id="album",
             data_schema=probatio.Schema(
@@ -287,26 +320,22 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_source(self) -> str | None:
         """Validate access to the selected source before creating an entry."""
-        api = self._parent_api()
-        if api is None:
-            return "immich_not_ready"
-        try:
-            if self._data[CONF_SOURCE] == SOURCE_SMART:
-                await api.search.async_smart_search(
-                    str(self._data[CONF_SMART_QUERY]),
-                    page_size=1,
-                    max_pages=1,
-                    asset_type=AssetType.IMAGE,
-                )
-            else:
-                await api.search.async_get_all(page_size=1, max_pages=1)
-        except ImmichUnauthorizedError:
-            return "immich_auth"
-        except CONNECT_ERRORS:
-            return "assets_unavailable"
-        except ImmichError:
-            return "assets_unavailable"
-        return None
+        return await _async_validate_source(self._parent_api(), self._data)
+
+    @staticmethod
+    def _reconfigure_schema(source: str) -> probatio.Schema:
+        """Return the reconfiguration source schema."""
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_SOURCE, default=source): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(FRAME_SOURCE_OPTIONS),
+                        translation_key=CONF_SOURCE,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -317,22 +346,18 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Required(
-                            CONF_SOURCE,
-                            default=self._data.get(CONF_SOURCE, DEFAULT_SOURCE),
-                        ): SelectSelector(
-                            SelectSelectorConfig(
-                                options=list(FRAME_SOURCE_OPTIONS),
-                                translation_key=CONF_SOURCE,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    }
+                data_schema=self._reconfigure_schema(
+                    self._data.get(CONF_SOURCE, DEFAULT_SOURCE)
                 ),
             )
         self._data.update(user_input)
+        if self._data[CONF_SOURCE] == SOURCE_ALL:
+            if error := await self._async_validate_source():
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self._reconfigure_schema(self._data[CONF_SOURCE]),
+                    errors={"base": error},
+                )
         return await self._async_continue_source()
 
 
@@ -369,6 +394,12 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 return await self.async_step_album()
             if source == SOURCE_SMART:
                 return await self.async_step_smart()
+            if error := await self._async_validate_source():
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self._settings_schema(),
+                    errors={"base": error},
+                )
             return self._finish()
         return self.async_show_form(
             step_id="init",
@@ -407,7 +438,10 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 errors["base"] = "album_unavailable"
             else:
                 self._data.update(user_input)
-                return self._finish()
+                if error := await self._async_validate_source():
+                    errors["base"] = error
+                else:
+                    return self._finish()
         return self.async_show_form(
             step_id="album",
             data_schema=probatio.Schema(
@@ -440,7 +474,10 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 errors[CONF_SMART_QUERY] = "smart_query_required"
             else:
                 self._data[CONF_SMART_QUERY] = query
-                return self._finish()
+                if error := await self._async_validate_source():
+                    errors["base"] = error
+                else:
+                    return self._finish()
         return self.async_show_form(
             step_id="smart",
             data_schema=probatio.Schema(
@@ -525,6 +562,17 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 ),
             }
         )
+
+    def _parent_api(self) -> Immich | None:
+        """Return the parent client, if it is loaded."""
+        parent = self.hass.config_entries.async_get_entry(
+            self._data.get(CONF_IMMICH_ENTRY_ID, "")
+        )
+        return getattr(getattr(parent, "runtime_data", None), "api", None)
+
+    async def _async_validate_source(self) -> str | None:
+        """Validate access to the selected source before saving options."""
+        return await _async_validate_source(self._parent_api(), self._data)
 
     def _finish(self) -> ConfigFlowResult:
         """Save options and reload the frame."""

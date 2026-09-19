@@ -241,6 +241,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     companion.asset_id = "companion"
     companion.checksum = "different"
     coordinator.options["mode"] = "pairs_only"
+    coordinator._invalidate_candidate_cache()
     with patch(
         "homeassistant.components.immich_frames.coordinator.async_get_candidates",
         new=AsyncMock(return_value=[portrait, companion]),
@@ -252,12 +253,14 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         "homeassistant.components.immich_frames.coordinator.async_get_candidates",
         new=AsyncMock(side_effect=ClientError("down")),
     ):
+        coordinator._invalidate_candidate_cache()
         result = await coordinator._async_update_data()
     assert result.status == "upstream_unavailable"
     with patch(
         "homeassistant.components.immich_frames.coordinator.async_get_candidates",
         new=AsyncMock(side_effect=LookupError("none")),
     ):
+        coordinator._invalidate_candidate_cache()
         result = await coordinator._async_update_data()
     assert result.status == "no_matching_photos"
     coordinator.options["mode"] = "pairs"
@@ -271,6 +274,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
             side_effect=ValueError("bad"),
         ),
     ):
+        coordinator._invalidate_candidate_cache()
         result = await coordinator._async_update_data()
     assert result.status == "invalid_image"
 
@@ -318,6 +322,25 @@ def test_coordinator_limits_recent_history(
 
     assert len(coordinator._recent_ids) == 20
     assert "asset-0" not in coordinator._recent_ids
+
+
+async def test_coordinator_reuses_candidates_until_invalidated(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Candidate retrieval is bounded between explicit refreshes."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    with patch(
+        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+        new=AsyncMock(return_value=list(MOCK_SEARCH_ASSETS)),
+    ) as get_candidates:
+        first = await coordinator._async_get_candidates()
+        second = await coordinator._async_get_candidates()
+        coordinator._invalidate_candidate_cache()
+        third = await coordinator._async_get_candidates()
+
+    assert first is second
+    assert third == first
+    assert get_candidates.await_count == 2
 
 
 def _coordinator_for_test(
