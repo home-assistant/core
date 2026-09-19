@@ -89,6 +89,7 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.CAMERA,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,

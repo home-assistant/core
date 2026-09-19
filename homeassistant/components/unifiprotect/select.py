@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -27,6 +27,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.public_devices import (
     PublicCamera,
+    PublicDeviceModel,
     PublicLight,
     SensorFeatureCapability,
 )
@@ -36,6 +37,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -380,7 +382,21 @@ async def async_setup_entry(
             entities.append(ProtectPTZPatrolSelect(data, device, patrols))
         async_add_entities(entities)
 
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectSelects,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                public_device=device,
+            )
+        )
+
     data.async_subscribe_adopt(_add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
 
     entities = list(
         async_all_device_entities(
@@ -388,18 +404,27 @@ async def async_setup_entry(
         )
     )
 
-    for camera in data.api.bootstrap.cameras.values():
-        if camera.feature_flags.is_ptz and camera.is_adopted_by_us:
-            patrols = data.ptz_patrols.get(camera.id, [])
-            entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
-
     api = data.api
+    if not api.is_public_only:
+        # PTZ patrols are read from the private bootstrap.
+        for camera in api.bootstrap.cameras.values():
+            if camera.feature_flags.is_ptz and camera.is_adopted_by_us:
+                patrols = data.ptz_patrols.get(camera.id, [])
+                entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
+
     if (
         api.has_public_bootstrap
         and api.public_bootstrap.arm_mode is not None
         and api.public_bootstrap.arm_profiles
     ):
-        entities.append(ProtectNVRArmProfileSelect(data, device=api.bootstrap.nvr))
+        # Same NVR device as the alarm control panel: without a private
+        # bootstrap it is the public one, whose mac setup guarantees.
+        nvr = (
+            cast(NVR, api.public_bootstrap.nvr)
+            if api.is_public_only
+            else api.bootstrap.nvr
+        )
+        entities.append(ProtectNVRArmProfileSelect(data, device=nvr))
 
     async_add_entities(entities)
 
@@ -407,14 +432,13 @@ async def async_setup_entry(
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     """A UniFi Protect Select Entity."""
 
-    device: Camera | Light | Viewer
     entity_description: ProtectSelectEntityDescription
     _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
 
     def __init__(
         self,
         data: ProtectData,
-        device: Camera | Light | Viewer,
+        device: ProtectDeviceType,
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
