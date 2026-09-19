@@ -193,7 +193,7 @@ def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Selec
 
     Filters states that do not have an old state or new state (added / removed)
     Filters states that are in a continuous domain with a UOM.
-    Filters states that do not have matching last_updated_ts and last_changed_ts.
+    Filters state updates that did not change the state or its attributes.
     """
     return (
         sel.filter(
@@ -202,12 +202,6 @@ def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Selec
         .outerjoin(OLD_STATE, (States.old_state_id == OLD_STATE.state_id))
         .where(_missing_state_matcher())
         .where(_not_continuous_entity_matcher())
-        .where(
-            (States.last_updated_ts == States.last_changed_ts)
-            | States.last_changed_ts.is_(None)
-            | States.attributes_id.is_distinct_from(OLD_STATE.attributes_id)
-            | States.attributes.is_distinct_from(OLD_STATE.attributes)
-        )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
@@ -218,14 +212,15 @@ def apply_states_filters(sel: Select, start_day: float, end_day: float) -> Selec
 def _missing_state_matcher() -> ColumnElement[bool]:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
-    # or the new_state is missing (removed entities). Same-state attribute
-    # changes are still real activity and should remain visible in the logbook.
+    # or the new_state is missing (removed entities).
     return sqlalchemy.and_(
         OLD_STATE.state_id.is_not(None),
         (
-            (States.state != OLD_STATE.state)
-            | (States.attributes_id != OLD_STATE.attributes_id)
-            | (States.attributes != OLD_STATE.attributes)
+            States.state.is_distinct_from(OLD_STATE.state)
+            | (
+                States.last_changed_ts.is_not(None)
+                & States.last_changed_ts.is_distinct_from(States.last_updated_ts)
+            )
         ),
         States.state.is_not(None),
     )

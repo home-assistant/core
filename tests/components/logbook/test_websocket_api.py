@@ -13,6 +13,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.logbook import DOMAIN, websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
@@ -51,7 +52,7 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, MockEntityPlatform, async_fire_time_changed
 from tests.components.recorder.common import (
     async_block_recorder,
     async_recorder_block_till_done,
@@ -201,15 +202,19 @@ async def test_get_events(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    hass.states.async_set("light.kitchen", STATE_OFF)
+    class MockLight(LightEntity):
+        _attr_brightness = 100
+        _attr_color_mode = ColorMode.BRIGHTNESS
+        _attr_is_on = True
+        _attr_name = "Kitchen"
+        _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    light = MockLight()
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    await platform.async_add_entities([light])
     await hass.async_block_till_done()
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
-    await hass.async_block_till_done()
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
-    await hass.async_block_till_done()
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
-    await hass.async_block_till_done()
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
+    light._attr_brightness = 200
+    light.async_write_ha_state()
     await hass.async_block_till_done()
     context = core.Context(
         id="01GTDGKBCH00GW0X276W5TEDDD",
@@ -261,17 +266,11 @@ async def test_get_events(
     assert response["id"] == 3
 
     results = response["result"]
-    assert len(results) == 5
+    assert len(results) == 2
     assert results[0]["entity_id"] == "light.kitchen"
     assert results[0]["state"] == "on"
     assert results[1]["entity_id"] == "light.kitchen"
-    assert results[1]["state"] == "on"
-    assert results[2]["entity_id"] == "light.kitchen"
-    assert results[2]["state"] == "on"
-    assert results[3]["entity_id"] == "light.kitchen"
-    assert results[3]["state"] == "on"
-    assert results[4]["entity_id"] == "light.kitchen"
-    assert results[4]["state"] == "off"
+    assert results[1]["state"] == "off"
 
     await client.send_json(
         {
@@ -285,23 +284,14 @@ async def test_get_events(
     assert response["id"] == 4
 
     results = response["result"]
-    assert len(results) == 6
+    assert len(results) == 3
     assert results[0]["message"] == "started"
     assert results[1]["entity_id"] == "light.kitchen"
     assert results[1]["state"] == "on"
     assert isinstance(results[1]["when"], float)
     assert results[2]["entity_id"] == "light.kitchen"
-    assert results[2]["state"] == "on"
+    assert results[2]["state"] == "off"
     assert isinstance(results[2]["when"], float)
-    assert results[3]["entity_id"] == "light.kitchen"
-    assert results[3]["state"] == "on"
-    assert isinstance(results[3]["when"], float)
-    assert results[4]["entity_id"] == "light.kitchen"
-    assert results[4]["state"] == "on"
-    assert isinstance(results[4]["when"], float)
-    assert results[5]["entity_id"] == "light.kitchen"
-    assert results[5]["state"] == "off"
-    assert isinstance(results[5]["when"], float)
 
     await client.send_json(
         {

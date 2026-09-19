@@ -16,6 +16,7 @@ from homeassistant.components import logbook, recorder
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.logbook import DOMAIN
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
@@ -58,7 +59,12 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_capture_events,
+    mock_platform,
+)
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -939,12 +945,19 @@ async def test_include_attribute_changes_for_same_state(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    hass.states.async_set("light.kitchen", STATE_OFF)
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
-    hass.states.async_set("light.kitchen", STATE_OFF)
+    class MockLight(LightEntity):
+        _attr_brightness = 100
+        _attr_color_mode = ColorMode.BRIGHTNESS
+        _attr_is_on = True
+        _attr_name = "Kitchen"
+        _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    light = MockLight()
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    await platform.async_add_entities([light])
+
+    light._attr_brightness = 200
+    light.async_write_ha_state()
 
     await hass.async_block_till_done()
 
@@ -961,13 +974,9 @@ async def test_include_attribute_changes_for_same_state(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
-    assert len(response_json) == 6
+    assert len(response_json) == 2
     assert response_json[0]["domain"] == "homeassistant"
     assert response_json[1]["entity_id"] == "light.kitchen"
-    assert response_json[2]["entity_id"] == "light.kitchen"
-    assert response_json[3]["entity_id"] == "light.kitchen"
-    assert response_json[4]["entity_id"] == "light.kitchen"
-    assert response_json[5]["entity_id"] == "light.kitchen"
 
 
 @pytest.mark.usefixtures("recorder_mock", "set_utc")
@@ -987,9 +996,15 @@ async def test_exclude_noop_updates_with_same_state_and_attributes(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     hass.states.async_set("light.kitchen", STATE_OFF)
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
-    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 100}, force_update=True
+    )
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 100}, force_update=True
+    )
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 100}, force_update=True
+    )
     hass.states.async_set("light.kitchen", STATE_OFF)
 
     await hass.async_block_till_done()
