@@ -124,5 +124,6 @@ async def test_error_log_does_not_include_credentials(
     await setup_integration(authenticated_entry, user)
 
     assert "Something strange" in caplog.text
+    assert API_KEY not in caplog.text
     assert API_SECRET not in caplog.text
     assert SESSION_KEY not in caplog.text
