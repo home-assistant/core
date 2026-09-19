@@ -7,10 +7,7 @@ from arcam.fmj.codecs import RoomEqMode
 from arcam.fmj.state import State
 import pytest
 
-from homeassistant.components.select import (
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.select import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
