@@ -313,7 +313,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         connection_failed: bool = False,
     ) -> ImmichFramesData:
         """Use the last rendered image when a recoverable update fails."""
-        if self.data is not None:
+        if self.data is not None and not self._account_state_invalidated:
             if connection_failed and self._connected is not False:
                 _LOGGER.info("Immich is unavailable for %s", self.config_entry.title)
             if connection_failed:

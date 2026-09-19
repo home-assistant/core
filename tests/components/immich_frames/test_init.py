@@ -382,6 +382,12 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
     assert coordinator.data is not None
     assert coordinator._candidate_cache is None
     assert coordinator._recent_ids == set()
+    with pytest.raises(UpdateFailed):
+        coordinator._cached_or_raise(
+            "upstream_error",
+            RuntimeError("replacement account unavailable"),
+            status="upstream_error",
+        )
 
 
 def _coordinator_for_test(
