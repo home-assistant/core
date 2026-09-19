@@ -96,6 +96,118 @@ def test_nested_references(snapshot: SnapshotAssertion) -> None:
     assert schema == snapshot
 
 
+def test_recursive_reference_description(caplog: pytest.LogCaptureFixture) -> None:
+    """Preserve a recursive field's description without expanding its reference."""
+    schema = _format_structured_output(
+        probatio.Schema(
+            {
+                probatio.Optional("child", description="The next node"): probatio.Self,
+            }
+        ),
+        None,
+    )
+
+    assert schema["properties"]["child"] == {
+        "anyOf": [{"$ref": "#"}, {"type": "null"}],
+        "description": "The next node",
+    }
+    validator = Draft202012Validator(schema)
+    assert validator.is_valid({"child": {"child": None}})
+    assert not validator.is_valid({"child": {"child": "invalid"}})
+    assert "Removed reference annotations" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "required",
+    [pytest.param([], id="optional"), pytest.param(["value"], id="required")],
+)
+def test_reference_annotations(
+    required: list[str], snapshot: SnapshotAssertion, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Keep annotations on nullable wrappers and log removals elsewhere."""
+    schema = {
+        "type": "object",
+        "properties": {
+            "value": {
+                "$ref": "#/$defs/value",
+                "title": "Value",
+                "description": "A value",
+            }
+        },
+        "required": required.copy(),
+        "$defs": {"value": {"type": "string", "enum": ["a", "b"]}},
+    }
+    adjust_schema(schema)
+
+    assert schema == snapshot
+    assert caplog.messages == snapshot(name="logs")
+    validator = Draft202012Validator(schema)
+    assert validator.is_valid({"value": "a"})
+    assert not validator.is_valid({"value": "c"})
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        pytest.param({"$ref": "#"}, id="required"),
+        pytest.param({"type": "array", "items": {"$ref": "#"}}, id="array-items"),
+    ],
+)
+def test_recursive_reference_annotations_removed(
+    field: dict[str, Any], snapshot: SnapshotAssertion, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Recursive references stay bare when no nullable wrapper is needed."""
+    field = deepcopy(field)
+    schema = {
+        "type": "object",
+        "properties": {"children": field},
+        "required": ["children"],
+    }
+    target = field.get("items", field)
+    target.update({"title": "Children", "description": "Child nodes"})
+    adjust_schema(schema)
+
+    assert schema == snapshot
+    assert caplog.messages == snapshot(name="logs")
+
+
+@pytest.mark.parametrize(
+    "required",
+    [pytest.param([], id="optional"), pytest.param(["value"], id="required")],
+)
+@pytest.mark.parametrize(
+    ("field", "keyword"),
+    [
+        pytest.param(
+            {"$ref": "#/$defs/value", "maxLength": 10}, "maxLength", id="length"
+        ),
+        pytest.param(
+            {"$ref": "#/$defs/value", "allOf": [{"maxLength": 10}]},
+            "maxLength",
+            id="all-of",
+        ),
+        pytest.param(
+            {"$ref": "#", "maxProperties": 1}, "maxProperties", id="recursive"
+        ),
+    ],
+)
+def test_reference_constraint_siblings(
+    field: dict[str, Any], keyword: str, required: list[str]
+) -> None:
+    """Reject reference constraints instead of dropping them or expanding cycles."""
+    with pytest.raises(HomeAssistantError, match="reference siblings") as err:
+        adjust_schema(
+            {
+                "type": "object",
+                "properties": {"value": deepcopy(field)},
+                "required": required.copy(),
+                "$defs": {"value": {"type": "string"}},
+            }
+        )
+    assert "$.properties.value" in str(err.value)
+    assert keyword in str(err.value)
+
+
 @pytest.mark.parametrize(
     "field",
     [

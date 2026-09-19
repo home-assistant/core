@@ -167,7 +167,31 @@ def _flatten_all_of(schema: dict[str, Any], path: str) -> None:
             schema.setdefault(key, value)
 
 
-def _adjust_schema(schema: dict[str, Any] | bool, path: str) -> None:
+def _adjust_reference(schema: dict[str, Any], path: str, *, nullable: bool) -> None:
+    """Keep references bare and preserve annotations on nullable wrappers."""
+    if siblings := schema.keys() - {"$ref", "title", "description"}:
+        raise HomeAssistantError(
+            f"Unsupported OpenAI output schema reference siblings at {path}: {', '.join(sorted(siblings))}"
+        )
+    annotations: dict[str, Any] = {
+        keyword: schema.pop(keyword)
+        for keyword in ("title", "description")
+        if keyword in schema
+    }
+    if nullable:
+        _make_nullable(schema)
+        schema.update(annotations)
+    elif annotations:
+        _LOGGER.debug(
+            "Removed reference annotations %s from OpenAI output schema at %s",
+            ", ".join(annotations),
+            path,
+        )
+
+
+def _adjust_schema(
+    schema: dict[str, Any] | bool, path: str, *, nullable: bool = False
+) -> None:
     """Normalize nested schemas and keep unsupported enforcement out of requests."""
     if not isinstance(schema, dict):
         raise HomeAssistantError(f"Unsupported OpenAI output schema at {path}")
@@ -187,6 +211,9 @@ def _adjust_schema(schema: dict[str, Any] | bool, path: str) -> None:
             "Removed unsupported uniqueItems: true from OpenAI output schema at %s",
             path,
         )
+    if "$ref" in schema:
+        _adjust_reference(schema, path, nullable=nullable)
+        return
 
     for name, definition in schema.get("$defs", {}).items():
         _adjust_schema(definition, f"{path}.$defs.{name}")
@@ -205,9 +232,10 @@ def _adjust_schema(schema: dict[str, Any] | bool, path: str) -> None:
         properties = schema.setdefault("properties", {})
         required = schema.setdefault("required", [])
         for name, prop in properties.items():
-            _adjust_schema(prop, f"{path}.properties.{name}")
+            _adjust_schema(
+                prop, f"{path}.properties.{name}", nullable=name not in required
+            )
             if name not in required:
-                _make_nullable(prop)
                 required.append(name)
     if "array" in types:
         if "items" not in schema:
@@ -215,6 +243,8 @@ def _adjust_schema(schema: dict[str, Any] | bool, path: str) -> None:
                 f"OpenAI output schema requires array items at {path}"
             )
         _adjust_schema(schema["items"], f"{path}.items")
+    if nullable:
+        _make_nullable(schema)
 
 
 def _make_nullable(schema: dict[str, Any]) -> None:
