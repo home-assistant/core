@@ -34,10 +34,13 @@ def _asset_from_state(values: dict[str, Any]) -> ImmichAsset:
     return ImmichAsset(**values)
 
 
-def cache_signature(options: dict[str, Any], parent_entry_id: str) -> str:
+def cache_signature(
+    options: dict[str, Any], parent_entry_id: str, parent_identity: str
+) -> str:
     """Return a settings/account-sensitive cache signature."""
     data = {
         "parent_entry_id": parent_entry_id,
+        "parent_identity": parent_identity,
         "render_version": RENDER_VERSION,
         "options": {
             key: value for key, value in options.items() if key != CONF_INTERVAL
@@ -56,7 +59,7 @@ class FrameCache:
         self.path = path
 
     def read(
-        self, options: dict[str, Any], parent_entry_id: str
+        self, options: dict[str, Any], parent_entry_id: str, parent_identity: str
     ) -> tuple[ImmichAsset, bytes, datetime] | None:
         """Read a valid cached asset and rendered image."""
         try:
@@ -64,7 +67,8 @@ class FrameCache:
             image = base64.b64decode(state["image"], validate=True)
             if (
                 state["cache_version"] != CACHE_VERSION
-                or state["signature"] != cache_signature(options, parent_entry_id)
+                or state["signature"]
+                != cache_signature(options, parent_entry_id, parent_identity)
                 or state["sha256"] != hashlib.sha256(image).hexdigest()
             ):
                 return None
@@ -82,6 +86,7 @@ class FrameCache:
         image: bytes,
         options: dict[str, Any],
         parent_entry_id: str,
+        parent_identity: str,
         rendered_at: datetime,
     ) -> None:
         """Atomically write a verified cached frame."""
@@ -93,7 +98,7 @@ class FrameCache:
             raise ValueError("Rendered image has an unsupported output size")
         state = {
             "cache_version": CACHE_VERSION,
-            "signature": cache_signature(options, parent_entry_id),
+            "signature": cache_signature(options, parent_entry_id, parent_identity),
             "asset": asset.to_dict(),
             "image": base64.b64encode(image).decode("ascii"),
             "sha256": hashlib.sha256(image).hexdigest(),

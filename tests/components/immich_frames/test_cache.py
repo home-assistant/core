@@ -31,10 +31,11 @@ def test_cache_round_trip_and_settings_invalidation(tmp_path: Path) -> None:
     options = {CONF_SCREEN_SHAPE: "landscape"}
 
     rendered_at = dt_util.utcnow() - timedelta(days=1)
-    cache.write(asset, image, options, "parent", rendered_at)
+    cache.write(asset, image, options, "parent", "server-a", rendered_at)
 
-    assert cache.read(options, "parent") == (asset, image, rendered_at)
-    assert cache.read({CONF_SCREEN_SHAPE: "portrait"}, "parent") is None
+    assert cache.read(options, "parent", "server-a") == (asset, image, rendered_at)
+    assert cache.read(options, "parent", "server-b") is None
+    assert cache.read({CONF_SCREEN_SHAPE: "portrait"}, "parent", "server-a") is None
 
     cache.clear()
     assert not cache.path.exists()
@@ -48,17 +49,19 @@ def test_cache_handles_exif_variants_and_invalid_output(tmp_path: Path) -> None:
     payload = BytesIO()
     Image.new("RGB", (16, 12), "blue").save(payload, "JPEG")
     image, _ = render([payload.getvalue()], "landscape", "show_full")
-    cache.write(asset, image, {}, "parent", dt_util.utcnow())
-    assert cache.read({}, "parent")[0].exif_info.date_time_original is not None
+    cache.write(asset, image, {}, "parent", "server", dt_util.utcnow())
+    assert (
+        cache.read({}, "parent", "server")[0].exif_info.date_time_original is not None
+    )
 
     asset.exif_info = None
-    cache.write(asset, image, {}, "parent", dt_util.utcnow())
-    assert cache.read({}, "parent")[0].exif_info is None
+    cache.write(asset, image, {}, "parent", "server", dt_util.utcnow())
+    assert cache.read({}, "parent", "server")[0].exif_info is None
 
     invalid = BytesIO()
     Image.new("RGB", (100, 100), "black").save(invalid, "JPEG")
     with pytest.raises(ValueError):
-        cache.write(asset, invalid.getvalue(), {}, "parent", dt_util.utcnow())
+        cache.write(asset, invalid.getvalue(), {}, "parent", "server", dt_util.utcnow())
 
     cache.path.write_text("not json")
-    assert cache.read({}, "parent") is None
+    assert cache.read({}, "parent", "server") is None

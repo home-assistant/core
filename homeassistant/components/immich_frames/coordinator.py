@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
+import hashlib
 import logging
 from pathlib import Path
 from typing import Any, override
@@ -12,6 +13,7 @@ from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -97,6 +99,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._cache.read,
             self.options,
             self.immich_entry.entry_id,
+            self._parent_identity(),
         )
         if cached is not None:
             asset, image, rendered_at = cached
@@ -196,6 +199,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 result.image,
                 self.options,
                 self.immich_entry.entry_id,
+                self._parent_identity(),
                 result.updated_at,
             )
         except OSError, ValueError:
@@ -216,6 +220,14 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self.immich_entry = immich_entry
         self.api = immich_entry.runtime_data.api
         return True
+
+    def _parent_identity(self) -> str:
+        """Return a non-secret identity for the configured Immich account."""
+        endpoint = str(self.immich_entry.runtime_data.configuration_url)
+        key_fingerprint = hashlib.sha256(
+            str(self.immich_entry.data.get(CONF_API_KEY, "")).encode()
+        ).hexdigest()
+        return f"{endpoint}|{key_fingerprint}"
 
     def _cached_or_raise(
         self,
