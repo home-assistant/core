@@ -66,12 +66,31 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "inverter_enabled": {
+        "name": "Inverter enabled"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to SMA device"
     },
     "invalid_auth": {
       "message": "Invalid authentication for SMA device"
+    },
+    "modbus_action_failed": {
+      "message": "Modbus action failed for control {control} with value {value}"
+    },
+    "modbus_write_failed": {
+      "message": "Modbus write failed for control {control} with value {value}"
+    }
+  },
+  "issues": {
+    "modbus_not_enabled": {
+      "description": "Home Assistant could not connect to the Modbus/SunSpec interface on {name}. Controls such as enabling/disabling the inverter or limiting its power output need Modbus and will not be available until it is enabled.\n\nTo enable Modbus on your SMA inverter:\n1. Log in to the inverter's web interface using the **Installer** login.\n2. Go to **Device configuration** > **Modbus**.\n3. Enable **Modbus TCP server**, and enable **SunSpec** if it is shown as a separate option.\n4. Save the settings, then reload the SMA integration in Home Assistant.",
+      "title": "Could not connect to Modbus on {name}"
     }
   },
   "selector": {
