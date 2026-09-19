@@ -1331,6 +1331,11 @@ async def test_add_authorized_client_failure_aborts(hass: HomeAssistant) -> None
     [
         pytest.param(InvalidResponse(), "cannot_connect", id="lookup_failure"),
         pytest.param(_empty_clients(), "key_not_registered", id="key_not_registered"),
+        pytest.param(
+            _own_key_clients(AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT),
+            "key_expired",
+            id="key_expired",
+        ),
         pytest.param(_own_key_clients("gremlin"), "cannot_connect", id="unknown_state"),
     ],
 )
