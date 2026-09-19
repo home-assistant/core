@@ -403,6 +403,7 @@ FLOWS = {
         "izone",
         "jellyfin",
         "jewish_calendar",
+        "jfl_alarm",
         "justnimbus",
         "jvc_projector",
         "kaco_modbus",
