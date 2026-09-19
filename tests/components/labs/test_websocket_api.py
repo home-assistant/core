@@ -282,7 +282,7 @@ async def test_websocket_update_validates_enabled_parameter(
     msg = await client.receive_json()
 
     assert not msg["success"]
-    # Validation error from voluptuous
+    # Validation error from probatio
 
 
 async def test_storage_persists_preview_feature_across_calls(

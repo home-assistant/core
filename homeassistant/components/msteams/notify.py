@@ -1,6 +1,6 @@
 """Microsoft Teams platform for notify component."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 from homeassistant.const import CONF_URL
@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DOMAIN = "msteams"
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({probatio.Required(CONF_URL): cv.url})
 
 
 async def async_get_service(
