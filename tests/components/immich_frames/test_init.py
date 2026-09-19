@@ -237,6 +237,17 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     assert result.status == "ready"
     assert render.call_args.args[2] == PHOTO_FIT_CROP
 
+    companion = copy(portrait)
+    companion.asset_id = "companion"
+    companion.checksum = "different"
+    coordinator.options["mode"] = "pairs_only"
+    with patch(
+        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+        new=AsyncMock(return_value=[portrait, companion]),
+    ):
+        result = await coordinator._async_update_data()
+    assert result.status == "ready"
+
     with patch(
         "homeassistant.components.immich_frames.coordinator.async_get_candidates",
         new=AsyncMock(side_effect=ClientError("down")),
@@ -249,6 +260,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     ):
         result = await coordinator._async_update_data()
     assert result.status == "no_matching_photos"
+    coordinator.options["mode"] = "pairs"
     with (
         patch(
             "homeassistant.components.immich_frames.coordinator.async_get_candidates",
@@ -273,6 +285,39 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         schedule_reload.assert_called_once()
     assert coordinator._orientation_is_portrait(portrait) is True
     assert coordinator._orientation_is_portrait(MOCK_SEARCH_ASSETS[0]) is False
+
+
+def test_coordinator_resets_recent_history_when_candidates_are_exhausted(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Recent-photo avoidance starts a new cycle after all candidates are shown."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    first, second = MOCK_SEARCH_ASSETS[:2]
+    coordinator._recent_order.extend((first.asset_id, second.asset_id))
+    coordinator._recent_ids.update((first.asset_id, second.asset_id))
+
+    coordinator._reset_recent_if_exhausted([first, second])
+
+    assert coordinator.data is not None
+    assert coordinator._recent_ids == {coordinator.data.asset.asset_id}
+    assert list(coordinator._recent_order) == [coordinator.data.asset.asset_id]
+
+
+def test_coordinator_limits_recent_history(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Recent-photo history does not grow with the lifetime of the entry."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    assets = []
+    for index in range(21):
+        asset = copy(MOCK_SEARCH_ASSETS[0])
+        asset.asset_id = f"asset-{index}"
+        assets.append(asset)
+
+    coordinator._remember_assets(tuple(assets))
+
+    assert len(coordinator._recent_ids) == 20
+    assert "asset-0" not in coordinator._recent_ids
 
 
 def _coordinator_for_test(

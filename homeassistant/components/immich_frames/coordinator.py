@@ -1,5 +1,6 @@
 """Coordinator for Immich Frames."""
 
+from collections import deque
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 import hashlib
@@ -40,6 +41,7 @@ from .selection import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+RECENT_HISTORY_LIMIT = 20
 
 
 @dataclass
@@ -81,6 +83,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self.paused = False
         self._connected: bool | None = None
         self._recent_ids: set[str] = set()
+        self._recent_order: deque[str] = deque()
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -112,7 +115,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 using_cache=True,
                 status="cached",
             )
-            self._recent_ids.add(asset.asset_id)
+            self._remember_assets((asset,))
 
     @override
     async def _async_update_data(self) -> ImmichFramesData:
@@ -140,6 +143,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 selection_candidates = candidates_with_companion(
                     candidates, self.options
                 )
+            self._reset_recent_if_exhausted(selection_candidates)
             primary = choose_asset(selection_candidates, self.options, self._recent_ids)
             photos = selected_photos(primary, candidates, self.options)
             payloads = [
@@ -191,7 +195,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         if self._connected is False:
             _LOGGER.info("Immich connection restored for %s", self.config_entry.title)
         self._connected = True
-        self._recent_ids.update(asset.asset_id for asset in photos)
+        self._remember_assets(photos)
         try:
             await self.hass.async_add_executor_job(
                 self._cache.write,
@@ -228,6 +232,27 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             str(self.immich_entry.data.get(CONF_API_KEY, "")).encode()
         ).hexdigest()
         return f"{endpoint}|{key_fingerprint}"
+
+    def _remember_assets(self, assets: tuple[ImmichAsset, ...]) -> None:
+        """Remember a bounded set of recently displayed assets."""
+        for asset in assets:
+            asset_id = asset.asset_id
+            if asset_id in self._recent_ids:
+                continue
+            if len(self._recent_order) >= RECENT_HISTORY_LIMIT:
+                self._recent_ids.discard(self._recent_order.popleft())
+            self._recent_order.append(asset_id)
+            self._recent_ids.add(asset_id)
+
+    def _reset_recent_if_exhausted(self, candidates: list[ImmichAsset]) -> None:
+        """Reset recent history when every candidate has been displayed."""
+        candidate_ids = {asset.asset_id for asset in candidates}
+        if not candidate_ids or not candidate_ids.issubset(self._recent_ids):
+            return
+        self._recent_ids.clear()
+        self._recent_order.clear()
+        if self.data is not None:
+            self._remember_assets(self.data.photos or (self.data.asset,))
 
     def _cached_or_raise(
         self,
