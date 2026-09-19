@@ -4,6 +4,11 @@ from aiohttp import ClientError
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
+from homeassistant.components.immich_frames.config_flow import (
+    ImmichFramesConfigFlow,
+    ImmichFramesOptionsFlow,
+    _async_validate_source,
+)
 from homeassistant.components.immich_frames.const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_NAME,
@@ -43,6 +48,54 @@ def _options_input(source: str) -> dict[str, object]:
         CONF_SCREEN_SHAPE: "landscape",
         CONF_PHOTO_FIT: "show_full",
     }
+
+
+async def test_source_validation_maps_parent_and_api_errors(
+    parent_immich_entry: MockConfigEntry,
+) -> None:
+    """Source preflight maps missing, auth, transport, and API failures."""
+    api = parent_immich_entry.runtime_data.api
+    data = {CONF_SOURCE: DEFAULT_SOURCE}
+
+    assert await _async_validate_source(None, data) == "immich_not_ready"
+
+    api.search.async_get_all.side_effect = ImmichUnauthorizedError(
+        {"message": "bad", "correlationId": "test"}
+    )
+    assert await _async_validate_source(api, data) == "immich_auth"
+
+    api.search.async_get_all.side_effect = ClientError("offline")
+    assert await _async_validate_source(api, data) == "assets_unavailable"
+
+    api.search.async_get_all.side_effect = ImmichError(
+        {"message": "server", "correlationId": "test"}
+    )
+    assert await _async_validate_source(api, data) == "assets_unavailable"
+
+
+async def test_config_flow_handles_unavailable_parent_and_album(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Direct source steps preserve clear errors for unavailable selections."""
+    flow = ImmichFramesConfigFlow()
+    flow.hass = hass
+    result = await flow.async_step_user(
+        {CONF_IMMICH_ENTRY_ID: "missing", CONF_SOURCE: DEFAULT_SOURCE}
+    )
+    assert result["errors"]["base"] == "immich_unavailable"
+
+    flow._data = {
+        CONF_IMMICH_ENTRY_ID: "missing",
+        CONF_SOURCE: SOURCE_ALBUM,
+    }
+    result = await flow.async_step_album()
+    assert result["type"] == "abort"
+    assert result["reason"] == "immich_not_ready"
+
+    flow._data[CONF_IMMICH_ENTRY_ID] = parent_immich_entry.entry_id
+    result = await flow.async_step_album({CONF_ALBUM_IDS: ["missing"]})
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "album_unavailable"
 
 
 async def test_user_requires_immich(hass: HomeAssistant) -> None:
@@ -425,6 +478,36 @@ async def test_options_flow_configures_album_source(
     assert result["data"][CONF_ALBUM_IDS]
 
 
+async def test_options_album_flow_validates_selection_and_source(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options reject stale albums and unreachable album assets."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Album source validation",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Album source validation",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    flow = ImmichFramesOptionsFlow(entry)
+    flow.hass = hass
+    flow._data.update(_options_input(SOURCE_ALBUM))
+
+    result = await flow.async_step_album({CONF_ALBUM_IDS: ["missing"]})
+    assert result["errors"]["base"] == "album_unavailable"
+
+    parent_immich_entry.runtime_data.api.search.async_get_all_by_album_ids.side_effect = ClientError(
+        "offline"
+    )
+    result = await flow.async_step_album(
+        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
+    )
+    assert result["errors"]["base"] == "assets_unavailable"
+
+
 async def test_options_flow_validates_empty_and_missing_parent_albums(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -504,14 +587,26 @@ async def test_options_album_flow_reports_immich_errors(
         },
     )
     entry.add_to_hass(hass)
-    parent_immich_entry.runtime_data.api.albums.async_get_all_albums.side_effect = (
-        ImmichError({"message": "server", "correlationId": "test"})
-    )
+    get_albums = parent_immich_entry.runtime_data.api.albums.async_get_all_albums
+    for side_effect in (
+        ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
+        ClientError("offline"),
+        ImmichError({"message": "server", "correlationId": "test"}),
+    ):
+        get_albums.side_effect = side_effect
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], _options_input(SOURCE_ALBUM)
+        )
+        assert result["errors"]["base"] in {"immich_auth", "albums_unavailable"}
+
+    get_albums.side_effect = None
+    get_albums.return_value = []
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], _options_input(SOURCE_ALBUM)
     )
-    assert result["errors"]["base"] == "albums_unavailable"
+    assert result["reason"] == "no_albums"
 
 
 async def test_options_flow_configures_smart_source(
