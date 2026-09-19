@@ -5,7 +5,11 @@ from typing import Any, override
 
 from hole import Hole
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -30,6 +34,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="dns_queries_today",
@@ -40,6 +45,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries_cached",
@@ -79,6 +85,7 @@ SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
         key="clients.total",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="queries.total",
@@ -89,6 +96,7 @@ SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
         key="gravity.domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.cached",
