@@ -194,6 +194,12 @@ async def test_coordinator_starts_parent_reauth_and_translates_unsupported_error
         await coordinator._async_update_data()
     assert exc_info.value.translation_key == "upstream_error"
 
+    parent_immich_entry.mock_state(hass, ConfigEntryState.SETUP_RETRY)
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+    assert exc_info.value.translation_key == "immich_not_ready"
+    parent_immich_entry.mock_state(hass, ConfigEntryState.LOADED)
+
     with (
         patch(
             "homeassistant.components.immich_frames.coordinator.async_get_candidates",
