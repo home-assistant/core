@@ -7,6 +7,7 @@ from typing import Any, Literal, override
 
 from uiprotect.data import (
     Camera,
+    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -660,7 +661,11 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_available = False
             self._attr_is_on = None
             return
-        self._attr_available = self.data.last_public_update_success
+        # A relay that dropped off the console stays in the bootstrap.
+        self._attr_available = (
+            self.data.last_public_update_success
+            and relay.state is DeviceState.CONNECTED
+        )
         self._attr_is_on = (
             _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
         )

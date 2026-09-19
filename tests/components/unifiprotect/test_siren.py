@@ -4,7 +4,14 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import ModelType, PublicSirenStatus, Siren, SirenDuration, WSAction
+from uiprotect.data import (
+    DeviceState,
+    ModelType,
+    PublicSirenStatus,
+    Siren,
+    SirenDuration,
+    WSAction,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
@@ -44,7 +51,9 @@ SIREN_NAME = "Garage Siren"
 SIREN_ENTITY_ID = "siren.garage_siren"
 
 
-def _make_siren(*, is_active: bool = False) -> Mock:
+def _make_siren(
+    *, is_active: bool = False, state: DeviceState = DeviceState.CONNECTED
+) -> Mock:
     """Build a mock :class:`Siren`."""
     status = Mock(spec=PublicSirenStatus)
     status.is_active = is_active
@@ -56,6 +65,7 @@ def _make_siren(*, is_active: bool = False) -> Mock:
     siren.mac = SIREN_MAC
     siren.name = SIREN_NAME
     siren.model = ModelType.SIREN
+    siren.state = state
     siren.volume = 50
     siren.siren_status = status
     siren.is_active = is_active
@@ -597,6 +607,46 @@ async def test_siren_auto_off_when_already_expired_at_update(
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "state",
+    [DeviceState.DISCONNECTED, DeviceState.CONNECTING, DeviceState.UNKNOWN],
+)
+async def test_siren_unavailable_when_not_connected_at_setup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    state: DeviceState,
+) -> None:
+    """A siren that is not connected at setup starts out unavailable."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(_make_siren(state=state))
+
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_siren_unavailable_when_disconnected(
+    hass: HomeAssistant,
+    ufp_with_siren: MockUFPFixture,
+    siren: Mock,
+) -> None:
+    """A siren that drops off the console is unavailable, and recovers."""
+    await init_entry(hass, ufp_with_siren, [])
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
+
+    siren.state = DeviceState.DISCONNECTED
+    ufp_with_siren.devices_ws_subscription(_make_ws_msg(siren))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    siren.state = DeviceState.CONNECTED
+    ufp_with_siren.devices_ws_subscription(_make_ws_msg(siren))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
 
 
 async def test_siren_unavailable_on_delete_event(
