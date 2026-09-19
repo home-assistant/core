@@ -67,12 +67,7 @@ async def test_full_flow(
     assert result["data"]["access_token"] == "new-access-token"
     assert result["data"]["refresh_token"] == "new-refresh-token"
     assert CONF_PASSWORD not in result["data"]
-
-    entry = (
-        mock_setup_entry.call_args.kwargs.get("entry")
-        or mock_setup_entry.call_args.args[1]
-    )
-    assert entry.unique_id == SUBJECT
+    assert result["result"].unique_id == SUBJECT
 
 
 @pytest.mark.parametrize(
