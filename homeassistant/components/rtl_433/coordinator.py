@@ -61,6 +61,10 @@ class Rtl433Coordinator(DataUpdateCoordinator[dict[str, NormalizedEvent]]):
             secure=entry.data.get(CONF_SECURE, False),
             session=async_get_clientsession(hass),
             on_event=self._handle_event,
+            # Offset-less rtl_433 timestamps are classified in Home Assistant's
+            # configured zone, not the host process zone; the two diverge when the
+            # container's zone differs, misreading live events as stale replays.
+            event_tz=dt_util.get_default_time_zone(),
         )
 
     @override
