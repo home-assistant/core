@@ -19,6 +19,7 @@ from homeassistant.components.knx.storage.const import CONF_DATA
 from homeassistant.components.knx.storage.entity_store_schema import (
     BaseEntityConfig,
     BinarySensorKnxConfig,
+    CoverKnxConfig,
     DateKnxConfig,
     DatetimeKnxConfig,
     KnxEntityData,
@@ -29,6 +30,7 @@ from homeassistant.components.knx.storage.entity_store_schema import (
     SwitchKnxConfig,
     TextKnxConfig,
     TimeKnxConfig,
+    WeatherKnxConfig,
 )
 from homeassistant.components.knx.storage.entity_store_validation import (
     validate_entity_data,
@@ -964,6 +966,56 @@ TYPED_CONFIG_CASES = [
             "sync_state": True,
         },
         id="text",
+    ),
+    pytest.param(
+        Platform.WEATHER,
+        WeatherKnxConfig,
+        {
+            "ga_temperature": {"state": "1/2/3"},
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+        },
+        {
+            "ga_temperature": {"state": "1/2/3", "passive": []},
+            "ga_humidity": None,
+            "ga_air_pressure": None,
+            "ga_wind_speed": None,
+            "ga_wind_bearing": None,
+            "ga_brightness_east": None,
+            "ga_brightness_south": None,
+            "ga_brightness_west": None,
+            "ga_brightness_north": None,
+            "ga_day_night": None,
+            "invert_day_night": False,
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+            "ga_frost_alarm": None,
+            "ga_wind_alarm": None,
+            "sync_state": True,
+        },
+        id="weather",
+    ),
+    pytest.param(
+        Platform.COVER,
+        CoverKnxConfig,
+        {
+            "ga_up_down": {"write": "1/2/3"},
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5"},
+            "travelling_time_down": 10,
+        },
+        {
+            "ga_up_down": {"write": "1/2/3", "passive": []},
+            "invert_updown": False,
+            "ga_stop": None,
+            "ga_step": None,
+            "ga_position_set": None,
+            "ga_position_state": None,
+            "invert_position": False,
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5", "passive": []},
+            "invert_angle": False,
+            "travelling_time_up": 25.0,
+            "travelling_time_down": 10.0,
+            "sync_state": True,
+        },
+        id="cover",
     ),
 ]
 
