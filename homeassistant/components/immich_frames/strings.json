@@ -99,8 +99,8 @@
       "album_required": "Select at least one album.",
       "album_unavailable": "One or more selected albums are no longer available.",
       "albums_unavailable": "Immich albums could not be loaded.",
-      "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
       "immich_auth": "The Immich account rejected this request.",
+      "pairs_only_portrait_required": "Pairs-only mode requires portrait photos.",
       "smart_query_required": "Enter keywords for the smart search."
     },
     "step": {
