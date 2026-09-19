@@ -2069,8 +2069,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/volvo/ @thomasddn
 /homeassistant/components/vrchat/ @hi94740
 /tests/components/vrchat/ @hi94740
-/homeassistant/components/wake_on_lan/ @ntilley905
-/tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
 /tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline
