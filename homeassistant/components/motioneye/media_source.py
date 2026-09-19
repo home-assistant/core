@@ -8,6 +8,7 @@ from pathlib import PurePath
 from typing import Any, cast, override
 
 from aiohttp import web
+from motioneye_client.client import MotionEyeClientError
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
 from homeassistant.components.http import HomeAssistantView
@@ -122,42 +123,45 @@ class MotionEyeMediaProxyView(HomeAssistantView):
 
         range_header = request.headers.get("Range")
 
-        async with cast(
-            Any, entry.runtime_data.client
-        ).async_get_media_stream(
-            camera,
-            media_path,
-            image=kind == "images",
-            preview=preview == "1",
-            range_header=range_header,
-        ) as upstream:
-            headers = {}
-            for header in (
-                "Accept-Ranges",
-                "Content-Length",
-                "Content-Range",
-                "Content-Type",
-            ):
-                if value := upstream.headers.get(header):
-                    headers[header] = value
+        try:
+            async with cast(
+                Any, entry.runtime_data.client
+            ).async_get_media_stream(
+                camera,
+                media_path,
+                image=kind == "images",
+                preview=preview == "1",
+                range_header=range_header,
+            ) as upstream:
+                headers = {}
+                for header in (
+                    "Accept-Ranges",
+                    "Content-Length",
+                    "Content-Range",
+                    "Content-Type",
+                ):
+                    if value := upstream.headers.get(header):
+                        headers[header] = value
 
-            response = web.StreamResponse(
-                status=upstream.status,
-                headers=headers,
-            )
-
-            if "Content-Type" not in headers:
-                response.content_type = (
-                    "image/jpeg" if preview == "1" else MIME_TYPE_MAP[kind]
+                response = web.StreamResponse(
+                    status=upstream.status,
+                    headers=headers,
                 )
 
-            await response.prepare(request)
+                if "Content-Type" not in headers:
+                    response.content_type = (
+                        "image/jpeg" if preview == "1" else MIME_TYPE_MAP[kind]
+                    )
 
-            async for chunk in upstream.content.iter_chunked(64 * 1024):
-                await response.write(chunk)
+                await response.prepare(request)
 
-            await response.write_eof()
-            return response
+                async for chunk in upstream.content.iter_chunked(64 * 1024):
+                    await response.write(chunk)
+
+                await response.write_eof()
+                return response
+        except MotionEyeClientError:
+            return web.Response(status=502)
 
 
 # Hierarchy:
