@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from venstarcolortouch import VenstarColorTouch
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -73,13 +73,13 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PIN): str,
-                    vol.Optional(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PIN): str,
+                    probatio.Optional(CONF_SSL, default=False): bool,
                 }
             ),
             errors=errors,

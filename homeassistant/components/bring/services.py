@@ -7,7 +7,7 @@ from bring_api import (
     BringRequestException,
     ReactionType,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
@@ -32,12 +32,12 @@ ATTR_RECEIVER = "publicUserUuid"
 SERVICE_PUSH_NOTIFICATION = "send_message"
 SERVICE_ACTIVITY_STREAM_REACTION = "send_reaction"
 
-SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
+SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_REACTION): vol.All(
-            vol.Upper,
-            vol.Coerce(ReactionType),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_REACTION): probatio.All(
+            probatio.Upper,
+            probatio.Coerce(ReactionType),
         ),
     }
 )
@@ -107,10 +107,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PUSH_NOTIFICATION,
         entity_domain=TODO_DOMAIN,
         schema={
-            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                vol.Upper, vol.Coerce(BringNotificationType)
+            probatio.Required(ATTR_NOTIFICATION_TYPE): probatio.All(
+                probatio.Upper, probatio.Coerce(BringNotificationType)
             ),
-            vol.Optional(ATTR_ITEM_NAME): cv.string,
+            probatio.Optional(ATTR_ITEM_NAME): cv.string,
         },
         func="async_send_message",
     )

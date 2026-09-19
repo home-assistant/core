@@ -72,6 +72,7 @@ _DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
 _WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+_WH_TO_THERM_US = _WH_TO_J / 1.054804e8  # 1 therm (U.S.) = 1.054804e8 J (NIST SP 811)
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -414,6 +415,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
+        UnitOfEnergy.THERM: _WH_TO_THERM_US * 1e3,
     }
     VALID_UNITS = set(UnitOfEnergy)
 

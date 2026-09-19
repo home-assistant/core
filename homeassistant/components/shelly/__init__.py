@@ -15,7 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
@@ -112,12 +112,14 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.UPDATE,
 ]
 
-COAP_SCHEMA: Final = vol.Schema(
+COAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
     }
 )
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: COAP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0

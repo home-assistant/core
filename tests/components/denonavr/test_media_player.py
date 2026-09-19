@@ -1,6 +1,7 @@
 """The tests for the denonavr media player platform."""
 
 import asyncio
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -22,13 +23,14 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ
+from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ, CONF_USE_TELNET
 from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
     SERVICE_GET_COMMAND,
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -57,7 +59,7 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 
 
 @pytest.fixture(name="client")
-def client_fixture():
+def client_fixture() -> Generator[MagicMock]:
     """Patch of client library for tests."""
     with (
         patch(
@@ -413,6 +415,34 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
         await hass.async_block_till_done()
 
     assert client.async_update_audyssey.await_count > calls_before
+
+
+async def test_setup_retry_on_request_error(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Test that a failed request during setup retries the config entry."""
+    client.async_update.side_effect = AvrInvalidResponseError(
+        "Server disconnected without sending a response", "GET"
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        },
+        options={CONF_USE_TELNET: True},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(

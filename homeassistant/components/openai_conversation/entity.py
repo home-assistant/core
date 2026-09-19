@@ -56,8 +56,7 @@ from openai.types.responses.tool_param import (
     ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
-from probatio import to_openapi
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -142,10 +141,10 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
 
 
 def _format_structured_output(
-    schema: vol.Schema, llm_api: llm.APIInstance | None
+    schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = to_openapi(
+    result: dict[str, Any] = probatio.to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
@@ -163,7 +162,7 @@ def _format_tool(
 ) -> FunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
-    schema = to_openapi(
+    schema = probatio.to_openapi(
         tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
     )
     if unsupported_keys.intersection(schema):
@@ -193,7 +192,7 @@ def _convert_content_to_param(
                 and content.tool_call_id in web_search_calls
             ):
                 web_search_call = web_search_calls.pop(content.tool_call_id)
-                web_search_call["status"] = content.tool_result.get(  # type: ignore[typeddict-item]
+                web_search_call["status"] = content.result.data.get(  # type: ignore[typeddict-item]
                     "status", "completed"
                 )
                 messages.append(web_search_call)
@@ -202,7 +201,12 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json_dumps(content.tool_result),
+                        output=json_dumps(
+                            {
+                                "data": content.result.data,
+                                "error": content.result.error,
+                            }
+                        ),
                     )
                 )
             continue
@@ -343,13 +347,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "code_interpreter",
-                    "tool_result": {
-                        "output": (
-                            [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
-                            if event.item.outputs is not None
-                            else None
-                        )
-                    },
+                    "result": llm.ToolResult(
+                        data={
+                            "output": (
+                                [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
+                                if event.item.outputs is not None
+                                else None
+                            )
+                        },
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ResponseFunctionWebSearch):
@@ -371,7 +378,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "web_search_call",
-                    "tool_result": {"status": event.item.status},
+                    "result": llm.ToolResult(
+                        data={"status": event.item.status},
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ImageGenerationCall):
@@ -506,7 +516,7 @@ class OpenAIBaseLLMEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         force_image: bool = False,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:

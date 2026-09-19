@@ -107,24 +107,25 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         "end_date_time": dt_util.start_of_local_day(now) + timedelta(days=1),
     }
 
-    assert response == {
-        "success": True,
-        "result": [
-            {
-                "start": "2025-09-17",
-                "end": "2025-09-18",
-                "summary": "Home Assistant 12th birthday",
-                "description": "",
-                "all_day": True,
-            },
-            {
-                "start": "2025-09-17T14:00:00-05:00",
-                "end": "2025-09-18T15:00:00-05:00",
-                "summary": "Champagne",
-                "description": "",
-            },
-        ],
-    }
+    assert response == llm.ToolResult(
+        data={
+            "events": [
+                {
+                    "start": "2025-09-17",
+                    "end": "2025-09-18",
+                    "summary": "Home Assistant 12th birthday",
+                    "description": "",
+                    "all_day": True,
+                },
+                {
+                    "start": "2025-09-17T14:00:00-05:00",
+                    "end": "2025-09-18T15:00:00-05:00",
+                    "summary": "Champagne",
+                    "description": "",
+                },
+            ]
+        }
+    )
 
     # The "week" range searches seven days out.
     calls.clear()
@@ -153,7 +154,7 @@ async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
         ),
         llm_context,
     )
-    assert response == {"success": False, "error": "Calendar not found"}
+    assert response == llm.ToolResult(data={"error": "Calendar not found"}, error=True)
 
 
 async def test_calendar_get_events_tool_uses_aliases(
