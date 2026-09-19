@@ -26,6 +26,12 @@
       "battery_discharge_depth": {
         "name": "Depth of discharge (on-grid)"
       },
+      "eco_mode_power": {
+        "name": "Eco charge/discharge power"
+      },
+      "eco_mode_soc": {
+        "name": "Eco charge target SOC"
+      },
       "grid_export_limit": {
         "name": "Grid export limit"
       }
