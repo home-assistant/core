@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container',
     'unit_of_measurement': None,
   })
 # ---
@@ -236,7 +236,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container',
     'unit_of_measurement': None,
   })
 # ---
@@ -287,7 +287,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container',
     'unit_of_measurement': None,
   })
 # ---
@@ -338,7 +338,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container',
     'unit_of_measurement': None,
   })
 # ---

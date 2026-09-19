@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_image_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_image_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -156,7 +156,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_image_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -218,7 +218,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_image_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -280,7 +280,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_image_update',
     'unit_of_measurement': None,
   })
 # ---
@@ -342,7 +342,7 @@
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': 'container_image_update',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_image_update',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_image_update',
     'unit_of_measurement': None,
   })
 # ---

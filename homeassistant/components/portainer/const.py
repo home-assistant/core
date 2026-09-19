@@ -5,6 +5,9 @@ DEFAULT_NAME = "Portainer"
 
 API_MAX_RETRIES = 3
 
+SUBENTRY_TYPE_ENVIRONMENT = "environment"
+CONF_ENDPOINT_ID = "endpoint_id"
+
 CONTAINER_STATE_ACTIONS = {
     "start",
     "stop",

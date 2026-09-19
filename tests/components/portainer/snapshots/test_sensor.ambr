@@ -202,7 +202,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -260,7 +260,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -316,7 +316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -374,7 +374,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -435,7 +435,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -493,7 +493,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -555,7 +555,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -793,7 +793,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -851,7 +851,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -907,7 +907,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_image',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -965,7 +965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1026,7 +1026,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1084,7 +1084,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1146,7 +1146,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1211,7 +1211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1269,7 +1269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1325,7 +1325,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_image',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -1383,7 +1383,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1444,7 +1444,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1502,7 +1502,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1564,7 +1564,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2724,7 +2724,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_practical_morse_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -2782,7 +2782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2838,7 +2838,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_practical_morse_image',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -2896,7 +2896,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -2957,7 +2957,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3015,7 +3015,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3077,7 +3077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3142,7 +3142,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_serene_banach_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3200,7 +3200,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3256,7 +3256,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -3306,7 +3306,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_created',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image_created',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -3357,7 +3357,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_version',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image_version',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -3415,7 +3415,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3476,7 +3476,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3534,7 +3534,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3596,7 +3596,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3661,7 +3661,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3719,7 +3719,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3775,7 +3775,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -3825,7 +3825,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_created',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image_created',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -3876,7 +3876,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_version',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image_version',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -3934,7 +3934,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3995,7 +3995,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -4053,7 +4053,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -4115,7 +4115,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_state',
     'unit_of_measurement': None,
   })
 # ---
