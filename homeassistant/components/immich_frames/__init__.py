@@ -48,8 +48,8 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="immich_not_ready",
         )
-    coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
     try:
+        coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         if err.translation_key != "no_photos":
