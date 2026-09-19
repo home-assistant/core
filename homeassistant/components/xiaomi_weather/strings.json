@@ -1,0 +1,123 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This city is already configured.",
+      "reconfigure_successful": "Configuration updated."
+    },
+    "error": {
+      "cannot_connect": "Unable to fetch weather right now. Your location has been kept. Retry, or choose a different location.",
+      "city_not_found": "No supported mainland China city found. Check the input or try a more specific name.",
+      "coordinates_required": "Provide both latitude and longitude, or leave both empty.",
+      "different_city": "The resolved city differs from the existing city. Add a new integration for it.",
+      "invalid_city_id": "Use a nine-digit city code starting with 101, or enter a city name.",
+      "invalid_zone": "The selected zone is missing or has invalid coordinates. Select a valid zone.",
+      "lookup_failed": "Unable to look up the city right now. Your inputs have been kept; please try again."
+    },
+    "step": {
+      "city": {
+        "data": {
+          "city_id": "City"
+        },
+        "data_description": {
+          "city_id": "Choose the matching city after checking its region and weather code."
+        },
+        "description": "Review the matched region and select a city. Check the region and code even when there is only one result.",
+        "title": "Choose a city"
+      },
+      "confirm": {
+        "data": {
+          "edit_location": "Choose a different location"
+        },
+        "data_description": {
+          "edit_location": "Select and submit to return to the location menu without saving."
+        },
+        "description": "City: {city_name}\n\nCity code: {city_id}\n\nLatitude: {latitude}\n\nLongitude: {longitude}\n\nSubmitting will verify weather access and save this location.",
+        "title": "Review location"
+      },
+      "coordinates": {
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        },
+        "data_description": {
+          "latitude": "Latitude of the weather location, between -90 and 90 degrees.",
+          "longitude": "Longitude of the weather location, between -180 and 180 degrees."
+        },
+        "description": "Enter the coordinates of the location. A city will be matched automatically.",
+        "sections": {
+          "advanced": {
+            "data": {
+              "city_id": "City name or code"
+            },
+            "data_description": {
+              "city_id": "Leave empty to match a city from the coordinates, or specify a city name/code."
+            },
+            "name": "Specify a city (optional)"
+          }
+        },
+        "title": "Enter coordinates"
+      },
+      "reconfigure": {
+        "description": "Current city code: {city_id}. Choose how to enter the location. Previous coordinates will not be added to your inputs. To change cities, add a new integration.",
+        "menu_options": {
+          "coordinates": "Enter coordinates",
+          "search": "Search for a city",
+          "zone": "Use Home or another zone"
+        },
+        "title": "Update weather location"
+      },
+      "search": {
+        "data": {
+          "city_id": "City name or code"
+        },
+        "data_description": {
+          "city_id": "Enter a mainland China city name or a nine-digit weather code starting with 101."
+        },
+        "description": "Enter a city name or code, such as 北京, 朝阳区, or 101010100. Review the matches and select a city on the next screen.",
+        "sections": {
+          "coordinates": {
+            "data": {
+              "latitude": "Latitude",
+              "longitude": "Longitude"
+            },
+            "data_description": {
+              "latitude": "Leave empty to use the city coordinates. To specify a location, enter both latitude and longitude.",
+              "longitude": "Longitude to use instead of the city center. Enter both coordinates."
+            },
+            "name": "Specify coordinates (optional)"
+          }
+        },
+        "title": "Search for a city"
+      },
+      "user": {
+        "description": "Where would you like to see the weather?",
+        "menu_options": {
+          "coordinates": "Enter coordinates",
+          "search": "Search for a city",
+          "zone": "Use Home or another zone"
+        }
+      },
+      "zone": {
+        "data": {
+          "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Use the coordinates of this zone to find a weather location."
+        },
+        "description": "Choose Home or another zone. Its coordinates are captured now; later zone changes require reconfiguration. The location name defaults to the zone name.",
+        "sections": {
+          "advanced": {
+            "data": {
+              "city_id": "City name or code"
+            },
+            "data_description": {
+              "city_id": "Leave empty to match a city from the coordinates, or specify a city name/code."
+            },
+            "name": "Specify a city (optional)"
+          }
+        },
+        "title": "Use Home or another zone"
+      }
+    }
+  }
+}

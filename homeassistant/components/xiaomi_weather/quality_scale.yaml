@@ -1,0 +1,75 @@
+rules:
+  action-exceptions: todo
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  async-dependency: todo
+  brands:
+    status: todo
+    comment: Requires the companion brands alias from xiaomi_weather to the existing Xiaomi assets.
+  common-modules: done
+  config-entry-unloading: todo
+  config-flow: done
+  config-flow-test-coverage:
+    status: done
+    comment: User and reconfigure flows have full line and branch coverage.
+  dependency-transparency:
+    status: todo
+    comment: The client is bundled; resolve the external-library requirement before submission.
+  devices: todo
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-actions:
+    status: exempt
+    comment: Forecasts use the standard weather action.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-configuration-parameters: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-high-level-description:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-installation-instructions:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-installation-parameters: todo
+  docs-known-limitations: todo
+  docs-removal-instructions:
+    status: todo
+    comment: Requires the companion home-assistant.io documentation change.
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-event-setup: done
+  entity-translations: todo
+  entity-unavailable: todo
+  entity-unique-id: done
+  exception-translations: todo
+  has-entity-name: done
+  icon-translations: todo
+  inject-websession: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  runtime-data: done
+  stale-devices: todo
+  strict-typing: todo
+  test-before-configure: done
+  test-before-setup: done
+  test-coverage: todo
+  unique-config-entry: done
