@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from aioautomower.model import (
     ExternalReasons,
@@ -31,11 +31,7 @@ from homeassistant.helpers.typing import StateType
 from . import AutomowerConfigEntry
 from .const import ERROR_KEYS, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import (
-    AutomowerBaseEntity,
-    WorkAreaAvailableEntity,
-    _work_area_translation_key,
-)
+from .entity import AutomowerBaseEntity, WorkAreaAvailableEntity
 
 _LOGGER = logging.getLogger(__name__)
 # Coordinator is used to centralize the data updates
@@ -337,13 +333,12 @@ class WorkAreaSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], StateType | datetime]
-    translation_key_fn: Callable[[int, str], str]
 
 
 WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="progress",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="work_area_progress",
         exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -351,7 +346,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     ),
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="work_area_last_time_completed",
         exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=attrgetter("last_time_completed"),
@@ -479,11 +474,6 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
-        if TYPE_CHECKING:
-            assert self.work_area_attributes is not None
-        self._attr_translation_placeholders = {
-            "work_area": self.work_area_attributes.name
-        }
 
     @property
     @override
@@ -492,11 +482,3 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         if (work_area := self.work_area_attributes) is None:
             return None
         return self.entity_description.value_fn(work_area)
-
-    @property
-    @override
-    def translation_key(self) -> str:
-        """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(
-            self.work_area_id, self.entity_description.key
-        )
