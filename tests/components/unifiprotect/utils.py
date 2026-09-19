@@ -557,6 +557,7 @@ def make_public_light(
             lds.pir_sensitivity if pir_sensitivity is None else pir_sensitivity
         ),
     )
+    public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
     return public
 
 
@@ -677,6 +678,7 @@ def make_public_camera(
         if hdr_type is None
         else hdr_type
     )
+    public.hdr_mode_display = PublicCamera.hdr_mode_display.fget(public)
     flags = camera.feature_flags
     public.has_package_camera = flags.has_package_camera
     # Spec'd so a private-only flag reads as absent.

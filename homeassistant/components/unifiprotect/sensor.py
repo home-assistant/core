@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import operator
-from typing import Any, cast, override
+from typing import Any, override
 
 from uiprotect.data import (
     NVR,
@@ -19,12 +19,7 @@ from uiprotect.data import (
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicLight,
-    SensorFeatureCapability,
-)
-from uiprotect.utils import convert_to_datetime
+from uiprotect.data.public_devices import PublicDeviceModel, SensorFeatureCapability
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -98,11 +93,6 @@ class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
-
-
-def _get_last_motion_public(obj: PublicDeviceModel) -> datetime | None:
-    # Public API reports last motion as a JS epoch (ms); private side a datetime.
-    return convert_to_datetime(cast(PublicLight, obj).last_motion)
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -523,7 +513,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_public_value_fn=_get_last_motion_public,
+        ufp_public_value="last_motion_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
