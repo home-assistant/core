@@ -70,7 +70,10 @@ async def async_setup_entry(
     try:
         await hass.async_add_executor_job(lutron_client.load_xml_db)
         lutron_client.connect()
-    except LutronException as ex:
+    except (LutronException, OSError) as ex:
+        # load_xml_db() fetches the XML database with urllib, and connect() re-raises
+        # whatever the reader thread caught, so an unreachable repeater surfaces as
+        # OSError rather than LutronException.
         raise ConfigEntryNotReady(f"Failed to connect to Lutron repeater: {ex}") from ex
 
     _LOGGER.debug("Connected to main repeater at %s", host)
