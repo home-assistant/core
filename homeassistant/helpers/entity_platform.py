@@ -910,13 +910,24 @@ class EntityPlatform:
             # `async_internal_added_to_hass` may have populated entity_sources.
             # Roll that back before aborting so neither leaks.
             try:
-                await entity.async_internal_will_remove_from_hass()
-            except Exception:
-                self.logger.exception(
-                    "%s: Error cleaning up entity %s after it failed to be added",
-                    self.platform_name,
-                    entity_id,
-                )
+                try:
+                    await entity.async_internal_will_remove_from_hass()
+                except Exception:
+                    self.logger.exception(
+                        "%s: Error cleaning up entity %s after it failed to be added",
+                        self.platform_name,
+                        entity_id,
+                    )
+                if entity._added_to_hass_started:  # noqa: SLF001
+                    try:
+                        await entity.async_will_remove_from_hass()
+                    except Exception:
+                        self.logger.exception(
+                            "%s: Error cleaning up entity %s after it failed to be"
+                            " added",
+                            self.platform_name,
+                            entity_id,
+                        )
             finally:
                 if not restored:
                     self.hass.states.async_remove(entity_id)
