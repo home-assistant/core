@@ -1,0 +1,7 @@
+{
+  "services": {
+    "read_access_log": {
+      "service": "mdi:text-box-search-outline"
+    }
+  }
+}
