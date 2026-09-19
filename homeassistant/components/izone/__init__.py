@@ -144,7 +144,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> b
         if unique_id == DOMAIN:
             try:
                 endpoints = await async_discover_all_endpoints(hass)
-            except OSError as err:
+            except (OSError, RuntimeError) as err:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="discovery_failed_legacy",
@@ -189,7 +189,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> b
                 )
             try:
                 resolved = await async_discover_endpoint(hass, unique_id)
-            except OSError as err:
+            except (OSError, RuntimeError) as err:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="discovery_failed_host",

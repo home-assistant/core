@@ -329,11 +329,19 @@ async def test_migrate_missing_host_not_found_retries(
     mock_discovery_service.create_controller.assert_not_awaited()
 
 
-async def test_migrate_legacy_domain_unique_id_discovery_oserror_retries(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(OSError("bind failed"), id="oserror"),
+        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
+    ],
+)
+async def test_migrate_legacy_domain_unique_id_discovery_error_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
+    side_effect: Exception,
 ) -> None:
-    """OSError while discovering for legacy DOMAIN unique_id leaves SETUP_RETRY."""
+    """Discovery startup errors for legacy DOMAIN unique_id leave SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -345,7 +353,7 @@ async def test_migrate_legacy_domain_unique_id_discovery_oserror_retries(
 
     with patch(
         "homeassistant.components.izone.async_discover_all_endpoints",
-        new=AsyncMock(side_effect=OSError("bind failed")),
+        new=AsyncMock(side_effect=side_effect),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
@@ -354,11 +362,19 @@ async def test_migrate_legacy_domain_unique_id_discovery_oserror_retries(
     assert entry.error_reason_translation_key == "discovery_failed_legacy"
 
 
-async def test_migrate_missing_host_discover_oserror_retries(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(OSError("bind failed"), id="oserror"),
+        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
+    ],
+)
+async def test_migrate_missing_host_discover_error_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
+    side_effect: Exception,
 ) -> None:
-    """OSError while resolving host for a real UID leaves SETUP_RETRY."""
+    """Discovery startup errors while resolving host leave SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
@@ -369,7 +385,7 @@ async def test_migrate_missing_host_discover_oserror_retries(
 
     with patch(
         "homeassistant.components.izone.async_discover_endpoint",
-        new=AsyncMock(side_effect=OSError("bind failed")),
+        new=AsyncMock(side_effect=side_effect),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
