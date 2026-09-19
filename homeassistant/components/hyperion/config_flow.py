@@ -349,6 +349,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id), eager_start=False
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
         )
