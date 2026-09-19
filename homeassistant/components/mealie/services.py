@@ -335,7 +335,7 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mealplan_not_found",
-            translation_placeholders={"mealplan_id": mealplan_id},
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
         ) from err
     return None
 
@@ -370,7 +370,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mealplan_not_found",
-            translation_placeholders={"mealplan_id": mealplan_id},
+            translation_placeholders={"mealplan_id": str(mealplan_id)},
         ) from err
     if call.return_response:
         return {"mealplan": asdict(mealplan)}

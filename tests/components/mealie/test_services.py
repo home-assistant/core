@@ -478,8 +478,6 @@ async def test_service_delete_mealplan_not_found(
         ),
     ],
 )
-
-
 async def test_service_update_mealplan(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
