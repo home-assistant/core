@@ -217,6 +217,8 @@ def _missing_state_matcher() -> ColumnElement[bool]:
         OLD_STATE.state_id.is_not(None),
         (
             States.state.is_distinct_from(OLD_STATE.state)
+            | States.attributes_id.is_distinct_from(OLD_STATE.attributes_id)
+            | States.attributes.is_distinct_from(OLD_STATE.attributes)
             | (
                 States.last_changed_ts.is_not(None)
                 & States.last_changed_ts.is_distinct_from(States.last_updated_ts)

@@ -1026,6 +1026,47 @@ async def test_exclude_noop_updates_with_same_state_and_attributes(
     assert response_json[2]["entity_id"] == "light.kitchen"
 
 
+@pytest.mark.usefixtures("recorder_mock", "set_utc")
+async def test_include_forced_attribute_changes_with_same_state(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test forced same-state attribute updates are kept as activity entries."""
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 200}, force_update=True
+    )
+    hass.states.async_set("light.kitchen", STATE_OFF)
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+
+    assert len(response_json) == 4
+    assert response_json[0]["domain"] == "homeassistant"
+    assert response_json[1]["entity_id"] == "light.kitchen"
+    assert response_json[2]["entity_id"] == "light.kitchen"
+    assert response_json[3]["entity_id"] == "light.kitchen"
+
+
 @pytest.mark.usefixtures("recorder_mock")
 async def test_logbook_entity_context_id(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
