@@ -48,6 +48,7 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import SensorSchema
 from .storage.entity_store_schema import KnxEntityData, SensorKnxConfig
+from .storage.knx_selector import state_and_passive
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -264,7 +265,7 @@ class KnxUiSensor(_KnxSensor, KnxUiEntity):
         self._device = XknxSensor(
             knx_module.xknx,
             name=config.entity.xknx_name,
-            group_address_state=knx_conf.ga_sensor.state_and_passive(),
+            group_address_state=state_and_passive(knx_conf.ga_sensor),
             sync_state=knx_conf.sync_state,
             always_callback=True,
             value_type=dpt_string,

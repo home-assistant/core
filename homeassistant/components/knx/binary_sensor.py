@@ -41,6 +41,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.entity_store_schema import BinarySensorKnxConfig, KnxEntityData
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -161,7 +162,7 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
         self._device = XknxBinarySensor(
             xknx=knx_module.xknx,
             name=config.entity.xknx_name,
-            group_address_state=knx_conf.ga_sensor.state_and_passive(),
+            group_address_state=state_and_passive(knx_conf.ga_sensor),
             sync_state=knx_conf.sync_state,
             invert=knx_conf.invert,
             ignore_internal_state=knx_conf.ignore_internal_state,
