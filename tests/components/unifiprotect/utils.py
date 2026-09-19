@@ -561,6 +561,29 @@ def make_public_light(
     return public
 
 
+def registry_keys(
+    entity_registry: er.EntityRegistry, platform: Platform, mac: str
+) -> set[str]:
+    """Return the description keys registered for a device on a platform."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == platform and entry.unique_id.startswith(prefix)
+    }
+
+
+def make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only).
+
+    Platform tests that set up a public-only entry load the camera platform
+    too; without streams it builds no camera entities from the mock.
+    """
+    public = make_public_camera(camera, **kwargs)
+    public.rtsps_streams = None
+    return public
+
+
 _HDR_DISPLAY_TO_PUBLIC = {
     "auto": PublicHdrMode.AUTO,
     "always": PublicHdrMode.ON,
