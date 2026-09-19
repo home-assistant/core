@@ -15,7 +15,13 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> dict[str, Any]:
     """Return safe diagnostics without including image bytes or credentials."""
-    data = entry.runtime_data.data
+    coordinator = entry.runtime_data
+    data = coordinator.current_data
+    if data is None:
+        return {
+            "entry": async_redact_data(entry.as_dict(), TO_REDACT),
+            "frame": {"status": "unavailable"},
+        }
     asset = data.asset
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
