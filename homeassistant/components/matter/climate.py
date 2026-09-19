@@ -27,6 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
@@ -207,7 +208,19 @@ class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescr
     """Describe Matter Climate entities."""
 
 
-class MatterClimate(MatterEntity, ClimateEntity):
+@dataclass
+class MatterClimateExtraStoredData(ExtraStoredData):
+    """Store the last running mode separately from the current device state."""
+
+    last_hvac_mode: HVACMode
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"last_hvac_mode": self.last_hvac_mode}
+
+
+class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
     """Representation of a Matter climate entity."""
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
@@ -216,6 +229,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
+    _last_hvac_mode: HVACMode | None = None
 
     _platform_translation_key = "thermostat"
 
@@ -229,6 +243,41 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last running mode without changing the device state."""
+        await super().async_added_to_hass()
+        if self._last_hvac_mode is not None:
+            return
+        if (extra_data := await self.async_get_last_extra_data()) is None:
+            return
+        last_hvac_mode = extra_data.as_dict().get("last_hvac_mode")
+        if last_hvac_mode in self.hvac_modes and last_hvac_mode != HVACMode.OFF:
+            self._last_hvac_mode = HVACMode(last_hvac_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> MatterClimateExtraStoredData | None:
+        """Return the last running mode for restoration."""
+        if self._last_hvac_mode is None:
+            return None
+        return MatterClimateExtraStoredData(self._last_hvac_mode)
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on using the last supported running mode."""
+        if self.hvac_mode != HVACMode.OFF:
+            return
+        has_dedicated_power = (
+            self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False
+        )
+        if self._last_hvac_mode is not None and self._last_hvac_mode in self.hvac_modes:
+            await self.async_set_hvac_mode(self._last_hvac_mode)
+        else:
+            await super().async_turn_on()
+        if has_dedicated_power:
+            await self.send_device_command(clusters.OnOff.Commands.On())
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -315,6 +364,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
             value=system_mode_value,
             matter_attribute=clusters.Thermostat.Attributes.SystemMode,
         )
+        # Dedicated power can keep the reported HVAC mode off after a mode write.
+        if hvac_mode != HVACMode.OFF:
+            self._last_hvac_mode = hvac_mode
         # we need to optimistically update the attribute's value here
         # to prevent a race condition when adjusting the mode and temperature
         # in the same call
@@ -348,6 +400,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._update_presets()
 
         self._update_hvac_mode_and_action()
+        if (
+            self._attr_hvac_mode != HVACMode.OFF
+            and self._attr_hvac_mode in self.hvac_modes
+        ):
+            self._last_hvac_mode = self._attr_hvac_mode
         self._update_target_temperatures()
         self._update_temperature_limits()
 
