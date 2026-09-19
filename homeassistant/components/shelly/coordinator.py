@@ -915,7 +915,7 @@ class ShellyBluTrvUpdateCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Initialize the BLU TRV firmware update coordinator."""
         super().__init__(hass, entry, device, BLU_TRV_UPDATE_CHECK_INTERVAL)
-        # The host device reports one firmware ID for all paired BLU TRVs.
+
         self.available_firmware: str | None = None
 
     @override
