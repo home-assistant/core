@@ -3,14 +3,24 @@
 from typing import Final
 
 import astral
+import astral.sun
 
 DOMAIN: Final = "sun"
 
 DEFAULT_NAME: Final = "Sun"
 
-# Elevation of the sun's center at the horizon, in degrees. This is the value
-# astral uses for sunrise/sunset (atmospheric refraction plus the sun's radius).
+# Conventional elevation of the sun's center at the horizon (the sun's radius plus
+# atmospheric refraction), used here as the upper edge of the civil twilight band.
 ELEVATION_HORIZON: Final = -0.833
+
+# Geometric (refraction-free) elevation of the sun's center at the instant astral
+# schedules sunrise/sunset - slightly above ELEVATION_HORIZON because astral adds
+# refraction to the requested zenith. Comparisons that must agree with the
+# sunrise/sunset events (the horizon state, midnight sun and polar night) use this.
+ELEVATION_GEOMETRIC_HORIZON: Final[float] = -(
+    astral.sun.SUN_APPARENT_RADIUS
+    + astral.sun.refraction_at_zenith(90 + astral.sun.SUN_APPARENT_RADIUS)
+)
 
 # Sun elevation, in degrees, at each twilight boundary
 ELEVATION_CIVIL: Final[float] = -astral.Depression.CIVIL.value
