@@ -228,9 +228,15 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_FRAME_ID] = self._reconfigure_entry.data.get(
                 CONF_FRAME_ID, uuid4().hex
             )
+            options = {
+                key: value
+                for key, value in self._reconfigure_entry.options.items()
+                if key not in (CONF_SOURCE, CONF_ALBUM_IDS, CONF_SMART_QUERY)
+            }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
                 data_updates=data,
+                options=options,
                 title=self._reconfigure_entry.title,
             )
         data[CONF_FRAME_ID] = uuid4().hex

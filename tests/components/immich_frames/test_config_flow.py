@@ -465,6 +465,7 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
                 CONF_FRAME_NAME: f"Reconfigure {source}",
                 CONF_SOURCE: DEFAULT_SOURCE,
             },
+            options={CONF_SOURCE: DEFAULT_SOURCE},
         )
         entry.add_to_hass(hass)
         result = await hass.config_entries.flow.async_init(
@@ -480,3 +481,5 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
         )
         assert result["reason"] == "reconfigure_successful"
         await hass.async_block_till_done()
+        assert entry.data[CONF_SOURCE] == source
+        assert CONF_SOURCE not in entry.options

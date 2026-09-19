@@ -11,7 +11,7 @@ from aioimmich.assets.models import ImmichAsset
 from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -118,6 +118,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Fetch, render, and cache the next frame."""
         if self.paused and self.data is not None:
             return self.data
+        if not self._refresh_parent():
+            return self._cached_or_raise(
+                "immich_not_ready",
+                RuntimeError("The parent Immich entry is not ready"),
+                status="parent_not_ready",
+                connection_failed=True,
+            )
 
         try:
             candidates = await async_get_candidates(
@@ -201,6 +208,21 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         except OSError, ValueError:
             _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
         return result
+
+    def _refresh_parent(self) -> bool:
+        """Refresh the parent entry and client after a parent reload."""
+        immich_entry = self.hass.config_entries.async_get_entry(
+            self.options[CONF_IMMICH_ENTRY_ID]
+        )
+        if (
+            immich_entry is None
+            or immich_entry.state is not ConfigEntryState.LOADED
+            or not getattr(immich_entry, "runtime_data", None)
+        ):
+            return False
+        self.immich_entry = immich_entry
+        self.api = immich_entry.runtime_data.api
+        return True
 
     def _cached_or_raise(
         self,

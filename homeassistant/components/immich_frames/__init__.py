@@ -29,7 +29,10 @@ async def async_migrate_entry(
     if entry.version < 2:
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, CONF_SOURCE: DEFAULT_SOURCE},
+            data={
+                **entry.data,
+                CONF_SOURCE: entry.data.get(CONF_SOURCE, DEFAULT_SOURCE),
+            },
             version=2,
         )
     return True
