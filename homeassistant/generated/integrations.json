@@ -1009,6 +1009,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ccl": {
+      "name": "CCL Electronics",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "centriconnect": {
       "name": "CentriConnect/MyPropane",
       "integration_type": "device",
