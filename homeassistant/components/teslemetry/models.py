@@ -46,7 +46,7 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
-    # Set only for a vehicle the user paired a Bluetooth subentry for; ble_api is
+    # Set exactly when the vehicle has a Bluetooth subentry; ble_api is
     # additionally None when the private key could not be loaded.
     ble_address: str | None
     ble_api: VehicleBluetooth | None

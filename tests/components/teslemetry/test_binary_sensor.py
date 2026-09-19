@@ -14,13 +14,20 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
+from homeassistant.components.teslemetry.const import DOMAIN, SUBENTRY_TYPE_VEHICLE
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import assert_entities, assert_entities_alt, setup_ble_platform, setup_platform
+from . import (
+    assert_entities,
+    assert_entities_alt,
+    mock_ble_config_entry,
+    setup_ble_platform,
+    setup_platform,
+)
 from .const import ADDRESS, VEHICLE_DATA_ALT, VIN
 
 from tests.common import async_fire_time_changed
@@ -318,15 +325,60 @@ async def test_bluetooth_session_binary_sensor(
 async def test_bluetooth_session_binary_sensor_without_key(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Tests that a failed key load keeps the session entity, unavailable."""
-    with patch(
-        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
-    ) as mock_parent:
+    """Tests that a failed key load keeps the session entity, unavailable.
+
+    The entities are gated on the subentry rather than on the Bluetooth backend,
+    so a key load failure cannot look like an unpaired vehicle to the stale
+    entity cleanup and cost the user a customised registry entry.
+    """
+    entry = mock_ble_config_entry()
+    entry.add_to_hass(hass)
+    existing = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{VIN}-bluetooth_session",
+        config_entry=entry,
+        suggested_object_id="test_bluetooth_session",
+    )
+    entity_registry.async_update_entity(existing.entity_id, name="Garage link")
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+    ):
         mock_parent.return_value.get_private_key = AsyncMock(
             side_effect=OSError("disk gone")
         )
-        await setup_ble_platform(hass, [Platform.BINARY_SENSOR])
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert entity_registry.async_get(SESSION_ENTITY_ID)
+    assert (survived := entity_registry.async_get(SESSION_ENTITY_ID))
+    assert survived.id == existing.id
+    assert survived.name == "Garage link"
     assert hass.states.get(SESSION_ENTITY_ID).state == STATE_UNAVAILABLE
     assert hass.states.get(PRESENCE_ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("enable_bluetooth", "mock_ble_vehicle")
+async def test_bluetooth_binary_sensors_removed_with_subentry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Tests that removing the Bluetooth subentry removes both entities."""
+    entry = await setup_ble_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert entity_registry.async_get(PRESENCE_ENTITY_ID)
+    assert entity_registry.async_get(SESSION_ENTITY_ID)
+
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    with patch(
+        "homeassistant.components.teslemetry.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(PRESENCE_ENTITY_ID) is None
+    assert entity_registry.async_get(SESSION_ENTITY_ID) is None
