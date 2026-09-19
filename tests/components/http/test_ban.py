@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+import threading
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
@@ -460,6 +461,57 @@ async def test_failed_login_attempts_counter(
     resp = await client.get("/auth_false")
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_failed_login_slow_reverse_dns(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a hanging reverse DNS lookup does not stall the response."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/", unauth_handler)
+    setup_bans(hass, app, 5)
+    mock_real_ip(app)("200.201.202.204")
+    client = await aiohttp_client(app)
+
+    release_lookup = threading.Event()
+
+    def hanging_gethostbyaddr(ip: str) -> tuple[str, list[str], list[str]]:
+        """Block like a resolver that never answers."""
+        release_lookup.wait(10)
+        return ("example.com", [], [ip])
+
+    # Patch with a plain function so the test hass runs it in the executor
+    with (
+        patch(
+            "homeassistant.components.http.ban.gethostbyaddr",
+            hanging_gethostbyaddr,
+        ),
+        patch("homeassistant.components.http.ban.REVERSE_DNS_TIMEOUT", 0),
+    ):
+        resp = await client.get("/")
+    release_lookup.set()
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
+    assert (
+        "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)." in caplog.text
+    )
+    notifications = async_get_persistent_notifications(hass)
+    assert (
+        notifications["http-login"]["message"]
+        == "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)."
+        " See the log for details."
+    )
 
 
 async def test_single_ban_file_entry(

@@ -1,5 +1,6 @@
 """Ban logic for HTTP component."""
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -7,7 +8,7 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
-from socket import gethostbyaddr, herror
+from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
 from aiohttp.web import (
@@ -43,6 +44,8 @@ NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
 IP_BANS_FILE: Final = "ip_bans.yaml"
+# Bound the reverse DNS lookup so a slow resolver cannot stall the response
+REVERSE_DNS_TIMEOUT: Final = 1
 ATTR_BANNED_AT: Final = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
@@ -119,10 +122,12 @@ async def process_wrong_login(request: Request) -> None:
     assert request.remote
     remote_addr = ip_address(request.remote)
     remote_host = request.remote
-    with suppress(herror):
-        remote_host, _, _ = await hass.async_add_executor_job(
-            gethostbyaddr, request.remote
-        )
+    # The hostname only feeds the log and notification below
+    with suppress(TimeoutError, OSError):
+        async with asyncio.timeout(REVERSE_DNS_TIMEOUT):
+            remote_host, _, _ = await hass.async_add_executor_job(
+                gethostbyaddr, request.remote
+            )
 
     base_msg = (
         "Login attempt or request with invalid authentication from"
