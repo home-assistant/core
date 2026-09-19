@@ -490,10 +490,19 @@ async def test_setup_component_with_delay(
         mock_dropwebhook.assert_called_once()
 
 
-async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
-    """Test handling of invalid token scope."""
+async def test_setup_component_string_token_scope_missing_some(
+    hass: HomeAssistant,
+) -> None:
+    """Test a space-separated string token scope with too few scopes.
+
+    The OAuth2 standard represents `scope` as a single space-separated
+    string rather than a list; Netatmo's real API sends a list, but the
+    string form must still be parsed correctly rather than iterated
+    character by character. This grant overlaps the required scopes, so
+    setup succeeds and a reauth flow is started to fill the gap.
+    """
     config_entry = MockConfigEntry(
-        domain="netatmo",
+        domain=DOMAIN,
         data={
             "auth_implementation": "cloud",
             "token": {
@@ -516,9 +525,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ) as mock_impl,
-        patch(
-            "homeassistant.components.netatmo.webhook.webhook_generate_url"
-        ) as mock_webhook,
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
@@ -529,18 +536,149 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    mock_auth.assert_not_called()
+    mock_auth.assert_called_once()
     mock_impl.assert_called_once()
-    mock_webhook.assert_not_called()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.config_entries.async_entries(DOMAIN)
 
-    # Test a reauth flow is initiated
+    # Test a reauth flow is initiated to fill the scope gap
     assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+async def test_setup_component_string_token_scope_no_overlap(
+    hass: HomeAssistant,
+) -> None:
+    """Test a space-separated string token scope sharing no required scope.
+
+    Parsed character by character, any string would overlap the required
+    scopes and reach the partial-grant path, so this pins the hard failure
+    for the string form.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 1000,
+                "scope": "read_nothing write_nothing",
+            },
+        },
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        ),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+async def test_setup_component_missing_optional_scopes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test setup succeeds and starts a reauth flow for missing scopes.
+
+    A partial scope grant (some but not all requested scopes approved) must
+    not block setup - some Netatmo apps never get every requested scope
+    approved, so a strict full-coverage check would put a legitimately
+    reduced grant into a permanent reauth loop. Instead, setup succeeds
+    with the reduced grant and a reauth flow is started automatically so
+    the account can be re-linked to pick up the missing scopes.
+    """
+    token_scopes = sorted(set(ALL_SCOPES) - {"read_station"})
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            "token": {**config_entry.data["token"], "scope": token_scopes},
+        },
+    )
+
+    with selected_platforms([Platform.COVER]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    active_flows = list(config_entry.async_get_active_flows(hass, {"reauth"}))
+    assert len(active_flows) == 1
+
+    # Dismiss the flow, as if the user closed it without completing it.
+    hass.config_entries.flow.async_abort(active_flows[0]["flow_id"])
+
+    # Re-linking with the full scope grant does not start another reauth flow.
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            "token": {**config_entry.data["token"], "scope": ALL_SCOPES},
+        },
+    )
+    with selected_platforms([Platform.COVER]):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not list(config_entry.async_get_active_flows(hass, {"reauth"}))
+
+
+async def test_setup_component_missing_optional_scopes_reauth_not_duplicated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test that an unresolved scope gap does not duplicate the reauth flow.
+
+    entry.async_start_reauth is a no-op while a matching reauth flow is
+    already in progress for the entry. A reload with the same reduced grant,
+    while that first flow is still open, must not spawn a second one
+    alongside it.
+    """
+    token_scopes = sorted(set(ALL_SCOPES) - {"read_station"})
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            "token": {**config_entry.data["token"], "scope": token_scopes},
+        },
+    )
+
+    with selected_platforms([Platform.COVER]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
+
+    # Reload with the same reduced grant and the first flow still open.
+    with selected_platforms([Platform.COVER]):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
 
 async def test_setup_component_invalid_token(
