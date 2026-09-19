@@ -17605,6 +17605,112 @@
     'state': '29',
   })
 # ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_communication_level_2_4_ghz-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enpower_654321_communication_level_2_4_ghz',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Communication level 2.4 GHz',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Communication level 2.4 GHz',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'comm_level_2_4_ghz',
+    'unique_id': '654321_comm_level_2_4_ghz',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_communication_level_2_4_ghz-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Communication level 2.4 GHz',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enpower_654321_communication_level_2_4_ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_communication_level_sub_ghz-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.enpower_654321_communication_level_sub_ghz',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Communication level sub-GHz',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Communication level sub-GHz',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'comm_level_sub_ghz',
+    'unique_id': '654321_comm_level_sub_ghz',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_communication_level_sub_ghz-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Communication level sub-GHz',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.enpower_654321_communication_level_sub_ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_last_reported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
