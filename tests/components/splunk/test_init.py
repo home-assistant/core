@@ -253,60 +253,6 @@ async def test_event_listener_unauthorized(
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_event_listener_severity_escalation_logs_at_natural_level(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a higher-severity failure remains visible during an outage."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
-
-    with caplog.at_level(logging.DEBUG):
-        for i in range(3):
-            hass.states.async_set("sensor.test", str(i))
-            await hass.async_block_till_done()
-
-        mock_hass_splunk.queue.side_effect = SplunkPayloadError(
-            0, "Unauthorized", HTTPStatus.UNAUTHORIZED
-        )
-
-        for i in range(3):
-            hass.states.async_set("sensor.test", f"unauthorized-{i}")
-            await hass.async_block_till_done()
-
-    # Connection errors already log at debug on their own, so all 3 appear.
-    connection_records = [
-        record
-        for record in caplog.records
-        if "Connection error sending to Splunk" in record.message
-    ]
-    assert len(connection_records) == 3
-    assert all(record.levelno == logging.DEBUG for record in connection_records)
-
-    # The escalation to unauthorized is more severe than the debug outage in
-    # progress, so the first one logs at its natural level; the rest, being
-    # an equal-severity repeat, fall back to debug.
-    unauthorized_records = [
-        record
-        for record in caplog.records
-        if "Splunk token unauthorized" in record.message
-    ]
-    assert len(unauthorized_records) == 3
-    assert unauthorized_records[0].levelno == logging.ERROR
-    assert all(record.levelno == logging.DEBUG for record in unauthorized_records[1:])
-
-    # Reauth still fires on every failure regardless of log suppression.
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"
-
-
 @pytest.mark.parametrize(
     ("error", "expected_log_level", "expected_message"),
     [
@@ -404,7 +350,7 @@ async def test_event_listener_repeated_failures_log_once(
     expected_log_level: int,
     expected_message: str,
 ) -> None:
-    """Test a sustained run of failures logs once at its level, then at debug."""
+    """Test the first failure logs at its level and the repeats log at debug."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -426,64 +372,98 @@ async def test_event_listener_repeated_failures_log_once(
 
 
 @pytest.mark.parametrize(
-    ("failures", "expected_recovery_level"),
+    ("first_error", "first_message", "first_level", "second_error", "second_message"),
     [
         pytest.param(
-            [
-                ClientResponseError(
-                    request_info=MagicMock(),
-                    history=(),
-                    status=500,
-                    message="Internal Server Error",
-                )
-            ]
-            * 3,
-            logging.WARNING,
-            id="warning_only_outage",
-        ),
-        pytest.param(
-            [ClientConnectionError("Connection failed")] * 3,
+            ClientConnectionError("Connection failed"),
+            "Connection error sending to Splunk",
             logging.DEBUG,
-            id="debug_only_outage",
+            SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
+            "Splunk token unauthorized",
+            id="more_severe_second_failure",
         ),
         pytest.param(
-            [SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED)] * 3,
-            logging.WARNING,
-            id="error_only_outage_capped_at_warning",
-        ),
-        pytest.param(
-            [
-                SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
-                ClientConnectionError("Connection failed"),
-            ],
-            logging.WARNING,
-            id="error_then_debug_capped_at_warning",
+            SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
+            "Splunk token unauthorized",
+            logging.ERROR,
+            ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=500,
+                message="Internal Server Error",
+            ),
+            "Splunk response error: Internal Server Error",
+            id="less_severe_second_failure",
         ),
     ],
 )
-async def test_event_listener_recovery_level(
+async def test_event_listener_different_failure_during_outage_logs_at_debug(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    failures: list[Exception],
-    expected_recovery_level: int,
+    first_error: Exception,
+    first_message: str,
+    first_level: int,
+    second_error: Exception,
+    second_message: str,
 ) -> None:
-    """Test recovery logs at the highest failure severity seen, capped at warning."""
+    """Test a different failure during an outage logs at debug, whatever its level."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with caplog.at_level(logging.DEBUG):
-        for i, failure in enumerate(failures):
+        mock_hass_splunk.queue.side_effect = first_error
+        hass.states.async_set("sensor.test", "outage")
+        await hass.async_block_till_done()
+
+        mock_hass_splunk.queue.side_effect = second_error
+        for i in range(2):
+            hass.states.async_set("sensor.test", f"different-{i}")
+            await hass.async_block_till_done()
+
+    first_records = [
+        record for record in caplog.records if first_message in record.message
+    ]
+    assert len(first_records) == 1
+    assert first_records[0].levelno == first_level
+
+    second_records = [
+        record for record in caplog.records if second_message in record.message
+    ]
+    assert len(second_records) == 2
+    assert all(record.levelno == logging.DEBUG for record in second_records)
+
+
+async def test_event_listener_recovery_logs_once_at_debug(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a recovered outage logs a single debug record."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with caplog.at_level(logging.DEBUG):
+        for i, failure in enumerate(
+            (
+                SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
+                ClientConnectionError("Connection failed"),
+            )
+        ):
             mock_hass_splunk.queue.side_effect = failure
             hass.states.async_set("sensor.test", str(i))
             await hass.async_block_till_done()
 
         mock_hass_splunk.queue.side_effect = None
-        hass.states.async_set("sensor.test", "recovered")
-        await hass.async_block_till_done()
+        for i in range(2):
+            hass.states.async_set("sensor.test", f"recovered-{i}")
+            await hass.async_block_till_done()
 
     recovery_records = [
         record
@@ -491,7 +471,7 @@ async def test_event_listener_recovery_level(
         if "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
-    assert recovery_records[0].levelno == expected_recovery_level
+    assert recovery_records[0].levelno == logging.DEBUG
 
 
 async def test_event_listener_failure_after_recovery_logs_at_natural_level(
@@ -541,9 +521,8 @@ async def test_event_listener_coalesced_send_is_not_a_recovery(
 ) -> None:
     """Test a send coalesced into an in-flight send isn't treated as success.
 
-    hass_splunk.queue() returns False, without raising, when a send is
-    already in flight. That must not be read as a successful send: it would
-    falsely log a recovery and reset the outage state mid-outage.
+    hass_splunk.queue() returns False, without raising, when a send is already
+    in flight, which says nothing about whether this event reached Splunk.
     """
     mock_config_entry.add_to_hass(hass)
 
