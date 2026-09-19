@@ -199,3 +199,37 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
+
+add_thermostat_suggestion:
+  target:
+    entity:
+      domain: climate
+      integration: matter
+  fields:
+    preset_handle:
+      selector:
+        text:
+      required: true
+    expiration_in_minutes:
+      selector:
+        number:
+          min: 1
+          max: 1440
+          step: 1
+          mode: box
+      required: true
+
+remove_thermostat_suggestion:
+  target:
+    entity:
+      domain: climate
+      integration: matter
+  fields:
+    unique_id:
+      selector:
+        number:
+          min: 0
+          max: 4294967295
+          step: 1
+          mode: box
+      required: true
