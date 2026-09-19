@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,9 +58,9 @@ async def test_binary_sensor_offline(
     mock_vehicle_data: AsyncMock,
     normal_config_entry: MockConfigEntry,
 ) -> None:
-    """Tests that the binary sensor entities are correct when offline."""
+    """Tests that the binary sensor entities are restored when offline."""
 
     mock_vehicle_data.side_effect = VehicleOffline
     await setup_platform(hass, normal_config_entry, [Platform.BINARY_SENSOR])
     state = hass.states.get("binary_sensor.test_status")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_OFF
