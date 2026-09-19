@@ -1142,6 +1142,7 @@ class ConfigEntry[_DataT = Any]:
                 result = True
             else:
                 result = unload_result  # type: ignore[unreachable]
+            assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
             # Custom components can continue to return a boolean
