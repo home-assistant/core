@@ -1089,6 +1089,29 @@ async def test_closure_cover_latch_only_panel_excluded(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_closure_shutter"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            # Endpoint 0 (root) has no ClosureDimension cluster. Injecting it
+            # into the closure endpoint's PartsList exercises the guard that
+            # skips a compose child that isn't a ClosureDimension panel.
+            "1/29/3": [2, 0]
+        }
+    ],
+)
+async def test_closure_cover_ignores_non_closure_dimension_compose_child(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+) -> None:
+    """A compose child without a ClosureDimension cluster is skipped, not errored."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
 async def test_closure_cover_tilt_only(
     hass: HomeAssistant,
