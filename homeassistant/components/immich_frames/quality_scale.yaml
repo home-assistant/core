@@ -6,9 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Add recovery assertions for every source, options, and reconfiguration error branch, including duplicate entries and invalid or unavailable albums.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
