@@ -1,9 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "account_not_found": "These credentials do not have access to the configured billing account.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "consent_required": "You need to accept the terms and conditions for your Anglian Water account before using this integration. Log in to their website for further information.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -20,6 +22,26 @@
           "code": "The security code sent to your email."
         },
         "description": "Two-factor authentication is enabled on your account. Check your email for the security code. It will come from `no-reply@anglianwater.co.uk`."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::anglian_water::config::step::user::data_description::password%]",
+          "username": "[%key:component::anglian_water::config::step::user::data_description::username%]"
+        },
+        "description": "[%key:component::anglian_water::config::step::user::description%]"
+      },
+      "reauth_mfa": {
+        "data": {
+          "code": "[%key:component::anglian_water::config::step::mfa::data::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::anglian_water::config::step::mfa::data_description::code%]"
+        },
+        "description": "[%key:component::anglian_water::config::step::mfa::description%]"
       },
       "select_account": {
         "data": {
