@@ -1,7 +1,9 @@
 """Ban logic for HTTP component."""
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
@@ -22,6 +24,7 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import probatio
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -45,6 +48,44 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
+# A stalled resolver can take ~10s (5s x 2 retries) to give up on a PTR lookup.
+# The mobile companion app gives up after 10s, so a hanging lookup turns every
+# failed login into a connection timeout. Bound the lookup well below that so
+# the auth response is never delayed by a lookup that only enriches a log line.
+RESOLVE_HOST_TIMEOUT: Final = 1.0
+
+
+# A stalled gethostbyaddr blocks the thread it runs on for ~10s (5s x 2 resolver
+# retries). Running it on the shared executor would let one unresolvable IP
+# starve every other executor job, so give it a dedicated thread. The holder is
+# rebuilt after shutdown so a stopped instance does not leave a permanently
+# unusable pool behind for the next one.
+class _ResolveHostExecutor:
+    """Lazily create and recreate the dedicated reverse-DNS thread pool."""
+
+    def __init__(self) -> None:
+        """Initialize the holder."""
+        self._executor: ThreadPoolExecutor | None = None
+
+    def get(self) -> ThreadPoolExecutor:
+        """Return a live pool, rebuilding it if it was shut down."""
+        executor = self._executor
+        if executor is None or executor._shutdown:  # noqa: SLF001
+            executor = self._executor = ThreadPoolExecutor(
+                max_workers=1, thread_name_prefix="resolve-host"
+            )
+        return executor
+
+    def shutdown(self) -> None:
+        """Release the thread."""
+        if self._executor is not None:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+            self._executor = None
+
+
+_resolve_host_executor = _ResolveHostExecutor()
+
+
 SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
     {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
 )
@@ -57,6 +98,12 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
+
+    def shutdown_executor(_event: Any) -> None:
+        """Release the dedicated reverse-DNS thread on stop."""
+        _resolve_host_executor.shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_executor)
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -119,9 +166,15 @@ async def process_wrong_login(request: Request) -> None:
     assert request.remote
     remote_addr = ip_address(request.remote)
     remote_host = request.remote
-    with suppress(herror):
-        remote_host, _, _ = await hass.async_add_executor_job(
-            gethostbyaddr, request.remote
+
+    # The lookup only enriches the log message, so it must never delay the
+    # auth response. On timeout, fall back to the bare IP address.
+    with suppress(herror, asyncio.TimeoutError):
+        remote_host, _, _ = await asyncio.wait_for(
+            hass.loop.run_in_executor(
+                _resolve_host_executor.get(), gethostbyaddr, request.remote
+            ),
+            timeout=RESOLVE_HOST_TIMEOUT,
         )
 
     base_msg = (
