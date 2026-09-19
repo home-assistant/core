@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -167,3 +167,27 @@ async def test_camera_stream_source(
 
     # Verify get_stream_url was called with channel 1
     mock_hikcamera.return_value.get_stream_url.assert_called_with(1)
+
+
+async def test_camera_unavailable_when_stream_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the camera goes unavailable when the event stream disconnects."""
+    camera = mock_hikcamera.return_value
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("camera.front_camera")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # pyhik notifies every registered callback when the stream drops
+    camera.stream_connected = False
+    callback_func = camera.add_update_callback.call_args_list[0][0][0]
+    callback_func("stream disconnected")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front_camera")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
