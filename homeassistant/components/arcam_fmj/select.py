@@ -65,7 +65,7 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
     def options(self) -> list[str]:
         """Return available room-EQ options."""
         options = ["Off", *_room_eq_names(self.coordinator)]
-        if self.coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED
+        if self.coordinator.state.get_room_equalization() == RoomEqMode.NOT_CALCULATED:
             options.append("Not calculated")
         return options
 
