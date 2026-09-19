@@ -68,3 +68,28 @@ async def test_forecast_service(
     await setup_integration(hass, mock_config_entry)
 
     assert await _get_forecast(hass, forecast_type) == snapshot
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize("forecast_fixture", ["high_low_temp.json"])
+@pytest.mark.freeze_time("2024-01-21T14:15:00+01:00")
+async def test_daily_forecast_night_low_above_day_high(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a night low above the day high is swapped into the first day."""
+    # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
+    await setup_integration(hass, mock_config_entry)
+
+    assert [
+        (forecast["temperature"], forecast["templow"])
+        for forecast in await _get_forecast(hass, "daily")
+    ] == [
+        (4.0, 3.0),
+        (10.0, 1.0),
+        (8.0, 3.0),
+        (12.0, 10.0),
+        (8.0, 2.0),
+        (8.0, 6.0),
+        (6.0, -2.0),
+    ]
