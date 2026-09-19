@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 from PIL import Image
 import pytest
 
-from homeassistant.components.immich.const import DOMAIN as IMMICH_DOMAIN
+from homeassistant.components.immich import const as immich_component_const
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -50,7 +50,7 @@ def parent_immich_entry(
 ) -> MockConfigEntry:
     """Add a loaded parent Immich entry with runtime data."""
     entry = MockConfigEntry(
-        domain=IMMICH_DOMAIN,
+        domain=immich_component_const.DOMAIN,
         title="Immich server",
         data={
             CONF_API_KEY: "test-key",
@@ -67,54 +67,3 @@ def parent_immich_entry(
         configuration_url="http://immich.local:2283",
     )
     return entry
-
-
-@pytest.fixture
-def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
-    """Ignore an unrelated missing translation in the current Core checkout."""
-    translations: list[str] = []
-    if request.node.name in {
-        "test_user_requires_immich",
-        "test_user_creates_frame",
-        "test_user_aborts_when_immich_is_not_loaded",
-        "test_setup_entry_creates_image",
-        "test_diagnostics_exclude_image_bytes",
-        "test_user_creates_album_frame",
-        "test_user_creates_smart_frame",
-        "test_options_flow_updates_display_settings",
-        "test_reconfigure_flow_keeps_generated_frame_name",
-        "test_options_flow_configures_album_source",
-        "test_options_flow_configures_smart_source",
-        "test_user_validation_errors",
-        "test_album_flow_validates_empty_and_unknown_albums",
-        "test_album_flow_aborts_when_no_albums",
-        "test_smart_flow_requires_a_query",
-        "test_album_flow_reports_auth_and_connection_errors",
-        "test_user_source_preflight_reports_unavailable_assets",
-        "test_album_source_preflight_reports_unavailable_assets",
-        "test_smart_source_preflight_reports_immich_errors",
-        "test_options_flow_preflights_all_source",
-        "test_options_flow_validates_empty_and_missing_parent_albums",
-        "test_options_flow_rejects_pairs_only_landscape",
-        "test_options_album_flow_reports_immich_errors",
-        "test_options_flow_requires_smart_query",
-        "test_options_smart_source_preflight_reports_unavailable_assets",
-        "test_reconfigure_flow_handles_album_and_smart_sources",
-        "test_reconfigure_all_source_preflight_reports_unavailable_assets",
-    }:
-        translations.append("component.immich.")
-    if request.node.name in {
-        "test_reconfigure_flow_keeps_generated_frame_name",
-        "test_reconfigure_flow_handles_album_and_smart_sources",
-    }:
-        translations.append("component.homeassistant.")
-    if request.node.name in {
-        "test_user_creates_frame",
-        "test_setup_entry_creates_image",
-        "test_diagnostics_exclude_image_bytes",
-        "test_user_creates_album_frame",
-        "test_user_creates_smart_frame",
-        "test_reconfigure_flow_handles_album_and_smart_sources",
-    }:
-        translations.append("component.image.")
-    return translations

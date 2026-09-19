@@ -9,11 +9,7 @@ from aioimmich.assets.models import ExifInfo
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
-from homeassistant.components.immich_frames import (
-    async_migrate_entry,
-    async_remove_entry,
-    async_setup_entry,
-)
+from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
@@ -29,7 +25,6 @@ from homeassistant.components.immich_frames.coordinator import (
 from homeassistant.components.immich_frames.selection import UnsupportedSourceError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -74,10 +69,9 @@ async def test_setup_entry_translates_parent_not_ready(
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryNotReady) as exc_info:
-        await async_setup_entry(hass, entry)
-
-    assert exc_info.value.translation_key == "immich_not_ready"
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "immich_not_ready"
 
 
 async def test_remove_entry_clears_cached_image(
@@ -91,7 +85,9 @@ async def test_remove_entry_clears_cached_image(
     )
     entry.add_to_hass(hass)
     cache_path = hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json")
-    await hass.async_add_executor_job(lambda: Path(cache_path).write_text("cached"))
+    await hass.async_add_executor_job(
+        lambda: Path(cache_path).write_text("cached", encoding="utf-8")
+    )
 
     await async_remove_entry(hass, entry)
 
@@ -110,7 +106,10 @@ async def test_migrate_entry_adds_default_source(
     )
     entry.add_to_hass(hass)
 
-    assert await async_migrate_entry(hass, entry)
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.version == 2
     assert entry.data[CONF_SOURCE] == DEFAULT_SOURCE
