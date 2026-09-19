@@ -24,15 +24,11 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 
 from .const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_ID,
-    CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
     CONF_MODE,
     CONF_ORIENTATION,
@@ -90,7 +86,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Select an Immich account, source, and frame name."""
+        """Select an Immich account and source."""
         entries = self._loaded_immich_entries()
         if not entries:
             reason = (
@@ -105,12 +101,9 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             parent_id = user_input[CONF_IMMICH_ENTRY_ID]
             if parent_id not in entries:
                 errors["base"] = "immich_unavailable"
-            elif not user_input[CONF_FRAME_NAME].strip():
-                errors[CONF_FRAME_NAME] = "name_required"
             else:
                 self._data = {
                     CONF_IMMICH_ENTRY_ID: parent_id,
-                    CONF_FRAME_NAME: user_input[CONF_FRAME_NAME].strip(),
                     CONF_SOURCE: user_input[CONF_SOURCE],
                 }
                 return await self._async_continue_source()
@@ -129,9 +122,6 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )
-                    ),
-                    probatio.Required(CONF_FRAME_NAME): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.TEXT)
                     ),
                     probatio.Required(
                         CONF_SOURCE, default=DEFAULT_SOURCE
@@ -241,7 +231,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
                 data_updates=data,
-                title=data[CONF_FRAME_NAME],
+                title=self._reconfigure_entry.title,
             )
         data[CONF_FRAME_ID] = uuid4().hex
         unique_id = f"{data[CONF_IMMICH_ENTRY_ID]}|{data[CONF_FRAME_ID]}"
@@ -253,7 +243,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the unique frame entry asynchronously."""
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=data[CONF_FRAME_NAME], data=data)
+        return self.async_create_entry(title="Immich Frames", data=data)
 
     def _loaded_immich_entries(self) -> dict[str, ConfigEntry]:
         """Return loaded parent Immich entries."""
@@ -281,9 +271,6 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=probatio.Schema(
                     {
-                        probatio.Required(
-                            CONF_FRAME_NAME, default=self._data[CONF_FRAME_NAME]
-                        ): str,
                         probatio.Required(
                             CONF_SOURCE,
                             default=self._data.get(CONF_SOURCE, DEFAULT_SOURCE),

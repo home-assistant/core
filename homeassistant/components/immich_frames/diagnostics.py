@@ -16,11 +16,9 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry": entry.as_dict(),
         "frame": {
-            "asset_id": asset.asset_id,
             "asset_type": asset.asset_type.value,
             "is_offline": asset.is_offline,
             "is_trashed": asset.is_trashed,
-            "local_datetime": asset.local_datetime.isoformat(),
             "updated_at": data.updated_at.isoformat(),
             "image_bytes": len(data.image),
         },

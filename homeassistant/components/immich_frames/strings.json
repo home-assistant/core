@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_configured": "A frame with this name is already configured.",
       "immich_not_ready": "The Immich integration is not ready.",
       "immich_required": "Set up the Immich integration first.",
       "no_albums": "No Immich albums are available."
@@ -12,7 +11,6 @@
       "albums_unavailable": "Immich albums could not be loaded.",
       "immich_auth": "The Immich account rejected this request.",
       "immich_unavailable": "The selected Immich account is no longer available.",
-      "name_required": "Enter a name for this frame.",
       "smart_query_required": "Enter keywords for the smart search."
     },
     "step": {
@@ -36,11 +34,9 @@
       },
       "reconfigure": {
         "data": {
-          "frame_name": "Frame name",
           "source": "Photo source"
         },
         "data_description": {
-          "frame_name": "The name shown for this frame in Home Assistant.",
           "source": "Choose the library, albums, or keywords used for rotation."
         },
         "title": "Reconfigure Immich frame"
@@ -54,16 +50,14 @@
       },
       "user": {
         "data": {
-          "frame_name": "Frame name",
           "immich_entry_id": "Immich account",
           "source": "Photo source"
         },
         "data_description": {
-          "frame_name": "The name shown for this frame in Home Assistant.",
           "immich_entry_id": "The Immich account that supplies the photos.",
           "source": "Choose the library, albums, or keywords used for rotation."
         },
-        "description": "Choose an existing Immich account, photo source, and frame name.",
+        "description": "Choose an existing Immich account and photo source.",
         "title": "Set up an Immich frame"
       }
     }
@@ -92,9 +86,16 @@
     }
   },
   "options": {
-    "abort": { "immich_not_ready": "The Immich integration is not ready." },
+    "abort": {
+      "immich_not_ready": "The Immich integration is not ready.",
+      "no_albums": "No Immich albums are available."
+    },
     "error": {
-      "album_unavailable": "One or more selected albums are no longer available."
+      "album_required": "Select at least one album.",
+      "album_unavailable": "One or more selected albums are no longer available.",
+      "albums_unavailable": "Immich albums could not be loaded.",
+      "immich_auth": "The Immich account rejected this request.",
+      "smart_query_required": "Enter keywords for the smart search."
     },
     "step": {
       "album": {
@@ -137,9 +138,9 @@
   "selector": {
     "mode": {
       "options": {
-        "pairs": "Single and paired portrait photos",
+        "pairs": "Single and paired photos",
         "pairs_only": "Paired portrait photos only",
-        "single": "Single portrait photos only"
+        "single": "Single photos only"
       }
     },
     "orientation": {

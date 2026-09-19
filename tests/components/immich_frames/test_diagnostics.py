@@ -36,3 +36,5 @@ async def test_diagnostics_exclude_image_bytes(
 
     assert diagnostics["frame"]["image_bytes"] > 0
     assert "image" not in diagnostics["frame"]
+    assert "asset_id" not in diagnostics["frame"]
+    assert "local_datetime" not in diagnostics["frame"]

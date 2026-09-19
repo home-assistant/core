@@ -1,6 +1,7 @@
 """Test the Immich Frames integration setup."""
 
 from copy import copy
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
@@ -8,6 +9,7 @@ from aioimmich.assets.models import ExifInfo
 from aioimmich.exceptions import ImmichUnauthorizedError
 import pytest
 
+from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
@@ -50,6 +52,24 @@ async def test_setup_entry_creates_image(
     assert isinstance(entry.runtime_data.data, ImmichFramesData)
     assert hass.states.get("image.living_room_image").state != "unknown"
     assert entry.runtime_data.api.assets.async_view_asset.await_count == 1
+
+
+async def test_remove_entry_clears_cached_image(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Deleting a frame removes its private cached image."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Cached frame",
+        data={CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id},
+    )
+    entry.add_to_hass(hass)
+    cache_path = hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json")
+    await hass.async_add_executor_job(lambda: Path(cache_path).write_text("cached"))
+
+    await async_remove_entry(hass, entry)
+
+    assert not await hass.async_add_executor_job(lambda: Path(cache_path).exists())
 
 
 async def test_coordinator_uses_cache_and_controls(

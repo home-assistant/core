@@ -66,21 +66,19 @@ async def test_user_creates_frame(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Living room",
         },
     )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "Living room"
+    assert result["title"] == "Immich Frames"
     assert result["data"][CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
-    assert result["data"][CONF_FRAME_NAME] == "Living room"
     assert result["data"][CONF_SOURCE] == DEFAULT_SOURCE
 
 
 async def test_user_validation_errors(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
-    """Test invalid account and blank-name validation."""
+    """Test invalid account validation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -89,23 +87,9 @@ async def test_user_validation_errors(
             result["flow_id"],
             {
                 CONF_IMMICH_ENTRY_ID: "missing",
-                CONF_FRAME_NAME: "Living room",
                 CONF_SOURCE: DEFAULT_SOURCE,
             },
         )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "   ",
-            CONF_SOURCE: DEFAULT_SOURCE,
-        },
-    )
-    assert result["errors"][CONF_FRAME_NAME] == "name_required"
 
 
 async def test_user_aborts_when_immich_is_not_loaded(hass: HomeAssistant) -> None:
@@ -133,7 +117,6 @@ async def test_user_creates_album_frame(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Album frame",
             CONF_SOURCE: SOURCE_ALBUM,
         },
     )
@@ -158,7 +141,6 @@ async def test_album_flow_validates_empty_and_unknown_albums(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Album validation",
             CONF_SOURCE: SOURCE_ALBUM,
         },
     )
@@ -185,7 +167,6 @@ async def test_album_flow_aborts_when_no_albums(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "No albums",
             CONF_SOURCE: SOURCE_ALBUM,
         },
     )
@@ -207,7 +188,6 @@ async def test_album_flow_reports_auth_and_connection_errors(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Auth album",
             CONF_SOURCE: SOURCE_ALBUM,
         },
     )
@@ -221,7 +201,6 @@ async def test_album_flow_reports_auth_and_connection_errors(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Offline album",
             CONF_SOURCE: SOURCE_ALBUM,
         },
     )
@@ -239,7 +218,6 @@ async def test_user_creates_smart_frame(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Keyword frame",
             CONF_SOURCE: SOURCE_SMART,
         },
     )
@@ -264,7 +242,6 @@ async def test_smart_flow_requires_a_query(
         result["flow_id"],
         {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_FRAME_NAME: "Empty query",
             CONF_SOURCE: SOURCE_SMART,
         },
     )
@@ -442,7 +419,7 @@ async def test_options_flow_requires_smart_query(
     assert result["errors"][CONF_SMART_QUERY] == "smart_query_required"
 
 
-async def test_reconfigure_flow_updates_frame_name(
+async def test_reconfigure_flow_keeps_generated_frame_name(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
     """Test the explicit frame reconfiguration flow."""
@@ -465,7 +442,7 @@ async def test_reconfigure_flow_updates_frame_name(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_FRAME_NAME: "Kitchen", CONF_SOURCE: DEFAULT_SOURCE},
+        {CONF_SOURCE: DEFAULT_SOURCE},
     )
 
     assert result["type"] == "abort"
@@ -496,7 +473,7 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_FRAME_NAME: entry.title, CONF_SOURCE: source},
+            {CONF_SOURCE: source},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], source_input
