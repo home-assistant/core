@@ -11,6 +11,7 @@ from pyportainer.exceptions import (
 from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
+from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -219,6 +220,26 @@ async def test_watcher_start_stop(
     await hass.async_block_till_done()
 
     mock_portainer_watcher.stop.assert_called_once()
+
+
+async def test_watcher_callback_requests_refresh(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a watcher result callback triggers a coordinator refresh."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_watcher.register_callback.assert_called_once()
+    result_callback = mock_portainer_watcher.register_callback.call_args[0][0]
+
+    calls_before = mock_portainer_client.get_endpoints.call_count
+    await result_callback(
+        PortainerImageWatcherResult(endpoint_id=1, container_id="abc", status=None)
+    )
+    await hass.async_block_till_done()
+
+    assert mock_portainer_client.get_endpoints.call_count == calls_before + 1
 
 
 async def test_migration_v4_to_v5(
