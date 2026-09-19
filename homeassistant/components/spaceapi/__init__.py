@@ -5,7 +5,7 @@ import math
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -114,127 +114,132 @@ SPACEAPI_VERSION = "0.13"
 
 URL_API_SPACEAPI = "/api/spaceapi"
 
-LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string})
+LOCATION_SCHEMA = probatio.Schema({probatio.Optional(CONF_ADDRESS): cv.string})
 
-SPACEFED_SCHEMA = vol.Schema(
+SPACEFED_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SPACENET): cv.boolean,
-        vol.Optional(CONF_SPACESAML): cv.boolean,
-        vol.Optional(CONF_SPACEPHONE): cv.boolean,
+        probatio.Optional(CONF_SPACENET): cv.boolean,
+        probatio.Optional(CONF_SPACESAML): cv.boolean,
+        probatio.Optional(CONF_SPACEPHONE): cv.boolean,
     }
 )
 
-STREAM_SCHEMA = vol.Schema(
+STREAM_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_M4): cv.url,
-        vol.Optional(CONF_MJPEG): cv.url,
-        vol.Optional(CONF_USTREAM): cv.url,
+        probatio.Optional(CONF_M4): cv.url,
+        probatio.Optional(CONF_MJPEG): cv.url,
+        probatio.Optional(CONF_USTREAM): cv.url,
     }
 )
 
-FEED_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FEED_TYPE): cv.string, vol.Required(CONF_FEED_URL): cv.url}
-)
-
-FEEDS_SCHEMA = vol.Schema(
+FEED_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FEED_BLOG): FEED_SCHEMA,
-        vol.Optional(CONF_FEED_WIKI): FEED_SCHEMA,
-        vol.Optional(CONF_FEED_CALENDAR): FEED_SCHEMA,
-        vol.Optional(CONF_FEED_FLICKER): FEED_SCHEMA,
+        probatio.Optional(CONF_FEED_TYPE): cv.string,
+        probatio.Required(CONF_FEED_URL): cv.url,
     }
 )
 
-CACHE_SCHEMA = vol.Schema(
+FEEDS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CACHE_SCHEDULE): cv.matches_regex(
+        probatio.Optional(CONF_FEED_BLOG): FEED_SCHEMA,
+        probatio.Optional(CONF_FEED_WIKI): FEED_SCHEMA,
+        probatio.Optional(CONF_FEED_CALENDAR): FEED_SCHEMA,
+        probatio.Optional(CONF_FEED_FLICKER): FEED_SCHEMA,
+    }
+)
+
+CACHE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_CACHE_SCHEDULE): cv.matches_regex(
             r"(m.02|m.05|m.10|m.15|m.30|h.01|h.02|h.04|h.08|h.12|d.01)"
         )
     }
 )
 
-RADIO_SHOW_SCHEMA = vol.Schema(
+RADIO_SHOW_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_RADIO_SHOW_NAME): cv.string,
-        vol.Required(CONF_RADIO_SHOW_URL): cv.url,
-        vol.Required(CONF_RADIO_SHOW_TYPE): cv.matches_regex(r"(mp3|ogg)"),
-        vol.Required(CONF_RADIO_SHOW_START): cv.string,
-        vol.Required(CONF_RADIO_SHOW_END): cv.string,
+        probatio.Required(CONF_RADIO_SHOW_NAME): cv.string,
+        probatio.Required(CONF_RADIO_SHOW_URL): cv.url,
+        probatio.Required(CONF_RADIO_SHOW_TYPE): cv.matches_regex(r"(mp3|ogg)"),
+        probatio.Required(CONF_RADIO_SHOW_START): cv.string,
+        probatio.Required(CONF_RADIO_SHOW_END): cv.string,
     }
 )
 
-KEYMASTER_SCHEMA = vol.Schema(
+KEYMASTER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_KEYMASTER_NAME): cv.string,
-        vol.Optional(CONF_KEYMASTER_IRC_NICK): cv.string,
-        vol.Optional(CONF_KEYMASTER_PHONE): cv.string,
-        vol.Optional(CONF_KEYMASTER_EMAIL): cv.string,
-        vol.Optional(CONF_KEYMASTER_TWITTER): cv.string,
+        probatio.Optional(CONF_KEYMASTER_NAME): cv.string,
+        probatio.Optional(CONF_KEYMASTER_IRC_NICK): cv.string,
+        probatio.Optional(CONF_KEYMASTER_PHONE): cv.string,
+        probatio.Optional(CONF_KEYMASTER_EMAIL): cv.string,
+        probatio.Optional(CONF_KEYMASTER_TWITTER): cv.string,
     }
 )
 
-CONTACT_SCHEMA = vol.Schema(
+CONTACT_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_EMAIL): cv.string,
-        vol.Optional(CONF_IRC): cv.string,
-        vol.Optional(CONF_ML): cv.string,
-        vol.Optional(CONF_PHONE): cv.string,
-        vol.Optional(CONF_TWITTER): cv.string,
-        vol.Optional(CONF_SIP): cv.string,
-        vol.Optional(CONF_FACEBOOK): cv.string,
-        vol.Optional(CONF_IDENTICA): cv.string,
-        vol.Optional(CONF_FOURSQUARE): cv.string,
-        vol.Optional(CONF_JABBER): cv.string,
-        vol.Optional(CONF_ISSUE_MAIL): cv.string,
-        vol.Optional(CONF_KEYMASTERS): vol.All(
-            cv.ensure_list, [KEYMASTER_SCHEMA], vol.Length(min=1)
+        probatio.Optional(CONF_EMAIL): cv.string,
+        probatio.Optional(CONF_IRC): cv.string,
+        probatio.Optional(CONF_ML): cv.string,
+        probatio.Optional(CONF_PHONE): cv.string,
+        probatio.Optional(CONF_TWITTER): cv.string,
+        probatio.Optional(CONF_SIP): cv.string,
+        probatio.Optional(CONF_FACEBOOK): cv.string,
+        probatio.Optional(CONF_IDENTICA): cv.string,
+        probatio.Optional(CONF_FOURSQUARE): cv.string,
+        probatio.Optional(CONF_JABBER): cv.string,
+        probatio.Optional(CONF_ISSUE_MAIL): cv.string,
+        probatio.Optional(CONF_KEYMASTERS): probatio.All(
+            cv.ensure_list, [KEYMASTER_SCHEMA], probatio.Length(min=1)
         ),
     },
     required=False,
 )
 
-STATE_SCHEMA = vol.Schema(
+STATE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Inclusive(CONF_ICON_CLOSED, CONF_ICONS): cv.url,
-        vol.Inclusive(CONF_ICON_OPEN, CONF_ICONS): cv.url,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Inclusive(CONF_ICON_CLOSED, CONF_ICONS): cv.url,
+        probatio.Inclusive(CONF_ICON_OPEN, CONF_ICONS): cv.url,
     },
     required=False,
 )
 
-SENSOR_SCHEMA = vol.Schema(
-    {vol.In(SENSOR_TYPES): [cv.entity_id], cv.string: [cv.entity_id]}
+SENSOR_SCHEMA = probatio.Schema(
+    {probatio.In(SENSOR_TYPES): [cv.entity_id], cv.string: [cv.entity_id]}
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_CONTACT): CONTACT_SCHEMA,
-                vol.Required(CONF_ISSUE_REPORT_CHANNELS): vol.All(
-                    cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]
+                probatio.Required(CONF_CONTACT): CONTACT_SCHEMA,
+                probatio.Required(CONF_ISSUE_REPORT_CHANNELS): probatio.All(
+                    cv.ensure_list, [probatio.In(ISSUE_REPORT_CHANNELS)]
                 ),
-                vol.Optional(CONF_LOCATION): LOCATION_SCHEMA,
-                vol.Required(CONF_LOGO): cv.url,
-                vol.Required(CONF_SPACE): cv.string,
-                vol.Required(CONF_STATE): STATE_SCHEMA,
-                vol.Required(CONF_URL): cv.string,
-                vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                vol.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
-                vol.Optional(CONF_CAM): vol.All(
-                    cv.ensure_list, [cv.url], vol.Length(min=1)
+                probatio.Optional(CONF_LOCATION): LOCATION_SCHEMA,
+                probatio.Required(CONF_LOGO): cv.url,
+                probatio.Required(CONF_SPACE): cv.string,
+                probatio.Required(CONF_STATE): STATE_SCHEMA,
+                probatio.Required(CONF_URL): cv.string,
+                probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
+                probatio.Optional(CONF_CAM): probatio.All(
+                    cv.ensure_list, [cv.url], probatio.Length(min=1)
                 ),
-                vol.Optional(CONF_STREAM): STREAM_SCHEMA,
-                vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
-                vol.Optional(CONF_CACHE): CACHE_SCHEMA,
-                vol.Optional(CONF_PROJECTS): vol.All(cv.ensure_list, [cv.url]),
-                vol.Optional(CONF_RADIO_SHOW): vol.All(
+                probatio.Optional(CONF_STREAM): STREAM_SCHEMA,
+                probatio.Optional(CONF_FEEDS): FEEDS_SCHEMA,
+                probatio.Optional(CONF_CACHE): CACHE_SCHEMA,
+                probatio.Optional(CONF_PROJECTS): probatio.All(
+                    cv.ensure_list, [cv.url]
+                ),
+                probatio.Optional(CONF_RADIO_SHOW): probatio.All(
                     cv.ensure_list, [RADIO_SHOW_SCHEMA]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

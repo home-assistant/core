@@ -40,7 +40,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -48,6 +48,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_started
 
 from .const import DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
@@ -164,22 +165,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
                 async_call_later(hass, 30, webhook_manager.register_webhook)
             )
 
-    if cloud.async_active_subscription(hass):
-        if cloud.async_is_connected(hass):
-            entry.async_on_unload(
-                async_call_later(
-                    hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
-                )
-            )
-        entry.async_on_unload(
-            cloud.async_listen_connection_change(hass, manage_cloudhook)
-        )
-    else:
+    @callback
+    def _async_register_webhook_later(_: HomeAssistant) -> None:
+        """Register the webhook once Home Assistant answers for it."""
         entry.async_on_unload(
             async_call_later(
                 hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
             )
         )
+
+    if cloud.async_active_subscription(hass):
+        if cloud.async_is_connected(hass):
+            entry.async_on_unload(async_at_started(hass, _async_register_webhook_later))
+        entry.async_on_unload(
+            cloud.async_listen_connection_change(hass, manage_cloudhook)
+        )
+    else:
+        entry.async_on_unload(async_at_started(hass, _async_register_webhook_later))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -160,6 +160,17 @@ async def test_sync_pause(hass: HomeAssistant) -> None:
     assert lawn_mower.pause.called
 
 
+async def test_sync_stop(hass: HomeAssistant) -> None:
+    """Test if async stop calls sync stop."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.stop = MagicMock()
+    await lawn_mower.async_stop()
+
+    assert lawn_mower.stop.called
+
+
 async def test_lawn_mower_default(hass: HomeAssistant) -> None:
     """Test lawn mower entity with defaults."""
     lawn_mower = MockLawnMowerEntity()

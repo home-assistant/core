@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
+import probatio
 from py_nightscout import Api as NightscoutAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -16,7 +16,9 @@ from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_URL): str, probatio.Optional(CONF_API_KEY): str}
+)
 
 
 async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
