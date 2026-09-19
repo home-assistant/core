@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant, State
@@ -152,9 +154,9 @@ async def test_select_option(hass: HomeAssistant) -> None:
         mock_set_picture_setting.assert_called_once_with("pictureMode", "cinema")
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_restore_option(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
 ) -> None:
     """Test that the last option is restored when no live data is available."""
 

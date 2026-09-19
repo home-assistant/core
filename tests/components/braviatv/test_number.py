@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant, State
@@ -55,9 +57,9 @@ NUMERIC_SETTINGS = [
 ]
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_entities(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
 ) -> None:
     """Test that number entities are created and can be set."""
 
@@ -109,9 +111,9 @@ async def test_entities(
         assert hass.states.get("number.bravia_tv_model_picture_mode") is None
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_set_value(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
 ) -> None:
     """Test setting a number value sends the command to the TV."""
 
@@ -158,9 +160,9 @@ async def test_set_value(
         mock_set_picture_setting.assert_called_once_with("brightness", "75")
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_restore_value_when_tv_is_off(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
 ) -> None:
     """Test that the last value is restored when the TV is off at startup."""
 
