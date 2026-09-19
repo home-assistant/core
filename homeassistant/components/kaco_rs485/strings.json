@@ -1,0 +1,174 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "The connection to that port failed. Check the adapter is connected and, for an ESPHome serial proxy, that the device is online, then try again.",
+      "no_inverters": "No KACO inverters answered on that port. These inverters stop responding entirely when the sun is down, so try again in daylight before suspecting the wiring.",
+      "only_unsupported": "Only devices this integration cannot read answered on that port. Address(es) {unsupported} use the CRC16 Generic Protocol — those are blueplanet or TL/TR units, which are read over Modbus TCP instead."
+    },
+    "error": {
+      "cannot_connect": "[%key:component::kaco_rs485::config::abort::cannot_connect%]"
+    },
+    "progress": {
+      "scanning": "Asking every address on the bus, 1 to 32. Addresses with nothing attached each cost a reply timeout."
+    },
+    "step": {
+      "confirm": {
+        "description": "Found at address(es): {found}",
+        "title": "Inverters found"
+      },
+      "user": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "The list shows the serial ports Home Assistant has detected, including USB adapters and ESPHome serial proxies."
+        },
+        "description": "Choose the serial port the inverters are wired to.",
+        "title": "Select the RS485 port"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ac_power": {
+        "name": "AC power"
+      },
+      "daily_yield": {
+        "name": "Daily yield"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "ac_current_limit_reached": "AC current limit reached",
+          "check_dc_isolator_switch": "Check DC isolator switch",
+          "check_overvoltage_protection": "Check overvoltage protection",
+          "communication_error": "Communication error",
+          "constant_voltage_mode": "Constant voltage mode",
+          "control_card_overtemperature": "Control card overtemperature",
+          "critical_overvoltage_l1": "Critical overvoltage L1",
+          "critical_overvoltage_l2": "Critical overvoltage L2",
+          "critical_overvoltage_l3": "Critical overvoltage L3",
+          "critical_undervoltage_l1": "Critical undervoltage L1",
+          "critical_undervoltage_l2": "Critical undervoltage L2",
+          "critical_undervoltage_l3": "Critical undervoltage L3",
+          "dc_dc_converter_communication_error": "DC/DC converter communication error",
+          "dc_feed_in_error": "DC feed-in error",
+          "dc_ground_fault": "DC ground fault",
+          "dc_link_error": "DC link error",
+          "dc_overvoltage_waiting_for_pv_voltage_to_drop": "DC overvoltage, waiting for PV voltage to drop",
+          "dsp_error": "DSP error",
+          "extended_selftest": "Extended selftest",
+          "external_power_limiting_active": "External power limiting active",
+          "external_reactive_power_demand": "External reactive power demand",
+          "fan_1_failure": "Fan 1 failure",
+          "fan_2_failure": "Fan 2 failure",
+          "fan_3_failure": "Fan 3 failure",
+          "fault_finding_mode": "Fault-finding mode",
+          "frequency_dependent_power_reduction": "Frequency-dependent power reduction",
+          "grid_average_voltage_fault": "Grid average voltage fault",
+          "grid_failure": "Grid failure",
+          "grid_mean_voltage_over_l1": "Grid mean voltage over L1",
+          "grid_mean_voltage_over_l2": "Grid mean voltage over L2",
+          "grid_mean_voltage_under_l1": "Grid mean voltage under L1",
+          "grid_mean_voltage_under_l2": "Grid mean voltage under L2",
+          "grid_overfrequency": "Grid overfrequency",
+          "grid_overvoltage_l1": "Grid overvoltage L1",
+          "grid_overvoltage_l2": "Grid overvoltage L2",
+          "grid_overvoltage_l3": "Grid overvoltage L3",
+          "grid_phase_conductor_fault": "Grid phase conductor fault",
+          "grid_underfrequency": "Grid underfrequency",
+          "grid_undervoltage_l1": "Grid undervoltage L1",
+          "grid_undervoltage_l2": "Grid undervoltage L2",
+          "grid_undervoltage_l3": "Grid undervoltage L3",
+          "hardware_error": "Hardware error",
+          "insulation_measurement": "Insulation measurement",
+          "insulation_measurement_not_possible": "Insulation measurement not possible",
+          "insulation_resistance_too_low": "Insulation resistance too low",
+          "island_operation_error": "Island operation error",
+          "island_operation_pac": "Island operation (PAC)",
+          "measurement_transformer_error": "Measurement transformer error",
+          "mpp_tracking": "MPP tracking",
+          "negative_pv_current_1": "Negative PV current 1",
+          "negative_pv_current_2": "Negative PV current 2",
+          "negative_pv_current_3": "Negative PV current 3",
+          "night_shutdown": "Night shutdown",
+          "operation_inhibited": "Operation inhibited",
+          "overload_shutdown": "Overload shutdown",
+          "overtemperature_shutdown": "Overtemperature shutdown",
+          "overvoltage_shutdown": "Overvoltage shutdown",
+          "plausibility_error": "Plausibility error",
+          "plausibility_error_afi_module": "Plausibility error AFI module",
+          "plausibility_error_dc_dc": "Plausibility error DC/DC",
+          "plausibility_error_efficiency": "Plausibility error efficiency",
+          "plausibility_error_relay_voltage": "Plausibility error relay voltage",
+          "plausibility_error_temperature_sensor": "Plausibility error temperature sensor",
+          "plausibility_error_voltage": "Plausibility error voltage",
+          "powador_protect_shutdown": "Powador-protect shutdown",
+          "power_limiting_active": "Power limiting active",
+          "power_unit_1_failure": "Power unit 1 failure",
+          "power_unit_2_failure": "Power unit 2 failure",
+          "power_unit_3_failure": "Power unit 3 failure",
+          "protective_shutdown_hardware": "Protective shutdown (hardware)",
+          "protective_shutdown_pv_string_1": "Protective shutdown PV string 1",
+          "protective_shutdown_pv_string_2": "Protective shutdown PV string 2",
+          "protective_shutdown_pv_string_3": "Protective shutdown PV string 3",
+          "protective_shutdown_software": "Protective shutdown (software)",
+          "pv_overvoltage_1": "PV overvoltage 1",
+          "pv_overvoltage_2": "PV overvoltage 2",
+          "pv_overvoltage_3": "PV overvoltage 3",
+          "pv_overvoltage_error": "PV overvoltage error",
+          "rcd_module_error": "RCD module error",
+          "relay_test": "Relay test",
+          "residual_current_shutdown_afi_rcd": "Residual current shutdown (AFI/RCD)",
+          "residual_current_too_high": "Residual current too high",
+          "rocof_error": "ROCOF error",
+          "selftest_error": "Selftest error",
+          "selftest_error_buffer_1": "Selftest error buffer 1",
+          "selftest_error_buffer_2": "Selftest error buffer 2",
+          "selftest_error_relay_1": "Selftest error relay 1",
+          "selftest_error_relay_2": "Selftest error relay 2",
+          "selftest_in_progress": "Selftest in progress",
+          "shutdown_1_5v_supply_collapse": "Shutdown 1.5V supply collapse",
+          "shutdown_2_5v_supply_collapse": "Shutdown 2.5V supply collapse",
+          "shutdown_5v_supply_collapse": "Shutdown 5V supply collapse",
+          "shutdown_dc_link_asymmetry": "Shutdown DC link asymmetry",
+          "shutdown_dc_link_overvoltage": "Shutdown DC link overvoltage",
+          "shutdown_dc_link_undervoltage": "Shutdown DC link undervoltage",
+          "shutdown_grid_voltage_l1": "Shutdown grid voltage L1",
+          "shutdown_grid_voltage_l2": "Shutdown grid voltage L2",
+          "shutdown_grid_voltage_l3": "Shutdown grid voltage L3",
+          "shutdown_hardware_buffer_enable": "Shutdown hardware buffer enable",
+          "shutdown_hardware_gate_driver": "Shutdown hardware gate driver",
+          "shutdown_hardware_overcurrent": "Shutdown hardware overcurrent",
+          "shutdown_hardware_overtemperature": "Shutdown hardware overtemperature",
+          "shutdown_overcurrent_l1": "Shutdown overcurrent L1",
+          "shutdown_overcurrent_l2": "Shutdown overcurrent L2",
+          "shutdown_overcurrent_l3": "Shutdown overcurrent L3",
+          "snow_melting": "Snow melting",
+          "startup": "Startup",
+          "temperature_sensor_defective": "Temperature sensor defective",
+          "testing_grid_relay": "Testing grid relay",
+          "testing_l_electronics": "Testing L electronics",
+          "unknown_hardware": "Unknown hardware",
+          "waiting": "Waiting",
+          "waiting_for_dc_voltage": "Waiting for DC voltage",
+          "waiting_for_reconnect": "Waiting for reconnect",
+          "waiting_for_shutdown": "Waiting for shutdown",
+          "waiting_for_wind": "Waiting for wind"
+        }
+      },
+      "total_yield": {
+        "name": "Total yield"
+      }
+    }
+  },
+  "exceptions": {
+    "bus_error": {
+      "message": "Error communicating over the RS485 bus: {error}"
+    },
+    "cannot_open_port": {
+      "message": "Could not open the RS485 port: {error}"
+    }
+  }
+}
