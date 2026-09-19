@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities read cached state from the coordinator; they subscribe via
+      CoordinatorEntity and register no other event handlers.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: |
+      The charger reports no serial number over Modbus, so an entry is told
+      apart by host and port.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: A Modbus link has no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: The charger does not announce itself over any discoverable protocol.
+  discovery-update-info:
+    status: exempt
+    comment: The charger does not announce itself over any discoverable protocol.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Connectors are wired into the charger by hand; the entry reads their
+      count when it loads and reloading picks a change up.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repairable issues are raised.
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration talks Modbus, not HTTP.
+  strict-typing: done
