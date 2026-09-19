@@ -1,0 +1,110 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_wibeee_device": "Discovered device is not a WiBeee energy monitor"
+    },
+    "error": {
+      "no_device_info": "Could not connect to the WiBeee device. Verify the IP address and that the device is powered on.",
+      "unknown": "An unknown error occurred."
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the WiBeee energy monitor at {host}?",
+        "title": "Discovered WiBeee device"
+      },
+      "user": {
+        "data": {
+          "host": "Hostname or IP address"
+        },
+        "data_description": {
+          "host": "The IP address of your WiBeee energy monitor."
+        },
+        "description": "Enter the IP address of your WiBeee energy monitor. Make sure the device has a static IP or DHCP reservation.",
+        "title": "Add WiBeee device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_energy": {
+        "name": "{phase} active energy"
+      },
+      "active_power": {
+        "name": "{phase} active power"
+      },
+      "apparent_power": {
+        "name": "{phase} apparent power"
+      },
+      "capacitive_reactive_energy": {
+        "name": "{phase} capacitive reactive energy"
+      },
+      "capacitive_reactive_power": {
+        "name": "{phase} capacitive reactive power"
+      },
+      "consumed_active_energy": {
+        "name": "{phase} consumed active energy"
+      },
+      "current": {
+        "name": "{phase} current"
+      },
+      "frequency": {
+        "name": "{phase} frequency"
+      },
+      "inductive_reactive_energy": {
+        "name": "{phase} inductive reactive energy"
+      },
+      "inductive_reactive_power": {
+        "name": "{phase} inductive reactive power"
+      },
+      "phase_angle": {
+        "name": "{phase} phase angle"
+      },
+      "power_factor": {
+        "name": "{phase} power factor"
+      },
+      "produced_active_energy": {
+        "name": "{phase} produced active energy"
+      },
+      "thd_current": {
+        "name": "{phase} THD current"
+      },
+      "thd_current_fundamental": {
+        "name": "{phase} THD current fundamental"
+      },
+      "thd_current_harmonic": {
+        "name": "{phase} THD current harmonic {order}"
+      },
+      "thd_voltage": {
+        "name": "{phase} THD voltage"
+      },
+      "thd_voltage_fundamental": {
+        "name": "{phase} THD voltage fundamental"
+      },
+      "thd_voltage_harmonic": {
+        "name": "{phase} THD voltage harmonic {order}"
+      },
+      "voltage": {
+        "name": "{phase} voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the Wibeee device at {host}: {error}"
+    },
+    "no_data": {
+      "message": "No data received from the Wibeee device at {host}"
+    },
+    "no_device_info": {
+      "message": "No device info received from the Wibeee device at {host}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
+    "update_error": {
+      "message": "Error fetching data from the Wibeee device at {host}: {error}"
+    }
+  }
+}
