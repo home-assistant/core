@@ -96,6 +96,36 @@ async def test_setup_entry_allows_no_matching_photos(
     assert hass.states.get("image.empty_frame_image").state == "unavailable"
 
 
+async def test_entity_becomes_unavailable_when_current_source_is_empty(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """A stale cached image is not presented as a current frame."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Changing frame",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_FRAME_NAME: "Changing frame",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("image.changing_frame_image").state != "unavailable"
+
+    coordinator = entry.runtime_data
+    coordinator._invalidate_candidate_cache()
+    with patch(
+        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+        new=AsyncMock(return_value=[]),
+    ):
+        await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("image.changing_frame_image").state == "unavailable"
+
+
 async def test_setup_entry_translates_parent_not_ready(
     hass: HomeAssistant,
 ) -> None:
