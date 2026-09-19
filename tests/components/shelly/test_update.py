@@ -1019,11 +1019,7 @@ async def test_rpc_update_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-@pytest.mark.parametrize(
-    "model",
-    [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM],
-    ids=["blu_gateway", "gen2_host"],
-)
+@pytest.mark.parametrize("model", [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM])
 async def test_blu_trv_update(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
@@ -1082,13 +1078,7 @@ async def test_blu_trv_update_without_firmware_version(
     assert entity_registry.async_get("update.trv_201_firmware") is None
 
 
-@pytest.mark.parametrize(
-    "fw_id",
-    [
-        pytest.param("20241224-101010/v1.2.10@aabbccdd", id="same_version"),
-        pytest.param("1.11.0", id="unparsable_firmware_id"),
-    ],
-)
+@pytest.mark.parametrize("fw_id", ["20241224-101010/v1.2.10@aabbccdd", "1.11.0"])
 async def test_blu_trv_update_no_update_available(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1138,7 +1128,6 @@ async def test_blu_trv_update_check_errors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # A failed check keeps the last known firmware, the entity stays usable
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
