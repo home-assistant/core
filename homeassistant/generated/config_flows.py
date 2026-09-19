@@ -482,6 +482,7 @@ FLOWS = {
         "melcloud",
         "melcloud_home",
         "melnor",
+        "meshtastic",
         "met",
         "met_eireann",
         "meteo_france",

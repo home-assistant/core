@@ -1,0 +1,19 @@
+{
+  "from": 2864434397,
+  "to": 781534648,
+  "fromId": "!aabbccdd",
+  "toId": "!2e9545b8",
+  "channel": 0,
+  "id": 305441742,
+  "rxTime": 1757300260,
+  "rxSnr": 6.25,
+  "rxRssi": -80,
+  "hopLimit": 2,
+  "hopStart": 3,
+  "wantAck": true,
+  "priority": "RELIABLE",
+  "decoded": {
+    "portnum": "TEXT_MESSAGE_APP",
+    "text": "direct hello"
+  }
+}
