@@ -413,11 +413,11 @@ async def test_service_delete_mealplan(
         SERVICE_DELETE_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_MEALPLAN_ID: "mealplan_id",
+            ATTR_MEALPLAN_ID: "16",
         },
         blocking=True,
     )
-    mock_mealie_client.delete_mealplan.assert_called_with("mealplan_id")
+    mock_mealie_client.delete_mealplan.assert_called_with(16)
 
     await hass.services.async_call(
         DOMAIN,
@@ -428,7 +428,7 @@ async def test_service_delete_mealplan(
         },
         blocking=True,
     )
-    mock_mealie_client.delete_mealplan.assert_called_with("16")
+    mock_mealie_client.delete_mealplan.assert_called_with(16)
 
 
 async def test_service_delete_mealplan_not_found(
@@ -478,6 +478,8 @@ async def test_service_delete_mealplan_not_found(
         ),
     ],
 )
+
+
 async def test_service_update_mealplan(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
@@ -495,7 +497,7 @@ async def test_service_update_mealplan(
         SERVICE_UPDATE_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_MEALPLAN_ID: "mealplan_id",
+            ATTR_MEALPLAN_ID: "16",
             ATTR_DATE: "2023-10-21",
             ATTR_ENTRY_TYPE: "lunch",
         }
@@ -505,7 +507,7 @@ async def test_service_update_mealplan(
     )
     assert response == snapshot
     mock_mealie_client.update_mealplan.assert_called_with(
-        "mealplan_id", date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+        16, date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
 
     mock_mealie_client.update_mealplan.reset_mock()
@@ -514,7 +516,7 @@ async def test_service_update_mealplan(
         SERVICE_UPDATE_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_MEALPLAN_ID: "mealplan_id",
+            ATTR_MEALPLAN_ID: "16",
             ATTR_DATE: "2023-10-21",
             ATTR_ENTRY_TYPE: "lunch",
         }
@@ -523,7 +525,7 @@ async def test_service_update_mealplan(
         return_response=False,
     )
     mock_mealie_client.update_mealplan.assert_called_with(
-        "mealplan_id", date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+        16, date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
 
     mock_mealie_client.update_mealplan.reset_mock()
@@ -541,8 +543,9 @@ async def test_service_update_mealplan(
         return_response=False,
     )
     mock_mealie_client.update_mealplan.assert_called_with(
-        "16", date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
+        16, date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
+
 
 async def test_service_update_mealplan_invalid_entry_type(
     hass: HomeAssistant,
@@ -560,7 +563,7 @@ async def test_service_update_mealplan_invalid_entry_type(
             SERVICE_UPDATE_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_MEALPLAN_ID: "mealplan_id",
+                ATTR_MEALPLAN_ID: "16",
                 ATTR_DATE: "2023-10-21",
                 ATTR_ENTRY_TYPE: "dessert",
                 ATTR_NOTE_TITLE: "Note Title",
@@ -737,7 +740,7 @@ async def test_service_get_shopping_list_items_connection_error(
         ),
         (
             SERVICE_DELETE_MEALPLAN,
-            {ATTR_MEALPLAN_ID: "mealplan_id"},
+            {ATTR_MEALPLAN_ID: "16"},
             "delete_mealplan",
             MealieConnectionError,
             HomeAssistantError,
@@ -747,7 +750,7 @@ async def test_service_get_shopping_list_items_connection_error(
         (
             SERVICE_UPDATE_MEALPLAN,
             {
-                ATTR_MEALPLAN_ID: "mealplan_id",
+                ATTR_MEALPLAN_ID: "16",
                 ATTR_DATE: "2023-10-21",
                 ATTR_ENTRY_TYPE: "lunch",
                 ATTR_RECIPE_ID: "recipe_id",
@@ -814,11 +817,11 @@ async def test_services_connection_error(
             },
             True,
         ),
-        (SERVICE_DELETE_MEALPLAN, {ATTR_MEALPLAN_ID: "mealplan_id"}, False),
+        (SERVICE_DELETE_MEALPLAN, {ATTR_MEALPLAN_ID: "16"}, False),
         (
             SERVICE_UPDATE_MEALPLAN,
             {
-                ATTR_MEALPLAN_ID: "mealplan_id",
+                ATTR_MEALPLAN_ID: "16",
                 ATTR_DATE: "2023-10-21",
                 ATTR_ENTRY_TYPE: "lunch",
                 ATTR_RECIPE_ID: "recipe_id",

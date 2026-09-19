@@ -319,7 +319,7 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_id = str(call.data[ATTR_MEALPLAN_ID])
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
     client = entry.runtime_data.client
 
     try:
@@ -345,7 +345,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_id = str(call.data[ATTR_MEALPLAN_ID])
+    mealplan_id = int(call.data[ATTR_MEALPLAN_ID])
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
