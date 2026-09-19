@@ -20,6 +20,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
 from teslemetry_stream.const import SseTopic
@@ -308,14 +309,13 @@ _BLE_KEY_ERRORS: Final = (
 
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
     vin: str,
     cloud_vehicle: Vehicle,
-) -> Vehicle | VehicleRouter:
-    """Return the API a vehicle's platforms should call."""
-    address = _ble_address_for_vin(entry, vin)
+    address: str | None,
+) -> tuple[Vehicle | VehicleRouter, VehicleBluetooth | None]:
+    """Return the API a vehicle's platforms should call, and its Bluetooth backend."""
     if not address:
-        return cloud_vehicle
+        return cloud_vehicle, None
 
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
@@ -327,7 +327,7 @@ async def _async_resolve_vehicle_api(
             vin,
             exc_info=True,
         )
-        return cloud_vehicle
+        return cloud_vehicle, None
     # disable keep alive to allow vehicles to sleep
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
@@ -346,7 +346,10 @@ async def _async_resolve_vehicle_api(
         bluetooth_vehicle.set_device(device)
         return True
 
-    return VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range)
+    return (
+        VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range),
+        bluetooth_vehicle,
+    )
 
 
 def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
@@ -601,11 +604,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
-            vehicle_api = await _async_resolve_vehicle_api(
+            ble_address = _ble_address_for_vin(entry, vin)
+            vehicle_api, ble_api = await _async_resolve_vehicle_api(
                 hass,
-                entry,
                 vin,
                 vehicle,
+                ble_address,
             )
 
             vehicles.append(
@@ -619,6 +623,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
+                    ble_address=ble_address,
+                    ble_api=ble_api,
                 )
             )
 
