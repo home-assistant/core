@@ -25,9 +25,7 @@ from .const import (
     DEFAULT_MODE,
     DEFAULT_PHOTO_FIT,
     DOMAIN,
-    MODE_PAIRS,
     MODE_PAIRS_ONLY,
-    PHOTO_FIT_FULL,
     screen_shape,
 )
 from .rendering import render
@@ -146,12 +144,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 for asset in photos
             ]
             fit = str(self.options.get(CONF_PHOTO_FIT, DEFAULT_PHOTO_FIT))
-            if (
-                len(photos) == 1
-                and str(self.options.get(CONF_MODE, DEFAULT_MODE)) == MODE_PAIRS
-                and self._orientation_is_portrait(primary)
-            ):
-                fit = PHOTO_FIT_FULL
             image, _layout = await self.hass.async_add_executor_job(
                 render,
                 payloads,

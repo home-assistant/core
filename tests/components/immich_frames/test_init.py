@@ -17,8 +17,10 @@ from homeassistant.components.immich_frames import (
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_PHOTO_FIT,
     CONF_SOURCE,
     DEFAULT_SOURCE,
+    PHOTO_FIT_CROP,
 )
 from homeassistant.components.immich_frames.coordinator import (
     ImmichFramesData,
@@ -219,15 +221,21 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     portrait = copy(MOCK_SEARCH_ASSETS[0])
     portrait.exif_info = ExifInfo(exif_image_width=100, exif_image_height=200)
     coordinator.options["mode"] = "pairs"
+    coordinator.options[CONF_PHOTO_FIT] = PHOTO_FIT_CROP
     with (
         patch(
             "homeassistant.components.immich_frames.coordinator.async_get_candidates",
             new=AsyncMock(return_value=[portrait]),
         ),
+        patch(
+            "homeassistant.components.immich_frames.coordinator.render",
+            return_value=(b"rendered", "single"),
+        ) as render,
         patch.object(coordinator._cache, "write", side_effect=OSError("read-only")),
     ):
         result = await coordinator._async_update_data()
     assert result.status == "ready"
+    assert render.call_args.args[2] == PHOTO_FIT_CROP
 
     with patch(
         "homeassistant.components.immich_frames.coordinator.async_get_candidates",
