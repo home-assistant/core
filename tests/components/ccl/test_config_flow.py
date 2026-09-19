@@ -100,10 +100,10 @@ async def test_create_entry_adds_sensors(
     mock_ccl.fw_ver = "1.0.0"
     mock_ccl.model = "HA100"
     mock_ccl.last_update_time = time.monotonic()
-    mock_ccl.get_sensors.side_effect = None
-    mock_ccl.get_sensors.return_value = {"t1tem": sensor}
+    mock_ccl.get_data.side_effect = None
+    mock_ccl.get_data.return_value = {"SENSOR": {"t1tem": sensor}}
     mock_ccl.set_update_callback.side_effect = lambda callback: callback(
-        {"t1tem": sensor}
+        {"SENSOR": {"t1tem": sensor}}
     )
 
     with (
