@@ -30,7 +30,9 @@ class AsyncConfigEntryAuth(AuthenticationManager):
 
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
-            self.oauth = self._get_oauth_token()
+
+        # A reauth can replace the token without the entry being reloaded
+        self.oauth = self._get_oauth_token()
 
         # This will skip the OAuth refresh and only refresh User and XSTS tokens
         try:
