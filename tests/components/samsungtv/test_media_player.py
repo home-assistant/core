@@ -776,6 +776,33 @@ async def test_turn_off_websocket(
     remote_websocket.send_commands.assert_not_called()
 
 
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_already_off(
+    hass: HomeAssistant, remote_websocket: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test turn_off is a no-op when the TV is already known to be off."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with patch.object(remote_websocket, "is_alive", return_value=False):
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    remote_websocket.send_commands.reset_mock()
+
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+
+    # KEY_POWER toggles the TV, so it must not be sent when already off
+    remote_websocket.send_commands.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
 async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remote_websocket: Mock, rest_api: Mock
 ) -> None:
