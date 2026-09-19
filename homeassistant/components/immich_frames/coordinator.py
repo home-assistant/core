@@ -194,7 +194,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 self.options,
                 self.immich_entry.entry_id,
             )
-        except (OSError, ValueError):
+        except OSError, ValueError:
             _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
         return result
 

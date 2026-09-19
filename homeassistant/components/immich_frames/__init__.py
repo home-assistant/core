@@ -16,7 +16,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: ImmichFramesConfigEntry
+) -> bool:
     """Migrate an older frame entry to the current source model."""
     if entry.version < 2:
         hass.config_entries.async_update_entry(

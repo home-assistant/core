@@ -63,7 +63,9 @@ async def test_album_source_uses_selected_albums() -> None:
 @pytest.mark.asyncio
 async def test_smart_source_uses_image_search() -> None:
     """Keyword selection must use Immich's supported smart-search API."""
-    search = SimpleNamespace(async_smart_search=AsyncMock(return_value=MOCK_SEARCH_ASSETS))
+    search = SimpleNamespace(
+        async_smart_search=AsyncMock(return_value=MOCK_SEARCH_ASSETS)
+    )
     api = SimpleNamespace(search=search)
 
     candidates = await async_get_candidates(

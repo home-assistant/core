@@ -107,20 +107,26 @@ async def test_coordinator_translates_auth_and_unsupported_errors(
     )
     entry.add_to_hass(hass)
     coordinator = ImmichFramesDataUpdateCoordinator(hass, entry)
-    with patch(
-        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+    with (
+        patch(
+            "homeassistant.components.immich_frames.coordinator.async_get_candidates",
             new=AsyncMock(
                 side_effect=ImmichUnauthorizedError(
                     {"message": "bad", "correlationId": "test"}
                 )
             ),
-    ), pytest.raises(ConfigEntryAuthFailed):
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
         await coordinator._async_update_data()
 
-    with patch(
-        "homeassistant.components.immich_frames.coordinator.async_get_candidates",
-        new=AsyncMock(side_effect=UnsupportedSourceError("memories")),
-    ), pytest.raises(UpdateFailed):
+    with (
+        patch(
+            "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+            new=AsyncMock(side_effect=UnsupportedSourceError("memories")),
+        ),
+        pytest.raises(UpdateFailed),
+    ):
         await coordinator._async_update_data()
 
 

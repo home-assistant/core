@@ -69,7 +69,7 @@ class FrameCache:
             ):
                 return None
             return _asset_from_state(state["asset"]), image
-        except (OSError, KeyError, TypeError, ValueError):
+        except OSError, KeyError, TypeError, ValueError:
             return None
 
     def write(

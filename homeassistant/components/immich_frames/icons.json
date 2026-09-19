@@ -1,20 +1,20 @@
 {
   "entity": {
     "button": {
-      "next": {"default": "mdi:skip-next"},
-      "previous": {"default": "mdi:skip-previous"},
-      "refresh": {"default": "mdi:refresh"},
-      "clear_cache": {"default": "mdi:cached"}
+      "clear_cache": { "default": "mdi:cached" },
+      "next": { "default": "mdi:skip-next" },
+      "previous": { "default": "mdi:skip-previous" },
+      "refresh": { "default": "mdi:refresh" }
     },
     "sensor": {
-      "photo_date": {"default": "mdi:calendar"},
-      "photo_location": {"default": "mdi:map-marker"},
-      "photo_people": {"default": "mdi:account-group"},
-      "matching_assets": {"default": "mdi:image-multiple"},
-      "frame_status": {"default": "mdi:information-outline"}
+      "frame_status": { "default": "mdi:information-outline" },
+      "matching_assets": { "default": "mdi:image-multiple" },
+      "photo_date": { "default": "mdi:calendar" },
+      "photo_location": { "default": "mdi:map-marker" },
+      "photo_people": { "default": "mdi:account-group" }
     },
     "switch": {
-      "slideshow": {"default": "mdi:play-pause"}
+      "slideshow": { "default": "mdi:play-pause" }
     }
   }
 }
