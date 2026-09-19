@@ -1,9 +1,9 @@
 """Media player platform for Marantz receivers using the 2007 protocol."""
 
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
 import math
-from typing import override
+from typing import Any, override
 
 from marantz_rs232 import (
     MarantzV2007Receiver,
@@ -74,16 +74,22 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@contextmanager
-def _translate_errors() -> Iterator[None]:
+def _translate_errors[**_P, _R](
+    func: Callable[_P, Awaitable[_R]],
+) -> Callable[_P, Coroutine[Any, Any, _R]]:
     """Translate receiver communication failures into action errors."""
-    try:
-        yield
-    except (ConnectionError, OSError, TimeoutError) as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-        ) from err
+
+    @wraps(func)
+    async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return await func(*args, **kwargs)
+        except (ConnectionError, OSError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+
+    return wrapper
 
 
 class MarantzMediaPlayer(MediaPlayerEntity):
@@ -179,46 +185,47 @@ class MarantzMediaPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = self._player.mute
 
     @override
+    @_translate_errors
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
-        with _translate_errors():
-            await self._player.power_on()
+        await self._player.power_on()
 
     @override
+    @_translate_errors
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        with _translate_errors():
-            await self._player.power_off()
+        await self._player.power_off()
 
     @override
+    @_translate_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         db = volume * self._volume_range + self._volume_min
-        with _translate_errors():
-            await self._set_volume(db)
+        await self._set_volume(db)
 
     @override
+    @_translate_errors
     async def async_volume_up(self) -> None:
         """Volume up."""
-        with _translate_errors():
-            await self._volume_up()
+        await self._volume_up()
 
     @override
+    @_translate_errors
     async def async_volume_down(self) -> None:
         """Volume down."""
-        with _translate_errors():
-            await self._volume_down()
+        await self._volume_down()
 
     @override
+    @_translate_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
-        with _translate_errors():
-            if mute:
-                await self._player.mute_on()
-            else:
-                await self._player.mute_off()
+        if mute:
+            await self._player.mute_on()
+        else:
+            await self._player.mute_off()
 
     @override
+    @_translate_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         v2007_source = next(
@@ -232,5 +239,4 @@ class MarantzMediaPlayer(MediaPlayerEntity):
                 translation_placeholders={"source": source},
             )
 
-        with _translate_errors():
-            await self._player.select_source(v2007_source)
+        await self._player.select_source(v2007_source)
