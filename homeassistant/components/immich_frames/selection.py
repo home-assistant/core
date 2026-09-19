@@ -161,8 +161,10 @@ async def async_get_candidates(
             max_pages=20,
             asset_type=AssetType.IMAGE,
         )
-    else:
+    elif source == DEFAULT_SOURCE:
         assets = await search.async_get_all(page_size=100, max_pages=20)
+    else:
+        raise UnsupportedSourceError(f"Unsupported Immich source: {source}")
     return _filter_assets(assets, options, now)
 
 

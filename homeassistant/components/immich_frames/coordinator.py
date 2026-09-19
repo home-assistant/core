@@ -93,9 +93,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 translation_domain=DOMAIN,
                 translation_key="immich_not_ready",
             )
+        runtime_data = immich_entry.runtime_data
         self.immich_entry = immich_entry
-        self.api: Immich = immich_entry.runtime_data.api
-        self._parent_identity_value = self._parent_identity(immich_entry)
+        self._parent_runtime_data = runtime_data
+        self.api: Immich = runtime_data.api
+        self._parent_identity_value = self._parent_identity(immich_entry, runtime_data)
         self.paused = False
         self._connected: bool | None = None
         self._recent_ids: set[str] = set()
@@ -150,9 +152,16 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 status="parent_not_ready",
                 connection_failed=True,
             )
+        parent_runtime_data = self._parent_runtime_data
+        parent_identity = self._parent_identity_value
+        api = self.api
 
         try:
-            candidates = await self._async_get_candidates()
+            candidates = await self._async_get_candidates(api)
+            if not self._parent_snapshot_is_current(
+                parent_runtime_data, parent_identity
+            ):
+                return self._handle_parent_change()
             if not candidates:
                 return self._cached_or_raise(
                     "no_photos", LookupError("no photos"), status="no_matching_photos"
@@ -166,7 +175,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             primary = choose_asset(selection_candidates, self.options, self._recent_ids)
             photos = selected_photos(primary, candidates, self.options)
             payloads = [
-                await self.api.assets.async_view_asset(asset.asset_id, size="preview")
+                await api.assets.async_view_asset(asset.asset_id, size="preview")
                 for asset in photos
             ]
             fit = str(self.options.get(CONF_PHOTO_FIT, DEFAULT_PHOTO_FIT))
@@ -181,8 +190,15 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 return self._cached_or_raise(
                     "invalid_image", err, status="invalid_image"
                 )
+            if not self._parent_snapshot_is_current(
+                parent_runtime_data, parent_identity
+            ):
+                return self._handle_parent_change()
         except ImmichUnauthorizedError as err:
-            self.immich_entry.async_start_reauth(self.hass)
+            if self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
+                self.immich_entry.async_start_reauth(self.hass)
+            else:
+                self._refresh_parent()
             return self._cached_or_raise(
                 "cannot_connect",
                 err,
@@ -230,13 +246,15 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                     result.image,
                     self.options,
                     self.immich_entry.entry_id,
-                    self._parent_identity_value,
+                    parent_identity,
                     result.updated_at,
                 )
             except OSError, ValueError:
                 _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
             finally:
                 self._last_cache_write_at = result.updated_at
+        if not self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
+            return self._handle_parent_change()
         return result
 
     def _refresh_parent(self) -> bool:
@@ -250,7 +268,8 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             or not getattr(immich_entry, "runtime_data", None)
         ):
             return False
-        parent_identity = self._parent_identity(immich_entry)
+        runtime_data = immich_entry.runtime_data
+        parent_identity = self._parent_identity(immich_entry, runtime_data)
         if parent_identity != self._parent_identity_value:
             self._invalidate_candidate_cache()
             self._recent_ids.clear()
@@ -261,10 +280,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._outage_logged = False
             self._parent_identity_value = parent_identity
         self.immich_entry = immich_entry
-        self.api = immich_entry.runtime_data.api
+        self._parent_runtime_data = runtime_data
+        self.api = runtime_data.api
         return True
 
-    async def _async_get_candidates(self) -> list[ImmichAsset]:
+    async def _async_get_candidates(
+        self, api: Immich | None = None
+    ) -> list[ImmichAsset]:
         """Return candidates, refreshing the bounded index when it expires."""
         now = dt_util.now()
         if (
@@ -273,7 +295,9 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             and now - self._candidate_cache_updated_at < CANDIDATE_CACHE_INTERVAL
         ):
             return self._candidate_cache
-        candidates = await async_get_candidates(self.api, self.options, now)
+        candidates = await async_get_candidates(
+            self.api if api is None else api, self.options, now
+        )
         self._candidate_cache = candidates
         self._candidate_cache_updated_at = now
         return candidates
@@ -303,14 +327,44 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             or rendered_at - self._last_cache_write_at >= CACHE_WRITE_INTERVAL
         )
 
-    def _parent_identity(self, entry: ConfigEntry | None = None) -> str:
+    def _parent_identity(
+        self, entry: ConfigEntry | None = None, runtime_data: Any | None = None
+    ) -> str:
         """Return a non-secret identity for the configured Immich account."""
         parent_entry = entry or self.immich_entry
-        endpoint = str(parent_entry.runtime_data.configuration_url)
+        parent_runtime_data = runtime_data or getattr(
+            parent_entry, "runtime_data", None
+        )
+        if parent_runtime_data is None:
+            return ""
+        endpoint = str(parent_runtime_data.configuration_url)
         key_fingerprint = hashlib.sha256(
             str(parent_entry.data.get(CONF_API_KEY, "")).encode()
         ).hexdigest()
         return f"{endpoint}|{key_fingerprint}"
+
+    def _parent_snapshot_is_current(self, runtime_data: object, identity: str) -> bool:
+        """Return whether an async operation still uses the current parent."""
+        parent_entry = self.hass.config_entries.async_get_entry(
+            self.options[CONF_IMMICH_ENTRY_ID]
+        )
+        current_runtime_data = getattr(parent_entry, "runtime_data", None)
+        return bool(
+            parent_entry is not None
+            and parent_entry.state is ConfigEntryState.LOADED
+            and current_runtime_data is runtime_data
+            and self._parent_identity(parent_entry, current_runtime_data) == identity
+        )
+
+    def _handle_parent_change(self) -> ImmichFramesData:
+        """Discard an in-flight result when the parent changes underneath it."""
+        self._refresh_parent()
+        return self._cached_or_raise(
+            "immich_not_ready",
+            RuntimeError("The parent Immich entry changed during refresh"),
+            status="parent_not_ready",
+            connection_failed=True,
+        )
 
     def _remember_assets(self, assets: tuple[ImmichAsset, ...]) -> None:
         """Remember a bounded set of recently displayed assets."""

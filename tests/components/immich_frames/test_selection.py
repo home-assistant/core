@@ -88,6 +88,19 @@ async def test_memories_source_is_not_offered_without_client_support() -> None:
         )
 
 
+@pytest.mark.asyncio
+async def test_unknown_source_is_rejected() -> None:
+    """Do not expose the full library for an invalid persisted source."""
+    search = SimpleNamespace(async_get_all=AsyncMock())
+    with pytest.raises(UnsupportedSourceError):
+        await async_get_candidates(
+            SimpleNamespace(search=search),
+            {CONF_SOURCE: "unexpected"},
+            dt_util.utcnow(),
+        )
+    search.async_get_all.assert_not_awaited()
+
+
 def test_portrait_companion_must_have_a_different_checksum() -> None:
     """Pairing avoids duplicate assets returned by Immich."""
     primary, duplicate = (copy(asset) for asset in MOCK_SEARCH_ASSETS[:2])

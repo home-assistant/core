@@ -4,10 +4,11 @@ from copy import copy
 from datetime import timedelta
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
-from aioimmich.assets.models import ExifInfo
+from aioimmich.assets.models import ExifInfo, ImmichAsset
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
@@ -517,6 +518,38 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
             RuntimeError("replacement account unavailable"),
             status="upstream_error",
         )
+
+
+async def test_coordinator_discards_inflight_result_when_parent_changes(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """An in-flight request cannot publish data from a replaced parent client."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    old_api = parent_immich_entry.runtime_data.api
+
+    async def replace_parent(*args: object, **kwargs: object) -> list[ImmichAsset]:
+        """Replace the parent while the candidate request is in flight."""
+        hass.config_entries.async_update_entry(
+            parent_immich_entry,
+            data={**parent_immich_entry.data, CONF_API_KEY: "replacement-key"},
+        )
+        parent_immich_entry.runtime_data = SimpleNamespace(
+            api=old_api,
+            configuration_url="http://immich.local:2283",
+        )
+        return list(MOCK_SEARCH_ASSETS)
+
+    with (
+        patch(
+            "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+            new=AsyncMock(side_effect=replace_parent),
+        ),
+        pytest.raises(UpdateFailed) as exc_info,
+    ):
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_key == "immich_not_ready"
+    assert coordinator.current_data is None
 
 
 async def test_image_does_not_serve_previous_account_data(

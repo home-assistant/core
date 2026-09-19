@@ -126,7 +126,7 @@
           "time_range": "Time range"
         },
         "data_description": {
-          "mode": "Allow single portrait photos, paired photos, or pairs only.",
+          "mode": "Allow single photos, paired photos, or pairs only.",
           "orientation": "Limit candidates to a particular image orientation.",
           "pair_window_days": "Maximum date difference between paired portraits.",
           "photo_fit": "Crop photos or show the complete image with padding.",
