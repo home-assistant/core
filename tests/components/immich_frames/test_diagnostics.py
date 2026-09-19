@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.immich_frames.const import (
+    CONF_ALBUM_IDS,
+    CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
     CONF_SMART_QUERY,
@@ -25,8 +27,12 @@ async def test_diagnostics_exclude_image_bytes(
         data={
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
             CONF_FRAME_NAME: "Living room",
+            CONF_FRAME_ID: "private-frame",
         },
-        options={CONF_SMART_QUERY: "private person"},
+        options={
+            CONF_ALBUM_IDS: ["private-album"],
+            CONF_SMART_QUERY: "private person",
+        },
     )
     entry.add_to_hass(hass)
 
@@ -45,6 +51,8 @@ async def test_diagnostics_exclude_image_bytes(
     assert diagnostics["entry"]["title"] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_IMMICH_ENTRY_ID] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_FRAME_NAME] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_FRAME_ID] == "**REDACTED**"
+    assert diagnostics["entry"]["options"][CONF_ALBUM_IDS] == "**REDACTED**"
 
 
 async def test_diagnostics_handle_unavailable_frame(

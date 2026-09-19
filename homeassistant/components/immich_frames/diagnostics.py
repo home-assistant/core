@@ -5,10 +5,18 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_FRAME_NAME, CONF_IMMICH_ENTRY_ID, CONF_SMART_QUERY
+from .const import (
+    CONF_ALBUM_IDS,
+    CONF_FRAME_ID,
+    CONF_FRAME_NAME,
+    CONF_IMMICH_ENTRY_ID,
+    CONF_SMART_QUERY,
+)
 from .coordinator import ImmichFramesConfigEntry
 
 TO_REDACT = {
+    CONF_ALBUM_IDS,
+    CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
     CONF_SMART_QUERY,
