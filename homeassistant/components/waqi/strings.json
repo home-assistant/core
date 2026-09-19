@@ -92,5 +92,18 @@
         "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
       }
     }
+  },
+  "issues": {
+    "station_not_found": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The measuring station \"{name}\" can no longer be found by the World Air Quality Index API. This usually means the station has been permanently taken offline. A different station may report different metrics, so it is not automatically substituted.\n\nSelect **Submit** to remove this measuring station. You can add a replacement station afterwards.",
+            "title": "[%key:component::waqi::issues::station_not_found::title%]"
+          }
+        }
+      },
+      "title": "Measuring station \"{name}\" not found"
+    }
   }
 }
