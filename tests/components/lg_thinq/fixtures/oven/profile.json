@@ -1,0 +1,77 @@
+{
+  "extensionProperty": {
+    "info": {
+      "type": "DOUBLE"
+    }
+  },
+  "property": [
+    {
+      "location": {
+        "locationName": "UPPER"
+      },
+      "runState": {
+        "currentState": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": [
+              "INITIAL",
+              "PREHEATING",
+              "COOKING_IN_PROGRESS",
+              "DONE",
+              "COOLING"
+            ]
+          }
+        }
+      },
+      "timer": {
+        "remainHour": {
+          "mode": ["r"],
+          "type": "number"
+        },
+        "remainMinute": {
+          "mode": ["r"],
+          "type": "number"
+        },
+        "remainSecond": {
+          "mode": ["r"],
+          "type": "number"
+        }
+      }
+    },
+    {
+      "location": {
+        "locationName": "LOWER"
+      },
+      "runState": {
+        "currentState": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": [
+              "INITIAL",
+              "PREHEATING",
+              "COOKING_IN_PROGRESS",
+              "DONE",
+              "COOLING"
+            ]
+          }
+        }
+      },
+      "timer": {
+        "remainHour": {
+          "mode": ["r"],
+          "type": "number"
+        },
+        "remainMinute": {
+          "mode": ["r"],
+          "type": "number"
+        },
+        "remainSecond": {
+          "mode": ["r"],
+          "type": "number"
+        }
+      }
+    }
+  ]
+}

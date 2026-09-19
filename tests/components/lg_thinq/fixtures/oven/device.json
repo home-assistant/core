@@ -1,0 +1,9 @@
+{
+  "deviceId": "OV-00000000-0000-0000-0000-000000000001",
+  "deviceInfo": {
+    "deviceType": "DEVICE_OVEN",
+    "modelName": "Test oven",
+    "alias": "Test oven",
+    "reportable": true
+  }
+}
