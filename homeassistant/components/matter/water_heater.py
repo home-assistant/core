@@ -65,7 +65,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
 
     _attr_current_temperature: float | None = None
-    _attr_current_operation: str
     _attr_operation_list = [
         STATE_ECO,
         STATE_HIGH_DEMAND,
@@ -177,15 +176,30 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         system_mode = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.SystemMode
         )
-        boost_state = self.get_matter_attribute_value(
-            clusters.WaterHeaterManagement.Attributes.BoostState
-        )
         if system_mode == clusters.Thermostat.Enums.SystemModeEnum.kOff:
             self._attr_current_operation = STATE_OFF
-        elif boost_state == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
-            self._attr_current_operation = STATE_HIGH_DEMAND
+        elif not self._endpoint.has_attribute(
+            None, clusters.WaterHeaterManagement.Attributes.BoostState
+        ):
+            # BoostState is mandatory in the Matter spec for WaterHeaterManagement,
+            # but a non-conformant device or bridge may never report it. The read
+            # path then returns the dataclass default (0), which is the valid
+            # BoostStateEnum.kInactive value, so an unreported attribute is
+            # indistinguishable from a reported inactive boost. Report unknown
+            # instead of silently claiming eco, matching how other Matter entities
+            # guard optional attributes.
+            self._attr_current_operation = None
         else:
-            self._attr_current_operation = STATE_ECO
+            boost_state = self.get_matter_attribute_value(
+                clusters.WaterHeaterManagement.Attributes.BoostState
+            )
+            if (
+                boost_state
+                == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive
+            ):
+                self._attr_current_operation = STATE_HIGH_DEMAND
+            else:
+                self._attr_current_operation = STATE_ECO
         self._attr_temperature = cast(
             float,
             self._get_temperature_in_degrees(
