@@ -372,6 +372,16 @@ async def test_keeps_latest_value_when_setting_is_omitted_after_refresh(
         assert state.attributes["max"] == 100
         assert state.attributes["step"] == 1
 
+        mock_picture_setting.return_value = []
+        await config_entry.runtime_data.picture_coordinator.async_refresh()
+
+        state = hass.states.get("number.bravia_tv_model_picture_brightness")
+        assert state is not None
+        assert state.state == "50.0"
+        assert state.attributes["min"] == 0
+        assert state.attributes["max"] == 100
+        assert state.attributes["step"] == 1
+
 
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_set_fractional_value(
