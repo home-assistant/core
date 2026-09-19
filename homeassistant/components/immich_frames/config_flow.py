@@ -432,7 +432,7 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
             albums = []
         if not albums and not errors:
             return self.async_abort(reason="no_albums")
-        if user_input is not None:
+        if user_input is not None and not errors:
             album_ids = user_input.get(CONF_ALBUM_IDS, [])
             if not album_ids:
                 errors["base"] = "album_required"
