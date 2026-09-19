@@ -54,10 +54,8 @@ async def async_setup_entry(
     )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    await asyncio.gather(
-        coordinator.async_config_entry_first_refresh(),
-        picture_coordinator.async_config_entry_first_refresh(),
-    )
+    await coordinator.async_config_entry_first_refresh()
+    await picture_coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = BraviaTVData(
         coordinator=coordinator,

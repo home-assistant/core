@@ -161,6 +161,53 @@ async def test_set_value(
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+async def test_unavailable_when_picture_setting_is_not_available(
+    hass: HomeAssistant,
+) -> None:
+    """Test that unavailable picture settings are not exposed as usable controls."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string",
+    )
+    config_entry.add_to_hass(hass)
+
+    unavailable_numeric_settings = [
+        {**NUMERIC_SETTINGS[0], "isAvailable": False},
+        NUMERIC_SETTINGS[1],
+    ]
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=INPUTS),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=unavailable_numeric_settings,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("number.bravia_tv_model_picture_brightness")
+        assert state is not None
+        assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_restore_value_when_tv_is_off(
     hass: HomeAssistant,
 ) -> None:

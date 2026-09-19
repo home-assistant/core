@@ -133,7 +133,12 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], RestoreNumbe
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.is_on
+        setting = self.coordinator.get_setting(self.entity_description.key)
+        return (
+            super().available
+            and self.coordinator.is_on
+            and (setting is None or setting["isAvailable"])
+        )
 
     @property
     @override

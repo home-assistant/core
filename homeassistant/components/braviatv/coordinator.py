@@ -490,11 +490,11 @@ class BraviaTVPictureCoordinator(
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]] | None:
         """Fetch picture quality settings."""
-        await self.async_connect()
-
         if not self._coordinator.is_on:
             # Keep the last known settings while the TV is off
             return self.data
+
+        await self._coordinator.async_connect()
 
         try:
             settings = await self.client.get_picture_setting()

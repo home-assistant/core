@@ -89,6 +89,20 @@ async def test_async_update_data_tv_off(
     client.get_picture_setting.assert_not_awaited()
 
 
+async def test_async_update_data_uses_main_coordinator_connection(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the picture coordinator reuses the main coordinator connection."""
+    coordinator, client = _create_coordinators(hass, config_entry, is_on=True)
+    coordinator._coordinator.async_connect = AsyncMock()
+    client.get_picture_setting.return_value = PICTURE_SETTINGS
+
+    await coordinator._async_update_data()
+
+    coordinator._coordinator.async_connect.assert_awaited_once()
+    client.get_picture_setting.assert_awaited_once()
+
+
 async def test_async_update_data_unsupported(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
