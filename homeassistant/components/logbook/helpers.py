@@ -297,8 +297,7 @@ def _is_state_filtered(new_state: State, old_state: State) -> bool:
     """Check if the logbook should filter a state.
 
     Used when we are in live mode to ensure only real activity is kept.
-    Same-state attribute changes are still activity and should not be filtered,
-    but no-op updates with no state or attribute changes are skipped.
+    no-op updates with no state or attribute changes are skipped.
     """
     return bool(
         (
