@@ -317,7 +317,7 @@ async def test_event_listener_error_handling(
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_log_level", "expected_message"),
+    ("error", "expected_log_level", "expected_message", "expected_traceback"),
     [
         (
             ClientResponseError(
@@ -328,20 +328,23 @@ async def test_event_listener_error_handling(
             ),
             logging.WARNING,
             "Splunk response error: Internal Server Error",
+            False,
         ),
         (
             SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
             logging.ERROR,
             "Splunk token unauthorized",
+            False,
         ),
         (
             ValueError("boom"),
             logging.ERROR,
             "Unexpected error sending event to Splunk",
+            True,
         ),
     ],
 )
-async def test_event_listener_repeated_failures_log_once(
+async def test_event_listener_repeated_failures_log_at_debug(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -349,6 +352,7 @@ async def test_event_listener_repeated_failures_log_once(
     error: Exception,
     expected_log_level: int,
     expected_message: str,
+    expected_traceback: bool,
 ) -> None:
     """Test the first failure logs at its level and the repeats log at debug."""
     mock_config_entry.add_to_hass(hass)
@@ -368,7 +372,10 @@ async def test_event_listener_repeated_failures_log_once(
     ]
     assert len(matching_records) == 5
     assert matching_records[0].levelno == expected_log_level
+    # A traceback is worth one record per outage, never one per state change.
+    assert bool(matching_records[0].exc_info) is expected_traceback
     assert all(record.levelno == logging.DEBUG for record in matching_records[1:])
+    assert not any(record.exc_info for record in matching_records[1:])
 
 
 @pytest.mark.parametrize(
@@ -437,26 +444,22 @@ async def test_event_listener_different_failure_during_outage_logs_at_debug(
     assert all(record.levelno == logging.DEBUG for record in second_records)
 
 
-async def test_event_listener_recovery_logs_once_at_debug(
+async def test_event_listener_recovery_logs_once_at_info(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a recovered outage logs a single debug record."""
+    """Test a recovered outage logs a single info record."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
+
     with caplog.at_level(logging.DEBUG):
-        for i, failure in enumerate(
-            (
-                SplunkPayloadError(0, "Unauthorized", HTTPStatus.UNAUTHORIZED),
-                ClientConnectionError("Connection failed"),
-            )
-        ):
-            mock_hass_splunk.queue.side_effect = failure
+        for i in range(2):
             hass.states.async_set("sensor.test", str(i))
             await hass.async_block_till_done()
 
@@ -471,7 +474,7 @@ async def test_event_listener_recovery_logs_once_at_debug(
         if "Sending events to Splunk has recovered" in record.message
     ]
     assert len(recovery_records) == 1
-    assert recovery_records[0].levelno == logging.DEBUG
+    assert recovery_records[0].levelno == logging.INFO
 
 
 async def test_event_listener_failure_after_recovery_logs_at_natural_level(
@@ -529,11 +532,13 @@ async def test_event_listener_coalesced_send_is_not_a_recovery(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_hass_splunk.queue.side_effect = [
-        ClientConnectionError("Connection failed"),
-        False,
-        ClientConnectionError("Connection failed"),
-    ]
+    error = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=500,
+        message="Internal Server Error",
+    )
+    mock_hass_splunk.queue.side_effect = [error, False, error]
 
     with caplog.at_level(logging.DEBUG):
         for i in range(3):
@@ -544,6 +549,16 @@ async def test_event_listener_coalesced_send_is_not_a_recovery(
         "Sending events to Splunk has recovered" in record.message
         for record in caplog.records
     )
+
+    # Still demoted, so the coalesced send did not clear the outage either.
+    failure_records = [
+        record
+        for record in caplog.records
+        if "Splunk response error: Internal Server Error" in record.message
+    ]
+    assert len(failure_records) == 2
+    assert failure_records[0].levelno == logging.WARNING
+    assert failure_records[1].levelno == logging.DEBUG
 
 
 async def test_event_listener_no_recovery_message_without_prior_failure(

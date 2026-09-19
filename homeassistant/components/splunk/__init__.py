@@ -219,10 +219,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
-    # The first failure of an outage logs at its natural level; every repeat
-    # logs at debug until a send succeeds, so a stuck connection can't flood
-    # the log with one record per state change.
     send_failing = False
+
+    def log_send_failure(level: int, message: str, *args: Any) -> None:
+        """Log a send failure, demoting it to debug while an outage is open."""
+        nonlocal send_failing
+
+        _LOGGER.log(logging.DEBUG if send_failing else level, message, *args)
+        send_failing = True
 
     async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
@@ -249,10 +253,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         }
 
-        level = logging.NOTSET
-        log_message = ""
-        log_args: tuple[Any, ...] = ()
-
         try:
             sent = await event_collector.queue(
                 json.dumps(payload, cls=JSONEncoder), send=True
@@ -260,47 +260,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SplunkPayloadError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
                 entry.async_start_reauth(hass)
-                level = logging.ERROR
-                log_message, log_args = "Splunk token unauthorized: %s", (err,)
+                log_send_failure(logging.ERROR, "Splunk token unauthorized: %s", err)
             else:
-                level = logging.WARNING
-                log_message, log_args = "Splunk payload error: %s", (err,)
-        except ClientConnectionError as err:
-            level = logging.DEBUG
-            log_message, log_args = "Connection error sending to Splunk: %s", (err,)
-        except TimeoutError:
-            level = logging.DEBUG
-            log_message = "Timeout sending to Splunk at %s:%s"
-            log_args = (host, port)
-        except ClientResponseError as err:
-            level = logging.WARNING
-            log_message, log_args = "Splunk response error: %s", (err.message,)
-        except Exception:
-            # Logged here, not after the block below, so the traceback is
-            # captured while this exception is still the one being handled.
-            if send_failing:
-                _LOGGER.debug("Unexpected error sending event to Splunk")
-            else:
-                _LOGGER.exception("Unexpected error sending event to Splunk")
-            send_failing = True
+                log_send_failure(logging.WARNING, "Splunk payload error: %s", err)
             return
-
-        if log_message:
+        except ClientConnectionError as err:
+            log_send_failure(
+                logging.DEBUG, "Connection error sending to Splunk: %s", err
+            )
+            return
+        except TimeoutError:
+            log_send_failure(
+                logging.DEBUG, "Timeout sending to Splunk at %s:%s", host, port
+            )
+            return
+        except ClientResponseError as err:
+            log_send_failure(logging.WARNING, "Splunk response error: %s", err.message)
+            return
+        except Exception:
+            # Logged in the handler, so the traceback is still available.
             _LOGGER.log(
-                logging.DEBUG if send_failing else level, log_message, *log_args
+                logging.DEBUG if send_failing else logging.ERROR,
+                "Unexpected error sending event to Splunk",
+                exc_info=not send_failing,
             )
             send_failing = True
             return
 
         if not sent:
-            # Coalesced into an already in-flight send; not a fact about this
-            # send, so it must not be treated as a success or a recovery.
+            # Coalesced into an in-flight send, which says nothing about
+            # whether this event reached Splunk.
             return
 
         if send_failing:
-            # Debug, so the recovery is never louder than the outage it
-            # closes; it belongs with the repeats it follows.
-            _LOGGER.debug("Sending events to Splunk has recovered")
+            _LOGGER.info("Sending events to Splunk has recovered")
             send_failing = False
 
     # Store the event listener cancellation callback
