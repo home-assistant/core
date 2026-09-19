@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the PAJ GPS integration."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -7,6 +8,7 @@ from typing import override
 
 from pajgps_api import PajGpsApi
 from pajgps_api.models.device import Device
+from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 from pajgps_api.pajgps_api_error import (
     AuthenticationError,
@@ -34,6 +36,7 @@ class PajGpsData:
 
     devices: dict[int, Device]
     positions: dict[int, TrackPoint]
+    sensor_data: dict[int, SensorData]
 
 
 class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
@@ -107,4 +110,30 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                 tp.iddevice: tp for tp in track_points if tp.iddevice is not None
             }
 
-        return PajGpsData(devices=devices, positions=positions)
+        sensor_data: dict[int, SensorData] = {}
+        voltage_device_ids = [
+            device_id
+            for device_id, device in devices.items()
+            if device.has_voltage_sensor
+        ]
+
+        if voltage_device_ids:
+            results = await asyncio.gather(
+                *(
+                    self.api.get_last_sensor_data(device_id)
+                    for device_id in voltage_device_ids
+                ),
+                return_exceptions=True,
+            )
+
+            for device_id, result in zip(voltage_device_ids, results, strict=False):
+                if not isinstance(result, SensorData):
+                    _LOGGER.debug(
+                        "Failed to fetch voltage sensor data for device %s: %s",
+                        device_id,
+                        result,
+                    )
+                    continue
+                sensor_data[device_id] = result
+
+        return PajGpsData(devices=devices, positions=positions, sensor_data=sensor_data)
