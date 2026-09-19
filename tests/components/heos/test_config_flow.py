@@ -254,6 +254,34 @@ async def test_discovery_updates(
     assert config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
+async def test_discovery_does_not_update_while_connected(
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery keeps the current host while connected to it."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.mock_set_connection_state(ConnectionState.CONNECTED)
+
+    # A device that has just rejoined the network reports an incomplete host list,
+    # without the configured host, and the player that is momentarily missing is
+    # not in the player list either.
+    controller.mock_set_players({1: controller.players[1]})
+    host = HeosHost("Player", "Model", None, None, "127.0.0.2", NetworkType.WIRED, True)
+    controller.get_system_info.return_value = HeosSystem(None, host, [host])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_zeroconf_discovery(
     hass: HomeAssistant,
     zeroconf_discovery_data: ZeroconfServiceInfo,
