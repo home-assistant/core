@@ -868,6 +868,7 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
         try:
+            await entity.async_prepare_to_add_to_hass()
             restored = await self._async_add_entity_impl(
                 entity, update_before_add, entity_registry, config_subentry_id
             )

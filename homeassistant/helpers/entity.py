@@ -1503,14 +1503,42 @@ class Entity(
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
 
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass.
+
+        Called on every add attempt, before the registry entry is assigned to
+        this entity and before its state is written, including for adds which
+        will be aborted, e.g. because the entity is disabled. Adding may not
+        complete; register cleanup with async_on_remove.
+
+        To be extended by integrations.
+        """
+
     async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass.
+        """Run when the entity has been added to hass.
+
+        Called as the last step of a successful add: after the entity has its
+        entity_id (and its registry entry, if it has a unique_id) and immediately
+        before its state is written for the first time. Use it to subscribe to
+        events, register update listeners and fetch initial data.
+
+        Not called when adding the entity is aborted, e.g. because the entity is
+        disabled or its entity_id or unique_id collides with an existing entity.
 
         To be extended by integrations.
         """
 
     async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass.
+        """Run when the entity is about to be removed from hass.
+
+        The counterpart to async_added_to_hass: called when the entity is removed
+        for an entity that was successfully added. Use it to undo work done in
+        async_added_to_hass, e.g. unsubscribe from events or release resources.
+
+        Not called when adding the entity is aborted before it finished being
+        added; on that path only the callbacks registered with async_on_remove
+        run. Register cleanup for anything set up before the add completed with
+        async_on_remove so it runs on both an aborted add and a normal removal.
 
         To be extended by integrations.
         """
