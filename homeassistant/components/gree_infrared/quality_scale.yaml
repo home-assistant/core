@@ -29,10 +29,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: |
-      This integration does not store runtime data.
+  runtime-data: done
   test-before-configure:
     status: exempt
     comment: |
@@ -98,10 +95,7 @@ rules:
     status: exempt
     comment: |
       This integration does not raise exceptions.
-  icon-translations:
-    status: exempt
-    comment: |
-      This integration does not use custom icons.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
