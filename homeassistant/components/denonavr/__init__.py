@@ -123,21 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         update_interval=update_interval if update_audyssey else None,
         refresh_fn=async_refresh_audyssey,
     )
-    # Audyssey values aren't populated by regular status queries, so
-    # without this the backing entities would start unavailable - a
-    # failure here shouldn't block setup though, unlike the general
-    # coordinator's. Skipped when Telnet and "Update Audyssey settings"
-    # are both on: receiver.py's connection step already fetched this.
-    if use_telnet and update_audyssey:
-        pass
-    elif use_telnet:
-        # Forced: Telnet is already connected by now (see above), but
-        # it only pushes Audyssey data on a change, never on connect,
-        # so the regular Telnet-healthy skip would otherwise leave
-        # these entities unavailable indefinitely.
-        await audyssey_coordinator.async_refresh_forced()
-    else:
-        await audyssey_coordinator.async_refresh()
 
     @callback
     def _propagate_connectivity_to_audyssey() -> None:
@@ -183,6 +168,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     entry.async_on_unload(
         audyssey_coordinator.async_add_listener(_propagate_audyssey_failure_to_general)
     )
+
+    # Audyssey values aren't populated by regular status queries, so
+    # without this the backing entities would start unavailable - a
+    # failure here shouldn't block setup though, unlike the general
+    # coordinator's. Skipped when Telnet and "Update Audyssey settings"
+    # are both on: receiver.py's connection step already fetched this.
+    # Runs after the listener above is installed so a connectivity
+    # failure here reaches the status coordinator too.
+    if use_telnet and update_audyssey:
+        pass
+    elif use_telnet:
+        # Forced: Telnet is already connected by now (see above), but
+        # it only pushes Audyssey data on a change, never on connect,
+        # so the regular Telnet-healthy skip would otherwise leave
+        # these entities unavailable indefinitely.
+        await audyssey_coordinator.async_refresh_forced()
+    else:
+        await audyssey_coordinator.async_refresh()
 
     @callback
     def _telnet_notify_audyssey(zone: str, event: str, parameter: str) -> None:

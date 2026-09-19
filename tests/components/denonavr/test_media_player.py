@@ -340,6 +340,61 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
     assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
+async def test_concurrent_forced_refreshes_each_bypass_telnet_skip(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Overlapping forced refreshes must each fetch, not just the first.
+
+    The force flag lives on the coordinator and async_refresh() only
+    waits on the debouncer lock after it is set, so without its own
+    lock the first caller's cleanup would clear the flag while the
+    second was still queued, and that second refresh would hit the
+    Telnet-healthy skip instead of the fetch it asked for.
+
+    Driven at the coordinator rather than through the service: the
+    media_player platform sets PARALLEL_UPDATES = 1, so entity service
+    calls cannot overlap.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    entry = await setup_denonavr(hass, options={"use_telnet": True})
+    audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+
+    async def _suspending_update() -> None:
+        # Yields control so the second caller reaches the coordinator
+        # while the first is still refreshing; without it the mock
+        # never suspends and the two calls can't interleave at all.
+        await asyncio.sleep(0)
+
+    client.async_update_audyssey.side_effect = _suspending_update
+    calls_before = client.async_update_audyssey.call_count
+
+    await asyncio.gather(
+        audyssey_coordinator.async_refresh_forced(),
+        audyssey_coordinator.async_refresh_forced(),
+    )
+
+    assert client.async_update_audyssey.call_count == calls_before + 2
+
+
+async def test_initial_audyssey_failure_marks_status_unavailable(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A connectivity failure on the setup-time Audyssey fetch reaches both.
+
+    The failure listener is registered before that first refresh, so
+    the status coordinator learns about it immediately rather than
+    keeping media_player and the general selects available until its
+    own next poll.
+    """
+    client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
+
+    entry = await setup_denonavr(hass)
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
+    assert entry.runtime_data.coordinator.last_update_success is False
+
+
 async def test_update_audyssey_restores_availability(
     hass: HomeAssistant, client: MagicMock
 ) -> None:

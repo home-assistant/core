@@ -158,6 +158,7 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lock = lock
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
+        self._force_refresh_lock = asyncio.Lock()
 
     async def async_refresh_forced(self) -> None:
         """Refresh immediately, bypassing the Telnet-healthy skip.
@@ -167,12 +168,19 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         read even though Telnet already looks healthy - regular
         polling and post-action confirmations still go through
         async_refresh()/async_request_refresh(), which keep that skip.
+
+        Serialized on its own lock: async_refresh() waits on the
+        debouncer lock only after the flag is set, so overlapping
+        callers would clear it for each other and the later refresh
+        would silently run unforced. Acquired before the debouncer and
+        receiver locks, never after, so it adds no deadlock path.
         """
-        self._force_next_refresh = True
-        try:
-            await self.async_refresh()
-        finally:
-            self._force_next_refresh = False
+        async with self._force_refresh_lock:
+            self._force_next_refresh = True
+            try:
+                await self.async_refresh()
+            finally:
+                self._force_next_refresh = False
 
     @override
     async def _async_update_data(self) -> None:
