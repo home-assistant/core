@@ -137,10 +137,13 @@ class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
         self._attr_available = self.entity_description.available_fn(self)
         value = self._value
-        if value is None:
-            self._attr_current_option = None
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self._attr_options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self._attr_options[value]
+            self._attr_current_option = None
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -184,10 +187,13 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
 
         value = self._value
-        if value is None:
-            self._attr_current_option = None
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self._attr_options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self._attr_options[value]
+            self._attr_current_option = None
 
     @override
     async def async_select_option(self, option: str) -> None:
