@@ -19,6 +19,11 @@ DEFAULT_LOCK_CODE_DIGITS = 4
 # vsure cookies are valid for ~15 minutes; refresh before expiry.
 COOKIE_REFRESH_INTERVAL = timedelta(minutes=10)
 
+# Force-arm readiness is primarily rechecked when a door/window state changes.
+# This is the fallback interval for violation types not reflected there, for
+# example an offline or otherwise faulted device.
+DRY_RUN_FALLBACK_INTERVAL = timedelta(minutes=30)
+
 # Exponential backoff when Verisure returns AUT_00021 / rate limits.
 RATE_LIMIT_BACKOFF = (
     timedelta(minutes=5),
