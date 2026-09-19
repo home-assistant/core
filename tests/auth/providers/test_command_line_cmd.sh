@@ -6,6 +6,18 @@ if [ "$username" = "good-user" ] && [ "$password" = "good-pass" ]; then
 		echo "name=Bob"
 		echo "group=system-users"
 		echo "local_only=true"
+	elif [ "$1" = "--with-meta-remote" ]; then
+		echo "name=Bob"
+		echo "group=system-users"
+		echo "local_only=false"
+	elif [ "$1" = "--with-empty-name" ]; then
+		echo "name="
+		echo "group="
+		echo "local_only=true"
+	elif [ "$1" = "--with-invalid-local-only" ]; then
+		echo "name=Bob"
+		echo "group=system-users"
+		echo "local_only=invalid"
 	fi
 	exit 0
 fi
