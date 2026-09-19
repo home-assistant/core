@@ -11,7 +11,6 @@ SETTINGS_SCAN_INTERVAL = 60
 
 CONF_UNIT_ID = "unit_id"
 
-# Named once: the registry cleanup has to match the descriptions.
 METER_ENERGY = "meter_energy"
 
 BATTERY_COMPONENTS = {
