@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 import dataclasses
-from datetime import timedelta
+from datetime import date, timedelta
 from unittest.mock import MagicMock
 
 from aioengiebelgium import (
@@ -166,8 +166,8 @@ def _single_period_prices(ean: str) -> EanPrices:
         ean=ean,
         periods=(
             PricePeriod(
-                valid_from="2000-01-01",
-                valid_to="2099-12-31",
+                valid_from=date(2000, 1, 1),
+                valid_to=date(2099, 12, 31),
                 vat_tariff=6.0,
                 offtake=(
                     PriceSlot(
@@ -305,12 +305,12 @@ async def test_device_name_falls_back_to_ban(
 @pytest.mark.parametrize(
     ("valid_from", "valid_to"),
     [
-        pytest.param("2026-08-01", "2026-09-01", id="inside-window"),
-        pytest.param("2026-08-13", "2026-09-01", id="first-day-inclusive"),
+        pytest.param(date(2026, 8, 1), date(2026, 9, 1), id="inside-window"),
+        pytest.param(date(2026, 8, 13), date(2026, 9, 1), id="first-day-inclusive"),
         pytest.param(
-            "2026-08-01T00:00:00",
-            "2026-09-01T00:00:00",
-            id="datetime-format-dates",
+            date(2026, 8, 1),
+            date(2026, 9, 1),
+            id="date-objects",
         ),
     ],
 )
@@ -320,8 +320,8 @@ async def test_period_window_creates_sensors(
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    valid_from: str,
-    valid_to: str,
+    valid_from: date | None,
+    valid_to: date | None,
 ) -> None:
     """Test sensors are created with a numeric state for a period covering today."""
     freezer.move_to("2026-08-13T12:00:00+02:00")
@@ -347,12 +347,33 @@ async def test_period_window_creates_sensors(
         float(state.state)
 
 
+async def test_period_window_uses_brussels_date(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test period selection uses the Brussels calendar date."""
+    freezer.move_to("2026-08-12T22:30:00+00:00")
+    mock_engie_client.return_value.async_get_prices.return_value = build_prices(
+        valid_from=date(2026, 8, 13), valid_to=date(2026, 8, 14)
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+
 @pytest.mark.parametrize(
     ("valid_from", "valid_to"),
     [
-        pytest.param("2026-08-01", "2026-08-13", id="last-day-exclusive"),
-        pytest.param("2026-01-01", "2026-02-01", id="expired-window"),
-        pytest.param("not-a-date", "2026-09-01", id="malformed-dates"),
+        pytest.param(date(2026, 8, 1), date(2026, 8, 13), id="last-day-exclusive"),
+        pytest.param(date(2026, 1, 1), date(2026, 2, 1), id="expired-window"),
+        pytest.param(None, date(2026, 9, 1), id="malformed-dates"),
     ],
 )
 async def test_period_window_skips_sensors(
@@ -361,8 +382,8 @@ async def test_period_window_skips_sensors(
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    valid_from: str,
-    valid_to: str,
+    valid_from: date | None,
+    valid_to: date | None,
 ) -> None:
     """Test no sensors are created when no period covers today (locks in exclusive valid_to)."""
     freezer.move_to("2026-08-13T12:00:00+02:00")
@@ -508,7 +529,7 @@ async def test_period_gap_heals(
     """Test sensors appear once today enters a price period that was a gap at setup."""
     freezer.move_to("2026-08-13T12:00:00+02:00")
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
-        valid_from="2026-08-14", valid_to="2026-09-01"
+        valid_from=date(2026, 8, 14), valid_to=date(2026, 9, 1)
     )
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -676,8 +697,8 @@ def _single_ban_prices_response(ean: str, price_value: float) -> PricesResponse:
                 ean=ean,
                 periods=(
                     PricePeriod(
-                        valid_from="2000-01-01",
-                        valid_to="2099-12-31",
+                        valid_from=date(2000, 1, 1),
+                        valid_to=date(2099, 12, 31),
                         vat_tariff=6.0,
                         offtake=(
                             PriceSlot(

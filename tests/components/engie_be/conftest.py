@@ -1,6 +1,7 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
 from collections.abc import Generator
+from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioengiebelgium import (
@@ -78,7 +79,9 @@ def build_relations(*bans: str, with_address: bool = True) -> CustomerAccountRel
 
 
 def build_prices(
-    *, valid_from: str = "2000-01-01", valid_to: str = "2099-12-31"
+    *,
+    valid_from: date | None = date(2000, 1, 1),
+    valid_to: date | None = date(2099, 12, 31),
 ) -> PricesResponse:
     """Build a prices response with an offtake-only EAN and a dual-direction EAN."""
     return PricesResponse(

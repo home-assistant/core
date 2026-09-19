@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import (
@@ -43,28 +43,12 @@ def normalize_slot_code(raw_code: str) -> str:
     return raw_code
 
 
-def _parse_date(value: str) -> date | None:
-    """Parse a date or datetime string into a date."""
-    try:
-        return date.fromisoformat(value)
-    except ValueError:
-        pass
-    try:
-        return datetime.fromisoformat(value).date()
-    except ValueError:
-        return None
-
-
 def _current_period(
     periods: tuple[PricePeriod, ...], today: date
 ) -> PricePeriod | None:
     """Return the price period covering today, if any."""
     for period in periods:
-        from_date = _parse_date(period.valid_from)
-        to_date = _parse_date(period.valid_to)
-        if from_date is None or to_date is None:
-            continue
-        if from_date <= today < to_date:
+        if period.contains(today):
             return period
     return None
 
@@ -186,7 +170,9 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 self.ean_energy_types.update(service_point_result.ean_energy_types)
                 self.ean_energy_types.setdefault(bare_ean(ean), None)
 
-        today = dt_util.now().date()
+        brussels = dt_util.get_time_zone("Europe/Brussels")
+        assert brussels is not None
+        today = dt_util.now(brussels).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
             period = _current_period(ean_prices.periods, today)
