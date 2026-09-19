@@ -720,6 +720,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/gree_infrared/ @Dr-Blank
+/tests/components/gree_infrared/ @Dr-Blank
 /homeassistant/components/green_planet_energy/ @petschni
 /tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greencell/ @BrzezowskiGC
@@ -1748,6 +1750,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
 /tests/components/smlight/ @tl-sl
+/homeassistant/components/smtp/ @tr4nt0r
+/tests/components/smtp/ @tr4nt0r
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
 /homeassistant/components/snmp/ @nmaggioni
@@ -2057,6 +2061,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
 /homeassistant/components/voip/ @synesthesiam @jaminh
 /tests/components/voip/ @synesthesiam @jaminh
+/homeassistant/components/volkszaehler/ @StefanSchoof
+/tests/components/volkszaehler/ @StefanSchoof
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn

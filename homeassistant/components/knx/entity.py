@@ -1,5 +1,6 @@
 """Base classes for KNX entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -26,7 +27,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN
-from .storage.config_store import PlatformControllerBase
+from .storage.config_store import KnxEntityData, PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
@@ -99,7 +100,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self,
         knx_module: KNXModule,
         entity_platform: EntityPlatform,
-        entity_class: type[KnxUiEntity],
+        entity_class: Callable[[KNXModule, str, KnxEntityData[Any]], KnxUiEntity],
     ) -> None:
         """Initialize the UI platform."""
         self._knx_module = knx_module
@@ -107,7 +108,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
         self._entity_class = entity_class
 
     @override
-    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+    async def create_entity(self, unique_id: str, config: KnxEntityData[Any]) -> None:
         """Add a new UI entity."""
         await self._entity_platform.async_add_entities(
             [self._entity_class(self._knx_module, unique_id, config)]
@@ -115,7 +116,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 
     @override
     async def update_entity(
-        self, entity_entry: RegistryEntry, config: dict[str, Any]
+        self, entity_entry: RegistryEntry, config: KnxEntityData[Any]
     ) -> None:
         """Update an existing UI entities configuration."""
         await self._entity_platform.async_remove_entity(entity_entry.entity_id)
