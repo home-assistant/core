@@ -404,24 +404,34 @@ async def test_map_refreshes_while_cleaning_without_rediscovering_home(
         assert properties.home.discover_home.call_count == 0
 
 
-@pytest.mark.parametrize("platforms", [[Platform.IMAGE, Platform.VACUUM]])
+@pytest.mark.parametrize(
+    "platforms", [[Platform.IMAGE, Platform.SENSOR, Platform.VACUUM]]
+)
 async def test_no_timed_map_refresh_when_no_entity_shows_the_map(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
-    """Test the map is not parsed on a timer when every map entity is disabled."""
+    """Test the map is not parsed on a timer when its consumers are disabled.
+
+    The consumers are the map images and the current room sensor.
+    """
     for entry in er.async_entries_for_config_entry(
         entity_registry, setup_entry.entry_id
     ):
-        if entry.domain == Platform.IMAGE:
+        if entry.domain == Platform.IMAGE or entry.translation_key == "current_room":
             entity_registry.async_update_entity(
                 entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
             )
     await hass.config_entries.async_reload(setup_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("image")) == 0
+    assert not [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_current_room")
+    ]
 
     await _clean_for_an_hour(hass, fake_devices)
     v1 = [d.v1_properties for d in fake_devices if d.v1_properties is not None]
@@ -431,3 +441,24 @@ async def test_no_timed_map_refresh_when_no_entity_shows_the_map(
         assert properties.status.refresh.call_count >= 1
         # ...but no map was fetched and parsed.
         assert properties.home.refresh.call_count == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_the_current_room_sensor_alone_keeps_the_map_refreshing(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test the current room sensor, with no map image, still gets a live map."""
+    assert len(hass.states.async_all("image")) == 0
+    assert [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_current_room")
+    ]
+
+    await _clean_for_an_hour(hass, fake_devices)
+    v1 = [d.v1_properties for d in fake_devices if d.v1_properties is not None]
+    assert v1
+    for properties in v1:
+        assert properties.home.refresh.call_count == 1
