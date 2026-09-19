@@ -81,11 +81,11 @@
     "no_photos": {
       "message": "Immich has no available photos for this frame."
     },
-    "upstream_error": {
-      "message": "Immich returned an error while loading this frame."
-    },
     "unsupported_source": {
       "message": "This photo source is not supported by the installed Immich client."
+    },
+    "upstream_error": {
+      "message": "Immich returned an error while loading this frame."
     }
   },
   "options": {
