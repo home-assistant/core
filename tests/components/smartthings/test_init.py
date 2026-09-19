@@ -14,6 +14,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Subscription,
 )
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -35,7 +36,12 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -986,3 +992,51 @@ async def test_periodic_status_refresh_error(
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_health_refresh(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a missed health event is reconciled by the periodic refresh."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    devices.get_device_health.return_value.state = HealthStatus.OFFLINE
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_periodic_health_refresh_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing health call still applies the refreshed status."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
+
+    devices.get_device_status.return_value = get_device_status(
+        "c2c_arlo_pro_3_switch"
+    ).components
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "off")
+    devices.get_device_health.side_effect = SmartThingsConnectionError
+
+    freezer.tick(STATUS_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF

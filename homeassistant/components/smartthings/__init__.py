@@ -131,26 +131,33 @@ PLATFORMS = [
 async def _async_refresh_device_status(
     hass: HomeAssistant, entry: SmartThingsConfigEntry, _now: datetime
 ) -> None:
-    """Reconcile the cached device status with the SmartThings API.
+    """Reconcile cached device status and availability with the API.
 
-    SmartThings can stop delivering device events for a subscription while the
-    event stream itself stays open, because it keeps emitting its periodic
-    `welcome` control event. Nothing raises, nothing is logged and the config
-    entry stays loaded, so entities keep serving their last known value until
-    the entry is reloaded by hand. Periodically pulling the authoritative
-    status back makes that failure mode self-healing.
+    The event stream can stop delivering updates without failing, leaving
+    entities on their last known value, so pull the authoritative state back
+    periodically. Status and health are refreshed independently: one failing
+    endpoint must not discard the other's result.
     """
     client = entry.runtime_data.client
     for device_id, device in entry.runtime_data.devices.items():
+        refreshed = False
         try:
-            status = process_status(await client.get_device_status(device_id))
-            health = await client.get_device_health(device_id)
+            device.status = process_status(await client.get_device_status(device_id))
         except SmartThingsError as err:
             _LOGGER.debug("Could not refresh status of %s: %s", device_id, err)
-            continue
-        device.status = status
-        device.online = health.state == HealthStatus.ONLINE
-        async_dispatcher_send(hass, SIGNAL_DEVICE_STATUS_REFRESHED.format(device_id))
+        else:
+            refreshed = True
+        try:
+            health = await client.get_device_health(device_id)
+        except SmartThingsError as err:
+            _LOGGER.debug("Could not refresh health of %s: %s", device_id, err)
+        else:
+            device.online = health.state == HealthStatus.ONLINE
+            refreshed = True
+        if refreshed:
+            async_dispatcher_send(
+                hass, SIGNAL_DEVICE_STATUS_REFRESHED.format(device_id)
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
