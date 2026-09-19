@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "interface": {
+        "default": "mdi:lan"
+      }
+    }
+  }
+}
