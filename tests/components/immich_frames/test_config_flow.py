@@ -272,6 +272,15 @@ async def test_user_source_preflight_reports_unavailable_assets(
         },
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_album_source_preflight_reports_unavailable_assets(
@@ -294,6 +303,12 @@ async def test_album_source_preflight_reports_unavailable_assets(
         result["flow_id"], {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    api.search.async_get_all_by_album_ids.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]},
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_smart_source_preflight_reports_immich_errors(
@@ -318,6 +333,11 @@ async def test_smart_source_preflight_reports_immich_errors(
         result["flow_id"], {CONF_SMART_QUERY: "beach sunset"}
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    api.search.async_smart_search.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SMART_QUERY: "beach sunset"}
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_user_creates_smart_frame(
@@ -419,6 +439,11 @@ async def test_options_flow_preflights_all_source(
         result["flow_id"], _options_input(DEFAULT_SOURCE)
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    parent_immich_entry.runtime_data.api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(DEFAULT_SOURCE)
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_options_flow_configures_album_source(
@@ -728,6 +753,12 @@ async def test_reconfigure_all_source_preflight_reports_unavailable_assets(
         result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    parent_immich_entry.runtime_data.api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_flow_handles_album_and_smart_sources(
@@ -762,5 +793,4 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
         )
         assert result["reason"] == "reconfigure_successful"
         await hass.async_block_till_done()
-        assert entry.data[CONF_SOURCE] == source
-        assert CONF_SOURCE not in entry.options
+        assert entry.options[CONF_SOURCE] == source
