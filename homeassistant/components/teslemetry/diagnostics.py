@@ -46,7 +46,8 @@ def _async_vehicle_entity_sources(
     A listener only costs credits while its coordinator is scheduled to
     refresh, which needs an update interval - set only when command signing is
     off - and polling left enabled on the config entry, so listeners are only
-    reported as "polling" when both hold. "streaming" entities belong to the
+    reported as "polling" when both hold, mirroring the guards in
+    DataUpdateCoordinator._schedule_refresh. "streaming" entities belong to the
     telemetry stream family. Anything else enabled in the registry, a listener
     that cannot cause a refresh or an entity whose platform is not loaded, is
     reported as "enabled" rather than attributed to either source.

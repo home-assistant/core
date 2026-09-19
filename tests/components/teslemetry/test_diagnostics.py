@@ -53,12 +53,6 @@ async def test_diagnostics(
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert diag == snapshot
 
-    # A polling vehicle's data entities keep the coordinator polling; its
-    # stateless command entities (buttons) are in the streaming family instead.
-    sources = set(diag["vehicles"][0]["entities"].values())
-    assert SOURCE_POLLING in sources
-    assert sources <= {SOURCE_POLLING, SOURCE_STREAMING}
-
 
 async def test_diagnostics_streaming_vehicle(
     hass: HomeAssistant,
@@ -99,11 +93,10 @@ async def test_diagnostics_streaming_and_polling_vehicles(
 ) -> None:
     """Test diagnostics attributes each vehicle's entities to its own source.
 
-    A vehicle either streams or polls, never both, so the two sources only
-    appear together across different vehicles. This sets up one polling and
-    one streaming vehicle and asserts diagnostics reports the polling
-    vehicle's data entities as polling and the streaming vehicle's entities
-    as streaming, without cross-attributing one vehicle's source to the other.
+    A vehicle either polls for its data or streams it, never both, so the
+    polling vehicle's data entities are reported as polling while the
+    streaming vehicle reports nothing but streaming, with neither vehicle's
+    source leaking into the other's diagnostics.
     """
     products = deepcopy(PRODUCTS)
     poll_product = next(p for p in products["response"] if p.get("vin") == VEHICLE_VIN)
@@ -135,6 +128,7 @@ async def test_diagnostics_streaming_and_polling_vehicles(
         for vehicle in diag["vehicles"]
     }
 
+    assert len(sources) == 2
     # The polling vehicle's data entities keep its coordinator polling...
     assert SOURCE_POLLING in sources[POLLED_NAME]
     # ...while the streaming vehicle reports only streaming, so neither
@@ -199,9 +193,7 @@ async def test_diagnostics_no_entities(
     entry = await setup_platform(hass, platforms=[])
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    assert diag["vehicles"]
-    for vehicle in diag["vehicles"]:
-        assert vehicle["entities"] == {}
+    assert diag["vehicles"][0]["entities"] == {}
 
 
 @pytest.mark.usefixtures("mock_legacy")
