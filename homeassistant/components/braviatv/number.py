@@ -223,7 +223,15 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], RestoreNumbe
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        """Set the picture quality setting."""
+        """Set the picture quality setting.
+
+        The step reported by the TV may allow fractional values, so only
+        whole numbers are converted to int to avoid trailing ".0" noise.
+        """
+        if value.is_integer():
+            setting_value = str(int(value))
+        else:
+            setting_value = str(value)
         await self.coordinator.async_set_picture_quality(
-            self.entity_description.key, str(int(value))
+            self.entity_description.key, setting_value
         )

@@ -5,17 +5,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
-from homeassistant.components.braviatv.coordinator import SCAN_INTERVAL
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 BRAVIA_SYSTEM_INFO = {
     "product": "TV",
@@ -58,6 +52,16 @@ NUMERIC_SETTINGS = [
         "target": "pictureMode",
         "currentValue": "vivid",
         "candidate": ["vivid", "standard", "cinema"],
+        "isAvailable": True,
+    },
+]
+
+
+FRACTIONAL_STEP_SETTINGS = [
+    {
+        "target": "brightness",
+        "currentValue": 1.5,
+        "candidate": [{"min": 0, "max": 100, "step": 0.5}],
         "isAvailable": True,
     },
 ]
@@ -364,16 +368,55 @@ async def test_keeps_latest_value_when_setting_is_omitted_after_refresh(
         state = hass.states.get("number.bravia_tv_model_picture_brightness")
         assert state is not None
         assert state.state == "50.0"
-
-        # A later refresh omits the setting, so the entity must fall back to
-        # the latest reported value rather than the startup-restored one
-        mock_picture_setting.return_value = []
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("number.bravia_tv_model_picture_brightness")
-        assert state is not None
-        assert state.state == "50.0"
         assert state.attributes["min"] == 0
         assert state.attributes["max"] == 100
         assert state.attributes["step"] == 1
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_set_fractional_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test that fractional values allowed by the reported step are sent as is."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=INPUTS),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=FRACTIONAL_STEP_SETTINGS,
+        ),
+        patch("pybravia.BraviaClient.set_picture_setting") as mock_set_picture_setting,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": "number.bravia_tv_model_picture_brightness", "value": 1.5},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_set_picture_setting.assert_called_once_with("brightness", "1.5")

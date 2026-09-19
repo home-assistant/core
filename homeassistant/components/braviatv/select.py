@@ -2,7 +2,11 @@
 
 from typing import Any, override
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    SelectEntity,
+    SelectEntityCapabilityAttribute,
+    SelectEntityDescription,
+)
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -130,7 +134,12 @@ class BraviaTVSelect(
             STATE_UNAVAILABLE,
         ):
             self._attr_current_option = last_state.state
-            self._attr_options = [last_state.state]
+            # The options attribute is persisted by restore state, so the
+            # full option list can be restored along with the option
+            if restored_options := last_state.attributes.get(
+                SelectEntityCapabilityAttribute.OPTIONS
+            ):
+                self._attr_options = list(restored_options)
         self._sync_fallback()
 
     @callback
@@ -166,9 +175,13 @@ class BraviaTVSelect(
             and self.coordinator.is_on
             and (
                 # Controls the TV does not report are only available while a
-                # restored option exists
+                # restored option with a usable option list exists
                 (setting is not None and setting["isAvailable"])
-                or (setting is None and self._attr_current_option is not None)
+                or (
+                    setting is None
+                    and self._attr_current_option is not None
+                    and bool(self._attr_options)
+                )
             )
         )
 
