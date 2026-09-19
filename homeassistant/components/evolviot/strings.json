@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This EvolvIOT account is already configured."
+    },
+    "error": {
+      "authorization_denied": "Pairing was denied in the EvolvIOT app.",
+      "authorization_expired": "The previous pairing session expired. Start pairing again.",
+      "authorization_pending": "Pairing is not approved yet. Enter the pairing code in the EvolvIOT app, then submit again.",
+      "cannot_connect": "Failed to connect to EvolvIOT.",
+      "invalid_auth": "Invalid EvolvIOT credentials.",
+      "unknown": "Unexpected error."
+    },
+    "progress": {
+      "pair": "Waiting for approval in the EvolvIOT app. Pairing code: {user_code}"
+    },
+    "step": {
+      "pair": {
+        "description": "Pairing code: `{user_code}`\n\nProfile > Third party services > Home Assistant > Enter code.\n\nAfter the app shows success, select Submit.",
+        "title": "Enter the EvolvIOT pairing code"
+      },
+      "user": {
+        "description": "Home Assistant could not start EvolvIOT pairing. Check the EvolvIOT backend connection and retry.",
+        "title": "Connect EvolvIOT"
+      }
+    }
+  }
+}
