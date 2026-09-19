@@ -247,6 +247,10 @@ async def test_album_flow_reports_auth_and_connection_errors(
         },
     )
     assert result["errors"]["base"] == "immich_auth"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ALBUM_IDS: ["album-1"]}
+    )
+    assert result["errors"]["base"] == "immich_auth"
 
     api.albums.async_get_all_albums.side_effect = ClientError("offline")
     result = await hass.config_entries.flow.async_init(
@@ -597,6 +601,10 @@ async def test_options_album_flow_reports_immich_errors(
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], _options_input(SOURCE_ALBUM)
+        )
+        assert result["errors"]["base"] in {"immich_auth", "albums_unavailable"}
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_ALBUM_IDS: ["album-1"]}
         )
         assert result["errors"]["base"] in {"immich_auth", "albums_unavailable"}
 

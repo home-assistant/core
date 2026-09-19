@@ -104,11 +104,16 @@ def test_orientation_and_calendar_cutoff_helpers() -> None:
     square.exif_info = ExifInfo(exif_image_width=100, exif_image_height=100)
     landscape = copy(MOCK_SEARCH_ASSETS[0])
     landscape.exif_info = ExifInfo(exif_image_width=200, exif_image_height=100)
+    rotated = copy(landscape)
+    rotated.exif_info = ExifInfo(
+        exif_image_width=200, exif_image_height=100, orientation="6"
+    )
     portrait = copy(MOCK_SEARCH_ASSETS[0])
     portrait.exif_info = ExifInfo(exif_image_width=100, exif_image_height=200)
 
     assert _orientation(square) == ORIENTATION_SQUARE
     assert _orientation(landscape) == ORIENTATION_LANDSCAPE
+    assert _orientation(rotated) == ORIENTATION_PORTRAIT
     assert _orientation(portrait) == ORIENTATION_PORTRAIT
     assert _cutoff(datetime(2024, 3, 31, tzinfo=UTC), "1_month") == datetime(
         2024, 2, 29, tzinfo=UTC

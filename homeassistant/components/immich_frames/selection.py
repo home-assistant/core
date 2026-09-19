@@ -36,6 +36,22 @@ class UnsupportedSourceError(ValueError):
     """Raised when the installed Immich client lacks a source API."""
 
 
+_ROTATED_EXIF_ORIENTATIONS = {
+    "5",
+    "6",
+    "7",
+    "8",
+    "90",
+    "-90",
+    "270",
+    "-270",
+    "rotate 90 cw",
+    "rotate 90 ccw",
+    "rotate 270 cw",
+    "rotate 270 ccw",
+}
+
+
 def _as_utc(value: datetime) -> datetime:
     """Normalize timestamps for comparisons."""
     return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
@@ -47,6 +63,8 @@ def _orientation(asset: ImmichAsset) -> str | None:
     if exif is None or not exif.exif_image_width or not exif.exif_image_height:
         return None
     width, height = exif.exif_image_width, exif.exif_image_height
+    if str(exif.orientation or "").strip().lower() in _ROTATED_EXIF_ORIENTATIONS:
+        width, height = height, width
     if width == height:
         return ORIENTATION_SQUARE
     return ORIENTATION_LANDSCAPE if width > height else ORIENTATION_PORTRAIT

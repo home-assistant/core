@@ -216,7 +216,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             for album in sorted(albums, key=lambda item: item.album_name.casefold())
         ]
-        if user_input is not None:
+        if user_input is not None and not errors:
             album_ids = user_input.get(CONF_ALBUM_IDS, [])
             if not album_ids:
                 errors["base"] = "album_required"
@@ -232,7 +232,9 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="album",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_ALBUM_IDS, default=[]): SelectSelector(
+                    probatio.Required(
+                        CONF_ALBUM_IDS, default=self._data.get(CONF_ALBUM_IDS, [])
+                    ): SelectSelector(
                         SelectSelectorConfig(
                             options=album_options,
                             multiple=True,
