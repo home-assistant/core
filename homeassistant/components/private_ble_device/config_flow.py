@@ -120,6 +120,8 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_IRK] = "irk_not_found"
             else:
                 new_irk = irk_bytes.hex()
+                # Reserves the IRK: another flow moving an entry to it aborts.
+                await self.async_set_unique_id(new_irk)
                 self._async_abort_entries_match({CONF_IRK: new_irk})
                 entry = self._get_reconfigure_entry()
                 # Unloaded while the registries move, so no live entity

@@ -1,5 +1,6 @@
 """Tests for private bluetooth device config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -307,3 +308,62 @@ async def test_reconfigure_stops_when_the_entry_will_not_unload(
         e.entity_id: e.unique_id
         for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     } == before
+
+
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
+async def test_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:
+    """Test reconfiguring is refused when bluetooth is not enabled."""
+    entry = MockConfigEntry(domain=const.DOMAIN, data={"irk": OLD_IRK})
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_available"
+    assert entry.data == {"irk": OLD_IRK}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reconfigure_two_entries_to_the_same_irk_at_once(
+    hass: HomeAssistant,
+) -> None:
+    """Test a second flow moving an entry to an IRK already being moved to aborts."""
+    other_irk = "22222222222222222222222222222222"
+    await async_mock_config_entry(hass, OLD_IRK)
+    await async_mock_config_entry(hass, other_irk)
+    first = hass.config_entries.async_get_entry(OLD_IRK)
+    second = hass.config_entries.async_get_entry(other_irk)
+    _inject_new_irk_device(hass)
+
+    unloading = asyncio.Event()
+    release = asyncio.Event()
+    real_unload = hass.config_entries.async_unload
+
+    async def slow_unload(entry_id: str, **kwargs: bool) -> bool:
+        # Only the first flow's unload is held; anything after runs through.
+        if not unloading.is_set():
+            unloading.set()
+            await release.wait()
+        return await real_unload(entry_id, **kwargs)
+
+    flow_1 = await first.start_reconfigure_flow(hass)
+    flow_2 = await second.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_unload", side_effect=slow_unload):
+        # The first flow stops part way, while its entry unloads.
+        task = hass.async_create_task(
+            hass.config_entries.flow.async_configure(
+                flow_1["flow_id"], user_input={"irk": NEW_IRK}
+            )
+        )
+        await unloading.wait()
+        result_2 = await hass.config_entries.flow.async_configure(
+            flow_2["flow_id"], user_input={"irk": NEW_IRK}
+        )
+        release.set()
+        result_1 = await task
+    await hass.async_block_till_done()
+
+    assert result_2["type"] is FlowResultType.ABORT
+    assert result_2["reason"] == "already_in_progress"
+    assert second.data == {"irk": other_irk}
+    assert result_1["reason"] == "reconfigure_successful"
+    assert first.data == {"irk": NEW_IRK}
