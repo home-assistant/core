@@ -106,6 +106,7 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS,
 )
+from .schema import adjust_schema
 
 if TYPE_CHECKING:
     from . import OpenAIConfigEntry
@@ -113,30 +114,6 @@ if TYPE_CHECKING:
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
-
-
-def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the output schema to be compatible with OpenAI API."""
-    if schema["type"] == "object":
-        schema.setdefault("additionalProperties", False)
-        if "properties" not in schema:
-            return
-
-        if "required" not in schema:
-            schema["required"] = []
-
-        # Ensure all properties are required
-        for prop, prop_info in schema["properties"].items():
-            _adjust_schema(prop_info)
-            if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
-                schema["required"].append(prop)
-
-    elif schema["type"] == "array":
-        if "items" not in schema:
-            return
-
-        _adjust_schema(schema["items"])
 
 
 def _format_structured_output(
@@ -151,7 +128,7 @@ def _format_structured_output(
         openapi_version="3.1.0",
     )
 
-    _adjust_schema(result)
+    adjust_schema(result)
 
     return result
 

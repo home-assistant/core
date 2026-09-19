@@ -1,5 +1,6 @@
 """Test AI Task platform of OpenAI Conversation integration."""
 
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -175,6 +176,56 @@ async def test_generate_invalid_structured_data(
                 },
             ),
         )
+
+
+@pytest.fixture
+def selection_structure() -> probatio.Schema:
+    """A multi-select with optional fields represented as null on the wire."""
+    return probatio.Schema(
+        {
+            probatio.Optional("names"): selector.SelectSelector(
+                {"options": ["a", "b"], "multiple": True}
+            ),
+            probatio.Optional("label"): selector.TextSelector(),
+        }
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "names",
+    [
+        pytest.param(["a", "b"], id="selection"),
+        pytest.param(["a", "a"], id="duplicates"),
+        pytest.param(None, id="omitted"),
+    ],
+)
+async def test_generate_selection(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_create_stream: AsyncMock,
+    selection_structure: probatio.Schema,
+    names: list[str] | None,
+) -> None:
+    """Generate multi-select results while accepting duplicates and optional nulls."""
+    data = {"names": names, "label": None}
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text=json.dumps(data), output_index=0)
+    ]
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Selection",
+        entity_id="ai_task.openai_ai_task",
+        instructions="Select names",
+        structure=selection_structure,
+    )
+    assert result.data == data
+    schema = mock_create_stream.call_args.kwargs["text"]["format"]["schema"]
+    assert "uniqueItems" not in schema["properties"]["names"]
+    assert (
+        "Removed unsupported uniqueItems: true from OpenAI output schema at $.properties.names"
+        in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("mock_init_component")
