@@ -473,6 +473,7 @@ FLOWS = {
         "marantz_infrared",
         "mastodon",
         "matter",
+        "mawaqit",
         "mcp",
         "mcp_server",
         "mealie",
