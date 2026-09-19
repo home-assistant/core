@@ -977,12 +977,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "ccm15": {
-      "name": "Midea ccm15 AC Controller",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "centriconnect": {
       "name": "CentriConnect/MyPropane",
       "integration_type": "device",

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from . import register_webhook
+from . import CONFIG_FLOW_DEVICES, register_webhook
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +71,8 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.webhook_id = ""
                 return self.async_abort(reason="invalid_webhook")
 
+            CONFIG_FLOW_DEVICES[self.webhook_id] = self.device
+
         # Create a task to wait for the first update from the device
         if not self.task_one:
 
@@ -101,6 +103,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except TimeoutError:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
+                CONFIG_FLOW_DEVICES.pop(self.webhook_id, None)
                 self.data["abort_reason"] = "connect_timeout"
                 _LOGGER.error(
                     "Device with webhook ID %s timed out waiting for update during config flow",
@@ -110,6 +113,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except asyncio.CancelledError:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
+                CONFIG_FLOW_DEVICES.pop(self.webhook_id, None)
                 self.data["abort_reason"] = "unknown"
                 _LOGGER.debug(
                     "Device with webhook ID %s config flow task was cancelled",
@@ -119,6 +123,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
+                CONFIG_FLOW_DEVICES.pop(self.webhook_id, None)
                 if err.reason == "already_configured":
                     self.data["abort_reason"] = "already_configured"
                     _LOGGER.debug(
@@ -171,3 +176,5 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         # Cancel the task if it's still running
         if self.task_one and not self.task_one.done():
             self.task_one.cancel()
+        if self.webhook_id:
+            CONFIG_FLOW_DEVICES.pop(self.webhook_id, None)

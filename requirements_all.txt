@@ -230,7 +230,7 @@ aiobafi6==0.9.0
 aiobotocore==3.7.0
 
 # homeassistant.components.ccl
-aioccl==2026.7
+aioccl==2026.9
 
 # homeassistant.components.centriconnect
 aiocentriconnect==0.2.3

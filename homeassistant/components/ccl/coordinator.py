@@ -61,7 +61,7 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
                 translation_key="device_timed_out",
             )
         try:
-            return self.device.get_sensors()
+            return self.device.get_data()
         except CCLDataUpdateException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

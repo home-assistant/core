@@ -208,7 +208,9 @@ async def async_setup_entry(
     coordinator.device.set_new_sensor_callback(_new_sensors)
 
     if coordinator.data is not None:
-        _new_sensors(list(coordinator.data.values()))
+        sensor_data = coordinator.data.get("SENSOR")
+        if sensor_data is not None:
+            _new_sensors(list(sensor_data.values()))
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):

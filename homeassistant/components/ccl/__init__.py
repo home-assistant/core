@@ -18,6 +18,7 @@ from .coordinator import CCLConfigEntry, CCLCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+CONFIG_FLOW_DEVICES: dict[str, CCLDevice] = {}
 
 
 def register_webhook(hass: HomeAssistant, webhook_id: str, device: CCLDevice) -> None:
@@ -44,8 +45,10 @@ def register_webhook(hass: HomeAssistant, webhook_id: str, device: CCLDevice) ->
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
-    # Create the device and register a webhook after restart
-    device = CCLDevice(webhook_id)
+    # Reuse the device that received the first update during the config flow.
+    device = CONFIG_FLOW_DEVICES.pop(webhook_id, None) or CCLDevice(webhook_id)
+
+    coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
     @callback
     def push_update_callback(data: dict[str, Any]) -> None:
@@ -53,8 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
         coordinator.async_set_updated_data(data)
 
     device.set_update_callback(push_update_callback)
-
-    coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
     # Ensure any previously-registered webhook is removed
     webhook.async_unregister(hass, webhook_id)

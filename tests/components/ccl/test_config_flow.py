@@ -80,6 +80,7 @@ async def test_create_entry(
 
 async def test_create_entry_adds_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_ccl: MagicMock,
 ) -> None:
     """Test creating an entry also adds sensor entities from device data."""
@@ -116,7 +117,7 @@ async def test_create_entry_adds_sensors(
         ),
         patch(
             "homeassistant.components.ccl.CCLDevice",
-            return_value=mock_ccl,
+            side_effect=AssertionError("A new device should not be created"),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -131,7 +132,6 @@ async def test_create_entry_adds_sensors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, "d50659-t1tem")
 
     assert entity_id is not None
