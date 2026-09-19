@@ -161,7 +161,7 @@
         'orientation_shift': 180.0,
         'progress': 40,
         'type': 'systematic',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
       '654321': dict({
         'current_orientation': None,
@@ -174,7 +174,7 @@
         'orientation_shift': None,
         'progress': None,
         'type': 'random',
-        'use_global_cutting_height': True,
+        'use_global_cutting_height': False,
       }),
     }),
   })
@@ -199,7 +199,7 @@
     }),
     'domain': 'husqvarna_automower',
     'entry_id': 'automower_test',
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
     }),
     'pref_disable_new_entities': False,
