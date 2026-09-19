@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
+import httpx
 import pytest
 
 
@@ -38,5 +39,15 @@ def network_failure_ccm15_device() -> Generator[None]:
     with patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
         return_value=device_state,
+    ):
+        yield
+
+
+@pytest.fixture
+def network_error_ccm15_device() -> Generator[None]:
+    """Mock a ccm15 device that cannot be reached."""
+    with patch(
+        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        side_effect=httpx.RequestError("Connection failed"),
     ):
         yield

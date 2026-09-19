@@ -56,11 +56,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     @override
     async def _async_update_data(self) -> CCM15DeviceState:
-        """Fetch data from Rain Bird device."""
+        """Fetch data from the CCM15 device."""
         try:
             return await self._fetch_data()
-        except httpx.RequestError as err:  # pragma: no cover
-            raise UpdateFailed("Error communicating with Device") from err
+        except httpx.RequestError as err:
+            raise UpdateFailed("Error communicating with the CCM15 controller") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
