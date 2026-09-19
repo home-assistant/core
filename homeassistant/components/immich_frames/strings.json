@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This Immich frame is already configured.",
       "immich_not_ready": "The Immich integration is not ready.",
       "immich_required": "Set up the Immich integration first.",
       "no_albums": "No Immich albums are available."

@@ -31,7 +31,7 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
             name=self.coordinator.config_entry.title,
             manufacturer="Immich",
             model="Photo frame",
-            configuration_url=self.coordinator.immich_entry.runtime_data.configuration_url,
+            configuration_url=self.coordinator.configuration_url,
             entry_type=DeviceEntryType.SERVICE,
         )
 

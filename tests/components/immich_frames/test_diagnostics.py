@@ -41,6 +41,10 @@ async def test_diagnostics_exclude_image_bytes(
     assert "asset_id" not in diagnostics["frame"]
     assert "local_datetime" not in diagnostics["frame"]
     assert diagnostics["entry"]["options"][CONF_SMART_QUERY] == "**REDACTED**"
+    assert diagnostics["entry"]["entry_id"] == "**REDACTED**"
+    assert diagnostics["entry"]["title"] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_IMMICH_ENTRY_ID] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_FRAME_NAME] == "**REDACTED**"
 
 
 async def test_diagnostics_handle_unavailable_frame(

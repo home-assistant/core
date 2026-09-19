@@ -2,6 +2,7 @@
 
 from copy import copy
 from datetime import timedelta
+import logging
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -122,9 +123,12 @@ async def test_entity_becomes_unavailable_when_current_source_is_empty(
         new=AsyncMock(return_value=[]),
     ):
         await coordinator.async_refresh()
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert hass.states.get("image.changing_frame_image").state == "unavailable"
+    image = ImmichFrameImage(coordinator)
+    assert image.extra_state_attributes == {}
+    assert await image.async_image() is None
 
 
 async def test_setup_entry_translates_parent_not_ready(
@@ -387,6 +391,42 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
     assert coordinator._orientation_is_portrait(MOCK_SEARCH_ASSETS[0]) is False
 
 
+async def test_coordinator_logs_upstream_outage_once_and_recovery(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Upstream errors log one outage and one recovery transition."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    caplog.set_level(logging.INFO, logger="homeassistant.components.immich_frames")
+    upstream_error = ImmichError({"message": "server error", "correlationId": "test"})
+    with (
+        patch(
+            "homeassistant.components.immich_frames.coordinator.async_get_candidates",
+            new=AsyncMock(
+                side_effect=[upstream_error, upstream_error, MOCK_SEARCH_ASSETS]
+            ),
+        ),
+        patch(
+            "homeassistant.components.immich_frames.coordinator.render",
+            return_value=(b"rendered", "single"),
+        ),
+    ):
+        first = await coordinator._async_update_data()
+        second = await coordinator._async_update_data()
+        recovered = await coordinator._async_update_data()
+
+    assert first.status == "upstream_error"
+    assert second.status == "upstream_error"
+    assert recovered.status == "ready"
+    unavailable = [
+        record for record in caplog.records if "is unavailable" in record.message
+    ]
+    recovery = [record for record in caplog.records if "recovered" in record.message]
+    assert len(unavailable) == 1
+    assert len(recovery) == 1
+
+
 def test_coordinator_resets_recent_history_when_candidates_are_exhausted(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -490,6 +530,20 @@ async def test_image_does_not_serve_previous_account_data(
     assert image.image_last_updated is None
     assert image.extra_state_attributes == {}
     assert await image.async_image() is None
+
+
+async def test_entities_guard_parent_runtime_data_after_unload(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Entity properties remain safe while the parent is unloaded."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    image = ImmichFrameImage(coordinator)
+
+    parent_immich_entry.runtime_data = None
+
+    assert coordinator.configuration_url is None
+    assert image.device_info["configuration_url"] is None
+    assert image.extra_state_attributes == {}
 
 
 def _coordinator_for_test(

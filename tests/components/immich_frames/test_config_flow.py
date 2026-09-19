@@ -1,5 +1,8 @@
 """Test the Immich Frames config flow."""
 
+from unittest.mock import patch
+from uuid import UUID
+
 from aiohttp import ClientError
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
@@ -130,6 +133,36 @@ async def test_user_creates_frame(
     assert result["options"][CONF_SOURCE] == DEFAULT_SOURCE
 
 
+async def test_user_aborts_when_frame_is_already_configured(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """A duplicate frame unique ID is rejected by the config flow."""
+    frame_id = "0123456789abcdef0123456789abcdef"
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{parent_immich_entry.entry_id}|{frame_id}",
+        data={CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    with patch(
+        "homeassistant.components.immich_frames.config_flow.uuid4",
+        return_value=UUID(frame_id),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+                CONF_SOURCE: DEFAULT_SOURCE,
+            },
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_user_validation_errors(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -253,6 +286,11 @@ async def test_album_flow_reports_auth_and_connection_errors(
         }
         result = await flow.async_step_album({CONF_ALBUM_IDS: ["album-1"]})
         assert result["errors"]["base"] == expected_error
+    api.albums.async_get_all_albums.side_effect = None
+    result = await flow.async_step_album(
+        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_user_source_preflight_reports_unavailable_assets(
@@ -509,6 +547,11 @@ async def test_options_album_flow_validates_selection_and_source(
         {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    parent_immich_entry.runtime_data.api.search.async_get_all_by_album_ids.side_effect = None
+    result = await flow.async_step_album(
+        {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_options_flow_validates_empty_and_missing_parent_albums(
@@ -672,6 +715,11 @@ async def test_options_smart_source_preflight_reports_unavailable_assets(
         result["flow_id"], {CONF_SMART_QUERY: "mountains"}
     )
     assert result["errors"]["base"] == "assets_unavailable"
+    parent_immich_entry.runtime_data.api.search.async_smart_search.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SMART_QUERY: "mountains"}
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_options_flow_requires_smart_query(
@@ -764,7 +812,8 @@ async def test_reconfigure_all_source_preflight_reports_unavailable_assets(
 async def test_reconfigure_flow_handles_album_and_smart_sources(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
-    """Reconfiguration exercises each source-specific branch."""
+    """Reconfiguration exercises each source-specific branch and recovery."""
+    api = parent_immich_entry.runtime_data.api
     for source, source_input in (
         (SOURCE_ALBUM, {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]}),
         (SOURCE_SMART, {CONF_SMART_QUERY: "mountains"}),
@@ -777,9 +826,23 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
                 CONF_FRAME_NAME: f"Reconfigure {source}",
                 CONF_SOURCE: DEFAULT_SOURCE,
             },
-            options={CONF_SOURCE: DEFAULT_SOURCE},
+            options={
+                CONF_SOURCE: DEFAULT_SOURCE,
+                CONF_MODE: MODE_PAIRS,
+                CONF_ORIENTATION: ORIENTATION_PORTRAIT,
+                "time_range": "1_month",
+                CONF_PAIR_WINDOW: 3,
+                CONF_SCREEN_SHAPE: "portrait",
+                CONF_PHOTO_FIT: PHOTO_FIT_CROP,
+            },
         )
         entry.add_to_hass(hass)
+        if source == SOURCE_ALBUM:
+            api.search.async_get_all_by_album_ids.side_effect = ClientError("offline")
+        else:
+            api.search.async_smart_search.side_effect = ImmichError(
+                {"message": "server", "correlationId": "test"}
+            )
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "reconfigure", "entry_id": entry.entry_id},
@@ -791,6 +854,20 @@ async def test_reconfigure_flow_handles_album_and_smart_sources(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], source_input
         )
+        assert result["errors"]["base"] == "assets_unavailable"
+        if source == SOURCE_ALBUM:
+            api.search.async_get_all_by_album_ids.side_effect = None
+        else:
+            api.search.async_smart_search.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], source_input
+        )
         assert result["reason"] == "reconfigure_successful"
         await hass.async_block_till_done()
         assert entry.options[CONF_SOURCE] == source
+        assert entry.options[CONF_MODE] == MODE_PAIRS
+        assert entry.options[CONF_ORIENTATION] == ORIENTATION_PORTRAIT
+        assert entry.options["time_range"] == "1_month"
+        assert entry.options[CONF_PAIR_WINDOW] == 3
+        assert entry.options[CONF_SCREEN_SHAPE] == "portrait"
+        assert entry.options[CONF_PHOTO_FIT] == PHOTO_FIT_CROP

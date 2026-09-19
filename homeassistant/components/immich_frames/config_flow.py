@@ -269,29 +269,17 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_finish_create(self) -> ConfigFlowResult:
         """Create or reconfigure a frame entry."""
-        settings = {
-            **self._data,
-            CONF_MODE: DEFAULT_MODE,
-            CONF_ORIENTATION: DEFAULT_ORIENTATION,
-            CONF_TIME_RANGE: DEFAULT_TIME_RANGE,
-            CONF_PAIR_WINDOW: DEFAULT_PAIR_WINDOW,
-            CONF_SCREEN_SHAPE: DEFAULT_SCREEN_SHAPE,
-            CONF_PHOTO_FIT: DEFAULT_PHOTO_FIT,
-        }
         if self._reconfigure_entry is not None:
+            settings = {
+                **self._reconfigure_entry.data,
+                **self._reconfigure_entry.options,
+                **self._data,
+            }
             frame_id = self._reconfigure_entry.data.get(CONF_FRAME_ID, uuid4().hex)
             options = {
-                **{
-                    key: value
-                    for key, value in self._reconfigure_entry.data.items()
-                    if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
-                },
-                **self._reconfigure_entry.options,
-                **{
-                    key: value
-                    for key, value in settings.items()
-                    if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
-                },
+                key: value
+                for key, value in settings.items()
+                if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
             }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
@@ -302,6 +290,15 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options=options,
                 title=self._reconfigure_entry.title,
             )
+        settings = {
+            **self._data,
+            CONF_MODE: DEFAULT_MODE,
+            CONF_ORIENTATION: DEFAULT_ORIENTATION,
+            CONF_TIME_RANGE: DEFAULT_TIME_RANGE,
+            CONF_PAIR_WINDOW: DEFAULT_PAIR_WINDOW,
+            CONF_SCREEN_SHAPE: DEFAULT_SCREEN_SHAPE,
+            CONF_PHOTO_FIT: DEFAULT_PHOTO_FIT,
+        }
         frame_id = uuid4().hex
         data = {
             CONF_IMMICH_ENTRY_ID: settings[CONF_IMMICH_ENTRY_ID],

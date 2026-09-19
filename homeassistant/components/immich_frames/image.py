@@ -47,9 +47,11 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the selected asset link."""
         data = self.coordinator.current_data
-        if data is None:
+        if data is None or data.status == "no_matching_photos":
             return {}
-        base_url = self.coordinator.immich_entry.runtime_data.configuration_url
+        base_url = self.coordinator.configuration_url
+        if base_url is None:
+            return {}
         asset_id = quote(data.asset.asset_id, safe="")
         return {"open_in_immich": f"{base_url}/photos/{asset_id}"}
 
@@ -57,4 +59,4 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return the selected Immich image."""
         data = self.coordinator.current_data
-        return data.image if data else None
+        return data.image if data and data.status != "no_matching_photos" else None

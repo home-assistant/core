@@ -45,6 +45,14 @@ _LOGGER = logging.getLogger(__name__)
 RECENT_HISTORY_LIMIT = 20
 CANDIDATE_CACHE_INTERVAL = timedelta(minutes=5)
 CACHE_WRITE_INTERVAL = timedelta(minutes=5)
+UPSTREAM_FAILURE_STATUSES = frozenset(
+    {
+        "authentication_required",
+        "parent_not_ready",
+        "upstream_error",
+        "upstream_unavailable",
+    }
+)
 
 
 @dataclass
@@ -96,6 +104,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._candidate_cache_updated_at: datetime | None = None
         self._account_state_invalidated = False
         self._last_cache_write_at: datetime | None = None
+        self._outage_logged = False
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -208,9 +217,10 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             status="ready",
         )
         self._account_state_invalidated = False
-        if self._connected is False:
-            _LOGGER.info("Immich connection restored for %s", self.config_entry.title)
+        if self._connected is False or self._outage_logged:
+            _LOGGER.info("Immich Frames recovered for %s", self.config_entry.title)
         self._connected = True
+        self._outage_logged = False
         self._remember_assets(photos)
         if self._cache_write_due(result.updated_at):
             try:
@@ -248,6 +258,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._account_state_invalidated = True
             self._connected = None
             self._last_cache_write_at = None
+            self._outage_logged = False
             self._parent_identity_value = parent_identity
         self.immich_entry = immich_entry
         self.api = immich_entry.runtime_data.api
@@ -278,6 +289,12 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         if self._account_state_invalidated:
             return None
         return self.data
+
+    @property
+    def configuration_url(self) -> str | None:
+        """Return the parent configuration URL while the parent is loaded."""
+        runtime_data = getattr(self.immich_entry, "runtime_data", None)
+        return getattr(runtime_data, "configuration_url", None)
 
     def _cache_write_due(self, rendered_at: datetime) -> bool:
         """Return whether the persistent cache should be refreshed."""
@@ -326,8 +343,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
     ) -> ImmichFramesData:
         """Use the last rendered image when a recoverable update fails."""
         if self.data is not None and not self._account_state_invalidated:
-            if connection_failed and self._connected is not False:
-                _LOGGER.info("Immich is unavailable for %s", self.config_entry.title)
+            if status in UPSTREAM_FAILURE_STATUSES and not self._outage_logged:
+                _LOGGER.info(
+                    "Immich Frames is unavailable for %s (%s)",
+                    self.config_entry.title,
+                    status,
+                )
+                self._outage_logged = True
             if connection_failed:
                 self._connected = False
             return replace(
