@@ -62,7 +62,9 @@ async def test_setup_entry_creates_image(
     assert isinstance(entry.runtime_data.data, ImmichFramesData)
     assert hass.states.get("image.living_room_image").state != "unknown"
     assert entry.runtime_data.api.assets.async_view_asset.await_count == 1
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
     assert device
     assert device.entry_type is dr.DeviceEntryType.SERVICE
 

@@ -233,52 +233,26 @@ async def test_album_flow_reports_auth_and_connection_errors(
 ) -> None:
     """Album loading errors are shown without losing the flow."""
     api = parent_immich_entry.runtime_data.api
-    api.albums.async_get_all_albums.side_effect = ImmichUnauthorizedError(
-        {"message": "bad", "correlationId": "test"}
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    for side_effect, expected_error in (
+        (
+            ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
+            "immich_auth",
+        ),
+        (ClientError("offline"), "albums_unavailable"),
+        (
+            ImmichError({"message": "server", "correlationId": "test"}),
+            "albums_unavailable",
+        ),
+    ):
+        api.albums.async_get_all_albums.side_effect = side_effect
+        flow = ImmichFramesConfigFlow()
+        flow.hass = hass
+        flow._data = {
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
             CONF_SOURCE: SOURCE_ALBUM,
-        },
-    )
-    assert result["errors"]["base"] == "immich_auth"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ALBUM_IDS: ["album-1"]}
-    )
-    assert result["errors"]["base"] == "immich_auth"
-
-    api.albums.async_get_all_albums.side_effect = ClientError("offline")
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_SOURCE: SOURCE_ALBUM,
-        },
-    )
-    assert result["errors"]["base"] == "albums_unavailable"
-
-    api.albums.async_get_all_albums.side_effect = ImmichError(
-        {"message": "server", "correlationId": "test"}
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
-            CONF_SOURCE: SOURCE_ALBUM,
-        },
-    )
-    assert result["errors"]["base"] == "albums_unavailable"
+        }
+        result = await flow.async_step_album({CONF_ALBUM_IDS: ["album-1"]})
+        assert result["errors"]["base"] == expected_error
 
 
 async def test_user_source_preflight_reports_unavailable_assets(
@@ -592,20 +566,16 @@ async def test_options_album_flow_reports_immich_errors(
     )
     entry.add_to_hass(hass)
     get_albums = parent_immich_entry.runtime_data.api.albums.async_get_all_albums
+    flow = ImmichFramesOptionsFlow(entry)
+    flow.hass = hass
+    flow._data.update(_options_input(SOURCE_ALBUM))
     for side_effect in (
         ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
         ClientError("offline"),
         ImmichError({"message": "server", "correlationId": "test"}),
     ):
         get_albums.side_effect = side_effect
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], _options_input(SOURCE_ALBUM)
-        )
-        assert result["errors"]["base"] in {"immich_auth", "albums_unavailable"}
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_ALBUM_IDS: ["album-1"]}
-        )
+        result = await flow.async_step_album({CONF_ALBUM_IDS: ["album-1"]})
         assert result["errors"]["base"] in {"immich_auth", "albums_unavailable"}
 
     get_albums.side_effect = None
