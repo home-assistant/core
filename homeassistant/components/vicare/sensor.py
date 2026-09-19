@@ -38,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     VICARE_BAR,
@@ -1642,10 +1641,11 @@ class ViCareSensor(ViCareCoordinatorEntity, SensorEntity):
                             vicare_unit
                         ]
 
-    @property
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        with suppress(PyViCareNotSupportedFeatureError):
-            return self.entity_description.value_getter(self._api)
-        return None
+    def _read_value(self) -> None:
+        """Read the sensor value from the API."""
+        # Both context managers swallow read failures, so clear first rather
+        # than republish the previous value.
+        self._attr_native_value = None
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_native_value = self.entity_description.value_getter(self._api)
