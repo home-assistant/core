@@ -6119,6 +6119,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "remootio": {
+      "name": "Remootio",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "remote_calendar": {
       "integration_type": "service",
       "config_flow": true,
