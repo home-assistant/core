@@ -19,6 +19,7 @@ from uiprotect.data import (
     Sensor,
     WSAction,
 )
+from uiprotect.data.devices import Hotplug
 from uiprotect.data.public_devices import PublicChime, SensorFeatureCapability
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
@@ -162,6 +163,28 @@ async def test_number_setup_camera_none(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+
+
+async def test_number_no_mic_level_for_hot_plugged_mic(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera: Camera,
+) -> None:
+    """A camera whose only microphone is hot-plugged gets no microphone level.
+
+    ``Camera.has_mic`` counts the hot-plugged module, but the public setter the
+    number writes through refuses such a camera, so the built-in flag gates it.
+    """
+    camera.feature_flags.has_mic = False
+    camera.feature_flags.hotplug = Hotplug(audio=True)
+    assert camera.has_mic
+
+    await init_entry(hass, ufp, [camera])
+
+    assert "mic_level" not in registry_keys(
+        entity_registry, Platform.NUMBER, camera.mac
+    )
 
 
 async def test_number_setup_camera_missing_attr(
