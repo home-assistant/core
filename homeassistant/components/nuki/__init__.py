@@ -20,7 +20,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -149,6 +153,23 @@ def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:
     for item in callbacks["callbacks"]:
         if entry_id in item["url"]:
             bridge.callback_remove(item["id"])
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        entity_registry = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if isinstance(entity_entry.unique_id, int):
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=str(entity_entry.unique_id)
+                )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
