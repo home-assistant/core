@@ -4,8 +4,12 @@ import logging
 
 from tuya_sharing import Manager
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -32,6 +36,72 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    if entry.version > 1:
+        # Downgraded from a future version, we can't handle that
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        await _async_migrate_entity_unique_ids(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
+async def _async_migrate_entity_unique_ids(
+    hass: HomeAssistant, entry: TuyaConfigEntry
+) -> None:
+    """Drop the redundant `tuya.` prefix from entity unique IDs.
+
+    Old format: `tuya.{device_id}{key}`, new format: `{device_id}.{key}`.
+    Added in 2026.10.
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def _migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Return the updated unique ID, if the entity needs migrating."""
+        if entity_entry.device_id is None or not (
+            device_entry := device_registry.async_get(entity_entry.device_id)
+        ):
+            return None
+        device_id = next(
+            (
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            ),
+            None,
+        )
+        if device_id is None:
+            return None
+
+        old_prefix = f"{DOMAIN}.{device_id}"
+        if not entity_entry.unique_id.startswith(old_prefix):
+            return None
+
+        new_unique_id = device_id
+        if key := entity_entry.unique_id.removeprefix(old_prefix):
+            new_unique_id = f"{device_id}.{key}"
+
+        # A downgrade can leave a stale entity holding the new unique ID
+        if entity_registry.async_get_entity_id(
+            entity_entry.domain, DOMAIN, new_unique_id
+        ):
+            LOGGER.debug(
+                "Not migrating %s, unique ID %s is already in use",
+                entity_entry.entity_id,
+                new_unique_id,
+            )
+            return None
+
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:

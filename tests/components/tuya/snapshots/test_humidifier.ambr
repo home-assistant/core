@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.8u5ftxkt52smougescswitch',
+    'unique_id': '8u5ftxkt52smougesc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -93,7 +93,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.giqs1xhsekjelfibscswitch',
+    'unique_id': 'giqs1xhsekjelfibsc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -151,7 +151,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ifzgvpgoodrfw2akscswitch',
+    'unique_id': 'ifzgvpgoodrfw2aksc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -208,7 +208,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.2myxayqtud9aqbizscswitch',
+    'unique_id': '2myxayqtud9aqbizsc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -267,7 +267,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ake0bre784zriw0uscswitch',
+    'unique_id': 'ake0bre784zriw0usc.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -326,7 +326,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.btpss2f6kwfi294rqsjswitch',
+    'unique_id': 'btpss2f6kwfi294rqsj.switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -383,7 +383,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.g1qorlffoy2iyo9bscswitch',
+    'unique_id': 'g1qorlffoy2iyo9bsc.switch',
     'unit_of_measurement': None,
   })
 # ---
