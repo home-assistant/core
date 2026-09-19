@@ -1,5 +1,6 @@
 """Config flow for MusicAssistant integration."""
 
+import asyncio
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlencode
@@ -15,6 +16,7 @@ from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import probatio
 
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntryState,
@@ -23,18 +25,24 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     _encode_jwt,
     async_get_redirect_uri,
 )
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .addon import get_addon_manager
 from .const import AUTH_SCHEMA_VERSION, DOMAIN, HASSIO_DISCOVERY_SCHEMA_VERSION, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
+
+ADDON_SETUP_TIMEOUT = 5
+ADDON_SETUP_TIMEOUT_ROUNDS = 12
 
 
 STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
@@ -53,6 +61,16 @@ def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage
         homeassistant_addon=properties["homeassistant_addon"].lower() == "true",
         onboard_done=properties["onboard_done"].lower() == "true",
     )
+
+
+def _addon_url(discovery_config: dict[str, Any]) -> str:
+    """Return the server URL from Home Assistant app discovery info.
+
+    The app exposes the API on port 8095, but also hosts an internal-only
+    webserver (default at port 8094) for the HA integration to connect to.
+    The info where the internal API is exposed is passed via discovery info.
+    """
+    return f"http://{discovery_config['host']}:{discovery_config['port']}"
 
 
 async def _get_server_info(hass: HomeAssistant, url: str) -> ServerInfoMessage:
@@ -79,14 +97,33 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _addon_manager: AddonManager
+
     def __init__(self) -> None:
         """Set up flow instance."""
         self.url: str | None = None
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
+        self.install_task: asyncio.Task | None = None
+        self.start_task: asyncio.Task | None = None
 
     @override
     async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        if is_hassio(self.hass):
+            # Offer to set up the Music Assistant app if the Supervisor is available
+            self._addon_manager = get_addon_manager(self.hass)
+            return self.async_show_menu(
+                step_id="user",
+                menu_options=["addon", "manual"],
+                description_placeholders={"addon": self._addon_manager.addon_name},
+            )
+
+        return await self.async_step_manual()
+
+    async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a manual configuration."""
@@ -125,11 +162,171 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             suggested_values = {CONF_URL: DEFAULT_URL}
 
         return self.async_show_form(
-            step_id="user",
+            step_id="manual",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_SCHEMA, suggested_values
             ),
             errors=errors,
+        )
+
+    async def async_step_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install and start the Music Assistant app."""
+        addon_manager = self._addon_manager
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError as err:
+            raise AbortFlow(
+                "addon_info_failed",
+                description_placeholders={"addon": addon_manager.addon_name},
+            ) from err
+
+        if addon_info.state is AddonState.RUNNING:
+            return await self.async_step_setup_entry_from_discovery()
+
+        if addon_info.state is AddonState.NOT_RUNNING:
+            return await self.async_step_start_addon()
+
+        return await self.async_step_install_addon()
+
+    async def _async_install_addon(self) -> None:
+        """Install the Music Assistant app."""
+        await self._addon_manager.async_schedule_install_addon()
+
+    async def async_step_install_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install the Music Assistant app."""
+        if self.install_task is None:
+            self.install_task = self.hass.async_create_task(self._async_install_addon())
+
+        if not self.install_task.done():
+            return self.async_show_progress(
+                step_id="install_addon",
+                progress_action="install_addon",
+                progress_task=self.install_task,
+            )
+
+        try:
+            await self.install_task
+        except AddonError as err:
+            LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="install_failed")
+        finally:
+            self.install_task = None
+
+        return self.async_show_progress_done(next_step_id="start_addon")
+
+    async def async_step_install_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a failed app installation."""
+        return self.async_abort(
+            reason="addon_install_failed",
+            description_placeholders={"addon": self._addon_manager.addon_name},
+        )
+
+    async def _async_start_addon(self) -> None:
+        """Start the Music Assistant app."""
+        addon_manager = self._addon_manager
+        await addon_manager.async_schedule_start_addon()
+
+        # The app needs some time to start up before it accepts connections.
+        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
+            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
+            if await self._async_get_config_and_try():
+                break
+        else:
+            raise AddonError(
+                translation_domain=DOMAIN,
+                translation_key="addon_start_failed",
+                translation_placeholders={"addon": addon_manager.addon_name},
+            )
+
+    async def async_step_start_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start the Music Assistant app."""
+        if self.start_task is None:
+            self.start_task = self.hass.async_create_task(self._async_start_addon())
+
+        if not self.start_task.done():
+            return self.async_show_progress(
+                step_id="start_addon",
+                progress_action="start_addon",
+                progress_task=self.start_task,
+            )
+
+        try:
+            await self.start_task
+        except AddonError as err:
+            LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="start_failed")
+        finally:
+            self.start_task = None
+
+        return self.async_show_progress_done(next_step_id="setup_entry_from_discovery")
+
+    async def async_step_start_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a failed app start."""
+        return self.async_abort(
+            reason="addon_start_failed",
+            description_placeholders={"addon": self._addon_manager.addon_name},
+        )
+
+    async def _async_get_config_and_try(self) -> bool:
+        """Get the app discovery info and try to connect to the server."""
+        # Reuse the server info we already validated while the app was starting up.
+        if self.server_info is not None:
+            return True
+
+        try:
+            discovery_config = (
+                await self._addon_manager.async_get_addon_discovery_info()
+            )
+        except AddonError:
+            # We do not have discovery information yet
+            return False
+
+        url = _addon_url(discovery_config)
+        try:
+            server_info = await _get_server_info(self.hass, url)
+        except TimeoutError, MusicAssistantClientException:
+            return False
+
+        self.url = url
+        # We trust the token from the app discovery info
+        self.token = discovery_config["auth_token"]
+        self.server_info = server_info
+        return True
+
+    async def async_step_setup_entry_from_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up the config entry from the app discovery info."""
+        if not await self._async_get_config_and_try():
+            raise AbortFlow(
+                "addon_connection_failed",
+                description_placeholders={"addon": self._addon_manager.addon_name},
+            )
+
+        if TYPE_CHECKING:
+            assert self.url is not None
+            assert self.token is not None
+            assert self.server_info is not None
+
+        await self.async_set_unique_id(
+            self.server_info.server_id, raise_on_progress=False
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: self.url, CONF_TOKEN: self.token}
+        )
+        return self.async_create_entry(
+            title=DEFAULT_TITLE,
+            data={CONF_URL: self.url, CONF_TOKEN: self.token},
         )
 
     @override
@@ -140,15 +337,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the Music Assistant app.
         """
-        # Build URL from app discovery info
-        # The app exposes the API on port 8095, but also
-        # hosts an internal-only webserver (default at port
-        # 8094) for the HA integration to connect to.
-        # The info where the internal API is exposed is
-        # passed via discovery_info
-        host = discovery_info.config["host"]
-        port = discovery_info.config["port"]
-        self.url = f"http://{host}:{port}"
+        self.url = _addon_url(discovery_info.config)
         try:
             server_info = await _get_server_info(self.hass, self.url)
         except CannotConnect:
