@@ -21,11 +21,19 @@ _LOGGER = logging.getLogger(__name__)
 type DeDietrichConfigEntry = ConfigEntry[DeDietrichDataUpdateCoordinator]
 
 
+CHILD_COMPONENT_DEVICE_NAMES: dict[str, str] = {
+    "circuit_a": "Heating circuit A",
+    "circuit_b": "Heating circuit B",
+    "circuit_c": "Heating circuit C",
+}
+
+
 class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Class to manage fetching De Dietrich data."""
 
     config_entry: DeDietrichConfigEntry
     device: Diematic | DiematicISystem
+    parent_device_id: str
 
     def __init__(
         self,
@@ -42,6 +50,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.device = device
+        self.parent_device_id = ""
 
     @override
     async def _async_setup(self) -> None:
@@ -56,7 +65,7 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
-        """Return device information."""
+        """Return main boiler device information."""
         device = self.device
         sw_version = (
             device.identity.software_version
@@ -67,6 +76,28 @@ class DeDietrichDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             manufacturer=ATTR_MANUFACTURER,
             sw_version=str(sw_version) if sw_version is not None else None,
+        )
+
+    def child_device_info(self, component: str) -> dr.ChildDeviceInfo | None:
+        """Return child device information when the component is present."""
+        if component not in CHILD_COMPONENT_DEVICE_NAMES:
+            return None
+        if component == "circuit_a":
+            if not self.device.circuit_a_present:
+                return None
+        elif component == "circuit_b":
+            if not self.device.circuit_b_present:
+                return None
+        elif component == "circuit_c":
+            if not (
+                isinstance(self.device, DiematicISystem)
+                and self.device.circuit_c_present
+            ):
+                return None
+        return dr.ChildDeviceInfo(
+            identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{component}")},
+            parent_device_id=self.parent_device_id,
+            name=CHILD_COMPONENT_DEVICE_NAMES[component],
         )
 
     @override
