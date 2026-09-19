@@ -137,6 +137,13 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         await super().async_added_to_hass()
         self._attr_image_last_updated = self.coordinator.last_home_update
         self.async_write_ha_state()
+        self.coordinator.map_consumers += 1
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop asking for live map updates."""
+        await super().async_will_remove_from_hass()
+        self.coordinator.map_consumers -= 1
 
     @property
     def _map_content(self) -> MapContent | None:
