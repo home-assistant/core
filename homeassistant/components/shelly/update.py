@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -39,8 +39,14 @@ from .entity import (
     ShellySleepingRpcAttributeEntity,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    rpc_call,
 )
-from .utils import get_device_entry_gen, get_release_url
+from .utils import (
+    get_blu_trv_device_info,
+    get_device_entry_gen,
+    get_release_url,
+    get_version_from_fw_id,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -51,6 +57,13 @@ class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
 
     latest_version: Callable[[dict], Any]
     beta: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcBluTrvUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
+    """Class to describe a RPC BLU TRV update."""
+
+    latest_version: Callable[[str], str | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -165,6 +178,83 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             )
 
 
+class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
+    """Represent a RPC BLU TRV update entity."""
+
+    _attr_supported_features = UpdateEntityFeature.INSTALL
+    entity_description: RpcBluTrvUpdateDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBluTrvUpdateDescription,
+    ) -> None:
+        """Initialize update entity."""
+        super().__init__(coordinator, key, attribute, description)
+
+        config = coordinator.device.config[key]
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            config,
+            config["addr"],
+            coordinator.mac,
+            coordinator.device.status[key].get("fw_ver"),
+        )
+
+        update_coordinator = coordinator.config_entry.runtime_data.rpc_blu_trv_update
+
+        if TYPE_CHECKING:
+            assert update_coordinator
+
+        self._update_coordinator = update_coordinator
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._update_coordinator.async_add_listener(self._update_callback)
+        )
+
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        return cast(str | None, self.status.get(self.entity_description.sub_key))
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        if (firmware := self._update_coordinator.available_firmware) is None:
+            return self.installed_version
+
+        return (
+            self.entity_description.latest_version(firmware) or self.installed_version
+        )
+
+    @rpc_call
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install the latest firmware version."""
+        LOGGER.info(
+            "Starting OTA update of BLU TRV %s from '%s' to '%s'",
+            self.entity_id,
+            self.installed_version,
+            self.latest_version,
+        )
+
+        if TYPE_CHECKING:
+            assert self._id is not None
+
+        await self.coordinator.device.blu_trv_update_firmware(self._id)
+
+
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
         key="sys",
@@ -193,6 +283,14 @@ RPC_UPDATES: Final = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcLoraAddOnUpdateEntity,
+    ),
+    "blutrv_fwupdate": RpcBluTrvUpdateDescription(
+        key="blutrv",
+        sub_key="fw_ver",
+        latest_version=get_version_from_fw_id,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        entity_class=RpcBluTrvUpdateEntity,
     ),
 }
 

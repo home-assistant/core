@@ -367,6 +367,10 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
 }
 
 
+# Firmware ID of the newest BLU TRV firmware in the Shelly repository
+MOCK_BLU_TRV_AVAILABLE_FIRMWARE = "20250321-100000/v1.3.0@abcdef01"
+
+
 MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
@@ -633,6 +637,10 @@ def _mock_blu_rtv_device(version: str | None = None):
         wifi_setconfig=AsyncMock(return_value={}),
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={}),
+        blu_trv_check_for_updates=AsyncMock(
+            return_value=MOCK_BLU_TRV_AVAILABLE_FIRMWARE
+        ),
+        blu_trv_update_firmware=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
