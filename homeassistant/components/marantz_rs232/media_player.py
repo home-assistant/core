@@ -1,5 +1,7 @@
 """Media player platform for the Marantz SR7002 receiver."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import math
 from typing import override
 
@@ -20,7 +22,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -62,6 +64,18 @@ async def async_setup_entry(
             )
         )
     async_add_entities(entities)
+
+
+@contextmanager
+def _translate_errors() -> Iterator[None]:
+    """Translate receiver communication failures into action errors."""
+    try:
+        yield
+    except (ConnectionError, OSError, TimeoutError) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+        ) from err
 
 
 class MarantzMediaPlayer(MediaPlayerEntity):
@@ -118,7 +132,7 @@ class MarantzMediaPlayer(MediaPlayerEntity):
         if zone == "main":
             self._attr_name = None
         else:
-            self._attr_name = "Multi Room"
+            self._attr_translation_key = "multi_room"
 
         self._async_update_from_player()
 
@@ -163,36 +177,42 @@ class MarantzMediaPlayer(MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
-        await self._player.power_on()
+        with _translate_errors():
+            await self._player.power_on()
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        await self._player.power_off()
+        with _translate_errors():
+            await self._player.power_off()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         db = volume * self._volume_range + self._volume_min
-        await self._set_volume(db)
+        with _translate_errors():
+            await self._set_volume(db)
 
     @override
     async def async_volume_up(self) -> None:
         """Volume up."""
-        await self._volume_up()
+        with _translate_errors():
+            await self._volume_up()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down."""
-        await self._volume_down()
+        with _translate_errors():
+            await self._volume_down()
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
-        if mute:
-            await self._player.mute_on()
-        else:
-            await self._player.mute_off()
+        with _translate_errors():
+            if mute:
+                await self._player.mute_on()
+            else:
+                await self._player.mute_off()
 
     @override
     async def async_select_source(self, source: str) -> None:
@@ -202,6 +222,11 @@ class MarantzMediaPlayer(MediaPlayerEntity):
             None,
         )
         if v2007_source is None:
-            raise HomeAssistantError("Invalid source")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": source},
+            )
 
-        await self._player.select_source(v2007_source)
+        with _translate_errors():
+            await self._player.select_source(v2007_source)

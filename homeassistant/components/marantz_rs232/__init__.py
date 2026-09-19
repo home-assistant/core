@@ -7,7 +7,7 @@ from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER, MarantzRS232ConfigEntry
+from .const import DOMAIN, LOGGER, MarantzRS232ConfigEntry
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -24,26 +24,34 @@ async def async_setup_entry(
         await receiver.query_state()
         await receiver.query_multi_room_a()
     except (ConnectionError, OSError, TimeoutError) as err:
-        LOGGER.error("Error connecting to Marantz receiver at %s: %s", port, err)
         if receiver.connected:
             await receiver.disconnect()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+        ) from err
 
     entry.runtime_data = receiver
+    reconnect_requested = False
 
     @callback
     def _on_disconnect(
         state: V2007ReceiverState | None,
     ) -> None:
-        # Only reload if the entry is still loaded. During entry removal,
-        # disconnect() fires this callback but the entry is already gone.
-        if state is None and entry.state is ConfigEntryState.LOADED:
-            LOGGER.warning("Marantz receiver disconnected, reloading config entry")
+        nonlocal reconnect_requested
+        if (
+            state is None
+            and entry.state is ConfigEntryState.LOADED
+            and not reconnect_requested
+        ):
+            reconnect_requested = True
+            LOGGER.info("Marantz receiver at %s is unavailable; reconnecting", port)
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(receiver.subscribe(_on_disconnect))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    LOGGER.info("Connected to Marantz receiver at %s", port)
 
     return True
 

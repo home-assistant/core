@@ -120,17 +120,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Multi Room',
+    'object_id_base': 'Multi-room',
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
     'original_icon': None,
-    'original_name': 'Multi Room',
+    'original_name': 'Multi-room',
     'platform': 'marantz_rs232',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 3468>,
-    'translation_key': 'receiver',
+    'translation_key': 'multi_room',
     'unique_id': '01KPBBPM6WCQ8148EFR0TCG1WW_multi_room_a',
     'unit_of_measurement': None,
   })
@@ -139,7 +139,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SR7002 Multi Room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SR7002 Multi-room',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'tv',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([

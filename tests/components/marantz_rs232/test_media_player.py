@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
@@ -199,13 +199,17 @@ async def test_commands(
 @pytest.mark.usefixtures("init_integration")
 async def test_invalid_source(hass: HomeAssistant) -> None:
     """Reject unsupported input names."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        ServiceValidationError, match="Input source nonexistent is not supported"
+    ) as err:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
             {ATTR_ENTITY_ID: MAIN, ATTR_INPUT_SOURCE: "nonexistent"},
             blocking=True,
         )
+
+    assert err.value.translation_key == "invalid_source"
 
 
 def test_source_translations() -> None:
@@ -215,3 +219,39 @@ def test_source_translations() -> None:
         "source"
     ]["state"]
     assert set(INPUT_SOURCE_TO_HA.values()) == set(declared)
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("entity_id", [MAIN, MULTI])
+@pytest.mark.parametrize("error", [ConnectionError, OSError, TimeoutError])
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (SERVICE_TURN_ON, {}),
+        (SERVICE_TURN_OFF, {}),
+        (SERVICE_VOLUME_UP, {}),
+        (SERVICE_VOLUME_DOWN, {}),
+        (SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0.5}),
+        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}),
+        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "dvd"}),
+    ],
+)
+async def test_command_failure(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    entity_id: str,
+    error: type[Exception],
+    service: str,
+    data: dict[str, str | bool | float],
+) -> None:
+    """Report serial failures as translated action errors for either output."""
+    mock_receiver._send_command.side_effect = error("Connection lost")
+    with pytest.raises(
+        HomeAssistantError, match="Unable to communicate with the receiver"
+    ) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, service, {ATTR_ENTITY_ID: entity_id, **data}, blocking=True
+        )
+    assert err.value.translation_key == "communication_error"
+    assert isinstance(err.value.__cause__, error)

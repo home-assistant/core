@@ -20,6 +20,27 @@
   },
   "entity": {
     "media_player": {
+      "multi_room": {
+        "name": "Multi-room",
+        "state_attributes": {
+          "source": {
+            "state": {
+              "am": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::am%]",
+              "aux1": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::aux1%]",
+              "aux2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::aux2%]",
+              "cd_cdr": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::cd_cdr%]",
+              "dss_vcr2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::dss_vcr2%]",
+              "dvd": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::dvd%]",
+              "fm": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::fm%]",
+              "tape": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tape%]",
+              "tuner": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tuner%]",
+              "tv": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tv%]",
+              "vcr1": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::vcr1%]",
+              "xm": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::xm%]"
+            }
+          }
+        }
+      },
       "receiver": {
         "state_attributes": {
           "source": {
@@ -40,6 +61,14 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Unable to communicate with the receiver"
+    },
+    "invalid_source": {
+      "message": "Input source {source} is not supported"
     }
   }
 }
