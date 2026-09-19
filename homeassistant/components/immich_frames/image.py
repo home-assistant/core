@@ -40,14 +40,18 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     def image_last_updated(self) -> datetime | None:
         """Return the selected asset update time."""
         data = self.coordinator.current_data
-        return data.updated_at if data else None
+        return (
+            data.updated_at
+            if data and data.connected and data.status == "ready"
+            else None
+        )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the selected asset link."""
         data = self.coordinator.current_data
-        if data is None or data.status == "no_matching_photos":
+        if data is None or not data.connected or data.status != "ready":
             return {}
         base_url = self.coordinator.configuration_url
         if base_url is None:
@@ -59,4 +63,6 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return the selected Immich image."""
         data = self.coordinator.current_data
-        return data.image if data and data.status != "no_matching_photos" else None
+        return (
+            data.image if data and data.connected and data.status == "ready" else None
+        )

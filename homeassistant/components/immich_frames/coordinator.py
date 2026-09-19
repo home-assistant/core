@@ -105,6 +105,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._candidate_cache: list[ImmichAsset] | None = None
         self._candidate_cache_updated_at: datetime | None = None
         self._account_state_invalidated = False
+        self._account_cache_clear_pending = False
         self._last_cache_write_at: datetime | None = None
         self._outage_logged = False
         self._cache = FrameCache(
@@ -146,6 +147,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         if self.paused and self.data is not None:
             return self.data
         if not self._refresh_parent():
+            await self._async_clear_account_cache()
             return self._cached_or_raise(
                 "immich_not_ready",
                 RuntimeError("The parent Immich entry is not ready"),
@@ -161,7 +163,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             if not self._parent_snapshot_is_current(
                 parent_runtime_data, parent_identity
             ):
-                return self._handle_parent_change()
+                return await self._handle_parent_change()
             if not candidates:
                 return self._cached_or_raise(
                     "no_photos", LookupError("no photos"), status="no_matching_photos"
@@ -193,12 +195,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             if not self._parent_snapshot_is_current(
                 parent_runtime_data, parent_identity
             ):
-                return self._handle_parent_change()
+                return await self._handle_parent_change()
         except ImmichUnauthorizedError as err:
             if self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
                 self.immich_entry.async_start_reauth(self.hass)
             else:
                 self._refresh_parent()
+                await self._async_clear_account_cache()
             return self._cached_or_raise(
                 "cannot_connect",
                 err,
@@ -254,7 +257,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             finally:
                 self._last_cache_write_at = result.updated_at
         if not self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
-            return self._handle_parent_change()
+            return await self._handle_parent_change()
         return result
 
     def _refresh_parent(self) -> bool:
@@ -271,11 +274,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         runtime_data = immich_entry.runtime_data
         parent_identity = self._parent_identity(immich_entry, runtime_data)
         if parent_identity != self._parent_identity_value:
-            self._cache.clear()
             self._invalidate_candidate_cache()
             self._recent_ids.clear()
             self._recent_order.clear()
             self._account_state_invalidated = True
+            self._account_cache_clear_pending = True
             self._connected = None
             self._last_cache_write_at = None
             self._outage_logged = False
@@ -284,6 +287,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._parent_runtime_data = runtime_data
         self.api = runtime_data.api
         return True
+
+    async def _async_clear_account_cache(self) -> None:
+        """Remove cached bytes after the parent account changes or disappears."""
+        if not self._account_cache_clear_pending:
+            return
+        await self.hass.async_add_executor_job(self._cache.clear)
+        self._account_cache_clear_pending = False
 
     async def _async_get_candidates(
         self, api: Immich | None = None
@@ -357,9 +367,10 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             and self._parent_identity(parent_entry, current_runtime_data) == identity
         )
 
-    def _handle_parent_change(self) -> ImmichFramesData:
+    async def _handle_parent_change(self) -> ImmichFramesData:
         """Discard an in-flight result when the parent changes underneath it."""
         self._refresh_parent()
+        await self._async_clear_account_cache()
         return self._cached_or_raise(
             "immich_not_ready",
             RuntimeError("The parent Immich entry changed during refresh"),

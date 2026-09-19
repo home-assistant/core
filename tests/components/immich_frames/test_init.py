@@ -508,6 +508,7 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
 
     with patch.object(coordinator._cache, "clear") as clear_cache:
         assert coordinator._refresh_parent() is True
+        await coordinator._async_clear_account_cache()
     clear_cache.assert_called_once_with()
     assert coordinator._account_state_invalidated is True
     assert coordinator.data is not None
