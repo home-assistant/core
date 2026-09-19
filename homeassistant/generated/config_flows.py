@@ -872,6 +872,7 @@ FLOWS = {
         "victron_remote_monitoring",
         "vilfo",
         "vistapool",
+        "vitesy",
         "vivotek",
         "vizio",
         "vlc_telnet",

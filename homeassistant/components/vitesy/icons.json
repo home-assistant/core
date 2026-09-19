@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "air_quality_score": {
+        "default": "mdi:air-filter"
+      },
+      "door_openings": {
+        "default": "mdi:door-open"
+      }
+    }
+  }
+}
