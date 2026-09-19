@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 from PIL import Image
 import pytest
 
-from homeassistant.components.immich import const as immich_component_const
+from homeassistant.components.immich import DOMAIN as IMMICH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -50,7 +50,7 @@ def parent_immich_entry(
 ) -> MockConfigEntry:
     """Add a loaded parent Immich entry with runtime data."""
     entry = MockConfigEntry(
-        domain=immich_component_const.DOMAIN,
+        domain=IMMICH_DOMAIN,
         title="Immich server",
         data={
             CONF_API_KEY: "test-key",
