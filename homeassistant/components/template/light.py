@@ -108,9 +108,9 @@ SCRIPT_FIELDS = (
 
 LIGHT_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-        probatio.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
-        probatio.Inclusive(CONF_EFFECT, "effect"): cv.template,
+        probatio.Optional(CONF_EFFECT_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_EFFECT_LIST): cv.template,
+        probatio.Optional(CONF_EFFECT): cv.template,
         probatio.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_HS): cv.template,
         probatio.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
@@ -134,20 +134,26 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
     }
 )
 
+_LIGHT_VALIDATION = (
+    tcv.inclusive_group("effect", CONF_EFFECT, CONF_EFFECT_LIST, CONF_EFFECT_ACTION),
+)
+
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=(LightEntityCapabilityAttribute, LightEntityStateAttribute),
 )
 
-LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(
-    make_template_entity_common_schema(
-        LIGHT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
-    ).schema
+LIGHT_YAML_SCHEMA = probatio.All(
+    LIGHT_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+        make_template_entity_common_schema(
+            LIGHT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+        ).schema
+    ),
+    *_LIGHT_VALIDATION,
 )
 
-LIGHT_CONFIG_ENTRY_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+LIGHT_CONFIG_ENTRY_SCHEMA = probatio.All(
+    LIGHT_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
+    *_LIGHT_VALIDATION,
 )
 
 
@@ -398,6 +404,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             "_attr_brightness",
             tcv.number(self, CONF_LEVEL, 0, 255, int),
         )
+        self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
 
         # Setup Color temperature
         self.setup_template(
@@ -405,6 +412,9 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             "_attr_color_temp_kelvin",
             self._validate_temperature,
             self._update_color("_attr_color_temp_kelvin", ColorMode.COLOR_TEMP),
+        )
+        self.add_assumed_attribute(
+            "_attr_color_temp_kelvin", CONF_TEMPERATURE, CONF_TEMPERATURE_ACTION
         )
 
         # Setup Hue Saturation
@@ -415,12 +425,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._update_color("_attr_hs_color", ColorMode.HS),
             render_complex=True,
         )
+        self.add_assumed_attribute("_attr_hs_color", CONF_HS, CONF_HS_ACTION)
 
         # Setup RGB Colors
-        for option, attribute, length, colormode in (
-            (CONF_RGB, "_attr_rgb_color", 3, ColorMode.RGB),
-            (CONF_RGBW, "_attr_rgbw_color", 4, ColorMode.RGBW),
-            (CONF_RGBWW, "_attr_rgbww_color", 5, ColorMode.RGBWW),
+        for option, attribute, length, colormode, action in (
+            (CONF_RGB, "_attr_rgb_color", 3, ColorMode.RGB, CONF_RGB_ACTION),
+            (CONF_RGBW, "_attr_rgbw_color", 4, ColorMode.RGBW, CONF_RGBW_ACTION),
+            (CONF_RGBWW, "_attr_rgbww_color", 5, ColorMode.RGBWW, CONF_RGBWW_ACTION),
         ):
             self.setup_template(
                 option,
@@ -429,6 +440,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
                 self._update_color(attribute, colormode),
                 render_complex=True,
             )
+            self.add_assumed_attribute(attribute, option, action)
 
         # Setup XY Color
         self.setup_template(
@@ -438,6 +450,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._update_color("_attr_xy_color", ColorMode.XY),
             render_complex=True,
         )
+        self.add_assumed_attribute("_attr_xy_color", CONF_XY, CONF_XY_ACTION)
 
         # Setup Effect templates
         self.setup_template(
@@ -453,6 +466,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
                 self, "_attr_effect", "_attr_effect_list", CONF_EFFECT_LIST
             ),
         )
+        self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
 
         # Min/Max temperature templates
         self.setup_template(
@@ -512,13 +526,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        optimistic_set = self.set_optimistic_attributes(**kwargs)
         script_id, script_params = self.get_registered_script(**kwargs)
         await self.async_run_script(
             self._action_scripts[script_id],
             run_variables=script_params,
             context=self._context,
         )
+        optimistic_set = self.set_optimistic_attributes(**kwargs)
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -549,68 +563,38 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._attr_is_on = True
             optimistic_set = True
 
-        if CONF_LEVEL not in self._templates and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
-            )
-            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_BRIGHTNESS in kwargs and self.update_assumed_attribute(
+            CONF_LEVEL, kwargs[ATTR_BRIGHTNESS]
+        ):
             optimistic_set = True
 
-        if CONF_TEMPERATURE not in self._templates and ATTR_COLOR_TEMP_KELVIN in kwargs:
-            self._set_optimistic_color(
-                "color temperature",
-                "_attr_color_temp_kelvin",
-                kwargs[ATTR_COLOR_TEMP_KELVIN],
+        for option, attr, color_mode, validator in (
+            (CONF_TEMPERATURE, ATTR_COLOR_TEMP_KELVIN, ColorMode.COLOR_TEMP, None),
+            (
+                CONF_TEMPERATURE,
+                ATTR_COLOR_TEMP,
                 ColorMode.COLOR_TEMP,
-            )
-            optimistic_set = True
+                color_util.color_temperature_mired_to_kelvin,
+            ),
+            (CONF_HS, ATTR_HS_COLOR, ColorMode.HS, None),
+            (CONF_RGB, ATTR_RGB_COLOR, ColorMode.RGB, None),
+            (CONF_RGBW, ATTR_RGBW_COLOR, ColorMode.RGBW, None),
+            (CONF_RGBWW, ATTR_RGBWW_COLOR, ColorMode.RGBWW, None),
+            (CONF_XY, ATTR_XY_COLOR, ColorMode.XY, None),
+        ):
+            if attr in kwargs and self._update_assumed_color(
+                option,
+                validator(kwargs[attr]) if validator else kwargs[attr],
+                color_mode,
+            ):
+                optimistic_set = True
 
-        if CONF_TEMPERATURE not in self._templates and ATTR_COLOR_TEMP in kwargs:
-            self._set_optimistic_color(
-                "color temperature",
-                "_attr_color_temp_kelvin",
-                color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]),
-                ColorMode.COLOR_TEMP,
-            )
-            optimistic_set = True
-
-        if CONF_HS not in self._templates and ATTR_HS_COLOR in kwargs:
-            self._set_optimistic_color(
-                "hs color", "_attr_hs_color", kwargs[ATTR_HS_COLOR], ColorMode.HS
-            )
-            optimistic_set = True
-
-        if CONF_RGB not in self._templates and ATTR_RGB_COLOR in kwargs:
-            self._set_optimistic_color(
-                "rgb color", "_attr_rgb_color", kwargs[ATTR_RGB_COLOR], ColorMode.RGB
-            )
-            optimistic_set = True
-
-        if CONF_RGBW not in self._templates and ATTR_RGBW_COLOR in kwargs:
-            self._set_optimistic_color(
-                "rgbw color",
-                "_attr_rgbw_color",
-                kwargs[ATTR_RGBW_COLOR],
-                ColorMode.RGBW,
-            )
-            optimistic_set = True
-
-        if CONF_RGBWW not in self._templates and ATTR_RGBWW_COLOR in kwargs:
-            self._set_optimistic_color(
-                "rgbww color",
-                "_attr_rgbww_color",
-                kwargs[ATTR_RGBWW_COLOR],
-                ColorMode.RGBWW,
-            )
-            optimistic_set = True
-
-        if CONF_XY not in self._templates and ATTR_XY_COLOR in kwargs:
-            self._set_optimistic_color(
-                "xy color",
-                "_attr_xy_color",
-                kwargs[ATTR_XY_COLOR],
-                ColorMode.XY,
-            )
+        if (
+            ATTR_EFFECT in kwargs
+            and self._attr_effect_list is not None
+            and (effect := kwargs[ATTR_EFFECT]) in self._attr_effect_list
+            and self.update_assumed_attribute(CONF_EFFECT, effect)
+        ):
             optimistic_set = True
 
         if optimistic_set and not self._attr_assumed_state:
@@ -620,31 +604,27 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
 
         return optimistic_set
 
-    def _set_optimistic_color(
-        self, description: str, attribute: str, value: Any, color_mode: ColorMode
-    ) -> None:
-        _LOGGER.debug(
-            "Optimistically setting %s to %s",
-            description,
-            value,
-        )
+    def _update_assumed_color(
+        self, option: str, value: Any, color_mode: ColorMode
+    ) -> bool:
+        if updated := self.update_assumed_attribute(option, value):
+            self._attr_color_mode = color_mode
 
-        self._attr_color_mode = color_mode
-        setattr(self, attribute, value)
+            for _option in (
+                CONF_TEMPERATURE,
+                CONF_HS,
+                CONF_RGB,
+                CONF_RGBW,
+                CONF_RGBWW,
+                CONF_XY,
+            ):
+                if _option == option:
+                    continue
 
-        for option, attr in (
-            (CONF_TEMPERATURE, "_attr_color_temp_kelvin"),
-            (CONF_HS, "_attr_hs_color"),
-            (CONF_RGB, "_attr_rgb_color"),
-            (CONF_RGBW, "_attr_rgbw_color"),
-            (CONF_RGBWW, "_attr_rgbww_color"),
-            (CONF_XY, "_attr_xy_color"),
-        ):
-            if attribute == attr:
-                continue
+                if (assumed_attr := self._assumed_attributes.get(_option)) is not None:
+                    setattr(self, assumed_attr, None)
 
-            if option not in self._templates:
-                setattr(self, attr, None)
+        return updated
 
     def get_registered_script(self, **kwargs) -> tuple[str, dict]:
         """Get registered script for turn_on."""
