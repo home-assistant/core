@@ -71,7 +71,6 @@ async def test_format_structured_output() -> None:
                     ],
                     "type": "object",
                     "additionalProperties": False,
-                    "strict": True,
                 },
                 "type": "array",
             },
@@ -81,7 +80,6 @@ async def test_format_structured_output() -> None:
             "stuff",
             "age",
         ],
-        "strict": True,
         "type": "object",
     }
 

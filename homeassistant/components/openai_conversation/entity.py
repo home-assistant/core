@@ -118,7 +118,6 @@ MAX_TOOL_ITERATIONS = 10
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the output schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
-        schema.setdefault("strict", True)
         schema.setdefault("additionalProperties", False)
         if "properties" not in schema:
             return
@@ -674,12 +673,11 @@ class OpenAIBaseLLMEntity(Entity):
             ]
 
         if structure and structure_name:
-            model_args["text"] = {
-                "format": {
-                    "type": "json_schema",
-                    "name": slugify(structure_name),
-                    "schema": _format_structured_output(structure, chat_log.llm_api),
-                },
+            model_args.setdefault("text", {})["format"] = {
+                "type": "json_schema",
+                "name": slugify(structure_name),
+                "schema": _format_structured_output(structure, chat_log.llm_api),
+                "strict": True,
             }
 
         client = self.entry.runtime_data
