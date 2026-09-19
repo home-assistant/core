@@ -205,6 +205,8 @@ TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
+    person_first_name="John",
+    person_type="CHILD",
 )
 
 TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
@@ -213,4 +215,6 @@ TEST_VOCAL_RECORD_EVENT = AmazonVocalRecord(
     intent="PlayMusicIntent",
     title="Play some music",
     sub_title="Echo Test",
+    person_first_name="Jane",
+    person_type="ADULT",
 )

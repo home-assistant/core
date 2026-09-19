@@ -1294,14 +1294,15 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
 
 
 @pytest.mark.parametrize(
-    ("fixture_name", "make", "key", "setter", "absent_keys"),
+    ("fixture_name", "make", "key", "setter", "present_keys", "absent_keys"),
     [
         pytest.param(
             "doorbell",
             _make_streamless_public_camera,
             "smart_person",
             "set_person_detection",
-            {"ssh", "motion", "high_fps", "privacy_mode", "color_night_vision"},
+            {"high_fps"},
+            {"ssh", "motion", "privacy_mode", "color_night_vision"},
             id="camera",
         ),
         pytest.param(
@@ -1313,6 +1314,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             ),
             "motion",
             "set_motion_status",
+            set(),
             {"status_light", "temperature"},
             id="sensor",
         ),
@@ -1321,6 +1323,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             partial(make_public_light, is_indicator_enabled=True),
             "status_light",
             "set_status_light",
+            set(),
             {"ssh"},
             id="light",
         ),
@@ -1337,6 +1340,7 @@ async def test_public_only_switch_end_to_end(
     make: Callable[[Any], Mock],
     key: str,
     setter: str,
+    present_keys: set[str],
     absent_keys: set[str],
 ) -> None:
     """A public-only entry builds the migrated switches from the public object.
@@ -1354,6 +1358,7 @@ async def test_public_only_switch_end_to_end(
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
     keys = _switch_keys(entity_registry, device.mac)
     assert key in keys
+    assert present_keys <= keys
     assert not keys & absent_keys
     assert hass.states.get("switch.unifiprotect_insights_enabled") is None
 

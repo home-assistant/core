@@ -433,7 +433,7 @@ async def test_function_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
@@ -958,7 +958,7 @@ async def test_extended_thinking_tool_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
