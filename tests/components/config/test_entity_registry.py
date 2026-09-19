@@ -1009,6 +1009,46 @@ async def test_update_entity(
     }
 
 
+async def test_update_entity_own_area_without_own_name(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setting an area on a device's main entity is rejected."""
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "test_domain",
+        "test_platform",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": entry.entity_id,
+            "area_id": "kitchen",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == (
+        "An entity without a name of its own cannot have an area of its own, "
+        "set the area on its device instead"
+    )
+    assert entity_registry.async_get(entry.entity_id).area_id is None
+
+
 @pytest.mark.parametrize(
     ("labels", "expected_labels"),
     [

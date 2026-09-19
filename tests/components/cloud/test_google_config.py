@@ -285,7 +285,7 @@ async def test_google_device_registry_sync(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_entry = entity_registry.async_get_or_create(
-        "light", "hue", "1234", device_id=device_entry.id
+        "light", "hue", "1234", device_id=device_entry.id, original_name="Light"
     )
     entity_entry = entity_registry.async_update_entity(
         entity_entry.entity_id, area_id="ABCD"
