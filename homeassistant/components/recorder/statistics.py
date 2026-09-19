@@ -1183,13 +1183,11 @@ def _reduce_statistics(
     stats: dict[str, list[StatisticsRow]],
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
-    period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
-    period_seconds = period.total_seconds()
     _want_mean = "mean" in types
     _want_min = "min" in types
     _want_max = "max" in types
@@ -1201,7 +1199,12 @@ def _reduce_statistics(
         mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
-        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
+        # Use the real local period end, not last_start + fixed duration: on a
+        # 25-hour fall-back day, +24h stays in the same local day and a lone
+        # partial-hour row would never flush.
+        fake_entry: StatisticsRow = {
+            "start": period_start_end(stat_list[-1]["start"])[1]
+        }
 
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(stat_list, (fake_entry,)):
@@ -1294,9 +1297,7 @@ def _reduce_statistics_per_day(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
-    return _reduce_statistics(
-        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types, metadata
-    )
+    return _reduce_statistics(stats, _same_day_ts, _day_start_end_ts, types, metadata)
 
 
 def reduce_week_ts_factory() -> tuple[
@@ -1344,9 +1345,7 @@ def _reduce_statistics_per_week(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
-    return _reduce_statistics(
-        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types, metadata
-    )
+    return _reduce_statistics(stats, _same_week_ts, _week_start_end_ts, types, metadata)
 
 
 def _find_month_end_time(timestamp: datetime) -> datetime:
@@ -1400,7 +1399,7 @@ def _reduce_statistics_per_month(
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types, metadata
+        stats, _same_month_ts, _month_start_end_ts, types, metadata
     )
 
 
@@ -1448,9 +1447,7 @@ def _reduce_statistics_per_year(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to yearly statistics."""
     _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
-    return _reduce_statistics(
-        stats, _same_year_ts, _year_start_end_ts, timedelta(days=366), types, metadata
-    )
+    return _reduce_statistics(stats, _same_year_ts, _year_start_end_ts, types, metadata)
 
 
 def _generate_statistics_during_period_stmt(
@@ -2087,6 +2084,142 @@ def _augment_result_with_change(
             prev_sum = _sum
 
 
+def _partial_current_hour_last_sum_stmt(
+    start_time_ts: float,
+    end_time_ts: float,
+    metadata_ids: list[int],
+) -> StatementLambdaElement:
+    """Latest short-term sum row per metadata_id in [start_time_ts, end_time_ts)."""
+    return lambda_stmt(
+        lambda: (
+            select(
+                subquery := (
+                    select(*QUERY_STATISTICS_SUMMARY_SUM)
+                    .filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                    .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                    .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                    .subquery()
+                )
+            )
+            .filter(subquery.c.rownum == 1)
+            .order_by(subquery.c.metadata_id)
+        )
+    )
+
+
+def _synthesize_current_hour_from_short_term(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    metadata_ids: list[int] | None,
+    units: dict[str, str] | None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None = None,
+) -> dict[str, StatisticsRow]:
+    """Build a partial hourly sum bucket for the unfinished current hour.
+
+    Only sum/state/last_reset are filled. Mean/min/max are intentionally omitted:
+    a partial hour must not change day/week/month aggregates for mean sensors the
+    way an unweighted hourly reduce would. Callers that need paired mean values
+    (e.g. fossil energy) must handle a missing current-hour mean themselves.
+    Uses the same last-sum rule as ``_compile_hourly_statistics``.
+
+    Pass ``now`` when the caller must match the synthesized hour (for example
+    fossil energy skipping an open hour without a CO₂ mean).
+    """
+    if not types & {"sum", "state", "last_reset"}:
+        return {}
+
+    if now is None:
+        now = dt_util.utcnow()
+    current_hour_start = now.replace(minute=0, second=0, microsecond=0)
+    current_hour_start_ts = current_hour_start.timestamp()
+    current_hour_end_ts = (current_hour_start + Statistics.duration).timestamp()
+
+    # Match the long-term query bound: only include the partial hour when its
+    # start is >= the requested start_time (not merely before the hour ends).
+    if start_time.timestamp() > current_hour_start_ts:
+        return {}
+    if end_time is not None and end_time.timestamp() <= current_hour_start_ts:
+        return {}
+
+    short_term_end_ts = min(current_hour_end_ts, now.timestamp())
+    if end_time is not None:
+        short_term_end_ts = min(short_term_end_ts, end_time.timestamp())
+    if short_term_end_ts <= current_hour_start_ts:
+        return {}
+
+    query_ids = [meta_id for meta_id, meta in metadata.values() if meta["has_sum"]]
+    if not query_ids:
+        return {}
+
+    stats = execute_stmt_lambda_element(
+        session,
+        _partial_current_hour_last_sum_stmt(
+            current_hour_start_ts, short_term_end_ts, query_ids
+        ),
+        orm_rows=False,
+    )
+    if not stats:
+        return {}
+
+    metadata_by_id = dict(metadata.values())
+    result: dict[str, StatisticsRow] = {}
+    for stat in stats:
+        metadata_id, _start, last_reset_ts, state, _sum, _ = stat
+        metadata_by_id_row = metadata_by_id[metadata_id]
+        statistic_id = metadata_by_id_row["statistic_id"]
+        unit_class = metadata_by_id_row["unit_class"]
+        state_unit = unit = metadata_by_id_row["unit_of_measurement"]
+        if ha_state := hass.states.get(statistic_id):
+            state_unit = ha_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+        convert = _get_statistic_to_display_unit_converter(
+            unit_class, unit, state_unit, units
+        )
+
+        stats_row: StatisticsRow = {
+            "start": current_hour_start_ts,
+            "end": current_hour_end_ts,
+        }
+        if "last_reset" in types:
+            stats_row["last_reset"] = last_reset_ts
+        if "state" in types:
+            stats_row["state"] = (
+                None if state is None else convert(state) if convert else state
+            )
+        if "sum" in types:
+            stats_row["sum"] = (
+                None if _sum is None else convert(_sum) if convert else _sum
+            )
+        result[statistic_id] = stats_row
+
+    return result
+
+
+def _merge_partial_current_hour(
+    result: dict[str, list[StatisticsRow]],
+    partial_hour: dict[str, StatisticsRow],
+) -> dict[str, list[StatisticsRow]]:
+    """Append synthesized current-hour rows when not already present."""
+    if not partial_hour:
+        return result
+    if not result:
+        return {statistic_id: [row] for statistic_id, row in partial_hour.items()}
+
+    for statistic_id, row in partial_hour.items():
+        rows = result.get(statistic_id)
+        if not rows:
+            result[statistic_id] = [row]
+            continue
+        if rows[-1]["start"] < row["start"]:
+            rows.append(row)
+    return result
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -2096,11 +2229,18 @@ def _statistics_during_period_with_session(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
+
+    For periods based on hourly long-term statistics (hour/day/week/month/year),
+    the unfinished current hour is filled from short-term (5-minute) sum statistics
+    using the same last-sum rule as hourly compilation. Day/week/month/year reduce
+    then include that partial hour automatically. Mean/min/max are not synthesized
+    so partial hours do not skew reduced aggregates for mean sensors.
     """
     if statistic_ids is not None and not isinstance(statistic_ids, set):
         # This is for backwards compatibility to avoid a breaking change
@@ -2180,19 +2320,39 @@ def _statistics_during_period_with_session(
         Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
     )
 
-    if not stats:
-        return {}
+    result: dict[str, list[StatisticsRow]] = {}
+    if stats:
+        result = _sorted_statistics_to_dict(
+            hass,
+            stats,
+            statistic_ids,
+            metadata,
+            True,
+            table,
+            units,
+            types,
+        )
 
-    result = _sorted_statistics_to_dict(
-        hass,
-        stats,
-        statistic_ids,
-        metadata,
-        True,
-        table,
-        units,
-        types,
-    )
+    # Fill the unfinished current hour from short-term sum stats before reduce so
+    # day/week/month/year buckets include in-progress energy for free.
+    if period != "5minute":
+        result = _merge_partial_current_hour(
+            result,
+            _synthesize_current_hour_from_short_term(
+                hass,
+                session,
+                start_time,
+                end_time,
+                metadata,
+                metadata_ids,
+                units,
+                types,
+                now=now,
+            ),
+        )
+
+    if not result:
+        return {}
 
     if period == "day":
         result = _reduce_statistics_per_day(result, types, metadata)
@@ -2229,11 +2389,16 @@ def statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
+
+    Optional ``now`` pins the unfinished current-hour synthesis to one clock
+    snapshot so callers can match that hour without a rollover race.
     """
     with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
@@ -2245,6 +2410,7 @@ def statistics_during_period(
             period,
             units,
             types,
+            now=now,
         )
 
 
