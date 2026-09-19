@@ -4,10 +4,10 @@ import socket
 from typing import Any, override
 from urllib.parse import urlparse
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
-import probatio
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -16,10 +16,10 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceIn
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
-STEP_DATA_SCHEMA = probatio.Schema(
+STEP_DATA_SCHEMA = vol.Schema(
     {
-        probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -49,7 +49,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "timeout_connect"}
         except ConnectionRefusedError:
             return {"base": "connection_refused"}
-        except ConnectionFailed, OSError:
+        except (ConnectionFailed, OSError):
             return {"base": "cannot_connect"}
         finally:
             await client.stop()

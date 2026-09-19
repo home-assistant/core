@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from arcam.fmj import SourceCodes
+from arcam.fmj.codecs import SourceCodes
 
 from homeassistant.components.media_player import (
     BrowseError,
