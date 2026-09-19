@@ -1,6 +1,8 @@
 """Tests for the LIVISI Smart Home integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from livisi import LivisiConnection, LivisiController
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
@@ -9,24 +11,22 @@ VALID_CONFIG = {
     CONF_PASSWORD: "test",
 }
 
-DEVICE_CONFIG = {
-    "serialNumber": "1234",
-    "controllerType": "Classic",
-}
+CONTROLLER = LivisiController(
+    controller_type="Classic",
+    serial_number="1234",
+    os_version="1.0",
+    is_v2=False,
+    is_v1=True,
+)
 
 
-def mocked_livisi_login():
-    """Create mock for LIVISI login."""
+def mocked_livisi_connect():
+    """Create mock for a LIVISI connection."""
+    connection = MagicMock(spec=LivisiConnection)
+    connection.controller = CONTROLLER
     return patch(
-        "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token"
-    )
-
-
-def mocked_livisi_controller():
-    """Create mock data for LIVISI controller."""
-    return patch(
-        "homeassistant.components.livisi.config_flow.AioLivisi.async_get_controller",
-        return_value=DEVICE_CONFIG,
+        "homeassistant.components.livisi.config_flow.livisi_connect",
+        return_value=connection,
     )
 
 
