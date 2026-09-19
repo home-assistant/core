@@ -1,5 +1,6 @@
 """Tests for the Gree Infrared switch platform."""
 
+import asyncio
 from unittest.mock import patch
 
 from infrared_protocols.commands.gree_ac import (
@@ -19,7 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.infrared import InfraredReceivedSignal
+from homeassistant.components.infrared import InfraredCommand, InfraredReceivedSignal
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -279,6 +280,76 @@ async def test_climate_frame_carries_the_switch_state(
     )
 
 
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+@pytest.mark.usefixtures("init_integration")
+async def test_overlapping_sends_keep_both_changes(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test a switch and the climate entity sending at once keep both changes.
+
+    The platforms have a PARALLEL_UPDATES semaphore each, so their service calls
+    overlap; both would otherwise build a frame from the same snapshot and the
+    unit would obey whichever frame arrived last.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    sending = asyncio.Event()
+    finish_sending = asyncio.Event()
+    send_command = mock_infrared_emitter_entity.async_send_command
+
+    async def blocking_send(command: InfraredCommand) -> None:
+        """Hold the first frame in flight until the second call has been made."""
+        if not sending.is_set():
+            sending.set()
+            await finish_sending.wait()
+        await send_command(command)
+
+    with patch.object(
+        mock_infrared_emitter_entity, "async_send_command", blocking_send
+    ):
+        turbo_call = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: _TURBO_ENTITY_ID},
+                blocking=True,
+            )
+        )
+        await sending.wait()
+        temperature_call = hass.async_create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+                blocking=True,
+            )
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+        finish_sending.set()
+        await turbo_call
+        await temperature_call
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 2
+    timings = mock_infrared_emitter_entity.send_command_calls[1].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL,
+            temperature=25,
+            fan=GreeAcFanSpeed.AUTO,
+            turbo=True,
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_send_leaves_the_flag_unset(
     hass: HomeAssistant,
@@ -470,6 +541,64 @@ async def test_next_frame_keeps_the_louvres_the_remote_set(
             fan=GreeAcFanSpeed.AUTO,
             swing_v=True,
             turbo=True,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+@pytest.mark.usefixtures("init_integration")
+async def test_unconfigured_mode_frame_records_only_the_flags(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a frame in an unconfigured mode reaches the switches but not the frame.
+
+    A flag is valid whatever mode the unit is in, so the switches record it. The
+    mode, temperature and fan are climate's to record, and climate drops a frame
+    whose mode the user did not configure rather than sending that mode back.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                mode=GreeAcMode.HEAT,
+                temperature=24,
+                fan=GreeAcFanSpeed.HIGH,
+                turbo=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    state = hass.states.get(_TURBO_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL,
+            temperature=MIN_TEMP,
+            fan=GreeAcFanSpeed.AUTO,
+            turbo=True,
+            display=False,
         ).get_raw_timings()
     )
 

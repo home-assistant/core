@@ -1,5 +1,6 @@
 """Gree IR Remote integration for Home Assistant."""
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Self
 
@@ -74,6 +75,7 @@ class GreeIrRuntimeData:
     """
 
     ac_state: GreeAcState = field(default_factory=GreeAcState)
+    send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type GreeIrConfigEntry = ConfigEntry[GreeIrRuntimeData]

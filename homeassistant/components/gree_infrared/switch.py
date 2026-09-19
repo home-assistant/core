@@ -124,12 +124,13 @@ class GreeAcSwitch(
 
     async def _async_send_state(self, is_on: bool) -> None:
         """Send a frame carrying this feature alongside the rest of the state."""
-        await self._send_command(
-            self.entity_description.set_value_fn(
-                self._runtime_data.ac_state, is_on
-            ).to_command()
-        )
-        self._record_state(is_on)
+        async with self._runtime_data.send_lock:
+            await self._send_command(
+                self.entity_description.set_value_fn(
+                    self._runtime_data.ac_state, is_on
+                ).to_command()
+            )
+            self._record_state(is_on)
         self._attr_is_on = is_on
         self.async_write_ha_state()
 

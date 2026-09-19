@@ -211,14 +211,16 @@ class GreeAcClimateEntity(
         """Send a full-state frame for the given target state."""
         power = hvac_mode is not HVACMode.OFF
         active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
-        await self._send_command(
-            self._state_for(power, active_hvac_mode, temp, fan_mode).to_command()
-        )
-        # Rebuilt rather than reused: a switch may have recorded a flag of its own
-        # while the frame was going out, and that flag is not this entity's to undo.
-        self._runtime_data.ac_state = self._state_for(
-            power, active_hvac_mode, temp, fan_mode
-        )
+        async with self._runtime_data.send_lock:
+            await self._send_command(
+                self._state_for(power, active_hvac_mode, temp, fan_mode).to_command()
+            )
+            # Rebuilt rather than reused: a frame from the remote may have landed
+            # while this one was going out, and what it carries is not this entity's
+            # to undo.
+            self._runtime_data.ac_state = self._state_for(
+                power, active_hvac_mode, temp, fan_mode
+            )
         if power:
             self._last_active_hvac_mode = hvac_mode
 
