@@ -447,7 +447,7 @@ async def test_service_delete_mealplan_not_found(
             SERVICE_DELETE_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_MEALPLAN_ID: "invalid_mealplan_id",
+                ATTR_MEALPLAN_ID: "16",
             },
             blocking=True,
         )
@@ -588,7 +588,7 @@ async def test_service_update_mealplan_not_found(
             SERVICE_UPDATE_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_MEALPLAN_ID: "invalid_mealplan_id",
+                ATTR_MEALPLAN_ID: "16",
                 ATTR_DATE: "2023-10-21",
                 ATTR_ENTRY_TYPE: "lunch",
                 ATTR_RECIPE_ID: "recipe_id",
