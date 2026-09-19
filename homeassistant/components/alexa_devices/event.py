@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, override
 
-from aioamazondevices.const.devices import DEVICE_TYPE_AQM, SPEAKER_GROUP_FAMILY
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.event import (
@@ -35,10 +34,7 @@ EVENTS: Final = {
     AmazonEventEntityDescription(
         key="voice_event",
         translation_key="voice_event",
-        is_supported_fn=lambda device: (
-            device.device_family != SPEAKER_GROUP_FAMILY
-            and device.device_type != DEVICE_TYPE_AQM
-        ),
+        is_supported_fn=lambda device: device.voice_control_supported,
     ),
 }
 
@@ -59,10 +55,7 @@ async def async_setup_entry(
         coordinator,
         EVENT_DOMAIN,
         "voice_event",
-        remove_fn=lambda device: (
-            device.device_family == SPEAKER_GROUP_FAMILY
-            or device.device_type == DEVICE_TYPE_AQM
-        ),
+        remove_fn=lambda device: not device.voice_control_supported,
     )
 
     known_devices: set[str] = set()
