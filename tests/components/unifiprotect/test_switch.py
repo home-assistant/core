@@ -1301,7 +1301,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             _make_streamless_public_camera,
             "smart_person",
             "set_person_detection",
-            {"ssh", "motion", "high_fps", "privacy_mode", "color_night_vision"},
+            {"ssh", "motion", "privacy_mode", "color_night_vision"},
             id="camera",
         ),
         pytest.param(
