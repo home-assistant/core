@@ -5,16 +5,15 @@ creates one :class:`Rtl433Sensor` per (device, field): entities for devices
 already recorded on the config entry are built at setup, and entities for
 devices/fields first observed at runtime are added as their events arrive.
 
-Identity formats are fixed by ``COMPATIBILITY_CONTRACT.md``:
+Entity and device identity is shared with the custom component of the same
+domain, so an entry moving between the two keeps its entities:
 
 * sensor ``unique_id``  -> ``f"{hub_entry_id}:{device_key}:{object_suffix}"``
 * per-device identifier -> ``(DOMAIN, f"{hub_entry_id}:{device_key}")``
-* hub ``via_device``    -> ``(DOMAIN, hub_entry_id)``
+* hub ``via_device_id`` -> the hub device registered by ``async_setup_entry``
 
-where ``hub_entry_id == entry.entry_id`` and ``device_key`` is the deterministic
-key produced by :mod:`pyrtl_433.normalizer`. This minimal build derives the
-``object_suffix`` from the field key; the full device-library object suffixes and
-device classes are layered on in later platform-completion PRs.
+where ``hub_entry_id == entry.entry_id``, ``device_key`` is the deterministic key
+produced by :mod:`pyrtl_433.normalizer`, and ``object_suffix`` is the field key.
 """
 
 from datetime import timedelta
@@ -99,7 +98,6 @@ class Rtl433Sensor(CoordinatorEntity[Rtl433Coordinator], SensorEntity):
         self._field_key = field_key
 
         hub_entry_id = coordinator.config_entry.entry_id
-        # ``object_suffix`` is the field key in this minimal build.
         self._attr_unique_id = f"{hub_entry_id}:{device_key}:{field_key}"
         self._attr_name = field_key.replace("_", " ")
         self._attr_device_info = DeviceInfo(

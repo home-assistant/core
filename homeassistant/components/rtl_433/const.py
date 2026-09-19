@@ -5,42 +5,36 @@ from typing import Final
 
 from homeassistant.const import Platform
 
-# Integration domain. Must match the "domain" key in manifest.json.
 DOMAIN: Final = "rtl_433"
 
-# Module-level logger shared across the package.
 LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 
-# Config-entry schema version. Kept identical to the full HACS build so an entry
-# created (or migrated up to) version 2 / minor 7 by that build loads in this
-# build without a downgrade. See ``COMPATIBILITY_CONTRACT.md`` section 1.
+# Config entries are created at 2.7 rather than 1.1 because the custom component
+# of the same domain already ships that schema. Home Assistant refuses to load an
+# entry whose version is newer than the flow's, so starting at 1.1 would lock out
+# every entry created by that build. ``async_migrate_entry`` covers the older
+# schemas it may still hand over.
 VERSION: Final = 2
 MINOR_VERSION: Final = 7
 
-# The only platform this minimal build forwards.
 PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
 
-# Generic device-registry manufacturer for the hub and its nested RF devices.
 MANUFACTURER: Final = "rtl_433"
 
-# --- Hub connection config-entry keys --------------------------------------
 # Whether to dial the server over ``wss://`` instead of ``ws://``.
 CONF_SECURE: Final = "secure"
 
-# --- Hub devices-map keys (read from migrated entries) ----------------------
 # ``entry.data[CONF_DEVICES]`` maps ``device_key`` -> a record carrying the
 # device's model (``CONF_MODEL``) and the sorted list of observed field keys.
-# The full build writes this map; this build reads it at setup so entities for
-# already-adopted devices are recreated on startup (they survive a restart even
-# before the device next transmits).
+# Read at setup so entities for known devices exist before the device next
+# transmits.
 DEVICE_FIELDS: Final = "fields"
 
-# --- Defaults ---------------------------------------------------------------
-# Default rtl_433 HTTP server port (the documented "-F http" default).
+# Default rtl_433 HTTP server port and WebSocket path (the "-F http" defaults).
 DEFAULT_PORT: Final = 8433
-# Default WebSocket path on the rtl_433 HTTP server.
 DEFAULT_PATH: Final = "/ws"
-# Seconds of silence after which a device's entities read unavailable. RF
-# devices signal presence only by transmitting, so a conservative window
-# tolerates slow reporters while still detecting genuinely offline devices.
+
+# Seconds of silence after which a device's entities read unavailable. RF devices
+# signal presence only by transmitting, so a conservative window tolerates slow
+# reporters while still detecting genuinely offline devices.
 DEFAULT_AVAILABILITY_TIMEOUT: Final = 600
