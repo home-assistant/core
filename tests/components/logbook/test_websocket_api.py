@@ -1633,6 +1633,109 @@ async def test_subscribe_logbook_stream_state_attributes(
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_logbook_stream_same_state_attribute_changes(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test same-state attribute changes are included in the logbook live stream."""
+    now = dt_util.utcnow()
+
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.kitchen"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # No historical events should exist.
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert msg["event"]["partial"] is True
+
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+
+    class MockLight(LightEntity):
+        _attr_brightness = 100
+        _attr_color_mode = ColorMode.BRIGHTNESS
+        _attr_is_on = True
+        _attr_name = "Kitchen"
+        _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    light = MockLight()
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    await platform.async_add_entities([light])
+    await hass.async_block_till_done()
+
+    # The initial state is ignored because there is no old state.
+    light._attr_brightness = 200
+    light.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {
+            "entity_id": "light.kitchen",
+            "state": STATE_ON,
+            "when": ANY,
+        }
+    ]
+
+    # Same state and same attributes is a true no-op.
+    state = hass.states.get("light.kitchen")
+    assert state is not None
+    hass.states.async_set(
+        "light.kitchen",
+        STATE_ON,
+        dict(state.attributes),
+        force_update=True,
+    )
+
+    # A real state change must still be included.
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {
+            "entity_id": "light.kitchen",
+            "state": STATE_OFF,
+            "when": ANY,
+        }
+    ]
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_entities(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
