@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from motioneye_client.client import MotionEyeClientError
 
 from homeassistant.components.media_source import (
     URI_SCHEME,
@@ -560,6 +561,40 @@ async def test_media_proxy_movie_range_not_satisfiable(
         image=False,
         preview=False,
         range_header="bytes=100-200",
+    )
+
+
+async def test_media_proxy_client_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test handling a motionEye client error while opening saved media."""
+    client = create_mock_motioneye_client()
+
+    class FailingStream:
+        async def __aenter__(self) -> None:
+            raise MotionEyeClientError
+
+        async def __aexit__(self, *args: object) -> None:
+            """No cleanup: stream never opened."""
+
+    stream_mock = MagicMock(return_value=FailingStream())
+    client.async_get_media_stream = stream_mock
+
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/movies/0/L2Zvby5tcDQ="
+    )
+
+    assert response.status == 502
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.mp4",
+        image=False,
+        preview=False,
+        range_header=None,
     )
 
 
