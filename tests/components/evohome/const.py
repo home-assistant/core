@@ -15,8 +15,9 @@ TEST_INSTALLS: Final = (
     "h099625",  # RoundThermostat
     "h139906",  # zone with null schedule
     "h157546",  # tcs with long 8-digit system_id
-    "sys_004",  # RoundModulation
+    "sys_004",  # RoundModulation; multi-location account, empty gateway
+    "sys_006",  # multi-location account, lots of faults
 )
 #   "botched",  # as default: but with activeFaults, ghost zones & unknown types
 
-TEST_INSTALLS_WITH_DHW: Final = ("default", "botched")
+TEST_INSTALLS_WITH_DHW: Final = ("default", "botched", "sys_006")
