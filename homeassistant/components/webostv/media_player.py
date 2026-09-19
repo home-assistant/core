@@ -29,7 +29,7 @@ from .const import (
 )
 from .coordinator import WebOsTvConfigEntry
 from .entity import WebOsTvEntity, cmd
-from .triggers.turn_on import async_get_turn_on_trigger
+from .triggers.turn_on import async_get_turn_on_trigger, async_run_turn_on
 
 SUPPORT_WEBOSTV = (
     MediaPlayerEntityFeature.TURN_OFF
@@ -269,7 +269,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self.coordinator.turn_on.async_run(self.hass, self._context)
+        await async_run_turn_on(self.hass, self.coordinator.turn_on, self._context)
 
     @cmd
     @override
