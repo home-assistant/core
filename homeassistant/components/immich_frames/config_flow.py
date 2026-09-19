@@ -57,6 +57,7 @@ from .const import (
     SOURCE_SMART,
     TIME_RANGE_MONTHS,
 )
+from .coordinator import ImmichFramesConfigEntry
 
 SOURCE_LABELS = {
     SOURCE_ALL: "All photos",
@@ -96,7 +97,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @override
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry):
+    def async_get_options_flow(config_entry: ImmichFramesConfigEntry):
         """Return the frame options flow."""
         return ImmichFramesOptionsFlow(config_entry)
 
@@ -321,7 +322,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ImmichFramesOptionsFlow(OptionsFlowWithReload):
     """Configure frame-specific photo selection and display settings."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ImmichFramesConfigEntry) -> None:
         """Initialize the options flow."""
         self._entry = config_entry
         self._data: dict[str, Any] = dict(config_entry.options)

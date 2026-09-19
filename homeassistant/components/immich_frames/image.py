@@ -5,11 +5,10 @@ from typing import Any, override
 from urllib.parse import quote
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import ImmichFramesDataUpdateCoordinator
+from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 from .entity import ImmichFramesEntity
 
 PARALLEL_UPDATES = 1
@@ -17,7 +16,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[ImmichFramesDataUpdateCoordinator],
+    entry: ImmichFramesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the frame image."""
