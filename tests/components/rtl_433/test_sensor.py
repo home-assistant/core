@@ -5,13 +5,31 @@ from unittest.mock import MagicMock, patch
 from pyrtl_433.normalizer import NormalizedEvent
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.rtl_433.const import (
+    CONF_SECURE,
+    DEVICE_FIELDS,
+    DOMAIN,
+    MINOR_VERSION,
+    VERSION,
+)
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PATH,
+    CONF_PORT,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import emit_event, setup_integration
+from .conftest import MOCK_HOST, MOCK_PATH, MOCK_PORT, MOCK_UNIQUE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+TEMPERATURE_ENTITY_ID = "sensor.acurite_606tx_temperature_c"
 
 
 async def test_sensors(
@@ -46,7 +64,7 @@ async def test_sensor_value_updates(
     await setup_integration(hass, mock_config_entry)
     await emit_event(hass, mock_rtl433_client, mock_event)
 
-    assert hass.states.get("sensor.acurite_606tx_temperature_c").state == "21.5"
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "21.5"
 
     await emit_event(
         hass,
@@ -59,4 +77,44 @@ async def test_sensor_value_updates(
         ),
     )
 
-    assert hass.states.get("sensor.acurite_606tx_temperature_c").state == "19.0"
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "19.0"
+
+
+async def test_sensors_restored_from_entry_devices(
+    hass: HomeAssistant,
+    mock_rtl433_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities for known devices exist before the device next transmits.
+
+    An RF device announces itself only by transmitting, so a device recorded on
+    the config entry has to be rebuilt from that record at startup rather than
+    waiting an unbounded time for the next event.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"rtl_433 ({MOCK_HOST})",
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_PATH: MOCK_PATH,
+            CONF_SECURE: False,
+            CONF_DEVICES: {
+                "Acurite-606TX-42": {
+                    CONF_MODEL: "Acurite-606TX",
+                    DEVICE_FIELDS: ["temperature_C"],
+                }
+            },
+        },
+        unique_id=MOCK_UNIQUE_ID,
+        version=VERSION,
+        minor_version=MINOR_VERSION,
+    )
+
+    await setup_integration(hass, entry)
+
+    entity_entry = entity_registry.async_get(TEMPERATURE_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{entry.entry_id}:Acurite-606TX-42:temperature_C"
+    # It has never transmitted in this session, so it reads unavailable.
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
