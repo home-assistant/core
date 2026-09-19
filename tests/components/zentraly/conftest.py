@@ -50,7 +50,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_api() -> Generator[MagicMock]:
+def mock_api_class() -> Generator[MagicMock]:
     """Mock the library client where the integration uses it."""
     with (
         patch(
@@ -60,13 +60,19 @@ def mock_api() -> Generator[MagicMock]:
             "homeassistant.components.zentraly.config_flow.ZentralyApi", new=api_class
         ),
     ):
-        api = api_class.return_value
-        api.device_id = DEVICE_ID
-        api.host = HOST
-        api.port = PORT
-        api.connected = True
-        api.async_validate_password.return_value = MAC
-        yield api
+        yield api_class
+
+
+@pytest.fixture
+def mock_api(mock_api_class: MagicMock) -> MagicMock:
+    """Return a connected library client."""
+    api = mock_api_class.return_value
+    api.device_id = DEVICE_ID
+    api.host = HOST
+    api.port = PORT
+    api.connected = True
+    api.async_validate_password.return_value = MAC
+    return api
 
 
 @pytest.fixture

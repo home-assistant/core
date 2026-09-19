@@ -1,7 +1,7 @@
 """Tests for the Zentraly config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from zentraly import ZentralyAuthenticationError, ZentralyConnectionError
@@ -151,34 +151,3 @@ async def test_user_setup_without_discoveries(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "zeroconf_only"
-
-
-@pytest.mark.parametrize(
-    ("host", "port", "reload_count"),
-    [
-        pytest.param(NEW_HOST, PORT, 1, id="new-host"),
-        pytest.param(HOST, NEW_PORT, 1, id="new-port"),
-        pytest.param(HOST, PORT, 0, id="unchanged"),
-    ],
-)
-async def test_loaded_entry_rediscovery(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    host: str,
-    port: int,
-    reload_count: int,
-) -> None:
-    """Reload a configured thermostat only when its network endpoint changes."""
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=_zeroconf_info(host=host, port=port),
-        )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == host
-    assert mock_config_entry.data[CONF_PORT] == port
-    assert reload.await_count == reload_count

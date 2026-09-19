@@ -401,3 +401,47 @@ async def test_temperature_with_unsupported_mode(
     mock_climate_api.async_set_target_temperature.assert_not_awaited()
     mock_climate_api.async_set_operation_mode.assert_not_awaited()
     assert hass.states.get(ENTITY_ID) == before
+
+
+async def test_report_during_refresh(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Reports stay current while unaffected fields accept their read results."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read_humidity() -> float:
+        started.set()
+        await release.wait()
+        return 60.0
+
+    mock_climate_api.async_get_humidity.side_effect = read_humidity
+    connection_state(True)
+    await started.wait()
+    try:
+        mock_climate_api.add_state_listener.call_args.args[0](
+            {
+                ClimateCapability.LOCAL_TEMPERATURE: 22.0,
+                ClimateCapability.TARGET_TEMPERATURE: 24.0,
+                ClimateCapability.OPERATION_MODE: ClimateOperationMode.AUTO,
+                ClimateCapability.HEAT_DEMAND: True,
+            }
+        )
+    finally:
+        release.set()
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_TEMPERATURE] == 24.0
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 60.0
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+    mock_climate_api.async_get_humidity.side_effect = None
+    connection_state(True)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19.0
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
