@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "immich_required": "Set up the Immich integration first.",
+      "immich_not_ready": "The Immich integration is not ready.",
+      "already_configured": "A frame with this name is already configured."
+    },
+    "error": {
+      "immich_unavailable": "The selected Immich account is no longer available.",
+      "name_required": "Enter a name for this frame."
+    },
+    "step": {
+      "user": {
+        "title": "Set up an Immich frame",
+        "description": "Choose an existing Immich account and name this frame.",
+        "data": {
+          "immich_entry_id": "Immich account",
+          "frame_name": "Frame name"
+        },
+        "data_description": {
+          "immich_entry_id": "The Immich account that supplies the photos.",
+          "frame_name": "The name shown for this frame in Home Assistant."
+        }
+      }
+    }
+  },
+  "entity": {
+    "image": {
+      "image": {
+        "name": "Image",
+        "state_attributes": {
+          "open_in_immich": {
+            "name": "Open in Immich"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "immich_not_ready": {
+      "message": "The Immich integration is not ready."
+    },
+    "no_photos": {
+      "message": "Immich has no available photos for this frame."
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to Immich."
+    }
+  }
+}
