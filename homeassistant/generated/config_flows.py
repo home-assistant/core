@@ -408,6 +408,7 @@ FLOWS = {
         "kaco_modbus",
         "kaleidescape",
         "karakeep",
+        "keba_p40",
         "keenetic_ndms2",
         "kegtron",
         "keymitt_ble",
