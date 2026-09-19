@@ -44,6 +44,7 @@ from .selection import (
 _LOGGER = logging.getLogger(__name__)
 RECENT_HISTORY_LIMIT = 20
 CANDIDATE_CACHE_INTERVAL = timedelta(minutes=5)
+CACHE_WRITE_INTERVAL = timedelta(minutes=5)
 
 
 @dataclass
@@ -94,6 +95,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         self._candidate_cache: list[ImmichAsset] | None = None
         self._candidate_cache_updated_at: datetime | None = None
         self._account_state_invalidated = False
+        self._last_cache_write_at: datetime | None = None
         self._cache = FrameCache(
             Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
         )
@@ -205,18 +207,21 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             _LOGGER.info("Immich connection restored for %s", self.config_entry.title)
         self._connected = True
         self._remember_assets(photos)
-        try:
-            await self.hass.async_add_executor_job(
-                self._cache.write,
-                result.asset,
-                result.image,
-                self.options,
-                self.immich_entry.entry_id,
-                self._parent_identity_value,
-                result.updated_at,
-            )
-        except OSError, ValueError:
-            _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
+        if self._cache_write_due(result.updated_at):
+            try:
+                await self.hass.async_add_executor_job(
+                    self._cache.write,
+                    result.asset,
+                    result.image,
+                    self.options,
+                    self.immich_entry.entry_id,
+                    self._parent_identity_value,
+                    result.updated_at,
+                )
+            except OSError, ValueError:
+                _LOGGER.warning("Could not save the Immich Frames cache", exc_info=True)
+            else:
+                self._last_cache_write_at = result.updated_at
         return result
 
     def _refresh_parent(self) -> bool:
@@ -237,6 +242,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             self._recent_order.clear()
             self._account_state_invalidated = True
             self._connected = None
+            self._last_cache_write_at = None
             self._parent_identity_value = parent_identity
         self.immich_entry = immich_entry
         self.api = immich_entry.runtime_data.api
@@ -260,6 +266,13 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         """Force the next update to retrieve the current candidate set."""
         self._candidate_cache = None
         self._candidate_cache_updated_at = None
+
+    def _cache_write_due(self, rendered_at: datetime) -> bool:
+        """Return whether the persistent cache should be refreshed."""
+        return (
+            self._last_cache_write_at is None
+            or rendered_at - self._last_cache_write_at >= CACHE_WRITE_INTERVAL
+        )
 
     def _parent_identity(self, entry: ConfigEntry | None = None) -> str:
         """Return a non-secret identity for the configured Immich account."""
@@ -354,3 +367,4 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
     async def async_clear_cache(self) -> None:
         """Clear the persistent image cache."""
         await self.hass.async_add_executor_job(self._cache.clear)
+        self._last_cache_write_at = None

@@ -2,7 +2,7 @@
 
 from typing import override
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,6 +32,7 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
             manufacturer="Immich",
             model="Photo frame",
             configuration_url=self.coordinator.immich_entry.runtime_data.configuration_url,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

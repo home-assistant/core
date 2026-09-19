@@ -71,7 +71,9 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: The initial image-only integration uses standard entity icons and has no custom icon translations.
   reconfiguration-flow: done
   repair-issues: todo
   stale-devices:

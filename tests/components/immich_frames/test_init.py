@@ -1,6 +1,7 @@
 """Test the Immich Frames integration setup."""
 
 from copy import copy
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -16,6 +17,7 @@ from homeassistant.components.immich_frames.const import (
     CONF_PHOTO_FIT,
     CONF_SOURCE,
     DEFAULT_SOURCE,
+    DOMAIN,
     PHOTO_FIT_CROP,
 )
 from homeassistant.components.immich_frames.coordinator import (
@@ -26,6 +28,7 @@ from homeassistant.components.immich_frames.selection import UnsupportedSourceEr
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -36,7 +39,9 @@ MOCK_SEARCH_ASSETS = immich_const.MOCK_SEARCH_ASSETS
 
 
 async def test_setup_entry_creates_image(
-    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    parent_immich_entry: MockConfigEntry,
 ) -> None:
     """Test that setup creates a usable image entity."""
     entry = MockConfigEntry(
@@ -57,6 +62,9 @@ async def test_setup_entry_creates_image(
     assert isinstance(entry.runtime_data.data, ImmichFramesData)
     assert hass.states.get("image.living_room_image").state != "unknown"
     assert entry.runtime_data.api.assets.async_view_asset.await_count == 1
+    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    assert device
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
 
 
 async def test_setup_entry_translates_parent_not_ready(
@@ -341,6 +349,19 @@ async def test_coordinator_reuses_candidates_until_invalidated(
     assert first is second
     assert third == first
     assert get_candidates.await_count == 2
+
+
+def test_coordinator_rate_limits_persistent_cache_writes(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Persistent cache writes are bounded independently of frame updates."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    rendered_at = dt_util.utcnow()
+
+    assert coordinator._cache_write_due(rendered_at) is True
+    coordinator._last_cache_write_at = rendered_at
+    assert coordinator._cache_write_due(rendered_at + timedelta(minutes=4)) is False
+    assert coordinator._cache_write_due(rendered_at + timedelta(minutes=5)) is True
 
 
 async def test_coordinator_discards_account_bound_state_when_parent_changes(
