@@ -3,6 +3,7 @@
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -13,16 +14,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.update import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     async_load_json_array_fixture,
     snapshot_platform,
 )
@@ -213,6 +217,7 @@ async def _recreate_container(hass: HomeAssistant, client: AsyncMock) -> None:
 
 async def test_update_recreated_container(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_portainer_client: AsyncMock,
     mock_portainer_watcher: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -240,9 +245,9 @@ async def test_update_recreated_container(
         )
     )
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_portainer_client.container_image_status.assert_called_once_with(
         1, CONTAINER_IMAGE
@@ -253,14 +258,16 @@ async def test_update_recreated_container(
     assert state.attributes[ATTR_LATEST_VERSION] == "sha256:afcc7f1ac1b4"
 
     # The result is kept until the watcher runs again, not fetched every poll
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_portainer_client.container_image_status.assert_called_once()
 
 
 async def test_update_recreated_container_before_watcher_ran(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_portainer_client: AsyncMock,
     mock_portainer_watcher: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -274,9 +281,9 @@ async def test_update_recreated_container_before_watcher_ran(
 
     await _recreate_container(hass, mock_portainer_client)
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_portainer_client.container_image_status.assert_not_called()
     state = hass.states.get(ENTITY_ID)
@@ -293,6 +300,7 @@ async def test_update_recreated_container_before_watcher_ran(
 )
 async def test_update_recreated_container_check_fails(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_portainer_client: AsyncMock,
     mock_portainer_watcher: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -310,11 +318,11 @@ async def test_update_recreated_container_check_fails(
     await _recreate_container(hass, mock_portainer_client)
     mock_portainer_client.container_image_status.side_effect = exception
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_update_success
+    assert mock_config_entry.runtime_data.last_update_success
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
