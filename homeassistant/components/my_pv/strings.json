@@ -57,6 +57,20 @@
       }
     }
   },
+  "entity": {
+    "select": {
+      "bstmode": {
+        "name": "Boost mode",
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "1": "[%key:common::state::on%]",
+          "3": "Relay",
+          "4": "SELV relay",
+          "5": "AUX relay"
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed, please reauthenticate."
