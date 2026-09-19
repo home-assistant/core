@@ -60,77 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
             translation_key="discovery_start_failed",
         ) from err
 
-    # Heal legacy / host-less entries here (not in migrate) so ConfigEntryNotReady
-    # can retry. Upstream pairs migrate→data={} with this setup-time rebind.
-    if entry.unique_id == DOMAIN:
-        try:
-            endpoints = await async_discover_all_endpoints(hass)
-        except OSError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="discovery_failed_legacy",
-            ) from err
-
-        excluded_uids = yaml_excluded_uids(hass)
-        configured_uids = {
-            config_entry.unique_id
-            for config_entry in hass.config_entries.async_entries(DOMAIN)
-            if config_entry.entry_id != entry.entry_id
-            and config_entry.unique_id not in (None, DOMAIN)
-        }
-        eligible = [
-            endpoint
-            for endpoint in endpoints.values()
-            if endpoint.uid not in excluded_uids and endpoint.uid not in configured_uids
-        ]
-
-        if not eligible:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="no_eligible_controller",
-            )
-
-        if len(eligible) > 1:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="multiple_eligible_controllers",
-            )
-
-        endpoint = eligible[0]
-        new_title = (
-            f"iZone {endpoint.uid}" if entry.title == "iZone Aircon" else entry.title
-        )
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=endpoint.uid,
-            title=new_title,
-            data={CONF_HOST: endpoint.host},
-        )
-    elif CONF_HOST not in entry.data:
-        uid = entry.unique_id
-        if not isinstance(uid, str):
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="missing_unique_id",
-            )
-        try:
-            resolved = await async_discover_endpoint(hass, uid)
-        except OSError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="discovery_failed_host",
-            ) from err
-        if resolved is None:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="controller_not_found",
-                translation_placeholders={"uid": uid},
-            )
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CONF_HOST: resolved.host},
-        )
-
     uid = entry.unique_id
     if not isinstance(uid, str):
         raise ConfigEntryError(
@@ -202,11 +131,87 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
-    """Migrate old config entry schema to the current version."""
-    if entry.version == 1:
-        hass.config_entries.async_update_entry(entry, version=2, data={})
-        return True
-    return False
+    """Migrate old config entry schema to the current version.
+
+    Discovery for legacy ``unique_id=DOMAIN`` / missing ``CONF_HOST`` runs here so
+    ``ConfigEntryNotReady`` can retry during migration.
+    """
+    if entry.version < 2 or entry.minor_version < 2:
+        unique_id = entry.unique_id
+        title = entry.title
+        data = dict(entry.data)
+
+        if unique_id == DOMAIN:
+            try:
+                endpoints = await async_discover_all_endpoints(hass)
+            except (OSError, RuntimeError) as err:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="discovery_failed_legacy",
+                ) from err
+
+            excluded_uids = yaml_excluded_uids(hass)
+            configured_uids = {
+                config_entry.unique_id
+                for config_entry in hass.config_entries.async_entries(DOMAIN)
+                if config_entry.entry_id != entry.entry_id
+                and config_entry.unique_id not in (None, DOMAIN)
+            }
+            eligible = [
+                endpoint
+                for endpoint in endpoints.values()
+                if endpoint.uid not in excluded_uids
+                and endpoint.uid not in configured_uids
+            ]
+
+            if not eligible:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="no_eligible_controller",
+                )
+
+            if len(eligible) > 1:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="multiple_eligible_controllers",
+                )
+
+            endpoint = eligible[0]
+            unique_id = endpoint.uid
+            if title == "iZone Aircon":
+                title = f"iZone {endpoint.uid}"
+            data = {CONF_HOST: endpoint.host}
+        elif CONF_HOST not in data:
+            if not isinstance(unique_id, str):
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_unique_id",
+                )
+            try:
+                resolved = await async_discover_endpoint(hass, unique_id)
+            except (OSError, RuntimeError) as err:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="discovery_failed_host",
+                ) from err
+            if resolved is None:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="controller_not_found",
+                    translation_placeholders={"uid": unique_id},
+                )
+            data = {**data, CONF_HOST: resolved.host}
+
+        hass.config_entries.async_update_entry(
+            entry,
+            version=2,
+            minor_version=2,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+        )
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
