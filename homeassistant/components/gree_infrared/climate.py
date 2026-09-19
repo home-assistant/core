@@ -1,6 +1,6 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -27,7 +27,6 @@ from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
@@ -39,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import GreeAcState, GreeIrConfigEntry
 from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
@@ -95,7 +95,7 @@ class _GreeAcExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GreeIrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gree AC climate entity from config entry."""
@@ -127,7 +127,7 @@ class GreeAcClimateEntity(
     )
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
-    def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
+    def __init__(self, entry: GreeIrConfigEntry, emitter_entity_id: str) -> None:
         """Initialize Gree AC climate entity."""
         super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
@@ -178,12 +178,31 @@ class GreeAcClimateEntity(
             ):
                 self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
 
+        self._runtime_data.ac_state = self._state_for(
+            self._attr_hvac_mode is not HVACMode.OFF,
+            self._last_active_hvac_mode,
+            int(self._attr_target_temperature or MIN_TEMP),
+            self._attr_fan_mode or FAN_AUTO,
+        )
+
     @property
     @override
     def extra_restore_state_data(self) -> ExtraStoredData:
         """Return extra data to be restored alongside the entity's state."""
         return _GreeAcExtraStoredData(
             last_active_hvac_mode=self._last_active_hvac_mode.value
+        )
+
+    def _state_for(
+        self, power: bool, hvac_mode: HVACMode, temp: int, fan_mode: str
+    ) -> GreeAcState:
+        """Build a frame state, keeping the feature flags the switches own."""
+        return replace(
+            self._runtime_data.ac_state,
+            power=power,
+            mode=_HA_MODE_TO_LIB[hvac_mode],
+            temperature=temp,
+            fan=_HA_FAN_TO_LIB[fan_mode],
         )
 
     async def _async_send_state(
@@ -193,7 +212,12 @@ class GreeAcClimateEntity(
         power = hvac_mode is not HVACMode.OFF
         active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
         await self._send_command(
-            self._build_command(active_hvac_mode, power, temp, fan_mode)
+            self._state_for(power, active_hvac_mode, temp, fan_mode).to_command()
+        )
+        # Rebuilt rather than reused: a switch may have recorded a flag of its own
+        # while the frame was going out, and that flag is not this entity's to undo.
+        self._runtime_data.ac_state = self._state_for(
+            power, active_hvac_mode, temp, fan_mode
         )
         if power:
             self._last_active_hvac_mode = hvac_mode
@@ -241,28 +265,12 @@ class GreeAcClimateEntity(
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
-    def _build_command(
-        self, hvac_mode: HVACMode, power: bool, temp: int, fan_mode: str
-    ) -> GreeAcCommand:
-        """Build a command from a mode, power state, a temperature and a fan mode."""
-        return GreeAcCommand(
-            power=power,
-            mode=_HA_MODE_TO_LIB[hvac_mode],
-            temperature=temp,
-            fan=_HA_FAN_TO_LIB[fan_mode],
-            swing_v=False,
-            swing_h=False,
-            turbo=False,
-            display=True,
-            blow=False,
-        )
-
 
 class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEntity):
     """Gree AC climate entity that also tracks a configured infrared receiver."""
 
     def __init__(
-        self, entry: ConfigEntry, emitter_entity_id: str, receiver_entity_id: str
+        self, entry: GreeIrConfigEntry, emitter_entity_id: str, receiver_entity_id: str
     ) -> None:
         """Initialize Gree AC climate entity with a receiver."""
         super().__init__(entry, emitter_entity_id)
@@ -288,4 +296,11 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
         self._attr_target_temperature = float(command.temperature)
+        # The remote's frame is now what the unit last saw, so a later frame has to
+        # carry every field of it rather than the ones sent before it. Only the mode
+        # is taken from the entity, which has already dropped an unconfigured one.
+        self._runtime_data.ac_state = replace(
+            GreeAcState.from_command(command),
+            mode=_HA_MODE_TO_LIB[self._last_active_hvac_mode],
+        )
         self.async_write_ha_state()
