@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_demand_control_sensor_snapshot
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'en_demand': '1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control',
+      'max_pow': '50',
+      'mode': '0',
+      'scdl_per_day': '4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.daikin_test_demand_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
