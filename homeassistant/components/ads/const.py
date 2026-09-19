@@ -1,18 +1,15 @@
 """Support for Automation Device Specification (ADS)."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .hub import AdsHub
 
 DOMAIN = "ads"
 
-DATA_ADS: HassKey[AdsHub] = HassKey(DOMAIN)
+DATA_PREVIOUS_HUB = "previous_hub"
+
+DEFAULT_PORT = 851
 
 CONF_ADS_VAR = "adsvar"
+CONF_LOCAL_NET_ID = "local_net_id"
 
 STATE_KEY_STATE = "state"
 

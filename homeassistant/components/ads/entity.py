@@ -27,6 +27,7 @@ class AdsEntity(Entity):
         self._event: asyncio.Event | None = None
         self._attr_unique_id = ads_var
         self._attr_name = name
+        ads_hub.register_device(self)
 
     async def async_initialize_device(
         self,
@@ -69,3 +70,21 @@ class AdsEntity(Entity):
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
         return self._state_dict[STATE_KEY_STATE] is not None
+
+    def mark_unavailable(self) -> None:
+        """Mark the entity unavailable after its hub connection is closed."""
+        # Notification callbacks add keys from another thread, so snapshot them.
+        for key in list(self._state_dict):
+            self._state_dict[key] = None
+        if self.hass is not None:
+            self.schedule_update_ha_state()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister this entity from its hub when it is removed."""
+        self._ads_hub.unregister_device(self)
+
+    def rebind(self, ads_hub: AdsHub) -> None:
+        """Rebind this entity to a new hub after a reload."""
+        self._ads_hub = ads_hub
+        ads_hub.register_device(self)
