@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities only consume coordinator updates and do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: >
+      Setup is deliberately deferred: the first refresh may rebuild the GTFS
+      index from a cold cache, which can take minutes and must not block or
+      fail setup. Credentials are validated in the config flow and auth
+      failures at runtime start a reauth flow.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration is a cloud service and is not discoverable.
+  discovery:
+    status: exempt
+    comment: The integration is a cloud service and is not discoverable.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: >
+      Stops are added via config subentries, which reload the entry and set up
+      their devices; there is no library-side device discovery.
+  entity-category:
+    status: exempt
+    comment: The departure sensors are primary entities with no category.
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: >
+      Devices exist only for configured stop subentries; removing a subentry
+      removes its device. Stops that vanish from the schedule raise a repair
+      issue instead of silent removal.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
