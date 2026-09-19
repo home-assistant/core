@@ -31,6 +31,10 @@ VEHICLE_REDACT = [
 ENERGY_LIVE_REDACT = ["vin"]
 ENERGY_INFO_REDACT = ["installation_date"]
 
+SOURCE_POLLING = "polling"
+SOURCE_STREAMING = "streaming"
+SOURCE_ENABLED = "enabled"
+
 
 def _async_vehicle_entity_sources(
     entity_entries: list[er.RegistryEntry],
@@ -39,28 +43,36 @@ def _async_vehicle_entity_sources(
 ) -> dict[str, str]:
     """Map each enabled vehicle entity to its data source.
 
-    "polling" entities are the vehicle coordinator's listeners, which is what
-    keeps it polling; "streaming" entities belong to the telemetry stream
-    family and never keep the coordinator polling. An entity enabled in the
-    registry but currently neither (for example when its platform is not
-    loaded) is reported as "enabled" rather than attributed to either source.
+    A listener only costs credits while its coordinator is scheduled to
+    refresh, which needs an update interval - set only when command signing is
+    off - and polling left enabled on the config entry, so listeners are only
+    reported as "polling" when both hold. "streaming" entities belong to the
+    telemetry stream family. Anything else enabled in the registry, a listener
+    that cannot cause a refresh or an entity whose platform is not loaded, is
+    reported as "enabled" rather than attributed to either source.
     """
-    polling_ids = {
-        context.entity_id
-        for context in vehicle.coordinator.async_contexts()
-        if isinstance(context, Entity)
-    }
+    coordinator = vehicle.coordinator
+    polling_ids: set[str] = set()
+    if (
+        coordinator.update_interval is not None
+        and not coordinator.config_entry.pref_disable_polling
+    ):
+        polling_ids = {
+            context.entity_id
+            for context in coordinator.async_contexts()
+            if isinstance(context, Entity)
+        }
     prefix = f"{vehicle.vin}-"
     sources: dict[str, str] = {}
     for entry in entity_entries:
         if entry.disabled_by or not entry.unique_id.startswith(prefix):
             continue
         if entry.entity_id in polling_ids:
-            sources[entry.entity_id] = "polling"
+            sources[entry.entity_id] = SOURCE_POLLING
         elif isinstance(entities.get(entry.entity_id), TeslemetryVehicleStreamEntity):
-            sources[entry.entity_id] = "streaming"
+            sources[entry.entity_id] = SOURCE_STREAMING
         else:
-            sources[entry.entity_id] = "enabled"
+            sources[entry.entity_id] = SOURCE_ENABLED
     return dict(sorted(sources.items()))
 
 

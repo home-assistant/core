@@ -9,16 +9,29 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.diagnostics import (
+    SOURCE_ENABLED,
+    SOURCE_POLLING,
+    SOURCE_STREAMING,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.json import JsonObjectType
 
-from . import setup_platform
-from .const import METADATA, METADATA_LEGACY, PRODUCTS
+from . import reload_platform, setup_platform
+from .const import METADATA, METADATA_LEGACY, PRODUCTS, PRODUCTS_MODERN
 
 from tests.common import async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+VEHICLE_VIN = "LRW3F7EK4NC700000"
+STREAM_VIN = "LRW3F7EK4NC700001"
+# vehicle_state.vehicle_name in the vehicle data fixture, which replaces the
+# product data once a vehicle polls.
+POLLED_NAME = "Test"
+STREAM_NAME = "Stream"
 
 
 async def test_diagnostics(
@@ -42,16 +55,23 @@ async def test_diagnostics(
 
     # A polling vehicle's data entities keep the coordinator polling; its
     # stateless command entities (buttons) are in the streaming family instead.
-    entities = diag["vehicles"][0]["entities"]
-    assert "polling" in set(entities.values())
-    assert set(entities.values()) <= {"polling", "streaming"}
+    sources = set(diag["vehicles"][0]["entities"].values())
+    assert SOURCE_POLLING in sources
+    assert sources <= {SOURCE_POLLING, SOURCE_STREAMING}
 
 
-async def test_diagnostics_streaming_entities(
+async def test_diagnostics_streaming_vehicle(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
-    """Test diagnostics reports the data source of a streaming vehicle's entities."""
+    """Test a streaming vehicle reports only streaming entities and never polls.
+
+    Streaming entities must not carry a coordinator listener context: giving
+    them one would make the vehicle coordinator start polling, which is the
+    behaviour this diagnostics change must not introduce.
+    """
 
     entry = await setup_platform(hass)
 
@@ -59,7 +79,16 @@ async def test_diagnostics_streaming_entities(
 
     entities = diag["vehicles"][0]["entities"]
     assert entities
-    assert set(entities.values()) == {"streaming"}
+    assert set(entities.values()) == {SOURCE_STREAMING}
+
+    mock_vehicle_data.reset_mock()
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Nothing listens to the coordinator, so it never polls even though its
+    # update interval is set for this vehicle.
+    mock_vehicle_data.assert_not_called()
 
 
 async def test_diagnostics_streaming_and_polling_vehicles(
@@ -73,58 +102,91 @@ async def test_diagnostics_streaming_and_polling_vehicles(
     A vehicle either streams or polls, never both, so the two sources only
     appear together across different vehicles. This sets up one polling and
     one streaming vehicle and asserts diagnostics reports the polling
-    vehicle's data entities as "polling" and the streaming vehicle's entities
-    as "streaming", without cross-attributing one vehicle's source to the
-    other.
+    vehicle's data entities as polling and the streaming vehicle's entities
+    as streaming, without cross-attributing one vehicle's source to the other.
     """
-    poll_vin = "LRW3F7EK4NC700000"
-    stream_vin = "LRW3F7EK4NC700001"
-
     products = deepcopy(PRODUCTS)
-    poll_product = next(p for p in products["response"] if p.get("vin") == poll_vin)
-    poll_product["display_name"] = "Poll"
+    poll_product = next(p for p in products["response"] if p.get("vin") == VEHICLE_VIN)
     stream_product = deepcopy(poll_product)
-    stream_product["vin"] = stream_vin
-    stream_product["display_name"] = "Stream"
+    stream_product["vin"] = STREAM_VIN
+    stream_product["display_name"] = STREAM_NAME
     products["response"].append(stream_product)
     mock_products.return_value = products
 
     metadata = deepcopy(METADATA)
     metadata["vehicles"] = {
-        poll_vin: deepcopy(METADATA_LEGACY["vehicles"][poll_vin]),
-        stream_vin: deepcopy(METADATA["vehicles"][poll_vin]),
+        VEHICLE_VIN: deepcopy(METADATA_LEGACY["vehicles"][VEHICLE_VIN]),
+        STREAM_VIN: deepcopy(METADATA["vehicles"][VEHICLE_VIN]),
     }
     mock_metadata.return_value = metadata
 
     entry = await setup_platform(hass)
 
-    vehicles = {vehicle.vin: vehicle for vehicle in entry.runtime_data.vehicles}
-    assert vehicles[poll_vin].poll is True
-    assert vehicles[stream_vin].poll is False
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    # A vehicle that polls replaces its product data with its polled response,
+    # which carries the name under vehicle_state; one that only streams never
+    # refreshes, so the product's display name survives.
+    sources = {
+        vehicle["data"].get("display_name")
+        or vehicle["data"]["vehicle_state_vehicle_name"]: set(
+            vehicle["entities"].values()
+        )
+        for vehicle in diag["vehicles"]
+    }
+
+    # The polling vehicle's data entities keep its coordinator polling...
+    assert SOURCE_POLLING in sources[POLLED_NAME]
+    # ...while the streaming vehicle reports only streaming, so neither
+    # vehicle's source leaks into the other's diagnostics.
+    assert sources[STREAM_NAME] == {SOURCE_STREAMING}
+    # No entity falls back to enabled: every one maps to a live source.
+    assert sources[POLLED_NAME] <= {SOURCE_POLLING, SOURCE_STREAMING}
+
+
+@pytest.mark.parametrize(
+    ("products", "pref_disable_polling"),
+    [
+        pytest.param(PRODUCTS_MODERN, False, id="no_update_interval"),
+        pytest.param(PRODUCTS, True, id="polling_disabled"),
+    ],
+)
+@pytest.mark.usefixtures("mock_legacy")
+async def test_diagnostics_listener_that_cannot_poll(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    mock_products: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    products: JsonObjectType,
+    pref_disable_polling: bool,
+) -> None:
+    """Test a coordinator listener is not reported as polling when nothing polls.
+
+    A vehicle without an update interval, or one whose config entry has
+    polling disabled, is never scheduled to refresh, so its listeners cost no
+    credits and must not be blamed for the vehicle's usage.
+    """
+    mock_products.return_value = products
+    entry = await setup_platform(hass)
+    hass.config_entries.async_update_entry(
+        entry, pref_disable_polling=pref_disable_polling
+    )
+    await reload_platform(hass, entry)
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    def sources_for(object_id_prefix: str) -> set[str]:
-        """Return the sources of the vehicle whose entity_ids use the prefix."""
-        return next(
-            set(vehicle["entities"].values())
-            for vehicle in diag["vehicles"]
-            if all(
-                entity_id.split(".", 1)[1].startswith(object_id_prefix)
-                for entity_id in vehicle["entities"]
-            )
-        )
+    sources = set(diag["vehicles"][0]["entities"].values())
+    assert SOURCE_ENABLED in sources
+    assert SOURCE_POLLING not in sources
 
-    poll_sources = sources_for("poll_")
-    stream_sources = sources_for("stream_")
+    mock_vehicle_data.reset_mock()
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    # The polling vehicle's data entities keep its coordinator polling...
-    assert "polling" in poll_sources
-    # ...while the streaming vehicle reports only "streaming", so neither
-    # vehicle's source leaks into the other's diagnostics.
-    assert stream_sources == {"streaming"}
-    # No entity falls back to "enabled": every one maps to a live source.
-    assert poll_sources <= {"polling", "streaming"}
+    # The label matches reality: no refresh is scheduled for this vehicle.
+    mock_vehicle_data.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_legacy")
@@ -151,46 +213,17 @@ async def test_diagnostics_enabled_entity_source(
     """Test diagnostics reports an enabled entity whose platform is not loaded."""
 
     entry = await setup_platform(hass, platforms=[])
-    vehicle = entry.runtime_data.vehicles[0]
 
     # An enabled entity with no platform loaded is neither a coordinator
-    # listener nor a live streaming entity, so it falls back to "enabled".
+    # listener nor a live streaming entity, so it falls back to enabled.
     registry_entry = entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
-        f"{vehicle.vin}-charge_state_usable_battery_level",
+        f"{VEHICLE_VIN}-charge_state_usable_battery_level",
         config_entry=entry,
     )
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     entities = diag["vehicles"][0]["entities"]
-    assert entities[registry_entry.entity_id] == "enabled"
-
-
-async def test_streaming_vehicle_does_not_poll(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Test a streaming vehicle's coordinator gains no listeners and never polls.
-
-    Streaming entities must not carry a coordinator listener context: giving
-    them one would make the vehicle coordinator start polling, which is the
-    behaviour this diagnostics change must not introduce.
-    """
-
-    entry = await setup_platform(hass)
-    coordinator = entry.runtime_data.vehicles[0].coordinator
-
-    # No enabled entity keeps the coordinator polling.
-    assert list(coordinator.async_contexts()) == []
-
-    mock_vehicle_data.reset_mock()
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # With no listeners the coordinator never polls, even though its update
-    # interval is set for this vehicle.
-    mock_vehicle_data.assert_not_called()
+    assert entities[registry_entry.entity_id] == SOURCE_ENABLED
