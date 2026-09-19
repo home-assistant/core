@@ -1123,7 +1123,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_SEARCH_INLINE_CITATIONS: False,
             },
-        ),
+        ), 
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
