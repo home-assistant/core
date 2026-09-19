@@ -1,7 +1,7 @@
 """Test Immich Frames source and pairing selection."""
 
 from copy import copy
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -142,6 +142,30 @@ def test_filter_assets_excludes_unsafe_and_mismatched_candidates() -> None:
         {CONF_TIME_RANGE: "all_time", CONF_ORIENTATION: ORIENTATION_PORTRAIT},
         now,
     ) == [valid]
+
+
+def test_filter_assets_compares_immich_wall_clock_values() -> None:
+    """Do not convert Immich's local capture time into a UTC instant."""
+    now = datetime(2023, 2, 15, 10, 30, tzinfo=timezone(timedelta(hours=2)))
+    captured = copy(MOCK_SEARCH_ASSETS[0])
+    captured.local_datetime = datetime(2023, 2, 15, 10, 0)
+    captured.exif_info = ExifInfo(exif_image_width=100, exif_image_height=200)
+
+    assert _filter_assets(
+        [captured],
+        {CONF_TIME_RANGE: "all_time", CONF_ORIENTATION: ORIENTATION_PORTRAIT},
+        now,
+    ) == [captured]
+
+    offset_capture = copy(captured)
+    offset_capture.local_datetime = datetime(
+        2023, 2, 15, 10, 0, tzinfo=timezone(timedelta(hours=2))
+    )
+    assert _filter_assets(
+        [offset_capture],
+        {CONF_TIME_RANGE: "all_time", CONF_ORIENTATION: ORIENTATION_PORTRAIT},
+        now,
+    ) == [offset_capture]
 
 
 def test_choose_asset_supports_order_and_empty_candidates() -> None:

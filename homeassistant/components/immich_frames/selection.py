@@ -2,7 +2,7 @@
 
 from bisect import bisect_left, bisect_right
 from calendar import monthrange
-from datetime import UTC, datetime
+from datetime import datetime
 import random
 
 from aioimmich.assets.models import AssetType, ImmichAsset
@@ -52,9 +52,19 @@ _ROTATED_EXIF_ORIENTATIONS = {
 }
 
 
-def _as_utc(value: datetime) -> datetime:
-    """Normalize timestamps for comparisons."""
-    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+def _as_wall_clock(value: datetime) -> datetime:
+    """Treat Immich localDateTime as a timezone-free wall-clock value.
+
+    Immich deliberately stores the local capture time in this field.  The API
+    may serialize it as either a naive value or an offset-bearing value, but
+    converting it to an instant changes the captured clock time.
+    """
+    return value.replace(tzinfo=None)
+
+
+def _wall_clock_seconds(value: datetime) -> float:
+    """Return a stable numeric value for a wall-clock timestamp."""
+    return (_as_wall_clock(value) - datetime.min).total_seconds()
 
 
 def _orientation(asset: ImmichAsset) -> str | None:
@@ -101,8 +111,8 @@ def _filter_assets(
 ) -> list[ImmichAsset]:
     """Apply frame-wide safety, time, and orientation constraints."""
     orientation = str(options.get(CONF_ORIENTATION, DEFAULT_ORIENTATION))
-    cutoff = _cutoff(now, str(options.get(CONF_TIME_RANGE, DEFAULT_TIME_RANGE)))
-    current = _as_utc(now)
+    current = _as_wall_clock(now)
+    cutoff = _cutoff(current, str(options.get(CONF_TIME_RANGE, DEFAULT_TIME_RANGE)))
     result: list[ImmichAsset] = []
     for asset in assets:
         if (
@@ -111,8 +121,8 @@ def _filter_assets(
             or asset.is_offline
         ):
             continue
-        captured = _as_utc(asset.local_datetime)
-        if cutoff is not None and captured < _as_utc(cutoff):
+        captured = _as_wall_clock(asset.local_datetime)
+        if cutoff is not None and captured < cutoff:
             continue
         detected = _orientation(asset)
         if orientation not in (ORIENTATION_ANY, detected):
@@ -164,9 +174,9 @@ def choose_asset(
         raise LookupError("no photos")
     order = str(options.get("order_direction", "random"))
     if order == "asc":
-        return min(candidates, key=lambda asset: asset.local_datetime)
+        return min(candidates, key=lambda asset: _as_wall_clock(asset.local_datetime))
     if order == "desc":
-        return max(candidates, key=lambda asset: asset.local_datetime)
+        return max(candidates, key=lambda asset: _as_wall_clock(asset.local_datetime))
     available = [asset for asset in candidates if asset.asset_id not in recent_ids]
     return random.SystemRandom().choice(available or candidates)
 
@@ -182,9 +192,9 @@ def candidates_with_companion(
         window = DEFAULT_PAIR_WINDOW
     portrait = sorted(
         (asset for asset in candidates if _orientation(asset) == ORIENTATION_PORTRAIT),
-        key=lambda asset: _as_utc(asset.local_datetime).timestamp(),
+        key=lambda asset: _wall_clock_seconds(asset.local_datetime),
     )
-    timestamps = [_as_utc(asset.local_datetime).timestamp() for asset in portrait]
+    timestamps = [_wall_clock_seconds(asset.local_datetime) for asset in portrait]
     by_checksum: dict[str, list[float]] = {}
     by_asset_id: dict[str, list[float]] = {}
     by_identity: dict[tuple[str, str], list[float]] = {}
@@ -202,7 +212,7 @@ def candidates_with_companion(
     for asset in candidates:
         if _orientation(asset) != ORIENTATION_PORTRAIT:
             continue
-        timestamp = _as_utc(asset.local_datetime).timestamp()
+        timestamp = _wall_clock_seconds(asset.local_datetime)
         start, end = timestamp - seconds, timestamp + seconds
         total = count_in_window(timestamps, start, end)
         same_checksum = count_in_window(by_checksum.get(asset.checksum, []), start, end)
@@ -229,7 +239,8 @@ def choose_companion(
         and asset.checksum != primary.checksum
         and abs(
             (
-                _as_utc(asset.local_datetime) - _as_utc(primary.local_datetime)
+                _as_wall_clock(asset.local_datetime)
+                - _as_wall_clock(primary.local_datetime)
             ).total_seconds()
         )
         <= window_days * 86400
@@ -238,7 +249,8 @@ def choose_companion(
         eligible,
         key=lambda asset: abs(
             (
-                _as_utc(asset.local_datetime) - _as_utc(primary.local_datetime)
+                _as_wall_clock(asset.local_datetime)
+                - _as_wall_clock(primary.local_datetime)
             ).total_seconds()
         ),
         default=None,

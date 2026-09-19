@@ -266,7 +266,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
 
     async def _async_get_candidates(self) -> list[ImmichAsset]:
         """Return candidates, refreshing the bounded index when it expires."""
-        now = dt_util.utcnow()
+        now = dt_util.now()
         if (
             self._candidate_cache is not None
             and self._candidate_cache_updated_at is not None
