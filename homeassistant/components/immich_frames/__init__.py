@@ -10,11 +10,37 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .cache import FrameCache
-from .const import CONF_IMMICH_ENTRY_ID, CONF_SOURCE, DEFAULT_SOURCE, DOMAIN
+from .const import (
+    CONF_ALBUM_IDS,
+    CONF_IMMICH_ENTRY_ID,
+    CONF_MODE,
+    CONF_ORIENTATION,
+    CONF_PAIR_WINDOW,
+    CONF_PHOTO_FIT,
+    CONF_SCREEN_SHAPE,
+    CONF_SMART_QUERY,
+    CONF_SOURCE,
+    CONF_TIME_RANGE,
+    DEFAULT_SOURCE,
+    DOMAIN,
+)
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
 PLATFORMS = [Platform.IMAGE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema("immich_frames")
+OPTION_KEYS = frozenset(
+    {
+        CONF_ALBUM_IDS,
+        CONF_MODE,
+        CONF_ORIENTATION,
+        CONF_PAIR_WINDOW,
+        CONF_PHOTO_FIT,
+        CONF_SCREEN_SHAPE,
+        CONF_SMART_QUERY,
+        CONF_SOURCE,
+        CONF_TIME_RANGE,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -34,6 +60,22 @@ async def async_migrate_entry(
                 CONF_SOURCE: entry.data.get(CONF_SOURCE, DEFAULT_SOURCE),
             },
             version=2,
+        )
+    if entry.version < 3:
+        moved_options = {
+            key: value
+            for key, value in entry.data.items()
+            if key in OPTION_KEYS and key not in entry.options
+        }
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                key: value
+                for key, value in entry.data.items()
+                if key not in OPTION_KEYS
+            },
+            options={**moved_options, **entry.options},
+            version=3,
         )
     return True
 

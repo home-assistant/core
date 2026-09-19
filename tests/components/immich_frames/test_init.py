@@ -14,6 +14,7 @@ from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_MODE,
     CONF_PHOTO_FIT,
     CONF_SOURCE,
     DEFAULT_SOURCE,
@@ -179,9 +180,36 @@ async def test_migrate_entry_adds_default_source(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.version == 2
-    assert entry.data[CONF_SOURCE] == DEFAULT_SOURCE
+    assert entry.version == 3
+    assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
     assert entry.data[CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
+
+
+async def test_migrate_entry_moves_frame_settings_to_options(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Version two entries move user-adjustable settings to options."""
+    entry = MockConfigEntry(
+        domain="immich_frames",
+        title="Migrated settings",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+            CONF_MODE: "single",
+        },
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.version == 3
+    assert entry.data == {CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id}
+    assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
+    assert entry.options[CONF_MODE] == "single"
 
 
 async def test_coordinator_uses_cache_and_controls(

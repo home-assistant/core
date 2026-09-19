@@ -101,7 +101,7 @@ async def _async_validate_source(
 class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle configuration of a frame linked to an Immich account."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize flow state."""
@@ -269,7 +269,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_finish_create(self) -> ConfigFlowResult:
         """Create or reconfigure a frame entry."""
-        data = {
+        settings = {
             **self._data,
             CONF_MODE: DEFAULT_MODE,
             CONF_ORIENTATION: DEFAULT_ORIENTATION,
@@ -279,31 +279,51 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PHOTO_FIT: DEFAULT_PHOTO_FIT,
         }
         if self._reconfigure_entry is not None:
-            data[CONF_FRAME_ID] = self._reconfigure_entry.data.get(
-                CONF_FRAME_ID, uuid4().hex
-            )
+            frame_id = self._reconfigure_entry.data.get(CONF_FRAME_ID, uuid4().hex)
             options = {
-                key: value
-                for key, value in self._reconfigure_entry.options.items()
-                if key not in (CONF_SOURCE, CONF_ALBUM_IDS, CONF_SMART_QUERY)
+                **{
+                    key: value
+                    for key, value in self._reconfigure_entry.data.items()
+                    if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
+                },
+                **self._reconfigure_entry.options,
+                **{
+                    key: value
+                    for key, value in settings.items()
+                    if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
+                },
             }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
-                data_updates=data,
+                data_updates={
+                    CONF_IMMICH_ENTRY_ID: settings[CONF_IMMICH_ENTRY_ID],
+                    CONF_FRAME_ID: frame_id,
+                },
                 options=options,
                 title=self._reconfigure_entry.title,
             )
-        data[CONF_FRAME_ID] = uuid4().hex
-        unique_id = f"{data[CONF_IMMICH_ENTRY_ID]}|{data[CONF_FRAME_ID]}"
-        return await self._async_create_unique_entry(unique_id, data)
+        frame_id = uuid4().hex
+        data = {
+            CONF_IMMICH_ENTRY_ID: settings[CONF_IMMICH_ENTRY_ID],
+            CONF_FRAME_ID: frame_id,
+        }
+        options = {
+            key: value
+            for key, value in settings.items()
+            if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
+        }
+        unique_id = f"{data[CONF_IMMICH_ENTRY_ID]}|{frame_id}"
+        return await self._async_create_unique_entry(unique_id, data, options)
 
     async def _async_create_unique_entry(
-        self, unique_id: str, data: dict[str, Any]
+        self, unique_id: str, data: dict[str, Any], options: dict[str, Any]
     ) -> ConfigFlowResult:
         """Create the unique frame entry asynchronously."""
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="Immich Frames", data=data)
+        return self.async_create_entry(
+            title="Immich Frames", data=data, options=options
+        )
 
     def _loaded_immich_entries(self) -> dict[str, ConfigEntry]:
         """Return loaded parent Immich entries."""

@@ -127,7 +127,7 @@ async def test_user_creates_frame(
     assert result["type"] == "create_entry"
     assert result["title"] == "Immich Frames"
     assert result["data"][CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
-    assert result["data"][CONF_SOURCE] == DEFAULT_SOURCE
+    assert result["options"][CONF_SOURCE] == DEFAULT_SOURCE
 
 
 async def test_user_validation_errors(
@@ -182,7 +182,7 @@ async def test_user_creates_album_frame(
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_ALBUM_IDS]
+    assert result["options"][CONF_ALBUM_IDS]
 
 
 async def test_album_flow_validates_empty_and_unknown_albums(
@@ -341,7 +341,7 @@ async def test_user_creates_smart_frame(
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_SMART_QUERY] == "beach sunset"
+    assert result["options"][CONF_SMART_QUERY] == "beach sunset"
 
 
 async def test_smart_flow_requires_a_query(
