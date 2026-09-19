@@ -347,7 +347,9 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
         """Dispatch turn_on / turn_off via the description callables."""
         desc = self.entity_description
 
-        if desc.write_fn is None:  # pragma: no cover - all switches wire write_fn
+        if (
+            desc.write_fn is None
+        ):  # pragma: no cover - all device switches wire write_fn
             return
 
         try:
@@ -381,4 +383,4 @@ class NeoPoolSwitch(NeoPoolEntity, SwitchEntity):
         desc = self.entity_description
         if desc.is_on_fn is not None:
             return desc.is_on_fn(self.coordinator.data)
-        return False  # pragma: no cover
+        return False  # pragma: no cover - all device switches wire is_on_fn

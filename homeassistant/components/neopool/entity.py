@@ -15,6 +15,20 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
     """Base class for NeoPool entities."""
 
     _attr_has_entity_name = True
+    _unavailable_in_winter_mode: bool = True
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False while winter mode gates this entity.
+
+        Winter mode (the native disable-polling flag) stops updates, so gated
+        entities report unavailable. Entities are gated by default; a subclass
+        can opt out by setting _unavailable_in_winter_mode to False.
+        """
+        if self._unavailable_in_winter_mode and self.coordinator.winter_mode:
+            return False
+        return super().available
 
     @property
     @override

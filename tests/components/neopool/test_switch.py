@@ -18,13 +18,21 @@ from neopool_modbus.registers import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
+from homeassistant.components.neopool.const import (
+    CONF_CAPABILITIES,
+    CONF_MODBUS_FRAMER,
+    CONF_UNIT_ID,
+    CURRENT_VERSION,
+    DOMAIN,
+    FOLLOW_UP_REFRESH_DELAY,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -658,3 +666,37 @@ async def test_all_entities(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_switch.entry_id
     )
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_io_switch_unavailable_in_winter_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Device switches become unavailable while winter mode is active.
+
+    The device is offline, so device switches report unavailable.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Winter Pool",
+        unique_id="neopool_winter_io",
+        version=CURRENT_VERSION,
+        pref_disable_polling=True,
+        data={
+            "host": "192.0.2.7",
+            "port": 502,
+            "name": "Winter Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={
+            CONF_MODBUS_FRAMER: "tcp",
+            CONF_CAPABILITIES: {"MBF_PAR_FILT_GPIO": 1},
+        },
+    )
+    await setup_integration(hass, entry)
+
+    io_id = _entity_id_by_suffix(hass, entry, "_mbf_par_filt_manual_state")
+    io_state = hass.states.get(io_id)
+    assert io_state is not None
+    assert io_state.state == STATE_UNAVAILABLE
