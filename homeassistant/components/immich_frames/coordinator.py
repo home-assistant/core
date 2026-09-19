@@ -271,6 +271,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         runtime_data = immich_entry.runtime_data
         parent_identity = self._parent_identity(immich_entry, runtime_data)
         if parent_identity != self._parent_identity_value:
+            self._cache.clear()
             self._invalidate_candidate_cache()
             self._recent_ids.clear()
             self._recent_order.clear()
