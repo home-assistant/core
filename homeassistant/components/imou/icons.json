@@ -57,17 +57,38 @@
       "close_camera": {
         "default": "mdi:camera-off"
       },
+      "frame_reverse": {
+        "default": "mdi:flip-vertical"
+      },
       "header_detect": {
         "default": "mdi:run"
       },
       "light": {
         "default": "mdi:lightbulb-on"
       },
+      "linkage_siren": {
+        "default": "mdi:bell-alert"
+      },
+      "linkage_white_light": {
+        "default": "mdi:alarm-light"
+      },
       "motion_detect": {
         "default": "mdi:motion-sensor"
       },
+      "pet_detect": {
+        "default": "mdi:paw"
+      },
+      "play_sound": {
+        "default": "mdi:bell-ring-outline"
+      },
+      "smart_track": {
+        "default": "mdi:target-account"
+      },
       "white_light": {
         "default": "mdi:light-flood-down"
+      },
+      "wide_dynamic": {
+        "default": "mdi:hdr"
       }
     }
   }

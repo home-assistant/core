@@ -34,6 +34,13 @@ PARAM_AB_ALARM_SOUND = "ab_alarm_sound"
 PARAM_AUDIO_ENCODE_CONTROL = "audio_encode_control"
 PARAM_LIGHT = "light"
 PARAM_PLUG_SWITCH = "switch"
+PARAM_FRAME_REVERSE = "frame_reverse"
+PARAM_LINKAGE_SIREN = "linkage_siren"
+PARAM_LINKAGE_WHITE_LIGHT = "linkage_white_light"
+PARAM_PET_DETECT = "pet_detect"
+PARAM_PLAY_SOUND = "play_sound"
+PARAM_SMART_TRACK = "smart_track"
+PARAM_WIDE_DYNAMIC = "wide_dynamic"
 
 # Binary sensor keys not yet exported by pyimouapi (keep integration-local).
 PARAM_DOOR_CONTACT_STATUS = "door_contact_status"
