@@ -8,7 +8,11 @@ from google_weather_api import GoogleWeatherApiError, WeatherCondition
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_weather.weather import _CONDITION_MAP
+from homeassistant.components.google_weather.const import DOMAIN
+from homeassistant.components.google_weather.weather import (
+    _CONDITION_MAP,
+    SERVICE_GET_MINUTE_FORECAST,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -22,6 +26,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -215,3 +220,51 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+async def test_minute_forecast_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_MINUTE_FORECAST,
+        {ATTR_ENTITY_ID: "weather.home"},
+        blocking=True,
+        return_response=True,
+    )
+    mock_google_weather_api.async_get_minute_forecast.assert_awaited_once_with(
+        latitude=10.1, longitude=20.1
+    )
+    result = response["weather.home"]
+    assert result["timeZone"]["id"] == "America/New_York"
+    assert len(result["segments"]) == 2
+    assert result["segments"][0]["type"] == "RAIN"
+    assert result["segments"][0]["probability"] == 62
+    assert result["segments"][0]["intensity"] == "MODERATE"
+    assert result["segments"][1]["type"] == "NONE"
+
+
+async def test_minute_forecast_service_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast service when the API raises an error."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    mock_google_weather_api.async_get_minute_forecast.side_effect = (
+        GoogleWeatherApiError("boom")
+    )
+    with pytest.raises(HomeAssistantError, match="Error fetching minute forecast"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MINUTE_FORECAST,
+            {ATTR_ENTITY_ID: "weather.home"},
+            blocking=True,
+            return_response=True,
+        )
