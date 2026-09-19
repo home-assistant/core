@@ -150,6 +150,8 @@ async def async_get_candidates(
             for album_id in (raw_album_ids if isinstance(raw_album_ids, list) else [])
             if isinstance(album_id, str) and album_id
         ]
+        if not album_ids:
+            return []
         assets = await search.async_get_all_by_album_ids(
             album_ids, page_size=100, max_pages=20
         )

@@ -62,6 +62,22 @@ async def test_album_source_uses_selected_albums() -> None:
 
 
 @pytest.mark.asyncio
+async def test_empty_album_source_does_not_fall_back_to_all_photos() -> None:
+    """An empty persisted album selection must not query the whole library."""
+    search = SimpleNamespace(async_get_all_by_album_ids=AsyncMock())
+
+    assert (
+        await async_get_candidates(
+            SimpleNamespace(search=search),
+            {CONF_SOURCE: SOURCE_ALBUM, CONF_ALBUM_IDS: []},
+            dt_util.utcnow(),
+        )
+        == []
+    )
+    search.async_get_all_by_album_ids.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_smart_source_uses_image_search() -> None:
     """Keyword selection must use Immich's supported smart-search API."""
     search = SimpleNamespace(
