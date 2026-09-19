@@ -493,8 +493,9 @@ async def get_lock_users(
     users: list[LockUserData] = []
     current_index = 1
 
-    # Iterate through users using next_user_index for efficiency
-    while current_index is not None and current_index <= max_users:
+    # nextUserIndex skips over unoccupied slots, but it is nullable and some locks
+    # always report it as null, so the whole table is walked when it is missing.
+    while current_index <= max_users:
         get_user_response = await matter_client.send_device_command(
             node_id=node.node_id,
             endpoint_id=lock_endpoint.endpoint_id,
@@ -507,11 +508,12 @@ async def get_lock_users(
         if user_data is not None:
             users.append(user_data)
 
-        # Move to next user index
+        # Only trust nextUserIndex when it moves the walk forward
         next_index = _get_attr(get_user_response, "nextUserIndex")
         if next_index is None or next_index <= current_index:
-            break
-        current_index = next_index
+            current_index += 1
+        else:
+            current_index = next_index
 
     return GetLockUsersResult(
         max_users=max_users,

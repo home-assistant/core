@@ -1,5 +1,6 @@
 """Test Matter locks."""
 
+from collections.abc import Iterable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
@@ -44,6 +45,39 @@ _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
 _FEATURE_USR_RFID = _FEATURE_USR | _FEATURE_RFID  # 258
 _FEATURE_USR_PIN_RFID = _FEATURE_USR | _FEATURE_PIN | _FEATURE_RFID  # 259
 _FEATURE_USR_FINGER = _FEATURE_USR | _FEATURE_FINGER  # 260
+
+# GetUser response for an index that holds no user
+_EMPTY_USER_RESPONSE = {
+    "userIndex": None,
+    "userName": None,
+    "userUniqueID": None,
+    "userStatus": None,
+    "userType": None,
+    "credentialRule": None,
+    "credentials": None,
+    "nextUserIndex": None,
+}
+
+
+def _mock_get_user(matter_client: MagicMock, users: dict[int, dict[str, Any]]) -> None:
+    """Answer GetUser commands from a user table keyed by user index."""
+
+    async def send_device_command(**kwargs: Any) -> dict[str, Any]:
+        return users.get(kwargs["command"].userIndex, _EMPTY_USER_RESPONSE)
+
+    matter_client.send_device_command = AsyncMock(side_effect=send_device_command)
+
+
+def _get_user_calls(node_id: int, indexes: Iterable[int]) -> list[call]:
+    """Build the expected GetUser calls for the given user indexes."""
+    return [
+        call(
+            node_id=node_id,
+            endpoint_id=1,
+            command=clusters.DoorLock.Commands.GetUser(userIndex=index),
+        )
+        for index in indexes
+    ]
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -545,9 +579,10 @@ async def test_get_lock_users_service(
     matter_node: MatterNode,
 ) -> None:
     """Test get_lock_users entity service returns users."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
                 "userIndex": 1,
                 "userName": "Alice",
                 "userUniqueID": None,
@@ -556,8 +591,8 @@ async def test_get_lock_users_service(
                 "credentialRule": 0,
                 "credentials": None,
                 "nextUserIndex": None,
-            },
-        ]
+            }
+        },
     )
 
     result = await hass.services.async_call(
@@ -568,12 +603,8 @@ async def test_get_lock_users_service(
         return_response=True,
     )
 
-    # Verify GetUser command was sent
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, range(1, 11)
     )
 
     assert result["lock.mock_door_lock"] == {
@@ -689,9 +720,10 @@ async def test_get_lock_users_iterates_with_next_index(
     matter_node: MatterNode,
 ) -> None:
     """Test get_lock_users uses nextUserIndex for efficient iteration."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {  # First user at index 1
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
                 "userIndex": 1,
                 "userStatus": 1,
                 "userName": "User 1",
@@ -701,7 +733,7 @@ async def test_get_lock_users_iterates_with_next_index(
                 "credentials": None,
                 "nextUserIndex": 5,  # Next user at index 5
             },
-            {  # Second user at index 5
+            5: {
                 "userIndex": 5,
                 "userStatus": 1,
                 "userName": "User 5",
@@ -709,9 +741,9 @@ async def test_get_lock_users_iterates_with_next_index(
                 "userType": 0,
                 "credentialRule": 0,
                 "credentials": None,
-                "nextUserIndex": None,  # No more users
+                "nextUserIndex": None,
             },
-        ]
+        },
     )
 
     result = await hass.services.async_call(
@@ -722,17 +754,9 @@ async def test_get_lock_users_iterates_with_next_index(
         return_response=True,
     )
 
-    assert matter_client.send_device_command.call_count == 2
-    # Verify it jumped from index 1 to index 5 via nextUserIndex
-    assert matter_client.send_device_command.call_args_list[0] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
-    )
-    assert matter_client.send_device_command.call_args_list[1] == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=5),
+    # Indexes 2 to 4 are skipped, the rest of the table is walked
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, [1, *range(5, 11)]
     )
 
     entity_result = result["lock.mock_door_lock"]
@@ -796,25 +820,26 @@ async def test_code_format_property_with_pin_required(
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
-async def test_get_lock_users_next_user_index_loop_prevention(
+async def test_get_lock_users_scans_when_next_user_index_is_null(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test get_lock_users handles nextUserIndex <= current to prevent loops."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {  # User at index 1
-                "userIndex": 1,
-                "userStatus": 1,
-                "userName": "User 1",
+    """Test get_lock_users scans the table when nextUserIndex is always null."""
+    _mock_get_user(
+        matter_client,
+        {
+            3: {
+                "userIndex": 3,
+                "userName": "Alice",
                 "userUniqueID": None,
+                "userStatus": 1,
                 "userType": 0,
                 "credentialRule": 0,
                 "credentials": None,
-                "nextUserIndex": 1,  # Same as current - should break loop
-            },
-        ]
+                "nextUserIndex": None,
+            }
+        },
     )
 
     result = await hass.services.async_call(
@@ -825,18 +850,69 @@ async def test_get_lock_users_next_user_index_loop_prevention(
         return_response=True,
     )
 
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    # The whole table is walked, so the user past the empty first slot is found
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, range(1, 11)
+    )
+    assert result["lock.mock_door_lock"] == {
+        "max_users": 10,
+        "users": [
+            {
+                "user_index": 3,
+                "user_name": "Alice",
+                "user_unique_id": None,
+                "user_status": "occupied_enabled",
+                "user_type": "unrestricted_user",
+                "credential_rule": "single",
+                "credentials": [],
+                "creator_fabric_index": None,
+                "last_modified_fabric_index": None,
+                "next_user_index": None,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_next_user_index_loop_prevention(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users handles nextUserIndex <= current to prevent loops."""
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
+                "userIndex": 1,
+                "userStatus": 1,
+                "userName": "User 1",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": 1,  # Same as current - must not be followed
+            }
+        },
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # The walk moves on instead of querying index 1 again
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, range(1, 11)
     )
 
     assert result is not None
-    # Result is keyed by entity_id
     lock_users = result["lock.mock_door_lock"]
     assert len(lock_users["users"]) == 1
-    # Should have stopped after first user due to nextUserIndex <= current
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
@@ -848,9 +924,10 @@ async def test_get_lock_users_with_credentials(
 ) -> None:
     """Test get_lock_users returns credential info for users."""
     pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {  # User with credentials
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
                 "userIndex": 1,
                 "userStatus": 1,
                 "userName": "User With PIN",
@@ -862,8 +939,8 @@ async def test_get_lock_users_with_credentials(
                     {"credentialType": pin_cred_type, "credentialIndex": 2},
                 ],
                 "nextUserIndex": None,
-            },
-        ]
+            }
+        },
     )
 
     result = await hass.services.async_call(
@@ -874,11 +951,8 @@ async def test_get_lock_users_with_credentials(
         return_response=True,
     )
 
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, range(1, 11)
     )
 
     assert result["lock.mock_door_lock"] == {
@@ -911,9 +985,10 @@ async def test_get_lock_users_with_nullvalue_credentials(
     matter_node: MatterNode,
 ) -> None:
     """Test get_lock_users handles NullValue credentials from Matter SDK."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
                 "userIndex": 1,
                 "userStatus": 1,
                 "userName": "User No Creds",
@@ -922,8 +997,8 @@ async def test_get_lock_users_with_nullvalue_credentials(
                 "credentialRule": 0,
                 "credentials": NullValue,
                 "nextUserIndex": None,
-            },
-        ]
+            }
+        },
     )
 
     result = await hass.services.async_call(
@@ -934,11 +1009,8 @@ async def test_get_lock_users_with_nullvalue_credentials(
         return_response=True,
     )
 
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    assert matter_client.send_device_command.call_args_list == _get_user_calls(
+        matter_node.node_id, range(1, 11)
     )
 
     lock_users = result["lock.mock_door_lock"]
@@ -958,9 +1030,10 @@ async def test_get_lock_users_with_fabric_indices(
     matter_node: MatterNode,
 ) -> None:
     """Test get_lock_users returns fabric indices and normalizes NullValue."""
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {
+    _mock_get_user(
+        matter_client,
+        {
+            1: {
                 "userIndex": 1,
                 "userName": "HA User",
                 "userUniqueID": None,
@@ -972,7 +1045,7 @@ async def test_get_lock_users_with_fabric_indices(
                 "lastModifiedFabricIndex": NullValue,
                 "nextUserIndex": 2,
             },
-            {
+            2: {
                 "userIndex": 2,
                 "userName": "External User",
                 "userUniqueID": None,
@@ -984,7 +1057,7 @@ async def test_get_lock_users_with_fabric_indices(
                 "lastModifiedFabricIndex": 5,
                 "nextUserIndex": None,
             },
-        ]
+        },
     )
 
     result = await hass.services.async_call(
