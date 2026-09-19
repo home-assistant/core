@@ -164,10 +164,8 @@ class GreeAcSwitchWithReceiver(GreeAcSwitch, InfraredReceiverConsumerEntity):
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal."""
         command = GreeAcCommand.from_raw_timings(signal.timings)
-        if command is None:
+        if command is None or not self._runtime_data.apply_received_command(command):
             return
 
-        is_on = self.entity_description.value_fn(GreeAcState.from_command(command))
-        self._record_state(is_on)
-        self._attr_is_on = is_on
+        self._attr_is_on = self.entity_description.value_fn(self._runtime_data.ac_state)
         self.async_write_ha_state()

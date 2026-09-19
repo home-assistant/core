@@ -1,7 +1,7 @@
 """Gree IR Remote integration for Home Assistant."""
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Self
 
 from infrared_protocols.commands.gree_ac import (
@@ -11,9 +11,12 @@ from infrared_protocols.commands.gree_ac import (
     GreeAcMode,
 )
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+
+from .const import CONF_HVAC_MODES, DEFAULT_HVAC_MODES, HA_MODE_TO_LIB
 
 PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
@@ -70,12 +73,37 @@ class GreeAcState:
 class GreeIrRuntimeData:
     """Runtime data for a Gree IR config entry.
 
-    Holds the state last sent to the unit, shared by every entity of the entry so
-    each one can build a full frame from it.
+    Holds the latest known state of the unit — the last frame sent to it, or the
+    last one a configured receiver saw the remote send — shared by every entity of
+    the entry so each one can build a full frame from it.
     """
 
+    configured_modes: tuple[GreeAcMode, ...]
+    last_active_mode: GreeAcMode
     ac_state: GreeAcState = field(default_factory=GreeAcState)
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+
+    @callback
+    def apply_received_command(self, command: GreeAcCommand) -> bool:
+        """Record a frame the remote sent, reporting whether it addresses this unit.
+
+        Kept here rather than on the climate entity because a frame the receiver
+        picks up describes the whole unit, and the entities owning the rest of it
+        stay usable when the climate entity is disabled.
+        """
+        # Off frames carry a mode field too, so the mode is recorded either way.
+        if command.mode in self.configured_modes:
+            self.last_active_mode = command.mode
+        elif command.power:
+            return False
+
+        # The remote's frame is now what the unit last saw, so a later frame has to
+        # carry every field of it rather than the ones sent before it. Only the mode
+        # is kept, having already dropped an unconfigured one.
+        self.ac_state = replace(
+            GreeAcState.from_command(command), mode=self.last_active_mode
+        )
+        return True
 
 
 type GreeIrConfigEntry = ConfigEntry[GreeIrRuntimeData]
@@ -83,7 +111,14 @@ type GreeIrConfigEntry = ConfigEntry[GreeIrRuntimeData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bool:
     """Set up Gree IR from a config entry."""
-    entry.runtime_data = GreeIrRuntimeData()
+    configured_modes = tuple(
+        HA_MODE_TO_LIB[HVACMode(mode)]
+        for mode in entry.data.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
+    )
+    entry.runtime_data = GreeIrRuntimeData(
+        configured_modes=configured_modes,
+        last_active_mode=configured_modes[0],
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

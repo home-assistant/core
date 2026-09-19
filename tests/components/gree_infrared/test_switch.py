@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.gree_infrared.const import DOMAIN
 from homeassistant.components.infrared import InfraredCommand, InfraredReceivedSignal
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -279,6 +280,67 @@ async def test_switch_frame_carries_changes_made_while_off(
             mode=GreeAcMode.COOL,
             temperature=27,
             fan=GreeAcFanSpeed.MEDIUM,
+            blow=True,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
+async def test_switch_frame_carries_a_remote_frame_with_climate_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    platforms: list[Platform],
+) -> None:
+    """Test the switches keep up with the remote while the climate entity is disabled.
+
+    A disabled entity is never added, so the frame it would have recorded has to be
+    recorded for the entry rather than by it. Otherwise the next switch toggle sends
+    the defaults back and turns the unit off.
+    """
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(_CLIMATE_ENTITY_ID) is None
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                mode=GreeAcMode.COOL,
+                temperature=27,
+                fan=GreeAcFanSpeed.HIGH,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _XFAN_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL,
+            temperature=27,
+            fan=GreeAcFanSpeed.HIGH,
             blow=True,
         ).get_raw_timings()
     )
@@ -594,16 +656,16 @@ async def test_next_frame_keeps_the_louvres_the_remote_set(
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.parametrize("platforms", [[Platform.CLIMATE, Platform.SWITCH]])
 @pytest.mark.usefixtures("init_integration")
-async def test_unconfigured_mode_frame_records_only_the_flags(
+async def test_unconfigured_mode_frame_reaches_neither_entity(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
-    """Test a frame in an unconfigured mode reaches the switches but not the frame.
+    """Test a frame in an unconfigured mode is dropped whole, flags included.
 
-    A flag is valid whatever mode the unit is in, so the switches record it. The
-    mode, temperature and fan are climate's to record, and climate drops a frame
-    whose mode the user did not configure rather than sending that mode back.
+    A mode the user did not configure is another unit's, so recording its flags
+    would leave the shared state mixing that frame with the mode, temperature and
+    fan of the one before it.
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -626,7 +688,7 @@ async def test_unconfigured_mode_frame_records_only_the_flags(
 
     state = hass.states.get(_TURBO_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -643,7 +705,6 @@ async def test_unconfigured_mode_frame_records_only_the_flags(
             mode=GreeAcMode.COOL,
             temperature=MIN_TEMP,
             fan=GreeAcFanSpeed.AUTO,
-            turbo=True,
             display=False,
         ).get_raw_timings()
     )

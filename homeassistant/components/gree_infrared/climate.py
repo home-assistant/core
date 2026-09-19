@@ -8,7 +8,6 @@ from infrared_protocols.commands.gree_ac import (
     MIN_TEMP,
     GreeAcCommand,
     GreeAcFanSpeed,
-    GreeAcMode,
 )
 
 from homeassistant.components.climate import (
@@ -43,6 +42,9 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DEFAULT_HVAC_MODES,
+    HA_MODE_TO_LIB,
+    LIB_MODE_TO_HA,
 )
 from .entity import GreeIrEntity
 
@@ -55,17 +57,6 @@ _HA_FAN_TO_LIB: dict[str, GreeAcFanSpeed] = {
     FAN_HIGH: GreeAcFanSpeed.HIGH,
 }
 _LIB_FAN_TO_HA: dict[GreeAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
-
-# Every mode other than OFF; the protocol has no OFF mode of its own, power is a
-# separate field, so this dict intentionally has no HVACMode.OFF entry.
-_HA_MODE_TO_LIB: dict[HVACMode, GreeAcMode] = {
-    HVACMode.AUTO: GreeAcMode.AUTO,
-    HVACMode.COOL: GreeAcMode.COOL,
-    HVACMode.HEAT: GreeAcMode.HEAT,
-    HVACMode.DRY: GreeAcMode.DRY,
-    HVACMode.FAN_ONLY: GreeAcMode.FAN_ONLY,
-}
-_LIB_MODE_TO_HA: dict[GreeAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
 
 
 @dataclass
@@ -132,16 +123,26 @@ class GreeAcClimateEntity(
         super().__init__(entry)
         self._infrared_emitter_entity_id = emitter_entity_id
 
-        configured_modes = entry.data.get(
-            CONF_HVAC_MODES, [HVACMode.COOL, HVACMode.DRY]
-        )
+        configured_modes = entry.data.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
-        # Power-off frames still need a mode field; this tracks the mode to send it
-        # with, since the protocol has no dedicated OFF mode.
-        self._last_active_hvac_mode = self._attr_hvac_modes[1]
+
+    @property
+    def _last_active_hvac_mode(self) -> HVACMode:
+        """Return the mode to send a power-off frame with.
+
+        Those frames still carry a mode field, since the protocol has no dedicated
+        OFF mode. It is shared rather than held here because a frame the receiver
+        picks up sets it whether or not this entity is enabled.
+        """
+        return LIB_MODE_TO_HA[self._runtime_data.last_active_mode]
+
+    @_last_active_hvac_mode.setter
+    def _last_active_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Record the mode to send a power-off frame with."""
+        self._runtime_data.last_active_mode = HA_MODE_TO_LIB[hvac_mode]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -200,7 +201,7 @@ class GreeAcClimateEntity(
         return replace(
             self._runtime_data.ac_state,
             power=power,
-            mode=_HA_MODE_TO_LIB[hvac_mode],
+            mode=HA_MODE_TO_LIB[hvac_mode],
             temperature=temp,
             fan=_HA_FAN_TO_LIB[fan_mode],
         )
@@ -301,26 +302,13 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Update state from a physical remote signal."""
         command = GreeAcCommand.from_raw_timings(signal.timings)
-        if command is None:
+        if command is None or not self._runtime_data.apply_received_command(command):
             return
 
-        # Off frames carry a mode field too, so the mode is recorded either way.
-        embedded_hvac_mode = _LIB_MODE_TO_HA[command.mode]
-        if embedded_hvac_mode in self._attr_hvac_modes:
-            self._last_active_hvac_mode = embedded_hvac_mode
-        elif command.power:
-            return
-
-        hvac_mode = embedded_hvac_mode if command.power else HVACMode.OFF
-
-        self._attr_hvac_mode = hvac_mode
-        self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
-        self._attr_target_temperature = float(command.temperature)
-        # The remote's frame is now what the unit last saw, so a later frame has to
-        # carry every field of it rather than the ones sent before it. Only the mode
-        # is taken from the entity, which has already dropped an unconfigured one.
-        self._runtime_data.ac_state = replace(
-            GreeAcState.from_command(command),
-            mode=_HA_MODE_TO_LIB[self._last_active_hvac_mode],
+        state = self._runtime_data.ac_state
+        self._attr_hvac_mode = (
+            LIB_MODE_TO_HA[state.mode] if state.power else HVACMode.OFF
         )
+        self._attr_fan_mode = _LIB_FAN_TO_HA[state.fan]
+        self._attr_target_temperature = float(state.temperature)
         self.async_write_ha_state()
