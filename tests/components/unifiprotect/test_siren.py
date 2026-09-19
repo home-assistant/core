@@ -1,7 +1,9 @@
 """Tests for the UniFi Protect siren (Public API) entities."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 from uiprotect.data import (
@@ -12,7 +14,12 @@ from uiprotect.data import (
     SirenDuration,
     WSAction,
 )
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import (
+    BadRequest,
+    ClientError,
+    NotAuthorized,
+    PublicOnlyModeError,
+)
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.siren import (
@@ -20,7 +27,11 @@ from homeassistant.components.siren import (
     ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
 )
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -718,30 +729,132 @@ async def test_siren_auto_off_timer_scheduled_at_startup(
     assert state.state == STATE_OFF
 
 
-async def test_siren_added_after_setup_in_hybrid(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    siren: Mock,
-) -> None:
-    """A siren adopted after setup gets its entity in hybrid mode too.
-
-    The private bootstrap has no store for sirens, so the adopt path never
-    sees one; discovery goes through the public add signal in both modes.
-    """
+@pytest.fixture(name="setup_hybrid")
+def setup_hybrid_fixture(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a callable setting up the hybrid entry without a siren."""
     ufp.api.has_public_bootstrap = True
     pb = _make_public_bootstrap(None)
     ufp.api.public_bootstrap = pb
     ufp.api.update_public = AsyncMock(return_value=pb)
 
-    await init_entry(hass, ufp, [])
-    assert entity_registry.async_get(SIREN_ENTITY_ID) is None
+    async def _setup() -> None:
+        await init_entry(hass, ufp, [])
 
-    pb.sirens = {siren.id: siren}
+    return _setup
+
+
+def _add_siren_frame(ufp: MockUFPFixture, siren: Mock) -> None:
+    """Deliver a public devices websocket add frame for ``siren``."""
+    ufp.api.public_bootstrap.sirens[siren.id] = siren
     msg = _make_ws_msg(siren)
     msg.action = WSAction.ADD
-    assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(msg)
+
+
+@pytest.mark.parametrize(
+    ("ufp_fixture", "setup_fixture"),
+    [
+        pytest.param("ufp_public_only", "setup_public_only", id="public_only"),
+        pytest.param("ufp", "setup_hybrid", id="hybrid"),
+    ],
+)
+async def test_siren_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_fixture: str,
+    setup_fixture: str,
+    siren: Mock,
+) -> None:
+    """A siren adopted after setup gets its entity in both modes.
+
+    The private bootstrap has no store for sirens, so the adopt path never
+    sees one; discovery goes through the public add signal in both modes.
+    """
+    ufp: MockUFPFixture = request.getfixturevalue(ufp_fixture)
+    setup: Callable[[], Coroutine[Any, Any, None]] = request.getfixturevalue(
+        setup_fixture
+    )
+    await setup()
+    assert entity_registry.async_get(SIREN_ENTITY_ID) is None
+
+    _add_siren_frame(ufp, siren)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(SIREN_ENTITY_ID) is not None
+
+
+async def test_public_only_siren_end_to_end(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    siren: Mock,
+) -> None:
+    """An API-key-only entry with a siren creates a working entity.
+
+    Exercises the real public-only setup path: reading the private bootstrap
+    raises on that client, so the siren platform must not touch it.
+    """
+    ufp_public_only.api.public_bootstrap.sirens = {siren.id: siren}
+
+    await setup_public_only()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Commands go to the public object; there is no private one to fall back to.
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        blocking=True,
+    )
+    siren.play.assert_awaited_once_with(duration=None)
+
+
+async def test_siren_survives_switch_to_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_with_siren: MockUFPFixture,
+) -> None:
+    """An entry switched to API-key-only keeps its siren entity.
+
+    The entity is built from the public object in both modes, so after the
+    switch the existing registry entry is re-adopted instead of being left
+    behind without an entity.
+    """
+    ufp = ufp_with_siren
+    await init_entry(hass, ufp, [])
+    registry_entry = entity_registry.async_get(SIREN_ENTITY_ID)
+    assert registry_entry is not None
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
+
+    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The public-only setup path registers the NVR from the public bootstrap.
+    api = ufp.api
+    api.public_bootstrap.nvr = api.bootstrap.nvr
+
+    # Flip both the stored mode and the client, as reconfiguring does.
+    hass.config_entries.async_update_entry(
+        ufp.entry,
+        data={**ufp.entry.data, CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY},
+    )
+    api.is_public_only = True
+    type(api).bootstrap = PropertyMock(side_effect=BadRequest("public-only"))
+    api.update = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
+    api.update_public = AsyncMock(return_value=api.public_bootstrap)
+
+    with patch(
+        "homeassistant.components.unifiprotect.async_create_api_client",
+        return_value=api,
+    ):
+        await hass.config_entries.async_setup(ufp.entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(SIREN_ENTITY_ID).id == registry_entry.id
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
