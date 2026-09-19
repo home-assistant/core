@@ -34,7 +34,7 @@ _FULL_MOON_PHASE_VALUE = 14
 @callback
 def moon_phase() -> str:
     """Return the current moon phase."""
-    value: float = moon.phase(dt_util.now().date())
+    value: float = moon.phase(dt_util.utcnow())
     if value < 0.5 or value > 27.5:
         return STATE_NEW_MOON
     if value < 6.5:
@@ -55,5 +55,5 @@ def moon_phase() -> str:
 @callback
 def is_waxing() -> bool:
     """Return whether the moon is currently waxing (illumination increasing)."""
-    value: float = moon.phase(dt_util.now().date())
+    value: float = moon.phase(dt_util.utcnow())
     return value < _FULL_MOON_PHASE_VALUE
