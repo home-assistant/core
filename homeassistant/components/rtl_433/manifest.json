@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["pyrtl_433==0.1.1"]
+  "requirements": ["pyrtl_433==0.4.0"]
 }
