@@ -64,9 +64,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "has_game_pass": {
-        "name": "Subscribed to Xbox Game Pass"
-      },
       "in_game": {
         "name": "In game"
       },

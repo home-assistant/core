@@ -26,7 +26,6 @@ class XboxBinarySensor(StrEnum):
 
     ONLINE = "online"
     IN_GAME = "in_game"
-    HAS_GAME_PASS = "has_game_pass"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -77,11 +76,6 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         key=XboxBinarySensor.IN_GAME,
         translation_key=XboxBinarySensor.IN_GAME,
         is_on_fn=in_game,
-    ),
-    XboxBinarySensorEntityDescription(
-        key=XboxBinarySensor.HAS_GAME_PASS,
-        translation_key=XboxBinarySensor.HAS_GAME_PASS,
-        is_on_fn=lambda x: x.detail.has_game_pass if x.detail else None,
     ),
 )
 
