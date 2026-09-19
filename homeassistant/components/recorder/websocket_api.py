@@ -1,12 +1,16 @@
 """The Recorder websocket API."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime as dt
 import logging
 from typing import Any, Literal, cast
 
 import probatio
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions import entity_permission_filter
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
@@ -141,6 +145,19 @@ UNIT_SCHEMA = probatio.Schema(
 )
 
 
+def _statistic_id_read_filter(user: User) -> Callable[[str], bool] | None:
+    """Return a check for the statistic ids a user may read, or None for all.
+
+    Statistic ids of entity backed statistics are entity ids, so the entity
+    read policy applies to them. External statistics are a `domain:object_id`
+    pair with no entity behind them, which leaves no policy to test.
+    """
+    if (check_entity := entity_permission_filter(user, POLICY_READ)) is None:
+        return None
+
+    return lambda statistic_id: ":" in statistic_id or check_entity(statistic_id)
+
+
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
@@ -200,6 +217,12 @@ async def ws_get_statistic_during_period(
 
     start_time, end_time = resolve_period(cast(StatisticPeriod, msg))
 
+    statistic_id: str = msg["statistic_id"]
+    check_statistic_id = _statistic_id_read_filter(connection.user)
+    if check_statistic_id is not None and not check_statistic_id(statistic_id):
+        connection.send_result(msg["id"], {})
+        return
+
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistic_during_period,
@@ -207,7 +230,7 @@ async def ws_get_statistic_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg["statistic_id"],
+            statistic_id,
             msg.get("types"),
             msg.get("units"),
         )
@@ -268,6 +291,18 @@ async def ws_handle_get_statistics_during_period(
 
     if (types := msg.get("types")) is None:
         types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
+
+    statistic_ids: set[str] = set(msg["statistic_ids"])
+    if (check_statistic_id := _statistic_id_read_filter(connection.user)) is not None:
+        statistic_ids = {
+            statistic_id
+            for statistic_id in statistic_ids
+            if check_statistic_id(statistic_id)
+        }
+        if not statistic_ids:
+            connection.send_result(msg["id"], {})
+            return
+
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -275,7 +310,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            set(msg["statistic_ids"]),
+            statistic_ids,
             msg.get("period"),
             msg.get("units"),
             types,
@@ -315,14 +350,20 @@ def _ws_get_list_statistic_ids(
     hass: HomeAssistant,
     msg_id: int,
     statistic_type: Literal["mean", "sum"] | None = None,
+    check_statistic_id: Callable[[str], bool] | None = None,
 ) -> bytes:
     """Fetch a list of available statistic_id and convert them to JSON.
 
     Runs in the executor.
     """
-    return json_bytes(
-        messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
-    )
+    statistic_ids = list_statistic_ids(hass, None, statistic_type)
+    if check_statistic_id is not None:
+        statistic_ids = [
+            metadata
+            for metadata in statistic_ids
+            if check_statistic_id(metadata["statistic_id"])
+        ]
+    return json_bytes(messages.result_message(msg_id, statistic_ids))
 
 
 async def ws_handle_list_statistic_ids(
@@ -335,6 +376,7 @@ async def ws_handle_list_statistic_ids(
             hass,
             msg["id"],
             msg.get("statistic_type"),
+            _statistic_id_read_filter(connection.user),
         )
     )
 
@@ -439,6 +481,12 @@ async def ws_get_statistics_metadata(
     statistic_ids = msg.get("statistic_ids")
     statistic_ids_set_or_none = set(statistic_ids) if statistic_ids else None
     metadata = await async_list_statistic_ids(hass, statistic_ids_set_or_none)
+    if (check_statistic_id := _statistic_id_read_filter(connection.user)) is not None:
+        metadata = [
+            statistic_metadata
+            for statistic_metadata in metadata
+            if check_statistic_id(statistic_metadata["statistic_id"])
+        ]
     connection.send_result(msg["id"], metadata)
 
 

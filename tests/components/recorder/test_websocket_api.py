@@ -53,7 +53,7 @@ from .common import (
 )
 from .conftest import InstrumentedMigration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
@@ -4808,3 +4808,161 @@ async def test_entity_options_ws(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"recording_disabled_by": None}
+
+
+async def _async_record_statistics(hass: HomeAssistant) -> None:
+    """Record statistics for two sensors and one external source."""
+    now = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    attributes = {
+        "device_class": "energy",
+        "state_class": "total",
+        "unit_of_measurement": "kWh",
+        "last_reset": None,
+    }
+    hass.states.async_set(
+        "sensor.allowed", 10, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.forbidden", 10, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    async_add_external_statistics(
+        hass,
+        {
+            "mean_type": StatisticMeanType.NONE,
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": "test",
+            "statistic_id": "test:total_energy_import",
+            "unit_class": "energy",
+            "unit_of_measurement": "kWh",
+        },
+        (
+            {
+                # External statistics are recorded on the hour
+                "start": now.replace(minute=0, second=0, microsecond=0),
+                "last_reset": None,
+                "state": 0,
+                "sum": 2,
+            },
+        ),
+    )
+    await async_wait_recording_done(hass)
+
+
+async def test_statistics_filter_unauthorized_entities(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the statistics read commands apply per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"sensor.allowed": True}}}
+    )
+    await _async_record_statistics(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+
+    # An id the user may not read is not listed, an external statistic has no
+    # entity behind it and stays
+    await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert {result["statistic_id"] for result in response["result"]} == {
+        "sensor.allowed",
+        "test:total_energy_import",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": [
+                "sensor.allowed",
+                "sensor.forbidden",
+                "test:total_energy_import",
+            ],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert {result["statistic_id"] for result in response["result"]} == {
+        "sensor.allowed",
+        "test:total_energy_import",
+    }
+
+    now = get_start_time(dt_util.utcnow())
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.allowed", "sensor.forbidden"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert set(response["result"]) == {"sensor.allowed"}
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.forbidden"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.forbidden",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.allowed",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] != {}
+
+
+async def test_statistics_all_entities_for_unrestricted_users(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a user with blanket read access sees every statistic."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"read": True}}})
+    await _async_record_statistics(hass)
+
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+    await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert {result["statistic_id"] for result in response["result"]} == {
+        "sensor.allowed",
+        "sensor.forbidden",
+        "test:total_energy_import",
+    }

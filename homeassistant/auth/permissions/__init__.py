@@ -24,6 +24,7 @@ __all__ = [
     "PermissionLookup",
     "PolicyPermissions",
     "PolicyType",
+    "entity_permission_filter",
     "filter_entity_ids_by_permission",
     "merge_policies",
 ]
@@ -37,6 +38,19 @@ def filter_entity_ids_by_permission(
         return list(entity_ids)
     check_entity = user.permissions.check_entity
     return [entity_id for entity_id in entity_ids if check_entity(entity_id, key)]
+
+
+def entity_permission_filter(user: User, key: str) -> Callable[[str], bool] | None:
+    """Return a check for the given policy key, or None when nothing is denied.
+
+    Callers that filter results one by one use the None to skip the check
+    altogether, so an admin or a user with blanket access pays for a single
+    boolean test rather than a lookup per item.
+    """
+    if user.is_admin or user.permissions.access_all_entities(key):
+        return None
+    check_entity = user.permissions.check_entity
+    return lambda entity_id: check_entity(entity_id, key)
 
 
 class AbstractPermissions:

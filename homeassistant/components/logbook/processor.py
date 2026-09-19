@@ -12,6 +12,9 @@ from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions import entity_permission_filter
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
@@ -111,6 +114,8 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     timestamp: bool
+    # The caller entries are filtered for, or None to return everything.
+    user: User | None = None
     memoize_new_contexts: bool = True
     # True when this run will switch to a live stream; gates population of
     # context_user_ids (wasted work for one-shot REST/get_events callers).
@@ -135,6 +140,7 @@ class EventProcessor:
         timestamp: bool = False,
         include_entity_name: bool = True,
         for_live_stream: bool = False,
+        user: User | None = None,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
@@ -155,6 +161,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
+            user=user,
             for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
@@ -265,16 +272,67 @@ class EventProcessor:
         query_parent_user_ids: dict[bytes, bytes] | None = None,
     ) -> list[dict[str, Any]]:
         """Humanify rows."""
-        return list(
-            _humanify(
-                self.hass,
-                rows,
-                self.ent_reg,
-                self.logbook_run,
-                self.context_augmenter,
-                query_parent_user_ids,
-            )
+        entries = _humanify(
+            self.hass,
+            rows,
+            self.ent_reg,
+            self.logbook_run,
+            self.context_augmenter,
+            query_parent_user_ids,
         )
+        # A request without entity_ids covers everything, so entries the caller
+        # may not read are dropped here rather than at the query. Permissions
+        # are resolved per batch rather than held from when the processor was
+        # built, because a live stream outlives a change to them. A caller that
+        # may read every entity resolves to None and is not filtered at all.
+        if (user := self.logbook_run.user) is not None and (
+            entity_filter := entity_permission_filter(user, POLICY_READ)
+        ) is not None:
+            return _filter_readable_entries(entries, entity_filter)
+
+        return list(entries)
+
+
+# Everything an augmented context says about the entity that triggered an
+# entry. The remaining context keys name an integration, a service or a user,
+# which say nothing about the entity itself.
+_DENIED_CONTEXT_KEYS = (
+    CONTEXT_ENTITY_ID,
+    CONTEXT_ENTITY_ID_NAME,
+    CONTEXT_STATE,
+    CONTEXT_NAME,
+    CONTEXT_MESSAGE,
+    CONTEXT_SOURCE,
+)
+
+
+def _filter_readable_entries(
+    entries: Generator[dict[str, Any]], entity_filter: Callable[[str], bool]
+) -> list[dict[str, Any]]:
+    """Return the entries a caller is allowed to read.
+
+    An entry that belongs to no entity, a plain event for example, carries no
+    entity to test and stays. The entity an entry was triggered by is a
+    different one than the entry's own, so its attribution is dropped by itself
+    and the entry survives without pointing at something the caller cannot see.
+    """
+    readable: list[dict[str, Any]] = []
+
+    for entry in entries:
+        if (entity_id := entry.get(LOGBOOK_ENTRY_ENTITY_ID)) and not entity_filter(
+            entity_id
+        ):
+            continue
+
+        if (context_entity_id := entry.get(CONTEXT_ENTITY_ID)) and not entity_filter(
+            context_entity_id
+        ):
+            for key in _DENIED_CONTEXT_KEYS:
+                entry.pop(key, None)
+
+        readable.append(entry)
+
+    return readable
 
 
 def _exposed_state_attributes(
