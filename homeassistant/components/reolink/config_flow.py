@@ -322,16 +322,27 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
                 mac_address = format_mac(host.api.mac_address)
-                await self.async_set_unique_id(mac_address, raise_on_progress=False)
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        entry=self._get_reauth_entry(), data=user_input
+                existing_entry = await self.async_set_unique_id(
+                    mac_address, raise_on_progress=False
+                )
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
                     )
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
+                    # a device moved to its other network interface reports a new
+                    # MAC address, its UID tells it is still the same device
+                    same_device = (
+                        host.api.supported(None, "UID")
+                        and entry.data.get(CONF_UID) == host.api.uid
+                    )
+                    if not same_device:
+                        self._abort_if_unique_id_mismatch()
+                    if existing_entry is not None and existing_entry is not entry:
+                        return self.async_abort(reason="already_configured")
                     return self.async_update_reload_and_abort(
-                        entry=self._get_reconfigure_entry(), data=user_input
+                        entry=entry, data=user_input, unique_id=mac_address
                     )
                 self._abort_if_unique_id_configured()
 
