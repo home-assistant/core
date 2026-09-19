@@ -1,4 +1,4 @@
-"""Media player platform for the Marantz SR7002 receiver."""
+"""Media player platform for Marantz receivers using the 2007 protocol."""
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -6,10 +6,8 @@ import math
 from typing import override
 
 from marantz_rs232 import (
-    V2007_SUPPORTED_SOURCES,
     MarantzV2007Receiver,
     V2007MainPlayer,
-    V2007Model,
     V2007MultiRoomPlayer,
     V2007ReceiverState,
     V2007Source,
@@ -26,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, MODEL, MarantzRS232ConfigEntry
+from .const import DOMAIN, MarantzRS232ConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -37,15 +35,25 @@ INPUT_SOURCE_TO_HA: dict[V2007Source, str] = {
     V2007Source.TV: "tv",
     V2007Source.DVD: "dvd",
     V2007Source.VCR1: "vcr1",
+    V2007Source.VCR2: "vcr2",
     V2007Source.DSS_VCR2: "dss_vcr2",
+    V2007Source.LD: "ld",
+    V2007Source.USB: "usb",
+    V2007Source.NETWORK: "network",
     V2007Source.AUX1: "aux1",
     V2007Source.AUX2: "aux2",
+    V2007Source.SR4023_CD: "cd",
+    V2007Source.CD_R: "cd_r",
     V2007Source.CD_CDR: "cd_cdr",
     V2007Source.TAPE: "tape",
     V2007Source.TUNER1: "tuner",
     V2007Source.FM1: "fm",
     V2007Source.AM1: "am",
     V2007Source.XM1: "xm",
+    V2007Source.SIRIUS: "sirius",
+    V2007Source.AM2: "am2",
+    V2007Source.BD: "bd",
+    V2007Source.MXPORT: "mxport",
 }
 
 
@@ -112,14 +120,10 @@ class MarantzMediaPlayer(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Marantz",
-            model_id=MODEL,
         )
         self._attr_unique_id = f"{config_entry.entry_id}_{zone}"
 
-        self._attr_source_list = sorted(
-            INPUT_SOURCE_TO_HA[source]
-            for source in V2007_SUPPORTED_SOURCES[V2007Model.SR7002]
-        )
+        self._attr_source_list = sorted(INPUT_SOURCE_TO_HA.values())
         self._attr_supported_features = (
             MediaPlayerEntityFeature.TURN_ON
             | MediaPlayerEntityFeature.TURN_OFF

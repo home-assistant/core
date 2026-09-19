@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from marantz_rs232 import MarantzV2007Receiver, V2007Model, V2007Source
+from marantz_rs232 import MarantzV2007Receiver, V2007Source
 import pytest
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_receiver() -> Generator[MarantzV2007Receiver]:
     """Use real player objects, populating state only when it is queried."""
-    receiver = MarantzV2007Receiver(MOCK_DEVICE, model=V2007Model.SR7002)
+    receiver = MarantzV2007Receiver(MOCK_DEVICE)
 
     async def connect() -> None:
         receiver._connected = True
@@ -61,7 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE: MOCK_DEVICE},
-        title="SR7002",
+        title="Marantz receiver",
         entry_id="01KPBBPM6WCQ8148EFR0TCG1WW",
     )
 

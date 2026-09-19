@@ -8,6 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "marantz_rs232"
-MODEL = "SR7002"
+DEFAULT_NAME = "Marantz receiver"
 
 type MarantzRS232ConfigEntry = ConfigEntry[MarantzV2007Receiver]

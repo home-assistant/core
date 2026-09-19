@@ -1,10 +1,10 @@
-"""Tests for Marantz SR7002 media players."""
+"""Tests for Marantz 2007-protocol media players."""
 
 import math
 from pathlib import Path
 from unittest.mock import patch
 
-from marantz_rs232 import MarantzV2007Receiver
+from marantz_rs232 import MarantzV2007Receiver, V2007Source
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -36,8 +36,8 @@ from homeassistant.util.json import load_json
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-MAIN = "media_player.sr7002"
-MULTI = "media_player.sr7002_multi_room"
+MAIN = "media_player.marantz_receiver"
+MULTI = "media_player.marantz_receiver_multi_room"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -213,12 +213,13 @@ async def test_invalid_source(hass: HomeAssistant) -> None:
 
 
 def test_source_translations() -> None:
-    """Only translate the supported SR7002 inputs."""
+    """Translate every 2007-protocol input."""
     strings = load_json(Path("homeassistant/components/marantz_rs232/strings.json"))
     declared = strings["entity"]["media_player"]["receiver"]["state_attributes"][
         "source"
     ]["state"]
     assert set(INPUT_SOURCE_TO_HA.values()) == set(declared)
+    assert set(INPUT_SOURCE_TO_HA) == set(V2007Source)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -255,3 +256,31 @@ async def test_command_failure(
         )
     assert err.value.translation_key == "communication_error"
     assert isinstance(err.value.__cause__, error)
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("entity_id", [MAIN, MULTI])
+@pytest.mark.parametrize(
+    ("source", "code"),
+    [("bd", "M"), ("usb", "7"), ("cd", "B"), ("am2", "L")],
+)
+async def test_other_model_sources(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    entity_id: str,
+    source: str,
+    code: str,
+) -> None:
+    """Offer and select 2007-protocol inputs absent from the tested SR7002."""
+    assert source in hass.states.get(entity_id).attributes["source_list"]
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
+        blocking=True,
+    )
+    assert mock_receiver._send_command.call_args.args[1] == code
+    mock_receiver._state.main.source_audio = code
+    mock_receiver._state.multi_room_a.source_audio = code
+    mock_receiver._notify_subscribers()
+    assert hass.states.get(entity_id).attributes[ATTR_INPUT_SOURCE] == source

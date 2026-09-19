@@ -31,17 +31,22 @@ async def test_user_form_creates_entry(
     mock_receiver: MarantzV2007Receiver,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test setup needs only the port for the supported SR7002."""
+    """Test setup needs only the port for a 2007-protocol receiver."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert list(result["data_schema"].schema) == [CONF_DEVICE]
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: MOCK_DEVICE}
-    )
+    with patch(
+        "homeassistant.components.marantz_rs232.config_flow.MarantzV2007Receiver",
+        return_value=mock_receiver,
+    ) as constructor:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: MOCK_DEVICE}
+        )
+    constructor.assert_called_once_with(MOCK_DEVICE)
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "SR7002"
+    assert result["title"] == "Marantz receiver"
     assert result["data"] == {CONF_DEVICE: MOCK_DEVICE}
     mock_setup_entry.assert_awaited_once()
     mock_receiver.connect.assert_awaited_once()

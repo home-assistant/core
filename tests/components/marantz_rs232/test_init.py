@@ -6,8 +6,11 @@ from unittest.mock import patch
 from marantz_rs232 import MarantzV2007Receiver
 import pytest
 
+from homeassistant.components.marantz_rs232.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -69,7 +72,7 @@ async def test_connection_logging(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Log one disconnect and one successful reconnection, at info level."""
+    """Log a disconnect once without duplicating library connection messages."""
     caplog.set_level(logging.INFO, logger="homeassistant.components.marantz_rs232")
     caplog.clear()
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
@@ -92,9 +95,50 @@ async def test_connection_logging(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert caplog.text.count("Connected to Marantz receiver") == 1
+    assert "Connected to Marantz receiver" not in caplog.text
     assert all(
         record.levelno == logging.INFO
         for record in caplog.records
         if record.name == "homeassistant.components.marantz_rs232"
     )
+
+
+@pytest.mark.parametrize("method", ["connect", "query_state"])
+async def test_invalid_serial_port(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Report invalid serial configuration without endlessly retrying it."""
+    getattr(mock_receiver, method).side_effect = ValueError("Invalid serial endpoint")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_serial_port"
+    assert not mock_receiver.connected
+
+
+async def test_generic_receiver(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Use the generic protocol without claiming to know the receiver model."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.marantz_rs232.MarantzV2007Receiver",
+        return_value=mock_receiver,
+    ) as constructor:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    constructor.assert_called_once_with(mock_config_entry.data[CONF_DEVICE])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.manufacturer == "Marantz"
+    assert device.model is None
+    assert device.model_id is None

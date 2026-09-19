@@ -2,19 +2,19 @@
 
 from typing import Any, override
 
-from marantz_rs232 import MarantzV2007Receiver, V2007Model
+from marantz_rs232 import MarantzV2007Receiver
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers.selector import SerialPortSelector
 
-from .const import DOMAIN, LOGGER, MODEL
+from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 
 async def _async_attempt_connect(port: str) -> str | None:
     """Attempt to connect to the receiver at the given port."""
-    receiver = MarantzV2007Receiver(port, model=V2007Model.SR7002)
+    receiver = MarantzV2007Receiver(port)
     try:
         await receiver.connect()
     except ValueError, ConnectionError, OSError, TimeoutError:
@@ -44,7 +44,7 @@ class MarantzRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
             error = await _async_attempt_connect(user_input[CONF_DEVICE])
             if error is None:
                 return self.async_create_entry(
-                    title=MODEL, data={CONF_DEVICE: user_input[CONF_DEVICE]}
+                    title=DEFAULT_NAME, data={CONF_DEVICE: user_input[CONF_DEVICE]}
                 )
             errors["base"] = error
 

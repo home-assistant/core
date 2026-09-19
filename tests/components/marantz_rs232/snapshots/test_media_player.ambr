@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities_created[media_player.sr7002-entry]
+# name: test_entities_created[media_player.marantz_receiver-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8,16 +8,26 @@
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'am',
+        'am2',
         'aux1',
         'aux2',
+        'bd',
+        'cd',
         'cd_cdr',
+        'cd_r',
         'dss_vcr2',
         'dvd',
         'fm',
+        'ld',
+        'mxport',
+        'network',
+        'sirius',
         'tape',
         'tuner',
         'tv',
+        'usb',
         'vcr1',
+        'vcr2',
         'xm',
       ]),
     }),
@@ -28,7 +38,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.sr7002',
+    'entity_id': 'media_player.marantz_receiver',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -51,39 +61,49 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities_created[media_player.sr7002-state]
+# name: test_entities_created[media_player.marantz_receiver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SR7002',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz receiver',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'dvd',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'am',
+        'am2',
         'aux1',
         'aux2',
+        'bd',
+        'cd',
         'cd_cdr',
+        'cd_r',
         'dss_vcr2',
         'dvd',
         'fm',
+        'ld',
+        'mxport',
+        'network',
+        'sirius',
         'tape',
         'tuner',
         'tv',
+        'usb',
         'vcr1',
+        'vcr2',
         'xm',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.40816326530612246,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.sr7002',
+    'entity_id': 'media_player.marantz_receiver',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities_created[media_player.sr7002_multi_room-entry]
+# name: test_entities_created[media_player.marantz_receiver_multi_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -92,16 +112,26 @@
     'capabilities': dict({
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'am',
+        'am2',
         'aux1',
         'aux2',
+        'bd',
+        'cd',
         'cd_cdr',
+        'cd_r',
         'dss_vcr2',
         'dvd',
         'fm',
+        'ld',
+        'mxport',
+        'network',
+        'sirius',
         'tape',
         'tuner',
         'tv',
+        'usb',
         'vcr1',
+        'vcr2',
         'xm',
       ]),
     }),
@@ -112,7 +142,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.sr7002_multi_room',
+    'entity_id': 'media_player.marantz_receiver_multi_room',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -135,32 +165,42 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities_created[media_player.sr7002_multi_room-state]
+# name: test_entities_created[media_player.marantz_receiver_multi_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SR7002 Multi-room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz receiver Multi-room',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'tv',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'am',
+        'am2',
         'aux1',
         'aux2',
+        'bd',
+        'cd',
         'cd_cdr',
+        'cd_r',
         'dss_vcr2',
         'dvd',
         'fm',
+        'ld',
+        'mxport',
+        'network',
+        'sirius',
         'tape',
         'tuner',
         'tv',
+        'usb',
         'vcr1',
+        'vcr2',
         'xm',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5102040816326531,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.sr7002_multi_room',
+    'entity_id': 'media_player.marantz_receiver_multi_room',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
