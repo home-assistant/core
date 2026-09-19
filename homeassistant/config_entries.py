@@ -935,7 +935,7 @@ class ConfigEntry[_DataT = Any]:
 
         reason = _SetupErrorReason()
 
-        result = False
+        result: bool | None = False
 
         if domain_is_integration:
             try:
@@ -982,7 +982,7 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                setup_result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
+                result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
 
         except (
             asyncio.CancelledError,
@@ -994,10 +994,9 @@ class ConfigEntry[_DataT = Any]:
             )
             if retry_later:
                 return
-        else:
-            result = bool(setup_result in [True, None])
+
         finally:
-            if not result and domain_is_integration:
+            if result is False and domain_is_integration:
                 await self._async_process_on_unload(hass)
 
         #
@@ -1123,13 +1122,13 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
 
-        result = False
+        result: bool | None = False
         try:
-            unload_result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
+            result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
             # Only do side effects if we unloaded the integration
             if domain_is_integration:
-                if unload_result in [True, None]:  # type: ignore[unused-ignore]
+                if result is not False:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
@@ -1149,9 +1148,8 @@ class ConfigEntry[_DataT = Any]:
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
-        else:
-            result = bool(unload_result in [True, None])
-        return result
+
+        return result is not False
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
