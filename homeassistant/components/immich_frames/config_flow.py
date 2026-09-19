@@ -53,7 +53,6 @@ from .const import (
     SCREEN_SIZES,
     SOURCE_ALBUM,
     SOURCE_ALL,
-    SOURCE_MEMORIES,
     SOURCE_SMART,
     TIME_RANGE_MONTHS,
 )
@@ -168,8 +167,6 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_album()
         if source == SOURCE_SMART:
             return await self.async_step_smart()
-        if source == SOURCE_MEMORIES:
-            return await self.async_step_memories()
         return await self._async_finish_create()
 
     async def async_step_album(
@@ -238,12 +235,6 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema({probatio.Required(CONF_SMART_QUERY): str}),
             errors=errors,
         )
-
-    async def async_step_memories(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reject memories until the shared Immich client supports them."""
-        return self.async_abort(reason="memories_unsupported")
 
     async def _async_finish_create(self) -> ConfigFlowResult:
         """Create or reconfigure a frame entry."""
@@ -338,8 +329,6 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 return await self.async_step_album()
             if source == SOURCE_SMART:
                 return await self.async_step_smart()
-            if source == SOURCE_MEMORIES:
-                return await self.async_step_memories()
             return self._finish()
         return self.async_show_form(
             step_id="init",
@@ -422,12 +411,6 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
                 }
             ),
         )
-
-    async def async_step_memories(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reject memories until the shared Immich client supports them."""
-        return self.async_abort(reason="memories_unsupported")
 
     def _settings_schema(self):
         """Return common display settings."""

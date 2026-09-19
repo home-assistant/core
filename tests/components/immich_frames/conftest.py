@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.immich.const import MOCK_SEARCH_ASSETS
+from tests.components.immich.const import ALBUM_DATA, MOCK_SEARCH_ASSETS
 
 
 @pytest.fixture
@@ -29,7 +29,12 @@ def mock_immich_api() -> SimpleNamespace:
     Image.new("RGB", (4, 3), "red").save(image, "JPEG")
     return SimpleNamespace(
         search=SimpleNamespace(
-            async_get_all=AsyncMock(return_value=MOCK_SEARCH_ASSETS)
+            async_get_all=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
+            async_get_all_by_album_ids=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
+            async_smart_search=AsyncMock(return_value=MOCK_SEARCH_ASSETS),
+        ),
+        albums=SimpleNamespace(
+            async_get_all_albums=AsyncMock(return_value=[ALBUM_DATA])
         ),
         assets=SimpleNamespace(
             async_view_asset=AsyncMock(return_value=image.getvalue())
@@ -72,9 +77,27 @@ def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
         "test_user_aborts_when_immich_is_not_loaded",
         "test_setup_entry_creates_image",
         "test_diagnostics_exclude_image_bytes",
+        "test_user_creates_album_frame",
+        "test_user_creates_smart_frame",
+        "test_options_flow_updates_display_settings",
+        "test_reconfigure_flow_updates_frame_name",
+        "test_options_flow_configures_album_source",
+        "test_options_flow_configures_smart_source",
+        "test_user_validation_errors",
+        "test_album_flow_validates_empty_and_unknown_albums",
+        "test_album_flow_aborts_when_no_albums",
+        "test_smart_flow_requires_a_query",
     }:
         translations.append("component.immich.")
-    if request.node.name in {"test_user_creates_frame", "test_setup_entry_creates_image", "test_diagnostics_exclude_image_bytes"}:
+    if request.node.name == "test_reconfigure_flow_updates_frame_name":
+        translations.append("component.homeassistant.")
+    if request.node.name in {
+        "test_user_creates_frame",
+        "test_setup_entry_creates_image",
+        "test_diagnostics_exclude_image_bytes",
+        "test_user_creates_album_frame",
+        "test_user_creates_smart_frame",
+    }:
         translations.append("component.image.")
         translations.append("component.button.")
         translations.append("component.switch.")

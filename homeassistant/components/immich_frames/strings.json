@@ -4,7 +4,6 @@
       "immich_required": "Set up the Immich integration first.",
       "immich_not_ready": "The Immich integration is not ready.",
       "no_albums": "No Immich albums are available.",
-      "memories_unsupported": "Memories require a newer shared Immich client.",
       "already_configured": "A frame with this name is already configured."
     },
     "error": {
@@ -28,7 +27,7 @@
         "data_description": {
           "immich_entry_id": "The Immich account that supplies the photos.",
           "frame_name": "The name shown for this frame in Home Assistant.",
-          "source": "Choose the library, albums, memories, or keywords used for rotation."
+          "source": "Choose the library, albums, or keywords used for rotation."
         }
       },
       "album": {
@@ -41,22 +40,15 @@
         "data": {"smart_query": "Keywords"},
         "data_description": {"smart_query": "Describe the photos to show, such as beach sunset."}
       },
-      "memories": {
-        "title": "Configure memories",
-        "data": {
-          "memory_window_days": "Memory window",
-          "fallback_to_all": "Fall back to all photos"
-        },
-        "data_description": {
-          "memory_window_days": "How many days before and after today to search.",
-          "fallback_to_all": "Use the normal library when no memories match."
-        }
-      },
       "reconfigure": {
         "title": "Reconfigure Immich frame",
         "data": {
           "frame_name": "Frame name",
           "source": "Photo source"
+        },
+        "data_description": {
+          "frame_name": "The name shown for this frame in Home Assistant.",
+          "source": "Choose the library, albums, or keywords used for rotation."
         }
       },
       "init": {
@@ -73,10 +65,7 @@
     }
   },
   "options": {
-    "abort": {
-      "immich_not_ready": "The Immich integration is not ready.",
-      "memories_unsupported": "Memories require a newer shared Immich client."
-    },
+    "abort": {"immich_not_ready": "The Immich integration is not ready."},
     "error": {
       "album_unavailable": "One or more selected albums are no longer available."
     },
@@ -92,15 +81,29 @@
           "screen_shape": "Screen shape",
           "photo_fit": "Photo fitting",
           "interval": "Rotation interval"
+        },
+        "data_description": {
+          "source": "Choose the library, albums, or keywords used for rotation.",
+          "mode": "Allow single portrait photos, paired photos, or pairs only.",
+          "orientation": "Limit candidates to a particular image orientation.",
+          "time_range": "Only use photos from this rolling time range.",
+          "pair_window_days": "Maximum date difference between paired portraits.",
+          "screen_shape": "Choose the exact output dimensions for the frame.",
+          "photo_fit": "Crop photos or show the complete image with padding.",
+          "interval": "How often to select and render another photo."
         }
       },
       "album": {
         "title": "Choose albums",
-        "data": {"album_ids": "Albums"}
+        "data": {"album_ids": "Albums"},
+        "data_description": {"album_ids": "One or more albums used by this frame."}
       },
       "smart": {
         "title": "Choose keywords",
-        "data": {"smart_query": "Keywords"}
+        "data": {"smart_query": "Keywords"},
+        "data_description": {
+          "smart_query": "Describe the photos to show, such as beach sunset."
+        }
       }
     }
   },

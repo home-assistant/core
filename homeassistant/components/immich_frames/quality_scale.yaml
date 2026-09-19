@@ -45,7 +45,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Authentication is owned by the parent Immich integration.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

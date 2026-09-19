@@ -1,9 +1,13 @@
 """Test Immich Frames cache integrity and invalidation."""
 
+from copy import copy
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 
+from aioimmich.assets.models import ExifInfo
 from PIL import Image
+import pytest
 
 from homeassistant.components.immich_frames.cache import FrameCache
 from homeassistant.components.immich_frames.const import CONF_SCREEN_SHAPE
@@ -30,3 +34,27 @@ def test_cache_round_trip_and_settings_invalidation(tmp_path: Path) -> None:
 
     cache.clear()
     assert not cache.path.exists()
+
+
+def test_cache_handles_exif_variants_and_invalid_output(tmp_path: Path) -> None:
+    """Cache serialization handles optional and timestamped EXIF metadata."""
+    cache = FrameCache(tmp_path / "frame.json")
+    asset = copy(MOCK_SEARCH_ASSETS[0])
+    asset.exif_info = ExifInfo(date_time_original=datetime.now(UTC))
+    payload = BytesIO()
+    Image.new("RGB", (16, 12), "blue").save(payload, "JPEG")
+    image, _ = render([payload.getvalue()], "landscape", "show_full")
+    cache.write(asset, image, {}, "parent")
+    assert cache.read({}, "parent")[0].exif_info.date_time_original is not None
+
+    asset.exif_info = None
+    cache.write(asset, image, {}, "parent")
+    assert cache.read({}, "parent")[0].exif_info is None
+
+    invalid = BytesIO()
+    Image.new("RGB", (100, 100), "black").save(invalid, "JPEG")
+    with pytest.raises(ValueError):
+        cache.write(asset, invalid.getvalue(), {}, "parent")
+
+    cache.path.write_text("not json")
+    assert cache.read({}, "parent") is None
