@@ -1,1 +1,1 @@
-"""Tests for the Bluetooth LE tracker component."""
+"""Tests for bluetooth_le_tracker."""
