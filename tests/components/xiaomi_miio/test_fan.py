@@ -10,6 +10,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.xiaomi_miio import MODEL_TO_CLASS_MAP
 from homeassistant.components.xiaomi_miio.const import CONF_FLOW_TYPE, DOMAIN
+from homeassistant.components.xiaomi_miio.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -144,3 +147,16 @@ async def test_fan_status(
 
     config_entry = await setup_component(hass, model_code, "test_fan")
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_diagnostics_device_entry(
+    hass: HomeAssistant,
+    model_code: str,
+    setup_device: MagicMock,
+) -> None:
+    """Test diagnostics export for a device config entry."""
+    entry = await setup_component(hass, model_code, "test_diagnostics")
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert diagnostics["coordinator_data"] == repr(setup_device.status.return_value)

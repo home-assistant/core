@@ -1013,3 +1013,229 @@ async def test_reauth(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+
+
+TEST_REPEATER_MODEL = const.MODEL_WIFI_REPEATER_V2
+TEST_REPEATER_ZEROCONF_NAME = "xiaomi-repeater-v2_miio12345678._miio._udp.local."
+
+
+async def _step_to_connect(
+    hass: HomeAssistant,
+) -> dict:
+    """Run a user flow up to the connect step and return the connect result."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_MANUAL: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+
+
+async def test_config_flow_repeater_success(hass: HomeAssistant) -> None:
+    """Test a successful config flow for the wifi repeater."""
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await _step_to_connect(hass)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_REPEATER_MODEL
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_MODEL: TEST_REPEATER_MODEL,
+        CONF_MAC: TEST_MAC,
+    }
+
+
+async def test_config_flow_repeater_wrong_token(hass: HomeAssistant) -> None:
+    """Test a config flow for the wifi repeater with a wrong token."""
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=error,
+    ):
+        result = await _step_to_connect(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "wrong_token"}
+
+    # The model dropdown offers the repeater model for manual entry.
+    assert TEST_REPEATER_MODEL in result["data_schema"].schema[CONF_MODEL].container
+
+
+async def test_config_flow_repeater_duplicate(hass: HomeAssistant) -> None:
+    """Test that a second flow for the same repeater updates the entry."""
+    existing_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST2,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await _step_to_connect(hass)
+
+    # A duplicate flow updates the existing entry and aborts (the shared
+    # async_update_reload_and_abort flow uses the reauth_successful reason
+    # for user-initiated flows).
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert existing_entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_zeroconf_repeater_success(hass: HomeAssistant) -> None:
+    """Test a successful zeroconf discovery of the wifi repeater."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
+            hostname="mock_hostname",
+            name=TEST_REPEATER_ZEROCONF_NAME,
+            port=None,
+            properties={ZEROCONF_MAC: TEST_MAC_DEVICE},
+            type="mock_type",
+        ),
+    )
+
+    # A discovered repeater is accepted (not aborted as not_xiaomi_miio).
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_MANUAL: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    mock_info = get_mock_info(model=TEST_REPEATER_MODEL)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_REPEATER_MODEL
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_MODEL: TEST_REPEATER_MODEL,
+        # The zeroconf mac ("abcdefghijkl") is normalized by format_mac to
+        # the same value as TEST_MAC.
+        CONF_MAC: TEST_MAC,
+    }
+
+
+async def test_config_flow_repeater_missing_mac(hass: HomeAssistant) -> None:
+    """Test that a repeater entry is rejected when the probe found no MAC."""
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await _step_to_connect(hass)
+
+        # The probe failed, so no MAC was discovered; choosing the
+        # repeater model must not create an entry without a unique ID.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MODEL: TEST_REPEATER_MODEL},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_repeater_wrong_token(hass: HomeAssistant) -> None:
+    """Test that a wrong token submitted during reauth is rejected."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        title=TEST_REPEATER_MODEL,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_WIFI_REPEATER,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_REPEATER_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=error,
+    ):
+        result = await config_entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "cloud"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {const.CONF_MANUAL: True},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "manual"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "wrong_token"}
