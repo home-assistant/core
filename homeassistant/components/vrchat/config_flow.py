@@ -2,7 +2,7 @@
 
 from typing import Any, Final, cast, override
 
-import voluptuous as vol
+import probatio
 import vrchatapi.exceptions
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -70,14 +70,14 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): TextSelector(
+                    probatio.Required(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.EMAIL, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -103,8 +103,8 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
         return self.async_show_form(
             step_id="email_2fa",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL_2FA_CODE): _TWO_FACTOR_CODE}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_EMAIL_2FA_CODE): _TWO_FACTOR_CODE}
             ),
             errors=errors,
         )
@@ -124,7 +124,9 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema({vol.Required(CONF_2FA_CODE): _TWO_FACTOR_CODE}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_2FA_CODE): _TWO_FACTOR_CODE}
+            ),
             errors=errors,
         )
 
