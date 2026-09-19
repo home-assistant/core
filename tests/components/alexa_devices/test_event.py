@@ -123,3 +123,4 @@ async def test_voice_event_removed_for_unsupported_device(
     await hass.async_block_till_done()
 
     assert not hass.states.get(entity.entity_id)
+    assert entity_registry.async_get(entity.entity_id) is None
