@@ -631,12 +631,11 @@ async def test_mcp_tools_list(
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
-    # A tool that declares no annotations is advertised as unsafe.
     assert tool.annotations == mcp.types.ToolAnnotations(
         readOnlyHint=False,
         destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        idempotentHint=True,
+        openWorldHint=False,
     )
 
 
