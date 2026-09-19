@@ -14,6 +14,7 @@ from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
     ResponseCodeInterpreterToolCall,
+    ResponseCodeInterpreterToolCallParam,
     ResponseCompletedEvent,
     ResponseErrorEvent,
     ResponseFailedEvent,
@@ -40,6 +41,9 @@ from openai.types.responses import (
     ToolChoiceTypesParam,
     ToolParam,
     WebSearchToolParam,
+)
+from openai.types.responses.response_code_interpreter_tool_call_param import (
+    Output as CodeInterpreterOutputParam,
 )
 from openai.types.responses.response_create_params import (
     Reasoning,
@@ -184,6 +188,7 @@ def _convert_content_to_param(
     messages: ResponseInputParam = []
     reasoning_summary: list[str] = []
     web_search_calls: dict[str, ResponseFunctionWebSearchParam] = {}
+    code_interpreter_calls: dict[str, ResponseCodeInterpreterToolCallParam] = {}
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
@@ -196,6 +201,19 @@ def _convert_content_to_param(
                     "status", "completed"
                 )
                 messages.append(web_search_call)
+            elif (
+                content.tool_name == "code_interpreter"
+                and content.tool_call_id in code_interpreter_calls
+            ):
+                code_interpreter_call = code_interpreter_calls.pop(content.tool_call_id)
+                code_interpreter_call["outputs"] = cast(
+                    list[CodeInterpreterOutputParam] | None,
+                    content.result.data["output"],
+                )
+                code_interpreter_call["status"] = (
+                    "failed" if content.result.error else "completed"
+                )
+                messages.append(code_interpreter_call)
             else:
                 messages.append(
                     FunctionCallOutput(
@@ -234,6 +252,19 @@ def _convert_content_to_param(
                             id=tool_call.id,
                             action=tool_call.tool_args["action"],
                             status="completed",
+                        )
+                    elif (
+                        tool_call.external and tool_call.tool_name == "code_interpreter"
+                    ):
+                        code_interpreter_calls[tool_call.id] = (
+                            ResponseCodeInterpreterToolCallParam(
+                                type="code_interpreter_call",
+                                id=tool_call.id,
+                                code=tool_call.tool_args["code"],
+                                container_id=tool_call.tool_args["container"],
+                                outputs=None,
+                                status="completed",
+                            )
                         )
                     else:
                         messages.append(
