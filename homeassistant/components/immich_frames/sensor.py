@@ -10,6 +10,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 from .entity import ImmichFramesEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,6 +75,10 @@ class PhotoSensor(ImmichFramesEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, key)
         self._value = value
+        self._attr_entity_registry_enabled_default = key in {
+            "matching_assets",
+            "frame_status",
+        }
 
     @property
     @override
