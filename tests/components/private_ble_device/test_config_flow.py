@@ -276,3 +276,34 @@ async def test_reconfigure_to_an_irk_in_use(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {"irk": OLD_IRK}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_reconfigure_stops_when_the_entry_will_not_unload(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test nothing moves when the entry cannot be unloaded."""
+    await async_mock_config_entry(hass, OLD_IRK)
+    entry = hass.config_entries.async_get_entry(OLD_IRK)
+    unique_id = entry.unique_id
+    before = {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+
+    _inject_new_irk_device(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_unload", return_value=False):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"irk": NEW_IRK}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unload_failed"
+    assert entry.data == {"irk": OLD_IRK}
+    assert entry.unique_id == unique_id
+    assert {
+        e.entity_id: e.unique_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == before

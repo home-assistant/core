@@ -123,8 +123,10 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_IRK: new_irk})
                 entry = self._get_reconfigure_entry()
                 # Unloaded while the registries move, so no live entity
-                # still carries the old unique_id.
-                await self.hass.config_entries.async_unload(entry.entry_id)
+                # still carries the old unique_id. If it will not unload,
+                # nothing is moved: its entities are still live.
+                if not await self.hass.config_entries.async_unload(entry.entry_id):
+                    return self.async_abort(reason="unload_failed")
                 _async_migrate_irk(self.hass, entry, entry.data[CONF_IRK], new_irk)
                 return self.async_update_reload_and_abort(
                     entry, unique_id=new_irk, data_updates={CONF_IRK: new_irk}

@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unload_failed": "The device could not be unloaded, so its IRK was not changed. Restart Home Assistant and try again."
     },
     "error": {
       "irk_not_found": "The provided IRK does not match any BLE devices that Home Assistant can see.",
