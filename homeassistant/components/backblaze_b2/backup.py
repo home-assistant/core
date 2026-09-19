@@ -286,7 +286,7 @@ class BackblazeBackupAgent(BackupAgent):
                 "Metadata file upload finished for %s", prefixed_metadata_filename
             )
             _LOGGER.debug("Backup upload complete: %s", prefixed_tar_filename)
-            self._invalidate_caches(
+            await self._invalidate_caches(
                 backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
             )
         except B2Error:
@@ -406,7 +406,7 @@ class BackblazeBackupAgent(BackupAgent):
 
         await self._hass.async_add_executor_job(_delete_backup_files)
 
-        self._invalidate_caches(
+        await self._invalidate_caches(
             backup_id,
             file.file_name,
             metadata_file.file_name,
@@ -674,7 +674,7 @@ class BackblazeBackupAgent(BackupAgent):
         )
         return _create_backup_from_metadata(metadata_content, found_backup_file)
 
-    def _invalidate_caches(
+    async def _invalidate_caches(
         self,
         backup_id: str,
         tar_filename: str,
@@ -691,17 +691,27 @@ class BackblazeBackupAgent(BackupAgent):
             remove_files: If True, remove specific files from cache;
                 if False, expire entire cache
         """
-        if remove_files:
-            if self._is_cache_valid(self._all_files_cache_expiration):
-                self._all_files_cache.pop(tar_filename, None)
-                if metadata_filename:
-                    self._all_files_cache.pop(metadata_filename, None)
+        # Serialized with the all-files refresh: an in-flight refresh that started
+        # before this operation can otherwise publish a pre-operation mapping as
+        # valid, resurrecting deleted files or hiding uploaded ones.
+        async with self._all_files_cache_lock:
+            if remove_files:
+                if self._is_cache_valid(self._all_files_cache_expiration):
+                    # Rebuild the mapping instead of popping in place: an in-flight
+                    # ID search can still be iterating the old dict while suspended
+                    # on a metadata download.
+                    removed_names = (tar_filename, metadata_filename)
+                    self._all_files_cache = {
+                        file_name: file_version
+                        for file_name, file_version in self._all_files_cache.items()
+                        if file_name not in removed_names
+                    }
 
-            if self._is_cache_valid(self._backup_list_cache_expiration):
-                self._backup_list_cache.pop(backup_id, None)
-        else:
-            # For uploads, we can't easily add new FileVersion
-            # objects without API calls,
-            # so we expire the entire cache for simplicity
-            self._all_files_cache_expiration = 0.0
-            self._backup_list_cache_expiration = 0.0
+                if self._is_cache_valid(self._backup_list_cache_expiration):
+                    self._backup_list_cache.pop(backup_id, None)
+            else:
+                # For uploads, we can't easily add new FileVersion
+                # objects without API calls,
+                # so we expire the entire cache for simplicity
+                self._all_files_cache_expiration = 0.0
+                self._backup_list_cache_expiration = 0.0
