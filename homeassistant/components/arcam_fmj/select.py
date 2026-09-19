@@ -23,6 +23,19 @@ ROOM_EQ_DESCRIPTION = SelectEntityDescription(
 )
 
 
+def _room_eq_names(coordinator: ArcamFmjCoordinator) -> tuple[str, ...]:
+    """Return a name for each available Room EQ profile slot."""
+    names = coordinator.state.get_room_eq_names() or []
+    return tuple(
+        name or default
+        for name, default in zip(
+            names[: len(_DEFAULT_ROOM_EQ_NAMES)],
+            _DEFAULT_ROOM_EQ_NAMES,
+            strict=False,
+        )
+    ) + _DEFAULT_ROOM_EQ_NAMES[len(names) :]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ArcamFmjConfigEntry,
@@ -48,10 +61,7 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
     @override
     def options(self) -> list[str]:
         """Return available room-EQ options."""
-        names = self.coordinator.state.get_room_eq_names()
-        if not names:
-            names = list(_DEFAULT_ROOM_EQ_NAMES)
-        return ["Off", *names[:3]]
+        return ["Off", *_room_eq_names(self.coordinator)]
 
     @property
     @override
@@ -63,13 +73,10 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
         if mode == RoomEqMode.OFF:
             return "Off"
         if mode in (RoomEqMode.EQ1, RoomEqMode.EQ2, RoomEqMode.EQ3):
-            names = self.coordinator.state.get_room_eq_names()
             index = mode.value - RoomEqMode.EQ1.value
-            if names and index < len(names):
-                return names[index]
-            return _DEFAULT_ROOM_EQ_NAMES[index]
+            return _room_eq_names(self.coordinator)[index]
         if mode == RoomEqMode.NOT_CALCULATED:
-            return "Not calculated"
+            return None
         return None
 
     @convert_exception
@@ -79,8 +86,7 @@ class ArcamFmjRoomEqSelect(ArcamFmjEntity, SelectEntity):
         if option == "Off":
             mode = RoomEqMode.OFF
         else:
-            names = self.coordinator.state.get_room_eq_names() or []
-            available_names = names[:3] or list(_DEFAULT_ROOM_EQ_NAMES)
+            available_names = _room_eq_names(self.coordinator)
             mode = next(
                 (
                     profile_mode
