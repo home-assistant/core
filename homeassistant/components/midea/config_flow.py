@@ -17,7 +17,7 @@ from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -33,19 +33,26 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_ACCOUNT,
     CONF_KEY,
+    CONF_POWER_ANALYSIS_METHOD,
     CONF_SERVER,
     CONF_SN,
     CONF_SUBTYPE,
     DOMAIN,
     LOGGER,
+    POWER_ANALYSIS_METHOD_OPTIONS,
 )
 from .device_catalog import MIDEA_DEVICE_NAMES
+from .entity import MideaConfigEntry
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
@@ -128,6 +135,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.preset_account: str = preset_account["username"]
         self.preset_password: str = preset_account["password"]
         self.preset_cloud_name: str = preset_account["cloud_name"]
+
+    @staticmethod
+    @override
+    def async_get_options_flow(config_entry: MideaConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return MideaOptionsFlow(config_entry)
 
     def _clear_login_state(self) -> None:
         """Clear flow-scoped credentials and cloud.
@@ -798,7 +811,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             elif device is None:
                 error = "invalid_device_id_for_ip"
             else:
-                return self.async_update_reload_and_abort(
+                if not entry.update_listeners:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
+                    )
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
                 )
@@ -893,7 +911,65 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
                 )
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                if not entry.update_listeners:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
 
         return self.async_abort(reason="no_devices_found")
+
+
+class MideaOptionsFlow(OptionsFlow):
+    """Handle Midea options."""
+
+    def __init__(self, config_entry: MideaConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage options."""
+        if self._config_entry.data.get(CONF_TYPE) != DeviceType.AC:
+            return self.async_create_entry(title="", data=self._config_entry.options)
+
+        if user_input is not None:
+            try:
+                analysis_method = int(user_input[CONF_POWER_ANALYSIS_METHOD])
+            except TypeError, ValueError:
+                analysis_method = 1
+
+            new_options = {
+                **self._config_entry.options,
+                CONF_POWER_ANALYSIS_METHOD: analysis_method,
+            }
+            if (
+                new_options != self._config_entry.options
+                and not self._config_entry.update_listeners
+                and self.hass.config_entries.async_get_entry(
+                    self._config_entry.entry_id
+                )
+            ):
+                self.hass.loop.call_soon(
+                    self.hass.config_entries.async_schedule_reload,
+                    self._config_entry.entry_id,
+                )
+            return self.async_create_entry(title="", data=new_options)
+
+        current = str(self._config_entry.options.get(CONF_POWER_ANALYSIS_METHOD, 1))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_POWER_ANALYSIS_METHOD,
+                        default=current,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(POWER_ANALYSIS_METHOD_OPTIONS),
+                            translation_key="power_analysis_method",
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+        )
