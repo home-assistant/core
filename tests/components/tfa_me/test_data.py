@@ -1,0 +1,114 @@
+"""Tests for the TFA.me integration: test of data.py."""
+
+from __future__ import annotations
+
+from unittest.mock import patch
+
+import pytest
+from tfa_me_ha_local.client import (
+    TFAmeConnectionError,
+    TFAmeException,
+    TFAmeHTTPError,
+    TFAmeJSONError,
+    TFAmeTimeoutError,
+)
+
+from homeassistant.components.tfa_me.data import TFAmeUniqueID
+from homeassistant.core import HomeAssistant
+
+from tests.common import AsyncMock
+
+
+async def test_get_identifier_success_ip(hass: HomeAssistant) -> None:
+    """Test get_identifier() for a normal IP address returns gateway_id."""
+    with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.async_get_sensors = AsyncMock(
+            return_value={"gateway_id": "012345678"}
+        )
+
+        data = TFAmeUniqueID(hass, "192.168.1.10")
+        identifier = await data.get_identifier()
+
+    assert identifier == "012345678"
+
+    mock_client_cls.assert_called_once()
+    args, _ = mock_client_cls.call_args
+    assert args[0] == "192.168.1.10"
+    assert args[1] == "sensors"
+
+
+async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
+    """Test get_identifier() when user passes station ID."""
+    with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.async_get_sensors = AsyncMock(
+            return_value={"gateway_id": "012345678"}
+        )
+
+        data = TFAmeUniqueID(hass, "012-345-678")
+        identifier = await data.get_identifier()
+
+    assert identifier == "012345678"
+
+    mock_client_cls.assert_called_once()
+    args, _ = mock_client_cls.call_args
+    assert args[0] == "tfa-me-012-345-678.local"
+    assert args[1] == "sensors"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "expected_exception", "expected_text"),
+    [
+        (TFAmeHTTPError("bad json"), None, TFAmeHTTPError, "bad json"),
+        (TFAmeJSONError("bad json"), None, TFAmeJSONError, "bad json"),
+        (TFAmeTimeoutError("timeout"), None, TFAmeTimeoutError, "timeout"),
+        (
+            TFAmeConnectionError("connection failed"),
+            None,
+            TFAmeConnectionError,
+            "connection failed",
+        ),
+        (ValueError("boom"), None, TFAmeException, "unknown"),
+    ],
+    ids=[
+        "http-error-invalid-response",
+        "json-error-invalid-response",
+        "timeout-cannot-connect",
+        "connection-error-cannot-connect",
+        "unexpected-error-unknown",
+    ],
+)
+async def test_get_identifier_error_mapping(
+    hass: HomeAssistant,
+    side_effect: Exception | None,
+    return_value: dict[str, str] | None,
+    expected_exception: type[Exception],
+    expected_text: str,
+) -> None:
+    """Test get_identifier() preserves client errors and maps unknown errors."""
+    with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.async_get_sensors = AsyncMock(side_effect=side_effect)
+
+        data = TFAmeUniqueID(hass, "192.168.1.10")
+
+        with pytest.raises(expected_exception) as excinfo:
+            await data.get_identifier()
+
+    assert expected_text in str(excinfo.value)
+
+
+async def test_get_identifier_missing_gateway_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_identifier() raises for missing gateway ID."""
+
+    with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.async_get_sensors = AsyncMock(return_value={})
+
+        data = TFAmeUniqueID(hass, "192.168.1.10")
+
+        with pytest.raises(TFAmeJSONError, match="Missing gateway_id in response"):
+            await data.get_identifier()

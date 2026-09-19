@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This TFA.me station is already configured."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the station.",
+      "invalid_ip_host": "Invalid IP or station ID.",
+      "invalid_response": "Invalid response from the station.",
+      "timeout_connect": "Timeout while connecting to the station.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "IP address or station ID"
+        },
+        "data_description": {
+          "ip_address": "Enter the IP address or mDNS hostname of your TFA.me station"
+        },
+        "description": "Please enter IP or station ID of your TFA.me station.\n- 9 digit station ID: 'XXX-XXX-XXX'\n- mDNS name:'tfa-me-XXX-XXX-XXX.local'\n- Get IP: Press and hold button '+' for 5 seconds at your device.",
+        "title": "Setup TFA.me station"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "barometric_pressure": {
+        "name": "Barometric pressure"
+      },
+      "co2": {
+        "name": "CO2, Air quality"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "lowbatt": {
+        "name": "Low battery"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "rain_1_hour": {
+        "name": "Rain last hour"
+      },
+      "rain_24_hours": {
+        "name": "Rain last 24 hours"
+      },
+      "rain_relative": {
+        "name": "Relative rain"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_probe": {
+        "name": "Temperature probe"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_deg": {
+        "name": "Wind direction (degrees)"
+      },
+
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to the station."
+    },
+    "invalid_response_error": {
+      "message": "The station returned invalid data."
+    }
+  }
+}
