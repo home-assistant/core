@@ -12,6 +12,8 @@ from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
 from pythonxbox.common.exceptions import AuthenticationException
 import respx
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.xbox.binary_sensor import XboxBinarySensor
 from homeassistant.components.xbox.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -19,7 +21,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -277,3 +283,74 @@ async def test_dynamic_devices(
     )
     response = await client.remove_device(account.id)
     assert not response["success"]
+
+
+@pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
+async def test_binary_sensor_deprecation_issue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor deprecation issue."""
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        suggested_object_id="gsr_ae_subscribed_to_xbox_game_pass",
+        disabled_by=None,
+    )
+
+    assert entity_registry is not None
+    with patch(
+        "homeassistant.components.xbox.entity.entity_used_in", return_value=True
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        assert (
+            entity_registry.async_get(
+                f"binary_sensor.{'gsr_ae_subscribed_to_xbox_game_pass'}"
+            )
+            is not None
+        )
+        assert issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"deprecated_entity_271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        )
+
+
+@pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
+async def test_binary_sensor_deprecation_remove_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we remove a deprecated sensor."""
+
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        suggested_object_id="gsr_ae_subscribed_to_xbox_game_pass",
+    )
+
+    assert entity_registry is not None
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        entity_registry.async_get(
+            f"binary_sensor.{'gsr_ae_subscribed_to_xbox_game_pass'}"
+        )
+        is None
+    )

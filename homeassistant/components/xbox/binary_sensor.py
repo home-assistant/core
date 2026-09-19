@@ -9,6 +9,7 @@ from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -16,7 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, XboxBaseEntityDescription, profile_pic
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    check_deprecated_entity,
+    profile_pic,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -26,6 +32,7 @@ class XboxBinarySensor(StrEnum):
 
     ONLINE = "online"
     IN_GAME = "in_game"
+    HAS_GAME_PASS = "has_game_pass"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -77,6 +84,12 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         translation_key=XboxBinarySensor.IN_GAME,
         is_on_fn=in_game,
     ),
+    XboxBinarySensorEntityDescription(
+        key=XboxBinarySensor.HAS_GAME_PASS,
+        translation_key=XboxBinarySensor.HAS_GAME_PASS,
+        is_on_fn=lambda _: None,
+        deprecated=True,
+    ),
 )
 
 
@@ -94,6 +107,9 @@ async def async_setup_entry(
         [
             XboxBinarySensorEntity(coordinator, entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
+            if check_deprecated_entity(
+                hass, entry.unique_id, description, BINARY_SENSOR_DOMAIN
+            )
         ]
     )
 
@@ -103,6 +119,9 @@ async def async_setup_entry(
                 XboxBinarySensorEntity(coordinator, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
+                and check_deprecated_entity(
+                    hass, subentry.unique_id, description, BINARY_SENSOR_DOMAIN
+                )
                 and subentry.unique_id in coordinator.data.presence
                 and subentry.subentry_type == "friend"
             ],

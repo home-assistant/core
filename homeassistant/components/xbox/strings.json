@@ -64,6 +64,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "has_game_pass": {
+        "name": "Subscribed to Xbox Game Pass"
+      },
       "in_game": {
         "name": "In game"
       },
@@ -170,6 +173,12 @@
     },
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "description": "The Xbox entity `{entity}` does no longer work, so it’s been removed.\nPlease update your automations and scripts, disable the entity and reload the integration/restart Home Assistant to fix this issue.",
+      "title": "The Xbox {name} entity is deprecated"
     }
   }
 }
