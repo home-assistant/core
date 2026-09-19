@@ -103,6 +103,7 @@ FLOWS = {
         "bang_olufsen",
         "bayesian",
         "besen",
+        "birdnet_go",
         "bitvis",
         "blebox",
         "blink",
