@@ -34,6 +34,7 @@ def format_track(track: Track | None) -> str | None:
 
 def get_lastfm_error(error: PyLastError) -> WSError | None:
     """Return the API error pylast hid when re-raising it as a PyLastError."""
+    # See upstream issue: https://github.com/pylast/pylast/issues/543
     if isinstance(error, WSError):
         return error
     cause = error.__cause__
