@@ -1,0 +1,12 @@
+{
+  "domain": "haven",
+  "name": "HAVEN IAQ",
+  "codeowners": ["@krhtzoa"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/haven",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["haveniaq==0.1.0"],
+  "zeroconf": ["_haven._tcp.local."]
+}
