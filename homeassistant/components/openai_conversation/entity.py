@@ -557,7 +557,6 @@ class OpenAIBaseLLMEntity(Entity):
                 reasoning["mode"] = "pro"
 
             model_args["reasoning"] = reasoning
-            model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
             not model_args["model"].startswith(("gpt-5", "gpt-6"))
