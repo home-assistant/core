@@ -513,7 +513,9 @@ async def test_event_media_data(
     assert "media_content_id" not in events[-1].data
 
     # Test: File path cannot be compared with the root directory.
-    with patch("homeassistant.components.motioneye.os.path.commonpath", side_effect=ValueError):
+    with patch(
+        "homeassistant.components.motioneye.os.path.commonpath", side_effect=ValueError
+    ):
         resp = await hass_client.post(
             URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
             json={
