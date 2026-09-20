@@ -512,6 +512,23 @@ async def test_event_media_data(
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
+    # Test: File path cannot be compared with the root directory.
+    with patch("homeassistant.components.motioneye.os.path.commonpath", side_effect=ValueError):
+        resp = await hass_client.post(
+            URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
+            json={
+                ATTR_DEVICE_ID: device.id,
+                ATTR_EVENT_TYPE: EVENT_FILE_STORED,
+                "file_path": f"/var/lib/motioneye/{TEST_CAMERA_NAME}/dir/four",
+                "file_type": "8",
+            },
+        )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(events) == 5
+    assert "file_url" not in events[-1].data
+    assert "media_content_id" not in events[-1].data
+    
     # Test: Not a loaded motionEye config entry.
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
@@ -528,7 +545,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 5
+    assert len(events) == 6
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -549,7 +566,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 6
+    assert len(events) == 7
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -567,6 +584,6 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 7
+    assert len(events) == 8
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
