@@ -155,15 +155,14 @@ class ModelContextProtocolTool(llm.Tool):
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
-        annotations: llm.ToolAnnotations | None = None,
+        annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
         """Initialize the tool."""
         self.name = name
         self.title = title
         self.description = description
         self.parameters = parameters
-        if annotations is not None:
-            self.annotations = annotations
+        self.annotations = annotations
         self.server_url = server_url
         self.config_entry = config_entry
         self.token_manager = token_manager
