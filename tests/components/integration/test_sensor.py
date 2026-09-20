@@ -809,6 +809,24 @@ async def test_units(hass: HomeAssistant) -> None:
                     "round": 2,
                     "method": "trapezoidal",
                     "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.WATER,
+                }
+            },
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            },
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.power",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
                 }
             },
             SensorDeviceClass.ENERGY,
