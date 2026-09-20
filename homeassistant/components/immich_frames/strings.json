@@ -4,8 +4,8 @@
       "already_configured": "This Immich frame is already configured.",
       "immich_not_ready": "The Immich integration is not ready.",
       "immich_required": "Set up the Immich integration first.",
-      "no_albums": "No Immich albums are available.",
-      "migration_required": "This frame was created by the custom integration and needs to be reconfigured."
+      "migration_required": "This frame was created by the custom integration and needs to be reconfigured.",
+      "no_albums": "No Immich albums are available."
     },
     "error": {
       "album_required": "Select at least one album.",
@@ -87,13 +87,13 @@
     }
   },
   "exceptions": {
-    "migration_required": {
-      "message": "This frame was created by the custom integration and needs to be reconfigured with a Core Immich account."
-    },
     "cannot_connect": { "message": "Unable to connect to Immich." },
     "immich_not_ready": { "message": "The Immich integration is not ready." },
     "invalid_image": {
       "message": "Immich returned an image that could not be rendered."
+    },
+    "migration_required": {
+      "message": "This frame was created by the custom integration and needs to be reconfigured with a Core Immich account."
     },
     "no_photos": {
       "message": "Immich has no available photos for this frame."
