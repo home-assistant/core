@@ -23,7 +23,6 @@ from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
-    CONF_NAME,
     CONF_PAYLOAD,
     CONF_PLATFORM,
     EntityCategory,
@@ -48,7 +47,8 @@ from ..const import (
 )
 from ..dpt import get_supported_dpts, raw_payload_length
 from ..validation import (
-    entity_category_validator,
+    entity_category_supported,
+    parse_entity_category,
     validate_number_attributes,
     validate_sensor_attributes,
 )
@@ -57,7 +57,6 @@ from .const import (
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
     CONF_DATA,
-    CONF_DEVICE_INFO,
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
@@ -142,7 +141,9 @@ class BaseEntityConfig:
 
     name: str | None = None
     device_info: str | None = None
-    entity_category: EntityCategory | None = None
+    entity_category: Annotated[
+        EntityCategory | None, probatio.Coerce(parse_entity_category)
+    ] = None
 
     @property
     def xknx_name(self) -> str:
@@ -150,41 +151,21 @@ class BaseEntityConfig:
         return self.name or ""
 
 
-def _to_base_entity_config(data: dict[str, Any]) -> BaseEntityConfig:
-    return BaseEntityConfig(**data)
+def _name_or_device_required(config: BaseEntityConfig) -> BaseEntityConfig:
+    """Require a name, unless the entity is named after its device."""
+    if not config.name and config.device_info is None:
+        raise probatio.AnyInvalid("One of `Device` or `Name` is required")
+    return config
 
 
 def base_entity_schema(platform: Platform) -> probatio.All:
-    """Return the base entity schema for a platform.
-
-    Stays a mapping schema: the entity part isn't serialized for the frontend
-    and its category validation depends on the platform. The dataclass is
-    constructed from the validated mapping.
-    """
+    """Return the base entity schema for a platform."""
     return probatio.All(
-        {
-            probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
-            probatio.Optional(CONF_DEVICE_INFO, default=None): probatio.Maybe(str),
-            probatio.Optional(
-                CONF_ENTITY_CATEGORY, default=None
-            ): entity_category_validator(platform),
-        },
-        probatio.Any(
-            probatio.Schema(
-                {
-                    probatio.Required(CONF_NAME): probatio.All(str, probatio.IsTrue()),
-                },
-                extra=probatio.ALLOW_EXTRA,
-            ),
-            probatio.Schema(
-                {
-                    probatio.Required(CONF_DEVICE_INFO): str,
-                },
-                extra=probatio.ALLOW_EXTRA,
-            ),
-            msg="One of `Device` or `Name` is required",
+        probatio.DataclassSchema(
+            BaseEntityConfig,
+            {CONF_ENTITY_CATEGORY: entity_category_supported(platform)},
         ),
-        _to_base_entity_config,
+        _name_or_device_required,
     )
 
 
