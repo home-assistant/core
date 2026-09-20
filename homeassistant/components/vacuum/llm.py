@@ -23,8 +23,7 @@ from .intent import (
 # runs again on every call.
 LLM_ANNOTATIONS = ToolAnnotations(open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools, with the
-# title shown for each.
+# Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = {
     INTENT_VACUUM_CLEAN_AREA: "Clean area",
     INTENT_VACUUM_RETURN_TO_BASE: "Return vacuum to base",
