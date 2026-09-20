@@ -28,6 +28,8 @@ from .const import (
     DOMAIN,
     MODE_PAIRS,
     MODE_PAIRS_ONLY,
+    ORIENTATION_ANY,
+    ORIENTATION_PORTRAIT,
     PHOTO_FIT_CROP,
     PHOTO_FIT_FULL,
     screen_shape,
@@ -116,6 +118,10 @@ def _legacy_options(data: dict[str, object]) -> dict[str, object]:
             and not data.get(CONF_ORIGINAL_ASPECT_RATIO)
             else PHOTO_FIT_FULL
         )
+    if options.get(CONF_MODE) == MODE_PAIRS_ONLY and options.get(
+        CONF_ORIENTATION
+    ) not in (None, ORIENTATION_ANY, ORIENTATION_PORTRAIT):
+        options[CONF_ORIENTATION] = ORIENTATION_PORTRAIT
     return options
 
 

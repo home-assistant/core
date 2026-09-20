@@ -67,6 +67,11 @@ def _wall_clock_seconds(value: datetime) -> float:
     return (_as_wall_clock(value) - datetime.min).total_seconds()
 
 
+def _wall_clock_day(value: datetime) -> int:
+    """Return the calendar day for an Immich wall-clock timestamp."""
+    return _as_wall_clock(value).date().toordinal()
+
+
 def _orientation(asset: ImmichAsset) -> str | None:
     """Return the source image orientation when EXIF dimensions are available."""
     exif = asset.exif_info
@@ -197,28 +202,27 @@ def candidates_with_companion(
         window = DEFAULT_PAIR_WINDOW
     portrait = sorted(
         (asset for asset in candidates if _orientation(asset) == ORIENTATION_PORTRAIT),
-        key=lambda asset: _wall_clock_seconds(asset.local_datetime),
+        key=lambda asset: _wall_clock_day(asset.local_datetime),
     )
-    timestamps = [_wall_clock_seconds(asset.local_datetime) for asset in portrait]
-    by_checksum: dict[str, list[float]] = {}
-    by_asset_id: dict[str, list[float]] = {}
-    by_identity: dict[tuple[str, str], list[float]] = {}
+    timestamps = [_wall_clock_day(asset.local_datetime) for asset in portrait]
+    by_checksum: dict[str, list[int]] = {}
+    by_asset_id: dict[str, list[int]] = {}
+    by_identity: dict[tuple[str, str], list[int]] = {}
     for asset, timestamp in zip(portrait, timestamps, strict=True):
         by_checksum.setdefault(asset.checksum, []).append(timestamp)
         by_asset_id.setdefault(asset.asset_id, []).append(timestamp)
         by_identity.setdefault((asset.asset_id, asset.checksum), []).append(timestamp)
 
-    def count_in_window(values: list[float], start: float, end: float) -> int:
+    def count_in_window(values: list[int], start: int, end: int) -> int:
         """Count sorted timestamps in an inclusive range."""
         return bisect_right(values, end) - bisect_left(values, start)
 
     result: list[ImmichAsset] = []
-    seconds = window * 86400
     for asset in candidates:
         if _orientation(asset) != ORIENTATION_PORTRAIT:
             continue
-        timestamp = _wall_clock_seconds(asset.local_datetime)
-        start, end = timestamp - seconds, timestamp + seconds
+        timestamp = _wall_clock_day(asset.local_datetime)
+        start, end = timestamp - window, timestamp + window
         total = count_in_window(timestamps, start, end)
         same_checksum = count_in_window(by_checksum.get(asset.checksum, []), start, end)
         same_asset = count_in_window(by_asset_id.get(asset.asset_id, []), start, end)
@@ -243,12 +247,10 @@ def choose_companion(
         and _orientation(asset) == ORIENTATION_PORTRAIT
         and asset.checksum != primary.checksum
         and abs(
-            (
-                _as_wall_clock(asset.local_datetime)
-                - _as_wall_clock(primary.local_datetime)
-            ).total_seconds()
+            _wall_clock_day(asset.local_datetime)
+            - _wall_clock_day(primary.local_datetime)
         )
-        <= window_days * 86400
+        <= window_days
     ]
     return min(
         eligible,

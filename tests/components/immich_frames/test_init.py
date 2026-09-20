@@ -20,12 +20,16 @@ from homeassistant.components.immich_frames.const import (
     CONF_IMMICH_ENTRY_ID,
     CONF_MIGRATION_REQUIRED,
     CONF_MODE,
+    CONF_ORIENTATION,
     CONF_ORIGINAL_ASPECT_RATIO,
     CONF_PHOTO_FIT,
     CONF_SCREEN_SHAPE,
     CONF_SOURCE,
     DEFAULT_SOURCE,
     DOMAIN,
+    MODE_PAIRS_ONLY,
+    ORIENTATION_LANDSCAPE,
+    ORIENTATION_PORTRAIT,
     PHOTO_FIT_CROP,
     PHOTO_FIT_FULL,
 )
@@ -70,7 +74,9 @@ async def test_setup_entry_creates_image(
 
     assert entry.state is ConfigEntryState.LOADED
     assert isinstance(entry.runtime_data.data, ImmichFramesData)
-    assert hass.states.get("image.living_room_image").state != "unknown"
+    state = hass.states.get("image.living_room_image")
+    assert state.state != "unknown"
+    assert "&v=" in state.attributes["entity_picture"]
     assert entry.runtime_data.api.assets.async_view_asset.await_count == 1
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, entry.entry_id), entry.entry_id
@@ -242,7 +248,8 @@ async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
             CONF_API_KEY: "test-key",
             CONF_SOURCE: DEFAULT_SOURCE,
             CONF_ALBUM_IDS: ["album-a", "album-b"],
-            CONF_MODE: "pairs",
+            CONF_MODE: MODE_PAIRS_ONLY,
+            CONF_ORIENTATION: ORIENTATION_LANDSCAPE,
             CONF_ORIGINAL_ASPECT_RATIO: True,
             CONF_SCREEN_SHAPE: "jc4880p443",
         },
@@ -265,6 +272,7 @@ async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
     assert entry.options[CONF_ALBUM_IDS] == ["album-a", "album-b"]
     assert entry.options[CONF_PHOTO_FIT] == PHOTO_FIT_FULL
     assert entry.options[CONF_SCREEN_SHAPE] == "portrait"
+    assert entry.options[CONF_ORIENTATION] == ORIENTATION_PORTRAIT
 
 
 async def test_migrate_legacy_hacs_entry_removes_retired_entities_and_cache(

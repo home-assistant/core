@@ -232,6 +232,22 @@ def test_pair_modes_select_a_valid_companion() -> None:
         selected_photos(primary, [primary], {CONF_MODE: MODE_PAIRS_ONLY})
 
 
+def test_pair_window_uses_capture_calendar_dates() -> None:
+    """Photos on adjacent calendar dates pair within a one-day window."""
+    primary, companion = (copy(asset) for asset in MOCK_SEARCH_ASSETS[:2])
+    for asset in (primary, companion):
+        asset.exif_info = ExifInfo(exif_image_width=100, exif_image_height=200)
+    primary.local_datetime = datetime(2024, 1, 1, 0, 0)
+    companion.local_datetime = datetime(2024, 1, 2, 23, 59)
+    companion.checksum = "different"
+
+    assert choose_companion(primary, [primary, companion], 1) is companion
+    assert candidates_with_companion([primary, companion], {CONF_PAIR_WINDOW: 1}) == [
+        primary,
+        companion,
+    ]
+
+
 def test_pairs_only_candidates_are_filtered_without_duplicate_companions() -> None:
     """Pairs-only candidates retain only portraits with a valid partner."""
     primary, companion = (copy(asset) for asset in MOCK_SEARCH_ASSETS[:2])

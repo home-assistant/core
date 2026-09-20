@@ -51,6 +51,16 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
 
     @property
     @override
+    def entity_picture(self) -> str | None:
+        """Return a cache-busted link for the currently rendered image."""
+        picture = super().entity_picture
+        data = self.coordinator.current_data
+        if picture is None or data is None:
+            return picture
+        return f"{picture}&v={int(data.updated_at.timestamp() * 1000)}"
+
+    @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the selected asset link."""
         data = self.coordinator.current_data

@@ -51,4 +51,6 @@ class ImmichFramesEntity(CoordinatorEntity[ImmichFramesDataUpdateCoordinator]):
     @override
     async def async_update(self) -> None:
         """Refresh the coordinator and invalidate its candidate index."""
+        if not self.enabled:
+            return
         await self.coordinator.async_refresh_now()

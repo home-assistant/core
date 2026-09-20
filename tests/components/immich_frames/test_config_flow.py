@@ -661,6 +661,30 @@ async def test_options_album_flow_validates_selection_and_source(
     assert result["type"] == "create_entry"
 
 
+async def test_options_album_flow_requires_loaded_parent(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Options must not use a stale client after the parent unloads."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unloaded album source",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    parent_immich_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(SOURCE_ALBUM)
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "immich_not_ready"
+
+
 async def test_options_flow_validates_empty_and_missing_parent_albums(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:

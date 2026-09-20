@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -97,6 +97,18 @@ async def _async_validate_source(
     except ImmichError:
         return "assets_unavailable"
     return None
+
+
+def _loaded_immich_entry(
+    hass: HomeAssistant, entry_id: str | None
+) -> ConfigEntry | None:
+    """Return a loaded parent entry, never a stale runtime client."""
+    if not entry_id:
+        return None
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        return None
+    return entry
 
 
 class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -340,9 +352,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _parent_api(self) -> Immich | None:
         """Return the selected parent client, if available."""
-        entry = self.hass.config_entries.async_get_entry(
-            self._data.get(CONF_IMMICH_ENTRY_ID, "")
-        )
+        entry = _loaded_immich_entry(self.hass, self._data.get(CONF_IMMICH_ENTRY_ID))
         return getattr(getattr(entry, "runtime_data", None), "api", None)
 
     async def _async_validate_source(self) -> str | None:
@@ -485,7 +495,10 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
         parent = self.hass.config_entries.async_get_entry(
             self._entry.data[CONF_IMMICH_ENTRY_ID]
         )
-        api = getattr(getattr(parent, "runtime_data", None), "api", None)
+        loaded_parent = _loaded_immich_entry(
+            self.hass, parent.entry_id if parent else None
+        )
+        api = getattr(getattr(loaded_parent, "runtime_data", None), "api", None)
         if api is None:
             return self.async_abort(reason="immich_not_ready")
         errors: dict[str, str] = {}
@@ -637,9 +650,7 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
 
     def _parent_api(self) -> Immich | None:
         """Return the parent client, if it is loaded."""
-        parent = self.hass.config_entries.async_get_entry(
-            self._data.get(CONF_IMMICH_ENTRY_ID, "")
-        )
+        parent = _loaded_immich_entry(self.hass, self._data.get(CONF_IMMICH_ENTRY_ID))
         return getattr(getattr(parent, "runtime_data", None), "api", None)
 
     async def _async_validate_source(self) -> str | None:
