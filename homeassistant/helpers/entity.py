@@ -26,8 +26,8 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -209,7 +209,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.unit_of_measurement
 
 
-ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+ENTITY_CATEGORIES_SCHEMA: Final = probatio.Coerce(EntityCategory)
 
 
 class EntityInfo(TypedDict):
@@ -1466,7 +1466,7 @@ class Entity(
         except BaseException as ex:
             self.__remove_future.set_exception(ex)
             raise
-        finally:
+        else:
             self.__remove_future.set_result(None)
 
     @final

@@ -29,10 +29,11 @@ from aiohasupervisor.models import (
     SupervisorOptions,
 )
 from freezegun.api import FrozenDateTimeFactory
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import User
 from homeassistant.components import frontend, hassio
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
@@ -69,6 +70,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -442,6 +444,60 @@ async def test_setup_api_existing_hassio_user(
     )
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+async def _async_assert_supervisor_user_adopted(
+    hass: HomeAssistant, user: User, human: User
+) -> None:
+    """Assert setup adopted the existing Supervisor system user."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data[ENTRY_DATA_USER] == user.id
+    assert entry.data[ENTRY_DATA_USER] != human.id
+    assert [
+        existing
+        for existing in await hass.auth.async_get_users()
+        if existing.system_generated and existing.name == HASSIO_USER_NAME
+    ] == [user]
+
+
+async def test_setup_adopts_existing_supervisor_user(hass: HomeAssistant) -> None:
+    """Test setup reuses an existing Supervisor system user.
+
+    When the config entry data (and legacy store) naming the Supervisor user
+    is lost, an existing Supervisor system user must be adopted instead of
+    creating a duplicate. A regular user named alike must not be picked up.
+    """
+    human = await hass.auth.async_create_user(HASSIO_USER_NAME)
+    user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN).add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    await _async_assert_supervisor_user_adopted(hass, user, human)
+
+
+async def test_setup_adopts_existing_supervisor_user_without_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup reuses an existing Supervisor system user without config entry.
+
+    Same as above, but with the config entry itself gone: the entry created by
+    the system flow must name the adopted user.
+    """
+    human = await hass.auth.async_create_user(HASSIO_USER_NAME)
+    user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    await _async_assert_supervisor_user_adopted(hass, user, human)
 
 
 async def test_setup_migrates_legacy_hassio_store_to_config_entry(
@@ -970,7 +1026,9 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
 
 @pytest.mark.usefixtures("hassio_env")
 async def test_partial_backup_legacy_homeassistant_folder(
-    hass: HomeAssistant, supervisor_client: AsyncMock
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    supervisor_client: AsyncMock,
 ) -> None:
     """Test legacy "homeassistant" folder is translated to homeassistant=True."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -991,7 +1049,6 @@ async def test_partial_backup_legacy_homeassistant_folder(
             folders={Folder.SSL},
         )
     )
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
         is not None
@@ -1722,7 +1779,7 @@ async def test_mount_reload_unknown_device_id(
         await hass.services.async_call(
             DOMAIN, "mount_reload", {"device_id": "1234"}, blocking=True
         )
-    assert str(exc.value) == "Device ID not found"
+    assert str(exc.value) == "Device with ID 1234 was not found"
 
 
 async def test_mount_reload_no_name(
@@ -1774,7 +1831,7 @@ async def test_mount_reload_not_supervisor_device(
         await hass.services.async_call(
             DOMAIN, "mount_reload", {"device_id": device2.id}, blocking=True
         )
-    assert str(exc.value) == "Device is not a supervisor mount point"
+    assert str(exc.value) == "Device NAS does not belong to integration hassio"
 
 
 async def test_mount_reload_selector_matches_device_name(

@@ -39,6 +39,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import CoverSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_ANGLE,
@@ -74,7 +75,7 @@ async def async_setup_entry(
             KnxYamlCover(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.COVER):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.COVER):
         entities.extend(
             KnxUiCover(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -306,7 +307,7 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
     _device: XknxCover
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX cover."""
         super().__init__(

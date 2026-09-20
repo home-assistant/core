@@ -7,7 +7,7 @@ import shutil
 from tempfile import mkdtemp
 from typing import override
 
-from aiohttp import BasicAuth, ClientSession, UnixConnector
+from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -20,7 +20,7 @@ from go2rtc_client.ws import (
     WebRTCOffer,
     WsError,
 )
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -80,10 +80,12 @@ def _validate_auth(config: dict) -> dict:
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
     if debug_ui_enabled and not auth_exists:
-        raise vol.Invalid("Username and password must be set when debug_ui is true")
+        raise probatio.Invalid(
+            "Username and password must be set when debug_ui is true"
+        )
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Username and password can only be set when a URL is"
             " configured or debug_ui is true"
         )
@@ -91,27 +93,27 @@ def _validate_auth(config: dict) -> dict:
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
-                    vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
-                    vol.Exclusive(
+                    probatio.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                    probatio.Exclusive(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
-                    vol.Inclusive(CONF_USERNAME, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
+                    probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
+                        cv.string, probatio.Length(min=1)
                     ),
-                    vol.Inclusive(CONF_PASSWORD, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
+                    probatio.Inclusive(CONF_PASSWORD, _AUTH): probatio.All(
+                        cv.string, probatio.Length(min=1)
                     ),
                 }
             ),
             _validate_auth,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
@@ -153,14 +155,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password = token_hex()
             _LOGGER.debug("Generated random credentials for go2rtc server")
 
-        auth = BasicAuth(username, password)
         # HA will manage the binary
         temp_dir = mkdtemp(prefix="go2rtc-")
         # Manually created session (not using the helper) needs to be closed manually
         # See on_stop listener below
         session = ClientSession(
             connector=UnixConnector(path=get_go2rtc_unix_socket_path(temp_dir)),
-            auth=auth,
+            headers={"Authorization": encode_basic_auth(username, password)},
         )
         server = Server(
             hass,
@@ -186,9 +187,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         url = HA_MANAGED_URL
     elif username and password:
-        # Create session with BasicAuth if credentials are provided
-        auth = BasicAuth(username, password)
-        session = async_create_clientsession(hass, auth=auth)
+        session = async_create_clientsession(
+            hass, headers={"Authorization": encode_basic_auth(username, password)}
+        )
     else:
         session = async_get_clientsession(hass)
 
