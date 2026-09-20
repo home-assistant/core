@@ -41,16 +41,16 @@ rules:
     status: exempt
     comment: |
       This integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
-  integration-owner: todo
+  integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
       No authentication required.
-  test-coverage: todo
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: todo

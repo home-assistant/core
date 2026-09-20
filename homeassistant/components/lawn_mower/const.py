@@ -1,7 +1,17 @@
 """Constants for the lawn mower integration."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import LawnMowerEntity
+
+DOMAIN: Final = "lawn_mower"
+DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)
 
 
 class LawnMowerActivity(StrEnum):
@@ -34,8 +44,6 @@ class LawnMowerEntityFeature(IntFlag):
     DOCK = 4
     STOP = 8
 
-
-DOMAIN: Final = "lawn_mower"
 
 SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"
