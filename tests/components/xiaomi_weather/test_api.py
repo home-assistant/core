@@ -405,6 +405,26 @@ def test_malformed_hourly_conditions(payload: dict[str, Any], series: object) ->
     )
 
 
+@pytest.mark.parametrize(
+    "timestamp_fields",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"pubTime": None}, id="null"),
+        pytest.param({"pubTime": "bad"}, id="malformed"),
+        pytest.param({"pubTime": "2026-09-08T13:00:00"}, id="missing-timezone"),
+    ],
+)
+def test_invalid_hourly_timestamp(
+    payload: dict[str, Any], timestamp_fields: dict[str, str | None]
+) -> None:
+    """An unusable hourly timestamp must not discard other weather data."""
+    expected = replace(parse_weather(payload), hourly=())
+    temperatures = payload["forecastHourly"]["temperature"]
+    del temperatures["pubTime"]
+    temperatures.update(timestamp_fields)
+    assert parse_weather(payload) == expected
+
+
 def test_clear_without_sun_times(payload: dict[str, Any]) -> None:
     """Test clear without sun times."""
     payload["current"]["weather"] = "0"

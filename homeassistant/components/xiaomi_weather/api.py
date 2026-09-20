@@ -243,10 +243,12 @@ def parse_weather(payload: Any) -> WeatherData:
         hourly = block(payload.get("forecastHourly"))
         hours: list[ForecastData] = []
         temperatures = block(hourly.get("temperature"))
-        if hourly.get("status", 0) == 0 and series_items(temperatures):
+        if (
+            series_items(temperatures)
+            and (start := optional_time(temperatures.get("pubTime"))) is not None
+        ):
             if temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected hourly temperature unit")
-            start = timestamp(temperatures["pubTime"])
             winds = hourly_winds(hourly)
             weather = block(hourly.get("weather"))
             codes = (
