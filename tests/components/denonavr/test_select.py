@@ -18,6 +18,7 @@ from homeassistant.components.denonavr.const import (
     CONF_UPDATE_AUDYSSEY,
     CONF_USE_TELNET,
     COORDINATOR_UPDATE_INTERVAL,
+    PENDING_VALUE_TIMEOUT,
 )
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -923,6 +924,51 @@ async def test_pending_expiry_reads_the_receiver_even_when_telnet_is_healthy(
         await hass.async_block_till_done()
 
     assert client.async_update.await_count > calls_after_action
+
+
+async def test_expiries_of_settings_changed_together_share_one_refresh(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Settings that expire together must not each read the receiver.
+
+    Every one of these reads is a full Audyssey round trip, and a refresh
+    already running when the next expiry fires started well after the
+    command that expiry gave up on, so it confirms that one too.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _entity_id(hass, "multi_eq"), ATTR_OPTION: "Flat"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _entity_id(hass, "dynamic_volume"), ATTR_OPTION: "Heavy"},
+        blocking=True,
+    )
+    # Well short of the expiry, so only the confirming refreshes run and
+    # the count below covers the two expiries alone. The receiver never
+    # reports the new values, so both stay pending.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    calls_after_actions = client.async_update_audyssey.await_count
+
+    async def _suspending_update(*args: object, **kwargs: object) -> None:
+        # Yields so the second expiry arrives while the first is still
+        # refreshing; without it the mock never suspends.
+        await asyncio.sleep(0)
+
+    client.async_update_audyssey.side_effect = _suspending_update
+
+    freezer.tick(timedelta(seconds=PENDING_VALUE_TIMEOUT + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count == calls_after_actions + 1
 
 
 async def test_audyssey_poll_needs_an_entity_not_just_internal_wiring(

@@ -334,14 +334,16 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
     assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
-async def test_concurrent_forced_refreshes_each_bypass_telnet_skip(
+async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Overlapping forced refreshes must each fetch, not just the first.
+    """Overlapping forced refreshes fetch once, and that fetch is forced.
 
-    The force flag lives on the coordinator and async_refresh() reaches the
-    debouncer lock only after it is set, so without a lock of its own the
-    first caller's cleanup clears the flag out from under the second.
+    The second caller returns only once the shared refresh is done, so it
+    has the fresh read it asked for. The force flag lives on the
+    coordinator and async_refresh() reaches the debouncer lock only after
+    it is set, hence the healthy Telnet here: a second caller running its
+    own refresh would find the flag already cleared and skip the fetch.
 
     Driven at the coordinator because PARALLEL_UPDATES keeps the service
     calls from overlapping.
@@ -364,7 +366,7 @@ async def test_concurrent_forced_refreshes_each_bypass_telnet_skip(
         audyssey_coordinator.async_refresh_forced(),
     )
 
-    assert client.async_update_audyssey.call_count == calls_before + 2
+    assert client.async_update_audyssey.call_count == calls_before + 1
 
 
 async def test_initial_audyssey_failure_marks_status_unavailable(

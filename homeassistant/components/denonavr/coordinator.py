@@ -153,6 +153,7 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
         self._force_refresh_lock = asyncio.Lock()
+        self._forced_refresh_count = 0
         self._internal_listeners: list[CALLBACK_TYPE] = []
 
     @callback
@@ -187,17 +188,29 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         For on-demand refreshes that need a confirmed fresh read; regular
         polling and post-action confirmations keep the skip.
 
-        Serialized on its own lock: async_refresh() reaches the debouncer
-        lock only after the flag is set, so overlapping callers would clear
-        it for each other and the later refresh would run unforced. Taken
-        before the debouncer and receiver locks, never after.
+        Overlapping callers share the refresh that is already running
+        instead of queueing another full read: settings changed together
+        expire together, and each of these reads is an expensive round
+        trip per zone. Sharing is sound because a pending value outlives
+        a refresh by far, so one already running when the expiry fires
+        still started after the command it has to confirm.
+
+        The lock is its own rather than the receiver's: async_refresh()
+        reaches the debouncer lock only after the flag is set, so
+        overlapping callers would otherwise clear it for each other and
+        the later refresh would run unforced. Taken before the debouncer
+        and receiver locks, never after.
         """
+        joined = self._forced_refresh_count
         async with self._force_refresh_lock:
+            if self._forced_refresh_count != joined:
+                return
             self._force_next_refresh = True
             try:
                 await self.async_refresh()
             finally:
                 self._force_next_refresh = False
+                self._forced_refresh_count += 1
 
     @override
     async def _async_update_data(self) -> None:
