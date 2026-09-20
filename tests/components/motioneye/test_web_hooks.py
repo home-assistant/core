@@ -427,34 +427,34 @@ async def test_event_media_data(
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/one"
     )
 
-# Verify the signed event file URL works without loading the media source.
-class MockStreamContent:
-    async def iter_chunked(self, size: int):
-        yield b"movie"
+    # Verify the signed event file URL works without loading the media source.
+    class MockStreamContent:
+        async def iter_chunked(self, size: int):
+            yield b"movie"
 
-@asynccontextmanager
-async def media_stream(*args, **kwargs):
-    yield SimpleNamespace(
-        status=HTTPStatus.OK,
-        headers={"Content-Type": "video/mp4"},
-        content=MockStreamContent(),
+    @asynccontextmanager
+    async def media_stream(*args, **kwargs):
+        yield SimpleNamespace(
+            status=HTTPStatus.OK,
+            headers={"Content-Type": "video/mp4"},
+            content=MockStreamContent(),
+        )
+
+    stream_mock = MagicMock(side_effect=media_stream)
+    client.async_get_media_stream = stream_mock
+
+    response = await hass_client.get(events[-1].data["file_url"])
+
+    assert response.status == HTTPStatus.OK
+    assert response.content_type == "video/mp4"
+    assert await response.read() == b"movie"
+    stream_mock.assert_called_once_with(
+        TEST_CAMERA_ID,
+        "/dir/one",
+        image=False,
+        preview=False,
+        range_header=None,
     )
-
-stream_mock = MagicMock(side_effect=media_stream)
-client.async_get_media_stream = stream_mock
-
-response = await hass_client.get(events[-1].data["file_url"])
-
-assert response.status == HTTPStatus.OK
-assert response.content_type == "video/mp4"
-assert await response.read() == b"movie"
-stream_mock.assert_called_once_with(
-    TEST_CAMERA_ID,
-    "/dir/one",
-    image=False,
-    preview=False,
-    range_header=None,
-)
 
     # Test: Image storage.
     client.is_file_type_image = Mock(return_value=True)
