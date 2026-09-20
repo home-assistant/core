@@ -55,8 +55,15 @@ def _format_tool(
         mcp_schema["required"] = required
     return types.Tool(
         name=tool.name,
+        title=tool.title,
         description=tool.description or "",
         inputSchema=mcp_schema,
+        annotations=types.ToolAnnotations(
+            readOnlyHint=tool.annotations.read_only,
+            destructiveHint=tool.annotations.destructive,
+            idempotentHint=tool.annotations.idempotent,
+            openWorldHint=tool.annotations.open_world,
+        ),
     )
 
 
@@ -147,7 +154,7 @@ async def create_server(
         tool_response = await llm_api.async_call_tool(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
-        if not tool_response.data.get("success"):
+        if tool_response.error:
             raise HomeAssistantError(cast(str, tool_response.data["error"]))
 
         return [

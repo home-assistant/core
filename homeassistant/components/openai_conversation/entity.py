@@ -192,7 +192,7 @@ def _convert_content_to_param(
                 and content.tool_call_id in web_search_calls
             ):
                 web_search_call = web_search_calls.pop(content.tool_call_id)
-                web_search_call["status"] = content.tool_result.get(  # type: ignore[typeddict-item]
+                web_search_call["status"] = content.result.data.get(  # type: ignore[typeddict-item]
                     "status", "completed"
                 )
                 messages.append(web_search_call)
@@ -201,7 +201,12 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json_dumps(content.tool_result),
+                        output=json_dumps(
+                            {
+                                "data": content.result.data,
+                                "error": content.result.error,
+                            }
+                        ),
                     )
                 )
             continue
@@ -342,13 +347,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "code_interpreter",
-                    "tool_result": {
-                        "output": (
-                            [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
-                            if event.item.outputs is not None
-                            else None
-                        )
-                    },
+                    "result": llm.ToolResult(
+                        data={
+                            "output": (
+                                [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
+                                if event.item.outputs is not None
+                                else None
+                            )
+                        },
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ResponseFunctionWebSearch):
@@ -370,7 +378,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "role": "tool_result",
                     "tool_call_id": event.item.id,
                     "tool_name": "web_search_call",
-                    "tool_result": {"status": event.item.status},
+                    "result": llm.ToolResult(
+                        data={"status": event.item.status},
+                        error=event.item.status == "failed",
+                    ),
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ImageGenerationCall):

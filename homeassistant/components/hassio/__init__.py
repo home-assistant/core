@@ -187,14 +187,27 @@ async def _async_get_or_create_supervisor_user(
         user = await hass.auth.async_get_user(legacy_user_id)
 
     if user is None:
+        # The storage naming the Supervisor user may have been lost. Reuse an
+        # existing Supervisor system user instead of creating a duplicate.
+        user = next(
+            (
+                existing
+                for existing in await hass.auth.async_get_users()
+                if existing.system_generated and existing.name == HASSIO_USER_NAME
+            ),
+            None,
+        )
+
+    if user is None:
         user = await hass.auth.async_create_system_user(
             HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
-        if entry is not None:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={**entry.data, ENTRY_DATA_USER: user.id},
-            )
+
+    if entry is not None and entry.data.get(ENTRY_DATA_USER) != user.id:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, ENTRY_DATA_USER: user.id},
+        )
 
     # Migrate old Hass.io users to be admin.
     if not user.is_admin:
