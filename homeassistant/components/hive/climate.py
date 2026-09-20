@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 from apyhiveapi import Hive
-import probatio
 
 from homeassistant.components.climate import (
     PRESET_BOOST,
@@ -17,11 +16,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_TIME_PERIOD, SERVICE_BOOST_HEATING_OFF, SERVICE_BOOST_HEATING_ON
 from .entity import HiveEntity
 
 HIVE_TO_HASS_STATE = {
@@ -64,27 +61,6 @@ async def async_setup_entry(
         async_add_entities(
             (HiveClimateEntity(hass, entry, hive, dev) for dev in devices), True
         )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_BOOST_HEATING_ON,
-        {
-            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
-                cv.time_period,
-                cv.positive_timedelta,
-                lambda td: td.total_seconds() // 60,
-            ),
-            probatio.Optional(ATTR_TEMPERATURE, default="25.0"): probatio.Coerce(float),
-        },
-        "async_heating_boost_on",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_BOOST_HEATING_OFF,
-        None,
-        "async_heating_boost_off",
-    )
 
 
 class HiveClimateEntity(HiveEntity, ClimateEntity):
