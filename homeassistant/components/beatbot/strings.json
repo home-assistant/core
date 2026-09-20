@@ -74,7 +74,7 @@
         "state": {
           "auto_dock": "Auto docking",
           "charge_done": "Charging complete",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "chase_light": "Chasing light",
           "clean_done": "Cleaning complete",
           "clean_wait": "Waiting to clean",
@@ -85,13 +85,13 @@
           "emerge": "Emerging",
           "finish_connect": "Connected",
           "goto_charge": "Returning to charge",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "remote_control": "Remote control",
           "replenish_energy": "Replenishing energy",
           "return_trip": "Returning",
           "self_cleaning": "Self-cleaning",
           "sleep": "Sleeping",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "wifi_connect": "Connecting to Wi-Fi"
         }
       }

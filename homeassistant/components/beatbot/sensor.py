@@ -44,11 +44,15 @@ def _status_value(data: BeatbotDeviceData) -> str | None:
     return None
 
 
-def _error_value(data: BeatbotDeviceData) -> str:
+def _error_value(data: BeatbotDeviceData) -> str | None:
     """Return the first active category-specific error."""
+    if not data.error_code:
+        return "none"
     if error := error_for(ProductCategory(data.product_category), data.error_code):
         return error.value
-    return "none"
+    # The bitmask reports a fault the library cannot decode; unknown is not
+    # the same as no error.
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)

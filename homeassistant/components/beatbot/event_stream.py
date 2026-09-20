@@ -17,14 +17,9 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
 from .coordinator import BeatbotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +47,6 @@ class BeatbotEventClient:
             api.async_get_access_token,
             state_callback=coordinator.async_apply_device_event,
             device_added_callback=self._handle_device_added,
-            device_removed_callback=self._handle_device_removed,
             reconnect_callback=coordinator.async_request_refresh,
             token_refresh_callback=self._async_refresh_token,
         )
@@ -77,13 +71,11 @@ class BeatbotEventClient:
                 await task
 
     async def _run(self) -> None:
-        """Run the library event client and start reauthentication if needed."""
+        """Run the library event client."""
         try:
             await self._client.async_run()
         except BeatbotAuthenticationError:
             _LOGGER.warning("Beatbot event stream authorization failed")
-            # No-op until the config flow implements reauthentication.
-            self._entry.async_start_reauth_if_available(self._hass)
 
     async def _async_refresh_token(self, rejected_access_token: str) -> str:
         """Refresh a rejected token through the session's shared rotation lock."""
@@ -112,33 +104,9 @@ class BeatbotEventClient:
         """Reload platforms to create entities for a newly discovered device."""
         self._schedule_entry_reload()
 
-    def _handle_device_removed(self, device_id: str) -> None:
-        """Remove device entities and reload the entry."""
-        self._remove_device_from_registries(device_id)
-        self._schedule_entry_reload()
-
     def _schedule_entry_reload(self) -> None:
         """Reload all platforms after the account's device set changes."""
         if self._reload_scheduled:
             return
         self._reload_scheduled = True
         self._hass.config_entries.async_schedule_reload(self._entry.entry_id)
-
-    def _remove_device_from_registries(self, device_id: str) -> None:
-        """Remove entities and the device registry entry after account removal."""
-        device_registry = dr.async_get(self._hass)
-        device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, device_id), self._entry.entry_id
-        )
-        if device is None:
-            return
-
-        entity_registry = er.async_get(self._hass)
-        for entity in er.async_entries_for_device(
-            entity_registry, device.id, include_disabled_entities=True
-        ):
-            if entity.config_entry_id == self._entry.entry_id:
-                entity_registry.async_remove(entity.entity_id)
-        device_registry.async_update_device(
-            device.id, remove_config_entry_id=self._entry.entry_id
-        )

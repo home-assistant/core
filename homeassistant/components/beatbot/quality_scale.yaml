@@ -68,7 +68,9 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices:
+    status: todo
+    comment: Devices absent from discovery are kept but marked unavailable; removal is deferred to a follow-up PR.
 
   # Platinum
   async-dependency: done
