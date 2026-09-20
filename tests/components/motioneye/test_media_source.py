@@ -598,6 +598,47 @@ async def test_media_proxy_client_error(
     )
 
 
+async def test_media_proxy_client_error_after_response_started(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test a motionEye client error after the media response has started."""
+    client = create_mock_motioneye_client()
+
+    class FailingStreamContent:
+        async def iter_chunked(self, size: int) -> AsyncIterator[bytes]:
+            yield b"movie"
+            raise MotionEyeClientError
+
+    @asynccontextmanager
+    async def media_stream(*args, **kwargs):
+        yield SimpleNamespace(
+            status=200,
+            headers={"Content-Type": "video/mp4"},
+            content=FailingStreamContent(),
+        )
+
+    stream_mock = MagicMock(side_effect=media_stream)
+    client.async_get_media_stream = stream_mock
+
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/movies/0/L2Zvby5tcDQ="
+    )
+
+    assert response.status == 200
+    assert await response.read() == b"movie"
+    stream_mock.assert_called_once_with(
+        1,
+        "/foo.mp4",
+        image=False,
+        preview=False,
+        range_header=None,
+    )
+
+
 async def test_media_proxy_rejects_invalid_kind(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
