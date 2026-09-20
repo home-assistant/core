@@ -42,12 +42,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Threema notify entities from config entry subentries."""
-    for subentry_id, subentry in entry.subentries.items():
-        if subentry.subentry_type != SUBENTRY_TYPE_RECIPIENT:
-            continue
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_RECIPIENT):
         async_add_entities(
             [ThreemaNotifyEntity(entry, subentry)],
-            config_subentry_id=subentry_id,
+            config_subentry_id=subentry.subentry_id,
         )
 
 
