@@ -1,117 +1,162 @@
 """Tests for the Beatbot sensor platform."""
 
-from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 from beatbot_cloud import BeatbotDeviceData
+import pytest
 
-from homeassistant.components.beatbot.sensor import (
-    SENSOR_DESCRIPTIONS,
-    BeatbotSensor,
-    BeatbotSensorEntityDescription,
-)
+from homeassistant.components.beatbot.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-DEVICE_ID = "test-device-1"
+from . import (
+    BATTERY_ENTITY_ID,
+    DEVICE_ID,
+    ERROR_ENTITY_ID,
+    INTERFACE_STATE,
+    STATUS_ENTITY_ID,
+    batch_state,
+    create_device,
+    setup_integration,
+)
 
+from tests.common import MockConfigEntry
 
-def _coordinator() -> SimpleNamespace:
-    """Return a coordinator with one pool cleaner."""
-    device = BeatbotDeviceData(
-        device_id=DEVICE_ID,
-        product_id="pool-bot-x",
-        product_category="pool_clean_bot",
-        work_status=5,
-        work_mode=0,
-        error_code=(1 << 2) | (1 << 6),
-        battery_level=80,
-        versions=[],
-        is_online=True,
-    )
-    return SimpleNamespace(data={DEVICE_ID: device}, last_update_success=True)
-
-
-def _description(key: str) -> BeatbotSensorEntityDescription:
-    """Return a sensor description by key."""
-    return next(
-        description for description in SENSOR_DESCRIPTIONS if description.key == key
-    )
+ERROR_BITS = (1 << 2) | (1 << 6)
+UNDECODABLE_ERROR_BITS = 1 << 23
 
 
-def _sensor(key: str, coordinator: SimpleNamespace | None = None) -> BeatbotSensor:
-    """Return a Beatbot sensor for a description key."""
-    return BeatbotSensor(coordinator or _coordinator(), DEVICE_ID, _description(key))
-
-
-def test_status_sensor() -> None:
+@pytest.mark.parametrize(
+    ("device", "states", "expected"),
+    [
+        pytest.param(create_device(), None, "cleaning", id="discovery"),
+        pytest.param(
+            create_device(),
+            batch_state(states={INTERFACE_STATE: 2}),
+            "charging",
+            id="batch-state",
+        ),
+        pytest.param(
+            create_device(work_status=999), None, STATE_UNKNOWN, id="unknown-status"
+        ),
+    ],
+)
+async def test_status_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    device: BeatbotDeviceData,
+    states: dict | None,
+    expected: str,
+) -> None:
     """Expose the library-decoded work status."""
-    sensor = _sensor("status")
+    mock_client.get_devices.return_value = [device]
+    if states is not None:
+        mock_client.get_device_states.return_value = states
 
-    assert sensor.unique_id == f"{DEVICE_ID}_status"
-    assert sensor.device_class is SensorDeviceClass.ENUM
-    assert sensor.native_value == "cleaning"
-    assert "standby" in sensor.options
+    await setup_integration(hass, mock_config_entry)
 
-
-def test_unknown_status() -> None:
-    """Return unknown when the library cannot decode a status."""
-    coordinator = _coordinator()
-    coordinator.data[DEVICE_ID].work_status = 999
-
-    assert _sensor("status", coordinator).native_value is None
+    state = hass.states.get(STATUS_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+    assert state.attributes["device_class"] == SensorDeviceClass.ENUM
+    assert "standby" in state.attributes["options"]
 
 
-def test_battery_sensor() -> None:
+@pytest.mark.parametrize(
+    ("error_code", "expected"),
+    [
+        pytest.param(0, "none", id="no-error"),
+        pytest.param(ERROR_BITS, "power_low", id="decoded"),
+        pytest.param(UNDECODABLE_ERROR_BITS, STATE_UNKNOWN, id="undecodable"),
+    ],
+)
+async def test_error_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    error_code: int,
+    expected: str,
+) -> None:
+    """Report a fault the library cannot decode as unknown, not as healthy."""
+    mock_client.get_devices.return_value = [create_device(error_code=error_code)]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ERROR_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+    assert state.attributes["device_class"] == SensorDeviceClass.ENUM
+    assert "motor_error" in state.attributes["options"]
+
+
+async def test_battery_sensor(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
     """Expose battery percentage with measurement metadata."""
-    sensor = _sensor("battery")
-
-    assert sensor.unique_id == f"{DEVICE_ID}_battery"
-    assert sensor.device_class is SensorDeviceClass.BATTERY
-    assert sensor.native_unit_of_measurement == PERCENTAGE
-    assert sensor.state_class is SensorStateClass.MEASUREMENT
-    assert sensor.native_value == 80
-
-
-def test_error_sensor() -> None:
-    """Expose the first library-decoded active error."""
-    sensor = _sensor("error")
-
-    assert sensor.unique_id == f"{DEVICE_ID}_error"
-    assert sensor.device_class is SensorDeviceClass.ENUM
-    assert sensor.native_value == "power_low"
-    assert "motor_error" in sensor.options
+    state = hass.states.get(BATTERY_ENTITY_ID)
+    assert state is not None
+    assert state.state == "80"
+    assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-def test_no_error() -> None:
-    """Expose none when the device has no active errors."""
-    coordinator = _coordinator()
-    coordinator.data[DEVICE_ID].error_code = 0
+@pytest.mark.parametrize(
+    ("devices", "states"),
+    [
+        pytest.param([create_device()], batch_state(is_online=False), id="offline"),
+        pytest.param([create_device()], {}, id="missing-batch-state"),
+        pytest.param(
+            [create_device(is_online=False)],
+            batch_state(is_online=None),
+            id="reported-offline",
+        ),
+    ],
+)
+async def test_sensors_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    devices: list[BeatbotDeviceData],
+    states: dict,
+) -> None:
+    """Make sensors unavailable without a confirmed online state."""
+    mock_client.get_devices.return_value = devices
+    mock_client.get_device_states.return_value = states
 
-    assert _sensor("error", coordinator).native_value == "none"
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (STATUS_ENTITY_ID, BATTERY_ENTITY_ID, ERROR_ENTITY_ID):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
 
-def test_sensor_availability() -> None:
-    """Require current online device data and a successful coordinator update."""
-    coordinator = _coordinator()
-    sensor = _sensor("status", coordinator)
-    assert sensor.available
+async def test_device_info(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose the Beatbot device metadata through the sensor entities."""
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{DEVICE_ID}_status"
+    )
+    assert entity_id is not None
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    device = device_registry.async_get(entry.device_id)
 
-    coordinator.data[DEVICE_ID].is_online = False
-    assert not sensor.available
-
-    coordinator.data.pop(DEVICE_ID)
-    assert not sensor.available
-
-
-def test_sensor_device_info() -> None:
-    """Expose Beatbot device metadata through sensor entities."""
-    coordinator = _coordinator()
-    coordinator.data[DEVICE_ID].name = "AquaSense"
-    coordinator.data[DEVICE_ID].model = "AquaSense 2"
-
-    device_info = _sensor("status", coordinator).device_info
-
-    assert device_info["identifiers"] == {("beatbot", DEVICE_ID)}
-    assert device_info["name"] == "AquaSense"
-    assert device_info["manufacturer"] == "Beatbot"
-    assert device_info["model"] == "AquaSense 2"
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, DEVICE_ID)}
+    assert device.name == "AquaSense"
+    assert device.manufacturer == "Beatbot"
+    assert device.model == "AquaSense 2"
+    assert device.model_id == "product-1"

@@ -1,315 +1,227 @@
 """Tests for the Beatbot OAuth2 config flow."""
 
-from __future__ import annotations
-
 import base64
 import json
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import MagicMock
 
-from aiohttp import ClientError, ClientResponseError
 from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
+from beatbot_cloud.const import OAUTH2_AUTHORIZE_URL, OAUTH2_CLIENT_ID, OAUTH2_SCOPE
 import pytest
 
-from homeassistant.components.beatbot import config_flow as config_flow_module
-from homeassistant.components.beatbot.config_flow import BeatbotConfigFlow
 from homeassistant.components.beatbot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
+
+from . import TOKEN_URL
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
-REDIRECT_URI = "http://example.com/auth/external/callback"
-REQUEST_INFO = SimpleNamespace(real_url="https://oauth.beatbot.com/oauth2/token")
+REDIRECT_URI = "https://example.com/auth/external/callback"
 
-pytestmark = pytest.mark.usefixtures("mock_get_devices", "mock_setup_entry")
-
-
-@pytest.fixture(autouse=True)
-def mock_import_client_credential(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep tests on the explicitly registered mock OAuth implementation."""
-    monkeypatch.setattr(
-        config_flow_module,
-        "async_import_client_credential",
-        AsyncMock(),
-    )
+pytestmark = pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 
 
-def _make_token(sub: object, *, nonce: str = "v1", region: str | None = None) -> dict:
-    """Build a fake OAuth2 token whose access_token is a JWT with `sub`.
-
-    `nonce` differentiates tokens for the same account (simulating a refresh)
-    without affecting the decoded `sub` used as unique id. `region` adds the
-    custom region claim used to pick the resource API base URL.
-    """
-    claims: dict = {"sub": sub, "nonce": nonce}
+def _make_access_token(sub: object, *, region: str | None = "cn") -> str:
+    """Build a JWT whose claims the library reads without verifying the signature."""
+    claims: dict[str, Any] = {"sub": sub}
     if region is not None:
         claims["region"] = region
-    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode()
-    payload = payload.rstrip("=")
+    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).rstrip(b"=")
+    return f"header.{payload.decode()}.signature"
+
+
+def _token_response(sub: object = "account-1", *, region: str | None = "cn") -> dict:
+    """Return an OAuth token response carrying the given account claims."""
     return {
-        "access_token": f"header.{payload}.signature",
-        "refresh_token": f"refresh-{sub}-{nonce}",
+        "access_token": _make_access_token(sub, region=region),
+        "refresh_token": "mock-refresh-token",
         "token_type": "bearer",
         "expires_in": 3600,
-        "scope": "device:info",
+        "scope": OAUTH2_SCOPE,
     }
 
 
-class _MockOAuth2Implementation(AbstractOAuth2Implementation):
-    """OAuth2 implementation that hands out a canned token (no HTTP)."""
-
-    def __init__(
-        self,
-        token: dict | None = None,
-        *,
-        authorize_error: Exception | None = None,
-        resolve_error: Exception | None = None,
-    ) -> None:
-        self._token = token
-        self._authorize_error = authorize_error
-        self._resolve_error = resolve_error
-
-    @property
-    def name(self) -> str:
-        return "Mock Beatbot"
-
-    @property
-    def domain(self) -> str:
-        return DOMAIN
-
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
-        if self._authorize_error is not None:
-            raise self._authorize_error
-        return "https://oauth.beatbot.com/oauth2/authorize"
-
-    async def async_resolve_external_data(self, external_data) -> dict:
-        if self._resolve_error is not None:
-            raise self._resolve_error
-        assert self._token is not None
-        return self._token
-
-    async def _async_refresh_token(self, token: dict) -> dict:
-        assert self._token is not None
-        return self._token
-
-
-def _register_mock_impl(
-    hass: HomeAssistant,
-    token: dict | None = None,
-    *,
-    authorize_error: Exception | None = None,
-    resolve_error: Exception | None = None,
-) -> _MockOAuth2Implementation:
-    """Register a canned-token OAuth2 implementation for the domain."""
-    impl = _MockOAuth2Implementation(
-        token,
-        authorize_error=authorize_error,
-        resolve_error=resolve_error,
-    )
-    config_entry_oauth2_flow.async_register_implementation(hass, DOMAIN, impl)
-    return impl
-
-
-async def _complete_external_auth(hass: HomeAssistant, flow_id: str) -> dict:
-    """Drive the flow from the `auth` external step through to entry creation/abort."""
-    result = await hass.config_entries.flow.async_configure(
-        flow_id,
-        {
-            "code": "mock-code",
-            "state": {"flow_id": flow_id, "redirect_uri": REDIRECT_URI},
-        },
-    )
-    # external_step_done -> need one more configure to run `creation`
-    if result["type"] is FlowResultType.EXTERNAL_STEP_DONE:
-        result = await hass.config_entries.flow.async_configure(flow_id)
-    return result
-
-
-async def _start_user_flow(hass: HomeAssistant) -> dict:
-    """Drive the user flow to the OAuth external step."""
-    result = await hass.config_entries.flow.async_init(
+async def _start_flow(hass: HomeAssistant) -> dict:
+    """Start a user flow and return its external authorization step."""
+    return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
 
 
-async def test_user_flow_creates_entry_with_jwt_sub_unique_id(
+async def _complete_flow(
     hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    flow_id: str,
+) -> dict:
+    """Finish the external OAuth step and return the flow result."""
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {"flow_id": flow_id, "redirect_uri": REDIRECT_URI},
+    )
+    client = await hass_client_no_auth()
+    response = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert response.status == 200
+    return await hass.config_entries.flow.async_configure(flow_id)
+
+
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client_class: MagicMock,
 ) -> None:
-    """Initial user flow creates one entry with unique_id = JWT `sub`."""
-    _register_mock_impl(hass, _make_token("account-1", region="cn"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    """Authorize an account, validate its region and create one entry."""
+    result = await _start_flow(hass)
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_implementation"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["step_id"] == "auth"
+    url = result["url"]
+    assert url.startswith(f"{OAUTH2_AUTHORIZE_URL}?")
+    assert f"client_id={OAUTH2_CLIENT_ID}" in url
+    assert f"redirect_uri={REDIRECT_URI}" in url
+    assert f"state={state}" in url
+    assert f"scope={OAUTH2_SCOPE}" in url
+    assert "code_challenge=" in url
 
-    result = await _complete_external_auth(hass, result["flow_id"])
+    aioclient_mock.post(TOKEN_URL, json=_token_response())
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].unique_id == "account-1"
-    assert entries[0].title == "Beatbot"
-
-
-async def test_user_flow_stores_region_from_token(hass: HomeAssistant) -> None:
-    """The custom `region` claim is stored on the entry for the API client."""
-    _register_mock_impl(hass, _make_token("account-1", region="cn"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    assert result["title"] == "Beatbot"
+    assert result["result"].unique_id == "account-1"
+    assert result["result"].data["region"] == "cn"
+    assert result["result"].data["auth_implementation"] == DOMAIN
+    assert result["result"].data["token"]["access_token"] == _make_access_token(
+        "account-1"
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
-    result = await _complete_external_auth(hass, result["flow_id"])
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data["region"] == "cn"
+    assert mock_client_class.call_args.args[0] == "cn"
 
 
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
-        (BeatbotAuthenticationError(), "oauth_error"),
-        (BeatbotConnectionError(), "cannot_connect"),
+        pytest.param(BeatbotAuthenticationError(), "oauth_error", id="authentication"),
+        pytest.param(
+            BeatbotConnectionError("offline"), "cannot_connect", id="connection"
+        ),
     ],
 )
-async def test_user_flow_tests_resource_api_before_create(
+async def test_flow_aborts_on_resource_api_failure(
     hass: HomeAssistant,
-    mock_get_devices: AsyncMock,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
     error: Exception,
     reason: str,
 ) -> None:
-    """Abort when the regional device API cannot be accessed."""
-    mock_get_devices.side_effect = error
-    _register_mock_impl(hass, _make_token("account-1", region="cn"))
+    """Abort when the regional device API rejects the new token."""
+    aioclient_mock.post(TOKEN_URL, json=_token_response())
+    mock_client.get_devices.side_effect = error
 
-    result = await _start_user_flow(hass)
-    result = await _complete_external_auth(hass, result["flow_id"])
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_resource_api_client_receives_access_token(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Pass the OAuth access token directly to the client library."""
-    session = SimpleNamespace()
-
-    def _client(region: str, client_session, access_token: str):
-        assert region == "cn"
-        assert client_session is session
-        assert access_token == "access-token"
-        return SimpleNamespace(get_devices=AsyncMock(return_value=[]))
-
-    monkeypatch.setattr(
-        config_flow_module, "async_get_clientsession", Mock(return_value=session)
-    )
-    monkeypatch.setattr(config_flow_module, "BeatbotClient", _client)
-    flow = BeatbotConfigFlow()
-    flow.hass = hass
-
-    result = await flow._async_validate_resource_api(
-        {"region": "cn", "token": {"access_token": "access-token"}}
-    )
-
-    assert result is None
-
-
 @pytest.mark.parametrize("sub", ["", 123, None])
-async def test_user_flow_rejects_invalid_subject(
-    hass: HomeAssistant, sub: object
+async def test_flow_aborts_without_account_subject(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    sub: object,
 ) -> None:
     """Reject tokens without a non-empty string account subject."""
-    _register_mock_impl(hass, _make_token(sub, region="cn"))
+    aioclient_mock.post(TOKEN_URL, json=_token_response(sub))
 
-    result = await _start_user_flow(hass)
-    result = await _complete_external_auth(hass, result["flow_id"])
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_user_flow_aborts_authorize_url_timeout(
+@pytest.mark.parametrize("region", ["zz", None])
+async def test_flow_aborts_with_unknown_region(
     hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    region: str | None,
 ) -> None:
-    """Timeout while building the authorize URL aborts clearly."""
-    _register_mock_impl(hass, authorize_error=TimeoutError)
+    """Abort without a region the API base URLs cover."""
+    aioclient_mock.post(TOKEN_URL, json=_token_response(region=region))
 
-    result = await _start_user_flow(hass)
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "authorize_url_timeout"
+    assert result["reason"] == "unknown_region"
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 @pytest.mark.parametrize(
-    ("resolve_error", "reason"),
+    ("status", "reason"),
     [
-        (TimeoutError(), "oauth_timeout"),
-        (ClientError(), "oauth_failed"),
-        (ClientResponseError(REQUEST_INFO, (), status=401), "oauth_failed"),
+        pytest.param(500, "oauth_failed", id="server-error"),
+        pytest.param(401, "oauth_unauthorized", id="rejected-token"),
     ],
 )
-async def test_user_flow_aborts_oauth_resolve_errors(
+async def test_flow_aborts_on_token_endpoint_failure(
     hass: HomeAssistant,
-    resolve_error: Exception,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    status: int,
     reason: str,
 ) -> None:
-    """Token exchange timeout and HTTP failures abort with HA OAuth reasons."""
-    _register_mock_impl(hass, resolve_error=resolve_error)
+    """Abort with the reason matching the token endpoint failure."""
+    aioclient_mock.post(TOKEN_URL, status=status)
 
-    result = await _start_user_flow(hass)
-    result = await _complete_external_auth(hass, result["flow_id"])
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_user_flow_aborts_invalid_oauth_token(hass: HomeAssistant) -> None:
-    """A token response without expires_in is rejected as an OAuth error."""
-    _register_mock_impl(
-        hass,
-        {
-            "access_token": _make_token("account-1", region="cn")["access_token"],
-            "refresh_token": "refresh-account-1",
-            "token_type": "bearer",
-            "scope": "device:info",
-        },
-    )
+async def test_flow_aborts_on_token_without_expiry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+) -> None:
+    """Reject a token response that does not say when the token expires."""
+    token = _token_response()
+    del token["expires_in"]
+    aioclient_mock.post(TOKEN_URL, json=token)
 
-    result = await _start_user_flow(hass)
-    result = await _complete_external_auth(hass, result["flow_id"])
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_user_flow_aborts_when_user_rejects_authorization(
+async def test_flow_aborts_when_authorization_is_rejected(
     hass: HomeAssistant,
 ) -> None:
-    """A rejected OAuth authorization is surfaced as user_rejected_authorize."""
-    _register_mock_impl(hass, _make_token("account-1", region="cn"))
-
-    result = await _start_user_flow(hass)
+    """Surface a rejected authorization as user_rejected_authorize."""
+    result = await _start_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"error": "access_denied", "state": {"flow_id": result["flow_id"]}},
@@ -322,63 +234,27 @@ async def test_user_flow_aborts_when_user_rejects_authorization(
     assert result["reason"] == "user_rejected_authorize"
 
 
-async def test_user_flow_aborts_unknown_region(hass: HomeAssistant) -> None:
-    """A token whose region is not in the known map aborts with unknown_region."""
-    _register_mock_impl(hass, _make_token("account-1", region="zz"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
-    result = await _complete_external_auth(hass, result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_region"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
-async def test_user_flow_aborts_missing_region(hass: HomeAssistant) -> None:
-    """A token with no region claim aborts with unknown_region (no fallback)."""
-    _register_mock_impl(hass, _make_token("account-1"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
-    result = await _complete_external_auth(hass, result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_region"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
-async def test_user_flow_aborts_duplicate_account(hass: HomeAssistant) -> None:
-    """The same Beatbot account cannot be configured twice."""
-    entry = MockConfigEntry(
+async def test_flow_aborts_for_configured_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+) -> None:
+    """Refuse to configure the same Beatbot account twice."""
+    MockConfigEntry(
         domain=DOMAIN,
         unique_id="account-1",
         title="Beatbot",
-        source=SOURCE_USER,
         data={
             "auth_implementation": DOMAIN,
             "region": "cn",
-            "token": _make_token("account-1", region="cn"),
+            "token": _token_response(),
         },
-    )
-    entry.add_to_hass(hass)
-    _register_mock_impl(hass, _make_token("account-1", nonce="new", region="cn"))
+    ).add_to_hass(hass)
+    aioclient_mock.post(TOKEN_URL, json=_token_response())
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": DOMAIN}
-    )
-    result = await _complete_external_auth(hass, result["flow_id"])
+    result = await _start_flow(hass)
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

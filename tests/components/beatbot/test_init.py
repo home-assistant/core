@@ -1,315 +1,420 @@
-"""Tests for Beatbot config entry setup and unload."""
+"""Tests for Beatbot config entry setup, polling and event handling."""
 
-from __future__ import annotations
+from datetime import timedelta
+import time
+from unittest.mock import MagicMock
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
-
-from beatbot_cloud import BeatbotAuthenticationError, BeatbotDeviceData
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotConnectionError,
+    BeatbotEvent,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.beatbot import config_entry_oauth2_flow
-from homeassistant.components.beatbot.const import DOMAIN, PLATFORMS
+from homeassistant.components.beatbot.const import DOMAIN, NETWORK_REFRESH_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestReauthError,
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import (
+    BATTERY_ENTITY_ID,
+    DEVICE_ID,
+    INTERFACE_BATTERY,
+    INTERFACE_STATE,
+    STATUS_ENTITY_ID,
+    TOKEN_URL,
+    batch_state,
+    create_device,
+    library_callback,
+    property_change,
+    setup_integration,
+    status_event,
+    topology_event,
 )
-from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
+NEW_DEVICE_ID = "pool-cleaner-2"
+NEW_STATUS_ENTITY_ID = "sensor.aquasense_2_pro_status"
 
-@pytest.fixture(autouse=True)
-def mock_oauth_implementation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Make the config entry's OAuth implementation available."""
-    monkeypatch.setattr(
-        config_entry_oauth2_flow,
-        "async_get_config_entry_implementation",
-        AsyncMock(return_value=Mock()),
-    )
-
-
-def _entry() -> MockConfigEntry:
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="account-1",
-        title="Beatbot",
-        data={
-            "auth_implementation": DOMAIN,
-            "region": "cn",
-            "token": {
-                "access_token": "access-token",
-                "refresh_token": "refresh-token",
-                "token_type": "bearer",
-            },
-        },
-    )
+REFRESHED_TOKEN = {
+    "access_token": "new-access-token",
+    "refresh_token": "new-refresh-token",
+    "token_type": "bearer",
+    "expires_in": 3600,
+}
 
 
-async def test_async_setup_entry_starts_runtime_objects(
+async def poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance to the next reconciliation poll and let it finish."""
+    freezer.tick(timedelta(seconds=NETWORK_REFRESH_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_setup_and_unload(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
 ) -> None:
-    """Successful setup creates runtime data, loads platforms, and starts events."""
-    entry = _entry()
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    coordinator = Mock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    event_client = Mock()
-    event_client.async_start = Mock()
+    """Set up the entry, load entities, then stop the event stream on unload."""
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch(
-            "homeassistant.components.beatbot.BeatbotClient", return_value=Mock()
-        ) as api_cls,
-        patch(
-            "homeassistant.components.beatbot.BeatbotCoordinator",
-            return_value=coordinator,
-        ) as coordinator_cls,
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient",
-            return_value=event_client,
-        ) as event_client_cls,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(STATUS_ENTITY_ID) is not None
+    assert set(mock_event_client.call_args.kwargs) == {
+        "state_callback",
+        "device_added_callback",
+        "reconnect_callback",
+        "token_refresh_callback",
+    }
+    assert mock_event_client.return_value.async_run.await_count == 1
 
-    api_cls.assert_called_once()
-    coordinator_cls.assert_called_once()
-    coordinator.async_config_entry_first_refresh.assert_awaited_once()
-    hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(
-        entry, PLATFORMS
-    )
-    event_client_cls.assert_called_once()
-    event_client.async_start.assert_called_once()
-    assert entry.runtime_data.coordinator is coordinator
-    assert entry.runtime_data.event_client is event_client
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-
-async def test_async_setup_entry_loads_sensor_platform(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Load pool cleaners through the config entry sensor platform."""
-    entry = _entry()
-    entry.add_to_hass(hass)
-    device = BeatbotDeviceData(
-        device_id="pool-cleaner-1",
-        product_id="new-product-id",
-        product_category="pool_clean_bot",
-        work_status=0,
-        work_mode=0,
-        error_code=0,
-        battery_level=80,
-        versions=[],
-        is_online=True,
-    )
-    api = SimpleNamespace(
-        get_devices=AsyncMock(return_value=[device]),
-        get_device_states=AsyncMock(return_value={}),
-    )
-    event_client = Mock()
-    event_client.async_start = Mock()
-    event_client.async_stop = AsyncMock()
-
-    with (
-        patch("homeassistant.components.beatbot.BeatbotClient", return_value=api),
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient",
-            return_value=event_client,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    status_entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, "pool-cleaner-1_status"
-    )
-    battery_entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, "pool-cleaner-1_battery"
-    )
-    error_entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, "pool-cleaner-1_error"
-    )
-    assert status_entity_id is not None
-    assert battery_entity_id is not None
-    assert error_entity_id is not None
-    assert hass.states.get(status_entity_id) is not None
-    assert hass.states.get(battery_entity_id) is not None
-    assert hass.states.get(battery_entity_id).name == "Battery"
-    assert hass.states.get(error_entity_id) is not None
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    # The registry keeps the entity, but no live platform provides it anymore.
+    state = hass.states.get(STATUS_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    mock_event_client.return_value.async_close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    "refresh_error",
+    ("method", "error", "expected_state"),
     [
-        ConfigEntryAuthFailed(),
-        OAuth2TokenRequestReauthError(
-            request_info=SimpleNamespace(real_url="https://oauth.beatbot.com/token"),
-            status=400,
-            domain=DOMAIN,
+        pytest.param(
+            "get_devices",
+            BeatbotAuthenticationError(),
+            ConfigEntryState.SETUP_ERROR,
+            id="discovery-authentication",
+        ),
+        pytest.param(
+            "get_devices",
+            BeatbotConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            id="discovery-connection",
+        ),
+        pytest.param(
+            "get_device_states",
+            BeatbotAuthenticationError(),
+            ConfigEntryState.SETUP_ERROR,
+            id="state-authentication",
+        ),
+        pytest.param(
+            "get_device_states",
+            BeatbotConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            id="state-connection",
         ),
     ],
 )
-async def test_access_token_provider_translates_oauth_refresh_rejection(
-    hass: HomeAssistant, refresh_error: Exception
-) -> None:
-    """Translate terminal OAuth refresh errors for the client library."""
-    entry = _entry()
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    session = SimpleNamespace(
-        token={"access_token": "access-token"},
-        async_ensure_token_valid=AsyncMock(
-            side_effect=[
-                None,
-                refresh_error,
-            ]
-        ),
-    )
-    access_token_provider = None
-
-    def _client(_region: str, _session, access_token):
-        nonlocal access_token_provider
-        access_token_provider = access_token
-        return Mock()
-
-    async def _first_refresh() -> None:
-        assert access_token_provider is not None
-        assert await access_token_provider() == "access-token"
-        with pytest.raises(BeatbotAuthenticationError):
-            await access_token_provider()
-
-    coordinator = Mock()
-    coordinator.async_config_entry_first_refresh = AsyncMock(side_effect=_first_refresh)
-    event_client = Mock()
-
-    with (
-        patch(
-            "homeassistant.components.beatbot.config_entry_oauth2_flow.OAuth2Session",
-            return_value=session,
-        ),
-        patch("homeassistant.components.beatbot.BeatbotClient", side_effect=_client),
-        patch(
-            "homeassistant.components.beatbot.BeatbotCoordinator",
-            return_value=coordinator,
-        ),
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient",
-            return_value=event_client,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-
-    assert session.async_ensure_token_valid.await_count == 2
-
-
-async def test_async_unload_entry_stops_events_and_unloads_platforms(
+async def test_setup_failure(
     hass: HomeAssistant,
-) -> None:
-    """Unload stops the event stream after unloading platforms."""
-    entry = _entry()
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
-    coordinator = Mock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    event_client = Mock()
-    event_client.async_start = Mock()
-    event_client.async_stop = AsyncMock()
-
-    with (
-        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
-        patch(
-            "homeassistant.components.beatbot.BeatbotCoordinator",
-            return_value=coordinator,
-        ),
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient",
-            return_value=event_client,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert await hass.config_entries.async_unload(entry.entry_id)
-
-    event_client.async_stop.assert_awaited_once()
-    hass.config_entries.async_unload_platforms.assert_awaited_once_with(
-        entry, PLATFORMS
-    )
-
-
-async def test_async_unload_failure_keeps_runtime_services(
-    hass: HomeAssistant,
-) -> None:
-    """Keep runtime services active when platform unload fails."""
-    entry = _entry()
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
-    coordinator = Mock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    event_client = Mock()
-    event_client.async_start = Mock()
-    event_client.async_stop = AsyncMock()
-
-    with (
-        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
-        patch(
-            "homeassistant.components.beatbot.BeatbotCoordinator",
-            return_value=coordinator,
-        ),
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient",
-            return_value=event_client,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert not await hass.config_entries.async_unload(entry.entry_id)
-
-    event_client.async_stop.assert_not_awaited()
-
-
-async def _assert_first_refresh_failure(
-    hass: HomeAssistant,
-    error: type[Exception],
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    method: str,
+    error: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
-    entry = _entry()
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
-    coordinator = Mock()
-    coordinator.async_config_entry_first_refresh = AsyncMock(side_effect=error)
+    """Retry transient failures and fail setup when the credentials are rejected."""
+    getattr(mock_client, method).side_effect = error
 
-    with (
-        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
-        patch(
-            "homeassistant.components.beatbot.BeatbotCoordinator",
-            return_value=coordinator,
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
+    mock_event_client.assert_not_called()
+
+
+async def test_poll_applies_batch_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Apply the batched device state on the reconciliation poll."""
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+
+    mock_client.get_device_states.return_value = batch_state(
+        states={INTERFACE_BATTERY: 42}
+    )
+    await poll(hass, freezer)
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
+
+
+async def test_poll_partial_batch_keeps_discovery_values(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep the discovery values a partial batch response does not report."""
+    mock_client.get_device_states.return_value = batch_state(
+        states={INTERFACE_STATE: 2}
+    )
+    await poll(hass, freezer)
+
+    assert hass.states.get(STATUS_ENTITY_ID).state == "charging"
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+
+
+async def test_poll_ignores_unsupported_product_category(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose pool cleaners only; other product categories are skipped."""
+    mock_client.get_devices.return_value = [
+        create_device(),
+        create_device("mower-1", name="Mower", product_category="lawn_mower"),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{DEVICE_ID}_status"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, "mower-1_status")
+        is None
+    )
+
+
+async def test_poll_discovers_added_device(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Load platforms for a device that shows up in a later poll."""
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is None
+
+    mock_client.get_devices.return_value = [
+        create_device(),
+        create_device(NEW_DEVICE_ID, name="AquaSense 2 Pro"),
+    ]
+    await poll(hass, freezer)
+
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is not None
+
+
+async def test_poll_keeps_missing_device_unavailable(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Keep a device that vanished from discovery, but stop reporting it as current."""
+    mock_client.get_devices.return_value = []
+    await poll(hass, freezer)
+
+    assert hass.states.get(STATUS_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_ID), init_integration.entry_id
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{DEVICE_ID}_status"
+        )
+        is not None
+    )
+
+
+async def test_state_event_updates_entities(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_event_client: MagicMock,
+) -> None:
+    """Overlay a pushed property change on the coordinator data."""
+    library_callback(mock_event_client, "state_callback")(
+        property_change(INTERFACE_BATTERY, 42)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
+
+
+@pytest.mark.freeze_time
+async def test_state_event_does_not_reset_poll(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep the reconciliation poll on schedule despite steady event traffic."""
+    assert mock_client.get_devices.call_count == 1
+
+    library_callback(mock_event_client, "state_callback")(
+        property_change(INTERFACE_BATTERY, 42)
+    )
+    await hass.async_block_till_done()
+
+    assert mock_client.get_devices.call_count == 1
+
+    await poll(hass, freezer)
+
+    assert mock_client.get_devices.call_count == 2
+
+
+async def test_status_event_marks_device_offline(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_event_client: MagicMock,
+) -> None:
+    """Stop reporting state when the device pushes an offline status."""
+    library_callback(mock_event_client, "state_callback")(status_event(False))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(STATUS_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        pytest.param(topology_event(), id="device-set-event"),
+        pytest.param(
+            property_change(INTERFACE_BATTERY, 42, "unknown-device"),
+            id="unknown-device",
         ),
-        patch(
-            "homeassistant.components.beatbot.BeatbotEventClient"
-        ) as event_client_cls,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    ],
+)
+async def test_unroutable_event_is_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_event_client: MagicMock,
+    event: BeatbotEvent,
+) -> None:
+    """Ignore events that carry no state for a known device."""
+    library_callback(mock_event_client, "state_callback")(event)
+    await hass.async_block_till_done()
 
-    assert entry.state is expected_state
-    coordinator.async_config_entry_first_refresh.assert_awaited_once()
-    hass.config_entries.async_forward_entry_setups.assert_not_called()
-    event_client_cls.assert_not_called()
-
-
-async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
-    """A transient first refresh failure schedules setup retry."""
-    await _assert_first_refresh_failure(
-        hass, ConfigEntryNotReady, ConfigEntryState.SETUP_RETRY
-    )
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
 
 
-async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
-    """An authentication failure fails config entry setup."""
-    await _assert_first_refresh_failure(
-        hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
-    )
+async def test_device_added_event_reloads_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+) -> None:
+    """Load platforms when the event stream reports a new device."""
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is None
+
+    mock_client.get_devices.return_value = [
+        create_device(),
+        create_device(NEW_DEVICE_ID, name="AquaSense 2 Pro"),
+    ]
+    library_callback(mock_event_client, "device_added_callback")(NEW_DEVICE_ID)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is not None
+
+
+async def test_expired_token_is_refreshed_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client_class: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Refresh an expired token for the library instead of asking the user again."""
+    mock_config_entry.data["token"]["expires_at"] = time.time() - 10
+    aioclient_mock.post(TOKEN_URL, json=REFRESHED_TOKEN)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    access_token = mock_client_class.call_args.args[2]
+
+    assert await access_token() == "new-access-token"
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # The refreshed token is reused instead of hitting the token endpoint again.
+    assert await access_token() == "new-access-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_rejected_refresh_token_is_translated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client_class: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Translate an OAuth refresh rejection into a library authentication error."""
+    mock_config_entry.data["token"]["expires_at"] = time.time() - 10
+    aioclient_mock.post(TOKEN_URL, status=400)
+
+    await setup_integration(hass, mock_config_entry)
+
+    access_token = mock_client_class.call_args.args[2]
+    with pytest.raises(BeatbotAuthenticationError):
+        await access_token()
+
+
+async def test_event_stream_refreshes_rejected_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Refresh a token the event stream rejected and return the replacement."""
+    aioclient_mock.post(TOKEN_URL, json=REFRESHED_TOKEN)
+
+    await setup_integration(hass, mock_config_entry)
+    refresh_token = library_callback(mock_event_client, "token_refresh_callback")
+
+    assert await refresh_token("access-token") == "new-access-token"
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_event_stream_ignores_stale_token_rejection(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Reuse the current token when a superseded one is rejected."""
+    refresh_token = library_callback(mock_event_client, "token_refresh_callback")
+
+    assert await refresh_token("superseded-token") == "access-token"
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+async def test_event_stream_translates_rejected_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Translate an OAuth refresh rejection for the event stream."""
+    aioclient_mock.post(TOKEN_URL, status=400)
+    refresh_token = library_callback(mock_event_client, "token_refresh_callback")
+
+    with pytest.raises(BeatbotAuthenticationError):
+        await refresh_token("access-token")
