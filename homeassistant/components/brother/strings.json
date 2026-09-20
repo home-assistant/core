@@ -135,7 +135,6 @@
           "down": "Down",
           "running": "Running",
           "testing": "Testing",
-          "unknown": "Unknown",
           "warning": "Warning"
         }
       },
@@ -196,7 +195,6 @@
           "idle": "Idle",
           "other": "Other",
           "printing": "Printing",
-          "unknown": "Unknown",
           "warmup": "Warming up"
         }
       },

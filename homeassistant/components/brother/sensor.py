@@ -51,16 +51,20 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         key="printer_status",
         translation_key="printer_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["idle", "other", "printing", "unknown", "warmup"],
-        value=lambda data: data.printer_status,
+        options=["idle", "other", "printing", "warmup"],
+        value=lambda data: (
+            None if data.printer_status == "unknown" else data.printer_status
+        ),
     ),
     BrotherSensorEntityDescription(
         key="device_status",
         translation_key="device_status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=["down", "running", "testing", "unknown", "warning"],
-        value=lambda data: data.device_status,
+        options=["down", "running", "testing", "warning"],
+        value=lambda data: (
+            None if data.device_status == "unknown" else data.device_status
+        ),
     ),
     BrotherSensorEntityDescription(
         key="page_counter",
