@@ -79,12 +79,15 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
         if info is None:
             if errors["base"] == "cannot_connect":
                 translation_key = "deprecated_yaml_import_issue_cannot_connect"
-            else:
+            elif errors["base"] == "invalid_auth":
                 translation_key = "deprecated_yaml_import_issue_credentials_required"
+            else:
+                translation_key = "deprecated_yaml_import_issue_unknown"
+            host = import_data[CONF_HOST]
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                translation_key,
+                f"{translation_key}_{host}",
                 breaks_in_ha_version="2027.1.0",
                 is_fixable=False,
                 is_persistent=False,
@@ -94,7 +97,7 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
                 translation_placeholders={
                     "domain": DOMAIN,
                     "integration_title": "Linksys Smart Wi-Fi",
-                    "host": import_data[CONF_HOST],
+                    "host": host,
                 },
             )
             return self.async_abort(reason=errors["base"])

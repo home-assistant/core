@@ -41,10 +41,8 @@ async def async_setup_scanner(
 ) -> bool:
     """Migrate the YAML configuration to a config entry."""
     host = config[CONF_HOST]
-    if any(
-        entry.data[CONF_HOST] == host
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    ):
+
+    def _create_deprecated_yaml_issue() -> None:
         ir.async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
@@ -59,6 +57,12 @@ async def async_setup_scanner(
                 "integration_title": "Linksys Smart Wi-Fi",
             },
         )
+
+    if any(
+        entry.data[CONF_HOST] == host
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
+        _create_deprecated_yaml_issue()
         return True
 
     result = await hass.config_entries.flow.async_init(
@@ -66,10 +70,13 @@ async def async_setup_scanner(
         context={"source": SOURCE_IMPORT},
         data={CONF_HOST: host},
     )
-    return (
+    if (
         result["type"] is not FlowResultType.ABORT
         or result["reason"] == "already_configured"
-    )
+    ):
+        _create_deprecated_yaml_issue()
+        return True
+    return False
 
 
 async def async_setup_entry(

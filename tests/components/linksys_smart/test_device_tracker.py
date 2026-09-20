@@ -14,6 +14,7 @@ from jnap import (
 import pytest
 
 from homeassistant.components.device_tracker import legacy
+from homeassistant.components.linksys_smart import config_flow as linksys_config_flow
 from homeassistant.components.linksys_smart.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -232,10 +233,14 @@ async def test_yaml_config_no_entry_imports_without_credentials(
 
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+            DOMAIN, "deprecated_yaml_import_issue_credentials_required_192.168.1.1"
         )
         is None
     )
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
 
 
 async def test_yaml_config_no_entry_creates_credentials_required_issue(
@@ -263,7 +268,7 @@ async def test_yaml_config_no_entry_creates_credentials_required_issue(
     assert not hass.config_entries.async_entries(DOMAIN)
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+        DOMAIN, "deprecated_yaml_import_issue_credentials_required_192.168.1.1"
     )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -274,10 +279,77 @@ async def test_yaml_config_no_entry_creates_credentials_required_issue(
     }
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+            DOMAIN, "deprecated_yaml_import_issue_cannot_connect_192.168.1.1"
         )
         is None
     )
+
+
+async def test_yaml_config_two_routers_failing_the_same_way_both_get_issues(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that two routers failing the same way don't collide on issue ID."""
+    mock_jnap_client.get_devices.side_effect = JNAPUnauthorizedError
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": [
+                {"platform": "linksys_smart", "host": "192.168.1.1"},
+                {"platform": "linksys_smart", "host": "192.168.1.2"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for host in ("192.168.1.1", "192.168.1.2"):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_yaml_import_issue_credentials_required_{host}"
+        )
+        assert issue is not None
+        assert issue.translation_placeholders["host"] == host
+
+
+async def test_yaml_config_no_entry_creates_unknown_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that an unexpected error creates a distinct unknown-error issue."""
+    mock_jnap_client.get_devices.side_effect = Exception
+
+    with (
+        patch.object(legacy.LOGGER, "error") as mock_error,
+        patch.object(linksys_config_flow._LOGGER, "exception"),
+    ):
+        assert await async_setup_component(
+            hass,
+            "device_tracker",
+            {
+                "device_tracker": {
+                    "platform": "linksys_smart",
+                    "host": "192.168.1.1",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    mock_error.assert_called_once()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_unknown_192.168.1.1"
+    )
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "Linksys Smart Wi-Fi",
+        "host": "192.168.1.1",
+    }
 
 
 async def test_yaml_config_no_entry_creates_cannot_connect_issue(
@@ -305,7 +377,7 @@ async def test_yaml_config_no_entry_creates_cannot_connect_issue(
     assert not hass.config_entries.async_entries(DOMAIN)
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_192.168.1.1"
     )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -316,7 +388,7 @@ async def test_yaml_config_no_entry_creates_cannot_connect_issue(
     }
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+            DOMAIN, "deprecated_yaml_import_issue_credentials_required_192.168.1.1"
         )
         is None
     )
@@ -359,6 +431,7 @@ async def test_yaml_config_with_entry_creates_remove_yaml_issue(
 
 async def test_yaml_config_second_router_with_different_host_is_imported(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_jnap_client: AsyncMock,
 ) -> None:
     """Test that a second, differently-hosted YAML entry is still imported."""
@@ -389,3 +462,39 @@ async def test_yaml_config_second_router_with_different_host_is_imported(
         "192.168.1.1",
         "192.168.1.2",
     }
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+
+
+async def test_yaml_config_host_alias_creates_remove_yaml_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test that a YAML host aliasing an existing router still prompts YAML removal."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SERIAL,
+        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"},
+    ).add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": {
+                "platform": "linksys_smart",
+                "host": "192.168.1.2",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
