@@ -47,7 +47,8 @@ _CUMULATIVE = ToolAnnotations(open_world=False)
 
 INTENT_ANNOTATIONS = {
     INTENT_MEDIA_PAUSE: _CONTROL,
-    INTENT_MEDIA_UNPAUSE: _CONTROL,
+    # Unpausing clears the players it remembered, so a repeat can resume more.
+    INTENT_MEDIA_UNPAUSE: _CUMULATIVE,
     INTENT_PLAYER_MUTE: _CONTROL,
     INTENT_PLAYER_UNMUTE: _CONTROL,
     INTENT_SET_VOLUME: _CONTROL,
