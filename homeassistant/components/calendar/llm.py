@@ -34,7 +34,9 @@ class CalendarGetEventsTool(Tool):
         "When asked if something happens, search the whole week. "
         "Results are RFC 5545 which means 'end' is exclusive."
     )
-    annotations = ToolAnnotations(read_only=True, open_world=False)
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
     integration = DOMAIN
 
     def __init__(self, calendars: list[str]) -> None:
