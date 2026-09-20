@@ -528,7 +528,7 @@ async def test_event_media_data(
     assert len(events) == 5
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
-    
+
     # Test: Not a loaded motionEye config entry.
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
