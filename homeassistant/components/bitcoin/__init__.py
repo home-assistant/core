@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
+from .const import DEFAULT_CURRENCY
+
 PLATFORMS = [Platform.SENSOR]
 
 API_ERRORS = (APIException, OSError, ValueError)
@@ -43,6 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BitcoinConfigEntry) -> b
         await hass.async_add_executor_job(data.update)
     except API_ERRORS as err:
         raise ConfigEntryNotReady(f"Cannot reach blockchain.com: {err}") from err
+
+    # The exchange rate sensor falls back to USD, so without it there is
+    # nothing usable to show.
+    if DEFAULT_CURRENCY not in data.ticker:
+        raise ConfigEntryNotReady("blockchain.com is not quoting exchange rates")
 
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

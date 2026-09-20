@@ -25,11 +25,15 @@ def _get_currencies() -> list[str]:
 
 
 async def _async_get_currencies(hass: HomeAssistant) -> list[str] | None:
-    """Return the currencies blockchain.com quotes, or None if it is unreachable."""
+    """Return the currencies blockchain.com quotes, or None if there are none."""
     try:
-        return await hass.async_add_executor_job(_get_currencies)
+        currencies = await hass.async_add_executor_job(_get_currencies)
     except API_ERRORS:
         return None
+
+    # An empty ticker would leave nothing to pick from, so treat it as a failure
+    # instead of showing an empty dropdown.
+    return currencies or None
 
 
 def _currency_schema(currencies: list[str]) -> vol.Schema:

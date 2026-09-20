@@ -49,6 +49,19 @@ async def test_user_flow_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
+async def test_user_flow_no_currencies(
+    hass: HomeAssistant, mock_exchangerates: MagicMock
+) -> None:
+    """Test the user flow aborts when blockchain.com quotes nothing."""
+    mock_exchangerates.return_value = {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.usefixtures("mock_exchangerates", "mock_setup_entry")
 async def test_user_flow_single_instance(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

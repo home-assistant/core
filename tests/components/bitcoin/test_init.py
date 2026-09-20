@@ -34,3 +34,16 @@ async def test_setup_retries_when_api_unreachable(
 
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_statistics")
+async def test_setup_retries_when_no_rates_quoted(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_exchangerates: MagicMock,
+) -> None:
+    """Test setup is retried when blockchain.com quotes no exchange rates."""
+    mock_exchangerates.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
