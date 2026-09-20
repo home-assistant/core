@@ -170,6 +170,7 @@ class BackblazeBackupAgent(BackupAgent):
         self._all_files_cache_expiration: float = 0.0
         self._backup_list_cache: dict[str, AgentBackup] = {}
         self._backup_list_cache_expiration: float = 0.0
+        self._backup_list_cache_generation = 0
 
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
@@ -473,6 +474,8 @@ class BackblazeBackupAgent(BackupAgent):
                 _LOGGER.debug("Returning backup %s from cache", backup_id)
                 return backup
 
+        cache_generation = self._backup_list_cache_generation
+
         file, metadata_file_version = await self._find_file_and_metadata_version_by_id(
             backup_id
         )
@@ -499,7 +502,10 @@ class BackblazeBackupAgent(BackupAgent):
         )
         backup = _create_backup_from_metadata(metadata_content, file)
 
-        if self._is_cache_valid(self._backup_list_cache_expiration):
+        if (
+            self._backup_list_cache_generation == cache_generation
+            and self._is_cache_valid(self._backup_list_cache_expiration)
+        ):
             self._backup_list_cache[backup.backup_id] = backup
 
         return backup
@@ -697,6 +703,9 @@ class BackblazeBackupAgent(BackupAgent):
         # publish, where its pop would miss the fresh mapping and the refresh
         # would resurrect deleted entries or hide uploaded ones.
         async with self._backup_list_cache_lock, self._all_files_cache_lock:
+            # Voids the cache write of any get suspended since before this
+            # invalidation, so it cannot repopulate a removed entry.
+            self._backup_list_cache_generation += 1
             if remove_files:
                 if self._is_cache_valid(self._all_files_cache_expiration):
                     # Rebuild the mapping instead of popping in place: an in-flight

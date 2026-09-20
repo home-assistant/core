@@ -425,10 +425,10 @@ async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
         )
         assert await hass.async_add_executor_job(delete_started.wait, 30)
 
-        # The expired refresh serves the all-files mapping the delete just
-        # refreshed and blocks in its first metadata download while holding
-        # the backup list lock, so the delete invalidation below completes
-        # before the refresh publishes its mapping
+        # The refresh holds the backup list lock from before its listing until
+        # it publishes, so the invalidation waits for the publish and its pop
+        # lands on the fresh mapping, and a stale refresh alone cannot bring
+        # the deleted backup back
         refresh_phase = True
         refresh_task = hass.async_create_task(agent.async_list_backups())
         assert await hass.async_add_executor_job(refresh_blocked.wait, 30)
@@ -442,6 +442,106 @@ async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
 
         with pytest.raises(BackupNotFound):
             await agent.async_download_backup(TEST_BACKUP.backup_id)
+
+        remaining = await agent.async_list_backups()
+        assert [backup.backup_id for backup in remaining] == ["second-id"]
+
+
+async def test_get_suspended_during_delete_does_not_repopulate_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a get suspended in its metadata download cannot repopulate a deleted backup."""
+    agent = (await async_get_backup_agents(hass))[0]
+    second_file_versions = _second_backup_file_versions()
+    second_metadata_content = json.dumps(
+        {
+            "metadata_version": "1",
+            "backup_id": "second-id",
+            "backup_metadata": replace(TEST_BACKUP, backup_id="second-id").as_dict(),
+        }
+    ).encode("utf-8")
+    original_ls = BucketSimulator.ls
+
+    def ls(self, prefix: str = "") -> list[tuple[FileVersion, str]]:
+        listed = original_ls(self, prefix)
+        listed.extend(
+            (file_version, file_version.file_name)
+            for file_version in second_file_versions
+        )
+        return listed
+
+    metadata_contents = {
+        f"testprefix/{TEST_BACKUP.backup_id}.metadata.json": json.dumps(
+            BACKUP_METADATA
+        ).encode("utf-8"),
+        "testprefix/second-id.metadata.json": second_metadata_content,
+    }
+
+    get_phase = False
+    get_blocked = threading.Event()
+    get_release = threading.Event()
+    blocked_once = False
+
+    def download(self: FileVersion, *args: Any, **kwargs: Any) -> Mock:
+        nonlocal blocked_once
+        if get_phase and not blocked_once:
+            blocked_once = True
+            get_blocked.set()
+            assert get_release.wait(timeout=30)
+        downloaded = Mock()
+        downloaded.response.content = metadata_contents.get(self.file_name, b"")
+        return downloaded
+
+    delete_started = threading.Event()
+    release_delete = threading.Event()
+    delete_calls = 0
+
+    def delete(self: FileVersion, *args: Any, **kwargs: Any) -> None:
+        nonlocal delete_calls
+        delete_calls += 1
+        if delete_calls == 1:
+            delete_started.set()
+            assert release_delete.wait(timeout=30)
+
+    clock_now = 1000.0
+
+    def fake_time() -> float:
+        return clock_now
+
+    with (
+        patch.object(BucketSimulator, "ls", ls, create=True),
+        patch.object(FileVersion, "download", download),
+        patch.object(FileVersion, "delete", delete),
+        patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
+    ):
+        seeded = await agent.async_list_backups()
+        seeded_ids = [backup.backup_id for backup in seeded]
+        assert TEST_BACKUP.backup_id in seeded_ids
+        assert "second-id" in seeded_ids
+
+        clock_now = 1000.0 + CACHE_TTL + 1
+
+        # The get misses the expired cache and suspends in its first metadata
+        # download, so the refresh and the delete below both complete while it
+        # is suspended and its cache write would land after the invalidation
+        get_phase = True
+        get_task = hass.async_create_task(agent.async_get_backup(TEST_BACKUP.backup_id))
+        assert await hass.async_add_executor_job(get_blocked.wait, 30)
+
+        refresh_task = hass.async_create_task(agent.async_list_backups())
+
+        delete_task = hass.async_create_task(
+            agent.async_delete_backup(TEST_BACKUP.backup_id)
+        )
+        assert await hass.async_add_executor_job(delete_started.wait, 30)
+
+        release_delete.set()
+        await asyncio.sleep(0.1)
+        get_release.set()
+
+        await refresh_task
+        await delete_task
+        await get_task
 
         remaining = await agent.async_list_backups()
         assert [backup.backup_id for backup in remaining] == ["second-id"]
