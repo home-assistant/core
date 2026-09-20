@@ -15,8 +15,8 @@ rules:
     status: done
     comment: User and reconfigure flows have full line and branch coverage.
   dependency-transparency:
-    status: todo
-    comment: The client is bundled; resolve the external-library requirement before submission.
+    status: exempt
+    comment: The API client is bundled; an exception is requested in https://github.com/home-assistant/core/pull/182576.
   devices: todo
   diagnostics: todo
   discovery: todo
