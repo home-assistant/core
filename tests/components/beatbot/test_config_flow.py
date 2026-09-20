@@ -239,18 +239,10 @@ async def test_flow_aborts_for_configured_account(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Refuse to configure the same Beatbot account twice."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="account-1",
-        title="Beatbot",
-        data={
-            "auth_implementation": DOMAIN,
-            "region": "cn",
-            "token": _token_response(),
-        },
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     aioclient_mock.post(TOKEN_URL, json=_token_response())
 
     result = await _start_flow(hass)
