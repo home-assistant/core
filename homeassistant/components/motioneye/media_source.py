@@ -125,6 +125,7 @@ class MotionEyeMediaProxyView(HomeAssistantView):
             return web.Response(status=400)
 
         range_header = request.headers.get("Range")
+        response: web.StreamResponse | None = None
 
         try:
             async with cast(Any, entry.runtime_data.client).async_get_media_stream(
@@ -162,6 +163,8 @@ class MotionEyeMediaProxyView(HomeAssistantView):
                 await response.write_eof()
                 return response
         except MotionEyeClientError:
+            if response is not None and response.prepared:
+                raise
             return web.Response(status=502)
 
 
