@@ -5,6 +5,7 @@ import copy
 from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from yarl import URL
 
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -444,7 +445,8 @@ async def test_event_media_data(
     stream_mock = MagicMock(side_effect=media_stream)
     client.async_get_media_stream = stream_mock
 
-    response = await hass_client.get(events[-1].data["file_url"])
+    file_url = URL(events[-1].data["file_url"])
+    response = await hass_client.get(file_url.path_qs)
 
     assert response.status == HTTPStatus.OK
     assert response.content_type == "video/mp4"
