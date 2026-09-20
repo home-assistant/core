@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     API_KEY,
     CONF_DATA_WITH_SESSION_KEY,
+    LOGIN_REQUIRED_ERROR,
     USERNAME_1,
     USERNAME_2,
     MockNetwork,
@@ -112,9 +113,7 @@ def mock_hidden_user() -> MockUser:
     """Return mock user who hides their recent listening information."""
     return MockUser(
         recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks_error=WSError(
-            "network", "17", "Login: User required to be logged in"
-        ),
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
 
 
@@ -133,7 +132,5 @@ def mock_hidden_now_playing_user() -> MockUser:
     return MockUser(
         now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
         recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks_error=WSError(
-            "network", "17", "Login: User required to be logged in"
-        ),
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )

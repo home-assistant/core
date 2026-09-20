@@ -183,6 +183,11 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @override
     def async_remove(self) -> None:
         """Cancel the session key polling task when the flow is removed."""
+        self._cancel_polling_task()
+
+    @callback
+    def _cancel_polling_task(self) -> None:
+        """Cancel the session key polling task, if any."""
         if self._polling_task:
             self._polling_task.cancel()
             self._polling_task = None
@@ -320,23 +325,17 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 # The user continued manually before authorization was detected
                 await self._async_get_session_key()
         if CONF_SESSION_KEY in self.data:
-            if self._polling_task:
-                self._polling_task.cancel()
-                self._polling_task = None
+            self._cancel_polling_task()
             return self.async_external_step_done(
                 next_step_id=(
                     "finish_reauth" if self.source == SOURCE_REAUTH else "friends"
                 )
             )
         if self._authorized_username is not None and CONF_SESSION_KEY not in self.data:
-            if self._polling_task:
-                self._polling_task.cancel()
-                self._polling_task = None
+            self._cancel_polling_task()
             return self.async_external_step_done(next_step_id="wrong_account")
         if self._session_key_error:
-            if self._polling_task:
-                self._polling_task.cancel()
-                self._polling_task = None
+            self._cancel_polling_task()
             return self.async_external_step_done(next_step_id="auth_failed")
         return self.async_external_step(step_id="auth_url", url=self._auth_url)
 

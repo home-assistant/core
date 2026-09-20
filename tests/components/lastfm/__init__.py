@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 from unittest.mock import patch
 
-from pylast import PyLastError, Track
+from pylast import PyLastError, Track, WSError
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -25,6 +25,7 @@ AUTH_TOKEN = "testauthtoken"
 AUTH_URL = f"https://www.last.fm/api/auth/?api_key={API_KEY}&token={AUTH_TOKEN}"
 USERNAME_1 = "testaccount1"
 USERNAME_2 = "testaccount2"
+LOGIN_REQUIRED_ERROR = WSError("network", "17", "Login: User required to be logged in")
 
 CONF_DATA = {
     CONF_API_KEY: API_KEY,
@@ -178,7 +179,6 @@ def get_session_key_polling_task(
     hass: HomeAssistant, flow_id: str
 ) -> asyncio.Task[None]:
     """Return the session key polling task of the given flow."""
-    flow = hass.config_entries.flow._progress[flow_id]
-    task = flow._polling_task
+    task = hass.config_entries.flow._progress[flow_id]._polling_task
     assert task is not None
     return task

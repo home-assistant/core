@@ -29,6 +29,7 @@ from . import (
     CONF_FRIENDS_DATA,
     CONF_USER_DATA,
     CONF_USER_DATA_WITH_SECRET,
+    LOGIN_REQUIRED_ERROR,
     NEW_SESSION_KEY,
     SESSION_KEY,
     USERNAME_1,
@@ -639,11 +640,7 @@ async def test_flow_hidden_recent_tracks(
     """Test user initialized flow when user hides recent listening information."""
     with patch(
         "pylast.User",
-        return_value=MockUser(
-            recent_tracks_error=WSError(
-                "network", "17", "Login: User required to be logged in"
-            )
-        ),
+        return_value=MockUser(recent_tracks_error=LOGIN_REQUIRED_ERROR),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -670,16 +667,40 @@ async def test_flow_hidden_recent_tracks(
         assert result["step_id"] == "friends"
 
 
+async def test_flow_hidden_recent_tracks_recovered(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test the flow recovers when the hidden recent tracks error clears."""
+    with patch(
+        "pylast.User",
+        return_value=MockUser(recent_tracks_error=LOGIN_REQUIRED_ERROR),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["errors"]["base"] == "hidden_recent_tracks"
+
+    with patch("pylast.User", return_value=default_user), patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "friends"
+
+
 async def test_flow_hidden_user_with_secret(hass: HomeAssistant) -> None:
     """Test a hidden user is accepted when an API secret is provided."""
     with (
         patch(
             "pylast.User",
-            return_value=MockUser(
-                recent_tracks_error=WSError(
-                    "network", "17", "Login: User required to be logged in"
-                )
-            ),
+            return_value=MockUser(recent_tracks_error=LOGIN_REQUIRED_ERROR),
         ),
         patch(
             SESSION_KEY_GENERATOR_PATH,
@@ -909,11 +930,7 @@ async def test_options_flow_hidden_recent_tracks(
 
     with patch(
         "pylast.User",
-        return_value=MockUser(
-            recent_tracks_error=WSError(
-                "network", "17", "Login: User required to be logged in"
-            )
-        ),
+        return_value=MockUser(recent_tracks_error=LOGIN_REQUIRED_ERROR),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
