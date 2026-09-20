@@ -12,6 +12,8 @@ from syrupy.filters import props
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import Unresolvable
+from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -109,11 +111,21 @@ async def test_browse_storage_empty(
     assert result.children == []
 
 
-@pytest.mark.parametrize(("index", "mime_type"), [(0, "video/mp4"), (2, "image/jpeg")])
+@pytest.mark.parametrize(
+    ("index", "expected_url", "mime_type"),
+    [
+        (0, "http://192.168.1.37/storage/0/aaaa1111/MOV_0001.mp4", "video/mp4"),
+        (2, "http://192.168.1.37/storage/0/cccc3333/IMG_0003.jpg", "image/jpeg"),
+    ],
+)
 async def test_resolve_media(
-    hass: HomeAssistant, mock_camera_storage: Mock, index: int, mime_type: str
+    hass: HomeAssistant,
+    mock_camera_storage: Mock,
+    index: int,
+    expected_url: str,
+    mime_type: str,
 ) -> None:
-    """Test resolving storage items returns the pre-signed URL and mime type."""
+    """Test resolving storage items returns an absolute URL and mime type."""
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
     media_id = MOCK_STORAGE_ITEMS[index]["media_id"]
@@ -122,8 +134,40 @@ async def test_resolve_media(
         hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
     )
 
-    assert result.url == MOCK_STORAGE_ITEMS[index]["url"]
+    assert result.url == expected_url
     assert result.mime_type == mime_type
+
+
+@pytest.mark.parametrize(
+    ("port", "expected_url"),
+    [
+        (8080, "http://192.168.1.37:8080/storage/0/aaaa1111/MOV_0001.mp4"),
+        (443, "https://192.168.1.37/storage/0/aaaa1111/MOV_0001.mp4"),
+    ],
+)
+async def test_resolve_media_device_port(
+    hass: HomeAssistant, mock_camera_storage: Mock, port: int, expected_url: str
+) -> None:
+    """Test relative URLs use the scheme and port the device is reachable on."""
+    assert await async_setup_component(hass, "media_source", {})
+    entry = await init_integration(
+        hass,
+        3,
+        model=MODEL_CAMERA,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_PORT: port,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_CAMERA,
+        },
+    )
+    media_id = MOCK_STORAGE_ITEMS[0]["media_id"]
+
+    result = await media_source.async_resolve_media(
+        hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
+    )
+
+    assert result.url == expected_url
 
 
 @pytest.mark.parametrize(

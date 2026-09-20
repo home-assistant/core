@@ -15,14 +15,14 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import get_host, get_http_port
+from .utils import get_absolute_url, get_device_url
 
 MAX_ITEMS = 500
 DEFAULT_STORAGE_ID = 0
@@ -125,13 +125,16 @@ class ShellyStorageMediaSource(MediaSource):
                 translation_key="storage_unavailable",
                 translation_placeholders={"device": entry.title},
             ) from err
+        base_url = get_device_url(entry.data)
         for stored in items:
-            if stored.get("media_id") != media_id or not stored.get("url"):
+            if stored.get("media_id") != media_id:
+                continue
+            if (url := get_absolute_url(stored.get("url"), base_url)) is None:
                 continue
             if stored.get("type") == "video":
-                return PlayMedia(url=stored["url"], mime_type=VIDEO_MIME_TYPE)
+                return PlayMedia(url=url, mime_type=VIDEO_MIME_TYPE)
             if stored.get("type") == "image":
-                return PlayMedia(url=stored["url"], mime_type=IMAGE_MIME_TYPE)
+                return PlayMedia(url=url, mime_type=IMAGE_MIME_TYPE)
         raise Unresolvable(
             translation_domain=DOMAIN,
             translation_key="unexpected_identifier",
@@ -227,7 +230,7 @@ class ShellyStorageMediaSource(MediaSource):
                 translation_key="storage_unavailable",
                 translation_placeholders={"device": entry.title},
             ) from err
-        base_url = self._async_base_url(entry)
+        base_url = get_device_url(entry.data)
         children = [
             child
             for stored in sorted(
@@ -266,6 +269,7 @@ class ShellyStorageMediaSource(MediaSource):
             return None
         if not stored.get("media_id") or not stored.get("url"):
             return None
+        thumbnail = get_absolute_url(stored.get("thumbnail_url"), base_url)
         local_time = dt_util.as_local(
             dt_util.utc_from_timestamp(stored["ts"])
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -273,12 +277,6 @@ class ShellyStorageMediaSource(MediaSource):
         title = f"{local_time} · {trigger.get('event', 'manual')}"
         if (duration := stored.get("duration")) is not None:
             title += f" · {duration:g}s"
-        thumbnail = None
-        if thumb := stored.get("thumbnail_url"):
-            if thumb.startswith("http"):
-                thumbnail = thumb
-            elif thumb.startswith("/"):
-                thumbnail = f"{base_url}{thumb}"
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{entry.entry_id}:{storage_id}:{stored['media_id']}",
@@ -289,13 +287,6 @@ class ShellyStorageMediaSource(MediaSource):
             can_play=True,
             can_expand=False,
         )
-
-    def _async_base_url(self, entry: ShellyConfigEntry) -> str:
-        """Return base URL for relative storage thumbnail URLs."""
-        host = get_host(entry.data[CONF_HOST])
-        if (port := get_http_port(entry.data)) == 80:
-            return f"http://{host}"
-        return f"http://{host}:{port}"
 
     async def _async_fetch_items(
         self, coordinator: ShellyRpcCoordinator, storage_id: int
