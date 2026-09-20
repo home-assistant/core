@@ -8,7 +8,7 @@ from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_VALVE
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -24,7 +24,6 @@ from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    CONF_HOST,
     CONF_MODEL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
@@ -78,8 +77,7 @@ from .utils import (
     async_manage_coiot_issues_task,
     get_block_device_sleep_period,
     get_device_entry_gen,
-    get_host,
-    get_http_port,
+    get_device_url,
     get_rpc_device_wakeup_period,
     get_rpc_key,
     get_rpc_ws_url,
@@ -172,9 +170,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def configuration_url(self) -> str:
         """Return the configuration URL for the device."""
-        port = get_http_port(self.config_entry.data)
-        scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
-        return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
+        return get_device_url(self.config_entry.data)
 
     @cached_property
     def model(self) -> str:
