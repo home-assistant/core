@@ -8,13 +8,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from PIL import Image
 import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.cloud.const import AI_TASK_ENTITY_UNIQUE_ID, DOMAIN
 from homeassistant.components.cloud.entity import (
     BaseCloudLLMEntity,
     _convert_content_to_param,
-    _ensure_schema_constraints,
     _format_structured_output,
 )
 from homeassistant.core import HomeAssistant
@@ -114,12 +114,15 @@ async def test_format_structured_output() -> None:
         pytest.param(["object", "null"], ["array", "null"], id="nullable-types"),
         pytest.param(["null", "object"], ["null", "array"], id="null-first"),
         pytest.param(["object"], ["array"], id="single-type-arrays"),
+        pytest.param("object", ["object", "array"], id="object-array-union"),
     ],
 )
-def test_ensure_schema_constraints(
-    object_type: str | list[str], array_type: str | list[str]
+def test_format_structured_output_type_arrays(
+    object_type: str | list[str],
+    array_type: str | list[str],
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test constraints on objects and arrays, including nullable types."""
+    """Test constraints on object and array types from a custom serializer."""
     schema = {
         "type": object_type,
         "properties": {
@@ -132,38 +135,43 @@ def test_ensure_schema_constraints(
             "untyped": {},
         },
     }
-    _ensure_schema_constraints(schema)
+    llm_api = MagicMock(
+        spec=llm.APIInstance,
+        custom_serializer=MagicMock(return_value=schema),
+    )
 
-    assert schema == {
-        "type": object_type,
-        "additionalProperties": False,
-        "properties": {
-            "objects": {
-                "type": array_type,
-                "items": {"type": object_type, "additionalProperties": False},
-            },
-            "mapping": {"type": object_type, "additionalProperties": True},
-            "value": {"type": ["string", "null"]},
-            "untyped": {},
-        },
-    }
+    assert _format_structured_output(probatio.Schema(dict), llm_api) == snapshot
 
 
-def test_ensure_schema_constraints_object_array_union() -> None:
-    """Test that both properties and items are constrained for a union type."""
-    schema = {
-        "type": ["object", "array"],
-        "properties": {"nested": {"type": "object"}},
-        "items": {"type": "object"},
-    }
-    _ensure_schema_constraints(schema)
-
-    assert schema == {
-        "type": ["object", "array"],
-        "additionalProperties": False,
-        "properties": {"nested": {"type": "object", "additionalProperties": False}},
-        "items": {"type": "object", "additionalProperties": False},
-    }
+@pytest.mark.parametrize(
+    "schema",
+    [
+        pytest.param(probatio.Schema(None), id="null"),
+        pytest.param(probatio.Schema(probatio.Maybe(str)), id="nullable-string"),
+        pytest.param(
+            probatio.Schema(probatio.In(["on", "off", None])), id="nullable-enum"
+        ),
+        pytest.param(
+            probatio.Schema(
+                probatio.All(
+                    float,
+                    probatio.Range(
+                        min=0, max=10, min_included=False, max_included=False
+                    ),
+                )
+            ),
+            id="exclusive-bounds",
+        ),
+        pytest.param(
+            probatio.Schema(probatio.ExactSequence([str, int])), id="prefix-items"
+        ),
+    ],
+)
+def test_format_structured_output_openapi_31(
+    schema: probatio.Schema, snapshot: SnapshotAssertion
+) -> None:
+    """Test version-specific schema conversion using OpenAPI 3.1."""
+    assert _format_structured_output(schema, None) == snapshot
 
 
 async def test_prepare_files_for_prompt(
