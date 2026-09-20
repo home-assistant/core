@@ -487,6 +487,7 @@ async def test_event_media_data(
     )
 
     # Test: No Home Assistant URL available.
+    client.is_file_type_image = Mock(return_value=False)
     with patch(
         "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
     ):
