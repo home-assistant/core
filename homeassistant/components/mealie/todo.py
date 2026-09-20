@@ -36,7 +36,6 @@ from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
 MINIMUM_CONFIDENCE = 0.97
-NO_CONFIDENCE = 0.0
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
@@ -167,8 +166,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             if (
                 parsed_ingredient
                 and parsed_ingredient.confidence
-                and (parsed_ingredient.confidence.average or NO_CONFIDENCE)
-                >= MINIMUM_CONFIDENCE
+                and (parsed_ingredient.confidence.average or 0.0) >= MINIMUM_CONFIDENCE
             ):
                 ingredient = parsed_ingredient.ingredient
                 if ingredient.food:
