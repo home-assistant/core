@@ -251,3 +251,72 @@ async def test_flow_aborts_for_configured_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_reauth_replaces_the_stored_token(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Store the new token on the existing entry for the same account."""
+    mock_config_entry.add_to_hass(hass)
+    new_token = _make_access_token("account-1")
+    aioclient_mock.post(TOKEN_URL, json=_token_response())
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"]["access_token"] == new_token
+    assert mock_config_entry.data["region"] == "cn"
+
+
+async def test_reauth_aborts_for_another_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Keep the entry untouched when a different account is authorized."""
+    mock_config_entry.add_to_hass(hass)
+    aioclient_mock.post(TOKEN_URL, json=_token_response("account-2"))
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_config_entry.unique_id == "account-1"
+    assert mock_config_entry.data["token"]["access_token"] == "access-token"
+
+
+async def test_reauth_aborts_when_the_resource_api_rejects_the_token(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Keep the entry untouched when the new token cannot read the account."""
+    mock_config_entry.add_to_hass(hass)
+    aioclient_mock.post(TOKEN_URL, json=_token_response())
+    mock_client.get_devices.side_effect = BeatbotAuthenticationError()
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await _complete_flow(hass, hass_client_no_auth, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert mock_config_entry.data["token"]["access_token"] == "access-token"

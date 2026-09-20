@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from beatbot_cloud import (
     BeatbotAuthenticationError,
@@ -292,15 +292,38 @@ async def test_device_added_event_reloads_entry(
 ) -> None:
     """Load platforms when the event stream reports a new device."""
     assert hass.states.get(NEW_STATUS_ENTITY_ID) is None
+    assert mock_client.get_devices.call_count == 1
 
     mock_client.get_devices.return_value = [
         create_device(),
         create_device(NEW_DEVICE_ID, name="AquaSense 2 Pro"),
     ]
-    library_callback(mock_event_client, "device_added_callback")(NEW_DEVICE_ID)
+    # Both arrive before the scheduled reload runs, so only one is acted on.
+    device_added = library_callback(mock_event_client, "device_added_callback")
+    device_added(NEW_DEVICE_ID)
+    device_added(NEW_DEVICE_ID)
     await hass.async_block_till_done()
 
     assert hass.states.get(NEW_STATUS_ENTITY_ID) is not None
+    assert mock_client.get_devices.call_count == 2
+
+
+async def test_event_stream_stops_on_token_rejection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Stop the stream instead of crashing when the server rejects the token."""
+    mock_event_client.return_value.async_run = AsyncMock(
+        side_effect=BeatbotAuthenticationError()
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "Beatbot event stream authorization failed" in caplog.text
 
 
 async def test_expired_token_is_refreshed_once(
@@ -343,6 +366,24 @@ async def test_rejected_refresh_token_is_translated(
 
     access_token = mock_client_class.call_args.args[2]
     with pytest.raises(BeatbotAuthenticationError):
+        await access_token()
+
+
+async def test_transient_refresh_failure_stays_retryable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client_class: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Keep a token endpoint outage retryable instead of asking for reauth."""
+    mock_config_entry.data["token"]["expires_at"] = time.time() - 10
+    aioclient_mock.post(TOKEN_URL, status=500)
+
+    await setup_integration(hass, mock_config_entry)
+
+    access_token = mock_client_class.call_args.args[2]
+    with pytest.raises(BeatbotConnectionError):
         await access_token()
 
 
@@ -390,4 +431,19 @@ async def test_event_stream_translates_rejected_refresh(
     refresh_token = library_callback(mock_event_client, "token_refresh_callback")
 
     with pytest.raises(BeatbotAuthenticationError):
+        await refresh_token("access-token")
+
+
+async def test_event_stream_keeps_transient_refresh_failure_retryable(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Keep a token endpoint outage on the event stream's reconnect path."""
+    aioclient_mock.post(TOKEN_URL, status=500)
+    refresh_token = library_callback(mock_event_client, "token_refresh_callback")
+
+    with pytest.raises(BeatbotConnectionError):
         await refresh_token("access-token")

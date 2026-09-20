@@ -3,7 +3,12 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-from beatbot_cloud import BeatbotDeviceData, BeatbotEvent
+from beatbot_cloud import (
+    BeatbotCapability,
+    BeatbotDeviceData,
+    BeatbotEvent,
+    FirmwareVersion,
+)
 from beatbot_cloud.const import OAUTH2_TOKEN_URL
 
 from homeassistant.core import HomeAssistant
@@ -30,7 +35,11 @@ def create_device(
     battery_level: int = 80,
     is_online: bool = True,
 ) -> BeatbotDeviceData:
-    """Return discovery data for a Beatbot device."""
+    """Return discovery data for a Beatbot device.
+
+    Mirrors what the library parses out of a discovery response, so entity
+    metadata built from it faces the same shapes as in production.
+    """
     return BeatbotDeviceData(
         device_id=device_id,
         product_id="product-1",
@@ -41,8 +50,13 @@ def create_device(
         work_mode=0,
         error_code=error_code,
         battery_level=battery_level,
-        versions=[],
+        versions=[FirmwareVersion(channel=0, version="1.2.3")],
         is_online=is_online,
+        work_mode_options={0: "auto", 1: "floor"},
+        capabilities={
+            INTERFACE_STATE: BeatbotCapability(INTERFACE_STATE, retrievable=True),
+            INTERFACE_BATTERY: BeatbotCapability(INTERFACE_BATTERY, retrievable=True),
+        },
     )
 
 

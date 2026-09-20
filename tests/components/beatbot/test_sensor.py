@@ -187,3 +187,4 @@ async def test_device_info(
     assert device.manufacturer == "Beatbot"
     assert device.model == "AquaSense 2"
     assert device.model_id == "product-1"
+    assert device.sw_version == "1.2.3"
