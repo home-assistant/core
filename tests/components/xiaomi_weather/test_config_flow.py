@@ -45,7 +45,6 @@ async def test_form(hass: HomeAssistant, locations: AsyncMock) -> None:
     locations.assert_not_awaited()
 
 
-@pytest.mark.usefixtures("client")
 @pytest.mark.parametrize(
     "coordinates",
     [
@@ -54,12 +53,26 @@ async def test_form(hass: HomeAssistant, locations: AsyncMock) -> None:
     ],
 )
 async def test_setup(
-    hass: HomeAssistant, locations: AsyncMock, coordinates: dict[str, float]
+    hass: HomeAssistant,
+    client: AsyncMock,
+    locations: AsyncMock,
+    coordinates: dict[str, float],
 ) -> None:
-    """Save the supplied coordinates rather than the matched city's center."""
+    """Review the resolved city and supplied coordinates before saving."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=coordinates
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "city_name": "北京市",
+        "city_id": "101010100",
+        "latitude": str(coordinates["latitude"]),
+        "longitude": str(coordinates["longitude"]),
+    }
+    client.assert_not_awaited()
+    assert not hass.config_entries.async_entries(DOMAIN)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "北京市"
     assert result["data"] == {
@@ -108,36 +121,39 @@ async def test_lookup_error_retry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], COORDINATES
     )
+    assert result["step_id"] == "confirm"
+    client.assert_not_awaited()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
 
-async def test_weather_error_retry(hass: HomeAssistant, client: AsyncMock) -> None:
-    """Do not save a location until weather access succeeds."""
-    client.side_effect = XiaomiWeatherError
+async def test_weather_error_retry(
+    hass: HomeAssistant, client: AsyncMock, locations: AsyncMock
+) -> None:
+    """Keep the location on the confirmation page until weather access succeeds."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "confirm"
+    summary = result["description_placeholders"]
+    client.side_effect = XiaomiWeatherError
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "cannot_connect"}
-    assert result["data_schema"] is not None
-    assert {
-        key.schema: key.description["suggested_value"]
-        for key in result["data_schema"].schema
-    } == COORDINATES
+    assert result["description_placeholders"] == summary
     assert not hass.config_entries.async_entries(DOMAIN)
     client.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], COORDINATES
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    locations.assert_awaited_once_with(39.9, 116.4)
     await hass.async_block_till_done()
 
 
 async def test_multiple_matches(
     hass: HomeAssistant, client: AsyncMock, locations: AsyncMock
 ) -> None:
-    """Let users choose an ambiguous match and retry a failed weather request."""
+    """Review the selected city before saving an ambiguous match."""
     locations.return_value = [BEIJING, CHAOYANG]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
@@ -149,20 +165,19 @@ async def test_multiple_matches(
         {"value": "101010300", "label": "朝阳区 · 北京市, 中国 (101010300)"},
     ]
     client.assert_not_awaited()
-    client.side_effect = XiaomiWeatherError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"city_id": "101010300"}
     )
-    assert result["step_id"] == "city"
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert result["data_schema"] is not None
-    key = next(iter(result["data_schema"].schema))
-    assert key.description["suggested_value"] == "101010300"
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "city_name": "朝阳区",
+        "city_id": "101010300",
+        "latitude": "39.9",
+        "longitude": "116.4",
+    }
+    client.assert_not_awaited()
     assert not hass.config_entries.async_entries(DOMAIN)
-    client.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"city_id": "101010300"}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "朝阳区"
     assert result["data"] == {
@@ -204,6 +219,21 @@ async def test_duplicate_during_selection(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"city_id": "101010100"}
     )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    client.assert_not_awaited()
+
+
+async def test_duplicate_during_confirmation(
+    hass: HomeAssistant, client: AsyncMock, entry: MockConfigEntry
+) -> None:
+    """Recheck duplicates when another entry is added during confirmation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+    )
+    assert result["step_id"] == "confirm"
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     client.assert_not_awaited()

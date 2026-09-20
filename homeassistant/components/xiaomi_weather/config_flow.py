@@ -28,6 +28,7 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the location inputs and matches."""
         self._coordinates: dict[str, float] = {}
         self._locations: dict[str, Location] = {}
+        self._location: Location
 
     @override
     async def async_step_user(
@@ -51,10 +52,8 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 elif len(locations) > 1:
                     return await self.async_step_city()
                 else:
-                    try:
-                        return await self._async_validate_and_create_entry(locations[0])
-                    except XiaomiWeatherError:
-                        errors["base"] = "cannot_connect"
+                    self._location = locations[0]
+                    return await self.async_step_confirm()
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -77,13 +76,9 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a city when the coordinates match multiple locations."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            location = self._locations[user_input[CONF_CITY_ID]]
-            try:
-                return await self._async_validate_and_create_entry(location)
-            except XiaomiWeatherError:
-                errors["base"] = "cannot_connect"
+            self._location = self._locations[user_input[CONF_CITY_ID]]
+            return await self.async_step_confirm()
         options: list[SelectOptionDict] = [
             {
                 "value": location.city_id,
@@ -95,39 +90,52 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="city",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(
-                    {
-                        probatio.Required(CONF_CITY_ID): SelectSelector(
-                            SelectSelectorConfig(
-                                options=options,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    }
-                ),
-                user_input,
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_CITY_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
             ),
-            errors=errors,
         )
 
-    async def _async_validate_and_create_entry(
-        self, location: Location
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Reject duplicates and verify weather access before creating the entry."""
-        await self.async_set_unique_id(location.city_id)
+        """Review the resolved location before validating weather and saving."""
+        await self.async_set_unique_id(self._location.city_id)
         self._abort_if_unique_id_configured()
-        await XiaomiWeatherClient(
-            async_get_clientsession(self.hass),
-            location.city_id,
-            self._coordinates[CONF_LATITUDE],
-            self._coordinates[CONF_LONGITUDE],
-        ).async_get_weather()
-        return self.async_create_entry(
-            title=location.name,
-            data={
-                CONF_NAME: location.name,
-                CONF_CITY_ID: location.city_id,
-                **self._coordinates,
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await XiaomiWeatherClient(
+                    async_get_clientsession(self.hass),
+                    self._location.city_id,
+                    self._coordinates[CONF_LATITUDE],
+                    self._coordinates[CONF_LONGITUDE],
+                ).async_get_weather()
+            except XiaomiWeatherError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=self._location.name,
+                    data={
+                        CONF_NAME: self._location.name,
+                        CONF_CITY_ID: self._location.city_id,
+                        **self._coordinates,
+                    },
+                )
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=probatio.Schema({}),
+            description_placeholders={
+                "city_name": self._location.name,
+                "city_id": self._location.city_id,
+                "latitude": str(self._coordinates[CONF_LATITUDE]),
+                "longitude": str(self._coordinates[CONF_LONGITUDE]),
             },
+            errors=errors,
         )
