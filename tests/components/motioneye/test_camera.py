@@ -28,7 +28,11 @@ from motioneye_client.const import (
 import probatio
 import pytest
 
-from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
+from homeassistant.components.camera import (
+    DATA_COMPONENT,
+    async_get_image,
+    async_get_mjpeg_stream,
+)
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
     CONF_STREAM_URL_TEMPLATE,
@@ -239,6 +243,20 @@ async def test_get_still_image_from_camera(hass: HomeAssistant) -> None:
     image = await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=1)
     assert image.content == b"image"
     client.async_get_camera_snapshot.assert_awaited_once_with(TEST_CAMERA_ID)
+
+
+async def test_get_still_image_without_camera(hass: HomeAssistant) -> None:
+    """Test getting a still image when camera data is unavailable."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+    await hass.async_block_till_done()
+
+    camera = hass.data[DATA_COMPONENT].get_entity(TEST_CAMERA_ENTITY_ID)
+    assert camera is not None
+    camera._camera = None
+
+    assert await camera.async_camera_image() is None
+    client.async_get_camera_snapshot.assert_not_awaited()
 
 
 async def test_get_stream_from_camera(
