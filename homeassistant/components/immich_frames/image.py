@@ -53,9 +53,16 @@ class ImmichFrameImage(ImmichFramesEntity, ImageEntity):
     @override
     def entity_picture(self) -> str | None:
         """Return a cache-busted link for the currently rendered image."""
-        picture = super().entity_picture
         data = self.coordinator.current_data
-        if picture is None or data is None:
+        if (
+            data is None
+            or not self.coordinator.parent_available
+            or not data.connected
+            or data.status != "ready"
+        ):
+            return None
+        picture = super().entity_picture
+        if picture is None:
             return picture
         return f"{picture}&v={int(data.updated_at.timestamp() * 1000)}"
 

@@ -109,6 +109,10 @@ async def test_setup_entry_allows_no_matching_photos(
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("image.empty_frame_image").state == "unavailable"
+    assert (
+        hass.states.get("image.empty_frame_image").attributes.get("entity_picture")
+        is None
+    )
 
 
 async def test_entity_becomes_unavailable_when_current_source_is_empty(
@@ -141,6 +145,7 @@ async def test_entity_becomes_unavailable_when_current_source_is_empty(
     assert hass.states.get("image.changing_frame_image").state == "unavailable"
     image = ImmichFrameImage(coordinator)
     assert image.extra_state_attributes == {}
+    assert image.entity_picture is None
     assert await image.async_image() is None
 
 
