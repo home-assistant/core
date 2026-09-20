@@ -7,6 +7,7 @@ from aiomealie import (
     MealieConnectionError,
     MealieError,
     MutateShoppingItem,
+    RegisteredParser,
     ShoppingItem,
     ShoppingList,
 )
@@ -23,11 +24,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import (
+    CONF_PARSE_TODO_EDIT,
+    CONF_PARSE_TODO_NEW,
+    CONF_PARSER,
+    DEFAULT_PARSER,
+    DOMAIN,
+)
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
+MINIMUM_CONFIDENCE = 0.97
+NO_CONFIDENCE = 0.0
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
@@ -111,6 +120,15 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         super().__init__(coordinator, shopping_list_id)
         self._shopping_list_id = shopping_list_id
         self._attr_name = self.shopping_list.name
+        self.parse_todo_new: bool = coordinator.config_entry.options.get(
+            CONF_PARSE_TODO_NEW, True
+        )
+        self.parse_todo_edit: bool = coordinator.config_entry.options.get(
+            CONF_PARSE_TODO_EDIT, True
+        )
+        self.parser = RegisteredParser(
+            coordinator.config_entry.options.get(CONF_PARSER, DEFAULT_PARSER)
+        )
 
     @property
     def shopping_list(self) -> ShoppingList:
@@ -141,6 +159,33 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             position=position,
             quantity=0.0,
         )
+
+        if item.summary and self.parse_todo_new:
+            parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                item.summary.strip(), parser=self.parser
+            )
+            if (
+                parsed_ingredient
+                and parsed_ingredient.confidence
+                and (parsed_ingredient.confidence.average or NO_CONFIDENCE)
+                >= MINIMUM_CONFIDENCE
+            ):
+                ingredient = parsed_ingredient.ingredient
+                if ingredient.food:
+                    new_shopping_item = MutateShoppingItem(
+                        list_id=self._shopping_list_id,
+                        is_food=ingredient.food.food_id is not None,
+                        food_id=ingredient.food.food_id
+                        if ingredient.food.food_id is not None
+                        else None,
+                        note=ingredient.food.name
+                        if not ingredient.food.food_id
+                        else None,
+                        unit_id=ingredient.unit.unit_id if ingredient.unit else None,
+                        quantity=ingredient.quantity or 0.0,
+                        position=position,
+                    )
+
         try:
             await self.coordinator.client.add_shopping_item(new_shopping_item)
         except MealieError as exception:
