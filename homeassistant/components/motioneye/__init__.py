@@ -80,8 +80,11 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
-from .media_source import _build_media_proxy_path
-from .media_source import MotionEyeMediaProxyView, split_motioneye_device_identifier
+from .media_source import (
+    MotionEyeMediaProxyView,
+    _build_media_proxy_path,
+    split_motioneye_device_identifier,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
