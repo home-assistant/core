@@ -13,7 +13,6 @@ from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
 from homeassistant.components.immich_frames import (
-    async_migrate_entry,
     async_remove_entry,
 )
 from homeassistant.components.immich_frames.const import (
@@ -308,7 +307,8 @@ async def test_migrate_legacy_hacs_entry_removes_retired_entities_and_cache(
     await hass.async_add_executor_job(legacy_jpeg.write_bytes, b"legacy image")
     await hass.async_add_executor_job(legacy_json.write_text, "legacy state")
 
-    assert await async_migrate_entry(hass, entry)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entity_registry.async_get(retired.entity_id) is None
     assert entity_registry.async_get(image.entity_id) is not None
