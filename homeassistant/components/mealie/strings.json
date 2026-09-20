@@ -170,14 +170,14 @@
     "step": {
       "init": {
         "data": {
-          "parse_todo_edit": "Parse edited todo list items",
-          "parse_todo_new": "Parse new todo list items",
+          "parse_todo_edit": "Parse edited to-do list items",
+          "parse_todo_new": "Parse new to-do list items",
           "parser": "Parser"
         },
         "data_description": {
           "parse_todo_edit": "When enabled, edited to-do list items are parsed. If a confident match is found, the food item, unit, and quantity are updated in Mealie. If disabled, the item is updated as entered.",
           "parse_todo_new": "When enabled, new to-do list items are parsed. If a confident match is found, the food item, unit, and quantity are added to Mealie separately. Otherwise, the item is added as a note.",
-          "parser": "The parser to use for processing todo list items.\nIf you select OpenAI, you must set up an API key in Mealie."
+          "parser": "The parser to use for processing to-do list items.\nIf you select OpenAI, you must set up an API key in Mealie."
         }
       }
     }
