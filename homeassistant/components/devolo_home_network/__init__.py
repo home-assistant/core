@@ -177,7 +177,7 @@ async def async_remove_config_entry_device(
     # A client roaming between access points is not stale, so all of them are asked.
     # An access point that cannot be queried might hold the client, so it blocks.
     entries: list[DevoloHomeNetworkConfigEntry] = hass.config_entries.async_entries(
-        DOMAIN, include_ignore=False, include_disabled=False
+        DOMAIN, include_ignore=False
     )
     connected_macs: set[str] = set()
     for entry in entries:
