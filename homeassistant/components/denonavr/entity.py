@@ -65,11 +65,14 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
 
     @callback
     def _async_handle_pending_expiry(self, _now: Any) -> None:
-        """Give up on an unconfirmed pending value and request a fresh read.
+        """Give up on an unconfirmed pending value and read the receiver.
 
         The settings poll is off by default, so the debounced post-action
         refresh can be the only read there is. Without this the state would
         keep showing the pending value with nothing left to correct it.
+
+        Forced: expiry means no Telnet push confirmed the value, so the
+        Telnet-healthy skip would drop the very read that has to replace it.
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
@@ -77,7 +80,7 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         if self.coordinator.config_entry:
             self.coordinator.config_entry.async_create_task(
                 self.hass,
-                self.coordinator.async_request_refresh(),
+                self.coordinator.async_refresh_forced(),
                 "denonavr pending value expiry refresh",
             )
 

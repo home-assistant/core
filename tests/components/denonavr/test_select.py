@@ -896,3 +896,33 @@ async def test_pending_expiry_triggers_a_fresh_refresh(
         await hass.async_block_till_done()
 
     assert client.async_update.await_count > calls_after_action
+
+
+async def test_pending_expiry_reads_the_receiver_even_when_telnet_is_healthy(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Expiry is exactly the case where no Telnet push confirmed the value.
+
+    An ordinary refresh skips the read while Telnet is healthy, which would
+    leave expiry falling back to a cached value nothing ever corrects.
+    """
+    with patch("homeassistant.components.denonavr.entity.PENDING_VALUE_TIMEOUT", 0.01):
+        await setup_denonavr(hass)
+        client.telnet_connected = True
+        client.telnet_healthy = True
+        entity_id = _entity_id(hass, "dimmer")
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
+            blocking=True,
+        )
+        await _wait_for_debounced_refresh(hass)
+        calls_after_action = client.async_update.await_count
+
+        await asyncio.sleep(0.02)
+        await hass.async_block_till_done()
+
+    assert client.async_update.await_count > calls_after_action
+
