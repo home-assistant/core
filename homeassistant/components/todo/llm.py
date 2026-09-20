@@ -26,8 +26,7 @@ from .intent import (
     INTENT_LIST_REMOVE_ITEM,
 )
 
-# Intents owned by this integration that are exposed as LLM tools, with the
-# title shown for each.
+# Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = {
     INTENT_LIST_ADD_ITEM: "Add to-do list item",
     INTENT_LIST_COMPLETE_ITEM: "Complete to-do list item",
