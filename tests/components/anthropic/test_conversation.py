@@ -402,6 +402,23 @@ async def test_prompt_caching_automatic(
 
 
 @pytest.mark.parametrize(
+    ("body_events", "expected_roles"),
+    [
+        pytest.param(create_content_block(0, []), [], id="empty-response"),
+        pytest.param(
+            [
+                *create_server_tool_use_block(
+                    0, "srvtoolu_test", "web_search", ['{"query":"Home Assistant"}']
+                ),
+                *create_web_search_result_block(1, "srvtoolu_test", []),
+                *create_content_block(2, []),
+            ],
+            ["assistant", "tool_result"],
+            id="server-tool-result",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "end_events",
     [
         pytest.param(
@@ -414,6 +431,28 @@ async def test_prompt_caching_automatic(
                 RawMessageStopEvent(type="message_stop"),
             ],
             id="token-limit",
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="pause_turn"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="paused-turn",
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="tool_use"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="tool-use",
         ),
         pytest.param(
             [RawMessageStopEvent(type="message_stop")], id="missing-stop-reason"
@@ -432,13 +471,15 @@ async def test_prompt_caching_automatic(
 )
 async def test_empty_response_without_completed_turn(
     hass: HomeAssistant,
+    body_events: list[RawMessageStreamEvent],
+    expected_roles: list[str],
     end_events: list[RawMessageStreamEvent],
 ) -> None:
     """Test incomplete empty responses do not produce a silent acknowledgement."""
     chat_log = conversation.ChatLog(hass, "test-conversation")
 
     async def stream() -> AsyncGenerator[RawMessageStreamEvent]:
-        for event in (*create_content_block(0, []), *end_events):
+        for event in (*body_events, *end_events):
             yield event
 
     results = [
@@ -448,7 +489,7 @@ async def test_empty_response_without_completed_turn(
         )
     ]
 
-    assert results == []
+    assert [content.role for content in results] == expected_roles
 
 
 @pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
@@ -1248,6 +1289,79 @@ async def test_web_search(
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "preamble",
+    [
+        pytest.param([], id="no-preamble"),
+        pytest.param(create_content_block(0, ["Searching"]), id="with-preamble"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("final_events", "expected_speech"),
+    [
+        pytest.param([], "", id="no-final-text"),
+        pytest.param(create_content_block(3, [""]), "", id="empty-final-text"),
+        pytest.param(
+            create_content_block(3, ["Found it"]), "Found it", id="nonempty-final-text"
+        ),
+    ],
+)
+async def test_web_search_final_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    preamble: list[RawMessageStreamEvent],
+    final_events: list[RawMessageStreamEvent],
+    expected_speech: str,
+) -> None:
+    """Test completed server tool results can be followed by a silent response."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_WEB_SEARCH: True},
+    )
+    await hass.async_block_till_done()
+    mock_create_stream.return_value = [
+        (
+            *preamble,
+            *create_server_tool_use_block(
+                1, "srvtoolu_test", "web_search", ['{"query":"Home Assistant"}']
+            ),
+            *create_web_search_result_block(
+                2,
+                "srvtoolu_test",
+                [
+                    WebSearchResultBlock(
+                        type="web_search_result",
+                        title="Home Assistant",
+                        url="https://www.home-assistant.io/",
+                        encrypted_content="test",
+                    )
+                ],
+            ),
+            *final_events,
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Search for Home Assistant",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == expected_speech
+    assert not result.continue_conversation
+    mock_create_stream.assert_awaited_once()
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][result.conversation_id]
+    assert not chat_log.unresponded_tool_results
+    assert isinstance(chat_log.content[-1], conversation.AssistantContent)
+    assert chat_log.content[-1].content == expected_speech
 
 
 @freeze_time("2025-10-31 12:00:00")

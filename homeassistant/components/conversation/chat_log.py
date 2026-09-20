@@ -276,7 +276,7 @@ class AssistantContent:
             "agent_id": self.agent_id,
             "created": self.created,
         }
-        if self.content:
+        if self.content is not None:
             result["content"] = self.content
         if self.thinking_content:
             result["thinking_content"] = self.thinking_content

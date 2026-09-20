@@ -799,6 +799,7 @@ class AnthropicDeltaStream:
             }
         )
         self._first_block = True
+        self._has_content = False
 
     def on_content_block_delta_event(self, delta: RawContentBlockDelta) -> None:
         """Handle RawContentBlockDeltaEvent."""

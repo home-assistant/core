@@ -23,6 +23,7 @@ from homeassistant.components.conversation import (
 from homeassistant.components.conversation.chat_log import (
     DATA_CHAT_LOGS,
     Attachment,
+    ChatLog,
     ChatLogEventType,
     async_subscribe_chat_logs,
 )
@@ -921,6 +922,43 @@ async def test_chat_log_continue_conversation(
             )
         )
         assert chat_log.continue_conversation is True
+
+
+@pytest.mark.parametrize(
+    ("content", "expected_content"),
+    [
+        pytest.param(None, {}, id="absent-content"),
+        pytest.param("", {"content": ""}, id="empty-content"),
+        pytest.param("Hello", {"content": "Hello"}, id="nonempty-content"),
+    ],
+)
+async def test_assistant_content_serialization(
+    hass: HomeAssistant,
+    content: str | None,
+    expected_content: dict[str, str],
+) -> None:
+    """Test chat logs and events distinguish empty text from absent text."""
+    chat_log = ChatLog(hass, "test-conversation")
+    message = AssistantContent(agent_id="test-agent", content=content)
+    expected_message = {
+        "role": "assistant",
+        "agent_id": "test-agent",
+        "created": message.created,
+        **expected_content,
+    }
+    event_callback = Mock()
+    unsubscribe = async_subscribe_chat_logs(hass, event_callback)
+
+    chat_log.async_add_assistant_content_without_tools(message)
+
+    assert message.as_dict() == expected_message
+    assert chat_log.as_dict()["content"][-1] == expected_message
+    event_callback.assert_called_once_with(
+        "test-conversation",
+        ChatLogEventType.CONTENT_ADDED,
+        {"content": expected_message},
+    )
+    unsubscribe()
 
 
 @freeze_time("2025-10-31 12:00:00")
