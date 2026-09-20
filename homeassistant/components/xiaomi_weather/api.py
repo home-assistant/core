@@ -328,42 +328,25 @@ class Location:
     city_id: str
     name: str
     affiliation: str
-    latitude: float
-    longitude: float
 
 
 class XiaomiLocationClient:
-    """Resolve city codes, city names and coordinates during configuration only."""
+    """Resolve coordinates to weather cities during configuration only."""
 
     def __init__(self, session: ClientSession) -> None:
         """Reuse the caller-owned session."""
         self._session = session
 
-    async def async_search(self, name: str) -> list[Location]:
-        """Search names without guessing which similarly named city was intended."""
-        return await self._async_locations("search", {"name": name})
-
-    async def async_city(self, city_id: str) -> list[Location]:
-        """Look up an exact code, discarding unexpected provider matches."""
-        locations = await self._async_locations(
-            "info", {"locationKey": f"weathercn:{city_id}"}
-        )
-        return [location for location in locations if location.city_id == city_id]
-
     async def async_locate(self, latitude: float, longitude: float) -> list[Location]:
-        """Resolve coordinates to the provider's city identifier."""
-        return await self._async_locations(
-            "geo", {"latitude": str(latitude), "longitude": str(longitude)}
-        )
-
-    async def _async_locations(
-        self, endpoint: str, params: dict[str, str]
-    ) -> list[Location]:
-        """Validate provider metadata and exclude unsupported global locations."""
+        """Resolve coordinates to the provider's city identifiers."""
         payload = await _async_get_json(
             self._session,
-            f"{LOCATION_URL}/{endpoint}",
-            {**params, "locale": "zh_cn"},
+            f"{LOCATION_URL}/geo",
+            {
+                "latitude": str(latitude),
+                "longitude": str(longitude),
+                "locale": "zh_cn",
+            },
         )
         try:
             if not isinstance(payload, list):
@@ -376,16 +359,8 @@ class XiaomiLocationClient:
                 if not key.startswith("weathercn:"):
                     continue
                 city_id = key.removeprefix("weathercn:")
-                latitude, longitude = (
-                    number(item["latitude"]),
-                    number(item["longitude"]),
-                )
                 if (
                     re.fullmatch(r"101[0-9]{6}", city_id) is None
-                    or latitude is None
-                    or not -90 <= latitude <= 90
-                    or longitude is None
-                    or not -180 <= longitude <= 180
                     or not isinstance(item["name"], str)
                     or not item["name"].strip()
                     or not isinstance(item.get("affiliation", ""), str)
@@ -395,8 +370,6 @@ class XiaomiLocationClient:
                     city_id,
                     item["name"],
                     item.get("affiliation", ""),
-                    latitude,
-                    longitude,
                 )
             return list(locations.values())
         except (KeyError, TypeError, ValueError, AttributeError) as err:

@@ -13,7 +13,7 @@ rules:
   config-flow: done
   config-flow-test-coverage:
     status: done
-    comment: User and reconfigure flows have full line and branch coverage.
+    comment: The coordinate setup flow has full line and branch coverage.
   dependency-transparency:
     status: exempt
     comment: The API client is bundled; an exception is requested in https://github.com/home-assistant/core/pull/182576.
