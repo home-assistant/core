@@ -368,4 +368,32 @@ async def test_water_heater_missing_boost_state(
     assert state
     # The entity must not report eco from a value the device never reported.
     assert state.state == STATE_UNKNOWN
-    assert state.state != STATE_ECO
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater_missing_boost_state_system_mode_off(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that SystemMode off still wins when BoostState is absent.
+
+    See #182557.
+    """
+    boost_path = create_attribute_path_from_attribute(
+        endpoint_id=2,
+        attribute=clusters.WaterHeaterManagement.Attributes.BoostState,
+    )
+    assert hass.states.get("water_heater.water_heater").state == STATE_ECO
+    # The device never reports BoostState, but reports SystemMode as off.
+    matter_node.node_data.attributes.pop(boost_path)
+    set_node_attribute(matter_node, 2, 513, 28, 0)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+    )
+
+    state = hass.states.get("water_heater.water_heater")
+    assert state
+    assert state.state == STATE_OFF
