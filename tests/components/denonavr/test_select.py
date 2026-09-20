@@ -926,3 +926,21 @@ async def test_pending_expiry_reads_the_receiver_even_when_telnet_is_healthy(
 
     assert client.async_update.await_count > calls_after_action
 
+
+async def test_audyssey_poll_needs_an_entity_not_just_internal_wiring(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """The cross-coordinator wiring alone must not keep the poll running.
+
+    Loading no platforms leaves that wiring as the only subscriber, so a
+    poll here would be one no entity ever asked for.
+    """
+    with patch("homeassistant.components.denonavr.PLATFORMS", []):
+        await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+        calls_before = client.async_update_audyssey.await_count
+
+        freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_INTERVAL + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert client.async_update_audyssey.await_count == calls_before

@@ -21,7 +21,7 @@ from denonavr.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -153,6 +153,33 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
         self._force_refresh_lock = asyncio.Lock()
+        self._internal_listeners: list[CALLBACK_TYPE] = []
+
+    @callback
+    def async_add_internal_listener(
+        self, update_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Register one of the integration's own callbacks for updates.
+
+        async_add_listener() starts the update interval for its first
+        listener, so wiring the coordinators to each other through it would
+        keep polling even with every entity disabled.
+        """
+        self._internal_listeners.append(update_callback)
+
+        @callback
+        def _remove_listener() -> None:
+            self._internal_listeners.remove(update_callback)
+
+        return _remove_listener
+
+    @callback
+    @override
+    def async_update_listeners(self) -> None:
+        """Notify the entities, then the integration's own callbacks."""
+        super().async_update_listeners()
+        for update_callback in list(self._internal_listeners):
+            update_callback()
 
     async def async_refresh_forced(self) -> None:
         """Refresh immediately, bypassing the Telnet-healthy skip.

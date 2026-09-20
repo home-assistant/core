@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
             audyssey_coordinator.async_update_listeners()
 
     entry.async_on_unload(
-        coordinator.async_add_listener(_propagate_connectivity_to_audyssey)
+        coordinator.async_add_internal_listener(_propagate_connectivity_to_audyssey)
     )
 
     @callback
@@ -161,7 +161,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
             mark_unavailable(coordinator)
 
     entry.async_on_unload(
-        audyssey_coordinator.async_add_listener(_propagate_audyssey_failure_to_general)
+        audyssey_coordinator.async_add_internal_listener(
+            _propagate_audyssey_failure_to_general
+        )
     )
 
     # Audyssey values aren't populated by regular status queries, so
