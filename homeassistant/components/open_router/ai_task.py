@@ -109,13 +109,24 @@ class OpenRouterAITaskEntity(
         # OpenRouter returns images as data URIs: `data:image/png;base64,<data>`
         try:
             image_url: str = content.native[0]["image_url"]["url"]
-            metadata, _, encoded = image_url.partition(",")
-            image_data = base64.b64decode(encoded, validate=True)
-        except (LookupError, TypeError, ValueError) as err:
+        except (LookupError, TypeError) as err:
             raise HomeAssistantError("Invalid image returned") from err
 
-        mime_type = metadata.removeprefix("data:").split(";")[0]
-        if not metadata.startswith("data:") or not mime_type or not image_data:
+        metadata, marker, encoded = image_url.partition(";base64,")
+        mime_type = metadata.removeprefix("data:")
+        is_base64_image_uri = marker == ";base64," and mime_type.startswith("image/")
+
+        try:
+            image_data = (
+                base64.b64decode(encoded, validate=True) if is_base64_image_uri else b""
+            )
+        except (TypeError, ValueError) as err:
+            raise HomeAssistantError("Invalid image returned") from err
+        finally:
+            # Discard the base64 payload so it isn't retained in the chat log cache.
+            content.native[0]["image_url"]["url"] = None
+
+        if not is_base64_image_uri or not image_data:
             raise HomeAssistantError("Invalid image returned")
 
         return ai_task.GenImageTaskResult(

@@ -11,7 +11,7 @@ import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import ai_task, media_source
+from homeassistant.components import ai_task, conversation, media_source
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -465,6 +465,24 @@ async def test_generate_image_no_image(
             [{"type": "image_url", "image_url": {"url": "data:;base64,aGVsbG8="}}],
             id="empty_mime_type",
         ),
+        pytest.param(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png,aGVsbG8="},
+                }
+            ],
+            id="missing_base64_marker",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:application/pdf;base64,aGVsbG8="},
+                }
+            ],
+            id="non_image_mime_type",
+        ),
     ],
 )
 async def test_generate_image_invalid_image(
@@ -487,3 +505,41 @@ async def test_generate_image_invalid_image(
             entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate a test image",
         )
+
+
+async def test_generate_image_clears_native_image_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test the base64 image payload is discarded from the chat log cache."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,aGVsbG8="},
+                }
+            ]
+        )
+    )
+
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ):
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_2_5_flash_image",
+            instructions="Generate a test image",
+        )
+
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][
+        result["conversation_id"]
+    ]
+    content = chat_log.content[-1]
+    assert content.native[0]["image_url"]["url"] is None

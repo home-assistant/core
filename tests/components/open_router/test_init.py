@@ -318,6 +318,58 @@ async def test_migrate_entry_v1_3_to_v1_4_api_error(
     assert CONF_OUTPUT_MODALITIES not in entry.subentries["ai_task_subentry"].data
 
 
+async def test_migrate_entry_v1_3_to_v1_4_skips_api_call_when_not_needed(
+    hass: HomeAssistant,
+    mock_open_router_client_setup: AsyncMock,
+) -> None:
+    """Test migration does not call the OpenRouter API when nothing needs backfilling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "bla",
+        },
+        version=1,
+        minor_version=3,
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_MODEL: "openai/gpt-3.5-turbo",
+                    CONF_PROMPT: "You are a helpful assistant.",
+                    CONF_WEB_SEARCH: "off",
+                },
+                subentry_id="conversation_subentry",
+                subentry_type="conversation",
+                title="GPT-3.5 Turbo",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_MODEL: "openai/gpt-4",
+                    CONF_WEB_SEARCH: "off",
+                    CONF_OUTPUT_MODALITIES: ["text"],
+                },
+                subentry_id="ai_task_subentry",
+                subentry_type="ai_task_data",
+                title="GPT-4",
+                unique_id=None,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.open_router.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 4
+    mock_open_router_client_setup.get_models.assert_not_called()
+    assert entry.subentries["ai_task_subentry"].data[CONF_OUTPUT_MODALITIES] == ["text"]
+
+
 async def test_migrate_entry_from_future_version_fails(
     hass: HomeAssistant,
 ) -> None:
