@@ -3,8 +3,9 @@
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
+from denonavr import DenonAVR
 from denonavr.const import POWER_ON
 from denonavr.exceptions import (
     AvrCommandError,
@@ -389,11 +390,10 @@ async def test_update_audyssey_restores_availability(
 ) -> None:
     """A successful call recovers Audyssey entities from a prior failure.
 
-    Calling the receiver directly instead of going through the
-    coordinator would change its properties without updating the
-    Audyssey coordinator's last_update_success, so a prior failure
-    would keep every Audyssey-backed entity unavailable even after
-    this succeeds.
+    The fetch is this zone's own rather than the coordinator's, so the
+    coordinator has to be told it succeeded - otherwise a prior failure
+    would keep every Audyssey-backed entity unavailable even after this
+    has updated the receiver's properties.
     """
     entry = await setup_denonavr(hass)
     entry.runtime_data.audyssey_coordinator.last_update_success = False
@@ -406,6 +406,36 @@ async def test_update_audyssey_restores_availability(
     await hass.async_block_till_done()
 
     assert entry.runtime_data.audyssey_coordinator.last_update_success is True
+
+
+async def test_update_audyssey_fetches_only_the_targeted_zone(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The action refreshes the zone it was called on, not every zone.
+
+    It is an entity service, so targeting a receiver's zone media
+    players calls it once per zone already - fetching every zone per
+    call would square the number of these slow queries.
+    """
+    zone2 = create_autospec(DenonAVR, instance=True)
+    zone2.name = TEST_NAME
+    zone2.zone = "Zone2"
+    zone2.input_func_list = []
+    zone2.sound_mode_list = []
+    client.zones = {TEST_ZONE: client, "Zone2": zone2}
+
+    await setup_denonavr(hass)
+    calls_before = zone2.async_update_audyssey.await_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    client.async_update_audyssey.assert_awaited()
+    assert zone2.async_update_audyssey.await_count == calls_before
 
 
 async def test_update_audyssey_connectivity_error_marks_media_player_unavailable(

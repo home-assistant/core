@@ -488,18 +488,26 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         """Send generic command."""
         return await self._receiver.async_get_command(command)
 
+    @async_log_errors
     async def async_update_audyssey(self) -> None:
-        """Get the latest audyssey information from device."""
-        # Routed through the coordinator so last_update_success follows, and
-        # forced because this action needs a confirmed fresh read. Left
-        # undecorated: async_refresh_forced() takes the shared lock itself.
-        await self._audyssey_coordinator.async_refresh_forced()
-        if not self._audyssey_coordinator.last_update_success:
-            # A connectivity failure here means the receiver itself is
-            # unreachable, not just Audyssey-specific - this entity's
-            # own availability (tied to the general coordinator) needs
-            # to reflect that too, not just the Audyssey one.
-            mark_unavailable(self.coordinator)
+        """Get the latest audyssey information from device.
+
+        Fetches this zone alone rather than going through the
+        coordinator, whose refresh covers every zone: this is an entity
+        service, so targeting a receiver's zone media players already
+        calls it once per zone, and each call fetching every zone would
+        square the number of these slow queries.
+        """
+        try:
+            await self._receiver.async_update_audyssey()
+        except UNAVAILABLE_ON:
+            # An Audyssey-scoped fetch, so that coordinator's data cannot
+            # be trusted either, not just the general one the decorator marks.
+            mark_unavailable(self._audyssey_coordinator)
+            raise
+        # Reported to the coordinator anyway, so last_update_success and
+        # every Audyssey-backed entity follow a fetch made outside it.
+        self._audyssey_coordinator.async_set_updated_data(None)
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:
