@@ -9,8 +9,8 @@ import mimetypes
 import os
 from typing import Any, override
 
+import probatio
 from TwitterAPI import TwitterAPI
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -35,11 +35,11 @@ ATTR_MEDIA = "media"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
-        vol.Required(CONF_CONSUMER_KEY): cv.string,
-        vol.Required(CONF_CONSUMER_SECRET): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
+        probatio.Required(CONF_CONSUMER_KEY): cv.string,
+        probatio.Required(CONF_CONSUMER_SECRET): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
     }
 )
 

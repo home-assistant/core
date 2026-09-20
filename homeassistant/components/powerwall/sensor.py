@@ -286,6 +286,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_suggested_display_precision = 0
 
     @property
     @override
@@ -295,9 +296,9 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """Get the current value in percentage."""
-        return round(self.data.charge)
+        return self.data.charge
 
 
 class PowerWallEnergySensor(PowerWallEntity, SensorEntity):

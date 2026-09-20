@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyenvisalink import EnvisalinkAlarmPanel
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -35,10 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = vol.Schema(
+ALARM_KEYPRESS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_KEYPRESS): cv.string,
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_KEYPRESS): cv.string,
     }
 )
 

@@ -80,9 +80,15 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={"api_token": "123"},
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"api_token": "123"},
         )
         assert result["errors"]["base"] == message
         assert result["type"] is FlowResultType.FORM

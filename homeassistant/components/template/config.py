@@ -6,7 +6,7 @@ import itertools
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -17,6 +17,7 @@ from homeassistant.components.blueprint import (
     schemas as blueprint_schemas,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
@@ -60,6 +61,7 @@ from . import (
     alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    climate as climate_platform,
     cover as cover_platform,
     device_tracker as device_tracker_platform,
     event as event_platform,
@@ -89,6 +91,7 @@ _DEFAULT_NAMES = {
     Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
     Platform.BUTTON: button_platform.DEFAULT_NAME,
     Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.CLIMATE: climate_platform.DEFAULT_NAME,
     Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
     Platform.EVENT: event_platform.DEFAULT_NAME,
     Platform.FAN: fan_platform.DEFAULT_NAME,
@@ -108,7 +111,7 @@ _DEFAULT_NAMES = {
 def _identify_entity_config_requires_trigger(
     platform: Platform, option: str, entity_config: ConfigType
 ) -> None:
-    """Raise vol.Invalid if an entity sets an option that requires a trigger."""
+    """Raise probatio.Invalid if an entity sets an option that requires a trigger."""
     if option not in entity_config:
         return
 
@@ -125,7 +128,7 @@ def _identify_entity_config_requires_trigger(
     elif unique_id := entity_config.get(CONF_UNIQUE_ID):
         identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
 
-    raise vol.Invalid(
+    raise probatio.Invalid(
         f"The {option} option for template {platform.replace('_', ' ')}: {identifier} "
         f"requires a trigger, remove the {option} option or rewrite "
         "configuration to use a trigger"
@@ -172,7 +175,7 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
         if found_domains := domains.intersection(options):
             invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Unsupported option(s) found for domain"
                     f" {found_domains.pop()}, please remove"
                     f" ({', '.join(found_invalid)})"
@@ -231,68 +234,71 @@ def _backward_compat_schema(value: Any | None) -> Any:
     return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
 
 
-CONFIG_SECTION_SCHEMA = vol.All(
+CONFIG_SECTION_SCHEMA = probatio.All(
     _backward_compat_schema,
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Optional(ALARM_CONTROL_PANEL_DOMAIN): vol.All(
+            probatio.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
+            probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            probatio.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            probatio.Optional(ALARM_CONTROL_PANEL_DOMAIN): probatio.All(
                 cv.ensure_list,
                 [alarm_control_panel_platform.ALARM_CONTROL_PANEL_YAML_SCHEMA],
             ),
-            vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
+            probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
                 cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_YAML_SCHEMA]
             ),
-            vol.Optional(BUTTON_DOMAIN): vol.All(
+            probatio.Optional(BUTTON_DOMAIN): probatio.All(
                 cv.ensure_list, [button_platform.BUTTON_YAML_SCHEMA]
             ),
-            vol.Optional(COVER_DOMAIN): vol.All(
+            probatio.Optional(CLIMATE_DOMAIN): probatio.All(
+                cv.ensure_list, [climate_platform.CLIMATE_YAML_SCHEMA]
+            ),
+            probatio.Optional(COVER_DOMAIN): probatio.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
-            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+            probatio.Optional(DEVICE_TRACKER_DOMAIN): probatio.All(
                 cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
-            vol.Optional(EVENT_DOMAIN): vol.All(
+            probatio.Optional(EVENT_DOMAIN): probatio.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
             ),
-            vol.Optional(FAN_DOMAIN): vol.All(
+            probatio.Optional(FAN_DOMAIN): probatio.All(
                 cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
             ),
-            vol.Optional(IMAGE_DOMAIN): vol.All(
+            probatio.Optional(IMAGE_DOMAIN): probatio.All(
                 cv.ensure_list, [image_platform.IMAGE_YAML_SCHEMA]
             ),
-            vol.Optional(LIGHT_DOMAIN): vol.All(
+            probatio.Optional(LIGHT_DOMAIN): probatio.All(
                 cv.ensure_list, [light_platform.LIGHT_YAML_SCHEMA]
             ),
-            vol.Optional(LOCK_DOMAIN): vol.All(
+            probatio.Optional(LOCK_DOMAIN): probatio.All(
                 cv.ensure_list, [lock_platform.LOCK_YAML_SCHEMA]
             ),
-            vol.Optional(NUMBER_DOMAIN): vol.All(
+            probatio.Optional(NUMBER_DOMAIN): probatio.All(
                 cv.ensure_list, [number_platform.NUMBER_YAML_SCHEMA]
             ),
-            vol.Optional(SELECT_DOMAIN): vol.All(
+            probatio.Optional(SELECT_DOMAIN): probatio.All(
                 cv.ensure_list, [select_platform.SELECT_YAML_SCHEMA]
             ),
-            vol.Optional(SENSOR_DOMAIN): vol.All(
+            probatio.Optional(SENSOR_DOMAIN): probatio.All(
                 cv.ensure_list, [sensor_platform.SENSOR_YAML_SCHEMA]
             ),
-            vol.Optional(SWITCH_DOMAIN): vol.All(
+            probatio.Optional(SWITCH_DOMAIN): probatio.All(
                 cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
             ),
-            vol.Optional(UPDATE_DOMAIN): vol.All(
+            probatio.Optional(UPDATE_DOMAIN): probatio.All(
                 cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
             ),
-            vol.Optional(VACUUM_DOMAIN): vol.All(
+            probatio.Optional(VACUUM_DOMAIN): probatio.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
-            vol.Optional(WEATHER_DOMAIN): vol.All(
+            probatio.Optional(WEATHER_DOMAIN): probatio.All(
                 cv.ensure_list,
                 [
-                    vol.Any(
+                    probatio.Any(
                         weather_platform.WEATHER_YAML_SCHEMA,
                         weather_platform.WEATHER_MODERN_YAML_SCHEMA,
                     )
@@ -307,7 +313,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
     validate_entity_config_with_conditions_has_trigger,
 )
 
-TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
+TEMPLATE_BLUEPRINT_SCHEMA = probatio.All(
     _backward_compat_schema, blueprint_schemas.BLUEPRINT_SCHEMA
 )
 
@@ -344,7 +350,7 @@ async def _async_resolve_template_config(
         platforms = [platform for platform in PLATFORMS if platform in config]
         platform_config: list[ConfigType] | ConfigType
         if len(platforms) > 1:
-            raise vol.Invalid("more than one platform defined per blueprint")
+            raise probatio.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
@@ -355,7 +361,7 @@ async def _async_resolve_template_config(
                         continue
 
                     if len(platform_config) > 1:
-                        raise vol.Invalid(
+                        raise probatio.Invalid(
                             f"more than one {platform} entity defined in blueprint"
                         )
                     platform_config[0][prop] = config.pop(prop)
@@ -441,7 +447,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             template_config: TemplateConfig = await async_validate_config_section(
                 hass, cfg
             )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue

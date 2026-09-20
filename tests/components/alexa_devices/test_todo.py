@@ -452,6 +452,23 @@ async def test_update_todo_item(
         "todo_list_id", "item_2", "Both Changed", 2
     )
 
+    # Neither status nor name changed -> no API calls
+    mock_amazon_devices_client.set_todo_list_item_checked_status.reset_mock()
+    mock_amazon_devices_client.rename_todo_list_item.reset_mock()
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "item": "item_2",
+            "rename": "Task 1",
+            "status": TodoItemStatus.NEEDS_ACTION,
+        },
+        blocking=True,
+    )
+    mock_amazon_devices_client.set_todo_list_item_checked_status.assert_not_called()
+    mock_amazon_devices_client.rename_todo_list_item.assert_not_called()
+
 
 async def test_update_todo_item_refreshes_state(
     hass: HomeAssistant,
@@ -551,6 +568,37 @@ async def test_dynamic_entities(
     # Confirm removed entities are no longer present.
     for entity_id in set(initial_entity_ids) - set(updated_entity_ids):
         assert hass.states.get(entity_id) is None
+
+
+async def test_list_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity is recreated when a list is removed and re-added."""
+    mock_amazon_devices_client.todo_lists = [MOCK_TODO_LIST]
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is not None
+
+    mock_amazon_devices_client.todo_lists = []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is None
+
+    mock_amazon_devices_client.todo_lists = [MOCK_TODO_LIST]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is not None
 
 
 async def test_dynamic_add_list_and_add_item(
