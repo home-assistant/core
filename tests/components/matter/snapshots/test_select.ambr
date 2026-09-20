@@ -4574,6 +4574,242 @@
     'state': 'Quick',
   })
 # ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Connection mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_connection_mode',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-0-WagoDirectlyConnected-355793920-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Connection mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'directly_connected',
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_switch_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_switch_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_type',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-0-WagoSwitchType-355793920-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_switch_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Switch type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_switch_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'button',
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_relay_16a_thread_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Connection mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_connection_mode',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-0-WagoDirectlyConnected-355793920-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Connection mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_relay_16a_thread_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'directly_connected',
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_switch_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_relay_16a_thread_switch_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_type',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-0-WagoSwitchType-355793920-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_switch_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Switch type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_relay_16a_thread_switch_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'switch',
+  })
+# ---
 # name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -271,7 +271,7 @@ async def test_bad_config_validation_critical(
             "bad_script",
             {},
             "could not be validated",
-            "required key not provided @ data['sequence']. Got None",
+            "required key not provided at 'sequence'. Got None",
             "validation_failed_schema",
         ),
         (
@@ -1611,6 +1611,39 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+async def test_websocket_config_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config command requires admin."""
+    config = {
+        "alias": "hello",
+        "sequence": [{"action": "light.turn_on"}],
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "script": {
+                "hello": config,
+            },
+        },
+    )
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "script/config",
+            "entity_id": "script.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
 async def test_script_service_changed_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -1720,8 +1753,7 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string for dictionary value"
-            " @ data['sequence'][0]['action']",
+            "value should be a string at 'sequence[0].action'",
         ),
     ],
 )

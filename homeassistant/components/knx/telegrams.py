@@ -142,6 +142,11 @@ class Telegrams:
                 retention_days=self.retention_days,
                 flush_interval=FLUSH_INTERVAL_SECONDS_SQLITE,
                 max_buffer_size=MAX_BUFFER_TELEGRAMS_SQLITE,
+                # Databases written before knx-telegram-store 0.14 hold local
+                # wall-clock times with no offset. Only we know which zone wrote
+                # them - it is ours, not necessarily the host's - so the store
+                # is told once and converts them on this start.
+                legacy_timestamp_timezone=dt_util.get_default_time_zone(),
             )
 
         self._xknx_telegram_cb_handle = (
@@ -372,6 +377,10 @@ class Telegrams:
         if telegram.decoded_data is not None:
             transcoder = telegram.decoded_data.transcoder
             value = _serializable_decoded_data(telegram.decoded_data.value)
+        elif ga_info is not None:
+            # Telegrams that carry no decodable payload - GroupValueRead and
+            # undecoded DataSecure telegrams - still report the projects DPT.
+            transcoder = ga_info.transcoder
 
         return TelegramDict(
             data_secure=telegram.data_secure,

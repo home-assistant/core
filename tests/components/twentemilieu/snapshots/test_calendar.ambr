@@ -20,6 +20,7 @@
       'start': dict({
         'date': '2022-01-06',
       }),
+      'status': None,
       'summary': 'Christmas tree pickup',
       'uid': None,
     }),

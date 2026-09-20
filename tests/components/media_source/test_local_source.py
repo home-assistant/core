@@ -505,3 +505,73 @@ async def test_remove_file(
 
     assert not msg["success"]
     assert to_delete_3.is_file()
+
+
+@pytest.mark.parametrize(
+    ("filename", "content_type"),
+    [
+        ("photo.jpg", "image/jpeg"),
+        ("song.mp3", "audio/mpeg"),
+        ("clip.mp4", "video/mp4"),
+    ],
+)
+async def test_media_view_serves_media_inline(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    tmp_path: Path,
+    filename: str,
+    content_type: str,
+) -> None:
+    """Test ordinary media is served for the browser to render."""
+    (tmp_path / filename).touch()
+
+    await async_process_ha_core_config(hass, {"media_dirs": {"local": str(tmp_path)}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get(f"/media/local/{filename}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == content_type
+    assert "Content-Disposition" not in resp.headers
+
+    resp = await client.head(f"/media/local/{filename}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == content_type
+    assert "Content-Disposition" not in resp.headers
+
+
+async def test_media_view_serves_svg_as_attachment(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, tmp_path: Path
+) -> None:
+    """Test an SVG is downloaded rather than rendered.
+
+    An SVG is a document a browser executes, and these are served from the
+    Home Assistant origin.
+    """
+    (tmp_path / "drawing.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+    )
+
+    await async_process_ha_core_config(hass, {"media_dirs": {"local": str(tmp_path)}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/media/local/drawing.svg")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Disposition"] == "attachment"
+    # Applied to every response by the HTTP integration, asserted here because
+    # it is what keeps the type from being sniffed into something executable
+    assert resp.headers["X-Content-Type-Options"] == "nosniff"
+
+    resp = await client.head("/media/local/drawing.svg")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Disposition"] == "attachment"
+    assert resp.headers["X-Content-Type-Options"] == "nosniff"
