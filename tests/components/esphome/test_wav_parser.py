@@ -1,5 +1,6 @@
 """Test the ESPHome WAV parser helper."""
 
+import asyncio
 from collections.abc import AsyncIterable
 import io
 import struct
@@ -54,6 +55,47 @@ async def test_stream_wav_valid() -> None:
     assert len(chunks) == 2
     assert chunks[0] == (audio_data[:512], False)
     assert chunks[1] == (audio_data[512:], True)
+
+
+async def test_stream_wav_discards_buffered_audio_on_interrupt() -> None:
+    """Test interruption discards pending and partially buffered audio."""
+    old_audio = b"a" * 700
+    replacement_audio = b"b" * 1024
+    wav_bytes = _create_wav(data=old_audio + replacement_audio)
+    header_size = len(wav_bytes) - len(old_audio) - len(replacement_audio)
+    old_audio_buffered = asyncio.Event()
+    continue_stream = asyncio.Event()
+    audio_interrupt = asyncio.Event()
+
+    async def interrupted_stream() -> AsyncIterable[bytes]:
+        yield wav_bytes[:header_size] + old_audio
+        old_audio_buffered.set()
+        await continue_stream.wait()
+        yield replacement_audio
+
+    async def collect_chunks() -> list[tuple[bytes, bool]]:
+        return [
+            chunk
+            async for chunk in stream_wav(
+                interrupted_stream(),
+                expected_channels=1,
+                expected_width=2,
+                expected_sample_rate=16000,
+                samples_per_chunk=256,
+                audio_interrupt=audio_interrupt,
+            )
+        ]
+
+    stream_task = asyncio.create_task(collect_chunks())
+    await old_audio_buffered.wait()
+    audio_interrupt.set()
+    continue_stream.set()
+
+    chunks = await stream_task
+    assert chunks == [
+        (replacement_audio[:512], False),
+        (replacement_audio[512:], True),
+    ]
 
 
 async def test_stream_wav_unsupported_format() -> None:

@@ -141,6 +141,12 @@ class TTSCache:
     _consumers: list[asyncio.Queue[bytes | None]] | None = None
     """Queue for consumers to receive data while loading."""
 
+    _interrupt_generation: int = 0
+    """Generation of audio currently being loaded."""
+
+    _was_interrupted: bool = False
+    """Whether this stream can no longer be replayed."""
+
     def __init__(
         self,
         cache_key: str,
@@ -152,6 +158,11 @@ class TTSCache:
         self.extension = extension
         self.last_used = monotonic()
         self._data_gen = data_gen
+
+    @property
+    def was_interrupted(self) -> bool:
+        """Return whether this stream was interrupted."""
+        return self._was_interrupted
 
     async def async_load_data(self) -> bytes:
         """Load the data from the generator."""
@@ -174,7 +185,9 @@ class TTSCache:
                 queue.put_nowait(None)
             self._consumers = None
 
-        self._result_data = b"".join(self._partial_data)
+        self._result_data = (
+            b"" if self._was_interrupted else b"".join(self._partial_data)
+        )
         self._partial_data = None
         return self._result_data
 
@@ -185,6 +198,8 @@ class TTSCache:
         Will listen for future data returned from the generator.
         Raises error if one occurred.
         """
+        if self._was_interrupted:
+            return
         if self._result_data is not None:
             yield self._result_data
             return
@@ -200,7 +215,10 @@ class TTSCache:
             queue = asyncio.Queue()
             self._consumers.append(queue)
 
+        interrupt_generation = self._interrupt_generation
         for chunk in list(self._partial_data):
+            if interrupt_generation != self._interrupt_generation:
+                break
             yield chunk
 
         if self._loading_error:
@@ -218,6 +236,13 @@ class TTSCache:
     @callback
     def async_interrupt(self) -> None:
         """Discard audio waiting for active stream consumers."""
+        self._was_interrupted = True
+        self._interrupt_generation += 1
+        if self._partial_data is not None:
+            self._partial_data.clear()
+        if self._result_data is not None:
+            self._result_data = b""
+
         if self._consumers is None:
             return
 
@@ -1034,6 +1059,10 @@ class SpeechManager:
             # but since we add 3 dots to truncated message, we cut off at 35.
             trunc_msg = message if len(message) < 35 else f"{message[0:32]}…"
             _LOGGER.error("Error getting audio for %s: %s", trunc_msg, err)
+            self.mem_cache.pop(cache.cache_key, None)
+            return
+
+        if cache.was_interrupted:
             self.mem_cache.pop(cache.cache_key, None)
             return
 

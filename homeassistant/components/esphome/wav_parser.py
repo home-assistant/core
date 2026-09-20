@@ -1,5 +1,6 @@
 """Helper to parse and stream WAV files."""
 
+import asyncio
 from collections.abc import AsyncIterable, AsyncIterator
 import struct
 
@@ -98,6 +99,7 @@ async def stream_wav(
     expected_width: int,
     expected_sample_rate: int,
     samples_per_chunk: int = 512,
+    audio_interrupt: asyncio.Event | None = None,
 ) -> AsyncIterator[tuple[bytes, bool]]:
     """Parse a WAV stream, validate its header, and yield chunks of audio data."""
     if expected_format != "pcm":
@@ -108,7 +110,20 @@ async def stream_wav(
     bytes_per_chunk_payload = samples_per_chunk * expected_width * expected_channels
     pending_chunk: bytes | None = None
 
+    def discard_buffered_audio() -> None:
+        nonlocal pending_chunk
+        if audio_interrupt is None or not audio_interrupt.is_set():
+            return
+        if not parser.found_data:
+            audio_interrupt.clear()
+            return
+        parser.data_bytes_remaining -= len(bytes_buffer)
+        bytes_buffer.clear()
+        pending_chunk = None
+        audio_interrupt.clear()
+
     async for chunk in stream:
+        discard_buffered_audio()
         bytes_buffer.extend(chunk)
 
         if not parser.found_data and not parser.parse(bytes_buffer):
@@ -124,6 +139,9 @@ async def stream_wav(
 
             if pending_chunk is not None:
                 yield pending_chunk, False
+                if audio_interrupt is not None and audio_interrupt.is_set():
+                    discard_buffered_audio()
+                    break
 
             pending_chunk = payload
 
@@ -132,6 +150,7 @@ async def stream_wav(
                 pending_chunk = None
                 return
 
+    discard_buffered_audio()
     if not parser.found_data:
         raise ValueError("Invalid WAV format: incomplete or missing data chunk")
 

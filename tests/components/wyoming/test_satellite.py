@@ -1109,37 +1109,106 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
         event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
         satellite: WyomingAssistSatellite = event_callback.__self__
         stream = MockResultStream(hass, "wav", b"")
-        wav_data = get_test_wav(1024)
+        wav_data = get_test_wav(2048)
         first_chunk_sent = asyncio.Event()
+        release_first_chunk = asyncio.Event()
         continue_stream = asyncio.Event()
 
+        original_write_event = mock_client.write_event
+
+        async def write_event(event: Event) -> None:
+            await original_write_event(event)
+            if (
+                AudioChunk.is_type(event.type)
+                and len(mock_client.tts_audio_chunks) == 1
+            ):
+                first_chunk_sent.set()
+                await release_first_chunk.wait()
+
         async def async_stream_result():
-            yield wav_data[:2092]
-            first_chunk_sent.set()
+            yield wav_data[:4140]
             await continue_stream.wait()
-            yield wav_data[2092:]
+            yield wav_data[4140:]
 
         stream.async_stream_result = async_stream_result
-        stream_task = asyncio.create_task(satellite._stream_tts(stream))
+        with (
+            patch.object(mock_client, "write_event", side_effect=write_event),
+            patch(
+                "homeassistant.components.wyoming.assist_satellite.monotonic",
+                side_effect=[0, 10, 10],
+            ) as mock_monotonic,
+            patch.object(
+                satellite, "_tts_timeout", new_callable=AsyncMock
+            ) as mock_tts_timeout,
+        ):
+            stream_task = asyncio.create_task(satellite._stream_tts(stream))
 
-        async with asyncio.timeout(1):
-            await first_chunk_sent.wait()
-        stream._async_handle_audio_interrupt()
+            async with asyncio.timeout(1):
+                await first_chunk_sent.wait()
+            stream._async_handle_audio_interrupt()
+            release_first_chunk.set()
 
-        async with asyncio.timeout(1):
-            while mock_client.tts_audio_events.count("audio-start") < 2:
-                await asyncio.sleep(0)
+            async with asyncio.timeout(1):
+                while mock_client.tts_audio_events.count("audio-start") < 2:
+                    await asyncio.sleep(0)
 
-        assert mock_client.tts_audio_events[:4] == [
-            "audio-start",
-            "audio-chunk",
-            "audio-stop",
-            "audio-start",
-        ]
+            assert mock_client.tts_audio_events[:4] == [
+                "audio-start",
+                "audio-chunk",
+                "audio-stop",
+                "audio-start",
+            ]
 
-        continue_stream.set()
-        await stream_task
+            continue_stream.set()
+            await stream_task
         assert mock_client.tts_audio_events[-1] == "audio-stop"
+        assert len(mock_client.tts_audio_chunks) == 3
+        assert mock_client.tts_audio_chunks[1].timestamp == 0
+        assert mock_monotonic.call_count == 3
+        assert mock_tts_timeout.call_args.args[0] == pytest.approx(
+            1 + 4096 / (22050 * 2)
+        )
+
+        cleanup_stream = MockResultStream(hass, "wav", b"")
+        cleanup_wav_data = get_test_wav(512)
+        stream_blocked = asyncio.Event()
+        audio_chunk_sent = asyncio.Event()
+        interrupt_task_started = asyncio.Event()
+        interrupt_task_cancelled = asyncio.Event()
+
+        async def blocked_stream_result():
+            yield cleanup_wav_data
+            await stream_blocked.wait()
+
+        async def blocked_write_event(event: Event) -> None:
+            if AudioStop.is_type(event.type):
+                interrupt_task_started.set()
+                try:
+                    await asyncio.Event().wait()
+                except asyncio.CancelledError:
+                    interrupt_task_cancelled.set()
+                    raise
+            await original_write_event(event)
+            if AudioChunk.is_type(event.type):
+                audio_chunk_sent.set()
+
+        cleanup_stream.async_stream_result = blocked_stream_result
+        with (
+            patch.object(mock_client, "write_event", side_effect=blocked_write_event),
+            patch.object(satellite, "_tts_timeout", new_callable=AsyncMock),
+        ):
+            cleanup_stream_task = asyncio.create_task(
+                satellite._stream_tts(cleanup_stream)
+            )
+            async with asyncio.timeout(1):
+                await audio_chunk_sent.wait()
+                cleanup_stream._async_handle_audio_interrupt()
+                await interrupt_task_started.wait()
+            cleanup_stream_task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await cleanup_stream_task
+
+        assert interrupt_task_cancelled.is_set()
 
         await hass.config_entries.async_unload(entry.entry_id)
 

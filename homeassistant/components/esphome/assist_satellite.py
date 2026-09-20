@@ -729,6 +729,7 @@ class EsphomeAssistSatellite(
             seconds_in_chunk = samples_per_chunk / sample_rate
             start_time: float | None = None
             audio_duration_sent = 0.0
+            audio_interrupt = asyncio.Event()
 
             @callback
             def on_audio_interrupt() -> None:
@@ -739,6 +740,7 @@ class EsphomeAssistSatellite(
                 self.cli.send_voice_assistant_event(
                     VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
                 )
+                audio_interrupt.set()
                 start_time = None
                 audio_duration_sent = 0.0
 
@@ -753,6 +755,7 @@ class EsphomeAssistSatellite(
                 expected_width=sample_width,
                 expected_sample_rate=sample_rate,
                 samples_per_chunk=samples_per_chunk,
+                audio_interrupt=audio_interrupt,
             ):
                 if not self._is_running:
                     break  # type: ignore[unreachable]

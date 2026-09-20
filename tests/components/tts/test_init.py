@@ -2119,6 +2119,10 @@ async def test_stream_audio_interrupt(
         with pytest.raises(StopAsyncIteration):
             await anext(result)
 
+        late_result = stream.async_stream_result()
+        with pytest.raises(StopAsyncIteration):
+            await anext(late_result)
+
     convert_audio.assert_not_called()
 
 

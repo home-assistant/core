@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 import contextlib
 import io
 import logging
-import time
+from time import monotonic
 from typing import Any, Final, override
 import wave
 
@@ -807,9 +807,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         # Track the total duration of TTS audio for response timeout
         total_seconds = 0.0
-        start_time = time.monotonic()
+        start_time = monotonic()
         write_lock = asyncio.Lock()
         interrupt_tasks: set[asyncio.Task[None]] = set()
+        latest_interrupt_task: asyncio.Task[None] | None = None
+        interrupt_generation = 0
 
         header_complete = False
         sample_rate: int | None = None
@@ -817,14 +819,20 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         sample_channels: int | None = None
         timestamp = 0
 
-        async def interrupt_playback() -> None:
-            nonlocal timestamp
+        async def interrupt_playback(
+            previous_task: asyncio.Task[None] | None,
+        ) -> None:
+            nonlocal start_time, timestamp, total_seconds
+            if previous_task is not None:
+                await previous_task
             if sample_rate is None or sample_width is None or sample_channels is None:
                 return
 
             async with write_lock:
                 await client.write_event(AudioStop(timestamp=timestamp).event())
                 timestamp = 0
+                total_seconds = 0.0
+                start_time = monotonic()
                 await client.write_event(
                     AudioStart(
                         rate=sample_rate,
@@ -836,7 +844,12 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         @callback
         def on_audio_interrupt() -> None:
-            task = self.hass.async_create_task(interrupt_playback())
+            nonlocal interrupt_generation, latest_interrupt_task
+            interrupt_generation += 1
+            task = self.hass.async_create_task(
+                interrupt_playback(latest_interrupt_task)
+            )
+            latest_interrupt_task = task
             interrupt_tasks.add(task)
 
         unsubscribe_interrupt = tts_result.async_subscribe_audio_interrupt(
@@ -847,6 +860,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             header_data = b""
 
             async for data_chunk in tts_result.async_stream_result():
+                data_chunk_generation = interrupt_generation
                 if not header_complete:
                     # Accumulate data until we can parse the header and get
                     # sample rate, etc.
@@ -860,14 +874,15 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                             audio_info
                         )
                         async with write_lock:
-                            await client.write_event(
-                                AudioStart(
-                                    rate=sample_rate,
-                                    width=sample_width,
-                                    channels=sample_channels,
-                                    timestamp=timestamp,
-                                ).event()
-                            )
+                            if data_chunk_generation == interrupt_generation:
+                                await client.write_event(
+                                    AudioStart(
+                                        rate=sample_rate,
+                                        width=sample_width,
+                                        channels=sample_channels,
+                                        timestamp=timestamp,
+                                    ).event()
+                                )
                         header_complete = True
 
                         if not data_chunk:
@@ -875,6 +890,13 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                             continue
                     else:
                         # Header is incomplete
+                        continue
+
+                if data_chunk_generation != interrupt_generation:
+                    continue
+                if latest_interrupt_task is not None:
+                    await latest_interrupt_task
+                    if data_chunk_generation != interrupt_generation:
                         continue
 
                 # Streaming audio
@@ -885,6 +907,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 data_chunk_idx = 0
                 while data_chunk_idx < len(data_chunk):
                     async with write_lock:
+                        if data_chunk_generation != interrupt_generation:
+                            break
                         audio_chunk = AudioChunk(
                             rate=sample_rate,
                             width=sample_width,
@@ -899,14 +923,18 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     total_seconds += audio_chunk.seconds
                     data_chunk_idx += _AUDIO_CHUNK_BYTES
 
-            if interrupt_tasks:
-                await asyncio.gather(*interrupt_tasks)
+            if latest_interrupt_task is not None:
+                await latest_interrupt_task
             async with write_lock:
                 await client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
         finally:
             unsubscribe_interrupt()
-            send_duration = time.monotonic() - start_time
+            for task in interrupt_tasks:
+                task.cancel()
+            if interrupt_tasks:
+                await asyncio.gather(*interrupt_tasks, return_exceptions=True)
+            send_duration = monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(
                 self.hass,
