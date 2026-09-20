@@ -141,6 +141,7 @@ async def test_multiple_llm_apis(
 
         name = "test_tool"
         description = "Test function"
+        integration = "test"
         parameters = probatio.Schema(
             {probatio.Optional("param1", description="Test parameters"): str}
         )
