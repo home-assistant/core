@@ -1,7 +1,7 @@
 """Provide functionality for TTS."""
 
 import asyncio
-from collections.abc import AsyncGenerator, MutableMapping
+from collections.abc import AsyncGenerator, Callable, MutableMapping
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -214,6 +214,23 @@ class TTSCache:
             raise self._loading_error
 
         self.last_used = monotonic()
+
+    @callback
+    def async_interrupt(self) -> None:
+        """Discard audio waiting for active stream consumers."""
+        if self._consumers is None:
+            return
+
+        for queue in self._consumers:
+            stream_finished = False
+            while True:
+                try:
+                    if queue.get_nowait() is None:
+                        stream_finished = True
+                except asyncio.QueueEmpty:
+                    break
+            if stream_finished:
+                queue.put_nowait(None)
 
 
 @callback
@@ -486,6 +503,10 @@ class ResultStream:
 
     _manager: SpeechManager
 
+    _audio_interrupt_listeners: set[Callable[[], None]] = field(
+        default_factory=set, init=False
+    )
+
     # Override
     _override_media_path: Path | None = None
 
@@ -522,6 +543,7 @@ class ResultStream:
                 use_file_cache=self.use_file_cache,
                 language=self.language,
                 options=self.options,
+                on_audio_interrupt=self._async_handle_audio_interrupt,
             )
         )
 
@@ -539,8 +561,30 @@ class ResultStream:
                 message_stream=message_stream,
                 language=self.language,
                 options=self.options,
+                on_audio_interrupt=self._async_handle_audio_interrupt,
             )
         )
+
+    @callback
+    def async_subscribe_audio_interrupt(
+        self, listener: Callable[[], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to interruptions of the current audio response."""
+        self._audio_interrupt_listeners.add(listener)
+
+        def unsubscribe() -> None:
+            self._audio_interrupt_listeners.discard(listener)
+
+        return unsubscribe
+
+    @callback
+    def _async_handle_audio_interrupt(self) -> None:
+        """Discard buffered audio and notify active stream consumers."""
+        if self._result_cache.done():
+            self._result_cache.result().async_interrupt()
+
+        for listener in tuple(self._audio_interrupt_listeners):
+            listener()
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
@@ -881,6 +925,7 @@ class SpeechManager:
         message_stream: AsyncGenerator[str],
         language: str,
         options: dict,
+        on_audio_interrupt: Callable[[], None],
     ) -> TTSCache:
         """Make sure a message stream will be cached in memory and returns cache object.
 
@@ -892,7 +937,11 @@ class SpeechManager:
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
         data_gen = self._async_generate_tts_audio(
-            engine_instance, message_stream, language, options
+            engine_instance,
+            message_stream,
+            language,
+            options,
+            on_audio_interrupt,
         )
 
         cache = TTSCache(
@@ -918,6 +967,7 @@ class SpeechManager:
         use_file_cache: bool,
         language: str,
         options: dict,
+        on_audio_interrupt: Callable[[], None],
     ) -> TTSCache:
         """Make sure a message will be cached in memory and returns cache object.
 
@@ -949,7 +999,7 @@ class SpeechManager:
 
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
             data_gen = self._async_generate_tts_audio(
-                engine_instance, message, language, options
+                engine_instance, message, language, options, on_audio_interrupt
             )
 
         cache = TTSCache(
@@ -1026,10 +1076,12 @@ class SpeechManager:
         message_or_stream: str | AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
+        on_audio_interrupt: Callable[[], None],
     ) -> AsyncGenerator[bytes]:
         """Generate TTS audio from an engine."""
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
+        passthrough = False
 
         # Extract preferred format options.
         #
@@ -1115,15 +1167,16 @@ class SpeechManager:
                 stream = message_or_stream
 
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, stream)
+                TTSAudioRequest(language, options, stream, on_audio_interrupt)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
+            passthrough = tts_result.passthrough
 
         # Only convert if we have a preferred format different than the
         # expected format from the TTS system, or if a specific sample
         # rate/format/channel count is requested.
-        needs_conversion = (
+        needs_conversion = not passthrough and (
             (final_extension != extension)
             or (sample_rate is not None)
             or (sample_channels is not None)

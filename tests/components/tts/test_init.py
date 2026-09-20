@@ -2072,6 +2072,56 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert result_data == data
 
 
+async def test_stream_audio_interrupt(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test interrupting a stream drops queued audio and notifies consumers."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    continue_generation = asyncio.Event()
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock an interrupted streaming TTS response."""
+
+        async def gen_data():
+            yield b"playing"
+            await continue_generation.wait()
+            yield b"stale"
+            assert request.on_audio_interrupt is not None
+            request.on_audio_interrupt()
+            yield b"replacement"
+
+        return tts.TTSAudioResponse("mp3", gen_data(), passthrough=True)
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        yield "hello"
+
+    stream = tts.async_create_stream(
+        hass,
+        mock_tts_entity.entity_id,
+        options={tts.ATTR_PREFERRED_SAMPLE_RATE: 16000},
+    )
+    interrupted = asyncio.Event()
+    stream.async_subscribe_audio_interrupt(interrupted.set)
+    with patch("homeassistant.components.tts._async_convert_audio") as convert_audio:
+        stream.async_set_message_stream(stream_message())
+        result = stream.async_stream_result()
+
+        assert await anext(result) == b"playing"
+        continue_generation.set()
+        assert await anext(result) == b"replacement"
+        assert interrupted.is_set()
+
+        with pytest.raises(StopAsyncIteration):
+            await anext(result)
+
+    convert_audio.assert_not_called()
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:

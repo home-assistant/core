@@ -1,6 +1,6 @@
 """Entity for Text-to-Speech."""
 
-from collections.abc import AsyncGenerator, Mapping
+from collections.abc import AsyncGenerator, Callable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, final, override
@@ -40,6 +40,7 @@ class TTSAudioRequest:
     language: str
     options: dict[str, Any]
     message_gen: AsyncGenerator[str]
+    on_audio_interrupt: Callable[[], None] | None = None
 
 
 @dataclass
@@ -48,6 +49,7 @@ class TTSAudioResponse:
 
     extension: str
     data_gen: AsyncGenerator[bytes]
+    passthrough: bool = False
 
 
 class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):

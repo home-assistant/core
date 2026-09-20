@@ -808,14 +808,43 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         # Track the total duration of TTS audio for response timeout
         total_seconds = 0.0
         start_time = time.monotonic()
+        write_lock = asyncio.Lock()
+        interrupt_tasks: set[asyncio.Task[None]] = set()
+
+        header_complete = False
+        sample_rate: int | None = None
+        sample_width: int | None = None
+        sample_channels: int | None = None
+        timestamp = 0
+
+        async def interrupt_playback() -> None:
+            nonlocal timestamp
+            if sample_rate is None or sample_width is None or sample_channels is None:
+                return
+
+            async with write_lock:
+                await client.write_event(AudioStop(timestamp=timestamp).event())
+                timestamp = 0
+                await client.write_event(
+                    AudioStart(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        timestamp=timestamp,
+                    ).event()
+                )
+
+        @callback
+        def on_audio_interrupt() -> None:
+            task = self.hass.async_create_task(interrupt_playback())
+            interrupt_tasks.add(task)
+
+        unsubscribe_interrupt = tts_result.async_subscribe_audio_interrupt(
+            on_audio_interrupt
+        )
 
         try:
             header_data = b""
-            header_complete = False
-            sample_rate: int | None = None
-            sample_width: int | None = None
-            sample_channels: int | None = None
-            timestamp = 0
 
             async for data_chunk in tts_result.async_stream_result():
                 if not header_complete:
@@ -830,14 +859,15 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                         sample_rate, sample_width, sample_channels, data_chunk = (
                             audio_info
                         )
-                        await client.write_event(
-                            AudioStart(
-                                rate=sample_rate,
-                                width=sample_width,
-                                channels=sample_channels,
-                                timestamp=timestamp,
-                            ).event()
-                        )
+                        async with write_lock:
+                            await client.write_event(
+                                AudioStart(
+                                    rate=sample_rate,
+                                    width=sample_width,
+                                    channels=sample_channels,
+                                    timestamp=timestamp,
+                                ).event()
+                            )
                         header_complete = True
 
                         if not data_chunk:
@@ -854,24 +884,28 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
                 data_chunk_idx = 0
                 while data_chunk_idx < len(data_chunk):
-                    audio_chunk = AudioChunk(
-                        rate=sample_rate,
-                        width=sample_width,
-                        channels=sample_channels,
-                        audio=data_chunk[
-                            data_chunk_idx : data_chunk_idx + _AUDIO_CHUNK_BYTES
-                        ],
-                        timestamp=timestamp,
-                    )
-
-                    await client.write_event(audio_chunk.event())
-                    timestamp += audio_chunk.milliseconds
+                    async with write_lock:
+                        audio_chunk = AudioChunk(
+                            rate=sample_rate,
+                            width=sample_width,
+                            channels=sample_channels,
+                            audio=data_chunk[
+                                data_chunk_idx : data_chunk_idx + _AUDIO_CHUNK_BYTES
+                            ],
+                            timestamp=timestamp,
+                        )
+                        await client.write_event(audio_chunk.event())
+                        timestamp += audio_chunk.milliseconds
                     total_seconds += audio_chunk.seconds
                     data_chunk_idx += _AUDIO_CHUNK_BYTES
 
-            await client.write_event(AudioStop(timestamp=timestamp).event())
+            if interrupt_tasks:
+                await asyncio.gather(*interrupt_tasks)
+            async with write_lock:
+                await client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
         finally:
+            unsubscribe_interrupt()
             send_duration = time.monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(

@@ -39,7 +39,7 @@ from homeassistant.components.intent import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
@@ -714,6 +714,7 @@ class EsphomeAssistSatellite(
         self.cli.send_voice_assistant_event(
             VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
         )
+        unsubscribe_interrupt: CALLBACK_TYPE | None = None
 
         try:
             if not self._is_running:
@@ -728,6 +729,22 @@ class EsphomeAssistSatellite(
             seconds_in_chunk = samples_per_chunk / sample_rate
             start_time: float | None = None
             audio_duration_sent = 0.0
+
+            @callback
+            def on_audio_interrupt() -> None:
+                nonlocal start_time, audio_duration_sent
+                self.cli.send_voice_assistant_event(
+                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+                )
+                self.cli.send_voice_assistant_event(
+                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+                )
+                start_time = None
+                audio_duration_sent = 0.0
+
+            unsubscribe_interrupt = tts_result.async_subscribe_audio_interrupt(
+                on_audio_interrupt
+            )
 
             async for chunk, is_last in stream_wav(
                 tts_result.async_stream_result(),
@@ -763,6 +780,8 @@ class EsphomeAssistSatellite(
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
+            if unsubscribe_interrupt is not None:
+                unsubscribe_interrupt()
             self.cli.send_voice_assistant_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
             )

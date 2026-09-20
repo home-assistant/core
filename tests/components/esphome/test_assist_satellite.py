@@ -955,6 +955,56 @@ async def test_streaming_tts_errors(
     )
 
 
+async def test_streaming_tts_restarts_on_audio_interrupt(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_wav: bytes,
+) -> None:
+    """Test an interrupted TTS response flushes ESPHome playback."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+    stream = MockResultStream(hass, "wav", b"")
+    stream_requested = asyncio.Event()
+    continue_stream = asyncio.Event()
+
+    async def async_stream_result():
+        stream_requested.set()
+        await continue_stream.wait()
+        yield mock_wav
+
+    stream.async_stream_result = async_stream_result
+    mock_client.send_voice_assistant_event.reset_mock()
+    task = asyncio.create_task(satellite._stream_tts_audio(stream))
+
+    async with asyncio.timeout(1):
+        await stream_requested.wait()
+    stream._async_handle_audio_interrupt()
+
+    assert [
+        call.args[0] for call in mock_client.send_voice_assistant_event.call_args_list
+    ] == [
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+    ]
+
+    continue_stream.set()
+    await task
+    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
+        {},
+    )
+
+
 async def test_tts_format_from_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
