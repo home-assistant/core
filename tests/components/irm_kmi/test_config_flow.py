@@ -47,10 +47,12 @@ async def test_config_flow_location_out_benelux(
     hass: HomeAssistant, mock_config_flow_forecast: AsyncMock
 ) -> None:
     """Test configuration flow with a location outside of Benelux."""
-    in_benelux = mock_config_flow_forecast.return_value
-    mock_config_flow_forecast.return_value = await async_load_json_object_fixture(
-        hass, "forecast_out_of_benelux.json", DOMAIN
-    )
+    mock_config_flow_forecast.side_effect = [
+        await async_load_json_object_fixture(
+            hass, "forecast_out_of_benelux.json", DOMAIN
+        ),
+        mock_config_flow_forecast.return_value,
+    ]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -64,7 +66,6 @@ async def test_config_flow_location_out_benelux(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_LOCATION: "out_of_benelux"}
 
-    mock_config_flow_forecast.return_value = in_benelux
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
