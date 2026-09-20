@@ -1817,8 +1817,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
 /homeassistant/components/stt/ @home-assistant/core
 /tests/components/stt/ @home-assistant/core
-/homeassistant/components/subaru/ @G-Two
-/tests/components/subaru/ @G-Two
+/homeassistant/components/subaru/ @G-Two @jpettitt
+/tests/components/subaru/ @G-Two @jpettitt
 /homeassistant/components/suez_water/ @ooii @jb101010-2
 /tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @home-assistant/core
