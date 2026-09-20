@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from hinen_open_api.exceptions import HinenBackendError, UnauthorizedError
 
@@ -46,6 +46,7 @@ class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=1),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Hinen."""
         hinen_open = await self._auth.get_resource()

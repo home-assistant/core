@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from hinen_open_api import HinenOpen, HinenPublic
 from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
-import voluptuous as vol
+from probatio import All, In, Length, Required, Schema
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
@@ -83,9 +83,9 @@ class HinenOpenFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                Schema(
                     {
-                        vol.Required(CONF_DEVICES): SelectSelector(
+                        Required(CONF_DEVICES): SelectSelector(
                             SelectSelectorConfig(
                                 options=selectable_devices, multiple=True
                             )
@@ -115,6 +115,7 @@ class OAuth2FlowHandler(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HinenPowerConfigEntry,
     ) -> HinenOpenFlowHandler:
@@ -122,10 +123,12 @@ class OAuth2FlowHandler(
         return HinenOpenFlowHandler()
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow start."""
         if user_input is not None:
@@ -159,16 +162,16 @@ class OAuth2FlowHandler(
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=Schema(
                 {
-                    vol.Required(ATTR_AUTH_LANGUAGE, default=default_language): vol.In(
+                    Required(ATTR_AUTH_LANGUAGE, default=default_language): In(
                         dict(SUPPORTED_LANGUAGES)
                     ),
-                    vol.Required(ATTR_REGION_CODE): CountrySelector(
+                    Required(ATTR_REGION_CODE): CountrySelector(
                         CountrySelectorConfig(countries=country_codes)
                     ),
-                    vol.Required(CONF_CLIENT_ID): str,
-                    vol.Required(CONF_CLIENT_SECRET): str,
+                    Required(CONF_CLIENT_ID): str,
+                    Required(CONF_CLIENT_SECRET): str,
                 }
             ),
         )
@@ -188,6 +191,7 @@ class OAuth2FlowHandler(
             await self._hinen_open.set_user_authentication(token)
         return self._hinen_open
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         try:
@@ -255,15 +259,15 @@ class OAuth2FlowHandler(
 
         return self.async_show_form(
             step_id="devices",
-            data_schema=vol.Schema(
+            data_schema=Schema(
                 {
-                    vol.Required(CONF_DEVICES): vol.All(
+                    Required(CONF_DEVICES): All(
                         SelectSelector(
                             SelectSelectorConfig(
                                 options=selectable_devices, multiple=True
                             )
                         ),
-                        vol.Length(min=1),
+                        Length(min=1),
                     )
                 }
             ),

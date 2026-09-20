@@ -8,12 +8,13 @@ from .conftest import ComponentSetup
 
 
 async def test_sensors_added_correctly(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensors are added correctly."""
     await setup_integration()
     await hass.async_block_till_done()
-    entity_registry = er.async_get(hass)
 
     # Test status sensor
     status_entity = entity_registry.async_get("sensor.test_hinen_device_status")
@@ -37,6 +38,7 @@ async def test_sensor_states(
 async def test_sensor_native_value_when_device_missing(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor native_value returns None when coordinator device data is missing."""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -45,7 +47,7 @@ async def test_sensor_native_value_when_device_missing(
 
     entry.runtime_data.coordinator.data.pop("device_12345", None)
 
-    entity = er.async_get(hass).async_get("sensor.test_hinen_device_status")
+    entity = entity_registry.async_get("sensor.test_hinen_device_status")
     assert entity is not None
 
     sensor = hass.data.get("entity_components", {}).get("sensor")

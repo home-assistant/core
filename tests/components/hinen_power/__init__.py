@@ -1,7 +1,6 @@
 """Mock Hinen API for testing."""
 
 from collections.abc import AsyncGenerator
-import json
 from typing import Any
 
 from hinen_open_api.models import HinenDeviceControl, HinenDeviceDetail, HinenDeviceInfo
@@ -9,7 +8,7 @@ from hinen_open_api.models import HinenDeviceControl, HinenDeviceDetail, HinenDe
 from homeassistant.components.hinen_power.const import DOMAIN, PROPERTIES
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_array_fixture
 
 
 class MockHinen:
@@ -41,8 +40,8 @@ class MockHinen:
             return
 
         # Return mock device info
-        device_info = json.loads(
-            await async_load_fixture(self.hass, self.device_fixture, DOMAIN)
+        device_info = await async_load_json_array_fixture(
+            self.hass, self.device_fixture, DOMAIN
         )
         for item in device_info:
             yield HinenDeviceInfo(**item)
@@ -56,8 +55,8 @@ class MockHinen:
             return
 
         # Return mock device info
-        device_detail = json.loads(
-            await async_load_fixture(self.hass, self.device_detail_fixture, DOMAIN)
+        device_detail = await async_load_json_array_fixture(
+            self.hass, self.device_detail_fixture, DOMAIN
         )
         for item in device_detail:
             yield HinenDeviceDetail(**item)

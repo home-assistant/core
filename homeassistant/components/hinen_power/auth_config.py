@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientError
 from hinen_open_api import HinenOpen
@@ -88,6 +88,7 @@ class HinenImplementation(AuthImplementation):
         self._region_code = region_code
         self._name = client_credential.name
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         # Get standard authorization URL from parent class
@@ -97,6 +98,7 @@ class HinenImplementation(AuthImplementation):
         state = URL(standard_url).query.get("state")
         return f"{self.authorize_url}?state={state}&language={self._language}&key={self.client_id}&redirectUrl={self.redirect_uri}"
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         request_data: dict = {
@@ -108,6 +110,7 @@ class HinenImplementation(AuthImplementation):
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         new_token = await self._token_request(
@@ -120,6 +123,7 @@ class HinenImplementation(AuthImplementation):
         )
         return {**token, **new_token}
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

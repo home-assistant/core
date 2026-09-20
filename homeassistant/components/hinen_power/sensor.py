@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from hinen_open_api import DeviceAlertStatus, DeviceStatus, HinenOpen
 
@@ -141,6 +141,7 @@ class HinenSensor(HinenDeviceEntity, SensorEntity):
     entity_description: HinenSensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         device = self.coordinator.data.get(self._device_id)
@@ -151,6 +152,7 @@ class HinenSensor(HinenDeviceEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         device = self.coordinator.data.get(self._device_id)
