@@ -201,7 +201,8 @@ def parse_weather(payload: Any) -> WeatherData:
             if values(temperatures) and temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected daily temperature unit")
             for index, item in enumerate(values(temperatures)):
-                high, low = number(item["from"]), number(item["to"])
+                item = block(item)
+                high, low = number(item.get("from")), number(item.get("to"))
                 if (
                     index >= len(suns)
                     or optional_time(block(suns[index]).get("from")) is None

@@ -295,6 +295,40 @@ def test_misaligned_hourly_weather(payload: dict[str, Any]) -> None:
     assert all(item.condition is None for item in parse_weather(payload).hourly)
 
 
+@pytest.mark.parametrize(
+    ("item", "daily_count", "periods"),
+    [
+        pytest.param({"from": "21"}, 15, [True], id="missing-low"),
+        pytest.param({"to": "16"}, 14, [False], id="missing-high"),
+        pytest.param(None, 14, [], id="null"),
+        pytest.param({}, 14, [], id="empty"),
+        pytest.param("bad", 14, [], id="invalid-type"),
+    ],
+)
+def test_incomplete_daily_temperature(
+    payload: dict[str, Any], item: object, daily_count: int, periods: list[bool]
+) -> None:
+    """Discard only forecast periods without a usable temperature."""
+    expected = parse_weather(payload)
+    payload["forecastDaily"]["temperature"]["value"][0] = item
+    data = parse_weather(payload)
+    assert data.temperature == expected.temperature
+    assert data.hourly == expected.hourly
+    assert len(data.daily) == daily_count
+    assert data.daily[-14:] == expected.daily[1:]
+    assert len(data.twice_daily) == 28 + len(periods)
+    assert [period.is_daytime for period in data.twice_daily[: len(periods)]] == periods
+    assert data.twice_daily[len(periods) :] == expected.twice_daily[2:]
+
+
+def test_missing_daily_low(payload: dict[str, Any]) -> None:
+    """Keep the daily high without inventing a missing low."""
+    expected = parse_weather(payload)
+    del payload["forecastDaily"]["temperature"]["value"][0]["to"]
+    data = parse_weather(payload)
+    assert data.daily[0] == replace(expected.daily[0], low=None)
+
+
 def test_invalid_series(payload: dict[str, Any]) -> None:
     """Test invalid series."""
     payload["forecastDaily"]["temperature"]["value"] = None
