@@ -8,6 +8,7 @@ from homeassistant.components import automation
 from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -71,17 +72,15 @@ async def test_turn_on_trigger_device_id(
 
     service_calls.clear()
 
-    # Ensure WOL backup is called when trigger not present
-    with patch(
-        "homeassistant.components.samsungtv.entity.send_magic_packet"
-    ) as mock_send_magic_packet:
+    # Turn on fails when trigger not present
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
+    # Only the turn_on call itself was recorded, the automation did not fire
     assert len(service_calls) == 1
-    mock_send_magic_packet.assert_called()
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
