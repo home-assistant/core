@@ -505,7 +505,7 @@ async def test_event_media_data(
         events[-1].data["media_content_id"]
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/no-url"
     )
-    
+
     # Test: Invalid file type.
     resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
