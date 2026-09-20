@@ -1870,6 +1870,52 @@ async def test_local_gateway_repair_cleared_after_local_success(
     assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
 
 
+async def test_local_gateway_repair_cleared_when_rate_limited(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The gateway repair clears once a later setup finds the gateway rate limiting."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    gateway_lookup = AsyncMock(return_value=None)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_powerwall_connect.side_effect = PowerwallRateLimitError("busy")
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_local_gateway_repair_cleared_at_confirmed_address(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The gateway repair clears once a later setup confirms the gateway's address."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    gateway_lookup = AsyncMock(return_value=None)
+
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_powerwall_connect.side_effect = PowerwallProtocolError("Login failed (404)")
+    gateway_lookup = AsyncMock(return_value=HOST)
+    await _setup_entry_with_powerwall(hass, entry, gateway_lookup)
+
+    assert entry.state is ConfigEntryState.LOADED
+    gateway_lookup.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
 async def test_local_gateway_repair_cleared_without_subentry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:

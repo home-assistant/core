@@ -496,6 +496,9 @@ async def _async_resolve_energy_site_api(
             cloud_energy_site.energy_site_id,
             err,
         )
+        ir.async_delete_issue(
+            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+        )
     except PowerwallError as err:
         # Another device may have taken the old address, so any refusal is a lead.
         powerwall_client = await _async_rediscover_gateway(
@@ -536,6 +539,7 @@ async def _async_rediscover_gateway(
             site_id,
             error,
         )
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
         return stale_client
     if host and host != stale_client.host:
         client = create_powerwall_client(
