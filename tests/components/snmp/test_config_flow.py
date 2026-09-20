@@ -394,26 +394,22 @@ async def test_user_flow_err_indication(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_invalid_oid_exception(
+async def test_user_flow_invalid_oid(
     hass: HomeAssistant, mock_setup_entry: Mock
 ) -> None:
-    """Test user setup flow failure - OID exception, then recovery."""
+    """Test user setup flow rejects an OID that pysnmp cannot resolve."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.snmp.config_flow.ObjectIdentity",
-        side_effect=PySnmpError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "192.168.1.1",
-                "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-                "version": "1",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "not_an_oid",
+            "version": "1",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"baseoid": "invalid_oid"}

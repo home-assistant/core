@@ -92,6 +92,25 @@ async def async_create_transport_target(
         return await Udp6TransportTarget.create((host, port), timeout=timeout)
 
 
+async def async_validate_oid(hass: HomeAssistant, oid: str) -> bool:
+    """Return True if pysnmp can resolve the OID.
+
+    pysnmp only parses an OID when it is resolved, so creating an ObjectIdentity
+    is not enough to tell a valid OID from an invalid one.
+    """
+    engine = await async_get_snmp_engine(hass)
+    mib_view_controller = engine.cache["mibViewController"]
+
+    def _resolve() -> None:
+        ObjectIdentity(oid).resolve_with_mib(mib_view_controller)
+
+    try:
+        await hass.async_add_executor_job(_resolve)
+    except PySnmpError:
+        return False
+    return True
+
+
 async def async_create_command_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,

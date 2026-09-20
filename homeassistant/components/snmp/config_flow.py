@@ -5,7 +5,7 @@ from typing import Any, override
 
 import probatio
 from pysnmp.error import PySnmpError
-from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
+from pysnmp.hlapi.v3arch.asyncio import get_cmd
 from pysnmp.proto import errind
 from pysnmp.smi.error import WrongValueError
 
@@ -42,6 +42,7 @@ from .const import (
 from .util import (
     async_create_request_cmd_args,
     async_create_transport_target,
+    async_validate_oid,
     create_auth_data,
 )
 
@@ -146,10 +147,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             or "decryptionerror" in err_status_str.lower()
         ):
             raise UsmWrongDigests from Exception(err_status_str)
-        # Non-crypto err_status (e.g., VACM access denial on sysDescr.0)
-        # does not mean credentials are wrong — proceed to base-OID check.
+        # A non-crypto err_status (e.g. VACM access denial on sysDescr.0) means
+        # the agent answered, so the credentials themselves are accepted.
         _LOGGER.debug(
-            "sysDescr.0 returned err_status %s, continuing to base OID validation",
+            "sysDescr.0 returned err_status %s, treating credentials as valid",
             err_status_str,
         )
 
@@ -168,16 +169,14 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                ObjectIdentity(user_input[CONF_BASEOID])
-            except PySnmpError:
-                errors["baseoid"] = "invalid_oid"
-            else:
+            if await async_validate_oid(self.hass, user_input[CONF_BASEOID]):
                 self._user_data = user_input
 
                 if user_input[CONF_VERSION] == "3":
                     return await self.async_step_v3()
                 return await self.async_step_v1_v2c()
+
+            errors[CONF_BASEOID] = "invalid_oid"
 
         return self.async_show_form(
             step_id="user",
