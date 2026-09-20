@@ -63,9 +63,9 @@ def create_auth_data(
     """Create SNMP auth data from config dict."""
     if version == "3":
         username: str = data[CONF_USERNAME]
-        auth_key: str | None = data.get(CONF_AUTH_KEY)
+        auth_key: str | None = data.get(CONF_AUTH_KEY) or None
         auth_proto: str = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
-        priv_key: str | None = data.get(CONF_PRIV_KEY)
+        priv_key: str | None = data.get(CONF_PRIV_KEY) or None
         priv_proto: str = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
 
         return UsmUserData(
