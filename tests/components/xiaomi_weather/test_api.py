@@ -135,25 +135,51 @@ def test_array_gaps(payload: dict[str, Any]) -> None:
     assert data.hourly[0].time.hour == 6
 
 
-@pytest.mark.parametrize("section", ["forecastDaily", "forecastHourly"])
-def test_wrong_units(payload: dict[str, Any], section: str) -> None:
-    """Test wrong units."""
-    payload[section]["temperature"]["unit"] = "F"
-    with pytest.raises(XiaomiWeatherError):
-        parse_weather(payload)
+@pytest.mark.parametrize(
+    ("section", "empty_forecasts"),
+    [
+        pytest.param("forecastDaily", ("daily", "twice_daily"), id="daily"),
+        pytest.param("forecastHourly", ("hourly",), id="hourly"),
+    ],
+)
+@pytest.mark.parametrize(
+    "unit_fields",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"unit": None}, id="null"),
+        pytest.param({"unit": "F"}, id="unsupported"),
+    ],
+)
+def test_invalid_forecast_temperature_unit(
+    payload: dict[str, Any],
+    section: str,
+    empty_forecasts: tuple[str, ...],
+    unit_fields: dict[str, str | None],
+) -> None:
+    """Omit only forecasts with unverified units and retain other weather data."""
+    expected = replace(parse_weather(payload), **dict.fromkeys(empty_forecasts, ()))
+    temperatures = payload[section]["temperature"]
+    del temperatures["unit"]
+    temperatures.update(unit_fields)
+    assert parse_weather(payload) == expected
 
 
 @pytest.mark.parametrize(
-    "section",
+    "unit_fields",
     [
-        pytest.param("forecastDaily", id="daily"),
-        pytest.param("forecastHourly", id="hourly"),
+        pytest.param({}, id="missing"),
+        pytest.param({"unit": None}, id="null"),
+        pytest.param({"unit": "F"}, id="unsupported"),
     ],
 )
-def test_missing_temperature_unit(payload: dict[str, Any], section: str) -> None:
-    """Reject forecast temperatures without an explicit unit."""
-    del payload[section]["temperature"]["unit"]
-    with pytest.raises(XiaomiWeatherError, match="temperature unit"):
+def test_invalid_current_temperature_unit(
+    payload: dict[str, Any], unit_fields: dict[str, str | None]
+) -> None:
+    """Current temperature still requires a verified Celsius unit."""
+    temperature = payload["current"]["temperature"]
+    del temperature["unit"]
+    temperature.update(unit_fields)
+    with pytest.raises(XiaomiWeatherError, match="Missing current temperature"):
         parse_weather(payload)
 
 
