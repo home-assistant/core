@@ -470,6 +470,9 @@ aiotankerkoenig==0.5.3
 # homeassistant.components.tedee
 aiotedee==0.3.0
 
+# homeassistant.components.threema
+aiothreema==0.1.0
+
 # homeassistant.components.tractive
 aiotractive==1.0.3
 
