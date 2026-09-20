@@ -20,4 +20,9 @@ ATTR_NOTE_TEXT = "note_text"
 ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
 
+CONF_PARSE_TODO_NEW = "parse_todo_new"
+CONF_PARSE_TODO_EDIT = "parse_todo_edit"
+CONF_PARSER = "parser"
+DEFAULT_PARSER = "nlp"
+
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v3.2.0")

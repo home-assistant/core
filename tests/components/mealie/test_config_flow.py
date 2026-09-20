@@ -484,3 +484,25 @@ async def test_hassio_connection_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating options."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"parse_todo_list_items_new": False}
+    )
+
+    assert not result["data"]["parse_todo_list_items_new"]
+    assert result["data"]["parse_todo_list_items_edit"]
+    assert result["data"]["parser"] == "nlp"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
