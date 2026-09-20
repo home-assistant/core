@@ -42,9 +42,11 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: All I/O runs in the coordinator; the sensor platform does not update.
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
