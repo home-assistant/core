@@ -51,13 +51,13 @@ INTENT_TITLES = LLM_INTENTS | TIMER_INTENTS
 # Every intent here acts on Home Assistant's own entities and timers, so none
 # of them reaches an open world.
 _CONTROL = ToolAnnotations(idempotent=True, open_world=False)
-_CUMULATIVE = ToolAnnotations(open_world=False)
+_REPEATS = ToolAnnotations(open_world=False)
+_ADDS = ToolAnnotations(destructive=False, open_world=False)
 _READ_ONLY = ToolAnnotations(read_only=True, open_world=False)
 
-# A timer intent that adds or removes time has an effect each time it is
-# called, so it is not idempotent.
 INTENT_ANNOTATIONS = {
-    intent.INTENT_TURN_ON: _CONTROL,
+    # Turning on a button entity presses it, which acts again on every call.
+    intent.INTENT_TURN_ON: _REPEATS,
     intent.INTENT_TURN_OFF: _CONTROL,
     intent.INTENT_SET_POSITION: _CONTROL,
     intent.INTENT_STOP_MOVING: _CONTROL,
@@ -65,9 +65,10 @@ INTENT_ANNOTATIONS = {
     intent.INTENT_CANCEL_TIMER: _CONTROL,
     intent.INTENT_PAUSE_TIMER: _CONTROL,
     intent.INTENT_UNPAUSE_TIMER: _CONTROL,
-    intent.INTENT_START_TIMER: _CUMULATIVE,
-    intent.INTENT_INCREASE_TIMER: _CUMULATIVE,
-    intent.INTENT_DECREASE_TIMER: _CUMULATIVE,
+    # Starting a timer and adding time only add, and both act on every call.
+    intent.INTENT_START_TIMER: _ADDS,
+    intent.INTENT_INCREASE_TIMER: _ADDS,
+    intent.INTENT_DECREASE_TIMER: _REPEATS,
     intent.INTENT_TIMER_STATUS: _READ_ONLY,
 }
 

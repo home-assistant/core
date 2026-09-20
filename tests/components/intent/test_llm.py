@@ -127,12 +127,16 @@ async def test_tool_annotations(hass: HomeAssistant) -> None:
 
     assert tools["intent__HassTurnOn"].title == "Turn on"
     assert tools["intent__HassTurnOn"].integration == "intent"
+    # Turning on a button entity presses it, so the call is not idempotent.
     assert tools["intent__HassTurnOn"].annotations == llm.ToolAnnotations(
+        open_world=False
+    )
+    assert tools["intent__HassTurnOff"].annotations == llm.ToolAnnotations(
         idempotent=True, open_world=False
     )
-    # Adding time has an effect on every call.
+    # Adding time only adds, and has an effect on every call.
     assert tools["intent__HassIncreaseTimer"].annotations == llm.ToolAnnotations(
-        open_world=False
+        destructive=False, open_world=False
     )
     assert tools["intent__HassTimerStatus"].annotations == llm.ToolAnnotations(
         read_only=True, open_world=False

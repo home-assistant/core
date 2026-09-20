@@ -634,7 +634,7 @@ async def test_mcp_tools_list(
     assert tool.annotations == mcp.types.ToolAnnotations(
         readOnlyHint=False,
         destructiveHint=True,
-        idempotentHint=True,
+        idempotentHint=False,
         openWorldHint=False,
     )
 
