@@ -4,9 +4,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import automation, device_automation
@@ -75,7 +75,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             spec=["ACTION_SCHEMA", "async_get_actions"],
@@ -87,7 +87,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_condition",
         Mock(
             CONDITION_SCHEMA=toggle_entity.CONDITION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_conditions=_async_get_conditions,
             spec=["CONDITION_SCHEMA", "async_get_conditions"],
@@ -98,10 +98,11 @@ def fake_integration(hass: HomeAssistant) -> None:
         hass,
         f"{FAKE_DOMAIN}.device_trigger",
         Mock(
-            TRIGGER_SCHEMA=vol.All(
+            TRIGGER_SCHEMA=probatio.All(
                 toggle_entity.TRIGGER_SCHEMA,
-                vol.Schema(
-                    {vol.Required("domain"): FAKE_DOMAIN}, extra=vol.ALLOW_EXTRA
+                probatio.Schema(
+                    {probatio.Required("domain"): FAKE_DOMAIN},
+                    extra=probatio.ALLOW_EXTRA,
                 ),
             ),
             async_get_triggers=_async_get_triggers,
@@ -311,10 +312,10 @@ async def test_websocket_get_action_capabilities(
 
     async def _async_get_action_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List action capabilities."""
         if config["type"] == "turn_on":
-            return {"extra_fields": vol.Schema({vol.Optional("code"): str})}
+            return {"extra_fields": probatio.Schema({probatio.Optional("code"): str})}
         return {}
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
@@ -473,7 +474,7 @@ async def test_websocket_get_condition_capabilities(
 
     async def _async_get_condition_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
         return await toggle_entity.async_get_condition_capabilities(hass, config)
 
@@ -771,7 +772,7 @@ async def test_websocket_get_trigger_capabilities(
 
     async def _async_get_trigger_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List trigger capabilities."""
         return await toggle_entity.async_get_trigger_capabilities(hass, config)
 
@@ -1232,6 +1233,50 @@ async def test_automation_with_dynamically_validated_trigger(
                 "trigger": {
                     "platform": "device",
                     "device_id": device_entry.id,
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_awaited_once()
+    module.async_attach_trigger.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("fake_integration")
+async def test_automation_with_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device automation targeting a child device of the domain's config entry."""
+    module_cache = hass.data[loader.DATA_COMPONENTS]
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_attach_trigger = AsyncMock()
+    module.async_validate_trigger_config = AsyncMock(wraps=lambda hass, config: config)
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    parent_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "parent")},
+    )
+    child_device_entry = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("fake_integration", "child")},
+        parent_device_id=parent_device_entry.id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": child_device_entry.id,
                     "domain": "fake_integration",
                 },
                 "action": {"service": "test.automation", "entity_id": "hello.world"},
@@ -1882,9 +1927,9 @@ async def test_validate_config_rewrites_composite_device_id(
             "entity_id": entity.entity_id,
             "type": "turned_on",
         },
-        vol.Schema(
-            {vol.Required("device_id"): str, vol.Required("domain"): str},
-            extra=vol.ALLOW_EXTRA,
+        probatio.Schema(
+            {probatio.Required("device_id"): str, probatio.Required("domain"): str},
+            extra=probatio.ALLOW_EXTRA,
         ),
         DeviceAutomationType.TRIGGER,
     )

@@ -300,7 +300,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
         key=NOTIFICATION_HOME_SECURITY,
         states={5, 6},
-        device_class=BinarySensorDeviceClass.SAFETY,
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 7, 8 (motion)

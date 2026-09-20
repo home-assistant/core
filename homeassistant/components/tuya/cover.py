@@ -35,11 +35,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaCoverEntityDescription(CoverEntityDescription):
+class TuyaCoverEntityDescription(TuyaEntityDescription, CoverEntityDescription):
     """Describe a Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
