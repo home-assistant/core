@@ -8,11 +8,13 @@ from typing import Any, cast, override
 from opower import (
     Account,
     AggregateType,
+    Bill,
     CostRead,
     Forecast,
     MeterType,
     Opower,
     ReadResolution,
+    UnitOfMeasure,
     create_cookie_jar,
 )
 from opower.exceptions import ApiException, CannotConnect, InvalidAuth, MfaChallenge
@@ -51,8 +53,40 @@ class OpowerData:
 
     account: Account
     forecast: Forecast | None
+    last_bill_electricity_rate: float | None
     last_changed: datetime | None
     last_updated: datetime
+
+
+def _last_bill_electricity_rates(bills: list[Bill]) -> dict[str, float]:
+    """Return the latest safely attributable electricity rate per account."""
+    rates: dict[str, float] = {}
+    for bill in bills:
+        if bill.usage_charges is None:
+            continue
+
+        account_uuids = {segment.account.uuid for segment in bill.segments}
+        if len(account_uuids) != 1:
+            continue
+        account = bill.segments[0].account
+        if (
+            account.meter_type is not MeterType.ELEC
+            or account.utility_account_id in rates
+        ):
+            continue
+
+        usage = sum(
+            quantity.value
+            for segment in bill.segments
+            for quantity in segment.service_quantities
+            if quantity.unit_of_measure is UnitOfMeasure.KWH
+            and quantity.service_quantity_identifier is not None
+            and quantity.service_quantity_identifier.strip().upper() == "NET_USAGE"
+            and quantity.value is not None
+        )
+        if usage > 0:
+            rates[account.utility_account_id] = bill.usage_charges / usage
+    return rates
 
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
@@ -130,7 +164,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting forecasts: %s", err)
             raise
 
+        try:
+            bills = await self.api.async_get_bills()
+        except ApiException as err:
+            _LOGGER.error("Error getting completed bills: %s", err)
+            raise
+
         forecasts = {f.account.utility_account_id: f for f in forecasts_list}
+        last_bill_electricity_rates = _last_bill_electricity_rates(bills)
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
 
         # Because Opower provides historical usage/cost with a delay of a couple of days
@@ -140,6 +181,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             account.utility_account_id: OpowerData(
                 account=account,
                 forecast=forecasts.get(account.utility_account_id),
+                last_bill_electricity_rate=last_bill_electricity_rates.get(
+                    account.utility_account_id
+                ),
                 last_changed=last_changed_per_account.get(account.utility_account_id),
                 last_updated=dt_util.utcnow(),
             )

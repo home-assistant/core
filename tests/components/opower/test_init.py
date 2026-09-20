@@ -25,6 +25,7 @@ async def test_setup_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_opower_api.async_login.assert_awaited_once()
+    mock_opower_api.async_get_bills.assert_awaited_once()
     mock_opower_api.async_get_forecast.assert_awaited_once()
     mock_opower_api.async_get_accounts.assert_awaited_once()
 
@@ -91,6 +92,23 @@ async def test_get_accounts_error(
     """Test for API error when getting accounts."""
     mock_opower_api.async_get_accounts.side_effect = ApiException(
         message="accounts error", url=""
+    )
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_get_bills_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test for API error when getting completed bills."""
+    mock_opower_api.async_get_bills.side_effect = ApiException(
+        message="completed bills error", url=""
     )
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

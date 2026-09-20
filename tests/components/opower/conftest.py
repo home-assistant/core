@@ -1,10 +1,19 @@
 """Fixtures for the Opower integration tests."""
 
 from collections.abc import Generator
-from datetime import date
+from datetime import UTC, date, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
-from opower import Account, Forecast, MeterType, ReadResolution, UnitOfMeasure
+from opower import (
+    Account,
+    Bill,
+    BillSegment,
+    BillServiceQuantity,
+    Forecast,
+    MeterType,
+    ReadResolution,
+    UnitOfMeasure,
+)
 from opower.utilities.pge import PGE
 import pytest
 
@@ -39,7 +48,7 @@ def mock_opower_api() -> Generator[AsyncMock]:
         api = mock_api.return_value
         api.utility = PGE()
 
-        api.async_get_accounts.return_value = [
+        accounts = [
             Account(
                 customer=Mock(),
                 uuid="111111-uuid",
@@ -57,6 +66,7 @@ def mock_opower_api() -> Generator[AsyncMock]:
                 read_resolution=ReadResolution.DAY,
             ),
         ]
+        api.async_get_accounts.return_value = accounts
         api.async_get_forecast.return_value = [
             Forecast(
                 account=Account(
@@ -98,6 +108,27 @@ def mock_opower_api() -> Generator[AsyncMock]:
                 end_date=date(2023, 1, 31),
                 current_date=date(2023, 1, 15),
             ),
+        ]
+        api.async_get_bills.return_value = [
+            Bill(
+                bill_date=date(2023, 1, 31),
+                start_time=datetime(2023, 1, 1, tzinfo=UTC),
+                end_time=datetime(2023, 2, 1, tzinfo=UTC),
+                usage_charges=30.0,
+                segments=[
+                    BillSegment(
+                        account=accounts[0],
+                        current_amount=35.0,
+                        service_quantities=[
+                            BillServiceQuantity(
+                                unit_of_measure=UnitOfMeasure.KWH,
+                                service_quantity_identifier="NET_USAGE",
+                                value=100.0,
+                            )
+                        ],
+                    )
+                ],
+            )
         ]
         api.async_get_cost_reads.return_value = []
         yield api
