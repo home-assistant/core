@@ -1,6 +1,7 @@
 """Test sensors."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -160,6 +161,91 @@ async def test_budget_sensors_discover_and_recover_categories(
     vacation_state = hass.states.get(vacation_entity_id)
     assert vacation_state is not None
     assert vacation_state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("category_id", "monthly_categories"),
+    [
+        pytest.param(
+            "category-stale",
+            [
+                {
+                    "category": {"id": "category-stale"},
+                    "monthlyAmounts": [
+                        {
+                            "month": "2026-08-01",
+                            "plannedCashFlowAmount": -1200.0,
+                            "actualAmount": -1200.0,
+                            "remainingAmount": 0.0,
+                        }
+                    ],
+                }
+            ],
+            id="stale_month_only",
+        ),
+        pytest.param(
+            "category-without-amounts",
+            [],
+            id="no_monthly_record",
+        ),
+    ],
+)
+async def test_budget_sensors_recover_when_current_month_appears(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_config_api: AsyncMock,
+    category_id: str,
+    monthly_categories: list[dict[str, Any]],
+) -> None:
+    """Test a known budget starts unavailable until its current month appears."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2026-09-20T12:00:00+00:00")
+    budget_data = await async_load_json_object_fixture(hass, "get_budgets.json", DOMAIN)
+    budget_data["categoryGroups"][2]["categories"].append(
+        {"id": category_id, "name": "Test budget"}
+    )
+    budget_data["budgetData"]["monthlyAmountsByCategory"].extend(monthly_categories)
+    budget_data_with_current_month = deepcopy(budget_data)
+    budget_data_with_current_month["budgetData"]["monthlyAmountsByCategory"].append(
+        {
+            "category": {"id": category_id},
+            "monthlyAmounts": [
+                {
+                    "month": "2026-09-01",
+                    "plannedCashFlowAmount": -1200.0,
+                    "actualAmount": -400.0,
+                    "remainingAmount": 800.0,
+                }
+            ],
+        }
+    )
+    mock_config_api.return_value.get_budgets.side_effect = [
+        budget_data,
+        budget_data_with_current_month,
+    ]
+
+    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    subscription_id = (
+        mock_config_api.return_value.get_subscription_details.return_value.id
+    )
+    budget_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{subscription_id}_budget_{category_id}_actual"
+    )
+    assert budget_entity_id is not None
+    budget_state = hass.states.get(budget_entity_id)
+    assert budget_state is not None
+    assert budget_state.state == "unavailable"
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    budget_state = hass.states.get(budget_entity_id)
+    assert budget_state is not None
+    assert budget_state.state == "-400.0"
 
 
 @pytest.mark.parametrize(

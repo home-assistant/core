@@ -296,7 +296,8 @@ class MonarchMoneyBudgetSensor(MonarchMoneyBudgetEntity, SensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return budget metadata."""
-        if (budget := self.coordinator.data.budgets.get(self._budget_id)) is None:
+        budget = self.coordinator.data.budgets.get(self._budget_id)
+        if budget is None or budget.month is None:
             return None
         return {"category_group": budget.group_name, "month": budget.month}
 

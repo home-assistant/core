@@ -41,7 +41,7 @@ class MonarchBudget:
     id: str
     name: str
     group_name: str
-    month: str
+    month: str | None
     planned_amount: float | None
     actual_amount: float | None
     remaining_amount: float | None
@@ -137,16 +137,27 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         data: dict[str, Any], budget_month: str
     ) -> dict[str, MonarchBudget]:
         """Return budget categories for the requested month."""
-        category_lookup: dict[str, tuple[str, str]] = {}
+        budgets: dict[str, MonarchBudget] = {}
         for group in data.get("categoryGroups", []):
             for category in group["categories"]:
-                category_lookup[category["id"]] = (category["name"], group["name"])
+                category_id = category["id"]
+                budgets[category_id] = MonarchBudget(
+                    id=category_id,
+                    name=category["name"],
+                    group_name=group["name"],
+                    month=None,
+                    planned_amount=None,
+                    actual_amount=None,
+                    remaining_amount=None,
+                )
 
-        budgets: dict[str, MonarchBudget] = {}
         for monthly_category in data.get("budgetData", {}).get(
             "monthlyAmountsByCategory", []
         ):
             category_id = monthly_category["category"]["id"]
+
+            if (budget := budgets.get(category_id)) is None:
+                continue
 
             month_data = next(
                 (
@@ -159,19 +170,10 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             if month_data is None:
                 continue
 
-            if (category_info := category_lookup.get(category_id)) is None:
-                continue
-
-            name, group_name = category_info
-            budgets[category_id] = MonarchBudget(
-                id=category_id,
-                name=name,
-                group_name=group_name,
-                month=str(month_data["month"]),
-                planned_amount=_as_float(month_data["plannedCashFlowAmount"]),
-                actual_amount=_as_float(month_data["actualAmount"]),
-                remaining_amount=_as_float(month_data["remainingAmount"]),
-            )
+            budget.month = str(month_data["month"])
+            budget.planned_amount = _as_float(month_data["plannedCashFlowAmount"])
+            budget.actual_amount = _as_float(month_data["actualAmount"])
+            budget.remaining_amount = _as_float(month_data["remainingAmount"])
 
         return budgets
 

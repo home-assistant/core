@@ -117,4 +117,9 @@ class MonarchMoneyBudgetEntity(MonarchMoneyEntityBase):
     @override
     def available(self) -> bool:
         """Return if the budget has data for the current month."""
-        return super().available and self._budget_id in self.coordinator.data.budgets
+        return (
+            super().available
+            and (budget := self.coordinator.data.budgets.get(self._budget_id))
+            is not None
+            and budget.month is not None
+        )
