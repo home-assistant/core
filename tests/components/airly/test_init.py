@@ -74,7 +74,7 @@ async def test_async_setup_entry_with_nearest(
 @pytest.mark.parametrize(
     "exception",
     [
-        ConnectionError(),
+        ConnectionError,
         AirlyError(HTTPStatus.INTERNAL_SERVER_ERROR, {"message": "Server error"}),
     ],
 )

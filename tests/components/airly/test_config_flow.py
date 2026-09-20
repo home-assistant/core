@@ -221,7 +221,7 @@ async def test_create_entry_with_nearest_method(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (TimeoutError(), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
     ],
 )
@@ -379,7 +379,7 @@ async def test_reauth_with_nearest_method(
             AirlyError(HTTPStatus.INTERNAL_SERVER_ERROR, {"message": "Server error"}),
             "unknown",
         ),
-        (TimeoutError(), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
         (Exception("unexpected"), "unknown"),
     ],
