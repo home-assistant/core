@@ -19,9 +19,9 @@ from .intent import (
     INTENT_VACUUM_START,
 )
 
-# Each intent sets a value on the user's own entities, so calling one again
-# with the same arguments has no further effect.
-LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
+# Each intent dispatches a command to the user's own vacuum, and the command
+# runs again on every call.
+LLM_ANNOTATIONS = ToolAnnotations(open_world=False)
 
 # Intents owned by this integration that are exposed as LLM tools, with the
 # title shown for each.
