@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MonarchMoneyDataUpdateCoordinator
+from .coordinator import MonarchBudget, MonarchMoneyDataUpdateCoordinator
 
 
 class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
@@ -88,3 +88,33 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
         return self.coordinator.data.account_data[self._account_id]
+
+
+class MonarchMoneyBudgetEntity(MonarchMoneyEntityBase):
+    """Entity for budget sensors."""
+
+    def __init__(
+        self,
+        coordinator: MonarchMoneyDataUpdateCoordinator,
+        description: EntityDescription,
+        budget: MonarchBudget,
+    ) -> None:
+        """Initialize the budget entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._budget_id = budget.id
+        self._attr_unique_id = (
+            f"{coordinator.subscription_id}_budget_{budget.id}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.subscription_id}_budget_{budget.id}")},
+            name=f"{budget.group_name} - {budget.name}",
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Monarch Money",
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the budget has data for the current month."""
+        return super().available and self._budget_id in self.coordinator.data.budgets

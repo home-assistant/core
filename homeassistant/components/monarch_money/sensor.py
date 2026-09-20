@@ -14,12 +14,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import MonarchMoneyConfigEntry
-from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
+from .coordinator import MonarchBudget, MonarchMoneyConfigEntry
+from .entity import (
+    MonarchMoneyAccountEntity,
+    MonarchMoneyBudgetEntity,
+    MonarchMoneyCashFlowEntity,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,6 +39,13 @@ class MonarchMoneyCashflowSensorEntityDescription(SensorEntityDescription):
     """Describe a cashflow sensor entity."""
 
     summary_fn: Callable[[MonarchCashflowSummary], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class MonarchMoneyBudgetSensorEntityDescription(SensorEntityDescription):
+    """Describe a budget sensor entity."""
+
+    value_fn: Callable[[MonarchBudget], StateType]
 
 
 def _account_owner_name(account: MonarchAccount) -> str | None:
@@ -128,6 +139,34 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
 )
 
 
+MONARCH_BUDGET_SENSORS: tuple[MonarchMoneyBudgetSensorEntityDescription, ...] = (
+    MonarchMoneyBudgetSensorEntityDescription(
+        key="actual",
+        translation_key="budget_actual",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
+        value_fn=lambda budget: budget.actual_amount,
+    ),
+    MonarchMoneyBudgetSensorEntityDescription(
+        key="planned",
+        translation_key="budget_planned",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
+        value_fn=lambda budget: budget.planned_amount,
+    ),
+    MonarchMoneyBudgetSensorEntityDescription(
+        key="remaining",
+        translation_key="budget_remaining",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
+        value_fn=lambda budget: budget.remaining_amount,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MonarchMoneyConfigEntry,
@@ -182,6 +221,31 @@ async def async_setup_entry(
 
     async_add_entities(entity_list)
 
+    added_budget_ids: set[str] = set()
+
+    @callback
+    def _async_add_new_budget_entities() -> None:
+        """Add sensors for budget categories discovered during an update."""
+        new_budget_ids = set(mm_coordinator.data.budgets) - added_budget_ids
+        if not new_budget_ids:
+            return
+
+        async_add_entities(
+            MonarchMoneyBudgetSensor(
+                mm_coordinator,
+                sensor_description,
+                mm_coordinator.data.budgets[budget_id],
+            )
+            for budget_id in new_budget_ids
+            for sensor_description in MONARCH_BUDGET_SENSORS
+        )
+        added_budget_ids.update(new_budget_ids)
+
+    _async_add_new_budget_entities()
+    config_entry.async_on_unload(
+        mm_coordinator.async_add_listener(_async_add_new_budget_entities)
+    )
+
 
 class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     """Cashflow summary sensor."""
@@ -213,3 +277,31 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
         if self.entity_description.picture_fn is not None:
             return self.entity_description.picture_fn(self.account_data)
         return None
+
+
+class MonarchMoneyBudgetSensor(MonarchMoneyBudgetEntity, SensorEntity):
+    """Budget category sensor."""
+
+    entity_description: MonarchMoneyBudgetSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the budget value."""
+        if (budget := self.coordinator.data.budgets.get(self._budget_id)) is None:
+            return None
+        return self.entity_description.value_fn(budget)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return budget metadata."""
+        if (budget := self.coordinator.data.budgets.get(self._budget_id)) is None:
+            return None
+        return {"category_group": budget.group_name, "month": budget.month}
+
+    @property
+    @override
+    def last_reset(self) -> datetime:
+        """Return the start of the budget month."""
+        return self.coordinator.data.budget_month_start

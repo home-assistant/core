@@ -51,6 +51,7 @@ def mock_config_api() -> Generator[AsyncMock]:
         "get_cashflow_summary.json", DOMAIN
     )
     cashflow_summary = MonarchCashflowSummary(cashflow_json)
+    budget_data = load_json_object_fixture("get_budgets.json", DOMAIN)
     subscription_details = MonarchSubscription(
         load_json_object_fixture("get_subscription_details.json", DOMAIN)
     )
@@ -74,5 +75,6 @@ def mock_config_api() -> Generator[AsyncMock]:
             return_value=account_data_dict
         )
         instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
+        instance.get_budgets = AsyncMock(return_value=budget_data)
         instance.get_subscription_details = AsyncMock(return_value=subscription_details)
         yield mock_class
