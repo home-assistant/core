@@ -125,3 +125,15 @@ def mock_recent_tracks_error_user() -> MockUser:
         recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
         recent_tracks_error=WSError("network", "status", "Something strange"),
     )
+
+
+@pytest.fixture(name="hidden_now_playing_user")
+def mock_hidden_now_playing_user() -> MockUser:
+    """Return mock user with now playing available but hidden listening info."""
+    return MockUser(
+        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks_error=WSError(
+            "network", "17", "Login: User required to be logged in"
+        ),
+    )

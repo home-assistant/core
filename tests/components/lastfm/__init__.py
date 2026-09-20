@@ -117,8 +117,6 @@ class MockUser:
 
     def get_now_playing(self) -> Track:
         """Get mock now playing."""
-        if self._recent_tracks_error:
-            raise self._recent_tracks_error
         return self._now_playing_result
 
     def get_friends(self) -> list[Any]:

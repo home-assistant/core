@@ -71,6 +71,33 @@ async def test_sensor_hidden_listening_information(
     )
 
 
+async def test_sensor_now_playing_with_hidden_listening_information(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    hidden_now_playing_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test now playing stays available when the recent tracks request fails."""
+    await setup_integration(config_entry, hidden_now_playing_user)
+
+    state = hass.states.get("sensor.lastfm_testaccount1")
+    assert state.state == "artist - title"
+    assert state.attributes[ATTR_LAST_PLAYED] is None
+    assert (
+        "user testaccount1 has hidden their recent listening information" in caplog.text
+    )
+
+    await config_entry.runtime_data.async_refresh()
+
+    assert (
+        caplog.text.count(
+            "user testaccount1 has hidden their recent listening information"
+        )
+        == 1
+    )
+
+
 @pytest.mark.parametrize(
     "user",
     [
