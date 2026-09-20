@@ -121,6 +121,9 @@ class MotionEyeMediaProxyView(HomeAssistantView):
         except Error, UnicodeDecodeError, UnicodeEncodeError, ValueError:
             return web.Response(status=400)
 
+        if PurePath(media_path).root != "/":
+            return web.Response(status=400)
+
         range_header = request.headers.get("Range")
 
         try:
