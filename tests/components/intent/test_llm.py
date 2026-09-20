@@ -58,12 +58,7 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
 
 
 async def test_device_class_enum_has_a_stable_order(hass: HomeAssistant) -> None:
-    """Test the device class enum does not follow set iteration order.
-
-    The enum is built from a set of device class enums, so its order depends on
-    the identity of those classes. Clients send the tools with every request, so
-    an order that changes between runs invalidates their prompt cache.
-    """
+    """Test the device class enum has a stable order."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     tool = next(tool for tool in result.tools if tool.name == "intent__HassTurnOn")
     schema = probatio.to_openapi(tool.parameters)
