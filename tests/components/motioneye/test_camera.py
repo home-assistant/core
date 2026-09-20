@@ -330,8 +330,8 @@ async def test_get_stream_from_camera_falls_back_to_surveillance_credentials(
     )
 
     cameras = copy.deepcopy(TEST_CAMERAS)
-    cameras[KEY_CAMERAS][0].pop("streaming_username", None)
-    cameras[KEY_CAMERAS][0].pop("streaming_password", None)
+    cameras[KEY_CAMERAS][0]["streaming_username"] = ""
+    cameras[KEY_CAMERAS][0]["streaming_password"] = ""
     client.async_get_cameras = AsyncMock(return_value=cameras)
 
     await setup_mock_motioneye_config_entry(
