@@ -5,7 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .client import ThreemaAPIClient, ThreemaAuthError, ThreemaConnectionError
 from .const import CONF_API_SECRET, CONF_GATEWAY_ID, CONF_PRIVATE_KEY, DOMAIN
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThreemaConfigEntry) -> b
     try:
         await client.validate_credentials()
     except ThreemaAuthError as err:
-        raise ConfigEntryAuthFailed(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from err

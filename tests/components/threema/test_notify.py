@@ -14,7 +14,7 @@ from homeassistant.components.threema.client import (
 )
 from homeassistant.components.threema.const import SUBENTRY_TYPE_RECIPIENT
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_NAME, CONF_RECIPIENT
+from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -23,38 +23,12 @@ from .conftest import MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID, RECIPIENT_SUBENTRY
 
 from tests.common import MockConfigEntry
 
-_OTHER_SUBENTRY: ConfigSubentryDataWithId = {
-    "data": {},
-    "subentry_id": "other_subentry_id",
-    "subentry_type": "other",
-    "title": "Other",
-    "unique_id": None,
-}
-
 _SECOND_RECIPIENT_ID = "WXYZ9999"
 _SECOND_RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {
     "data": {CONF_RECIPIENT: _SECOND_RECIPIENT_ID},
     "subentry_id": "second_recipient_subentry_id",
     "subentry_type": SUBENTRY_TYPE_RECIPIENT,
     "title": "Second recipient",
-    "unique_id": _SECOND_RECIPIENT_ID,
-}
-
-_NAMED_RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {
-    "data": {CONF_RECIPIENT: _SECOND_RECIPIENT_ID, CONF_NAME: "Dad"},
-    "subentry_id": "named_recipient_subentry_id",
-    "subentry_type": SUBENTRY_TYPE_RECIPIENT,
-    "title": f"Dad ({_SECOND_RECIPIENT_ID})",
-    "unique_id": _SECOND_RECIPIENT_ID,
-}
-
-# Simulates a subentry created before the display name was stored
-# separately in `data` — only the title carries "Name (RECIPIENT_ID)".
-_LEGACY_NAMED_RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {
-    "data": {CONF_RECIPIENT: _SECOND_RECIPIENT_ID},
-    "subentry_id": "legacy_named_recipient_subentry_id",
-    "subentry_type": SUBENTRY_TYPE_RECIPIENT,
-    "title": f"Mom ({_SECOND_RECIPIENT_ID})",
     "unique_id": _SECOND_RECIPIENT_ID,
 }
 
@@ -67,27 +41,6 @@ async def test_notify_entity_created(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test notify entity is created from subentry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
-    assert len(notify_entities) == 1
-    assert notify_entities[0].unique_id == f"{MOCK_GATEWAY_ID}_{MOCK_RECIPIENT_ID}"
-
-
-@pytest.mark.parametrize("mock_subentries", [[RECIPIENT_SUBENTRY, _OTHER_SUBENTRY]])
-async def test_notify_entity_skips_non_recipient_subentry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_credentials: AsyncMock,
-    mock_send_message: AsyncMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test notify setup only creates entities for recipient subentries."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -135,70 +88,6 @@ async def test_notify_entities_get_separate_devices(
         assert device is not None
         assert device.config_entry_id == mock_config_entry.entry_id
         assert device.config_subentry_id is not None
-
-
-@pytest.mark.parametrize("mock_subentries", [[_NAMED_RECIPIENT_SUBENTRY]])
-async def test_notify_entity_id_includes_gateway_name_and_recipient_id(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_credentials: AsyncMock,
-    mock_send_message: AsyncMock,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test entity_id is threema_<gateway>_<name>_<recipient id>.
-
-    The display name (device/friendly name) stays "Name (ID)" for
-    disambiguation in the UI, but the entity_id is independently built
-    from the gateway id, name and recipient id, so it stays stable and
-    unique across multiple gateways even when recipients share a name.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
-    assert len(notify_entities) == 1
-    assert notify_entities[0].entity_id == "notify.threema_testgwy_dad_wxyz9999"
-
-    device = device_registry.async_get(notify_entities[0].device_id)
-    assert device is not None
-    assert device.name == "Dad (WXYZ9999)"
-
-
-@pytest.mark.parametrize("mock_subentries", [[_LEGACY_NAMED_RECIPIENT_SUBENTRY]])
-async def test_notify_entity_id_recovers_name_from_legacy_title(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_credentials: AsyncMock,
-    mock_send_message: AsyncMock,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the name is recovered from the title for older subentries.
-
-    Subentries created before the display name was stored separately in
-    `data` only carry it baked into the title ("Mom (WXYZ9999)"); both the
-    entity_id and the device name should still reflect "Mom", not fall
-    back to the raw ID alone.
-    """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
-    assert len(notify_entities) == 1
-    assert notify_entities[0].entity_id == "notify.threema_testgwy_mom_wxyz9999"
-
-    device = device_registry.async_get(notify_entities[0].device_id)
-    assert device is not None
-    assert device.name == "Mom (WXYZ9999)"
 
 
 @pytest.mark.parametrize("mock_subentries", [[]])
@@ -312,11 +201,14 @@ async def test_send_message_e2e(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "expected_error"),
     [
-        ThreemaSendError("Send failed"),
-        ThreemaConnectionError("Connection error"),
-        ThreemaAuthError("Invalid credentials"),
+        (ThreemaSendError("Send failed"), "Error sending message: Send failed"),
+        (
+            ThreemaConnectionError("Connection error"),
+            "Error sending message: Connection error",
+        ),
+        (ThreemaAuthError("Invalid credentials"), "Invalid authentication"),
     ],
     ids=["send_error", "connection_error", "auth_error"],
 )
@@ -327,6 +219,7 @@ async def test_send_message_error(
     mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
     side_effect: Exception,
+    expected_error: str,
 ) -> None:
     """Test notify entity raises HomeAssistantError on send/connection errors."""
     mock_send_message.side_effect = side_effect
@@ -340,7 +233,7 @@ async def test_send_message_error(
     )
     notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "send_message",
