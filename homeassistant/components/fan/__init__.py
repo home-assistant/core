@@ -1,11 +1,10 @@
 """Provides functionality to interact with fans."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
 import probatio
 from propcache.api import cached_property
@@ -29,27 +28,20 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
+from .const import (
+    DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "fan"
 DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-
-class FanEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
-
-    SET_SPEED = 1
-    OSCILLATE = 2
-    DIRECTION = 4
-    PRESET_MODE = 8
-    TURN_OFF = 16
-    TURN_ON = 32
 
 
 SERVICE_INCREASE_SPEED = "increase_speed"

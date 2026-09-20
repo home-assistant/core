@@ -65,12 +65,12 @@ from .const import (
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
 
 
 @dataclass(frozen=True)
-class TuyaSensorEntityDescription(SensorEntityDescription):
+class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     dpcode: DPCode | None = None
@@ -1887,9 +1887,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
-
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-SENSORS[DeviceCategory.KSDJML] = SENSORS[DeviceCategory.SP]
 
 # Power Socket (duplicate of `kg`)
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]

@@ -29,11 +29,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaLightEntityDescription(LightEntityDescription):
+class TuyaLightEntityDescription(TuyaEntityDescription, LightEntityDescription):
     """Describe an Tuya light entity."""
 
     brightness_max: DPCode | None = None
@@ -373,9 +373,6 @@ LIGHTS[DeviceCategory.PC] = LIGHTS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
-
-# Video peephole camera / video intercom doorbell (duplicate of `sp`)
-LIGHTS[DeviceCategory.KSDJML] = LIGHTS[DeviceCategory.SP]
 
 # Dimmer (duplicate of `tgq`)
 LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
