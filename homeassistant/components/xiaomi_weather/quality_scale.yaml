@@ -6,8 +6,8 @@ rules:
   appropriate-polling: done
   async-dependency: todo
   brands:
-    status: todo
-    comment: Requires the companion brands alias from xiaomi_weather to the existing Xiaomi assets.
+    status: done
+    comment: https://github.com/home-assistant/brands/pull/11187
   common-modules: done
   config-entry-unloading: todo
   config-flow: done
