@@ -24,20 +24,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "is_disable": {
-        "name": "Charging enabled",
-        "state": {
-          "off": "Disabled",
-          "on": "Enabled"
-        }
-      },
-      "is_lock": {
-        "name": "Cable lock state",
-        "state": {
-          "off": "Locked",
-          "on": "Unlocked"
-        }
-      }
+      "is_disable": { "name": "Charging enabled" },
+      "is_lock": { "name": "Cable lock state" }
     },
     "sensor": {
       "access_level": {
