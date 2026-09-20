@@ -596,6 +596,10 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
         self._attr_current_option = (
             self._id_to_name.get(profile_id) if profile_id else None
         )
+        # Profiles and the active one arrive over the public devices websocket,
+        # so availability follows its health rather than the private one the
+        # base applies to the NVR, like the alarm control panel.
+        self._attr_available = self.data.last_public_update_success
 
     @callback
     @override

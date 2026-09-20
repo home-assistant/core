@@ -32,6 +32,7 @@ from uiprotect.data import (
 from uiprotect.data.nvr import DoorbellMessage
 from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.exceptions import GlobalAlarmManagerError
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
@@ -1452,3 +1453,54 @@ async def test_public_only_select_nvr_arm_profile(
         blocking=True,
     )
     ufp_public_only.api.set_current_arm_profile_public.assert_awaited_once_with("p1")
+
+
+async def test_public_only_select_nvr_arm_profile_follows_public_ws(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """The arm profile select goes unavailable with the public devices websocket."""
+    pb = ufp_public_only.api.public_bootstrap
+    pb.arm_profiles = {"p1": _make_arm_profile("p1", "Home")}
+    pb.arm_mode = _make_nvr_arm_mode(profile_id="p1")
+
+    await setup_public_only()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{UNIFI_MAC}_nvr_arm_profile"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "Home (p1)"
+
+
+async def test_select_nvr_arm_profile_decoupled_from_private_websocket(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Arm profile availability follows the public WS only: private loss is a no-op."""
+    profiles = {"p1": _make_arm_profile("p1", "Home")}
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(
+        arm_mode=_make_nvr_arm_mode(profile_id="p1"), profiles=profiles
+    )
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == "Home (p1)"
+
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == "Home (p1)"
+
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == STATE_UNAVAILABLE
