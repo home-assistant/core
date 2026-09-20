@@ -247,6 +247,39 @@ async def test_gather_first_refreshes_raises_for_cancelled_sibling() -> None:
         await _async_gather_first_refreshes(_cancel_self(), _succeeds())
 
 
+async def test_gather_first_refreshes_cancels_blocked_sibling() -> None:
+    """A cancelled sibling must not leave a genuinely blocked task running forever.
+
+    asyncio.wait(..., return_when=FIRST_EXCEPTION) only returns early when a
+    future raises; a cancelled future does not count, so wait keeps blocking
+    until every future is done. If a sibling is still stuck on real I/O, that
+    hangs _async_gather_first_refreshes instead of failing fast and cancelling
+    it.
+    """
+
+    blocked = asyncio.Event()
+    blocked_cancelled = asyncio.Event()
+
+    async def _cancel_self() -> None:
+        asyncio.current_task().cancel()
+        await asyncio.sleep(0)
+
+    async def _blocks_forever() -> None:
+        try:
+            await blocked.wait()
+        except asyncio.CancelledError:
+            blocked_cancelled.set()
+            raise
+
+    with pytest.raises(asyncio.CancelledError):
+        await asyncio.wait_for(
+            _async_gather_first_refreshes(_cancel_self(), _blocks_forever()),
+            timeout=3,
+        )
+
+    assert blocked_cancelled.is_set()
+
+
 # Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_live_refresh_error(

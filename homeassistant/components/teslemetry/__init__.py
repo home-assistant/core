@@ -504,21 +504,20 @@ async def _async_gather_first_refreshes(
     leaves the other awaitables running. A timed-out vehicle refresh must not
     leave a sleeping vehicle's stream get_config() or an energy site refresh
     running in the background, so this cancels and awaits the rest before the
-    failure propagates.
+    failure propagates. Unlike asyncio.wait(return_when=FIRST_EXCEPTION), which
+    ignores a cancelled task, asyncio.gather resolves as soon as any task is
+    cancelled or raises, so a cancelled sibling still triggers cleanup promptly.
     """
     tasks = [asyncio.ensure_future(coro) for coro in coros]
     if not tasks:
         return
     try:
-        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        await asyncio.gather(*tasks)
     finally:
         for task in tasks:
             if not task.done():
                 task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-    for task in tasks:
-        if task in done:
-            task.result()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
