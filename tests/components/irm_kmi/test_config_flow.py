@@ -94,7 +94,7 @@ async def test_config_flow_with_api_error(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_config_flow_forecast")
-async def test_setup_twice_same_location(
+async def test_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the flow aborts when the location is already configured."""
@@ -106,7 +106,7 @@ async def test_setup_twice_same_location(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.5, ATTR_LONGITUDE: 4.6}},
+        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
