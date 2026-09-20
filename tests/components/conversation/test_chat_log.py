@@ -1,5 +1,6 @@
 """Test the conversation session."""
 
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import (
     AssistantContent,
+    AssistantContentDeltaDict,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -756,6 +758,57 @@ async def test_add_delta_content_stream(
         assert captured_deltas == expected_delta
         assert results == snapshot
         assert chat_log.content[2:] == results
+
+
+@freeze_time("2025-10-31 12:00:00")
+@pytest.mark.parametrize(
+    ("deltas", "expected_content"),
+    [
+        pytest.param([{"role": "assistant"}], [], id="role-only"),
+        pytest.param([{"role": "assistant", "content": ""}], [""], id="empty-message"),
+        pytest.param([{"role": "assistant"}, {"content": ""}], [""], id="empty-delta"),
+        pytest.param(
+            [
+                {"role": "assistant", "content": ""},
+                {"role": "assistant", "content": "Next"},
+            ],
+            ["", "Next"],
+            id="empty-before-next-message",
+        ),
+        pytest.param(
+            [{"role": "assistant", "content": ""}, {"content": "Hello"}],
+            ["Hello"],
+            id="text-after-empty-delta",
+        ),
+    ],
+)
+async def test_add_delta_content_stream_empty_content(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    deltas: list[AssistantContentDeltaDict],
+    expected_content: list[str],
+) -> None:
+    """Test explicit empty content is preserved but role-only messages are not."""
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        for delta in deltas:
+            yield delta
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        results = [
+            content
+            async for content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id", stream()
+            )
+        ]
+
+    assert results == [
+        AssistantContent(agent_id="mock-agent-id", content=content)
+        for content in expected_content
+    ]
 
 
 async def test_add_delta_content_stream_errors(

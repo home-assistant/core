@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+from collections.abc import AsyncGenerator
 import datetime
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ from anthropic.types import (
     RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
+    RawMessageStreamEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -63,6 +65,7 @@ from homeassistant.components.anthropic.const import (
     DOMAIN,
 )
 from homeassistant.components.anthropic.entity import (
+    AnthropicDeltaStream,
     CitationDetails,
     ContentDetails,
     _convert_content,
@@ -396,6 +399,99 @@ async def test_prompt_caching_automatic(
     assert mock_create_stream.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
     system = mock_create_stream.call_args.kwargs["system"]
     assert isinstance(system, str)
+
+
+@pytest.mark.parametrize(
+    "end_events",
+    [
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="max_tokens"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+                RawMessageStopEvent(type="message_stop"),
+            ],
+            id="token-limit",
+        ),
+        pytest.param(
+            [RawMessageStopEvent(type="message_stop")], id="missing-stop-reason"
+        ),
+        pytest.param(
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="end_turn"),
+                    usage=MessageDeltaUsage(output_tokens=0),
+                ),
+            ],
+            id="missing-message-stop",
+        ),
+    ],
+)
+async def test_empty_response_without_completed_turn(
+    hass: HomeAssistant,
+    end_events: list[RawMessageStreamEvent],
+) -> None:
+    """Test incomplete empty responses do not produce a silent acknowledgement."""
+    chat_log = conversation.ChatLog(hass, "test-conversation")
+
+    async def stream() -> AsyncGenerator[RawMessageStreamEvent]:
+        for event in (*create_content_block(0, []), *end_events):
+            yield event
+
+    results = [
+        content
+        async for content in chat_log.async_add_delta_content_stream(
+            "conversation.claude_conversation", AnthropicDeltaStream(chat_log, stream())
+        )
+    ]
+
+    assert results == []
+
+
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
+@pytest.mark.parametrize(
+    "events",
+    [
+        pytest.param([], id="no-content-blocks"),
+        pytest.param(create_content_block(0, []), id="empty-text-block"),
+        pytest.param(create_content_block(0, [""]), id="empty-text-delta"),
+    ],
+)
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
+async def test_function_call_with_silent_response(
+    mock_get_tools: AsyncMock,
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    events: list[RawMessageStreamEvent],
+) -> None:
+    """Test an empty completed turn acknowledges tool results without retries."""
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = probatio.Schema({})
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
+    mock_create_stream.return_value = [
+        create_tool_use_block(0, "toolu_test", "test_tool", ["{}"]),
+        events,
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function silently",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == ""
+    assert not result.continue_conversation
+    assert mock_create_stream.await_count == 2
+    mock_tool.async_call.assert_awaited_once()
 
 
 @patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
