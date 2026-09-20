@@ -13,7 +13,6 @@ from uiprotect.data import (
     FobAwayState,
     FobButton,
     ModelType,
-    PublicBootstrap,
     PublicFobFeatureFlags,
     WSAction,
 )
@@ -32,7 +31,13 @@ from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .utils import MockUFPFixture, enable_entity, init_entry, public_device_ws_message
+from .utils import (
+    MockUFPFixture,
+    enable_entity,
+    init_entry,
+    make_public_bootstrap,
+    public_device_ws_message,
+)
 
 FOB_ID = "fob-id-1"
 FOB_MAC = "AA:BB:CC:DD:EE:F0"
@@ -78,14 +83,8 @@ def _make_fob(
 
 def _make_public_bootstrap(fob: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given fob."""
-    pb = Mock(spec=PublicBootstrap)
+    pb = make_public_bootstrap()
     pb.fobs = {fob.id: fob} if fob is not None else {}
-    pb.cameras = {}
-    pb.lights = {}
-    pb.relays = {}
-    pb.sirens = {}
-    pb.arm_mode = None
-    pb.arm_profiles = {}
     pb.nvr = Mock()
     pb.nvr.mac = "aa:bb:cc:dd:ee:ff"
     pb.nvr.name = "Test NVR"

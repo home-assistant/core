@@ -686,10 +686,21 @@ async def async_setup_entry(
                 ProtectFobSensor(data, device, description)
                 for description in FOB_SENSORS
             )
+            return
+        async_add_entities(
+            async_all_device_entities(
+                data,
+                ProtectDeviceSensor,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                public_device=device,
+            )
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
+
+    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.
@@ -701,12 +712,15 @@ async def async_setup_entry(
             for description in FOB_SENSORS
         )
 
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
     if api.is_public_only:
+        # The remaining sensors read the private bootstrap; the migrated ones
+        # are built from the public devices instead.
+        async_add_entities(
+            async_all_device_entities(
+                data, ProtectDeviceSensor, model_descriptions=_MODEL_DESCRIPTIONS
+            )
+        )
         return
-
-    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
