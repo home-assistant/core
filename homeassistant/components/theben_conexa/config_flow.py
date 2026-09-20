@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 import aiohttp
+from probatio import Required, Schema
 from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -15,11 +15,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = Schema(
     {
-        vol.Required(CONF_HOST, description={"suggested_value": "192.168.1.200"}): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        Required(CONF_HOST, description={"suggested_value": "192.168.1.200"}): str,
+        Required(CONF_USERNAME): str,
+        Required(CONF_PASSWORD): str,
     }
 )
 
