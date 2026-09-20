@@ -5,8 +5,8 @@ from enum import StrEnum
 from typing import Final
 
 import aiohttp
+import probatio
 from pyomie import QUARTER_HOURLY_START_DATE
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
@@ -34,12 +34,12 @@ class Country(StrEnum):
 
 
 SERVICE_GET_PRICES_FOR_DATE: Final = "get_prices_for_date"
-SERVICE_GET_PRICES_SCHEMA: Final = vol.Schema(
+SERVICE_GET_PRICES_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_DATE): cv.date,
-        vol.Required(ATTR_COUNTRIES, default=[Country.ES, Country.PT]): vol.All(
-            cv.ensure_list, [vol.Coerce(Country)]
-        ),
+        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Required(
+            ATTR_COUNTRIES, default=[Country.ES, Country.PT]
+        ): probatio.All(cv.ensure_list, [probatio.Coerce(Country)]),
     }
 )
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -89,14 +89,14 @@ class RestoreBackupView(NoAuthBaseOnboardingView):
     name = "api:onboarding:backup:restore"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("backup_id"): str,
-                vol.Required("agent_id"): str,
-                vol.Optional("password"): str,
-                vol.Optional("restore_addons"): [str],
-                vol.Optional("restore_database", default=True): bool,
-                vol.Optional("restore_folders"): [vol.Coerce(Folder)],
+                probatio.Required("backup_id"): str,
+                probatio.Required("agent_id"): str,
+                probatio.Optional("password"): str,
+                probatio.Optional("restore_addons"): [str],
+                probatio.Optional("restore_database", default=True): bool,
+                probatio.Optional("restore_folders"): [probatio.Coerce(Folder)],
             }
         )
     )

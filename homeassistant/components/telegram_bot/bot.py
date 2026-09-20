@@ -1083,7 +1083,20 @@ class TelegramNotificationService:
                     translation_key="invalid_directory_path",
                     translation_placeholders={"directory_path": directory_path},
                 ) from err
+
+            # A caller supplied destination has to sit inside
+            # allowlist_external_dirs, the boundary load_data already applies to
+            # reads. is_allowed_path resolves the path first, so a symlink inside
+            # an allowed directory that points out of it is rejected too.
+            if not await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, directory_path
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="allowlist_external_dirs_error",
+                )
         else:
+            # The integration's own directory needs no allowlist entry.
             directory_path = self.hass.config.path(DOMAIN)
 
         if file_name:

@@ -12,7 +12,7 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING, Any, override
 
 import aiosmtplib
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -94,19 +94,21 @@ RETRIES = 2
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
-        vol.Required(CONF_SENDER): vol.Email(),
-        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+        probatio.Required(CONF_RECIPIENT): probatio.All(
+            cv.ensure_list, [probatio.Email()]
+        ),
+        probatio.Required(CONF_SENDER): probatio.Email(),
+        probatio.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): probatio.In(
             ENCRYPTION_OPTIONS
         ),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SENDER_NAME): cv.string,
-        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_SENDER_NAME): cv.string,
+        probatio.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 

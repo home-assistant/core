@@ -302,7 +302,7 @@ async def test_reauth_abort(
     # Simulate failure looking up existing spreadsheet
     mock_open = Mock()
     mock_open.return_value.id = SHEET_ID
-    mock_open.side_effect = GSpreadException()
+    mock_open.side_effect = PermissionError()
     mock_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(

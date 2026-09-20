@@ -6,7 +6,7 @@ from aidot.client import AidotClient
 from aidot.const import CONF_ID, DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
 from aidot.exceptions import AidotUserOrPassIncorrect
 from aiohttp import ClientError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -15,9 +15,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_COUNTRY_CODE,
             default=DEFAULT_COUNTRY_CODE,
         ): selector.CountrySelector(
@@ -25,8 +25,8 @@ DATA_SCHEMA = vol.Schema(
                 countries=SUPPORTED_COUNTRY_CODES,
             )
         ),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

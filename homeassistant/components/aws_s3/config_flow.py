@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PREFIX
@@ -29,17 +29,17 @@ from .const import (
     DOMAIN,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+        probatio.Required(CONF_ACCESS_KEY_ID): cv.string,
+        probatio.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_BUCKET): cv.string,
-        vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
-        ),
-        vol.Optional(CONF_PREFIX, default=""): cv.string,
+        probatio.Required(CONF_BUCKET): cv.string,
+        probatio.Required(
+            CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL
+        ): TextSelector(config=TextSelectorConfig(type=TextSelectorType.URL)),
+        probatio.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 

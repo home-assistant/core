@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -25,10 +25,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
-SERVICE_LIST_SCHEMA = vol.Schema({})
-SERVICE_SORT_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
+SERVICE_ITEM_SCHEMA = probatio.Schema({probatio.Required(ATTR_NAME): cv.string})
+SERVICE_LIST_SCHEMA = probatio.Schema({})
+SERVICE_SORT_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
 )
 
 
