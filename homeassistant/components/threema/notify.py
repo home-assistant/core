@@ -62,7 +62,6 @@ class ThreemaNotifyEntity(NotifyEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the notify entity."""
-        self._entry = entry
         self._client = entry.runtime_data
         self._recipient_id: str = subentry.data[CONF_RECIPIENT]
 
@@ -91,7 +90,6 @@ class ThreemaNotifyEntity(NotifyEntity):
         try:
             await self._client.send_text_message(self._recipient_id, text)
         except ThreemaAuthError as err:
-            self._entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",

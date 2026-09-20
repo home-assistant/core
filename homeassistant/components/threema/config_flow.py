@@ -1,6 +1,5 @@
 """Config flow for Threema Gateway integration."""
 
-from collections.abc import Mapping
 import logging
 import re
 from typing import Any, override
@@ -226,57 +225,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="credentials",
             data_schema=schema,
             errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle a reauth flow triggered by an expired or invalid API secret."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm new API secret during reauthentication."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            new_api_secret = user_input[CONF_API_SECRET].strip()
-            client = ThreemaAPIClient(
-                self.hass,
-                gateway_id=reauth_entry.data[CONF_GATEWAY_ID],
-                api_secret=new_api_secret,
-                private_key=reauth_entry.data.get(CONF_PRIVATE_KEY),
-            )
-            try:
-                await client.validate_credentials()
-            except ThreemaAuthError:
-                errors["base"] = "invalid_auth"
-            except ThreemaConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error during reauth")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_SECRET: new_api_secret},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_SECRET): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
-                }
-            ),
-            errors=errors,
-            description_placeholders={
-                "gateway_id": reauth_entry.data[CONF_GATEWAY_ID],
-            },
         )
 
 
