@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register Google Assistant services."""
 
     async def request_sync_service_handler(call: ServiceCall) -> None:

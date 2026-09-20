@@ -1,7 +1,7 @@
 """Test the UniFi Protect number platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.data import (
@@ -10,11 +10,12 @@ from uiprotect.data import (
     DeviceState,
     IRLEDMode,
     Light,
+    Permission,
     RingSetting,
     Sensor,
 )
 
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
     LIGHT_NUMBERS,
@@ -180,9 +181,11 @@ async def test_number_light_sensitivity(
         hass, Platform.NUMBER, light, description
     )
 
-    with patch_ufp_method(
-        light, "set_sensitivity_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_light(light)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_sensitivity", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "number",
             "set_value",
@@ -241,9 +244,11 @@ async def test_number_light_duration(
         hass, Platform.NUMBER, light, description
     )
 
-    with patch_ufp_method(
-        light, "set_duration_public", new_callable=AsyncMock
-    ) as mock_method:
+    public = make_public_light(light)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_duration", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "number",
             "set_value",
@@ -327,14 +332,16 @@ async def test_number_light_duration_none(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("description", CAMERA_NUMBERS)
+@pytest.mark.parametrize(
+    "description", [d for d in CAMERA_NUMBERS if not d.is_public_value]
+)
 async def test_number_camera_simple(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     camera_all_features: Camera,
     description: ProtectNumberEntityDescription,
 ) -> None:
-    """Tests simple numbers for cameras using the all features fixture."""
+    """Tests the private-API numbers for cameras using the all features fixture."""
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera_all_features])
     assert_entity_counts(hass, Platform.NUMBER, 7, 7)
@@ -348,6 +355,33 @@ async def test_number_camera_simple(
     with patch_ufp_method(
         camera_all_features, description.ufp_set_method, new_callable=AsyncMock
     ) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 1.0},
+            blocking=True,
+        )
+
+        mock_method.assert_called_once_with(1.0)
+
+
+async def test_number_camera_mic_volume_set(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all_features: Camera
+) -> None:
+    """The migrated mic volume number writes through the public object."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [camera_all_features])
+
+    description = next(d for d in CAMERA_NUMBERS if d.key == "mic_level")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera_all_features, description
+    )
+
+    public = make_public_camera(camera_all_features)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(public, "set_mic_volume", new_callable=AsyncMock) as mock_method:
         await hass.services.async_call(
             "number",
             "set_value",
@@ -439,6 +473,35 @@ async def test_number_sense_sensitivity_public_value(
     assert hass.states.get(entity_id).state == "42"
 
 
+async def test_number_sense_sensitivity_ignores_local_permissions(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A read-only local user keeps the motion sensitivity number.
+
+    It writes through the API key, so the local user's write bit must not gate it.
+    Its read-only mirror stays until the deprecation runs out.
+    """
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "sensor:read:*"})
+    ]
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, sensor_all, SENSE_NUMBERS[0]
+    )
+    assert entity_registry.async_get(entity_id) is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{sensor_all.mac}_sensitivity"
+        )
+        is not None
+    )
+
+
 async def test_number_sense_sensitivity_set(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ) -> None:
@@ -451,8 +514,12 @@ async def test_number_sense_sensitivity_set(
         hass, Platform.NUMBER, sensor_all, SENSE_NUMBERS[0]
     )
 
-    with patch_ufp_method(
-        sensor_all, "set_motion_sensitivity_public", new_callable=AsyncMock
+    public = make_public_sensor(sensor_all)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    with patch.object(
+        public, "set_motion_sensitivity", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "number",

@@ -5,8 +5,8 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import noaa_coops as coops
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -39,10 +39,12 @@ UNIT_SYSTEMS = ["english", "metric"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
-        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): probatio.In(
+            TIMEZONES
+        ),
+        probatio.Optional(CONF_UNIT_SYSTEM): probatio.In(UNIT_SYSTEMS),
     }
 )
 

@@ -117,7 +117,7 @@ def mock_dest_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_action_call() -> Generator[Callable]:
+def mock_action_call() -> Generator[Callable[..., None]]:
     """Override Action.__call__."""
 
     async def fake_call(self, **kwargs):
@@ -133,7 +133,7 @@ def mock_action_call() -> Generator[Callable]:
 
 
 @pytest.fixture
-def mock_action_list_call() -> Generator[Callable]:
+def mock_action_list_call() -> Generator[Callable[..., None]]:
     """Override ActionList.__call__."""
 
     async def fake_list_call(self, **kwargs):

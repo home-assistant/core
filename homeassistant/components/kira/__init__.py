@@ -3,9 +3,9 @@
 import logging
 import os
 
+import probatio
+from probatio.error import Error as ProbatioError
 import pykira
-import voluptuous as vol
-from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant.const import (
@@ -37,42 +37,42 @@ CONF_REMOTE = "remote"
 
 CODES_YAML = f"{DOMAIN}_codes.yaml"
 
-CODE_SCHEMA = vol.Schema(
+CODE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_CODE): cv.string,
-        vol.Optional(CONF_TYPE): cv.string,
-        vol.Optional(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_REPEAT): cv.positive_int,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_CODE): cv.string,
+        probatio.Optional(CONF_TYPE): cv.string,
+        probatio.Optional(CONF_DEVICE): cv.string,
+        probatio.Optional(CONF_REPEAT): cv.positive_int,
     }
 )
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DOMAIN): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
-REMOTE_SCHEMA = vol.Schema(
+REMOTE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DOMAIN): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_SENSORS): [SENSOR_SCHEMA],
-                vol.Optional(CONF_REMOTES): [REMOTE_SCHEMA],
+                probatio.Optional(CONF_SENSORS): [SENSOR_SCHEMA],
+                probatio.Optional(CONF_REMOTES): [REMOTE_SCHEMA],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -85,7 +85,7 @@ def load_codes(path):
         for code in data:
             try:
                 codes.append(CODE_SCHEMA(code))
-            except VoluptuousError as exception:
+            except ProbatioError as exception:
                 # keep going
                 _LOGGER.warning("KIRA code invalid data: %s", exception)
     else:

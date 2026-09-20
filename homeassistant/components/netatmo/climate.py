@@ -3,9 +3,9 @@
 import logging
 from typing import Any, cast, override
 
+import probatio
 from pyatmo.modules import NATherm1
 from pyatmo.modules.device_types import DeviceType
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -140,34 +140,34 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_SCHEDULE,
-        {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
+        {probatio.Required(ATTR_SCHEDULE_NAME): cv.string},
         "_async_service_set_schedule",
     )
     platform.async_register_entity_service(
         SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
         {
-            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
+            probatio.Required(ATTR_PRESET_MODE): probatio.In(THERM_MODES),
+            probatio.Required(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_preset_mode_with_end_datetime",
     )
     platform.async_register_entity_service(
         SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
         {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
+            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
             ),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
+            probatio.Required(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_temperature_with_end_datetime",
     )
     platform.async_register_entity_service(
         SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
         {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
+            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
             ),
-            vol.Required(ATTR_TIME_PERIOD): vol.All(
+            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
                 cv.time_period,
                 cv.positive_timedelta,
             ),
@@ -432,9 +432,13 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._hg_temperature = self.home.get_hg_temp()
         self._attr_current_temperature = self.device.therm_measured_temperature
         self._attr_target_temperature = self.device.therm_setpoint_temperature
-        self._attr_preset_mode = NETATMO_MAP_PRESET[
-            getattr(self.device, "therm_setpoint_mode", STATE_NETATMO_SCHEDULE)
-        ]
+
+        therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
+
+        if therm_setpoint_mode is None:
+            therm_setpoint_mode = STATE_NETATMO_SCHEDULE
+
+        self._attr_preset_mode = NETATMO_MAP_PRESET[therm_setpoint_mode]
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 

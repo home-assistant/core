@@ -33,13 +33,14 @@ ROOM_THERMOSTATS = {
 
 
 async def add_climate_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee climate entities."""
     async_add_entities(
-        HomeeClimate(node, config_entry)
+        HomeeClimate(hass, node, config_entry)
         for node in nodes
         if node.profile in CLIMATE_PROFILES
     )
@@ -52,7 +53,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the Homee platform for the climate component."""
 
-    await setup_homee_platform(add_climate_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_climate_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
@@ -61,9 +64,11 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
 
-    def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: HomeeNode, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize a Homee climate entity."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
 
         (
             self._attr_supported_features,

@@ -116,7 +116,9 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
     assert config_entry.unique_id == "ZXXX12345"
 
     # verify hub device is registered correctly
-    hub = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
+    hub = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ZXXX12345"), config_entry.entry_id
+    )
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"
@@ -201,8 +203,40 @@ async def test_old_identifiers_are_removed(
     assert config_entry.unique_id == "ZXXX12345"
 
     # verify the device info is cleaned up
-    assert device_registry.async_get_device(identifiers={old_identifers}) is None
-    assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            old_identifers, config_entry.entry_id
+        )
+        is None
+    )
+    assert device_registry.async_get_device_by_identifier(
+        new_identifiers, config_entry.entry_id
+    )
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that child devices link to the hub via via_device_id."""
+    config_entry = await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test-hub-id"), config_entry.entry_id
+    )
+    assert hub_device is not None
+
+    entity = entity_registry.entities["fan.name_1"]
+    child_device = device_registry.async_get(entity.device_id)
+    assert child_device is not None
+    assert child_device.via_device_id == hub_device.id
 
 
 async def test_smart_by_bond_device_suggested_area(
@@ -245,7 +279,9 @@ async def test_smart_by_bond_device_suggested_area(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "KXXX12345"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "KXXX12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "KXXX12345"), config_entry.entry_id
+    )
     assert device is not None
     assert device.area_id == area_registry.async_get_area_by_name("Den").id
 
@@ -295,7 +331,9 @@ async def test_bridge_device_suggested_area(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ZXXX12345"), config_entry.entry_id
+    )
     assert device is not None
     assert device.area_id == area_registry.async_get_area_by_name("Office").id
 
@@ -322,28 +360,28 @@ async def test_device_remove_devices(
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id", "remove-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
     )
-    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
     hub_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id")},
     )
-    response = await client.remove_device(hub_device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(hub_device_entry.id)
     assert not response["success"]
 
 

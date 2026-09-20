@@ -4,7 +4,6 @@ import datetime as dt
 import logging
 from typing import override
 
-from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
 from reolink_aio.typings import VOD_trigger
 
@@ -218,7 +217,7 @@ class ReolinkVODMediaSource(MediaSource):
                 if device.name_by_user is not None:
                     device_name = device.name_by_user
 
-                if host.api.model in DUAL_LENS_MODELS:
+                if host.api.is_dual_lens:
                     device_name = f"{device_name} lens {ch}"
 
                 children.append(
@@ -305,7 +304,7 @@ class ReolinkVODMediaSource(MediaSource):
             )
 
         title = host.api.camera_name(channel)
-        if host.api.model in DUAL_LENS_MODELS:
+        if host.api.is_dual_lens:
             title = f"{host.api.camera_name(channel)} lens {channel}"
 
         return BrowseMediaSource(
@@ -355,7 +354,7 @@ class ReolinkVODMediaSource(MediaSource):
         ]
 
         title = f"{host.api.camera_name(channel)} {res_name(stream)}"
-        if host.api.model in DUAL_LENS_MODELS:
+        if host.api.is_dual_lens:
             title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)}"
 
         return BrowseMediaSource(
@@ -444,7 +443,7 @@ class ReolinkVODMediaSource(MediaSource):
         title = (
             f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
         )
-        if host.api.model in DUAL_LENS_MODELS:
+        if host.api.is_dual_lens:
             title = (
                 f"{host.api.camera_name(channel)} lens"
                 f" {channel} {res_name(stream)}"

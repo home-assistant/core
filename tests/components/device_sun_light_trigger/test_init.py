@@ -216,6 +216,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert await async_setup_component(

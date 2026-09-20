@@ -9,6 +9,7 @@ from pyblu import Player
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -118,8 +119,13 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
                 manufacturer=sync_status.brand,
                 model=sync_status.model_name,
                 model_id=sync_status.model,
-                via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
+            # The leader (default-port) device is a separate config entry that may
+            # not be loaded yet; link to it only if it already exists.
+            if leader_devices := dr.async_get(coordinator.hass).async_get_devices(
+                identifiers={(DOMAIN, format_mac(sync_status.mac))}
+            ):
+                self._attr_device_info["via_device_id"] = leader_devices[0].id
 
     @override
     async def async_press(self) -> None:
