@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-from .conftest import MOCK_STORAGE_LIST
+from .conftest import MOCK_STORAGE_ITEMS
 
 
 async def test_root_lists_camera(
@@ -65,9 +65,7 @@ async def test_browse_storage(
     assert len(result.children) == 8
     assert result.as_dict() == snapshot(exclude=props("media_content_id"))
     by_id = {child.identifier.rsplit(":", 1)[1]: child for child in result.children}
-    assert list(by_id) == [
-        item["media_id"] for item in reversed(MOCK_STORAGE_LIST["items"])
-    ]
+    assert list(by_id) == [item["media_id"] for item in reversed(MOCK_STORAGE_ITEMS)]
     assert "motion_detected" in by_id["88888888-8888-8888-8888-888888888888"].title
     assert "5s" in by_id["88888888-8888-8888-8888-888888888888"].title
     assert "manual" in by_id["44444444-4444-4444-4444-444444444444"].title
@@ -96,45 +94,11 @@ async def test_browse_storage_relative_thumbnail(
     )
 
 
-async def test_browse_storage_pagination(
-    hass: HomeAssistant, mock_camera_storage: Mock
-) -> None:
-    """Test browsing follows Storage.List pagination."""
-    mock_camera_storage.call_rpc = AsyncMock(
-        side_effect=[
-            {
-                "total": 8,
-                "offset": 0,
-                "rev": 8,
-                "items": MOCK_STORAGE_LIST["items"][:5],
-            },
-            {
-                "total": 8,
-                "offset": 5,
-                "rev": 8,
-                "items": MOCK_STORAGE_LIST["items"][5:],
-            },
-        ]
-    )
-    assert await async_setup_component(hass, "media_source", {})
-    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
-
-    result = await media_source.async_browse_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0"
-    )
-
-    assert result.children is not None
-    assert len(result.children) == 8
-    assert mock_camera_storage.call_rpc.await_count == 2
-
-
 async def test_browse_storage_empty(
     hass: HomeAssistant, mock_camera_storage: Mock
 ) -> None:
     """Test browsing empty storage returns no children."""
-    mock_camera_storage.call_rpc = AsyncMock(
-        return_value={"total": 0, "offset": 0, "rev": 1, "items": []}
-    )
+    mock_camera_storage.get_storage_list = AsyncMock(return_value=[])
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
@@ -145,26 +109,20 @@ async def test_browse_storage_empty(
     assert result.children == []
 
 
-@pytest.mark.parametrize(
-    ("index", "mime_type"),
-    [
-        pytest.param(0, "video/mp4", id="video"),
-        pytest.param(2, "image/jpeg", id="image"),
-    ],
-)
+@pytest.mark.parametrize(("index", "mime_type"), [(0, "video/mp4"), (2, "image/jpeg")])
 async def test_resolve_media(
     hass: HomeAssistant, mock_camera_storage: Mock, index: int, mime_type: str
 ) -> None:
     """Test resolving storage items returns the pre-signed URL and mime type."""
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
-    media_id = MOCK_STORAGE_LIST["items"][index]["media_id"]
+    media_id = MOCK_STORAGE_ITEMS[index]["media_id"]
 
     result = await media_source.async_resolve_media(
         hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
     )
 
-    assert result.url == MOCK_STORAGE_LIST["items"][index]["url"]
+    assert result.url == MOCK_STORAGE_ITEMS[index]["url"]
     assert result.mime_type == mime_type
 
 
@@ -218,18 +176,12 @@ async def test_resolve_bad_identifier(
     assert excinfo.value.translation_key == "unexpected_identifier"
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        pytest.param(DeviceConnectionError(), id="connection_error"),
-        pytest.param(RpcCallError(999), id="rpc_error"),
-    ],
-)
+@pytest.mark.parametrize("side_effect", [DeviceConnectionError(), RpcCallError(999)])
 async def test_browse_storage_unavailable(
     hass: HomeAssistant, mock_camera_storage: Mock, side_effect: Exception
 ) -> None:
     """Test browsing storage raises when the device cannot be reached."""
-    mock_camera_storage.call_rpc = AsyncMock(side_effect=side_effect)
+    mock_camera_storage.get_storage_list = AsyncMock(side_effect=side_effect)
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
@@ -245,7 +197,7 @@ async def test_browse_storage_auth_error(
     hass: HomeAssistant, mock_camera_storage: Mock
 ) -> None:
     """Test browsing storage starts reauth on authentication failure."""
-    mock_camera_storage.call_rpc = AsyncMock(side_effect=InvalidAuthError)
+    mock_camera_storage.get_storage_list = AsyncMock(side_effect=InvalidAuthError)
     assert await async_setup_component(hass, "media_source", {})
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
@@ -285,7 +237,7 @@ async def test_resolve_storage_private(
     new_status = deepcopy(mock_camera_storage.status)
     new_status["camera:0"]["privacy"] = True
     monkeypatch.setattr(mock_camera_storage, "status", new_status)
-    media_id = MOCK_STORAGE_LIST["items"][0]["media_id"]
+    media_id = MOCK_STORAGE_ITEMS[0]["media_id"]
 
     with pytest.raises(Unresolvable) as excinfo:
         await media_source.async_resolve_media(

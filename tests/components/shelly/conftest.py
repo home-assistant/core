@@ -491,108 +491,473 @@ MOCK_CAMERA_STATUS = {
     }
 }
 
-MOCK_STORAGE_LIST = {
-    "total": 8,
-    "offset": 0,
-    "rev": 8,
-    "items": [
-        {
-            "media_id": "11111111-1111-1111-1111-111111111111",
-            "type": "video",
+MOCK_STORAGE_ITEMS = [
+    {
+        "media_id": "11111111-1111-1111-1111-111111111111",
+        "type": "video",
+        "ts": 1750000000.0,
+        "duration": 12,
+        "size": 123456,
+        "url": "http://192.168.1.37/storage/0/aaaa1111/MOV_0001.mp4",
+        "thumbnail_url": "http://192.168.1.37/storage/0/aaaa1111/thumb_0001.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
             "ts": 1750000000.0,
-            "duration": 12,
-            "size": 123456,
-            "url": "http://192.168.1.37/storage/0/aaaa1111/MOV_0001.mp4",
-            "thumbnail_url": "http://192.168.1.37/storage/0/aaaa1111/thumb_0001.jpg",
-            "trigger": {
-                "component": "camerazone:200",
-                "event": "motion_detected",
-                "ts": 1750000000.0,
-            },
         },
-        {
-            "media_id": "22222222-2222-2222-2222-222222222222",
-            "type": "video",
+    },
+    {
+        "media_id": "22222222-2222-2222-2222-222222222222",
+        "type": "video",
+        "ts": 1750000060.0,
+        "duration": 30,
+        "size": 234567,
+        "url": "http://192.168.1.37/storage/0/bbbb2222/MOV_0002.mp4",
+        "thumbnail_url": "/storage/0/bbbb2222/thumb_0002.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
             "ts": 1750000060.0,
-            "duration": 30,
-            "size": 234567,
-            "url": "http://192.168.1.37/storage/0/bbbb2222/MOV_0002.mp4",
-            "thumbnail_url": "/storage/0/bbbb2222/thumb_0002.jpg",
-            "trigger": {
-                "component": "camerazone:200",
-                "event": "motion_detected",
-                "ts": 1750000060.0,
-            },
         },
-        {
-            "media_id": "33333333-3333-3333-3333-333333333333",
-            "type": "image",
-            "ts": 1750000120.0,
-            "size": 34567,
-            "url": "http://192.168.1.37/storage/0/cccc3333/IMG_0003.jpg",
-            "thumbnail_url": "/storage/0/cccc3333/thumb_0003.jpg",
-        },
-        {
-            "media_id": "44444444-4444-4444-4444-444444444444",
-            "type": "video",
-            "ts": 1750000180.0,
-            "duration": 15,
-            "size": 345678,
-            "url": "http://192.168.1.37/storage/0/dddd4444/MOV_0004.mp4",
-            "thumbnail_url": "http://192.168.1.37/storage/0/dddd4444/thumb_0004.jpg",
-        },
-        {
-            "media_id": "55555555-5555-5555-5555-555555555555",
-            "type": "video",
+    },
+    {
+        "media_id": "33333333-3333-3333-3333-333333333333",
+        "type": "image",
+        "ts": 1750000120.0,
+        "size": 34567,
+        "url": "http://192.168.1.37/storage/0/cccc3333/IMG_0003.jpg",
+        "thumbnail_url": "/storage/0/cccc3333/thumb_0003.jpg",
+    },
+    {
+        "media_id": "44444444-4444-4444-4444-444444444444",
+        "type": "video",
+        "ts": 1750000180.0,
+        "duration": 15,
+        "size": 345678,
+        "url": "http://192.168.1.37/storage/0/dddd4444/MOV_0004.mp4",
+        "thumbnail_url": "http://192.168.1.37/storage/0/dddd4444/thumb_0004.jpg",
+    },
+    {
+        "media_id": "55555555-5555-5555-5555-555555555555",
+        "type": "video",
+        "ts": 1750000240.0,
+        "duration": 8,
+        "size": 456789,
+        "url": "http://192.168.1.37/storage/0/eeee5555/MOV_0005.mp4",
+        "thumbnail_url": "/storage/0/eeee5555/thumb_0005.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
             "ts": 1750000240.0,
-            "duration": 8,
-            "size": 456789,
-            "url": "http://192.168.1.37/storage/0/eeee5555/MOV_0005.mp4",
-            "thumbnail_url": "/storage/0/eeee5555/thumb_0005.jpg",
-            "trigger": {
-                "component": "camerazone:200",
-                "event": "motion_detected",
-                "ts": 1750000240.0,
-            },
         },
-        {
-            "media_id": "66666666-6666-6666-6666-666666666666",
-            "type": "image",
+    },
+    {
+        "media_id": "66666666-6666-6666-6666-666666666666",
+        "type": "image",
+        "ts": 1750000300.0,
+        "size": 45678,
+        "url": "http://192.168.1.37/storage/0/ffff6666/IMG_0006.jpg",
+        "thumbnail_url": "http://192.168.1.37/storage/0/ffff6666/thumb_0006.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
             "ts": 1750000300.0,
-            "size": 45678,
-            "url": "http://192.168.1.37/storage/0/ffff6666/IMG_0006.jpg",
-            "thumbnail_url": "http://192.168.1.37/storage/0/ffff6666/thumb_0006.jpg",
-            "trigger": {
-                "component": "camerazone:200",
-                "event": "motion_detected",
-                "ts": 1750000300.0,
-            },
         },
-        {
-            "media_id": "77777777-7777-7777-7777-777777777777",
-            "type": "video",
-            "ts": 1750000360.0,
-            "duration": 20,
-            "size": 567890,
-            "url": "http://192.168.1.37/storage/0/gggg7777/MOV_0007.mp4",
-            "thumbnail_url": "http://192.168.1.37/storage/0/gggg7777/thumb_0007.jpg",
-        },
-        {
-            "media_id": "88888888-8888-8888-8888-888888888888",
-            "type": "video",
+    },
+    {
+        "media_id": "77777777-7777-7777-7777-777777777777",
+        "type": "video",
+        "ts": 1750000360.0,
+        "duration": 20,
+        "size": 567890,
+        "url": "http://192.168.1.37/storage/0/gggg7777/MOV_0007.mp4",
+        "thumbnail_url": "http://192.168.1.37/storage/0/gggg7777/thumb_0007.jpg",
+    },
+    {
+        "media_id": "88888888-8888-8888-8888-888888888888",
+        "type": "video",
+        "ts": 1750000420.0,
+        "duration": 5,
+        "size": 678901,
+        "url": "http://192.168.1.37/storage/0/hhhh8888/MOV_0008.mp4",
+        "thumbnail_url": "/storage/0/hhhh8888/thumb_0008.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
             "ts": 1750000420.0,
-            "duration": 5,
-            "size": 678901,
-            "url": "http://192.168.1.37/storage/0/hhhh8888/MOV_0008.mp4",
-            "thumbnail_url": "/storage/0/hhhh8888/thumb_0008.jpg",
-            "trigger": {
-                "component": "camerazone:200",
-                "event": "motion_detected",
-                "ts": 1750000420.0,
-            },
         },
-    ],
+    },
+]
+
+MOCK_SCRIPTS = [
+    """"
+function eventHandler(event, userdata) {
+  if (typeof event.component !== "string")
+    return;
+
+  let component = event.component.substring(0, 5);
+  if (component === "input") {
+    let id = Number(event.component.substring(6));
+    Shelly.emitEvent("input_event", { id: id });
+  }
 }
+
+Shelly.addEventHandler(eventHandler);
+Shelly.emitEvent("script_start");
+""",
+    'console.log("Hello World!")',
+    BLE_CODE.replace(VAR_ACTIVE, "true")
+    .replace(VAR_EVENT_TYPE, BLE_SCAN_RESULT_EVENT)
+    .replace(VAR_VERSION, str(BLE_SCAN_RESULT_VERSION)),
+]
+
+
+@pytest.fixture(autouse=True)
+def mock_coap():
+    """Mock out coap."""
+    with patch(
+        "homeassistant.components.shelly.utils.COAP",
+        return_value=Mock(
+            initialize=AsyncMock(),
+            close=Mock(),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ws_server():
+    """Mock out ws_server."""
+    with patch("homeassistant.components.shelly.utils.get_ws_context"):
+        yield
+
+
+@pytest.fixture
+def events(hass: HomeAssistant):
+    """Yield caught shelly_click events."""
+    return async_capture_events(hass, EVENT_SHELLY_CLICK)
+
+
+@pytest.fixture
+async def mock_block_device(model: str = MODEL_1):
+    """Mock block (Gen1, CoAP) device."""
+    with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
+        _update_listener = None
+
+        def _update():
+            _update_listener({}, BlockUpdateType.COAP_PERIODIC)
+
+        def _update_reply():
+            _update_listener({}, BlockUpdateType.COAP_REPLY)
+
+        def _online():
+            _update_listener({}, BlockUpdateType.ONLINE)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
+
+        device = Mock(
+            spec=BlockDevice,
+            blocks=MOCK_BLOCKS,
+            settings=MOCK_SETTINGS,
+            shelly=MOCK_SHELLY_COAP,
+            version="1.11.0",
+            status=MOCK_STATUS_COAP,
+            firmware_version="some fw string",
+            initialized=True,
+            model=model,
+            gen=1,
+            ip_address="10.10.10.11",
+        )
+        type(device).name = PropertyMock(return_value="Test name")
+        block_device_mock.return_value = device
+        block_device_mock.return_value.mock_update = Mock(side_effect=_update)
+        block_device_mock.return_value.mock_update_reply = Mock(
+            side_effect=_update_reply
+        )
+        block_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        block_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
+        )
+
+        yield block_device_mock.return_value
+
+
+def _mock_rpc_device(version: str | None = None):
+    """Mock rpc (Gen2, Websocket) device."""
+    device = Mock(
+        spec=RpcDevice,
+        config=MOCK_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY_RPC,
+        version=version or "1.0.0",
+        hostname="test-host",
+        status=MOCK_STATUS_RPC,
+        firmware_version="some fw string",
+        initialized=True,
+        connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
+        xmod_info={},
+        zigbee_enabled=False,
+        zigbee_firmware=False,
+        ip_address="10.10.10.10",
+        wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_getconfig=AsyncMock(return_value={}),
+        ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        shutdown=AsyncMock(),
+    )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
+
+
+def _mock_blu_rtv_device(version: str | None = None):
+    """Mock rpc (Gen2, Websocket) device."""
+    device = Mock(
+        spec=RpcDevice,
+        config=MOCK_CONFIG | MOCK_BLU_TRV_REMOTE_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY_RPC,
+        version=version or "1.0.0",
+        hostname="test-host",
+        status=MOCK_STATUS_RPC | MOCK_BLU_TRV_REMOTE_STATUS,
+        firmware_version="some fw string",
+        initialized=True,
+        connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
+        xmod_info={},
+        wifi_setconfig=AsyncMock(return_value={}),
+        ble_getconfig=AsyncMock(return_value={}),
+        ble_setconfig=AsyncMock(return_value={}),
+    )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
+
+
+@pytest.fixture
+async def mock_rpc_device():
+    """Mock rpc (Gen2, Websocket) device with BLE support."""
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
+    ):
+        _update_listener = None
+
+        def _update():
+            _update_listener({}, RpcUpdateType.STATUS)
+
+        def _event():
+            _update_listener({}, RpcUpdateType.EVENT)
+
+        def _online():
+            _update_listener({}, RpcUpdateType.ONLINE)
+
+        def _disconnected():
+            _update_listener({}, RpcUpdateType.DISCONNECTED)
+
+        def _initialized():
+            _update_listener({}, RpcUpdateType.INITIALIZED)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
+
+        current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def update_cover_status(cover_id: int):
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
+
+        device = _mock_rpc_device()
+        rpc_device_mock.return_value = device
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=_event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialized)
+        rpc_device_mock.return_value.update_cover_status = AsyncMock(
+            side_effect=update_cover_status
+        )
+        rpc_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
+        )
+
+        yield rpc_device_mock.return_value
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Auto mock bluetooth."""
+
+
+@pytest.fixture(autouse=True)
+async def mock_blu_trv():
+    """Mock BLU TRV."""
+
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as blu_trv_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
+    ):
+
+        def update():
+            blu_trv_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.STATUS
+            )
+
+        device = _mock_blu_rtv_device()
+        blu_trv_device_mock.return_value = device
+        blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
+
+        yield blu_trv_device_mock.return_value
+
+
+def _mock_sleepy_not_initialized_rpc_device():
+    """Mock sleepy NotInitialized rpc (Gen2+, Websocket) device."""
+    device = Mock(spec=RpcDevice, initialized=False, connected=False)
+    type(device).requires_auth = PropertyMock(side_effect=NotInitialized)
+    type(device).status = PropertyMock(side_effect=NotInitialized)
+    type(device).event = PropertyMock(side_effect=NotInitialized)
+    type(device).config = PropertyMock(side_effect=NotInitialized)
+    type(device).shelly = PropertyMock(side_effect=NotInitialized)
+    type(device).gen = PropertyMock(side_effect=NotInitialized)
+    type(device).firmware_version = PropertyMock(side_effect=NotInitialized)
+    type(device).version = PropertyMock(side_effect=NotInitialized)
+    type(device).model = PropertyMock(side_effect=NotInitialized)
+    type(device).xmod_info = PropertyMock(side_effect=NotInitialized)
+    type(device).hostname = PropertyMock(side_effect=NotInitialized)
+    type(device).name = PropertyMock(side_effect=NotInitialized)
+    type(device).firmware_supported = PropertyMock(side_effect=NotInitialized)
+    return device
+
+
+def initialize_sleepy_rpc_device(device):
+    """Initialize a sleepy RPC (Gen2+, Websocket) device."""
+    status = deepcopy(MOCK_STATUS_RPC)
+    status["sys"]["wakeup_period"] = 1000
+
+    type(device).requires_auth = PropertyMock(return_value=False)
+    type(device).status = PropertyMock(return_value=status)
+    type(device).event = PropertyMock(return_value={})
+    type(device).config = PropertyMock(return_value=MOCK_CONFIG)
+    type(device).shelly = PropertyMock(return_value=MOCK_SHELLY_RPC)
+    type(device).gen = PropertyMock(return_value=2)
+    type(device).firmware_version = PropertyMock(
+        return_value="20240425-141520/1.3.0-ga3fdd3d"
+    )
+    type(device).version = PropertyMock(return_value="1.3.0")
+    type(device).model = PropertyMock(return_value="SPSW-201PE16EU")
+    type(device).xmod_info = PropertyMock(return_value={})
+    type(device).hostname = PropertyMock(return_value="hostname")
+    type(device).name = PropertyMock(return_value="Test Name")
+    type(device).firmware_supported = PropertyMock(return_value=True)
+
+    device.connected = True
+    device.initialized = True
+
+
+@pytest.fixture
+async def mock_sleepy_rpc_device():
+    """Mock sleepy RPC (Gen2+, Websocket) device.
+
+    Mock a RPC device that is not initialized and raises NotInitialized
+    when aioshelly properties are accessed.
+
+    Initialize the device when initialize() method is called.
+    """
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
+        _update_listener = None
+
+        def _update():
+            _update_listener({}, RpcUpdateType.STATUS)
+
+        def _event():
+            _update_listener({}, RpcUpdateType.EVENT)
+
+        def _online():
+            _update_listener({}, RpcUpdateType.ONLINE)
+
+        def _disconnected():
+            _update_listener({}, RpcUpdateType.DISCONNECTED)
+
+        def _initialized():
+            _update_listener({}, RpcUpdateType.INITIALIZED)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
+
+        def _initialize():
+            initialize_sleepy_rpc_device(device)
+
+        device = _mock_sleepy_not_initialized_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
+        rpc_device_mock.return_value = device
+
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=_event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialized)
+        rpc_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
+        )
+
+        yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry and async_unload_entry."""
+    with (
+        patch(
+            "homeassistant.components.shelly.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch("homeassistant.components.shelly.async_unload_entry", return_value=True),
+    ):
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_setup() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
+def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
+    """Patch out async_remove_shelly_rpc_entities.
+
+    This is used by virtual components tests that should not create entities,
+    without it async_remove_shelly_rpc_entities will clean up the entities.
+    """
+    with patch(
+        "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_camera_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with camera component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
+    monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device
+
 
 MOCK_LEDSTRIP_CONFIG = {
     "ledstrip:0": {
@@ -1071,9 +1436,9 @@ def mock_ledstrip_rpc_device(
 
 @pytest.fixture
 def mock_camera_storage(mock_camera_rpc_device: Mock) -> Mock:
-    """Mock Storage.List RPC for a camera device."""
-    mock_camera_rpc_device.call_rpc = AsyncMock(
-        return_value=deepcopy(MOCK_STORAGE_LIST)
+    """Mock storage list for a camera device."""
+    mock_camera_rpc_device.get_storage_list = AsyncMock(
+        return_value=deepcopy(MOCK_STORAGE_ITEMS)
     )
     return mock_camera_rpc_device
 

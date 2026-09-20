@@ -232,7 +232,7 @@ class ShellyStorageMediaSource(MediaSource):
             child
             for stored in sorted(
                 items, key=lambda item: item.get("ts", 0), reverse=True
-            )
+            )[:MAX_ITEMS]
             if (child := self._async_storage_child(entry, storage_id, stored, base_url))
             is not None
         ]
@@ -300,43 +300,9 @@ class ShellyStorageMediaSource(MediaSource):
     async def _async_fetch_items(
         self, coordinator: ShellyRpcCoordinator, storage_id: int
     ) -> list[dict[str, Any]]:
-        """Fetch all storage items, following Storage.List pagination."""
-        items: list[dict[str, Any]] = []
-        offset = 0
-        rev: int | None = None
-        restarted = False
-        while True:
-            result = await self._async_storage_list(coordinator, storage_id, offset)
-            if rev is None:
-                rev = result.get("rev")
-            elif result.get("rev") != rev and not restarted:
-                items = []
-                offset = 0
-                restarted = True
-                rev = result.get("rev")
-                continue
-            if not (page := result.get("items", [])):
-                break
-            items.extend(page)
-            if len(items) >= MAX_ITEMS:
-                return items[:MAX_ITEMS]
-            offset += len(page)
-            if offset >= result.get("total", 0):
-                break
-        return items[:MAX_ITEMS]
-
-    async def _async_storage_list(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        storage_id: int,
-        offset: int,
-    ) -> dict[str, Any]:
-        """Fetch one page of storage items via Storage.List RPC."""
-        # Replace with aioshelly.storage_list wrapper once available in aioshelly
+        """Fetch all storage items from the device."""
         try:
-            return await coordinator.device.call_rpc(
-                "Storage.List", {"id": storage_id, "offset": offset}
-            )
+            return await coordinator.device.get_storage_list(storage_id)
         except InvalidAuthError:
             await coordinator.async_shutdown_device_and_start_reauth()
             raise
