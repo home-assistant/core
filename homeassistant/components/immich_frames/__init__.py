@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .cache import FrameCache
@@ -120,6 +120,27 @@ def _legacy_options(data: dict[str, object]) -> dict[str, object]:
     return options
 
 
+def _remove_legacy_entities(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove custom-integration entities no longer provided by Core."""
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry_id):
+        if entity.platform == DOMAIN and entity.domain != Platform.IMAGE:
+            registry.async_remove(entity.entity_id)
+
+
+def _remove_legacy_cache(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove cache files written by the released custom integration."""
+    storage = Path(hass.config.path(".storage"))
+    for suffix in (".jpg", ".json"):
+        (storage / f"immich_frames_{entry_id}{suffix}").unlink(missing_ok=True)
+
+
+async def _async_prepare_legacy_migration(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove custom-integration entities and cache files before migration."""
+    _remove_legacy_entities(hass, entry_id)
+    await hass.async_add_executor_job(_remove_legacy_cache, hass, entry_id)
+
+
 def _migrate_legacy_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -> None:
     """Bind a released HACS entry to a matching Core Immich account."""
     legacy_data = dict(entry.data)
@@ -171,6 +192,7 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate an older frame entry to the current source model."""
     if CONF_IMMICH_ENTRY_ID not in entry.data:
+        await _async_prepare_legacy_migration(hass, entry.entry_id)
         _migrate_legacy_entry(hass, entry)
         return True
     if entry.version < 2:
@@ -208,6 +230,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up an Immich frame."""
     if CONF_IMMICH_ENTRY_ID not in entry.data:
+        await _async_prepare_legacy_migration(hass, entry.entry_id)
         _migrate_legacy_entry(hass, entry)
     if entry.data.get(CONF_MIGRATION_REQUIRED):
         raise ConfigEntryError(

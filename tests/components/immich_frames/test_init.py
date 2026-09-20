@@ -12,7 +12,10 @@ from aioimmich.assets.models import ExifInfo, ImmichAsset
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
-from homeassistant.components.immich_frames import async_remove_entry
+from homeassistant.components.immich_frames import (
+    async_migrate_entry,
+    async_remove_entry,
+)
 from homeassistant.components.immich_frames.const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_ID,
@@ -38,7 +41,7 @@ from homeassistant.components.immich_frames.selection import UnsupportedSourceEr
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -256,6 +259,52 @@ async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
     assert entry.options[CONF_ALBUM_IDS] == ["album-a", "album-b"]
     assert entry.options[CONF_PHOTO_FIT] == PHOTO_FIT_FULL
     assert entry.options[CONF_SCREEN_SHAPE] == "portrait"
+
+
+async def test_migrate_legacy_hacs_entry_removes_retired_entities_and_cache(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Remove custom-only entities and cache files during Core migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy frame",
+        data={
+            "url": "http://immich.local:2283",
+            CONF_API_KEY: "test-key",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    retired = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{entry.entry_id}_status",
+        config_entry=entry,
+    )
+    image = entity_registry.async_get_or_create(
+        "image",
+        DOMAIN,
+        f"{entry.entry_id}_image",
+        config_entry=entry,
+    )
+    storage = Path(hass.config.path(".storage"))
+    legacy_jpeg = storage / f"immich_frames_{entry.entry_id}.jpg"
+    legacy_json = storage / f"immich_frames_{entry.entry_id}.json"
+    await hass.async_add_executor_job(
+        lambda: storage.mkdir(parents=True, exist_ok=True)
+    )
+    await hass.async_add_executor_job(legacy_jpeg.write_bytes, b"legacy image")
+    await hass.async_add_executor_job(legacy_json.write_text, "legacy state")
+
+    assert await async_migrate_entry(hass, entry)
+
+    assert entity_registry.async_get(retired.entity_id) is None
+    assert entity_registry.async_get(image.entity_id) is not None
+    assert not await hass.async_add_executor_job(legacy_jpeg.exists)
+    assert not await hass.async_add_executor_job(legacy_json.exists)
 
 
 async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
