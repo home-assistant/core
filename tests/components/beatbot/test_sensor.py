@@ -139,6 +139,33 @@ async def test_sensors_unavailable(
         assert state.state == STATE_UNAVAILABLE
 
 
+async def test_unsupported_product_category_is_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose pool cleaners only; other product categories are skipped."""
+    mock_client.get_devices.return_value = [
+        create_device(),
+        create_device("mower-1", name="Mower", product_category="lawn_mower"),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{DEVICE_ID}_status"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, "mower-1_status")
+        is None
+    )
+
+
 async def test_device_info(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
