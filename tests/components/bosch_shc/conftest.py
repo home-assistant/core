@@ -20,6 +20,7 @@ from boschshcpy import (
     SHCShutterControl,
     SHCSmartPlug,
     SHCSmartPlugCompact,
+    SHCSmokeDetector,
     SHCThermostat,
     SHCThermostatGen2,
     SHCTwinguard,
@@ -407,6 +408,28 @@ def motion_detector2_device(
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
     device.tamper_protection_enabled = tamper_protection_enabled
+    return device
+
+
+def smoke_detector_device(
+    device_id: str = "hdm:ZigBee:smokedetector1",
+    name: str = "Smoke Detector",
+    supports_intrusion_alarm: bool = True,
+    intrusion_alarm: bool = False,
+) -> SHCSmokeDetector:
+    """Build a minimal device double for the smoke_detectors bucket."""
+    device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SMOKE_DETECTOR2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_intrusion_alarm = supports_intrusion_alarm
+    device.intrusion_alarm = intrusion_alarm
     return device
 
 

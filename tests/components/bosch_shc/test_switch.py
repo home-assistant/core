@@ -25,6 +25,7 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_compact_device,
     smart_plug_device,
+    smoke_detector_device,
     thermostat_device,
     thermostat_gen2_device,
     twinguard_device,
@@ -393,6 +394,58 @@ async def test_motion_detector2_tamper_protection(
         blocking=True,
     )
     assert device.tamper_protection_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device(intrusion_alarm=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detector_intrusion_alarm(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Smoke Detector II's intrusion alarm is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+
+    state = hass.states.get("switch.smoke_detector_intrusion_alarm")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        blocking=True,
+    )
+    assert device.intrusion_alarm is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.smoke_detector_intrusion_alarm"},
+        blocking=True,
+    )
+    assert device.intrusion_alarm is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device(supports_intrusion_alarm=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detector_no_intrusion_alarm_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a gen-1 Smoke Detector without intrusion-alarm support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smoke_detector_intrusion_alarm") is None
 
 
 @pytest.mark.parametrize(
