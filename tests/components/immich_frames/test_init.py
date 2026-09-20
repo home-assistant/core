@@ -12,9 +12,7 @@ from aioimmich.assets.models import ExifInfo, ImmichAsset
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 import pytest
 
-from homeassistant.components.immich_frames import (
-    async_remove_entry,
-)
+from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_ID,
