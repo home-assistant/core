@@ -193,15 +193,13 @@ def parse_weather(payload: Any) -> WeatherData:
             for index, item in enumerate(series_items(temperatures)):
                 item = block(item)
                 high, low = number(item.get("from")), number(item.get("to"))
-                if (
-                    index >= len(suns)
-                    or optional_time(block(suns[index]).get("from")) is None
-                ):
-                    continue
-                local = datetime.fromisoformat(suns[index]["from"])
-                date = timestamp(local.replace(hour=0, minute=0, second=0).isoformat())
-                code = daily_value(daily.get("weather"), index, "from")
-                if high is not None:
+                sun = block(suns[index]) if index < len(suns) else {}
+                if high is not None and optional_time(sun.get("from")) is not None:
+                    local = datetime.fromisoformat(sun["from"])
+                    date = timestamp(
+                        local.replace(hour=0, minute=0, second=0).isoformat()
+                    )
+                    code = daily_value(daily.get("weather"), index, "from")
                     days.append(
                         ForecastData(
                             date,
@@ -221,7 +219,7 @@ def parse_weather(payload: Any) -> WeatherData:
                     ("from", "from", high),
                     ("to", "to", low),
                 ):
-                    period_time = optional_time(suns[index].get(sun_key))
+                    period_time = optional_time(sun.get(sun_key))
                     if temperature is None or period_time is None:
                         continue
                     code = daily_value(daily.get("weather"), index, part)
