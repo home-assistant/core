@@ -10,6 +10,7 @@ from homematicip.base.enums import (
 )
 import pytest
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_MODE,
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
@@ -30,7 +31,7 @@ from homeassistant.components.homematicip_cloud.entity import (
     ATTR_RSSI_DEVICE,
     ATTR_SABOTAGE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -69,6 +70,9 @@ async def test_hmip_full_flush_lock_controller_binary_sensors(
         "HmIP-FLC",
     )
     assert glass_state.state == STATE_ON
+    assert (
+        glass_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+    )
 
     assert hmip_device is not None
     await async_manipulate_test_data(hass, hmip_device, "lockState", "UNLOCKED")

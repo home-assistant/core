@@ -5,8 +5,8 @@ from collections.abc import Coroutine
 import logging
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -198,8 +198,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 def _humanize(err: Exception, data: Any) -> str:
-    """Humanize vol.Invalid, stringify other exceptions."""
-    if isinstance(err, vol.Invalid):
+    """Humanize probatio.Invalid, stringify other exceptions."""
+    if isinstance(err, probatio.Invalid):
         return humanize_error(data, err)
     return str(err)
 
@@ -229,7 +229,7 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                     conf_section[CONF_ACTIONS] = await async_validate_actions_config(
                         hass, actions_config
                     )
-                except (vol.Invalid, HomeAssistantError) as err:
+                except (probatio.Invalid, HomeAssistantError) as err:
                     breadcrumb = "template section"
                     if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
                         breadcrumb = f"template section with unique_id: {unique_id}"

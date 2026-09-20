@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -19,7 +19,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "ai_task/preferences/get",
+        probatio.Required("type"): "ai_task/preferences/get",
     }
 )
 @callback
@@ -35,9 +35,9 @@ def websocket_get_preferences(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "ai_task/preferences/set",
-        vol.Optional("gen_data_entity_id"): vol.Any(str, None),
-        vol.Optional("gen_image_entity_id"): vol.Any(str, None),
+        probatio.Required("type"): "ai_task/preferences/set",
+        probatio.Optional("gen_data_entity_id"): probatio.Any(str, None),
+        probatio.Optional("gen_image_entity_id"): probatio.Any(str, None),
     }
 )
 @websocket_api.require_admin

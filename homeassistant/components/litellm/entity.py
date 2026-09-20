@@ -60,7 +60,9 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
 
     role: Literal["user", "assistant", "system"] = content.role

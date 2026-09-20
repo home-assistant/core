@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from probatio import to_field_list
+import probatio
 from pyinsteon import devices
 from pyinsteon.config import (
     LOAD_BUTTON,
@@ -18,7 +18,6 @@ from pyinsteon.constants import (
     ToggleMode,
 )
 from pyinsteon.device_types.device_base import Device
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -43,34 +42,36 @@ RELAY_MODES = [str(RelayMode(v)).lower() for v in list(RelayMode)]
 
 
 def _bool_schema(name):
-    return to_field_list(vol.Schema({vol.Required(name): bool}))[0]
+    return probatio.to_field_list(probatio.Schema({probatio.Required(name): bool}))[0]
 
 
 def _byte_schema(name):
-    return to_field_list(vol.Schema({vol.Required(name): cv.byte}))[0]
+    return probatio.to_field_list(probatio.Schema({probatio.Required(name): cv.byte}))[
+        0
+    ]
 
 
 def _float_schema(name):
-    return to_field_list(vol.Schema({vol.Required(name): float}))[0]
+    return probatio.to_field_list(probatio.Schema({probatio.Required(name): float}))[0]
 
 
 def _list_schema(name, values):
-    return to_field_list(
-        vol.Schema({vol.Required(name): vol.In(values)}),
+    return probatio.to_field_list(
+        probatio.Schema({probatio.Required(name): probatio.In(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
 
 
 def _multi_select_schema(name, values):
-    return to_field_list(
-        vol.Schema({vol.Optional(name): cv.multi_select(values)}),
+    return probatio.to_field_list(
+        probatio.Schema({probatio.Optional(name): cv.multi_select(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
 
 
 def _read_only_schema(name, value):
     """Return a constant value schema."""
-    return to_field_list(vol.Schema({vol.Required(name): value}))[0]
+    return probatio.to_field_list(probatio.Schema({probatio.Required(name): value}))[0]
 
 
 def get_schema(prop, name, groups):
@@ -157,9 +158,9 @@ def update_property(device, prop_name, value):
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/properties/get",
-        vol.Required(DEVICE_ADDRESS): str,
-        vol.Required(SHOW_ADVANCED): bool,
+        probatio.Required(TYPE): "insteon/properties/get",
+        probatio.Required(DEVICE_ADDRESS): str,
+        probatio.Required(SHOW_ADVANCED): bool,
     }
 )
 @websocket_api.require_admin
@@ -181,10 +182,10 @@ async def websocket_get_properties(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/properties/change",
-        vol.Required(DEVICE_ADDRESS): str,
-        vol.Required(PROPERTY_NAME): str,
-        vol.Required(PROPERTY_VALUE): vol.Any(list, int, float, bool, str),
+        probatio.Required(TYPE): "insteon/properties/change",
+        probatio.Required(DEVICE_ADDRESS): str,
+        probatio.Required(PROPERTY_NAME): str,
+        probatio.Required(PROPERTY_VALUE): probatio.Any(list, int, float, bool, str),
     }
 )
 @websocket_api.require_admin
@@ -205,8 +206,8 @@ async def websocket_change_properties_record(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/properties/write",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/properties/write",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -235,8 +236,8 @@ async def websocket_write_properties(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/properties/load",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/properties/load",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -266,8 +267,8 @@ async def websocket_load_properties(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/properties/reset",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/properties/reset",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
