@@ -30,7 +30,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    # All reported device class options must support the Total state class
     device_class = result["data_schema"].schema["device_class"]
     assert isinstance(device_class, selector.SelectSelector)
     assert all(

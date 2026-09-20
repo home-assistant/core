@@ -390,7 +390,6 @@ class IntegrationSensor(RestoreSensor):
 
         If a device class value has been set in the config, try to use that instead.
         """
-        # If we don't have a unit of measurement, then we can't have a device class.
         if unit_of_measurement is None:
             return None
 
