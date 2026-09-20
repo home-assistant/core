@@ -13,7 +13,7 @@ from grandstream_home_api import (
     create_device_api_instance,
     extract_mac_from_name,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
@@ -80,9 +80,9 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the manual device form."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
                 }
             ),
             errors=errors or {},
@@ -250,14 +250,14 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the authentication form."""
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Username is fixed to "gdsha", port defaults from discovery
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_PORT, default=self._port): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=65535)
+                    probatio.Required(CONF_PASSWORD): cv.string,
+                    probatio.Optional(CONF_PORT, default=self._port): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1, max=65535)
                     ),
-                    vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                    probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 }
             ),
             errors=errors,
