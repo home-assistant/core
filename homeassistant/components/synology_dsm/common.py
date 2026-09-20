@@ -273,8 +273,10 @@ class SynoApi:
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
+        # Keep fetching while no device is connected, as no entity subscribes yet
         self._with_external_usb = bool(
             self._fetching_entities.get(SynoCoreExternalUSB.API_KEY)
+            or (self.external_usb is not None and not self.external_usb.get_devices)
         )
         self._with_hardware = bool(
             self._fetching_entities.get(SynoCoreHardware.API_KEY)
