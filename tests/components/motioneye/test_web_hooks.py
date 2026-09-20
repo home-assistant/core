@@ -5,7 +5,6 @@ import copy
 from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
-from yarl import URL
 
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -19,6 +18,7 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 import pytest
+from yarl import URL
 
 from homeassistant.components.motioneye.const import (
     ATTR_EVENT_TYPE,
