@@ -46,6 +46,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         value=lambda data: data.status,
+        entity_registry_enabled_default=False,
     ),
     BrotherSensorEntityDescription(
         key="printer_status",
