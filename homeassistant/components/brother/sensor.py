@@ -48,6 +48,21 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         value=lambda data: data.status,
     ),
     BrotherSensorEntityDescription(
+        key="printer_status",
+        translation_key="printer_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["idle", "other", "printing", "unknown", "warmup"],
+        value=lambda data: data.printer_status,
+    ),
+    BrotherSensorEntityDescription(
+        key="device_status",
+        translation_key="device_status",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["down", "running", "testing", "unknown", "warning"],
+        value=lambda data: data.device_status,
+    ),
+    BrotherSensorEntityDescription(
         key="page_counter",
         translation_key="page_counter",
         state_class=SensorStateClass.MEASUREMENT,
@@ -280,6 +295,14 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.yellow_ink_remaining,
+    ),
+    BrotherSensorEntityDescription(
+        key="ink_capture_box_remaining_life",
+        translation_key="ink_capture_box_remaining_life",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda data: data.ink_capture_box_remaining_life,
     ),
     BrotherSensorEntityDescription(
         key="uptime",
