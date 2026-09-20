@@ -5,8 +5,9 @@ creates one :class:`Rtl433Sensor` per (device, field): entities for devices
 already recorded on the config entry are built at setup, and entities for
 devices/fields first observed at runtime are added as their events arrive.
 
-Entity and device identity is shared with the custom component of the same
-domain, so an entry moving between the two keeps its entities:
+Entity and device identity matches the custom component of the same domain, so
+an entry migrated from it keeps its entities. Only that direction is supported:
+see ``async_migrate_entry``.
 
 * sensor ``unique_id``  -> ``f"{hub_entry_id}:{device_key}:{object_suffix}"``
 * per-device identifier -> ``(DOMAIN, f"{hub_entry_id}:{device_key}")``
