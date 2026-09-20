@@ -432,6 +432,50 @@ def test_clear_without_sun_times(payload: dict[str, Any]) -> None:
     assert parse_weather(payload).condition == "sunny"
 
 
+@pytest.mark.parametrize(
+    ("sun_fields", "missing_period", "daily_start"),
+    [
+        pytest.param({"to": "2026-09-08T18:36:00+08:00"}, 0, 1, id="missing-sunrise"),
+        pytest.param(
+            {"from": None, "to": "2026-09-08T18:36:00+08:00"}, 0, 1, id="null-sunrise"
+        ),
+        pytest.param(
+            {"from": "bad", "to": "2026-09-08T18:36:00+08:00"},
+            0,
+            1,
+            id="invalid-sunrise",
+        ),
+        pytest.param({"from": "2026-09-08T05:48:00+08:00"}, 1, 0, id="missing-sunset"),
+        pytest.param(
+            {"from": "2026-09-08T05:48:00+08:00", "to": None}, 1, 0, id="null-sunset"
+        ),
+        pytest.param(
+            {"from": "2026-09-08T05:48:00+08:00", "to": "bad"},
+            1,
+            0,
+            id="invalid-sunset",
+        ),
+    ],
+)
+def test_independent_forecast_solar_times(
+    payload: dict[str, Any],
+    sun_fields: dict[str, str | None],
+    missing_period: int,
+    daily_start: int,
+) -> None:
+    """An invalid solar time must not remove the other valid forecast period."""
+    expected = parse_weather(payload)
+    payload["forecastDaily"]["sunRiseSet"]["value"][0] = sun_fields
+    data = parse_weather(payload)
+    assert data.temperature == expected.temperature
+    assert data.daily == expected.daily[daily_start:]
+    assert data.twice_daily == (
+        expected.twice_daily[:missing_period]
+        + expected.twice_daily[missing_period + 1 :]
+    )
+    assert len(data.hourly) == len(expected.hourly)
+
+
 def test_missing_daily_high_retains_night(payload: dict[str, Any]) -> None:
     """Test missing daily high retains night."""
     payload["forecastDaily"]["temperature"]["value"][0]["from"] = None
