@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.threema.client import (
@@ -512,7 +512,7 @@ async def test_credentials_invalid_private_key_preserves_other_fields(
     defaults = {
         schema_key: schema_key.default()
         for schema_key in result["data_schema"].schema
-        if schema_key.default is not vol.UNDEFINED
+        if schema_key.default is not probatio.UNDEFINED
     }
     assert defaults[CONF_GATEWAY_ID] == MOCK_GATEWAY_ID
     assert defaults[CONF_API_SECRET] == MOCK_API_SECRET

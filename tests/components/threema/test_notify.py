@@ -133,7 +133,8 @@ async def test_notify_entities_get_separate_devices(
         assert device_id is not None
         device = device_registry.async_get(device_id)
         assert device is not None
-        assert device.config_entries_subentries[mock_config_entry.entry_id] != {None}
+        assert device.config_entry_id == mock_config_entry.entry_id
+        assert device.config_subentry_id is not None
 
 
 @pytest.mark.parametrize("mock_subentries", [[_NAMED_RECIPIENT_SUBENTRY]])

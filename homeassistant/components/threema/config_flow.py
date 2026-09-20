@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -206,16 +206,16 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                             data=data,
                         )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_GATEWAY_ID, default=self._gateway_id or ""): str,
-                vol.Required(
+                probatio.Required(CONF_GATEWAY_ID, default=self._gateway_id or ""): str,
+                probatio.Required(
                     CONF_API_SECRET, default=self._api_secret or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                vol.Optional(
+                probatio.Optional(
                     CONF_PRIVATE_KEY, default=self._private_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                vol.Optional(
+                probatio.Optional(
                     _CONF_PUBLIC_KEY, default=self._public_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             }
@@ -266,10 +266,10 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_RECIPIENT): str,
-                    vol.Optional(CONF_NAME): str,
+                    probatio.Required(CONF_RECIPIENT): str,
+                    probatio.Optional(CONF_NAME): str,
                 }
             ),
             errors=errors,
