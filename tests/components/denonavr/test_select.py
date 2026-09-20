@@ -942,3 +942,40 @@ async def test_audyssey_poll_needs_an_entity_not_just_internal_wiring(
         await hass.async_block_till_done()
 
     assert client.async_update_audyssey.await_count == calls_before
+
+
+async def test_telnet_update_clears_an_audyssey_connectivity_failure(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A Telnet push has to restore availability, not only notify listeners.
+
+    With "Update Audyssey settings" off this coordinator has no poll of
+    its own, so notifying alone would leave these entities unavailable
+    for as long as Telnet keeps them up to date.
+    """
+    await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
+    entity_id = _entity_id(hass, "multi_eq")
+
+    client.async_set_multieq.side_effect = AvrNetworkError(
+        "Connection refused", "SetAudyssey"
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Flat"},
+            blocking=True,
+        )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    telnet_callbacks = [
+        call.args[1]
+        for call in client.register_callback.call_args_list
+        if not hasattr(call.args[1], "__self__")
+    ]
+    assert telnet_callbacks
+    for telnet_callback in telnet_callbacks:
+        telnet_callback("Main", "PS", "MULTEQ:AUDYSSEY")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

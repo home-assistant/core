@@ -186,14 +186,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
 
     @callback
     def _telnet_notify_audyssey(zone: str, event: str, parameter: str) -> None:
-        """Notify Audyssey listeners of Telnet activity.
+        """Feed Telnet activity into the Audyssey coordinator.
 
         Registered on the receiver directly rather than through the
         media_player entity: that entity's own callback only runs
         while it's enabled, but the receiver stays updated via Telnet
         regardless, so Audyssey entities need a path independent of it.
+
+        Counted as a successful update, not just a notification: a push
+        is the receiver answering, which clears an earlier connectivity
+        failure. Without "Update Audyssey settings" this coordinator has
+        no poll to clear one itself, and the recovery above only reaches
+        it while a status entity keeps that coordinator polling.
         """
-        audyssey_coordinator.async_update_listeners()
+        audyssey_coordinator.async_set_updated_data(None)
 
     receiver.register_callback(AUDYSSEY_TELNET_EVENT, _telnet_notify_audyssey)
     entry.async_on_unload(
