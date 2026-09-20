@@ -47,6 +47,7 @@ from homeassistant.components.motioneye.const import (
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_ACTION, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.aiohttp import MockRequest
@@ -242,6 +243,19 @@ async def test_get_still_image_from_camera(hass: HomeAssistant) -> None:
 
     image = await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=1)
     assert image.content == b"image"
+    client.async_get_camera_snapshot.assert_awaited_once_with(TEST_CAMERA_ID)
+
+
+async def test_get_still_image_client_error(hass: HomeAssistant) -> None:
+    """Test handling a client error while getting a still image."""
+    client = create_mock_motioneye_client()
+    client.async_get_camera_snapshot = AsyncMock(side_effect=MotionEyeClientError)
+    await setup_mock_motioneye_config_entry(hass, client=client)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="Unable to get camera snapshot"):
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=1)
+
     client.async_get_camera_snapshot.assert_awaited_once_with(TEST_CAMERA_ID)
 
 
