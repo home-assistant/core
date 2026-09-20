@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.grandstream_home.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
 from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_HOST,
@@ -25,6 +25,24 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_gds_api")
+
+
+def _assert_created_entry(hass: HomeAssistant, result: ConfigFlowResult) -> None:
+    """Assert the flow created the expected config entry from the mocked device."""
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "GDS 00:0B:82:12:34:56"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 443,
+        CONF_USERNAME: "gdsha",
+        CONF_VERIFY_SSL: False,
+        CONF_TYPE: "GDS",
+        CONF_MODEL: None,
+        ATTR_SW_VERSION: None,
+    }
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.unique_id == format_mac("00:0B:82:12:34:56")
 
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
@@ -53,20 +71,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "GDS 00:0B:82:12:34:56"
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 443,
-        CONF_USERNAME: "gdsha",
-        CONF_VERIFY_SSL: False,
-        CONF_TYPE: "GDS",
-        CONF_MODEL: None,
-        ATTR_SW_VERSION: None,
-    }
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == format_mac("00:0B:82:12:34:56")
+    _assert_created_entry(hass, result)
 
 
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
@@ -108,7 +113,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    _assert_created_entry(hass, result)
 
 
 async def test_user_invalid_auth(hass: HomeAssistant) -> None:
@@ -150,7 +155,7 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    _assert_created_entry(hass, result)
 
 
 async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
@@ -272,7 +277,7 @@ async def test_user_device_error(
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    _assert_created_entry(hass, result)
 
 
 async def test_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
@@ -347,18 +352,18 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("EC74D79753C5")
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == format_mac("EC74D79753C5")
 
 
 @pytest.mark.parametrize(
-    ("name", "hostname", "properties", "title"),
+    ("name", "hostname", "properties", "title", "model", "unique_id"),
     [
         pytest.param(
             "",
             "device.local.",
             None,
             "GDS 00:0B:82:12:34:56",
+            None,
+            format_mac("00:0B:82:12:34:56"),
             id="empty_name_no_properties",
         ),
         pytest.param(
@@ -366,6 +371,8 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
             "GDS3710-EC74D79753C5.local.",
             {},
             "GDS3710-EC74D79753C5",
+            None,
+            format_mac("EC74D79753C5"),
             id="no_txt_properties",
         ),
         pytest.param(
@@ -373,6 +380,8 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
             "GDS3710-EC74D79753C5.local.",
             {"product": "GDS3710"},
             "GDS3710-EC74D79753C5",
+            "GDS3710",
+            format_mac("EC74D79753C5"),
             id="properties_no_version",
         ),
     ],
@@ -383,6 +392,8 @@ async def test_zeroconf_edge_cases(
     hostname: str,
     properties: dict | None,
     title: str,
+    model: str | None,
+    unique_id: str,
 ) -> None:
     """Test zeroconf flow with edge case properties."""
     result = await hass.config_entries.flow.async_init(
@@ -412,8 +423,18 @@ async def test_zeroconf_edge_cases(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == title
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 443,
+        CONF_USERNAME: "gdsha",
+        CONF_VERIFY_SSL: False,
+        CONF_TYPE: "GDS",
+        CONF_MODEL: model,
+        ATTR_SW_VERSION: None,
+    }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id is not None
+    assert entry.unique_id == unique_id
 
 
 async def test_user_already_configured(
@@ -558,4 +579,4 @@ async def test_user_empty_host(
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    _assert_created_entry(hass, result)
