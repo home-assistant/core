@@ -109,6 +109,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.axle_energy.*
 homeassistant.components.azure_storage.*
 homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
@@ -118,6 +119,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
+homeassistant.components.bitvis.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
@@ -172,6 +174,7 @@ homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
+homeassistant.components.discogs.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dlna_dms.*
@@ -254,6 +257,7 @@ homeassistant.components.google_sheets.*
 homeassistant.components.google_weather.*
 homeassistant.components.govee_ble.*
 homeassistant.components.gpsd.*
+homeassistant.components.gree_infrared.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -310,6 +314,7 @@ homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
 homeassistant.components.incomfort.*
 homeassistant.components.indevolt.*
+homeassistant.components.indi_allsky.*
 homeassistant.components.inels.*
 homeassistant.components.infrared.*
 homeassistant.components.input_button.*
@@ -375,6 +380,7 @@ homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
+homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
@@ -389,6 +395,7 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
+homeassistant.components.midea.*
 homeassistant.components.miele.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
@@ -596,6 +603,7 @@ homeassistant.components.teltonika.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
+homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*

@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -27,7 +27,7 @@ from .const import DOMAIN
 from .coordinator import LinksysConfigEntry, LinksysDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}
+    {probatio.Required(CONF_HOST): cv.string}
 )
 
 PARALLEL_UPDATES = 0

@@ -6,9 +6,9 @@ import re
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
 from sqlalchemy import select
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
@@ -4590,7 +4590,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
     await async_recorder_block_till_done(hass)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match=re.escape(f"required key not provided at '{missing_key}'"),
     ):
         await hass.services.async_call(
