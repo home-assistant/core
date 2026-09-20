@@ -239,7 +239,6 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
             connected=True,
             status="ready",
         )
-        self._account_state_invalidated = False
         if self._connected is False or self._outage_logged:
             _LOGGER.info("Immich Frames recovered for %s", self.config_entry.title)
         self._connected = True
@@ -262,6 +261,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
                 self._last_cache_write_at = result.updated_at
         if not self._parent_snapshot_is_current(parent_runtime_data, parent_identity):
             return await self._handle_parent_change()
+        self._account_state_invalidated = False
         return result
 
     async def _refresh_parent(self) -> bool:
@@ -341,13 +341,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
     @property
     def parent_available(self) -> bool:
         """Return whether the linked Immich entry can currently serve data."""
-        parent_entry = self.hass.config_entries.async_get_entry(
-            self.options[CONF_IMMICH_ENTRY_ID]
-        )
         return bool(
-            parent_entry is not None
-            and parent_entry.state is ConfigEntryState.LOADED
-            and getattr(parent_entry, "runtime_data", None)
+            not self._account_state_invalidated
+            and self._parent_snapshot_is_current(
+                self._parent_runtime_data, self._parent_identity_value
+            )
         )
 
     @property

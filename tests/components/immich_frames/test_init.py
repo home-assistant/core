@@ -545,6 +545,54 @@ async def test_coordinator_waits_for_parent_reload_after_config_change(
     assert coordinator.api is parent_immich_entry.runtime_data.api
 
 
+async def test_coordinator_keeps_account_invalidated_during_cache_write(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Do not expose the previous account while the replacement is cached."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    old_api = parent_immich_entry.runtime_data.api
+    hass.config_entries.async_update_entry(
+        parent_immich_entry,
+        data={**parent_immich_entry.data, CONF_API_KEY: "replacement-key"},
+    )
+    parent_immich_entry.runtime_data = SimpleNamespace(
+        api=old_api,
+        configuration_url="http://immich.local:2283",
+    )
+    observed_current_data: list[ImmichFramesData | None] = []
+
+    def record_cache_write(*args: object) -> None:
+        """Observe the public state while the replacement cache is written."""
+        observed_current_data.append(coordinator.current_data)
+
+    with (
+        patch.object(coordinator._cache, "clear"),
+        patch.object(coordinator._cache, "write", side_effect=record_cache_write),
+    ):
+        result = await coordinator._async_update_data()
+
+    assert observed_current_data == [None]
+    assert coordinator._account_state_invalidated is False
+    assert result.status == "ready"
+    coordinator.data = result
+    assert coordinator.current_data is result
+
+
+async def test_image_waits_for_coordinator_to_adopt_reloaded_parent(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """A reloaded parent is not current until the coordinator adopts it."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+    image = ImmichFrameImage(coordinator)
+    parent_immich_entry.runtime_data = SimpleNamespace(
+        api=parent_immich_entry.runtime_data.api,
+        configuration_url="http://immich.local:2283",
+    )
+
+    assert coordinator.parent_available is False
+    assert await image.async_image() is None
+
+
 async def test_coordinator_discards_inflight_result_when_parent_changes(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
