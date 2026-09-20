@@ -357,7 +357,7 @@
 # name: test_sensors[sensor.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'achievements': '57 / 0',
+      'achievements': '57 / 121',
       'developer': 'Mojang Studios',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.11144.13851379342944008.b2fc5ef4-8c3f-4b02-8c42-1e88e52dd0f1.6a2c9c4f-1a34-4a3f-9a2e-0f3a5a07a6bd',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
