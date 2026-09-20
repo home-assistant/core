@@ -1,7 +1,7 @@
 """Support for KNX select entities."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 from xknx.devices import RawValue
 from xknx.dpt import DPTBase, DPTEnum
@@ -42,6 +42,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
+from .storage.config_store import KnxEntityData
 from .storage.const import CONF_ENTITY
 from .storage.util import ConfigExtractor
 
@@ -71,7 +72,7 @@ async def async_setup_entry(
             KnxYamlSelect(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.SELECT):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.SELECT):
         entities.extend(
             KnxUiSelect(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -202,7 +203,7 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
     _device: RawValue
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize a KNX select."""
         knx_conf = ConfigExtractor(config[DOMAIN])

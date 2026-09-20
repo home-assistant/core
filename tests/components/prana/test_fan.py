@@ -1,6 +1,5 @@
 """Integration-style tests for Prana fans."""
 
-import math
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -153,7 +152,7 @@ async def test_fans_set_percentage(
         blocking=True,
     )
     expected_speed = (
-        math.ceil(percentage_to_ranged_value((1, fan_mock_state.max_speed), 50))
+        round(percentage_to_ranged_value((1, fan_mock_state.max_speed), 50))
         * PRANA_SPEED_MULTIPLIER
     )
     mock_prana_api.set_speed.assert_called_once_with(
@@ -169,6 +168,58 @@ async def test_fans_set_percentage(
         blocking=True,
     )
     mock_prana_api.set_speed_is_on.assert_called_with(False, expected_api_key)
+
+
+@pytest.mark.parametrize(
+    ("percentage", "expected_step"),
+    [
+        (1, 1),  # any non-zero percentage turns the fan on at least at step 1
+        (16, 1),
+        (17, 1),  # UI-displayed value for step 1 of 6 (16.67% rounded up)
+        (33, 2),
+        (50, 3),
+        (66, 4),
+        (67, 4),  # UI-displayed value for step 4 of 6 (66.67% rounded up)
+        (83, 5),
+        (100, 6),
+    ],
+)
+async def test_fans_percentage_maps_to_nearest_step(
+    hass: HomeAssistant,
+    mock_prana_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    percentage: int,
+    expected_step: int,
+) -> None:
+    """Test that displayed percentages map back to the same speed step.
+
+    A 6-step fan reports step 4 as 66.67%, which the UI displays as 67%.
+    Sending that displayed value back must select step 4 again, not step 5.
+    """
+    mock_prana_api.get_state.return_value.supply.max_speed = 6
+    target, fan_mock_state = await _async_setup_fan_entity(
+        hass,
+        mock_prana_api,
+        mock_config_entry,
+        entity_registry,
+        "supply",
+        False,
+    )
+
+    fan_mock_state.is_on = True
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: percentage},
+        blocking=True,
+    )
+    mock_prana_api.set_speed.assert_called_once_with(
+        expected_step * PRANA_SPEED_MULTIPLIER,
+        "supply",
+    )
 
 
 @pytest.mark.parametrize(

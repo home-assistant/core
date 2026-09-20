@@ -422,10 +422,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,7 +445,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -460,12 +460,12 @@
 # name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -720,10 +720,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -743,7 +743,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -758,12 +758,12 @@
 # name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -781,10 +781,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -804,7 +804,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -819,12 +819,12 @@
 # name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -50,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4654,10 +4654,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4677,7 +4677,7 @@
     'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'matter',
@@ -4692,12 +4692,12 @@
 # name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Temperature offset',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 25,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: -25,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.7,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,

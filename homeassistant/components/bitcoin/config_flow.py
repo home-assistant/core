@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from blockchain import exchangerates
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CURRENCY
@@ -36,11 +36,11 @@ async def _async_get_currencies(hass: HomeAssistant) -> list[str] | None:
     return currencies or None
 
 
-def _currency_schema(currencies: list[str]) -> vol.Schema:
+def _currency_schema(currencies: list[str]) -> probatio.Schema:
     """Build a schema offering the currencies blockchain.com quotes."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_CURRENCY, default=DEFAULT_CURRENCY): SelectSelector(
+            probatio.Required(CONF_CURRENCY, default=DEFAULT_CURRENCY): SelectSelector(
                 SelectSelectorConfig(
                     options=currencies, mode=SelectSelectorMode.DROPDOWN
                 )

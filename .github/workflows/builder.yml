@@ -198,7 +198,7 @@ jobs:
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Build base image
-        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -256,7 +256,7 @@ jobs:
           fi
 
       - name: Build machine image
-        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -278,7 +278,7 @@ jobs:
     name: Run E2E tests on base images
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    uses: ./.github/workflows/e2e-tests.yml
+    uses: $/.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
       image_prefixes: ${{ needs.init.outputs.architectures }}
@@ -287,7 +287,7 @@ jobs:
     name: Run E2E tests on machine images
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
-    uses: ./.github/workflows/e2e-tests.yml
+    uses: $/.github/workflows/e2e-tests.yml
     with:
       version: ${{ needs.init.outputs.version }}
       image_prefixes: ${{ needs.init.outputs.machines }}

@@ -6,12 +6,20 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 from mcp import McpError
-from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
+from mcp.types import (
+    CallToolResult,
+    ErrorData,
+    ListToolsResult,
+    TextContent,
+    Tool,
+    ToolAnnotations,
+)
+import probatio
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.mcp.const import DOMAIN
+from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -299,7 +307,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'query'")
+        probatio.Invalid, match=re.escape("required key not provided at 'query'")
     ):
         tool.parameters({})
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
@@ -308,7 +316,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided at 'context'")
+        probatio.Invalid, match=re.escape("required key not provided at 'context'")
     ):
         tool.parameters({})
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {
@@ -316,8 +324,93 @@ async def test_llm_get_api_tools(
     }
 
 
+@pytest.mark.parametrize(
+    ("remote_annotations", "expected_annotations"),
+    [
+        pytest.param(None, llm.ToolAnnotations(), id="unannotated"),
+        pytest.param(
+            ToolAnnotations(readOnlyHint=True, openWorldHint=False),
+            llm.ToolAnnotations(read_only=True, open_world=False),
+            id="partly-annotated",
+        ),
+        pytest.param(
+            ToolAnnotations(
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=True,
+            ),
+            llm.ToolAnnotations(destructive=False, idempotent=True),
+            id="fully-annotated",
+        ),
+    ],
+)
+async def test_llm_tool_annotations(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    remote_annotations: ToolAnnotations | None,
+    expected_annotations: llm.ToolAnnotations,
+) -> None:
+    """Test the annotations the remote server declares are carried over."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[
+            SEARCH_MEMORY_TOOL.model_copy(
+                update={"title": "Search memory", "annotations": remote_annotations}
+            )
+        ]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    assert tool.integration == "mcp"
+    assert tool.title == "Search memory"
+    assert tool.annotations == expected_annotations
+
+
+@pytest.mark.parametrize(
+    ("call_tool_result", "expected_result"),
+    [
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="User was born in February")]
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "User was born in February", "type": "text"}]
+                }
+            ),
+            id="success",
+        ),
+        pytest.param(
+            CallToolResult(
+                content=[TextContent(type="text", text="Memory search failed")],
+                isError=True,
+            ),
+            llm.ToolResult(
+                data={
+                    "content": [{"text": "Memory search failed", "type": "text"}],
+                    "isError": True,
+                },
+                error=True,
+            ),
+            id="error",
+        ),
+    ],
+)
 async def test_call_tool(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    call_tool_result: CallToolResult,
+    expected_result: llm.ToolResult,
 ) -> None:
     """Test calling an MCP Tool through the LLM API."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
@@ -336,9 +429,7 @@ async def test_call_tool(
     tool = api_instance.tools[0]
     assert tool.name == "search_memory"
 
-    mock_mcp_client.return_value.call_tool.return_value = CallToolResult(
-        content=[TextContent(type="text", text="User was born in February")]
-    )
+    mock_mcp_client.return_value.call_tool.return_value = call_tool_result
     result = await tool.async_call(
         hass,
         llm.ToolInput(
@@ -346,9 +437,7 @@ async def test_call_tool(
         ),
         create_llm_context(),
     )
-    assert result == {
-        "content": [{"text": "User was born in February", "type": "text"}]
-    }
+    assert result == expected_result
 
 
 async def test_call_tool_fails(
@@ -734,3 +823,40 @@ async def test_sse_client_does_not_build_ssl_context(
 
     assert not mock_load_certs.called
     await client.aclose()
+
+
+async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
+    """Test the LLM API id of a discovered server survives a reinstall of the app."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL],
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    # Reinstalling the app discovers the server again as a new config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://1.1.1.1/mcp", CONF_SLUG: "a0d7b954_mcp"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    assert api.id == "mcp-a0d7b954_mcp"

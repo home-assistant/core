@@ -1,6 +1,6 @@
 """Support for KNX weather entities."""
 
-from typing import override
+from typing import Any, override
 
 from xknx.devices import Weather as XknxWeather
 
@@ -29,6 +29,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import WeatherSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_AIR_PRESSURE,
@@ -72,7 +73,7 @@ async def async_setup_entry(
             KnxYamlWeather(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.WEATHER):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.WEATHER):
         entities.extend(
             KnxUiWeather(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -190,7 +191,7 @@ class KnxUiWeather(_KnxWeather, KnxUiEntity):
     _device: XknxWeather
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX weather device."""
         super().__init__(

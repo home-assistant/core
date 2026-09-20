@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier"
     },
     "error": {
@@ -264,8 +263,8 @@
       "modbus_mppt_current_dc": {
         "name": "MPPT {mppt_no} DC current"
       },
-      "modbus_mppt_energy_dc": {
-        "name": "MPPT {mppt_no} DC energy"
+      "modbus_mppt_energy": {
+        "name": "MPPT {mppt_no} energy"
       },
       "modbus_mppt_power_dc": {
         "name": "MPPT {mppt_no} DC power"

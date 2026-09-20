@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -30,23 +30,23 @@ ATTR_DEVICES = "devices"
 ATTR_DURATION = "duration"
 ATTR_SORT_ORDER = "sortOrder"
 
-PAUSE_SERVICE_SCHEMA = vol.Schema(
+PAUSE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_DEVICES): cv.string,
-        vol.Optional(ATTR_DURATION, default=60): cv.positive_int,
+        probatio.Optional(ATTR_DEVICES): cv.string,
+        probatio.Optional(ATTR_DURATION, default=60): cv.positive_int,
     }
 )
 
-RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+RESUME_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_DEVICES): cv.string})
 
-START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
+START_MULTIPLE_ZONES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_DURATION): cv.ensure_list_csv,
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_DURATION): cv.ensure_list_csv,
     }
 )
 
-STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+STOP_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_DEVICES): cv.string})
 
 
 def _stop_water(call: ServiceCall) -> None:

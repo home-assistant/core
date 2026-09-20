@@ -6,8 +6,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
@@ -648,6 +646,7 @@
           "permanent": "Permanent",
           "schedule": "Schedule",
           "sensordriven": "Sensor-driven",
+          "sensoroverride": "Sensor override",
           "silent": "Silent",
           "standby": "[%key:common::state::standby%]"
         }
@@ -657,6 +656,20 @@
       },
       "zigbee_signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      }
+    },
+    "switch": {
+      "quickmode_comfort": {
+        "name": "Intensive"
+      },
+      "quickmode_eco": {
+        "name": "Eco"
+      },
+      "quickmode_forced_level_four": {
+        "name": "Boost"
+      },
+      "quickmode_silent": {
+        "name": "Silent"
       }
     },
     "water_heater": {
@@ -674,6 +687,9 @@
     },
     "program_unknown": {
       "message": "Cannot translate preset {preset} into a valid ViCare program"
+    },
+    "quickmode_not_activated": {
+      "message": "Unable to activate ViCare quickmode {quickmode}. Only one quickmode can be active at a time; another one may already be running."
     }
   },
   "issues": {

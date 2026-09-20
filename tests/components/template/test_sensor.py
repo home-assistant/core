@@ -2,6 +2,8 @@
 
 from asyncio import Event
 from datetime import datetime
+from itertools import chain
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
@@ -9,6 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.sensor import (
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
+)
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -1953,7 +1959,19 @@ async def test_attributes_template(
     )
 
 
-@pytest.mark.parametrize("attribute", ["device_class"])
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        *list(
+            chain(
+                set(SensorEntityCapabilityAttribute)
+                - {SensorEntityCapabilityAttribute.OPTIONS},
+                SensorEntityStateAttribute,
+            )
+        ),
+        "device_class",
+    ],
+)
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
@@ -1979,3 +1997,42 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("attribute", "set_state", "expected"),
+    [(SensorEntityCapabilityAttribute.OPTIONS, ["a"], ["a"])],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_allowed_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    set_state: Any,
+    expected: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'x' }}",
+            "attributes": f"{{{{ dict({attribute}=state_attr('{TEST_ATTRIBUTE_ENTITY_ID}', '{attribute}')) }}}}",
+        },
+    )
+
+    await async_trigger(
+        hass, TEST_ATTRIBUTE_ENTITY_ID, "anything", {attribute: set_state}
+    )
+
+    state = hass.states.get(TEST_SENSOR.entity_id)
+    assert state.state == "x"
+    assert state.attributes[attribute] == expected
+
+    error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
+    assert error not in caplog.text
