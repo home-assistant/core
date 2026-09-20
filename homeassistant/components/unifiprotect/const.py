@@ -90,6 +90,8 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
 ]
 
 # Stored local-user credentials do not imply the mode: they are kept on a
