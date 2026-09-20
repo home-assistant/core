@@ -418,7 +418,8 @@ async def test_event_media_data(
         events[-1]
         .data["file_url"]
         .startswith(
-            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/movies/0/"
+            f"https://internal.url/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/"
+            f"{TEST_CAMERA_ID}/movies/0/"
         )
     )
     assert "?authSig=" in events[-1].data["file_url"]
@@ -473,7 +474,8 @@ async def test_event_media_data(
         events[-1]
         .data["file_url"]
         .startswith(
-            f"/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/{TEST_CAMERA_ID}/images/0/"
+            f"https://internal.url/api/motioneye/media/{TEST_CONFIG_ENTRY_ID}/"
+            f"{TEST_CAMERA_ID}/images/0/"
         )
     )
     assert "?authSig=" in events[-1].data["file_url"]
@@ -482,6 +484,28 @@ async def test_event_media_data(
         == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/dir/two"
     )
 
+    # Test: No Home Assistant URL available.
+    with patch(
+        "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
+    ):
+        resp = await hass_client.post(
+            URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
+            json={
+                ATTR_DEVICE_ID: device.id,
+                ATTR_EVENT_TYPE: EVENT_FILE_STORED,
+                "file_path": f"/var/lib/motioneye/{TEST_CAMERA_NAME}/dir/no-url",
+                "file_type": "8",
+            },
+        )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(events) == 3
+    assert "file_url" not in events[-1].data
+    assert (
+        events[-1].data["media_content_id"]
+        == f"media-source://motioneye/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/dir/no-url"
+    )
+    
     # Test: Invalid file type.
     resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
@@ -493,7 +517,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 3
+    assert len(events) == 4
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -508,7 +532,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 4
+    assert len(events) == 5
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -527,7 +551,7 @@ async def test_event_media_data(
         )
 
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 5
+    assert len(events) == 6
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -547,7 +571,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 6
+    assert len(events) == 7
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -568,7 +592,7 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 7
+    assert len(events) == 8
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
@@ -586,6 +610,6 @@ async def test_event_media_data(
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert len(events) == 8
+    assert len(events) == 9
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
