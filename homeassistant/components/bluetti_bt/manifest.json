@@ -1,0 +1,17 @@
+{
+  "domain": "bluetti_bt",
+  "name": "Bluetti BT",
+  "bluetooth": [
+    {
+      "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@Patrick762"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/bluetti_bt",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["bluetti-bt-lib==0.2.0b3"]
+}
