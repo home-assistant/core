@@ -42,6 +42,8 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 LLM_API_ASSIST = "assist"
 
+TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
+
 DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
@@ -209,6 +211,21 @@ class APIInstance:
     llm_context: LLMContext
     tools: list[Tool]
     custom_serializer: Callable[[Any], Any] | None = None
+
+    def __post_init__(self) -> None:
+        """Report a tool that does not record the integration providing it."""
+        for tool in self.tools:
+            # A merged API wraps tools whose own API instance already checked them.
+            if isinstance(tool, NamespacedTool) or tool.integration is not None:
+                continue
+            frame.report_usage(
+                f"provides the LLM tool {tool.name} without an integration",
+                breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.LOG,
+                integration_domain=_tool_integration_domain(tool),
+            )
 
     async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""

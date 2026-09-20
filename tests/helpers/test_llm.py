@@ -230,6 +230,32 @@ async def test_call_tool_deprecated_json_object_custom_integration(
     assert "returns a JSON object from a tool" in caplog.text
 
 
+async def test_api_instance_reports_untagged_tool(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a directly registered API is reported for an untagged tool."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    class CustomTool(llm.Tool):
+        """Tool provided by a custom integration."""
+
+        name = "test_tool"
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> llm.ToolResult:
+            return llm.ToolResult(data={})
+
+    CustomTool.__module__ = "custom_components.my_custom.llm"
+    llm.APIInstance(
+        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [CustomTool()]
+    )
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+
+
 def test_tool_metadata_defaults() -> None:
     """Test a tool that declares no metadata is taken to be unsafe."""
 
@@ -313,7 +339,7 @@ async def test_intent_tool_omits_blank_arguments(
             probatio.Optional("enabled"): cv.boolean,
         }
 
-    intent_tool = llm.IntentTool("test_intent", MyIntentHandler())
+    intent_tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
     tool: llm.Tool = (
         llm.NamespacedTool("test_api", intent_tool) if namespaced else intent_tool
     )
@@ -379,7 +405,7 @@ async def test_assist_api(
 
     intent_handler = MyIntentHandler()
 
-    tool = llm.IntentTool("test_intent", intent_handler)
+    tool = llm.IntentTool("test_intent", intent_handler, integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == probatio.Schema(
@@ -541,7 +567,7 @@ async def test_assist_api_description(
         intent_type = "test_intent"
         description = "my intent handler"
 
-    tool = llm.IntentTool("test_intent", MyIntentHandler())
+    tool = llm.IntentTool("test_intent", MyIntentHandler(), integration="test")
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
 
@@ -1483,6 +1509,7 @@ async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
         def __init__(self, name: str, description: str) -> None:
             self.name = name
             self.description = description
+            self.integration = "test"
 
         async def async_call(
             self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
