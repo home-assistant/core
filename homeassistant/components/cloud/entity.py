@@ -173,7 +173,9 @@ def _format_tool(
 ) -> ToolParam:
     """Format a Home Assistant tool for the OpenAI Responses API."""
     parameters = probatio.to_openapi(
-        tool.parameters, custom_serializer=custom_serializer
+        tool.parameters,
+        custom_serializer=custom_serializer,
+        openapi_version="3.1.0",
     )
 
     spec: FunctionToolParam = {
@@ -221,6 +223,7 @@ def _format_structured_output(
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
         ),
+        openapi_version="3.1.0",
     )
 
     _ensure_schema_constraints(result)
@@ -231,15 +234,16 @@ def _format_structured_output(
 def _ensure_schema_constraints(schema: dict[str, Any]) -> None:
     """Ensure generated schemas match the Responses API expectations."""
     schema_type = schema.get("type")
+    schema_types = schema_type if isinstance(schema_type, list) else [schema_type]
 
-    if schema_type == "object":
+    if "object" in schema_types:
         schema.setdefault("additionalProperties", False)
         properties = schema.get("properties")
         if isinstance(properties, dict):
             for property_schema in properties.values():
                 if isinstance(property_schema, dict):
                     _ensure_schema_constraints(property_schema)
-    elif schema_type == "array":
+    if "array" in schema_types:
         items = schema.get("items")
         if isinstance(items, dict):
             _ensure_schema_constraints(items)

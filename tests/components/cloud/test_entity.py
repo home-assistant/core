@@ -14,6 +14,7 @@ from homeassistant.components.cloud.const import AI_TASK_ENTITY_UNIQUE_ID, DOMAI
 from homeassistant.components.cloud.entity import (
     BaseCloudLLMEntity,
     _convert_content_to_param,
+    _ensure_schema_constraints,
     _format_structured_output,
 )
 from homeassistant.core import HomeAssistant
@@ -103,6 +104,65 @@ async def test_format_structured_output() -> None:
         },
         "required": ["name", "stuff"],
         "additionalProperties": False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("object_type", "array_type"),
+    [
+        pytest.param("object", "array", id="single-types"),
+        pytest.param(["object", "null"], ["array", "null"], id="nullable-types"),
+        pytest.param(["null", "object"], ["null", "array"], id="null-first"),
+        pytest.param(["object"], ["array"], id="single-type-arrays"),
+    ],
+)
+def test_ensure_schema_constraints(
+    object_type: str | list[str], array_type: str | list[str]
+) -> None:
+    """Test constraints on objects and arrays, including nullable types."""
+    schema = {
+        "type": object_type,
+        "properties": {
+            "objects": {
+                "type": array_type,
+                "items": {"type": object_type},
+            },
+            "mapping": {"type": object_type, "additionalProperties": True},
+            "value": {"type": ["string", "null"]},
+            "untyped": {},
+        },
+    }
+    _ensure_schema_constraints(schema)
+
+    assert schema == {
+        "type": object_type,
+        "additionalProperties": False,
+        "properties": {
+            "objects": {
+                "type": array_type,
+                "items": {"type": object_type, "additionalProperties": False},
+            },
+            "mapping": {"type": object_type, "additionalProperties": True},
+            "value": {"type": ["string", "null"]},
+            "untyped": {},
+        },
+    }
+
+
+def test_ensure_schema_constraints_object_array_union() -> None:
+    """Test that both properties and items are constrained for a union type."""
+    schema = {
+        "type": ["object", "array"],
+        "properties": {"nested": {"type": "object"}},
+        "items": {"type": "object"},
+    }
+    _ensure_schema_constraints(schema)
+
+    assert schema == {
+        "type": ["object", "array"],
+        "additionalProperties": False,
+        "properties": {"nested": {"type": "object", "additionalProperties": False}},
+        "items": {"type": "object", "additionalProperties": False},
     }
 
 
