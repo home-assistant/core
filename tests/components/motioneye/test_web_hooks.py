@@ -1,7 +1,7 @@
 """Test the motionEye camera web hooks."""
 
-import copy
 from contextlib import asynccontextmanager
+import copy
 from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
