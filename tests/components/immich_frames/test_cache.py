@@ -37,8 +37,11 @@ def test_cache_round_trip_and_settings_invalidation(tmp_path: Path) -> None:
     assert cache.read(options, "parent", "server-b") is None
     assert cache.read({CONF_SCREEN_SHAPE: "portrait"}, "parent", "server-a") is None
 
+    legacy_cache = cache.path.with_suffix(".jpg")
+    legacy_cache.write_bytes(b"legacy image")
     cache.clear()
     assert not cache.path.exists()
+    assert not legacy_cache.exists()
 
 
 def test_cache_handles_exif_variants_and_invalid_output(tmp_path: Path) -> None:

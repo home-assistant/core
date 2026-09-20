@@ -125,3 +125,4 @@ class FrameCache:
     def clear(self) -> None:
         """Remove the cache if it exists."""
         self.path.unlink(missing_ok=True)
+        self.path.with_suffix(".jpg").unlink(missing_ok=True)

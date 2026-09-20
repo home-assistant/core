@@ -545,6 +545,23 @@ async def test_options_flow_updates_display_settings(
     assert result["data"][CONF_MODE] == MODE_PAIRS
 
 
+async def test_options_flow_requires_legacy_reconfiguration(
+    hass: HomeAssistant,
+) -> None:
+    """Migration-required entries must use reconfigure before options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy frame",
+        data={CONF_FRAME_ID: "legacy-frame", CONF_MIGRATION_REQUIRED: True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "migration_required"
+
+
 async def test_options_flow_preflights_all_source(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:

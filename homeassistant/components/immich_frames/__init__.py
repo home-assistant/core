@@ -143,6 +143,7 @@ async def _async_prepare_legacy_migration(hass: HomeAssistant, entry_id: str) ->
 def _migrate_legacy_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -> None:
     """Bind a released HACS entry to a matching Core Immich account."""
     legacy_data = dict(entry.data)
+    frame_id = str(legacy_data.get(CONF_FRAME_ID) or entry.entry_id)
     legacy_url = str(legacy_data.get(LEGACY_URL, "")).strip()
     legacy_api_key = str(legacy_data.get(CONF_API_KEY, ""))
     legacy_source = str(legacy_data.get(CONF_SOURCE, DEFAULT_SOURCE))
@@ -161,9 +162,10 @@ def _migrate_legacy_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -
             entry,
             data={
                 CONF_IMMICH_ENTRY_ID: matches[0].entry_id,
-                CONF_FRAME_ID: entry.entry_id,
+                CONF_FRAME_ID: frame_id,
             },
             options=options,
+            unique_id=f"{matches[0].entry_id}|{frame_id}",
             version=4,
         )
         return
@@ -173,10 +175,11 @@ def _migrate_legacy_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -
     hass.config_entries.async_update_entry(
         entry,
         data={
-            CONF_FRAME_ID: entry.entry_id,
+            CONF_FRAME_ID: frame_id,
             CONF_MIGRATION_REQUIRED: True,
         },
         options=options,
+        unique_id=f"{DOMAIN}|{frame_id}",
         version=4,
     )
 
@@ -190,7 +193,9 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> bool:
     """Migrate an older frame entry to the current source model."""
-    if CONF_IMMICH_ENTRY_ID not in entry.data:
+    if not entry.data.get(CONF_IMMICH_ENTRY_ID) and not entry.data.get(
+        CONF_MIGRATION_REQUIRED
+    ):
         await _async_prepare_legacy_migration(hass, entry.entry_id)
         _migrate_legacy_entry(hass, entry)
         return True
@@ -228,7 +233,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> bool:
     """Set up an Immich frame."""
-    if CONF_IMMICH_ENTRY_ID not in entry.data:
+    if not entry.data.get(CONF_IMMICH_ENTRY_ID) and not entry.data.get(
+        CONF_MIGRATION_REQUIRED
+    ):
         await _async_prepare_legacy_migration(hass, entry.entry_id)
         _migrate_legacy_entry(hass, entry)
     if entry.data.get(CONF_MIGRATION_REQUIRED):

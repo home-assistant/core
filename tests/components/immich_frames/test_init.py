@@ -327,15 +327,15 @@ async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
             "url": "http://immich.local:2283",
             CONF_API_KEY: "old-key",
             CONF_SOURCE: DEFAULT_SOURCE,
+            CONF_ALBUM_IDS: ["album-a"],
+            CONF_SCREEN_SHAPE: "portrait",
         },
+        unique_id="https://user:password@immich.local:2283|Legacy frame",
         version=1,
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.version == 4
     assert entry.data == {
@@ -343,6 +343,10 @@ async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
         CONF_MIGRATION_REQUIRED: True,
     }
     assert CONF_API_KEY not in entry.data
+    assert entry.options[CONF_ALBUM_IDS] == ["album-a"]
+    assert entry.options[CONF_SCREEN_SHAPE] == "portrait"
+    assert entry.unique_id == f"{DOMAIN}|{entry.entry_id}"
+    assert "password" not in entry.unique_id
 
 
 @pytest.mark.parametrize(
@@ -571,6 +575,11 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         schedule_reload.assert_called_once()
     assert coordinator._orientation_is_portrait(portrait) is True
     assert coordinator._orientation_is_portrait(MOCK_SEARCH_ASSETS[0]) is False
+    rotated = copy(MOCK_SEARCH_ASSETS[0])
+    rotated.exif_info = ExifInfo(
+        exif_image_width=200, exif_image_height=100, orientation="6"
+    )
+    assert coordinator._orientation_is_portrait(rotated) is True
 
 
 async def test_coordinator_logs_upstream_outage_once_and_recovery(

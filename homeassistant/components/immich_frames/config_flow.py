@@ -290,6 +290,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
+                unique_id=f"{settings[CONF_IMMICH_ENTRY_ID]}|{frame_id}",
                 data={
                     CONF_IMMICH_ENTRY_ID: settings[CONF_IMMICH_ENTRY_ID],
                     CONF_FRAME_ID: frame_id,
@@ -443,6 +444,10 @@ class ImmichFramesOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure source and display settings."""
+        if self._data.get(CONF_MIGRATION_REQUIRED) or not self._data.get(
+            CONF_IMMICH_ENTRY_ID
+        ):
+            return self.async_abort(reason="migration_required")
         errors: dict[str, str] = {}
         if user_input is not None:
             self._data.update(user_input)

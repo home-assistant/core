@@ -37,12 +37,14 @@ from .const import (
     DOMAIN,
     MODE_PAIRS,
     MODE_PAIRS_ONLY,
+    ORIENTATION_PORTRAIT,
     PHOTO_FIT_FULL,
     screen_shape,
 )
 from .rendering import render
 from .selection import (
     UnsupportedSourceError,
+    _orientation,
     async_get_candidates,
     candidates_with_companion,
     choose_asset,
@@ -466,13 +468,7 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
     @staticmethod
     def _orientation_is_portrait(asset: ImmichAsset) -> bool:
         """Return whether EXIF dimensions identify a portrait."""
-        exif = asset.exif_info
-        return bool(
-            exif
-            and exif.exif_image_width
-            and exif.exif_image_height
-            and exif.exif_image_height > exif.exif_image_width
-        )
+        return _orientation(asset) == ORIENTATION_PORTRAIT
 
     @callback
     def async_update_settings(self, changes: dict[str, Any]) -> None:

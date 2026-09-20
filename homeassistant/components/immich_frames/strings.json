@@ -108,6 +108,7 @@
   "options": {
     "abort": {
       "immich_not_ready": "The Immich integration is not ready.",
+      "migration_required": "This frame was created by the custom integration and needs to be reconfigured.",
       "no_albums": "No Immich albums are available."
     },
     "error": {
