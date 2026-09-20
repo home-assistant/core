@@ -1725,7 +1725,11 @@
       ],
       "connectivity": [
         "modbus"
-      ],
+      ]
+    },
+    "bluetti_bt": {
+      "name": "Bluetti BT",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
