@@ -182,7 +182,7 @@ class KNXTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Validate arguments, run the library function and serialize the result."""
         args = self.parameters(tool_input.tool_args)
         try:
@@ -195,7 +195,7 @@ class KNXTool(llm.Tool):
                 translation_key="llm_tool_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return _serialize(result)
+        return llm.ToolResult(data=_serialize(result))
 
 
 def _require_store(knx: KNXModule) -> TelegramStore:

@@ -1,5 +1,6 @@
 """Tests for the KNX LLM API."""
 
+from dataclasses import fields
 from datetime import UTC, date, datetime, time
 import json
 from typing import Any
@@ -99,7 +100,12 @@ def test_schema_from_dataclass_defaults_and_descriptions() -> None:
     tool = _tool(llm_api._build_tools(_mock_knx()), "query_telegrams")
 
     properties = to_openapi(tool.parameters)["properties"]
-    assert properties["limit"]["description"] == "Maximum number of results to return."
+    # Compared against the library's own metadata rather than a copy of its
+    # wording, which a library bump would otherwise break.
+    limit_field = next(
+        field for field in fields(QueryTelegramsInput) if field.name == "limit"
+    )
+    assert properties["limit"]["description"] == limit_field.metadata["description"]
     assert all("description" in prop for prop in properties.values())
 
     # Omitted optional fields are filled with their dataclass defaults.
@@ -308,11 +314,13 @@ def test_schema_required_field_is_enforced() -> None:
 async def test_describe_dpt_tool_call(hass: HomeAssistant) -> None:
     """A DPT tool needs no KNX runtime state and returns a serialized result."""
     tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"}),
-        _llm_context(),
-    )
+    result = (
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"}),
+            _llm_context(),
+        )
+    ).data
     assert result["found"] is True
     assert result["dpt"]["dpt"] == "9.001"
     assert result["dpt"]["unit"] == "°C"
@@ -331,11 +339,13 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
         # Patch before building the tool: the factory captures the function reference.
         mp.setattr(llm_api.kts_mcp, "query_telegrams", query)
         tool = _tool(llm_api._build_tools(knx), "query_telegrams")
-        result = await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": 5}),
-            _llm_context(),
-        )
+        result = (
+            await tool.async_call(
+                hass,
+                llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": 5}),
+                _llm_context(),
+            )
+        ).data
 
     assert query.await_args.args[0] is store
     # The schema constructs the library input, so the tool never builds one.
@@ -397,8 +407,9 @@ async def test_bus_write_tool_call_reaches_the_bus(
     )
 
     await knx.assert_write("1/2/3", (0x0C, 0x33))
-    assert result["group_address"] == "1/2/3"
-    assert result["queued"] is True
+    # APIInstance.async_call_tool wraps a tool's return value in a ToolResult.
+    assert result.data["group_address"] == "1/2/3"
+    assert result.data["queued"] is True
 
 
 @pytest.mark.parametrize(
@@ -453,11 +464,13 @@ async def test_get_last_values_is_paginated(
             llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
         )
         tool = _tool(llm_api._build_tools(knx), "get_last_values")
-        result = await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name="get_last_values", tool_args=tool_args),
-            _llm_context(),
-        )
+        result = (
+            await tool.async_call(
+                hass,
+                llm.ToolInput(tool_name="get_last_values", tool_args=tool_args),
+                _llm_context(),
+            )
+        ).data
 
     assert len(result["telegrams"]) == expected_count
     assert result["total_count"] == 2500
@@ -474,11 +487,13 @@ async def test_get_last_values_is_ordered(hass: HomeAssistant) -> None:
             llm_api.kts_mcp, "get_last_values", AsyncMock(return_value=telegrams)
         )
         tool = _tool(llm_api._build_tools(knx), "get_last_values")
-        result = await tool.async_call(
-            hass,
-            llm.ToolInput(tool_name="get_last_values", tool_args={}),
-            _llm_context(),
-        )
+        result = (
+            await tool.async_call(
+                hass,
+                llm.ToolInput(tool_name="get_last_values", tool_args={}),
+                _llm_context(),
+            )
+        ).data
 
     assert [telegram["destination"] for telegram in result["telegrams"]] == [
         "1/1/1",
@@ -514,11 +529,13 @@ async def test_get_topology_is_paginated_by_line(hass: HomeAssistant) -> None:
     }
     tool = _tool(llm_api._build_tools(_mock_knx(project=project)), "get_topology")
 
-    result = await tool.async_call(
-        hass,
-        llm.ToolInput(tool_name="get_topology", tool_args={"limit": 5}),
-        _llm_context(),
-    )
+    result = (
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool_name="get_topology", tool_args={"limit": 5}),
+            _llm_context(),
+        )
+    ).data
 
     # Three areas, twelve lines: a limit of 5 has to bite on the lines.
     assert len(result["lines"]) == 5
