@@ -35,12 +35,13 @@ LLM_INTENTS = {
     INTENT_LIST_REMOVE_ITEM: "Remove to-do list item",
 }
 
-# Adding an item appends to the list, so it has an effect on every call and
-# takes nothing away. The others act on an item that is already there.
+# Adding an item appends to the list and takes nothing away. Completing and
+# removing both look for an item that is still there, so a repeated call
+# raises instead of having no further effect.
 INTENT_ANNOTATIONS = {
     INTENT_LIST_ADD_ITEM: ToolAnnotations(destructive=False, open_world=False),
-    INTENT_LIST_COMPLETE_ITEM: ToolAnnotations(idempotent=True, open_world=False),
-    INTENT_LIST_REMOVE_ITEM: ToolAnnotations(idempotent=True, open_world=False),
+    INTENT_LIST_COMPLETE_ITEM: ToolAnnotations(open_world=False),
+    INTENT_LIST_REMOVE_ITEM: ToolAnnotations(open_world=False),
 }
 
 
