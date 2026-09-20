@@ -174,5 +174,17 @@
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."
     }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Xbox entity `{entity}` is no longer functional and will be removed in a future release.\n\nPlease update any automations and scripts that use this entity, then press **Submit** to remove it now and resolve this issue."
+          }
+        }
+      },
+      "title": "The Xbox {name} entity is deprecated"
+    }
   }
 }

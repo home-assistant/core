@@ -93,7 +93,7 @@ async def test_set_temperature_omits_empty_optional_targets(
         "entity_id": ENTITY_ID,
         ATTR_TEMPERATURE: 25,
     }
-    assert response["response_type"] == "action_done"
+    assert response.data["response_type"] == "action_done"
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
