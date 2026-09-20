@@ -6,7 +6,11 @@ from typing import Any, cast, override
 
 import aiohttp
 from jinja2 import Template
-from motioneye_client.client import MotionEyeClient, MotionEyeClientURLParseError
+from motioneye_client.client import (
+    MotionEyeClient,
+    MotionEyeClientError,
+    MotionEyeClientURLParseError,
+)
 from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
@@ -39,6 +43,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -271,7 +276,12 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         """Return a still image using the authenticated motionEye client."""
         if not self._camera:
             return None
-        return await cast(Any, self._client).async_get_camera_snapshot(self._camera_id)
+        try:
+            return await cast(Any, self._client).async_get_camera_snapshot(
+                self._camera_id
+            )
+        except MotionEyeClientError as err:
+            raise HomeAssistantError("Unable to get camera snapshot") from err
 
     async def async_set_text_overlay(
         self,
