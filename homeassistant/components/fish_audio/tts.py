@@ -1,11 +1,17 @@
 """TTS platform for the Fish Audio integration."""
 
+from collections.abc import AsyncGenerator
 import logging
 from typing import Any, override
 
-from fishaudio.exceptions import APIError, RateLimitError
+from fishaudio.exceptions import APIError, RateLimitError, WebSocketError
 
-from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
+from homeassistant.components.tts import (
+    TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
+    TtsAudioType,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -89,17 +95,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         """Return a list of supported languages."""
         return TTS_SUPPORTED_LANGUAGES
 
-    @override
-    async def async_get_tts_audio(
-        self,
-        message: str,
-        language: str,
-        options: dict[str, Any],
-    ) -> TtsAudioType:
-        """Load tts audio file from engine."""
-
-        _LOGGER.debug("Getting TTS audio for %s", message)
-
+    def _get_options(self, options: dict[str, Any]) -> tuple[str, str, str, float]:
         voice_id = options.get(CONF_VOICE_ID, self.sub_entry.data.get(CONF_VOICE_ID))
         backend = options.get(CONF_BACKEND, self.sub_entry.data.get(CONF_BACKEND))
         latency = options.get(
@@ -117,6 +113,21 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             raise ServiceValidationError(
                 f"Speed must be between {MIN_SPEED} and {MAX_SPEED}"
             )
+
+        return voice_id, backend, latency, speed
+
+    @override
+    async def async_get_tts_audio(
+        self,
+        message: str,
+        language: str,
+        options: dict[str, Any],
+    ) -> TtsAudioType:
+        """Load tts audio file from engine."""
+
+        _LOGGER.debug("Getting TTS audio for %s", message)
+
+        voice_id, backend, latency, speed = self._get_options(options)
 
         try:
             audio = await self.client.tts.convert(
@@ -137,3 +148,43 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             raise UnexpectedError(err) from err
 
         return "mp3", audio
+
+    @override
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Stream TTS audio from engine."""
+
+        voice_id, backend, latency, speed = self._get_options(request.options)
+
+        stream = self.client.tts.stream_websocket(
+            request.message_gen,
+            reference_id=voice_id,
+            latency=latency,
+            speed=speed,
+            model=backend,
+            format="mp3",
+        )
+
+        async def gen() -> AsyncGenerator[bytes]:
+            try:
+                async for chunk in stream:
+                    yield chunk
+
+            except RateLimitError as err:
+                _LOGGER.error("Fish Audio TTS rate limited: %s", err)
+                raise HomeAssistantError(f"Rate limited: {err}") from err
+            except APIError as err:
+                _LOGGER.error("Fish Audio TTS request failed: %s", err)
+                raise HomeAssistantError(f"TTS request failed: {err}") from err
+            except WebSocketError as err:
+                _LOGGER.error(
+                    "Fish Audio Websocket connection closed unexpectedly: %s", err
+                )
+                raise HomeAssistantError(
+                    f"Websocket connection closed unexpectedly: {err}"
+                ) from err
+            except Exception as err:
+                raise UnexpectedError(err) from err
+
+        return TTSAudioResponse("mp3", gen())
