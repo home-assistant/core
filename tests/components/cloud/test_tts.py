@@ -478,8 +478,12 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_entity"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
-    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
-    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
+    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][
+        1
+    ] | {"user_id": None}
+    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][
+        2
+    ] | {"user_id": None}
 
 
 @pytest.mark.parametrize(
