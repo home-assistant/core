@@ -13,10 +13,7 @@ from beatbot_cloud import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestBaseError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -90,9 +87,10 @@ class BeatbotEventClient:
             )
             try:
                 await self._oauth_session.async_ensure_token_valid()
-            except (OAuth2TokenRequestReauthError, ConfigEntryAuthFailed) as err:
+            except ConfigEntryAuthFailed as err:
                 raise BeatbotAuthenticationError from err
-            except Exception as err:
+            except OAuth2TokenRequestBaseError as err:
+                # Transient token-endpoint failures have to stay retryable.
                 raise BeatbotConnectionError("OAuth token refresh failed") from err
 
         access_token = self._oauth_session.token.get("access_token")

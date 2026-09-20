@@ -2,14 +2,15 @@
 
 from dataclasses import dataclass
 
-from beatbot_cloud import BeatbotAuthenticationError, BeatbotClient
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotClient,
+    BeatbotConnectionError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestBaseError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -45,8 +46,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
         """Return a valid OAuth access token for the client library."""
         try:
             await session.async_ensure_token_valid()
-        except (ConfigEntryAuthFailed, OAuth2TokenRequestReauthError) as err:
+        except ConfigEntryAuthFailed as err:
+            # OAuth2TokenRequestReauthError subclasses this, and covers a
+            # rejected refresh token.
             raise BeatbotAuthenticationError from err
+        except OAuth2TokenRequestBaseError as err:
+            # Transient token-endpoint failures have to stay retryable.
+            raise BeatbotConnectionError from err
         access_token = session.token.get("access_token")
         if not isinstance(access_token, str) or not access_token:
             raise BeatbotAuthenticationError
