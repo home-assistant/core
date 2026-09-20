@@ -1,17 +1,18 @@
 """Tests for the OpenRouter integration."""
 
+from collections.abc import AsyncGenerator
 import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from openai.types import CompletionUsage
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionMessage,
-    ChatCompletionMessageFunctionToolCall,
+from openai.types.chat import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import (
+    Choice as ChunkChoice,
+    ChoiceDelta,
+    ChoiceDeltaToolCall,
+    ChoiceDeltaToolCallFunction,
 )
-from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -22,6 +23,7 @@ from homeassistant.helpers import entity_registry as er, intent
 from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
+from .conftest import get_generator_from_data
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
@@ -162,14 +164,20 @@ async def test_empty_api_response(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[],
-            created=1700000000,
-            model="gpt-3.5-turbo-0613",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[],
+                    created=1700000000,
+                    model="gpt-3.5-turbo-0613",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=0, prompt_tokens=8, total_tokens=8
+                    ),
+                )
+            ]
         )
     )
 
@@ -242,58 +250,156 @@ async def test_function_call(
     )
 
     mock_openai_client.chat.completions.create.side_effect = (
-        ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="tool_calls",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content=None,
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=[
-                            ChatCompletionMessageFunctionToolCall(
-                                id="call_call_1",
-                                function=Function(
-                                    arguments='{"param1":"call1"}',
-                                    name="test_tool",
-                                ),
-                                type="function",
-                            )
-                        ],
+        get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            finish_reason=None,
+                            delta=ChoiceDelta(
+                                role="assistant",
+                                content=None,
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=0,
+                                        id="call_call_1",
+                                        type="function",
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name="test_tool",
+                                            arguments='{"param1"',
+                                        ),
+                                    )
+                                ],
+                            ),
+                        ),
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            finish_reason=None,
+                            delta=ChoiceDelta(
+                                content=None,
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=1,
+                                        id="call_call_2",
+                                        type="function",
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name="test_tool",
+                                            arguments='{"param2"',
+                                        ),
+                                    )
+                                ],
+                            ),
+                        ),
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            finish_reason=None,
+                            delta=ChoiceDelta(
+                                content=None,
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=0,
+                                        function=ChoiceDeltaToolCallFunction(
+                                            arguments=':"call1"}'
+                                        ),
+                                    )
+                                ],
+                            ),
+                        ),
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            finish_reason=None,
+                            delta=ChoiceDelta(
+                                content=None,
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=1,
+                                        function=ChoiceDeltaToolCallFunction(
+                                            arguments=':"call2"}'
+                                        ),
+                                    )
+                                ],
+                            ),
+                        ),
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0, finish_reason="tool_calls", delta=ChoiceDelta()
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                ),
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
                     ),
-                )
-            ],
-            created=1700000000,
-            model="gpt-4-1106-preview",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+                ),
+            ]
         ),
-        ChatCompletion(
-            id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="I have successfully called the function",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            index=0,
+                            delta=ChoiceDelta(
+                                role="assistant",
+                                content="I have successfully called the function",
+                            ),
+                            finish_reason="stop",
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="gpt-4-1106-preview",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         ),
     )
 
@@ -313,3 +419,71 @@ async def test_function_call(
         mock_openai_client.chat.completions.create.call_args.kwargs["messages"]
         == snapshot
     )
+
+
+async def test_streaming_response(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test streaming response from the assistant."""
+
+    async def mock_stream() -> AsyncGenerator[ChatCompletionChunk]:
+        yield ChatCompletionChunk.model_construct(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                ChunkChoice.model_construct(
+                    index=0,
+                    delta=ChoiceDelta(role="assistant", content="Hello"),
+                    finish_reason=None,
+                )
+            ],
+            created=1700000000,
+            model="gpt-3.5-turbo",
+            object="chat.completion.chunk",
+        )
+
+        yield ChatCompletionChunk.model_construct(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                ChunkChoice.model_construct(
+                    index=0, delta=ChoiceDelta(content=" World!"), finish_reason=None
+                )
+            ],
+            created=1700000000,
+            model="gpt-3.5-turbo",
+            object="chat.completion.chunk",
+        )
+
+        yield ChatCompletionChunk.model_construct(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[ChunkChoice(index=0, delta=ChoiceDelta(), finish_reason="stop")],
+            created=1700000000,
+            model="gpt-3.5-turbo",
+            object="chat.completion.chunk",
+        )
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create.return_value = mock_stream()
+
+    result = await conversation.async_converse(
+        hass,
+        "Please stream a response",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+
+    assert mock_openai_client.chat.completions.create.call_args.kwargs["stream"] is True
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello World!"
+
+    content = mock_chat_log.content[1:]
+    assert len(content) == 2
+    assert content[0].role == "user"
+    assert content[0].content == "Please stream a response"
+    assert content[1].role == "assistant"
+    assert content[1].content == "Hello World!"

@@ -1,7 +1,7 @@
 """Base entity for Open Router."""
 
 import base64
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, Any, Literal
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
+    ChatCompletionChunk,
     ChatCompletionContentPartImageParam,
     ChatCompletionFunctionToolParam,
-    ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
     ChatCompletionMessageParam,
     ChatCompletionSystemMessageParam,
@@ -151,25 +151,74 @@ def _decode_tool_arguments(arguments: str) -> Any:
         raise HomeAssistantError(f"Unexpected tool argument response: {err}") from err
 
 
-async def _transform_response(
-    message: ChatCompletionMessage,
+async def _transform_stream(
+    chunks: AsyncIterable[ChatCompletionChunk],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
-    """Transform the OpenRouter message to a ChatLog format."""
-    data: conversation.AssistantContentDeltaDict = {
-        "role": message.role,
-        "content": message.content,
-    }
-    if message.tool_calls:
-        data["tool_calls"] = [
-            llm.ToolInput(
-                id=tool_call.id,
-                tool_name=tool_call.function.name,
-                tool_args=_decode_tool_arguments(tool_call.function.arguments),
-            )
-            for tool_call in message.tool_calls
-            if tool_call.type == "function"
-        ]
-    yield data
+    """Transform the streamed completion chunks from OpenRouter to a ChatLog format."""
+    is_role_emitted = False
+    has_choices = False
+
+    tool_calls: dict[int, dict[str, str]] = {}
+
+    async for chunk in chunks:
+        if not chunk.choices:
+            continue
+
+        has_choices = True
+
+        choice = chunk.choices[0]
+
+        data: conversation.AssistantContentDeltaDict = {}
+
+        if choice.delta.role == "assistant" and not is_role_emitted:
+            is_role_emitted = True
+            data["role"] = "assistant"
+
+        if choice.delta.content is not None:
+            data["content"] = choice.delta.content
+
+        if choice.delta.tool_calls:
+            for tool_call in choice.delta.tool_calls:
+                current_tool_call = tool_calls.setdefault(
+                    tool_call.index,
+                    {
+                        "id": "",
+                        "name": "",
+                        "arguments": "",
+                    },
+                )
+
+                if tool_call.id:
+                    current_tool_call["id"] = tool_call.id
+
+                if tool_call.function and tool_call.function.name:
+                    current_tool_call["name"] = tool_call.function.name
+
+                if tool_call.function and tool_call.function.arguments:
+                    current_tool_call["arguments"] = (
+                        current_tool_call["arguments"] + tool_call.function.arguments
+                    )
+
+        if choice.finish_reason == "tool_calls":
+            completed_tool_calls = [tool_calls[index] for index in sorted(tool_calls)]
+
+            data["tool_calls"] = [
+                llm.ToolInput(
+                    id=tool_call["id"],
+                    tool_name=tool_call["name"],
+                    tool_args=_decode_tool_arguments(tool_call["arguments"])
+                    if tool_call["arguments"]
+                    else {},
+                )
+                for tool_call in completed_tool_calls
+            ]
+
+        if data:
+            yield data
+
+    if not has_choices:
+        LOGGER.error("API returned empty choices")
+        raise HomeAssistantError("API returned empty response")
 
 
 async def async_prepare_files_for_prompt(
@@ -345,22 +394,16 @@ class OpenRouterEntity(Entity):
 
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                result = await client.chat.completions.create(**model_args)
+                result = await client.chat.completions.create(**model_args, stream=True)
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
-
-            if not result.choices:
-                LOGGER.error("API returned empty choices")
-                raise HomeAssistantError("API returned empty response")
-
-            result_message = result.choices[0].message
 
             model_args["messages"].extend(
                 [
                     msg
                     async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, _transform_response(result_message)
+                        self.entity_id, _transform_stream(result)
                     )
                     if (msg := _convert_content_to_chat_message(content))
                 ]
