@@ -652,6 +652,24 @@ async def test_media_proxy_rejects_invalid_base64_path(
     stream_mock.assert_not_called()
 
 
+async def test_media_proxy_rejects_relative_path(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test rejecting a relative media path."""
+    client = create_mock_motioneye_client()
+    stream_mock = mock_media_stream(client, b"")
+    config = await setup_mock_motioneye_config_entry(hass, client=client)
+    await async_get_media_source(hass)
+
+    client_session = await hass_client()
+    response = await client_session.get(
+        f"/api/motioneye/media/{config.entry_id}/1/images/0/Zm9vLmpwZw=="
+    )
+
+    assert response.status == 400
+    stream_mock.assert_not_called()
+
+
 async def test_media_proxy_rejects_config_entry_from_other_domain(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
