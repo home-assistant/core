@@ -1,6 +1,7 @@
 """Tests for helpers in the Home Assistant Cloud conversation entity."""
 
 import base64
+from collections.abc import Callable
 import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -16,6 +17,7 @@ from homeassistant.components.cloud.entity import (
     BaseCloudLLMEntity,
     _convert_content_to_param,
     _format_structured_output,
+    _format_tool,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -63,6 +65,16 @@ class DummyTool(llm.Tool):
     async def async_call(self, hass: HomeAssistant, tool_input, llm_context):
         """No-op implementation."""
         return {"value": "done"}
+
+
+def test_format_tool_openapi_31(snapshot: SnapshotAssertion) -> None:
+    """Test that tool parameters use OpenAPI 3.1 nullable types."""
+    tool = DummyTool()
+    tool.parameters = probatio.Schema(
+        {probatio.Required("value"): probatio.In(["on", "off", None])}
+    )
+
+    assert _format_tool(tool, None) == snapshot
 
 
 async def test_format_structured_output() -> None:
@@ -171,6 +183,45 @@ def test_format_structured_output_openapi_31(
     schema: probatio.Schema, snapshot: SnapshotAssertion
 ) -> None:
     """Test version-specific schema conversion using OpenAPI 3.1."""
+    assert _format_structured_output(schema, None) == snapshot
+
+
+@pytest.mark.parametrize(
+    "schema_factory",
+    [
+        pytest.param(probatio.Maybe, id="any-of"),
+        pytest.param(
+            lambda schema: probatio.SomeOf([schema, str], min_valid=1, max_valid=1),
+            id="one-of",
+        ),
+        pytest.param(
+            lambda schema: probatio.SomeOf([schema, dict], min_valid=2, max_valid=2),
+            id="all-of",
+        ),
+        pytest.param(
+            lambda schema: probatio.ExactSequence([schema]), id="prefix-items"
+        ),
+        pytest.param(
+            lambda schema: probatio.Maybe(probatio.ExactSequence([schema])),
+            id="nullable-prefix-items",
+        ),
+    ],
+)
+def test_format_structured_output_nested_objects(
+    schema_factory: Callable[[selector.ObjectSelector], object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test constraints on objects nested in composition branches and tuples."""
+    schema = probatio.Schema(
+        {
+            probatio.Required("value"): schema_factory(
+                selector.ObjectSelector(
+                    {"fields": {"name": {"selector": {"text": None}}}}
+                )
+            )
+        }
+    )
+
     assert _format_structured_output(schema, None) == snapshot
 
 

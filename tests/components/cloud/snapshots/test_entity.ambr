@@ -1,4 +1,145 @@
 # serializer version: 1
+# name: test_format_structured_output_nested_objects[all-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'allOf': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+          dict({
+            'additionalProperties': True,
+            'type': 'object',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[any-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'type': 'null',
+          }),
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[nullable-prefix-items]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'type': 'null',
+          }),
+          dict({
+            'items': False,
+            'prefixItems': list([
+              dict({
+                'additionalProperties': False,
+                'properties': dict({
+                  'name': dict({
+                    'type': 'string',
+                  }),
+                }),
+                'type': 'object',
+              }),
+            ]),
+            'type': 'array',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[one-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'oneOf': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+          dict({
+            'type': 'string',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[prefix-items]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'items': False,
+        'prefixItems': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+        ]),
+        'type': 'array',
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
 # name: test_format_structured_output_openapi_31[exclusive-bounds]
   dict({
     'exclusiveMaximum': 10,
@@ -219,5 +360,33 @@
       }),
     }),
     'type': 'object',
+  })
+# ---
+# name: test_format_tool_openapi_31
+  dict({
+    'description': 'Test tool',
+    'name': 'do_something',
+    'parameters': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'enum': list([
+            'on',
+            'off',
+            None,
+          ]),
+          'type': list([
+            'string',
+            'null',
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': False,
+    'type': 'function',
   })
 # ---

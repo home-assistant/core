@@ -233,6 +233,12 @@ def _format_structured_output(
 
 def _ensure_schema_constraints(schema: dict[str, Any]) -> None:
     """Ensure generated schemas match the Responses API expectations."""
+    for keyword in ("anyOf", "oneOf", "allOf", "prefixItems"):
+        if isinstance(branches := schema.get(keyword), list):
+            for branch in branches:
+                if isinstance(branch, dict):
+                    _ensure_schema_constraints(branch)
+
     schema_type = schema.get("type")
     schema_types = schema_type if isinstance(schema_type, list) else [schema_type]
 
