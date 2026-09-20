@@ -1,6 +1,5 @@
 """The motionEye integration."""
 
-from base64 import urlsafe_b64encode
 from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
@@ -81,6 +80,7 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
+from .media_source import _build_media_proxy_path
 from .media_source import MotionEyeMediaProxyView, split_motioneye_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
@@ -471,9 +471,12 @@ def _get_media_event_data(
             f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
         ),
     }
-    encoded_path = urlsafe_b64encode(file_path.encode("utf-8")).decode("ascii")
-    proxy_path = (
-        f"/api/motioneye/media/{config_entry_id}/{camera_id}/{kind}/0/{encoded_path}"
+    proxy_path = _build_media_proxy_path(
+        config_entry_id,
+        camera_id,
+        kind,
+        file_path,
+        preview=False,
     )
     output[EVENT_FILE_URL] = async_sign_path(
         hass,
