@@ -4,7 +4,7 @@ from typing import Any, override
 
 from aioambient import API
 from aioambient.errors import AmbientError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -20,8 +20,8 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = vol.Schema(
-            {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
+        self.data_schema = probatio.Schema(
+            {probatio.Required(CONF_API_KEY): str, probatio.Required(CONF_APP_KEY): str}
         )
 
     async def _show_form(self, errors: dict | None = None) -> ConfigFlowResult:

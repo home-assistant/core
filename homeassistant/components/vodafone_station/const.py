@@ -2,7 +2,7 @@
 
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "vodafone_station"
 SCAN_INTERVAL = 30

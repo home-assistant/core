@@ -31,6 +31,8 @@ async def async_setup_entry(
         api_key=entry.data[CONF_API_KEY],
         referrer=entry.data.get(CONF_REFERRER),
         language_code=hass.config.language,
+        # The entities report native values in metric units.
+        units_system="METRIC",
     )
     subentries_runtime_data: dict[str, GoogleWeatherSubEntryRuntimeData] = {}
     for subentry in entry.subentries.values():
@@ -46,16 +48,24 @@ async def async_setup_entry(
             ),
         )
         subentries_runtime_data[subentry.subentry_id] = subentry_runtime_data
-    tasks = [
-        coro
-        for subentry_runtime_data in subentries_runtime_data.values()
-        for coro in (
-            subentry_runtime_data.coordinator_observation.async_config_entry_first_refresh(),
-            subentry_runtime_data.coordinator_daily_forecast.async_config_entry_first_refresh(),
-            subentry_runtime_data.coordinator_hourly_forecast.async_config_entry_first_refresh(),
-        )
-    ]
-    await asyncio.gather(*tasks)
+    # Wait for every refresh to settle before failing, so that no refresh outlives
+    # a setup that did not complete. Exceptions are re-raised as-is, so that
+    # ConfigEntryNotReady and ConfigEntryAuthFailed keep their meaning.
+    results = await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for subentry_runtime_data in subentries_runtime_data.values()
+            for coordinator in (
+                subentry_runtime_data.coordinator_observation,
+                subentry_runtime_data.coordinator_daily_forecast,
+                subentry_runtime_data.coordinator_hourly_forecast,
+            )
+        ),
+        return_exceptions=True,
+    )
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
     entry.runtime_data = GoogleWeatherRuntimeData(
         api=api,
         subentries_runtime_data=subentries_runtime_data,

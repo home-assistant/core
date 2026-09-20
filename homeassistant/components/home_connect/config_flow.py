@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import jwt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
@@ -42,7 +42,7 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         return await self.async_step_user()
 
@@ -68,14 +68,14 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         device_registry = dr.async_get(self.hass)
-        if device_entry := device_registry.async_get_device(
+        for device in device_registry.async_get_devices(
             identifiers={
                 (DOMAIN, discovery_info.hostname),
                 (DOMAIN, discovery_info.hostname.split("-")[-1]),
             }
         ):
             device_registry.async_update_device(
-                device_entry.id,
+                device.id,
                 new_connections={
                     (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
                 },

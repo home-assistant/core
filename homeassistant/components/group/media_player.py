@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from contextlib import suppress
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -19,13 +19,13 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -42,6 +42,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -74,9 +75,9 @@ DEFAULT_NAME = "Media Group"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(MEDIA_PLAYER_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(MEDIA_PLAYER_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -174,7 +175,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 players.discard(entity_id)
             return
 
-        new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        new_features = new_state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if new_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST:
             self._features[KEY_CLEAR_PLAYLIST].add(entity_id)
         else:
@@ -441,7 +444,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
+            volume_level = self.hass.states.get(entity).attributes[  # type: ignore[union-attr]
+                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+            ]
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
@@ -449,7 +454,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
     async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
+            volume_level = self.hass.states.get(entity).attributes[  # type: ignore[union-attr]
+                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+            ]
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 

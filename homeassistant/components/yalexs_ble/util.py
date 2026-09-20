@@ -37,13 +37,24 @@ def async_find_existing_service_info(
 ) -> BluetoothServiceInfoBleak | None:
     """Return the service info for the given local_name and address."""
     has_unique_local_name = local_name_is_unique(local_name)
+    by_local_name: BluetoothServiceInfoBleak | None = None
+
     for service_info in async_discovered_service_info(hass):
         device = service_info.device
-        if (
-            has_unique_local_name and device.name == local_name
-        ) or device.address == address:
+        if device.address == address:
             return service_info
-    return None
+
+        # The local name is all we have to go on when the address is hidden
+        # behind a system UUID, but anything can advertise that name, so it
+        # only counts when nothing answers to the address we were given.
+        if (
+            by_local_name is None
+            and has_unique_local_name
+            and device.name == local_name
+        ):
+            by_local_name = service_info
+
+    return by_local_name
 
 
 def short_address(address: str) -> str:

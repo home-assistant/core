@@ -2,7 +2,6 @@
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import StrEnum
 import logging
 from typing import Any, Self, final, override
 
@@ -25,6 +24,7 @@ from .const import (
     DOMAIN,
     ButtonEventType,
     DoorbellEventType,
+    EventDeviceClass,
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
@@ -35,14 +35,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-
-class EventDeviceClass(StrEnum):
-    """Device class for events."""
-
-    DOORBELL = "doorbell"
-    BUTTON = "button"
-    MOTION = "motion"
 
 
 __all__ = [
@@ -165,7 +157,13 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """Process a new event."""
         if event_type not in self.event_types:
             raise ValueError(f"Invalid event type {event_type} for {self.entity_id}")
-        self.__last_event_triggered = dt_util.utcnow()
+        triggered = dt_util.utcnow()
+        # Force the timestamp to strictly increase so multiple events fired
+        # within the same millisecond stay distinct state changes, which state
+        # triggers such as event.received rely on to fire once per event.
+        if (last := self.__last_event_triggered) is not None:
+            triggered = max(triggered, last + timedelta(milliseconds=1))
+        self.__last_event_triggered = triggered
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 

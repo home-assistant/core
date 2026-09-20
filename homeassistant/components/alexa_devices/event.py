@@ -12,7 +12,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
 from .utils import async_remove_entity_from_virtual_group
@@ -47,6 +47,7 @@ async def async_setup_entry(
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
@@ -78,7 +79,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 self.device.serial_number
             )
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "No vocal record found for device %s [%s]",
                 self.device.account_name,
                 self.device.serial_number,
@@ -96,6 +97,8 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 "intent": vocal_record.intent,
                 "voice_command": vocal_record.title,
                 "voice_reply": vocal_record.sub_title,
+                "person_first_name": vocal_record.person_first_name,
+                "person_type": vocal_record.person_type,
             },
         )
         self.async_write_ha_state()

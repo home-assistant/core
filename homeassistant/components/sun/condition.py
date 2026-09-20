@@ -1,10 +1,10 @@
 """Offer sun based automation rules."""
 
 from datetime import datetime, timedelta
-from typing import Any, Unpack, cast, override
+from typing import Any, Final, Literal, Unpack, cast, override
 
 import astral.sun
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -43,22 +43,36 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     ELEVATION_ASTRONOMICAL,
+    ELEVATION_BLUE_HOUR_HIGH,
+    ELEVATION_BLUE_HOUR_LOW,
     ELEVATION_CIVIL,
+    ELEVATION_GOLDEN_HOUR_HIGH,
+    ELEVATION_GOLDEN_HOUR_LOW,
     ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
 
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Optional("before"): cv.sun_event,
-    vol.Optional("before_offset"): cv.time_period,
-    vol.Optional("after"): cv.sun_event,
-    vol.Optional("after_offset"): cv.time_period,
+# Names of the solar noon/midnight events in the astral.sun module.
+_SUN_EVENT_SOLAR_NOON: Final = "noon"
+_SUN_EVENT_SOLAR_MIDNIGHT: Final = "midnight"
+
+CONF_PERIOD = "period"
+_PERIOD_ANY = "any"
+_PERIOD_MORNING = "morning"
+_PERIOD_EVENING = "evening"
+_PERIODS = (_PERIOD_ANY, _PERIOD_MORNING, _PERIOD_EVENING)
+
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Optional("before"): cv.sun_event,
+    probatio.Optional("before_offset"): cv.time_period,
+    probatio.Optional("after"): cv.sun_event,
+    probatio.Optional("after_offset"): cv.time_period,
 }
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        probatio.Required(CONF_OPTIONS): probatio.All(
             _OPTIONS_SCHEMA_DICT,
             cv.has_at_least_one_key("before", "after"),
         )
@@ -191,7 +205,9 @@ class SunCondition(Condition):
 
 
 # The sun is a singleton, so these conditions take no target and no options.
-_STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
+_STATE_CONDITION_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): {}}
+)
 
 # The sun is a singleton, so the elevation condition always targets sun.sun
 # instead of asking the user to pick an entity.
@@ -282,10 +298,12 @@ _TWILIGHT_BANDS = {
     _TWILIGHT_ASTRONOMICAL: (ELEVATION_ASTRONOMICAL, ELEVATION_NAUTICAL),
 }
 
-_TWILIGHT_CONDITION_SCHEMA = vol.Schema(
+_TWILIGHT_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_TYPE, default=_TWILIGHT_ANY): vol.In(_TWILIGHT_BANDS),
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Optional(CONF_TYPE, default=_TWILIGHT_ANY): probatio.In(
+                _TWILIGHT_BANDS
+            ),
         }
     }
 )
@@ -334,10 +352,128 @@ class _EveningTwilightCondition(_TwilightCondition):
     _rising = False
 
 
-_ELEVATION_CONDITION_SCHEMA = vol.Schema(
+_PERIOD_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Required("threshold"): NumericThresholdSelector(
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Optional(CONF_PERIOD, default=_PERIOD_ANY): probatio.In(_PERIODS),
+        }
+    }
+)
+
+
+class _GoldenBlueHourCondition(Condition):
+    """Base class for the golden and blue hour conditions.
+
+    The sun is in golden/blue hour when its elevation is within the band; the
+    ``period`` option narrows this to the rising (morning) or descending
+    (evening) pass through the band.
+    """
+
+    _low: float
+    _high: float
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _PERIOD_CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._period = config.options[CONF_PERIOD]
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, rising = _solar_position(self._hass)
+        if not self._low <= elevation <= self._high:
+            return False
+        if self._period == _PERIOD_MORNING:
+            return rising
+        if self._period == _PERIOD_EVENING:
+            return not rising
+        return True
+
+
+class _GoldenHourCondition(_GoldenBlueHourCondition):
+    """Test if it is golden hour."""
+
+    _low = ELEVATION_GOLDEN_HOUR_LOW
+    _high = ELEVATION_GOLDEN_HOUR_HIGH
+
+
+class _BlueHourCondition(_GoldenBlueHourCondition):
+    """Test if it is blue hour."""
+
+    _low = ELEVATION_BLUE_HOUR_LOW
+    _high = ELEVATION_BLUE_HOUR_HIGH
+
+
+def _elevation_at_last_solar_extreme(
+    hass: HomeAssistant, event: Literal["noon", "midnight"]
+) -> float:
+    """Return the sun's elevation at the most recent solar noon or midnight.
+
+    Evaluating the current cycle's extreme (the one at or before now), rather than
+    the next one, keeps ``is_midnight_sun``/``is_polar_night`` in step with their
+    start/end triggers: those fire at the solar noon/midnight whose elevation
+    crosses the horizon, and looking ahead would flip the condition up to a day
+    early.
+    """
+    observer = get_astral_observer(hass)
+    now = dt_util.utcnow()
+    event_func = getattr(astral.sun, event)
+    # Scan a short window and keep the latest extreme at or before now. Starting
+    # two days back guarantees the first candidate precedes now even for time
+    # zones skewed far from their meridian.
+    local_date = dt_util.as_local(now).date() - timedelta(days=2)
+    latest: datetime = event_func(observer, local_date)
+    for _ in range(4):
+        local_date += timedelta(days=1)
+        candidate: datetime = event_func(observer, local_date)
+        if candidate <= now:
+            latest = candidate
+        else:
+            # Candidates only move later, so the first one past now ends the scan.
+            break
+    elevation: float = astral.sun.elevation(observer, latest)
+    return elevation
+
+
+class _MidnightSunCondition(_SunStateCondition):
+    """Test if it is midnight sun (the sun stays above the horizon for 24h)."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        # The sun's daily low is at solar midnight; if even that is above the
+        # horizon the sun never sets during this cycle.
+        elevation = _elevation_at_last_solar_extreme(
+            self._hass, _SUN_EVENT_SOLAR_MIDNIGHT
+        )
+        return elevation > ELEVATION_HORIZON
+
+
+class _PolarNightCondition(_SunStateCondition):
+    """Test if it is polar night (the sun stays below the horizon for 24h)."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        # The sun's daily high is at solar noon; if even that is below the
+        # horizon the sun never rises during this cycle.
+        elevation = _elevation_at_last_solar_extreme(self._hass, _SUN_EVENT_SOLAR_NOON)
+        return elevation < ELEVATION_HORIZON
+
+
+_ELEVATION_CONDITION_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_OPTIONS, default=dict): {
+            probatio.Required("threshold"): NumericThresholdSelector(
                 NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
             ),
         }
@@ -375,6 +511,10 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_night": _NightCondition,
     "is_morning_twilight": _MorningTwilightCondition,
     "is_evening_twilight": _EveningTwilightCondition,
+    "is_golden_hour": _GoldenHourCondition,
+    "is_blue_hour": _BlueHourCondition,
+    "is_midnight_sun": _MidnightSunCondition,
+    "is_polar_night": _PolarNightCondition,
 }
 
 

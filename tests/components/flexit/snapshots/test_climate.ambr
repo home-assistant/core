@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_climate_entity[climate.flexit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'Off',
+        'Low',
+        'Medium',
+        'High',
+      ]),
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.flexit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'flexit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 9>,
+    'translation_key': None,
+    'unique_id': 'flexit_001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entity[climate.flexit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'Medium',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'Off',
+        'Low',
+        'Medium',
+        'High',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flexit',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 9>,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.flexit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
