@@ -12,6 +12,10 @@
       "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network.",
       "unsupported_device": "This Marstek device type is not currently supported"
     },
+    "progress": {
+      "discover": "Searching for Marstek devices on the local network",
+      "title": "Marstek device discovery"
+    },
     "step": {
       "discover": {
         "data": {
@@ -67,69 +71,21 @@
           "ups": "UPS"
         }
       },
-      "pv1_current": {
-        "name": "PV1 current"
+      "pv_current": {
+        "name": "PV input {input} current"
       },
-      "pv1_power": {
-        "name": "PV1 power"
+      "pv_power": {
+        "name": "PV input {input} power"
       },
-      "pv1_state": {
-        "name": "PV1 state",
+      "pv_state": {
+        "name": "PV input {input} state",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "working": "Working"
         }
       },
-      "pv1_voltage": {
-        "name": "PV1 voltage"
-      },
-      "pv2_current": {
-        "name": "PV2 current"
-      },
-      "pv2_power": {
-        "name": "PV2 power"
-      },
-      "pv2_state": {
-        "name": "PV2 state",
-        "state": {
-          "standby": "[%key:common::state::standby%]",
-          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
-        }
-      },
-      "pv2_voltage": {
-        "name": "PV2 voltage"
-      },
-      "pv3_current": {
-        "name": "PV3 current"
-      },
-      "pv3_power": {
-        "name": "PV3 power"
-      },
-      "pv3_state": {
-        "name": "PV3 state",
-        "state": {
-          "standby": "[%key:common::state::standby%]",
-          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
-        }
-      },
-      "pv3_voltage": {
-        "name": "PV3 voltage"
-      },
-      "pv4_current": {
-        "name": "PV4 current"
-      },
-      "pv4_power": {
-        "name": "PV4 power"
-      },
-      "pv4_state": {
-        "name": "PV4 state",
-        "state": {
-          "standby": "[%key:common::state::standby%]",
-          "working": "[%key:component::marstek::entity::sensor::pv1_state::state::working%]"
-        }
-      },
-      "pv4_voltage": {
-        "name": "PV4 voltage"
+      "pv_voltage": {
+        "name": "PV input {input} voltage"
       },
       "total_pv_energy": {
         "name": "Lifetime PV energy"

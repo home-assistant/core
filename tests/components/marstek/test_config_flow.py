@@ -1,8 +1,10 @@
 """Tests for the Marstek config flow."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiomarstek import MarstekDeviceInfo
 import pytest
 
 from homeassistant import config_entries
@@ -43,6 +45,24 @@ def _data_schema(result: config_entries.ConfigFlowResult) -> config_entries.vol.
     return data_schema
 
 
+async def _async_run_discovery(
+    hass: HomeAssistant,
+    result: config_entries.ConfigFlowResult,
+    user_input: dict[str, object],
+) -> config_entries.ConfigFlowResult:
+    """Run discovery through its progress step."""
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    if result["type"] is not FlowResultType.SHOW_PROGRESS:
+        return result
+
+    assert result["step_id"] == "discover"
+    assert result["progress_action"] == "discover"
+    await hass.async_block_till_done()
+    return await hass.config_entries.flow.async_configure(result["flow_id"])
+
+
 DISCOVERED_DEVICE = MOCK_DISCOVERY_RESPONSE["result"]
 
 DISCOVERED_DEVICE_DUPLICATE_NAME = replace(
@@ -75,6 +95,37 @@ EXPECTED_DEVICE_OPTION = (
 )
 
 
+async def test_discovery_flow_shows_progress(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Test discovery shows progress while the task is running."""
+    finish_discovery = asyncio.Event()
+
+    async def _async_discover_devices() -> list[MarstekDeviceInfo]:
+        await finish_discovery.wait()
+        return [DISCOVERED_DEVICE]
+
+    mock_udp_client.discover_devices.side_effect = _async_discover_devices
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "discover"
+    assert result["progress_action"] == "discover"
+
+    finish_discovery.set()
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
+
+
 async def test_discovery_flow_creates_entry(
     hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
@@ -85,9 +136,7 @@ async def test_discovery_flow_creates_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -115,9 +164,7 @@ async def test_discovery_flow_reuses_shared_udp_client(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -136,10 +183,7 @@ async def test_discovery_flow_duplicate_device_names(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     selector = next(iter(_data_schema(result).schema.values()))
 
@@ -161,10 +205,7 @@ async def test_discovery_flow_filters_unsupported_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     selector = next(iter(_data_schema(result).schema.values()))
 
@@ -182,10 +223,7 @@ async def test_discovery_flow_errors_if_only_unsupported_devices_found(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -202,9 +240,7 @@ async def test_discovery_flow_aborts_if_selected_device_is_unsupported(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_DEVICE: "0"}
     )
@@ -227,10 +263,7 @@ async def test_discovery_flow_aborts_without_stable_unique_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_DEVICE: "0"}
@@ -261,9 +294,7 @@ async def test_discovery_flow_select_device_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_DEVICE: "0"}
     )
@@ -402,9 +433,7 @@ async def test_discover_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -420,15 +449,12 @@ async def test_discovery_empty_error_form_rediscovers(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_devices_found"}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -458,16 +484,13 @@ async def test_discovery_flow_errors_are_recoverable(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discover"}
-    )
+    result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
     assert result["errors"] == {"base": expected_reason}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
+    result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
@@ -492,16 +515,13 @@ async def test_discover_failed_when_client_setup_fails(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "discover"}
-        )
+        result = await _async_run_discovery(hass, result, {"next_step_id": "discover"})
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "discover"
         assert result["errors"] == {"base": "discovery_failed"}
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
+        result = await _async_run_discovery(hass, result, {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"

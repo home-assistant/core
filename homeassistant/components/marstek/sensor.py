@@ -33,44 +33,40 @@ class MarstekSensorEntityDescription(SensorEntityDescription):
     """Describe a Marstek sensor entity."""
 
 
-def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
-    """Build sensors for each of the device's four PV input channels."""
+def _pv_input_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
+    """Build sensors for each of the device's four PV inputs."""
     descriptions: list[MarstekSensorEntityDescription] = []
-    for pv_channel in range(1, 5):
-        for metric, device_class, unit, icon in (
+    for pv_input in range(1, 5):
+        for metric, device_class, unit in (
             (
                 "power",
                 SensorDeviceClass.POWER,
                 UnitOfPower.WATT,
-                "mdi:solar-power",
             ),
             (
                 "voltage",
                 SensorDeviceClass.VOLTAGE,
                 UnitOfElectricPotential.VOLT,
-                "mdi:flash",
             ),
             (
                 "current",
                 SensorDeviceClass.CURRENT,
                 UnitOfElectricCurrent.AMPERE,
-                "mdi:current-ac",
             ),
             (
                 "state",
                 SensorDeviceClass.ENUM,
                 None,
-                "mdi:state-machine",
             ),
         ):
-            key = f"pv{pv_channel}_{metric}"
+            key = f"pv{pv_input}_{metric}"
             descriptions.append(
                 MarstekSensorEntityDescription(
                     key=key,
-                    translation_key=key,
+                    translation_key=f"pv_{metric}",
+                    translation_placeholders={"input": str(pv_input)},
                     device_class=device_class,
                     native_unit_of_measurement=unit,
-                    icon=icon,
                     state_class=(
                         SensorStateClass.MEASUREMENT if metric != "state" else None
                     ),
@@ -106,17 +102,15 @@ SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
         key="device_mode",
         translation_key="device_mode",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:cog",
         options=list(DEVICE_MODE_OPTIONS),
     ),
     MarstekSensorEntityDescription(
         key="battery_status",
         translation_key="battery_status",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:battery",
         options=list(BATTERY_STATUS_OPTIONS),
     ),
-    *_pv_sensor_descriptions(),
+    *_pv_input_sensor_descriptions(),
 )
 
 
@@ -126,7 +120,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Marstek sensors based on a config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
     device_ip = coordinator.device_ip
     _LOGGER.debug("Setting up Marstek sensors: %s", device_ip)
 

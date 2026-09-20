@@ -19,10 +19,10 @@ BATTERY_LEVEL_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_level"
 BATTERY_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_power"
 BATTERY_STATUS_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_battery_status"
 DEVICE_MODE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_device_mode"
-PV1_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_power"
-PV1_STATE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_state"
-PV1_VOLTAGE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv1_voltage"
-PV2_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv2_power"
+PV1_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv_input_1_power"
+PV1_STATE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv_input_1_state"
+PV1_VOLTAGE_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv_input_1_voltage"
+PV2_POWER_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_pv_input_2_power"
 TOTAL_PV_ENERGY_ENTITY_ID = "sensor.marstek_venuse_3_0_v1_lifetime_pv_energy"
 
 
@@ -54,24 +54,6 @@ async def test_sensor_setup_snapshot(
     )
 
 
-async def test_polling_paused(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_udp_client: MagicMock,
-) -> None:
-    """Test coordinator respects polling pause."""
-    mock_config_entry.add_to_hass(hass)
-    mock_udp_client.is_polling_paused.return_value = True
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    mock_udp_client.get_device_status.assert_not_awaited()
-
-
 async def test_polling_failure_recovers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -88,12 +70,12 @@ async def test_polling_failure_recovers(
         MOCK_DEVICE_STATUS,
     ]
 
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == "85"

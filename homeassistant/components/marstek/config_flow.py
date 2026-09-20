@@ -1,10 +1,11 @@
 """Config flow for Marstek integration."""
 
+import asyncio
 import logging
 from typing import override
 
 from aiomarstek import MarstekDeviceInfo
-from probatio import Required as VolRequired, Schema as VolSchema
+from probatio import Required, Schema
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -30,13 +31,19 @@ from .helpers import async_create_udp_client
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_MANUAL_DATA_SCHEMA = VolSchema({VolRequired(CONF_HOST): TextSelector()})
+STEP_MANUAL_DATA_SCHEMA = Schema({Required(CONF_HOST): TextSelector()})
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Marstek."""
 
     discovered_device_options: dict[str, MarstekDeviceInfo]
+
+    def __init__(self) -> None:
+        """Initialize the Marstek config flow."""
+        self.discovery_task: asyncio.Task[None] | None = None
+        self.discovered_devices: list[MarstekDeviceInfo] = []
+        self.discovery_error: str | None = None
 
     @override
     async def async_step_user(
@@ -55,12 +62,33 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input and CONF_DEVICE in user_input:
             return await self._async_step_discover_selected_device(user_input)
 
-        data_schema, errors = await self._async_get_discovery_form()
+        if self.discovery_task is None:
+            self.discovery_task = self.hass.async_create_task(self._async_discover())
+
+        if self.discovery_task.done():
+            self.discovery_task.result()
+            self.discovery_task = None
+            return self.async_show_progress_done(next_step_id="discovery_done")
+
+        return self.async_show_progress(
+            step_id="discover",
+            progress_action="discover",
+            progress_task=self.discovery_task,
+        )
+
+    async def async_step_discovery_done(
+        self, user_input: dict[str, object] | None = None
+    ) -> ConfigFlowResult:
+        """Show the discovery results."""
+        data_schema = (
+            self._async_build_discovery_schema(self.discovered_devices)
+            if self.discovered_devices
+            else Schema({})
+        )
+        errors = {"base": self.discovery_error} if self.discovery_error else {}
 
         return self.async_show_form(
-            step_id="discover",
-            data_schema=data_schema,
-            errors=errors,
+            step_id="discover", data_schema=data_schema, errors=errors
         )
 
     async def _async_step_discover_selected_device(
@@ -81,67 +109,51 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discover",
-            data_schema=VolSchema({}),
+            data_schema=Schema({}),
             errors=errors,
         )
 
-    async def _async_get_discovery_form(
-        self,
-    ) -> tuple[VolSchema, dict[str, str]]:
-        """Discover devices and build the selection form."""
-        errors: dict[str, str] = {}
-        data_schema = VolSchema({})
-
+    async def _async_discover(self) -> None:
+        """Discover supported Marstek devices."""
+        self.discovered_devices = []
+        self.discovery_error = None
         _LOGGER.debug("Starting device discovery")
-        supported_devices = await self._async_get_supported_discovered_devices(errors)
-        if supported_devices is None:
-            return data_schema, errors
-
-        data_schema = self._async_build_discovery_schema(supported_devices)
-        return data_schema, errors
-
-    async def _async_get_supported_discovered_devices(
-        self, errors: dict[str, str]
-    ) -> list[MarstekDeviceInfo] | None:
-        """Return supported discovered devices or record an error."""
         shared_data = self.hass.data.get(MARSTEK_SHARED_DATA)
         udp_client = shared_data.udp_client if shared_data is not None else None
         try:
             if udp_client is None:
                 udp_client = await async_create_udp_client(self.hass)
+            try:
                 discovered_devices = await udp_client.discover_devices()
-                await udp_client.async_cleanup()
-            else:
-                discovered_devices = await udp_client.discover_devices()
+            finally:
+                if shared_data is None:
+                    await udp_client.async_cleanup()
         except TimeoutError, OSError, TypeError:
-            if shared_data is None and udp_client is not None:
-                await udp_client.async_cleanup()
-            errors["base"] = "discovery_failed"
-            return None
+            self.discovery_error = "discovery_failed"
+            return
 
         if not discovered_devices:
-            errors["base"] = "no_devices_found"
-            return None
+            self.discovery_error = "no_devices_found"
+            return
 
-        supported_devices = [
+        self.discovered_devices = [
             device
             for device in discovered_devices
             if device.device_type in SUPPORTED_DEVICE_TYPES
         ]
-        if not supported_devices:
-            errors["base"] = "unsupported_device"
-            return None
+        if not self.discovered_devices:
+            self.discovery_error = "unsupported_device"
+            return
 
         _LOGGER.debug(
             "Discovered %d supported devices out of %d total",
-            len(supported_devices),
+            len(self.discovered_devices),
             len(discovered_devices),
         )
-        return supported_devices
 
     def _async_build_discovery_schema(
         self, supported_devices: list[MarstekDeviceInfo]
-    ) -> VolSchema:
+    ) -> Schema:
         """Build the discovery form schema from supported devices."""
         self.discovered_device_options = {}
 
@@ -160,9 +172,9 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 SelectOptionDict(value=device_key, label=device_label)
             )
 
-        return VolSchema(
+        return Schema(
             {
-                VolRequired(CONF_DEVICE): SelectSelector(
+                Required(CONF_DEVICE): SelectSelector(
                     SelectSelectorConfig(options=device_options)
                 )
             }

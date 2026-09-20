@@ -43,10 +43,8 @@ async def test_async_setup_entry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(
-        mock_config_entry.runtime_data.coordinator, MarstekDataUpdateCoordinator
-    )
-    assert mock_config_entry.runtime_data.coordinator.udp_client is mock_udp_client
+    assert isinstance(mock_config_entry.runtime_data, MarstekDataUpdateCoordinator)
+    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
     mock_udp_client.get_device_info.assert_awaited_once()
     mock_forward_entry_setups.assert_awaited_once()
 
@@ -97,8 +95,8 @@ async def test_async_unload_multiple_entries(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert second_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.coordinator.udp_client is mock_udp_client
-    assert second_entry.runtime_data.coordinator.udp_client is mock_udp_client
+    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
+    assert second_entry.runtime_data.udp_client is mock_udp_client
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

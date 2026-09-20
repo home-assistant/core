@@ -15,7 +15,6 @@ from .coordinator import (
     MARSTEK_SHARED_DATA,
     MarstekConfigEntry,
     MarstekDataUpdateCoordinator,
-    MarstekRuntimeData,
     MarstekSharedData,
 )
 from .helpers import async_create_udp_client
@@ -51,12 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
     shared_data.entry_count += 1
 
     coordinator = MarstekDataUpdateCoordinator(hass, entry, shared_data.udp_client)
-    entry.runtime_data = MarstekRuntimeData(coordinator=coordinator)
+    entry.runtime_data = coordinator
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryAuthFailed, ConfigEntryError, ConfigEntryNotReady:
         await _async_release_udp_client(hass, shared_data)
-        object.__delattr__(entry, "runtime_data")
         raise
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

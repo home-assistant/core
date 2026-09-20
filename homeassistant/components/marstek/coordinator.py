@@ -29,14 +29,7 @@ class MarstekSharedData:
     entry_count: int = 0
 
 
-@dataclass(slots=True, kw_only=True)
-class MarstekRuntimeData:
-    """Runtime data for a Marstek config entry."""
-
-    coordinator: MarstekDataUpdateCoordinator
-
-
-type MarstekConfigEntry = ConfigEntry[MarstekRuntimeData]
+type MarstekConfigEntry = ConfigEntry[MarstekDataUpdateCoordinator]
 
 MARSTEK_SHARED_DATA: HassKey[MarstekSharedData] = HassKey(DOMAIN)
 
@@ -102,12 +95,6 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[MarstekDeviceStatus]):
         """Fetch device data from the Marstek client library."""
         _LOGGER.debug("Start polling device: %s", self.device_ip)
         current_data = self.data
-
-        if self.udp_client.is_polling_paused(self.device_ip):
-            _LOGGER.debug(
-                "Polling paused for device: %s, skipping update", self.device_ip
-            )
-            return current_data or MarstekDeviceStatus(device_ip=self.device_ip)
 
         try:
             current_data = await self.udp_client.get_device_status(

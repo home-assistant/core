@@ -58,7 +58,6 @@ def mock_udp_client() -> Generator[MagicMock]:
     mock_client.get_device_info.return_value = MOCK_DEVICE_INFO
     mock_client.get_device_status.return_value = MOCK_DEVICE_STATUS
     mock_client.get_discovery_cache.return_value = None
-    mock_client.is_polling_paused.return_value = False
     with (
         patch(
             "homeassistant.components.marstek.async_create_udp_client",
