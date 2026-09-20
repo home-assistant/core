@@ -305,8 +305,10 @@ async def test_migrate_legacy_hacs_entry_removes_retired_entities_and_cache(
     await hass.async_add_executor_job(legacy_jpeg.write_bytes, b"legacy image")
     await hass.async_add_executor_job(legacy_json.write_text, "legacy state")
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert entity_registry.async_get(retired.entity_id) is None
     assert entity_registry.async_get(image.entity_id) is not None
