@@ -118,15 +118,13 @@ class MotionEyeMediaProxyView(HomeAssistantView):
                 path.encode("ascii"), altchars=b"-_", validate=True
             ).decode("utf-8")
             camera = int(camera_id)
-        except (Error, UnicodeDecodeError, UnicodeEncodeError, ValueError):
+            except Error, UnicodeDecodeError, UnicodeEncodeError, ValueError:
             return web.Response(status=400)
 
         range_header = request.headers.get("Range")
 
         try:
-            async with cast(
-                Any, entry.runtime_data.client
-            ).async_get_media_stream(
+            async with cast(Any, entry.runtime_data.client).async_get_media_stream(
                 camera,
                 media_path,
                 image=kind == "images",
