@@ -6,8 +6,8 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from motioneye_client.client import MotionEyeClientError
+import pytest
 
 from homeassistant.components.media_source import (
     URI_SCHEME,
