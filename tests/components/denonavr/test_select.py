@@ -445,12 +445,9 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
     # _wait_for_debounced_refresh for why this extra step is needed.
     await _wait_for_debounced_refresh(hass)
 
-    # One call from setup's initial refresh, one from confirming this
-    # action (CoordinatorEntity sets should_poll=False, so there's no
-    # separate forced poll on top of that)...
+    # should_poll=False, so setup's refresh and this action's confirmation
+    # are the only two reads.
     assert client.async_update.await_count == 2
-    # ...and the new value is visible right away, with no time-based
-    # polling trick needed to observe it.
     assert hass.states.get(entity_id).state == "Dark"
 
 
