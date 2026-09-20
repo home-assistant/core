@@ -11,6 +11,7 @@ import probatio
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -134,7 +135,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        return await self._async_step_api_key(user_input, "user")
 
+    async def _async_step_api_key(
+        self, user_input: dict[str, Any] | None, step_id: str
+    ) -> ConfigFlowResult:
+        """Handle an API key form."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -152,6 +158,10 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         self._get_reauth_entry(), data_updates=user_input
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="ChatGPT",
@@ -185,7 +195,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),
@@ -205,12 +215,13 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self._async_step_api_key(user_input, "reauth_confirm")
 
-        return await self.async_step_user(user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the API key."""
+        return await self._async_step_api_key(user_input, "reconfigure")
 
     @classmethod
     @callback
