@@ -29,11 +29,13 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
+                autocomplete="username",
             ),
         ),
         probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
             ),
         ),
     }
