@@ -42,7 +42,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="GLASS_BREAK",
-        device_class=BinarySensorDeviceClass.SOUND,
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
     ),
 )
 

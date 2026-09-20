@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "not_ipv4_address": "No IPv4 address in SSDP discovery information",
-      "not_sonos_device": "Discovered device is not a Sonos device",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "not_sonos_device": "Discovered device is not a Sonos device"
     },
     "step": {
       "confirm": {

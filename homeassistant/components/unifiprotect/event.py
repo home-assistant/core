@@ -5,8 +5,9 @@ import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import ModelType, SmartDetectObjectType
+from uiprotect.data import Fob, ModelType, PublicDeviceModel, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
+from uiprotect.data.types import EventButtonType
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -15,12 +16,14 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_SOURCE,
     ATTR_SMART_DETECT_TYPES,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
@@ -40,7 +43,12 @@ from .data import (
     ProtectDeviceType,
     UFPConfigEntry,
 )
-from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+from .entity import (
+    EventEntityMixin,
+    ProtectDeviceEntity,
+    ProtectEventMixin,
+    ProtectFobEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -98,16 +106,50 @@ class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
     """Describes a category detection event entity driven by the public events WS."""
 
     ufp_public_event_types: tuple[EventType, ...]
+    include_event_source: bool = False
+
+
+class ProtectFireOnceMixin(EventEntity):
+    """Dedup mixin for entities fired from the public events WS.
+
+    A detection type can surface at the event start, on a later update, or only
+    as the event ends, and every non-eviction change is dispatched, so firing is
+    deduped per ``(event id, surfaced type, Protect event type)``.
+    """
+
+    # A device can run two overlapping events of the same category whose
+    # dispatches interleave, so dedup tracks fired type pairs per recent event
+    # id (bounded), not just the current one.
+    _fired: dict[str, frozenset[tuple[str, EventType]]] | None = None
+
+    @callback
+    def _fire_once(
+        self, event: ProtectEvent, event_type: str, event_data: dict[str, Any]
+    ) -> None:
+        """Fire once per event id, surfaced type, and Protect event type."""
+        fired = self._fired
+        if fired is None:
+            fired = self._fired = {}
+        # Pop-and-reinsert so any dispatch refreshes this event id's recency; a
+        # long-running event that keeps updating is then not evicted below.
+        types = fired.pop(event.id, frozenset())
+        # Protect can reuse an event id across overlapping smart-detect sources,
+        # so omitting event.type would swallow a later line or loiter event.
+        fired_type = (event_type, event.type)
+        if fired_type in types:
+            fired[event.id] = types
+            return
+        fired[event.id] = types | {fired_type}
+        if len(fired) > _MAX_TRACKED_EVENTS:
+            del fired[next(iter(fired))]  # evict the least-recently-seen event id
+        self._trigger_event(event_type, event_data)
+        self.async_write_ha_state()
 
 
 class ProtectDevicePublicEventEntity(
-    EventEntityMixin, ProtectDeviceEntity, EventEntity
+    ProtectFireOnceMixin, EventEntityMixin, ProtectDeviceEntity, EventEntity
 ):
     """Base for entities driven by the public events WS.
-
-    A detection type can surface at the event start, on a later update, or only
-    as the event ends, and every non-eviction change is dispatched — so firing is
-    deduped per ``(event id, event type)``.
 
     Availability follows the public API (device present and connected) plus the
     events websocket, which is the only channel these entities fire from.
@@ -117,30 +159,6 @@ class ProtectDevicePublicEventEntity(
     _ufp_requires_events_ws = True
 
     entity_description: ProtectEventEntityDescription
-    # A camera can run two overlapping events of the same category whose
-    # dispatches interleave, so dedup tracks fired types per recent event id
-    # (bounded), not just the current one.
-    _fired: dict[str, frozenset[str]] | None = None
-
-    @callback
-    def _fire_once(
-        self, event: ProtectEvent, event_type: str, event_data: dict[str, Any]
-    ) -> None:
-        """Fire ``event_type`` once per event, ignoring repeat dispatches."""
-        fired = self._fired
-        if fired is None:
-            fired = self._fired = {}
-        # Pop-and-reinsert so any dispatch refreshes this event id's recency; a
-        # long-running event that keeps updating is then not evicted below.
-        types = fired.pop(event.id, frozenset())
-        if event_type in types:
-            fired[event.id] = types
-            return
-        fired[event.id] = types | {event_type}
-        if len(fired) > _MAX_TRACKED_EVENTS:
-            del fired[next(iter(fired))]  # evict the least-recently-seen event id
-        self._trigger_event(event_type, event_data)
-        self.async_write_ha_state()
 
 
 class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
@@ -433,8 +451,8 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
     Used for object types that Protect models as discrete, point-in-time
     detections (e.g. package): the camera fires once with a cooldown and the
     smart-detect event is recorded already-ended, so a sustained binary sensor
-    can never reflect it. The public events websocket delivers these as proper
-    ``smartDetectZone`` events (the private API only exposes the unhandled
+    can never reflect it. The public events websocket delivers these as smart
+    detection events (the private API only exposes the unhandled
     ``smartDetectObject`` model), so we subscribe there and fire a momentary
     event when the description's object type matches.
     """
@@ -457,7 +475,14 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
         description = self.entity_description
         event_types = description.event_types
         if event_types and description.ufp_obj_type in event.smart_detect_types:
-            self._fire_once(event, event_types[0], {ATTR_EVENT_ID: event.id})
+            self._fire_once(
+                event,
+                event_types[0],
+                {
+                    ATTR_EVENT_ID: event.id,
+                    ATTR_EVENT_SOURCE: event.type.value,
+                },
+            )
 
 
 _CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
@@ -520,17 +545,27 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
 
     @callback
     def _async_detection_event(self, event: ProtectEvent) -> None:
-        allowed = self.entity_description.event_types or ()
+        description = self.entity_description
+        allowed = description.event_types or ()
         # One fire per detected type so each stays independently automatable
         # (incl. types with no binary sensor); carries the co-detected set known
         # at fire time (types can still arrive on a later update).
         detected = [_event_type(t) for t in event.smart_detect_types]
         for event_type in detected:
             if event_type in allowed:
+                event_data: dict[str, Any] = {
+                    ATTR_EVENT_ID: event.id,
+                    ATTR_SMART_DETECT_TYPES: detected,
+                }
+                if description.include_event_source:
+                    # Keep this raw: hassfest state translation keys reject
+                    # camelCase, so normalization belongs in uiprotect. It remains
+                    # recordable to distinguish overlapping sources in history.
+                    event_data[ATTR_EVENT_SOURCE] = event.type.value
                 self._fire_once(
                     event,
                     event_type,
-                    {ATTR_EVENT_ID: event.id, ATTR_SMART_DETECT_TYPES: detected},
+                    event_data,
                 )
 
 
@@ -541,6 +576,60 @@ class ProtectDeviceMotionEventEntity(ProtectDeviceDetectionEventEntity):
     @override
     def _async_detection_event(self, event: ProtectEvent) -> None:
         self._fire_once(event, EventType.MOTION.value, {ATTR_EVENT_ID: event.id})
+
+
+# Real hardware reports an empty ``feature_flags.buttons``, so the whole
+# vocabulary is declared. Sourced from the enum matched against
+# ``metadata.button`` below so the two cannot drift apart.
+_FOB_EVENT_TYPES: list[str] = [
+    button.name.lower()
+    for button in EventButtonType
+    if button is not EventButtonType.UNKNOWN
+]
+
+
+class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventEntity):
+    """A UniFi Protect key fob button-press event entity.
+
+    Each fob exposes one event entity that fires the pressed button (from a
+    public ``sensorButtonPressed`` event's ``metadata.button``) as its event
+    type.
+    """
+
+    _attr_translation_key = "keyfob"
+    _attr_event_types = _FOB_EVENT_TYPES
+    # Presses arrive only on the events websocket, so its health gates
+    # availability on top of the devices websocket.
+    _ufp_requires_events_ws = True
+
+    def __init__(self, data: ProtectData, fob: Fob) -> None:
+        """Initialize the key fob button event entity."""
+        self._attr_unique_id = f"{fob.mac}_keyfob"
+        super().__init__(data, fob)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public key-fob button-press events."""
+        await super().async_added_to_hass()
+        # A press arrives as a ``sensorButtonPressed`` event whose ``device`` is
+        # the fob and whose ``metadata.button`` is the pressed button.
+        self.async_on_remove(
+            self.data.async_subscribe_public_event(
+                self._fob_id, EventType.SENSOR_BUTTON_PRESSED, self._async_button_event
+            )
+        )
+
+    @callback
+    def _async_button_event(self, event: ProtectEvent) -> None:
+        if (metadata := event.metadata) is None or (button := metadata.button) is None:
+            return
+        # Skip a button added by newer firmware that coerces to
+        # ``EventButtonType.UNKNOWN`` (not among the declared event types).
+        if (button_type := button.name.lower()) not in self.event_types:
+            return
+        # A press is dispatched on every non-eviction change to its event, so
+        # the same press can arrive more than once.
+        self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
@@ -601,6 +690,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_smart_detect",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
+        include_event_source=True,
         entity_class=ProtectDeviceDetectionEventEntity,
     ),
     ProtectDetectionEventEntityDescription(
@@ -634,6 +724,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up event entities for UniFi Protect integration."""
     data = entry.runtime_data
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities([ProtectFobButtonEventEntity(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobButtonEventEntity(data, fob)
+            for fob in api.public_bootstrap.fobs.values()
+        )
+
+    # Everything below is driven by the private bootstrap, which public-only
+    # entries do not have.
+    if api.is_public_only:
+        return
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

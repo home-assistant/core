@@ -26,6 +26,7 @@ from .conftest import (
     MOCK_API,
     MOCK_API_FETCH,
     MOCK_API_GET_DATA,
+    advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
 
@@ -302,12 +303,12 @@ async def test_no_buttons_without_remote_start(
 
 
 async def test_button_unavailable_on_fetch_failure(
-    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+    hass: HomeAssistant, ev_entry: MockConfigEntry
 ) -> None:
-    """Test button goes unavailable when the coordinator fails to fetch data."""
-    await setup_subaru_config_entry(
-        hass, subaru_config_entry, fetch_effect=SubaruException("403 Error")
-    )
+    """Test button goes unavailable when a fetch fails after setup."""
+    with patch(MOCK_API_FETCH, side_effect=SubaruException("403 Error")):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
 
     state = hass.states.get(VEHICLE_BUTTONS[TEST_VIN_2_EV]["remote_start"])
     assert state.state == STATE_UNAVAILABLE

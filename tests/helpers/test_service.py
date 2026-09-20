@@ -8,9 +8,9 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 # To prevent circular import when running just this file
 from homeassistant import config_entries, exceptions
@@ -1442,7 +1442,7 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
               unit_of_measurement: "seconds"
     """
 
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
             "topic": cv.string,
             "duration": cv.positive_int,
@@ -1974,7 +1974,7 @@ async def test_register_admin_service(
         "test",
         "test2",
         mock_service,
-        vol.Schema({vol.Required("required"): cv.boolean}),
+        probatio.Schema({probatio.Required("required"): cv.boolean}),
     )
 
     with pytest.raises(exceptions.UnknownUser):
@@ -1997,7 +1997,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test",
@@ -2007,7 +2007,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test2",
@@ -3322,9 +3322,9 @@ async def test_register_platform_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         with pytest.raises(HomeAssistantError, match=expected_message):
@@ -3349,8 +3349,8 @@ async def test_register_platform_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         service.async_register_platform_entity_service(
@@ -3511,3 +3511,109 @@ async def test_get_service_device_and_config_entry(
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_device_and_config_entry(hass, domain, device.id)
     assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry_child_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that we can get a child device and its config entry."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id_child")},
+        parent_device_id=parent.id,
+        name="Mock child device",
+    )
+
+    # A child device is paired with the entry owning it
+    assert service.async_get_device_and_config_entry(hass, domain, child.id) == (
+        child,
+        entry,
+    )
+
+    # With include_child_devices=False the child raises as an unknown device
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass, domain, child.id, include_child_devices=False
+        )
+    assert err.value.translation_key == "service_device_not_found"
+    assert err.value.translation_placeholders == {"device_id": child.id}
+
+    # The child exists, but is not owned by a config entry of the domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, "another_domain", child.id)
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Mock child device",
+        "domain": "another_domain",
+    }
+
+    # The child exists, but its config entry is not loaded
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, child.id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry_no_main_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting a device and its config entry with main devices excluded."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id_child")},
+        parent_device_id=parent.id,
+        name="Mock child device",
+    )
+
+    # A main device raises as an unknown device
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass, domain, parent.id, include_main_devices=False
+        )
+    assert err.value.translation_key == "service_device_not_found"
+    assert err.value.translation_placeholders == {"device_id": parent.id}
+
+    # A child-only lookup resolves the child
+    assert service.async_get_device_and_config_entry(
+        hass, domain, child.id, include_main_devices=False
+    ) == (child, entry)
+
+    # A child device raises as an unknown device with both flags off
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass,
+            domain,
+            child.id,
+            include_child_devices=False,
+            include_main_devices=False,
+        )
+    assert err.value.translation_key == "service_device_not_found"
+
+    # Neither does a main device with both flags off
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass,
+            domain,
+            parent.id,
+            include_child_devices=False,
+            include_main_devices=False,
+        )
+    assert err.value.translation_key == "service_device_not_found"

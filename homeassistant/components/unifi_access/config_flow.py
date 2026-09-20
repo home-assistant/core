@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from unifi_access_api import ApiAuthError, ApiConnectionError, UnifiAccessApiClient
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -78,11 +78,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_API_TOKEN): str,
-                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_API_TOKEN): str,
+                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors,
@@ -110,11 +110,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_API_TOKEN): str,
-                        vol.Required(CONF_VERIFY_SSL): bool,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_API_TOKEN): str,
+                        probatio.Required(CONF_VERIFY_SSL): bool,
                     }
                 ),
                 suggested_values,
@@ -180,10 +180,10 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TOKEN): str,
-                    vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_API_TOKEN): str,
+                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             description_placeholders=placeholders,
@@ -218,7 +218,7 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
