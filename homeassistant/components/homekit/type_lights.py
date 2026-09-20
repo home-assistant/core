@@ -58,6 +58,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
 
+# Characteristics that only describe colour, never on/off intent.
+COLOR_ONLY_CHARS = {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
+
 DEFAULT_MIN_COLOR_TEMP = 2000  # 500 mireds
 DEFAULT_MAX_COLOR_TEMP = 6500  # 153 mireds
 
@@ -219,6 +222,20 @@ class Light(HomeAccessory):
         service = SERVICE_TURN_ON
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
+
+        # The Home app keeps writing the adaptive lighting curve to accessories
+        # that are off. With no CHAR_ON those writes fall through to the
+        # SERVICE_TURN_ON default below and switch the light on by itself; a
+        # colour only write is never a request to turn a light on.
+        if not has_on and char_values and not char_values.keys() - COLOR_ONLY_CHARS:
+            state = self.hass.states.get(self.entity_id)
+            if state is None or state.state != STATE_ON:
+                _LOGGER.debug(
+                    "%s: ignoring colour only write %s, the light is off",
+                    self.entity_id,
+                    char_values,
+                )
+                return
 
         if has_on:
             if not char_values[CHAR_ON]:
