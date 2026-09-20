@@ -204,6 +204,14 @@ def test_choose_asset_supports_order_and_empty_candidates() -> None:
         choose_asset([], {}, set())
     assert choose_asset([first, second], {"order_direction": "asc"}, set()) is first
     assert choose_asset([first, second], {"order_direction": "desc"}, set()) is second
+    assert (
+        choose_asset([first, second], {"order_direction": "asc"}, {first.asset_id})
+        is second
+    )
+    assert (
+        choose_asset([first, second], {"order_direction": "desc"}, {second.asset_id})
+        is first
+    )
 
 
 def test_pair_modes_select_a_valid_companion() -> None:

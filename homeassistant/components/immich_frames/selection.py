@@ -176,13 +176,14 @@ def choose_asset(
     """Choose the next candidate while avoiding recent slides."""
     if not candidates:
         raise LookupError("no photos")
+    available = [asset for asset in candidates if asset.asset_id not in recent_ids]
+    pool = available or candidates
     order = str(options.get("order_direction", "random"))
     if order == "asc":
-        return min(candidates, key=lambda asset: _as_wall_clock(asset.local_datetime))
+        return min(pool, key=lambda asset: _as_wall_clock(asset.local_datetime))
     if order == "desc":
-        return max(candidates, key=lambda asset: _as_wall_clock(asset.local_datetime))
-    available = [asset for asset in candidates if asset.asset_id not in recent_ids]
-    return random.SystemRandom().choice(available or candidates)
+        return max(pool, key=lambda asset: _as_wall_clock(asset.local_datetime))
+    return random.SystemRandom().choice(pool)
 
 
 def candidates_with_companion(
