@@ -841,6 +841,78 @@ async def test_get_lock_users_next_user_index_loop_prevention(
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_skips_unoccupied_first_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users scans past an unoccupied first slot.
+
+    A GetUser response for an unoccupied index carries no nextUserIndex, so the
+    walk used to stop there and hide every user above it. See #182526.
+    """
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # Index 1 is unoccupied and advertises no next index
+                "userIndex": 1,
+                "userStatus": None,
+                "userName": None,
+                "userUniqueID": None,
+                "userType": None,
+                "credentialRule": None,
+                "credentials": None,
+                "nextUserIndex": None,
+            },
+            {  # User at index 2, pointing at the next user
+                "userIndex": 2,
+                "userStatus": 1,
+                "userName": "User 2",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": 3,
+            },
+            {  # User at index 3, last in the table
+                "userIndex": 3,
+                "userStatus": 1,
+                "userName": "User 3",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": None,
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_users",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # The walk advances past the empty slot instead of stopping at it.
+    assert matter_client.send_device_command.call_count == 3
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=1),
+    )
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetUser(userIndex=2),
+    )
+
+    lock_users = result["lock.mock_door_lock"]
+    assert [user["user_index"] for user in lock_users["users"]] == [2, 3]
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_get_lock_users_with_credentials(
     hass: HomeAssistant,
     matter_client: MagicMock,
