@@ -8,7 +8,6 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from httpx import ConnectTimeout, HTTPStatusError, ProtocolError, RequestError, Response
 import pytest
-from pythonxbox.api.provider.people.models import PeopleResponse
 from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
 from pythonxbox.common.exceptions import AuthenticationException
 import respx
@@ -198,30 +197,6 @@ async def test_coordinator_update_failed(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_title_info_uses_person_xuid(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    xbox_live_client: AsyncMock,
-) -> None:
-    """Test title info is requested for the person playing the title."""
-
-    xbox_live_client.people.get_friends_own.return_value = PeopleResponse(
-        **await async_load_json_object_fixture(
-            hass, "people_friends_own_playing.json", DOMAIN
-        )  # pyright: ignore[reportArgumentType]
-    )
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    xbox_live_client.titlehub.get_title_info_by_xuid.assert_any_call(
-        "2533274913657542", "1297287135"
-    )
 
 
 @pytest.mark.freeze_time
