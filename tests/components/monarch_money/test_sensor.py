@@ -1,12 +1,12 @@
 """Test sensors."""
 
 from copy import deepcopy
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typedmonarchmoney.models import MonarchBudget
 
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import Platform
@@ -16,11 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -114,15 +110,11 @@ async def test_budget_sensors_discover_and_recover_categories(
     """Test budget categories are added later and recover after missing data."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-09-20T12:00:00+00:00")
-    budget_data = await async_load_json_object_fixture(hass, "get_budgets.json", DOMAIN)
-    budget_data_without_vacation = deepcopy(budget_data)
-    budget_data_without_vacation["budgetData"]["monthlyAmountsByCategory"] = [
-        budget_data_without_vacation["budgetData"]["monthlyAmountsByCategory"][0]
-    ]
-    budget_data_without_vacation["categoryGroups"] = [
-        budget_data_without_vacation["categoryGroups"][0]
-    ]
-    mock_config_api.return_value.get_budgets.side_effect = [
+    budget_data = (
+        mock_config_api.return_value.get_budgets_as_dict_with_id_key.return_value
+    )
+    budget_data_without_vacation = {"category-food": budget_data["category-food"]}
+    mock_config_api.return_value.get_budgets_as_dict_with_id_key.side_effect = [
         budget_data_without_vacation,
         budget_data,
         budget_data_without_vacation,
@@ -164,21 +156,16 @@ async def test_budget_sensors_discover_and_recover_categories(
 
 
 @pytest.mark.parametrize(
-    ("category_id", "monthly_categories"),
+    ("category_id", "monthly_amounts"),
     [
         pytest.param(
             "category-stale",
             [
                 {
-                    "category": {"id": "category-stale"},
-                    "monthlyAmounts": [
-                        {
-                            "month": "2026-08-01",
-                            "plannedCashFlowAmount": -1200.0,
-                            "actualAmount": -1200.0,
-                            "remainingAmount": 0.0,
-                        }
-                    ],
+                    "month": "2026-08-01",
+                    "plannedCashFlowAmount": -1200.0,
+                    "actualAmount": -1200.0,
+                    "remainingAmount": 0.0,
                 }
             ],
             id="stale_month_only",
@@ -197,31 +184,33 @@ async def test_budget_sensors_recover_when_current_month_appears(
     entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
     category_id: str,
-    monthly_categories: list[dict[str, Any]],
+    monthly_amounts: list[dict[str, str | float]],
 ) -> None:
     """Test a known budget starts unavailable until its current month appears."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-09-20T12:00:00+00:00")
-    budget_data = await async_load_json_object_fixture(hass, "get_budgets.json", DOMAIN)
-    budget_data["categoryGroups"][2]["categories"].append(
-        {"id": category_id, "name": "Test budget"}
+    budget_data = deepcopy(
+        mock_config_api.return_value.get_budgets_as_dict_with_id_key.return_value
     )
-    budget_data["budgetData"]["monthlyAmountsByCategory"].extend(monthly_categories)
+    budget_data[category_id] = MonarchBudget(
+        {"id": category_id, "name": "Test budget"},
+        group_name="Test budgets",
+        monthly_amounts=monthly_amounts,
+    )
     budget_data_with_current_month = deepcopy(budget_data)
-    budget_data_with_current_month["budgetData"]["monthlyAmountsByCategory"].append(
-        {
-            "category": {"id": category_id},
-            "monthlyAmounts": [
-                {
-                    "month": "2026-09-01",
-                    "plannedCashFlowAmount": -1200.0,
-                    "actualAmount": -400.0,
-                    "remainingAmount": 800.0,
-                }
-            ],
-        }
+    budget_data_with_current_month[category_id] = MonarchBudget(
+        {"id": category_id, "name": "Test budget"},
+        group_name="Test budgets",
+        monthly_amounts=[
+            {
+                "month": "2026-09-01",
+                "plannedCashFlowAmount": -1200.0,
+                "actualAmount": -400.0,
+                "remainingAmount": 800.0,
+            }
+        ],
     )
-    mock_config_api.return_value.get_budgets.side_effect = [
+    mock_config_api.return_value.get_budgets_as_dict_with_id_key.side_effect = [
         budget_data,
         budget_data_with_current_month,
     ]

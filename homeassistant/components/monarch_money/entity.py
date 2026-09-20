@@ -2,14 +2,18 @@
 
 from typing import override
 
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from typedmonarchmoney.models import (
+    MonarchAccount,
+    MonarchBudget,
+    MonarchCashflowSummary,
+)
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MonarchBudget, MonarchMoneyDataUpdateCoordinator
+from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
 class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
@@ -121,5 +125,5 @@ class MonarchMoneyBudgetEntity(MonarchMoneyEntityBase):
             super().available
             and (budget := self.coordinator.data.budgets.get(self._budget_id))
             is not None
-            and budget.month is not None
+            and self.coordinator.data.budget_month in budget.monthly_amounts
         )

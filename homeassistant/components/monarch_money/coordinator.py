@@ -3,22 +3,23 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, override
+from typing import Never, override
 
-from aiohttp import ClientResponseError
-from gql.transport.exceptions import TransportServerError
+from aiohttp import ClientError, ClientResponseError
+from gql.transport.exceptions import TransportError, TransportServerError
 from monarchmoney import LoginFailedException
 from typedmonarchmoney import TypedMonarchMoney
 from typedmonarchmoney.models import (
     MonarchAccount,
+    MonarchBudget,
     MonarchCashflowSummary,
     MonarchSubscription,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
@@ -31,23 +32,22 @@ class MonarchData:
     account_data: dict[str, MonarchAccount]
     cashflow_summary: MonarchCashflowSummary
     budgets: dict[str, MonarchBudget]
+    budget_month: str
     budget_month_start: datetime
 
 
-@dataclass
-class MonarchBudget:
-    """Container for a budget category for a month."""
-
-    id: str
-    name: str
-    group_name: str
-    month: str | None
-    planned_amount: float | None
-    actual_amount: float | None
-    remaining_amount: float | None
-
-
 type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
+
+
+def _raise_update_error(err: Exception) -> Never:
+    """Translate Monarch Money API errors to coordinator errors."""
+    if isinstance(err, LoginFailedException) or (
+        isinstance(err, (TransportServerError, ClientResponseError))
+        and (err.status if isinstance(err, ClientResponseError) else err.code)
+        in (401, 403)
+    ):
+        raise ConfigEntryAuthFailed("Authentication failed") from err
+    raise UpdateFailed("Error communicating with Monarch Money") from err
 
 
 class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
@@ -79,8 +79,8 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             sub_details: MonarchSubscription = (
                 await self.client.get_subscription_details()
             )
-        except (TransportServerError, LoginFailedException, ClientResponseError) as err:
-            raise ConfigEntryError("Authentication failed") from err
+        except (LoginFailedException, TransportError, ClientError, TimeoutError) as err:
+            _raise_update_error(err)
         self.subscription_id = sub_details.id
 
     @override
@@ -95,20 +95,24 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             "%Y-%m-%d"
         )
 
-        account_data, cashflow_summary, raw_budgets = await asyncio.gather(
-            self.client.get_accounts_as_dict_with_id_key(),
-            self.client.get_cashflow_summary(
-                start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
-            ),
-            self.client.get_budgets(
-                start_date=budget_start_date, end_date=budget_end_date
-            ),
-        )
+        try:
+            account_data, cashflow_summary, budgets = await asyncio.gather(
+                self.client.get_accounts_as_dict_with_id_key(),
+                self.client.get_cashflow_summary(
+                    start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
+                ),
+                self.client.get_budgets_as_dict_with_id_key(
+                    start_date=budget_start_date, end_date=budget_end_date
+                ),
+            )
+        except (LoginFailedException, TransportError, ClientError, TimeoutError) as err:
+            _raise_update_error(err)
 
         return MonarchData(
             account_data=account_data,
             cashflow_summary=cashflow_summary,
-            budgets=self._parse_budgets(raw_budgets, budget_month),
+            budgets=budgets,
+            budget_month=budget_start_date,
             budget_month_start=dt_util.start_of_local_day(now.replace(day=1)),
         )
 
@@ -131,55 +135,3 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     def balance_accounts(self) -> list[MonarchAccount]:
         """Return accounts that aren't assets."""
         return [x for x in self.accounts if x.is_balance_account]
-
-    @staticmethod
-    def _parse_budgets(
-        data: dict[str, Any], budget_month: str
-    ) -> dict[str, MonarchBudget]:
-        """Return budget categories for the requested month."""
-        budgets: dict[str, MonarchBudget] = {}
-        for group in data.get("categoryGroups", []):
-            for category in group["categories"]:
-                category_id = category["id"]
-                budgets[category_id] = MonarchBudget(
-                    id=category_id,
-                    name=category["name"],
-                    group_name=group["name"],
-                    month=None,
-                    planned_amount=None,
-                    actual_amount=None,
-                    remaining_amount=None,
-                )
-
-        for monthly_category in data.get("budgetData", {}).get(
-            "monthlyAmountsByCategory", []
-        ):
-            category_id = monthly_category["category"]["id"]
-
-            if (budget := budgets.get(category_id)) is None:
-                continue
-
-            month_data = next(
-                (
-                    amount
-                    for amount in monthly_category.get("monthlyAmounts", [])
-                    if str(amount.get("month", "")).startswith(budget_month)
-                ),
-                None,
-            )
-            if month_data is None:
-                continue
-
-            budget.month = str(month_data["month"])
-            budget.planned_amount = _as_float(month_data["plannedCashFlowAmount"])
-            budget.actual_amount = _as_float(month_data["actualAmount"])
-            budget.remaining_amount = _as_float(month_data["remainingAmount"])
-
-        return budgets
-
-
-def _as_float(value: Any) -> float | None:
-    """Return a Monarch amount when it is available."""
-    if value is None:
-        return None
-    return float(value)

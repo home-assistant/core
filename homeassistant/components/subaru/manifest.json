@@ -1,7 +1,7 @@
 {
   "domain": "subaru",
   "name": "Subaru",
-  "codeowners": ["@G-Two"],
+  "codeowners": ["@G-Two", "@jpettitt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",
   "integration_type": "hub",
