@@ -230,6 +230,11 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from the old YAML configuration file."""
+        # The legacy YAML schema had no way to specify SNMPv3 protocols, so a
+        # configuration with v3 keys cannot be turned into a working v3 entry.
+        if CONF_AUTH_KEY in user_input or CONF_PRIV_KEY in user_input:
+            return self.async_abort(reason="credentials_required")
+
         self._async_abort_entries_match(
             {CONF_HOST: user_input[CONF_HOST], CONF_BASEOID: user_input[CONF_BASEOID]}
         )

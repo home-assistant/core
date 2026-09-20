@@ -20,6 +20,7 @@ from homeassistant.components.device_tracker.legacy import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -90,11 +91,32 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Trigger an import flow to migrate YAML config to a config entry."""
-    await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=config,
     )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        reason = result["reason"]
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "SNMP",
+                "host": config[CONF_HOST],
+            },
+        )
+        return False
 
     ir.async_create_issue(
         hass,

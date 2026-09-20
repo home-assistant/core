@@ -174,6 +174,24 @@ async def test_import_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import_flow_with_v3_credentials_aborts(hass: HomeAssistant) -> None:
+    """Test YAML import aborts when the configuration uses SNMPv3 credentials."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "auth_key": "auth_key",
+            "priv_key": "priv_key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "credentials_required"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 async def test_import_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

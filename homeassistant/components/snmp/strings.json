@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "credentials_required": "SNMPv3 credentials cannot be imported from YAML"
     },
     "error": {
       "auth_key_required_for_priv": "Authentication Key is required when using a Privacy Key (SNMP v3)",
@@ -42,6 +43,12 @@
         },
         "title": "v3 Authentication"
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_credentials_required": {
+      "description": "Configuring the {integration_title} integration through YAML is deprecated. Your configuration uses SNMPv3 credentials, which cannot be imported automatically.\n\nSet up the integration through the UI with your SNMPv3 credentials, then remove configuration from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The {integration_title} YAML configuration cannot be imported"
     }
   }
 }

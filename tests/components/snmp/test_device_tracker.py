@@ -18,8 +18,12 @@ from homeassistant.components.snmp.device_tracker import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import dump
 
@@ -384,15 +388,66 @@ async def test_device_tracker_enabled_if_device_exists(
     assert reg_entry.disabled_by is None
 
 
-async def test_async_setup_scanner_import(hass: HomeAssistant) -> None:
-    """Test that async_setup_scanner triggers an import flow."""
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        assert await async_setup_scanner(hass, {"host": "1.2.3.4"}, Mock())
-        await hass.async_block_till_done()
-        mock_init.assert_called_once()
-        args, kwargs = mock_init.call_args
-        assert args[0] == DOMAIN
-        assert kwargs["context"]["source"] == "import"
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+async def test_async_setup_scanner_import(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a YAML configuration without v3 keys is imported."""
+    assert (
+        await async_setup_scanner(
+            hass,
+            {
+                CONF_PLATFORM: DOMAIN,
+                "host": "192.168.1.1",
+                "baseoid": "1.3.6.1.2.1.4.22.1.2",
+                "community": "public",
+            },
+            Mock(),
+        )
+        is True
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
+
+
+async def test_async_setup_scanner_v3_credentials(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a YAML configuration with v3 credentials is not imported."""
+    assert (
+        await async_setup_scanner(
+            hass,
+            {
+                CONF_PLATFORM: DOMAIN,
+                "host": "192.168.1.1",
+                "baseoid": "1.3.6.1.2.1.4.22.1.2",
+                "auth_key": "auth_key",
+                "priv_key": "priv_key",
+            },
+            Mock(),
+        )
+        is False
+    )
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_credentials_required"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml_import_issue_credentials_required"
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "SNMP",
+        "host": "192.168.1.1",
+    }
 
 
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
