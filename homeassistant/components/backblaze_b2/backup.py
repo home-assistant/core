@@ -691,10 +691,12 @@ class BackblazeBackupAgent(BackupAgent):
             remove_files: If True, remove specific files from cache;
                 if False, expire entire cache
         """
-        # Serialized with the all-files refresh: an in-flight refresh that started
-        # before this operation can otherwise publish a pre-operation mapping as
-        # valid, resurrecting deleted files or hiding uploaded ones.
-        async with self._all_files_cache_lock:
+        # A list refresh holds the backup list lock from before its listing
+        # until it publishes the mapping, so taking the same locks here keeps
+        # the invalidation from landing between a refresh start and its
+        # publish, where its pop would miss the fresh mapping and the refresh
+        # would resurrect deleted entries or hide uploaded ones.
+        async with self._backup_list_cache_lock, self._all_files_cache_lock:
             if remove_files:
                 if self._is_cache_valid(self._all_files_cache_expiration):
                     # Rebuild the mapping instead of popping in place: an in-flight

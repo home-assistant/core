@@ -349,6 +349,104 @@ async def test_delete_during_in_flight_refresh_still_invalidates(
         assert [backup.backup_id for backup in remaining] == ["second-id"]
 
 
+async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a refresh publishing after a delete does not reintroduce it."""
+    agent = (await async_get_backup_agents(hass))[0]
+    second_file_versions = _second_backup_file_versions()
+    second_metadata_content = json.dumps(
+        {
+            "metadata_version": "1",
+            "backup_id": "second-id",
+            "backup_metadata": replace(TEST_BACKUP, backup_id="second-id").as_dict(),
+        }
+    ).encode("utf-8")
+    original_ls = BucketSimulator.ls
+
+    def ls(self, prefix: str = "") -> list[tuple[FileVersion, str]]:
+        listed = original_ls(self, prefix)
+        listed.extend(
+            (file_version, file_version.file_name)
+            for file_version in second_file_versions
+        )
+        return listed
+
+    metadata_contents = {
+        f"testprefix/{TEST_BACKUP.backup_id}.metadata.json": json.dumps(
+            BACKUP_METADATA
+        ).encode("utf-8"),
+        "testprefix/second-id.metadata.json": second_metadata_content,
+    }
+
+    refresh_phase = False
+    refresh_blocked = threading.Event()
+    release_refresh = threading.Event()
+
+    def download(self: FileVersion, *args: Any, **kwargs: Any) -> Mock:
+        if refresh_phase and not refresh_blocked.is_set():
+            refresh_blocked.set()
+            assert release_refresh.wait(timeout=30)
+        downloaded = Mock()
+        downloaded.response.content = metadata_contents.get(self.file_name, b"")
+        return downloaded
+
+    delete_started = threading.Event()
+    release_delete = threading.Event()
+    delete_calls = 0
+
+    def delete(self: FileVersion, *args: Any, **kwargs: Any) -> None:
+        nonlocal delete_calls
+        delete_calls += 1
+        if delete_calls == 1:
+            delete_started.set()
+            assert release_delete.wait(timeout=30)
+
+    clock_now = 1000.0
+
+    def fake_time() -> float:
+        return clock_now
+
+    with (
+        patch.object(BucketSimulator, "ls", ls, create=True),
+        patch.object(FileVersion, "download", download),
+        patch.object(FileVersion, "delete", delete),
+        patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
+    ):
+        seeded = await agent.async_list_backups()
+        seeded_ids = [backup.backup_id for backup in seeded]
+        assert TEST_BACKUP.backup_id in seeded_ids
+        assert "second-id" in seeded_ids
+
+        clock_now = 1000.0 + CACHE_TTL + 1
+
+        delete_task = hass.async_create_task(
+            agent.async_delete_backup(TEST_BACKUP.backup_id)
+        )
+        assert await hass.async_add_executor_job(delete_started.wait, 30)
+
+        # The expired refresh serves the all-files mapping the delete just
+        # refreshed and blocks in its first metadata download while holding
+        # the backup list lock, so the delete invalidation below completes
+        # before the refresh publishes its mapping
+        refresh_phase = True
+        refresh_task = hass.async_create_task(agent.async_list_backups())
+        assert await hass.async_add_executor_job(refresh_blocked.wait, 30)
+
+        release_delete.set()
+        await asyncio.sleep(0.1)
+        release_refresh.set()
+
+        await refresh_task
+        await delete_task
+
+        with pytest.raises(BackupNotFound):
+            await agent.async_download_backup(TEST_BACKUP.backup_id)
+
+        remaining = await agent.async_list_backups()
+        assert [backup.backup_id for backup in remaining] == ["second-id"]
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
