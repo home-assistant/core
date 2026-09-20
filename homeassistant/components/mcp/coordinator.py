@@ -13,8 +13,10 @@ from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import InitializeResult
+import probatio
+
+# Imported by name because the tests patch it on this module.
 from probatio import from_openapi
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -27,7 +29,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
@@ -127,7 +128,7 @@ class ModelContextProtocolTool(llm.Tool):
         self,
         name: str,
         description: str | None,
-        parameters: vol.Schema,
+        parameters: probatio.Schema,
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
@@ -146,7 +147,7 @@ class ModelContextProtocolTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
@@ -186,7 +187,10 @@ class ModelContextProtocolTool(llm.Tool):
             raise HomeAssistantError(
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return llm.ToolResult(
+            data=result.model_dump(exclude_unset=True, exclude_none=True),
+            error=bool(result.isError),
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):

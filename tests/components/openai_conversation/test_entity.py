@@ -3,8 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.openai_conversation.entity import (
     _format_structured_output,
@@ -17,16 +17,16 @@ from homeassistant.helpers import selector
 
 async def test_format_structured_output() -> None:
     """Test the format_structured_output function."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("name"): selector.TextSelector(),
-            vol.Optional("age"): selector.NumberSelector(
+            probatio.Required("name"): selector.TextSelector(),
+            probatio.Optional("age"): selector.NumberSelector(
                 config=selector.NumberSelectorConfig(
                     min=0,
                     max=120,
                 ),
             ),
-            vol.Required("stuff"): selector.ObjectSelector(
+            probatio.Required("stuff"): selector.ObjectSelector(
                 {
                     "multiple": True,
                     "fields": {
@@ -71,7 +71,6 @@ async def test_format_structured_output() -> None:
                     ],
                     "type": "object",
                     "additionalProperties": False,
-                    "strict": True,
                 },
                 "type": "array",
             },
@@ -81,7 +80,6 @@ async def test_format_structured_output() -> None:
             "stuff",
             "age",
         ],
-        "strict": True,
         "type": "object",
     }
 

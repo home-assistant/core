@@ -6,6 +6,7 @@
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not comment on code style, formatting or linting issues.
+- When reviewing changes under `homeassistant/components/` or `tests/components/`, use the `ha-integration-knowledge` skill as the primary reference.
 - Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
 - Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. No content from the template should be missing, except for HTML comments and Markdown link reference definitions (lines of the form `[name]: url`), which do not render and cannot be verified from the description. Even unchecked checkboxes or empty sections must be present. This is a hard requirement.
