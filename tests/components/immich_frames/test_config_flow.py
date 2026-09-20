@@ -332,6 +332,45 @@ async def test_user_source_preflight_reports_unavailable_assets(
     assert result["type"] == "create_entry"
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
+        ClientError("offline"),
+        ImmichError({"message": "server", "correlationId": "test"}),
+    ],
+    ids=("auth", "connection", "upstream"),
+)
+async def test_user_source_preflight_recovers_from_all_errors(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Every user source preflight error can recover on retry."""
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_get_all.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    assert result["errors"]["base"] in {"assets_unavailable", "immich_auth"}
+    api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    assert result["type"] == "create_entry"
+
+
 async def test_album_source_preflight_reports_unavailable_assets(
     hass: HomeAssistant, parent_immich_entry: MockConfigEntry
 ) -> None:
@@ -356,6 +395,44 @@ async def test_album_source_preflight_reports_unavailable_assets(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_ALBUM_IDS: ["721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"]},
+    )
+    assert result["type"] == "create_entry"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
+        ClientError("offline"),
+        ImmichError({"message": "server", "correlationId": "test"}),
+    ],
+    ids=("auth", "connection", "upstream"),
+)
+async def test_options_source_preflight_recovers_from_all_errors(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Every options source preflight error can recover on retry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Recoverable options",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_get_all.side_effect = error
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(DEFAULT_SOURCE)
+    )
+    assert result["errors"]["base"] in {"assets_unavailable", "immich_auth"}
+    api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], _options_input(DEFAULT_SOURCE)
     )
     assert result["type"] == "create_entry"
 
@@ -817,6 +894,47 @@ async def test_reconfigure_all_source_preflight_reports_unavailable_assets(
         result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
     )
     assert result["type"] == "abort"
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ImmichUnauthorizedError({"message": "bad", "correlationId": "test"}),
+        ClientError("offline"),
+        ImmichError({"message": "server", "correlationId": "test"}),
+    ],
+    ids=("auth", "connection", "upstream"),
+)
+async def test_reconfigure_source_preflight_recovers_from_all_errors(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Every reconfigure source preflight error can recover on retry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Recoverable reconfigure",
+        data={
+            CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+    )
+    entry.add_to_hass(hass)
+    api = parent_immich_entry.runtime_data.api
+    api.search.async_get_all.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
+    )
+    assert result["errors"]["base"] in {"assets_unavailable", "immich_auth"}
+    api.search.async_get_all.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SOURCE: DEFAULT_SOURCE}
+    )
     assert result["reason"] == "reconfigure_successful"
 
 
