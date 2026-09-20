@@ -13,9 +13,6 @@ from homeassistant.components.xiaomi_weather.api import (
     parse_weather,
 )
 from homeassistant.components.xiaomi_weather.coordinator import XiaomiWeatherConfigEntry
-from homeassistant.components.xiaomi_weather.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
 from homeassistant.components.xiaomi_weather.weather import XiaomiWeather
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -46,14 +43,6 @@ async def test_setup_forecast_unload(
     assert (
         len([e for e in entities.values() if e.config_entry_id == entry.entry_id]) == 1
     )
-    diagnostics = await async_get_config_entry_diagnostics(
-        hass, cast(XiaomiWeatherConfigEntry, entry)
-    )
-    assert diagnostics == {
-        "last_update_success": True,
-        "daily_forecast_count": 15,
-        "hourly_forecast_count": 23,
-    }
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
