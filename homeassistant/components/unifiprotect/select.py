@@ -417,8 +417,7 @@ async def async_setup_entry(
         and api.public_bootstrap.arm_mode is not None
         and api.public_bootstrap.arm_profiles
     ):
-        # Same NVR device as the alarm control panel: without a private
-        # bootstrap it is the public one, whose mac setup guarantees.
+        # Without a private bootstrap the NVR is the public one, as for the alarm panel.
         nvr = (
             cast(NVR, api.public_bootstrap.nvr)
             if api.is_public_only
@@ -596,9 +595,7 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
         self._attr_current_option = (
             self._id_to_name.get(profile_id) if profile_id else None
         )
-        # Profiles and the active one arrive over the public devices websocket,
-        # so availability follows its health rather than the private one the
-        # base applies to the NVR, like the alarm control panel.
+        # Arm data comes over the public WS, so availability follows it, not the private one.
         self._attr_available = self.data.last_public_update_success
 
     @callback
