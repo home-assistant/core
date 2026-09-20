@@ -31,16 +31,16 @@ rules:
   docs-data-update: todo
   docs-examples: todo
   docs-high-level-description:
-    status: todo
-    comment: Requires the companion home-assistant.io documentation change.
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
   docs-installation-instructions:
-    status: todo
-    comment: Requires the companion home-assistant.io documentation change.
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
   docs-installation-parameters: todo
   docs-known-limitations: todo
   docs-removal-instructions:
-    status: todo
-    comment: Requires the companion home-assistant.io documentation change.
+    status: done
+    comment: https://github.com/home-assistant/home-assistant.io/pull/48270
   docs-supported-devices: todo
   docs-supported-functions: todo
   docs-triggers:
