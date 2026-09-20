@@ -4,11 +4,12 @@ import asyncio
 import datetime as dt
 import socket
 import ssl
-from typing import Any
+
+from cryptography import x509
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import get_default_context
+from homeassistant.util.ssl import SSLCipherList, client_context_no_verify
 
 from .const import TIMEOUT
 from .errors import (
@@ -25,19 +26,20 @@ async def async_get_cert(
     hass: HomeAssistant,
     host: str,
     port: int,
-) -> dict[str, Any]:
-    """Get the certificate for the host and port combination."""
+) -> bytes | None:
+    """Get the DER-encoded certificate for the host and port combination."""
     async with asyncio.timeout(TIMEOUT):
         transport, _ = await hass.loop.create_connection(
             asyncio.Protocol,
             host,
             port,
-            ssl=get_default_context(),
+            ssl=client_context_no_verify(SSLCipherList.INSECURE),
             happy_eyeballs_delay=0.25,
             server_hostname=host,
         )
     try:
-        return transport.get_extra_info("peercert")  # type: ignore[no-any-return]
+        ssl_object = transport.get_extra_info("ssl_object")
+        return ssl_object.getpeercert(binary_form=True)  # type: ignore[no-any-return]
     finally:
         transport.close()
 
@@ -71,10 +73,9 @@ async def get_cert_expiry_timestamp(
             f"Connection failed with server: {hostname}:{port}"
         ) from err
 
-    if not cert or "notAfter" not in cert:
+    if not cert:
         raise ValidationFailure(
             f"No certificate expiration found for: {hostname}:{port}"
         )
 
-    ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt_util.utc_from_timestamp(ts_seconds)
+    return x509.load_der_x509_certificate(cert).not_valid_after_utc
