@@ -726,9 +726,7 @@ async def test_rapid_consecutive_selections_do_not_race(
         ),
     )
 
-    # Serialized: one call fully completes (start+end) before the next
-    # one starts. Interleaved (start-A, start-B, end-A, end-B) would
-    # mean they raced.
+    # Either call may win the lock; what must not happen is interleaving.
     assert call_order in (
         ["start-Dark", "end-Dark", "start-Dim", "end-Dim"],
         ["start-Dim", "end-Dim", "start-Dark", "end-Dark"],
