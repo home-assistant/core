@@ -14,7 +14,13 @@ from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichError, ImmichUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -275,6 +281,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         runtime_data = immich_entry.runtime_data
         parent_identity = self._parent_identity(immich_entry, runtime_data)
         if parent_identity != self._parent_identity_value:
+            if runtime_data is self._parent_runtime_data:
+                self._account_state_invalidated = True
+                self._account_cache_clear_pending = True
+                await self._async_clear_account_cache()
+                return False
             self._invalidate_candidate_cache()
             self._recent_ids.clear()
             self._recent_order.clear()
@@ -366,7 +377,11 @@ class ImmichFramesDataUpdateCoordinator(DataUpdateCoordinator[ImmichFramesData])
         key_fingerprint = hashlib.sha256(
             str(parent_entry.data.get(CONF_API_KEY, "")).encode()
         ).hexdigest()
-        return f"{endpoint}|{key_fingerprint}"
+        configured_endpoint = "|".join(
+            str(parent_entry.data.get(key, ""))
+            for key in (CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
+        )
+        return f"{endpoint}|{configured_endpoint}|{key_fingerprint}"
 
     def _parent_snapshot_is_current(self, runtime_data: object, identity: str) -> bool:
         """Return whether an async operation still uses the current parent."""

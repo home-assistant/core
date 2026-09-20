@@ -505,6 +505,10 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
         parent_immich_entry,
         data={**parent_immich_entry.data, CONF_API_KEY: "replacement-key"},
     )
+    parent_immich_entry.runtime_data = SimpleNamespace(
+        api=parent_immich_entry.runtime_data.api,
+        configuration_url="http://immich.local:2283",
+    )
 
     with patch.object(coordinator._cache, "clear") as clear_cache:
         assert await coordinator._refresh_parent() is True
@@ -520,6 +524,25 @@ async def test_coordinator_discards_account_bound_state_when_parent_changes(
             RuntimeError("replacement account unavailable"),
             status="upstream_error",
         )
+
+
+async def test_coordinator_waits_for_parent_reload_after_config_change(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Do not pair changed parent data with the old runtime client."""
+    coordinator = _coordinator_for_test(hass, parent_immich_entry)
+
+    hass.config_entries.async_update_entry(
+        parent_immich_entry,
+        data={**parent_immich_entry.data, CONF_API_KEY: "replacement-key"},
+    )
+
+    with patch.object(coordinator._cache, "clear") as clear_cache:
+        assert await coordinator._refresh_parent() is False
+
+    clear_cache.assert_called_once_with()
+    assert coordinator._account_state_invalidated is True
+    assert coordinator.api is parent_immich_entry.runtime_data.api
 
 
 async def test_coordinator_discards_inflight_result_when_parent_changes(
