@@ -14,8 +14,10 @@ import pytest
 
 from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
+    CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_MIGRATION_REQUIRED,
     CONF_MODE,
     CONF_PHOTO_FIT,
     CONF_SOURCE,
@@ -185,7 +187,7 @@ async def test_migrate_entry_adds_default_source(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.version == 3
+    assert entry.version == 4
     assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
     assert entry.data[CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
 
@@ -211,10 +213,73 @@ async def test_migrate_entry_moves_frame_settings_to_options(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.version == 3
+    assert entry.version == 4
     assert entry.data == {CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id}
     assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
     assert entry.options[CONF_MODE] == "single"
+
+
+async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """Bind a released HACS entry without retaining its credential."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy frame",
+        unique_id="http://immich.local:2283|Legacy frame",
+        data={
+            "url": "http://immich.local:2283",
+            CONF_API_KEY: "test-key",
+            CONF_SOURCE: DEFAULT_SOURCE,
+            CONF_MODE: "single",
+            "screen_shape": "portrait",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.version == 4
+    assert entry.data == {
+        CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
+        CONF_FRAME_ID: entry.entry_id,
+    }
+    assert CONF_API_KEY not in entry.data
+    assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
+    assert entry.options["screen_shape"] == "portrait"
+
+
+async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
+    hass: HomeAssistant,
+) -> None:
+    """Do not retain a legacy credential when no Core account matches."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unmatched legacy frame",
+        data={
+            "url": "http://immich.local:2283",
+            CONF_API_KEY: "old-key",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.version == 4
+    assert entry.data == {
+        CONF_FRAME_ID: entry.entry_id,
+        CONF_MIGRATION_REQUIRED: True,
+    }
+    assert CONF_API_KEY not in entry.data
 
 
 async def test_coordinator_uses_cache_and_controls(

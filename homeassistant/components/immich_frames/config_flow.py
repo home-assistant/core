@@ -32,6 +32,7 @@ from .const import (
     CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_MIGRATION_REQUIRED,
     CONF_MODE,
     CONF_ORIENTATION,
     CONF_PAIR_WINDOW,
@@ -101,7 +102,7 @@ async def _async_validate_source(
 class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle configuration of a frame linked to an Immich account."""
 
-    VERSION = 3
+    VERSION = 4
 
     def __init__(self) -> None:
         """Initialize flow state."""
@@ -283,7 +284,7 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
-                data_updates={
+                data={
                     CONF_IMMICH_ENTRY_ID: settings[CONF_IMMICH_ENTRY_ID],
                     CONF_FRAME_ID: frame_id,
                 },
@@ -360,8 +361,14 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reconfigure frame-specific settings."""
-        self._reconfigure_entry = self._get_reconfigure_entry()
-        self._data = {**self._reconfigure_entry.data, **self._reconfigure_entry.options}
+        if self._reconfigure_entry is None:
+            self._reconfigure_entry = self._get_reconfigure_entry()
+            self._data = {
+                **self._reconfigure_entry.data,
+                **self._reconfigure_entry.options,
+            }
+        if self._data.get(CONF_MIGRATION_REQUIRED):
+            return await self.async_step_reconfigure_parent()
         if user_input is None:
             return self.async_show_form(
                 step_id="reconfigure",
@@ -378,6 +385,36 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors={"base": error},
                 )
         return await self._async_continue_source()
+
+    async def async_step_reconfigure_parent(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select the Core Immich account for a legacy frame entry."""
+        entries = self._loaded_immich_entries()
+        if not entries:
+            return self.async_abort(reason="immich_required")
+        if user_input is not None:
+            self._data[CONF_IMMICH_ENTRY_ID] = user_input[CONF_IMMICH_ENTRY_ID]
+            self._data.pop(CONF_MIGRATION_REQUIRED, None)
+            return await self.async_step_reconfigure()
+        return self.async_show_form(
+            step_id="reconfigure_parent",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_IMMICH_ENTRY_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(
+                                    value=entry.entry_id, label=entry.title
+                                )
+                                for entry in entries.values()
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
 
 
 class ImmichFramesOptionsFlow(OptionsFlowWithReload):

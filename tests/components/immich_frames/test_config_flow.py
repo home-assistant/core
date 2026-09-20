@@ -14,8 +14,10 @@ from homeassistant.components.immich_frames.config_flow import (
 )
 from homeassistant.components.immich_frames.const import (
     CONF_ALBUM_IDS,
+    CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
+    CONF_MIGRATION_REQUIRED,
     CONF_MODE,
     CONF_ORIENTATION,
     CONF_PAIR_WINDOW,
@@ -862,6 +864,45 @@ async def test_reconfigure_flow_keeps_generated_frame_name(
 
     assert result["type"] == "abort"
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_legacy_entry_selects_core_immich_account(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """A migrated legacy entry can be rebound through reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy frame",
+        data={
+            CONF_FRAME_ID: "legacy-frame",
+            CONF_MIGRATION_REQUIRED: True,
+        },
+        options={CONF_SOURCE: DEFAULT_SOURCE},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+    assert result["step_id"] == "reconfigure_parent"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id},
+    )
+    assert result["step_id"] == "reconfigure"
+    assert entry.data[CONF_MIGRATION_REQUIRED] is True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SOURCE: DEFAULT_SOURCE},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
+    assert CONF_MIGRATION_REQUIRED not in entry.data
 
 
 async def test_reconfigure_all_source_preflight_reports_unavailable_assets(

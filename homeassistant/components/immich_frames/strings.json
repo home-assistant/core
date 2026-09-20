@@ -4,7 +4,8 @@
       "already_configured": "This Immich frame is already configured.",
       "immich_not_ready": "The Immich integration is not ready.",
       "immich_required": "Set up the Immich integration first.",
-      "no_albums": "No Immich albums are available."
+      "no_albums": "No Immich albums are available.",
+      "migration_required": "This frame was created by the custom integration and needs to be reconfigured."
     },
     "error": {
       "album_required": "Select at least one album.",
@@ -45,6 +46,15 @@
         },
         "title": "Reconfigure Immich frame"
       },
+      "reconfigure_parent": {
+        "data": {
+          "immich_entry_id": "Immich account"
+        },
+        "data_description": {
+          "immich_entry_id": "Choose the Core Immich account that replaces the custom integration connection."
+        },
+        "title": "Choose the Immich account"
+      },
       "smart": {
         "data": { "smart_query": "Keywords" },
         "data_description": {
@@ -77,6 +87,9 @@
     }
   },
   "exceptions": {
+    "migration_required": {
+      "message": "This frame was created by the custom integration and needs to be reconfigured with a Core Immich account."
+    },
     "cannot_connect": { "message": "Unable to connect to Immich." },
     "immich_not_ready": { "message": "The Immich integration is not ready." },
     "invalid_image": {
