@@ -123,7 +123,9 @@ async def test_invalid_session_key_starts_reauth(
         patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-        polling_task = get_session_key_polling_task()
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(flows) == 1
+        polling_task = get_session_key_polling_task(hass, flows[0]["flow_id"])
         await hass.async_block_till_done()
 
     assert not polling_task.done()

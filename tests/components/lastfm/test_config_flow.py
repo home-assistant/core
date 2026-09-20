@@ -124,7 +124,7 @@ async def test_full_user_flow_with_session_key(
         assert result["step_id"] == "auth_url"
         assert result["url"] == AUTH_URL
 
-        await get_session_key_polling_task()
+        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -153,7 +153,7 @@ async def test_session_key_exchange_is_serialized(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task()
+        polling_task = get_session_key_polling_task(hass, result["flow_id"])
         assert await hass.async_add_executor_job(
             session_key_generator.exchange_started.wait, 1
         )
@@ -221,13 +221,13 @@ async def test_flow_restarts_polling_after_timeout(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task()
+        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
 
         session_key_generator.session_key_error = None
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task()
+        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -259,7 +259,7 @@ async def test_flow_session_key_error(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task()
+        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -393,7 +393,7 @@ async def test_reauth_flow_start_retry(
         )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    polling_task = get_session_key_polling_task()
+    polling_task = get_session_key_polling_task(hass, result["flow_id"])
     hass.config_entries.flow.async_abort(result["flow_id"])
     await hass.async_block_till_done()
     assert polling_task.cancelled()
@@ -412,7 +412,7 @@ async def test_flow_abort_cancels_session_key_polling(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task()
+        polling_task = get_session_key_polling_task(hass, result["flow_id"])
 
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
@@ -441,7 +441,7 @@ async def test_flow_abort_after_terminal_polling_error(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task()
+        polling_task = get_session_key_polling_task(hass, result["flow_id"])
 
         await polling_task
         hass.config_entries.flow.async_abort(result["flow_id"])

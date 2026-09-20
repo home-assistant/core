@@ -11,8 +11,10 @@ from homeassistant.components.lastfm.const import (
     CONF_MAIN_USER,
     CONF_SESSION_KEY,
     CONF_USERS,
+    DOMAIN as DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 API_KEY = "asdasdasdasdasd"
@@ -172,11 +174,11 @@ def patch_setup_entry() -> bool:
     return patch("homeassistant.components.lastfm.async_setup_entry", return_value=True)
 
 
-def get_session_key_polling_task() -> asyncio.Task[None]:
-    """Return the active session key polling task."""
-    return next(
-        task
-        for task in asyncio.all_tasks()
-        if task.get_coro().__qualname__
-        == "LastFmConfigFlowHandler._async_poll_for_session_key"
-    )
+def get_session_key_polling_task(
+    hass: HomeAssistant, flow_id: str
+) -> asyncio.Task[None]:
+    """Return the session key polling task of the given flow."""
+    flow = hass.config_entries.flow._progress[flow_id]
+    task = flow._polling_task
+    assert task is not None
+    return task
