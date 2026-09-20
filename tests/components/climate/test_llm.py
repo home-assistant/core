@@ -58,7 +58,14 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
-    assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert "climate__HassClimateSetTemperature" in tools
+
+    tool = tools["climate__HassClimateSetTemperature"]
+    assert tool.title == "Set temperature"
+    assert tool.integration == DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(idempotent=True, open_world=False)
 
 
 @pytest.mark.parametrize(
