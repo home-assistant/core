@@ -88,6 +88,47 @@ async def test_light_controls_refresh_device_state(
     assert state.state == expected
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_light_controls_refresh_during_cooldown(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+) -> None:
+    """Test back-to-back light controls do not return stale entity state."""
+    mock_opengarage.set_light.return_value = 1
+    mock_opengarage.update_state.return_value = {
+        **mock_opengarage.update_state.return_value,
+        "light": 1,
+    }
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        light.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
+
+    mock_opengarage.set_light.reset_mock()
+    mock_opengarage.update_state.reset_mock()
+    mock_opengarage.update_state.return_value = {
+        **mock_opengarage.update_state.return_value,
+        "light": 0,
+    }
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        light.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_opengarage.set_light.assert_awaited_once_with(False)
+    mock_opengarage.update_state.assert_awaited_once()
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_OFF
+
+
 async def test_light_not_created_without_capability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

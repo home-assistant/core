@@ -77,7 +77,7 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
                 translation_key="light_control_unavailable",
             ) from err
         if result == 1:
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
             return
 
         if result == 2:
