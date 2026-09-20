@@ -20,14 +20,15 @@ from homeassistant.util.json import JsonObjectType
 
 
 @pytest.mark.parametrize(
-    ("code", "outputs", "error", "external"),
+    ("code", "outputs", "error", "external", "status"),
     [
-        pytest.param(None, None, False, True, id="no_output"),
+        pytest.param(None, None, False, True, "completed", id="no_output"),
         pytest.param(
             "raise ValueError()",
             [{"type": "logs", "logs": "ValueError"}],
             True,
             True,
+            "failed",
             id="failed",
         ),
         pytest.param(
@@ -35,9 +36,11 @@ from homeassistant.util.json import JsonObjectType
             [{"type": "image", "url": "https://example.com/plot.png"}],
             False,
             True,
+            "completed",
             id="image",
         ),
-        pytest.param("print(1)", None, False, False, id="custom_function"),
+        pytest.param("print(1)", None, False, False, "completed", id="custom_function"),
+        pytest.param("print(1)", None, False, True, "incomplete", id="incomplete"),
     ],
 )
 def test_convert_code_interpreter(
@@ -45,6 +48,7 @@ def test_convert_code_interpreter(
     outputs: list[JsonObjectType] | None,
     error: bool,
     external: bool,
+    status: str,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Restore native external calls while preserving custom function calls."""
@@ -55,7 +59,7 @@ def test_convert_code_interpreter(
                 llm.ToolInput(
                     id="ci_A",
                     tool_name="code_interpreter",
-                    tool_args={"code": code, "container": "cntr_A"},
+                    tool_args={"code": code},
                     external=external,
                 )
             ],
@@ -64,7 +68,10 @@ def test_convert_code_interpreter(
             agent_id="conversation.openai_conversation",
             tool_call_id="ci_A",
             tool_name="code_interpreter",
-            result=llm.ToolResult(data={"output": outputs}, error=error),
+            result=llm.ToolResult(
+                data={"container_id": "cntr_A", "output": outputs, "status": status},
+                error=error,
+            ),
         ),
     ]
 

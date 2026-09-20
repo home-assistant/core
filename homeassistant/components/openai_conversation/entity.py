@@ -188,7 +188,7 @@ def _convert_content_to_param(
     messages: ResponseInputParam = []
     reasoning_summary: list[str] = []
     web_search_calls: dict[str, ResponseFunctionWebSearchParam] = {}
-    code_interpreter_calls: dict[str, ResponseCodeInterpreterToolCallParam] = {}
+    code_interpreter_calls: dict[str, llm.ToolInput] = {}
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
@@ -205,15 +205,20 @@ def _convert_content_to_param(
                 content.tool_name == "code_interpreter"
                 and content.tool_call_id in code_interpreter_calls
             ):
-                code_interpreter_call = code_interpreter_calls.pop(content.tool_call_id)
-                code_interpreter_call["outputs"] = cast(
-                    list[CodeInterpreterOutputParam] | None,
-                    content.result.data["output"],
+                tool_call = code_interpreter_calls.pop(content.tool_call_id)
+                messages.append(
+                    ResponseCodeInterpreterToolCallParam(
+                        type="code_interpreter_call",
+                        id=tool_call.id,
+                        code=tool_call.tool_args["code"],
+                        container_id=cast(str, content.result.data["container_id"]),
+                        outputs=cast(
+                            list[CodeInterpreterOutputParam] | None,
+                            content.result.data["output"],
+                        ),
+                        status=content.result.data["status"],  # type: ignore[typeddict-item]
+                    )
                 )
-                code_interpreter_call["status"] = (
-                    "failed" if content.result.error else "completed"
-                )
-                messages.append(code_interpreter_call)
             else:
                 messages.append(
                     FunctionCallOutput(
@@ -256,16 +261,7 @@ def _convert_content_to_param(
                     elif (
                         tool_call.external and tool_call.tool_name == "code_interpreter"
                     ):
-                        code_interpreter_calls[tool_call.id] = (
-                            ResponseCodeInterpreterToolCallParam(
-                                type="code_interpreter_call",
-                                id=tool_call.id,
-                                code=tool_call.tool_args["code"],
-                                container_id=tool_call.tool_args["container"],
-                                outputs=None,
-                                status="completed",
-                            )
-                        )
+                        code_interpreter_calls[tool_call.id] = tool_call
                     else:
                         messages.append(
                             ResponseFunctionToolCallParam(
@@ -366,10 +362,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                         llm.ToolInput(
                             id=event.item.id,
                             tool_name="code_interpreter",
-                            tool_args={
-                                "code": event.item.code,
-                                "container": event.item.container_id,
-                            },
+                            tool_args={"code": event.item.code},
                             external=True,
                         )
                     ]
@@ -380,11 +373,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_name": "code_interpreter",
                     "result": llm.ToolResult(
                         data={
+                            "container_id": event.item.container_id,
                             "output": (
                                 [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
                                 if event.item.outputs is not None
                                 else None
-                            )
+                            ),
+                            "status": event.item.status,
                         },
                         error=event.item.status == "failed",
                     ),

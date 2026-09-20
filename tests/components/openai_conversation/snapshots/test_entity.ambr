@@ -2,14 +2,14 @@
 # name: test_convert_code_interpreter[custom_function]
   list([
     dict({
-      'arguments': '{"code":"print(1)","container":"cntr_A"}',
+      'arguments': '{"code":"print(1)"}',
       'call_id': 'ci_A',
       'name': 'code_interpreter',
       'type': 'function_call',
     }),
     dict({
       'call_id': 'ci_A',
-      'output': '{"data":{"output":null},"error":false}',
+      'output': '{"data":{"container_id":"cntr_A","output":null,"status":"completed"},"error":false}',
       'type': 'function_call_output',
     }),
   ])
@@ -44,6 +44,18 @@
         }),
       ]),
       'status': 'completed',
+      'type': 'code_interpreter_call',
+    }),
+  ])
+# ---
+# name: test_convert_code_interpreter[incomplete]
+  list([
+    dict({
+      'code': 'print(1)',
+      'container_id': 'cntr_A',
+      'id': 'ci_A',
+      'outputs': None,
+      'status': 'incomplete',
       'type': 'code_interpreter_call',
     }),
   ])
