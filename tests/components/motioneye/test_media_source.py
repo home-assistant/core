@@ -6,6 +6,7 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import client_exceptions
 from motioneye_client.client import MotionEyeClientError
 import pytest
 
@@ -629,7 +630,9 @@ async def test_media_proxy_client_error_after_response_started(
     )
 
     assert response.status == 200
-    assert await response.read() == b"movie"
+    assert await response.content.readexactly(5) == b"movie"
+    with pytest.raises(client_exceptions.ClientPayloadError):
+        await response.content.read()
     stream_mock.assert_called_once_with(
         1,
         "/foo.mp4",
