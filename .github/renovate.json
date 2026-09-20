@@ -9,6 +9,7 @@
     "dockerfile",
     "npm",
     "custom.regex",
+    "github-actions",
     "homeassistant-manifest"
   ],
 
@@ -55,7 +56,7 @@
   ],
 
   "minimumReleaseAge": "7 days",
-  "prConcurrentLimit": 10,
+  "prConcurrentLimit": 0,
   "prHourlyLimit": 2,
   "schedule": ["before 6am"],
 
@@ -184,11 +185,35 @@
       "labels": ["dependency"]
     },
     {
+      "description": "GitHub Actions used in our workflows (allowlisted). Runner labels and action version inputs are deliberately left out.",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action", "workflow", "docker", "container", "service"],
+      "enabled": true,
+      "labels": ["dependency", "github_actions"]
+    },
+    {
+      "description": "Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.",
+      "matchPackageNames": [
+        "github/gh-aw-actions",
+        "/^github\\/gh-aw-actions\\//",
+        "/^ghcr\\.io\\/github\\/gh-aw/"
+      ],
+      "enabled": false
+    },
+    {
       "description": "pnpm version pinned in the E2E tests packageManager field (allowlisted)",
       "matchManagers": ["npm"],
       "matchFileNames": ["tests/e2e/package.json"],
       "matchDepTypes": ["packageManager"],
       "matchPackageNames": ["pnpm"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Playwright pinned in the E2E tests (allowlisted)",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["tests/e2e/package.json"],
+      "matchPackageNames": ["@playwright/test"],
       "enabled": true,
       "labels": ["dependency"]
     },
@@ -246,6 +271,18 @@
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
       "groupSlug": "pylint"
+    },
+    {
+      "description": "Group the github/codeql-action subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^github\\/codeql-action(?:\\/|$)/"],
+      "groupName": "github/codeql-action",
+      "groupSlug": "codeql-action"
+    },
+    {
+      "description": "Group the actions/cache subactions into one PR (they share a release)",
+      "matchPackageNames": ["/^actions\\/cache(?:\\/|$)/"],
+      "groupName": "actions/cache",
+      "groupSlug": "actions-cache"
     },
     {
       "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",

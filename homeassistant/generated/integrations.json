@@ -7444,6 +7444,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "theben_conexa": {
+      "name": "Theben Conexa Smart Meter Gateway",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "thermador": {
       "name": "Thermador",
       "integration_type": "virtual",
@@ -7503,6 +7509,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "single_config_entry": true
+    },
+    "threema": {
+      "name": "Threema",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "tibber": {
       "name": "Tibber",
