@@ -25,8 +25,7 @@ from .const import (
     INTENT_SET_VOLUME_RELATIVE,
 )
 
-# Intents owned by this integration that are exposed as LLM tools, with the
-# title shown for each.
+# Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = {
     INTENT_MEDIA_NEXT: "Next track",
     INTENT_MEDIA_PAUSE: "Pause media",
