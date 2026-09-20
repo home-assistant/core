@@ -421,6 +421,36 @@ async def test_flow_abort_cancels_session_key_polling(
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+async def test_flow_abort_after_terminal_polling_error(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test aborting the flow before the scheduled advancement task runs."""
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(
+                session_key_error=WSError(
+                    "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Token not authorized"
+                )
+            ),
+        ),
+        patch(POLLING_INTERVAL_PATH, 0),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        polling_task = get_session_key_polling_task()
+
+        await polling_task
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert polling_task.exception() is None
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
 @pytest.mark.parametrize(
     ("error", "message"),
     [

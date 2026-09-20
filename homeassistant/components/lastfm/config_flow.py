@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 from functools import partial
 import logging
 from typing import Any, override
@@ -25,6 +26,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -376,20 +378,20 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
                 await asyncio.sleep(POLLING_INTERVAL)
                 await self._async_get_session_key()
-                if self._session_key_error:
+                if self._session_key_error or self._authorized_username is not None:
                     self._polling_task = None
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_configure(self.flow_id)
-                    )
-                    return
-                if self._authorized_username is not None:
-                    self._polling_task = None
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_configure(self.flow_id)
-                    )
+                    self.hass.async_create_task(self._async_advance_flow())
                     return
         finally:
             self._polling_task = None
+
+    async def _async_advance_flow(self) -> None:
+        """Advance the flow after a terminal polling outcome.
+
+        The flow may have been aborted while polling was still running.
+        """
+        with suppress(UnknownFlow):
+            await self.hass.config_entries.flow.async_configure(self.flow_id)
 
     async def async_step_friends(
         self, user_input: dict[str, Any] | None = None
