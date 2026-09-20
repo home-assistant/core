@@ -19,8 +19,7 @@ from .intent import INTENT_FAN_SET_SPEED
 # with the same arguments has no further effect.
 LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
 
-# Intents owned by this integration that are exposed as LLM tools, with the
-# title shown for each.
+# Intents owned by this integration that are exposed as LLM tools.
 LLM_INTENTS = {
     INTENT_FAN_SET_SPEED: "Set fan speed",
 }
