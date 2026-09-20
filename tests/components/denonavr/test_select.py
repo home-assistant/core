@@ -812,9 +812,7 @@ async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
     """A stale immediate refresh must not revert to the previous value."""
-    # dimmer starts "Bright"; simulate the receiver's refresh call
-    # responding with the *old* value, as if the command hadn't
-    # internally settled yet by the time we queried it.
+    # The refresh reports the old value, as if the command had not settled yet.
     client.async_update.side_effect = lambda *a, **k: None  # dimmer stays "Bright"
 
     await setup_denonavr(hass)
@@ -826,19 +824,13 @@ async def test_option_shown_immediately_even_if_refresh_reads_back_stale_value(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Dark"},
         blocking=True,
     )
-    # Let the debounced confirmation refresh actually run its stale
-    # read, rather than asserting before it's even had a chance to.
+    # Let the debounced confirmation refresh run its stale read.
     await _wait_for_debounced_refresh(hass)
 
     client.async_dimmer.assert_awaited_once_with("Dark")
-    # Even though the immediate refresh read back the stale "Bright",
-    # the UI shows what was actually picked, not what the receiver
-    # momentarily still reported.
     assert hass.states.get(entity_id).state == "Dark"
 
-    # Once the receiver's value genuinely catches up (e.g. on a later,
-    # unrelated poll that happens to refresh it - simulated directly
-    # here), the override reconciles cleanly rather than getting stuck.
+    # Once the receiver catches up, the override reconciles instead of sticking.
     client.dimmer = "Dark"
     await async_update_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == "Dark"
