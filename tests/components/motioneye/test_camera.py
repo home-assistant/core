@@ -361,9 +361,7 @@ async def test_stream_auth_header_cleared_when_auth_disabled(
     )
     await hass.async_block_till_done()
 
-    await async_get_mjpeg_stream(
-        hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID
-    )
+    await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert authorizations == ["Basic dXNlcjpwYXNzd29yZA=="]
 
     cameras = copy.deepcopy(TEST_CAMERAS)
@@ -373,9 +371,7 @@ async def test_stream_auth_header_cleared_when_auth_disabled(
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    await async_get_mjpeg_stream(
-        hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID
-    )
+    await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert authorizations == ["Basic dXNlcjpwYXNzd29yZA==", None]
 
 
