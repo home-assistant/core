@@ -26,7 +26,6 @@ from .intent import (
     INTENT_LIST_REMOVE_ITEM,
 )
 
-# Intents owned by this integration that are exposed as LLM tools.
 # Intents owned by this integration that are exposed as LLM tools, with the
 # title shown for each.
 LLM_INTENTS = {
@@ -57,7 +56,9 @@ class TodoGetItemsTool(Tool):
         "'Read my grocery list'. "
         "Filters items by status (needs_action, completed, all)."
     )
-    annotations = ToolAnnotations(read_only=True, open_world=False)
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
     integration = DOMAIN
 
     def __init__(self, todo_lists: list[str]) -> None:
