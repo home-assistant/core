@@ -40,7 +40,6 @@ def mock_conexa_smgw() -> Generator[SimpleNamespace]:
     mock_create.return_value = mock_smgw
 
     with (
-        patch("theben_conexa_smgw.checkNetworkConnection", mock_network),
         patch(
             "homeassistant.components.theben_conexa.coordinator.checkNetworkConnection",
             mock_network,
@@ -49,7 +48,6 @@ def mock_conexa_smgw() -> Generator[SimpleNamespace]:
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection",
             mock_network,
         ),
-        patch("theben_conexa_smgw.ConexaSMGW.create", mock_create),
         patch(
             "homeassistant.components.theben_conexa.coordinator.ConexaSMGW.create",
             mock_create,
