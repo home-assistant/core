@@ -121,16 +121,6 @@ def condition(code: object, time: datetime, suns: list[Any]) -> str | None:
     return result
 
 
-def values(series: dict[str, Any]) -> list[Any]:
-    """Ignore failed sub-series instead of presenting stale provider values."""
-    if series.get("status", 0) != 0:
-        return []
-    result = series.get("value", [])
-    if not isinstance(result, list):
-        raise TypeError("Expected a forecast array")
-    return result
-
-
 def block(value: Any) -> dict[str, Any]:
     """Isolate missing or failed optional blocks from the current weather."""
     return value if isinstance(value, dict) and value.get("status", 0) == 0 else {}
@@ -193,14 +183,14 @@ def parse_weather(payload: Any) -> WeatherData:
             raise XiaomiWeatherError("Missing current temperature")
         now = timestamp(current["pubTime"])
         daily = block(payload.get("forecastDaily"))
-        suns = values(daily.get("sunRiseSet", {}))
+        suns = series_items(daily.get("sunRiseSet"))
         days: list[ForecastData] = []
         twice_daily: list[ForecastData] = []
         if daily.get("status", 0) == 0:
-            temperatures = daily.get("temperature", {})
-            if values(temperatures) and temperatures.get("unit") != "℃":
+            temperatures = block(daily.get("temperature"))
+            if series_items(temperatures) and temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected daily temperature unit")
-            for index, item in enumerate(values(temperatures)):
+            for index, item in enumerate(series_items(temperatures)):
                 item = block(item)
                 high, low = number(item.get("from")), number(item.get("to"))
                 if (
@@ -252,19 +242,19 @@ def parse_weather(payload: Any) -> WeatherData:
                     )
         hourly = block(payload.get("forecastHourly"))
         hours: list[ForecastData] = []
-        temperatures = hourly.get("temperature", {})
-        if hourly.get("status", 0) == 0 and values(temperatures):
+        temperatures = block(hourly.get("temperature"))
+        if hourly.get("status", 0) == 0 and series_items(temperatures):
             if temperatures.get("unit") != "℃":
                 raise XiaomiWeatherError("Unexpected hourly temperature unit")
             start = timestamp(temperatures["pubTime"])
             winds = hourly_winds(hourly)
-            weather = hourly.get("weather", {})
+            weather = block(hourly.get("weather"))
             codes = (
-                values(weather)
+                series_items(weather)
                 if weather.get("pubTime") == temperatures["pubTime"]
                 else []
             )
-            for index, value in enumerate(values(temperatures)):
+            for index, value in enumerate(series_items(temperatures)):
                 high = number(value)
                 if high is None:
                     continue

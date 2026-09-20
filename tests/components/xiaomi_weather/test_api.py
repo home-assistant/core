@@ -329,11 +329,80 @@ def test_missing_daily_low(payload: dict[str, Any]) -> None:
     assert data.daily[0] == replace(expected.daily[0], low=None)
 
 
-def test_invalid_series(payload: dict[str, Any]) -> None:
-    """Test invalid series."""
-    payload["forecastDaily"]["temperature"]["value"] = None
-    with pytest.raises(XiaomiWeatherError):
-        parse_weather(payload)
+@pytest.mark.parametrize(
+    ("section", "key", "empty_forecasts", "unaffected"),
+    [
+        pytest.param(
+            "forecastDaily",
+            "temperature",
+            ("daily", "twice_daily"),
+            "hourly",
+            id="daily-temperature",
+        ),
+        pytest.param(
+            "forecastDaily",
+            "sunRiseSet",
+            ("daily", "twice_daily"),
+            "temperature",
+            id="sun-times",
+        ),
+        pytest.param(
+            "forecastHourly",
+            "temperature",
+            ("hourly",),
+            "daily",
+            id="hourly-temperature",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "series",
+    [
+        pytest.param(None, id="null-block"),
+        pytest.param([], id="invalid-block"),
+        pytest.param({"value": None}, id="null-array"),
+        pytest.param({"value": "bad"}, id="invalid-array"),
+    ],
+)
+def test_malformed_optional_series(
+    payload: dict[str, Any],
+    section: str,
+    key: str,
+    empty_forecasts: tuple[str, ...],
+    unaffected: str,
+    series: object,
+) -> None:
+    """Drop only forecasts that depend on a malformed optional series."""
+    expected = parse_weather(payload)
+    payload[section][key] = series
+    data = parse_weather(payload)
+    assert data.temperature == expected.temperature
+    assert getattr(data, unaffected) == getattr(expected, unaffected)
+    for forecast in empty_forecasts:
+        assert getattr(data, forecast) == ()
+
+
+@pytest.mark.parametrize(
+    "series",
+    [
+        pytest.param(None, id="null-block"),
+        pytest.param([], id="invalid-block"),
+        pytest.param(
+            {"pubTime": "2026-09-08T13:00:00+08:00", "value": None}, id="null-array"
+        ),
+        pytest.param(
+            {"pubTime": "2026-09-08T13:00:00+08:00", "value": "bad"}, id="invalid-array"
+        ),
+    ],
+)
+def test_malformed_hourly_conditions(payload: dict[str, Any], series: object) -> None:
+    """Retain hourly temperatures when the optional condition series is invalid."""
+    expected = parse_weather(payload)
+    payload["forecastHourly"]["weather"] = series
+    assert parse_weather(payload) == replace(
+        expected,
+        hourly=tuple(replace(item, condition=None) for item in expected.hourly),
+    )
 
 
 def test_clear_without_sun_times(payload: dict[str, Any]) -> None:
