@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
-from aiovodafone.exceptions import CannotAuthenticate, VodafoneError
+from aiovodafone.exceptions import (
+    CannotAuthenticate,
+    GenericResponseError,
+    VodafoneError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -209,3 +213,57 @@ async def test_initial_login_auth_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_vodafone_station_router.login.assert_awaited_once_with()
     mock_vodafone_station_router.get_devices_data.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "method", ["get_devices_data", "get_sensor_data", "get_wifi_data"]
+)
+@pytest.mark.parametrize(
+    ("errors", "login_count", "success"),
+    [
+        pytest.param([GenericResponseError()], 0, True, id="response"),
+        pytest.param(
+            [CannotAuthenticate(), GenericResponseError()], 1, True, id="auth-response"
+        ),
+        pytest.param(
+            [GenericResponseError(), CannotAuthenticate()], 1, True, id="response-auth"
+        ),
+        pytest.param(
+            [GenericResponseError(), GenericResponseError()], 0, False, id="persistent"
+        ),
+    ],
+)
+async def test_transient_response_retry(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+    errors: list[Exception],
+    login_count: int,
+    success: bool,
+) -> None:
+    """Retry response errors once, including after session recovery."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator._session.cookie_jar.update_cookies(
+        {"session": "present"}, response_url=coordinator.api.base_url
+    )
+    mock_vodafone_station_router.login.reset_mock()
+    failing_method = getattr(mock_vodafone_station_router, method)
+    failing_method.reset_mock()
+    failing_method.side_effect = [*errors, failing_method.return_value]
+
+    with (
+        patch(
+            "homeassistant.components.vodafone_station.coordinator.asyncio.sleep"
+        ) as sleep,
+        patch.object(mock_config_entry, "async_start_reauth_if_available") as reauth,
+    ):
+        await coordinator.async_refresh()
+
+    sleep.assert_awaited_once_with(2)
+    assert coordinator.last_update_success is success
+    assert failing_method.await_count == len(errors) + int(success)
+    assert mock_vodafone_station_router.login.await_count == login_count
+    reauth.assert_not_called()
+    assert coordinator._unsub_refresh is not None

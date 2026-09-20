@@ -1,5 +1,6 @@
 """Support for Vodafone Station."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
@@ -135,16 +136,27 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.api.base_url.host,
                 )
                 await self.api.login()
-            for attempt in range(2):
+            auth_retried = False
+            response_retried = False
+            for _ in range(3):
                 try:
                     raw_data_devices = await self.api.get_devices_data()
                     data_sensors = await self.api.get_sensor_data()
                     data_wifi = await self.api.get_wifi_data()
                 except exceptions.CannotAuthenticate:
-                    if attempt:
+                    if auth_retried:
                         raise
+                    auth_retried = True
                     LOGGER.debug("Session rejected, re-login and retry data update")
                     await self.api.login()
+                except exceptions.GenericResponseError:
+                    if response_retried:
+                        raise
+                    response_retried = True
+                    LOGGER.debug(
+                        "Data request failed, retrying once in 2 seconds without re-login"
+                    )
+                    await asyncio.sleep(2)
                 else:
                     break
         except exceptions.CannotAuthenticate as err:
