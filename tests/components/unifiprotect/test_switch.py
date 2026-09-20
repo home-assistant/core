@@ -57,9 +57,7 @@ from .utils import (
     make_public_camera,
     make_public_light,
     make_public_sensor,
-    make_streamless_public_camera,
     public_device_ws_message,
-    registry_keys,
     remove_entities,
     setup_public_camera,
     setup_public_light,
@@ -1178,6 +1176,23 @@ async def test_switch_sense_public_switches_ignore_local_permissions(
 _SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}
 
 
+def _switch_keys(entity_registry: er.EntityRegistry, mac: str) -> set[str]:
+    """Return the description keys of the switches registered for a device."""
+    prefix = f"{mac}_"
+    return {
+        entry.unique_id.removeprefix(prefix)
+        for entry in entity_registry.entities.values()
+        if entry.domain == Platform.SWITCH and entry.unique_id.startswith(prefix)
+    }
+
+
+def _make_streamless_public_camera(camera: Camera) -> Mock:
+    """Build a public camera without RTSPS streams (snapshot-only)."""
+    public = make_public_camera(camera)
+    public.rtsps_streams = None
+    return public
+
+
 @pytest.mark.parametrize(
     ("key", "object_types", "audio_types"), CAMERA_SWITCHES_DETECTION_READ
 )
@@ -1196,9 +1211,7 @@ async def test_switch_camera_detection_capability_gating(
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
 
-    assert registry_keys(
-        entity_registry, Platform.SWITCH, doorbell.mac
-    ) & _SMART_KEYS == {key}
+    assert _switch_keys(entity_registry, doorbell.mac) & _SMART_KEYS == {key}
 
 
 async def test_switch_command_when_public_object_vanishes(
@@ -1276,7 +1289,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
 
     await init_entry(hass, ufp, [])
 
-    assert registry_keys(entity_registry, Platform.SWITCH, orphan.mac) == {"motion"}
+    assert _switch_keys(entity_registry, orphan.mac) == {"motion"}
     assert entity_registry.async_get(stale.entity_id) is not None
 
 
@@ -1285,7 +1298,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
     [
         pytest.param(
             "doorbell",
-            make_streamless_public_camera,
+            _make_streamless_public_camera,
             "smart_person",
             "set_person_detection",
             {"high_fps"},
@@ -1343,7 +1356,7 @@ async def test_public_only_switch_end_to_end(
     await setup_public_only()
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
-    keys = registry_keys(entity_registry, Platform.SWITCH, device.mac)
+    keys = _switch_keys(entity_registry, device.mac)
     assert key in keys
     assert present_keys <= keys
     assert not keys & absent_keys
@@ -1382,14 +1395,12 @@ async def test_public_only_switch_camera_capability_gating(
     """Without a private object the detection switches gate on the public capability."""
     doorbell.feature_flags.smart_detect_types = [SmartDetectObjectType.PERSON]
     doorbell.feature_flags.smart_detect_audio_types = []
-    public = make_streamless_public_camera(doorbell)
+    public = _make_streamless_public_camera(doorbell)
     ufp_public_only.api.public_bootstrap.cameras[doorbell.id] = public
 
     await setup_public_only()
 
-    assert registry_keys(
-        entity_registry, Platform.SWITCH, doorbell.mac
-    ) & _SMART_KEYS == {"smart_person"}
+    assert _switch_keys(entity_registry, doorbell.mac) & _SMART_KEYS == {"smart_person"}
 
 
 @pytest.mark.parametrize(
@@ -1402,7 +1413,7 @@ async def test_public_only_switch_camera_capability_gating(
             id="sensor",
         ),
         pytest.param(
-            "doorbell", make_streamless_public_camera, "smart_person", id="camera"
+            "doorbell", _make_streamless_public_camera, "smart_person", id="camera"
         ),
     ],
 )
@@ -1434,7 +1445,7 @@ async def test_public_only_switch_added_after_setup(
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert key in registry_keys(entity_registry, Platform.SWITCH, device.mac)
+    assert key in _switch_keys(entity_registry, device.mac)
     count = len(hass.states.async_entity_ids(Platform.SWITCH.value))
 
     ufp_public_only.devices_ws_subscription(msg)

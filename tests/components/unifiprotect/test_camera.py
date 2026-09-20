@@ -44,7 +44,6 @@ from .utils import (
     enable_entity,
     init_entry,
     make_public_camera,
-    make_streamless_public_camera,
     public_device_ws_message,
     public_rtsps_for,
     remove_entities,
@@ -303,7 +302,8 @@ async def test_streams_unavailable(
 
     async def _prime_streamless() -> Any:
         pb = ufp.api.public_bootstrap
-        public = make_streamless_public_camera(camera_all)
+        public = make_public_camera(camera_all)
+        public.rtsps_streams = None
         pb.cameras = {camera_all.id: public}
         return pb
 
@@ -906,10 +906,11 @@ async def test_camera_without_main_tiers_skipped_with_warning(
         channel._api = ufp.api
     healthy = make_public_camera(camera)
     healthy.rtsps_streams = public_rtsps_for(camera)
-    broken = make_streamless_public_camera(camera)
+    broken = make_public_camera(camera)
     broken.id = "broken-camera"
     broken.mac = "FFEEDDCCBBAA"
     broken.display_name = "Broken"
+    broken.rtsps_streams = None
     broken.hardware_stream_qualities.return_value = [ChannelQuality.PACKAGE]
 
     async def _prime_public_only() -> Any:
