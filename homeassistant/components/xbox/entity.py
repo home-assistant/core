@@ -206,13 +206,14 @@ def check_deprecated_entity(
                     DOMAIN,
                     f"deprecated_entity_{xuid}_{entity_description.key}",
                     breaks_in_ha_version="2027.4.0",
-                    is_fixable=False,
+                    is_fixable=True,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_entity",
                     translation_placeholders={
                         "name": str(entity_entry.name or entity_entry.original_name),
                         "entity": entity_id,
                     },
+                    data={"entity_id": entity_id},
                 )
                 return True
             if not entity_used_in(hass, entity_id) or entity_entry.disabled:
