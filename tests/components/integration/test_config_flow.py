@@ -6,7 +6,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.integration.const import DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,6 +29,15 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
+
+    # All reported device class options must support the Total state class
+    device_class = result["data_schema"].schema["device_class"]
+    assert isinstance(device_class, selector.SelectSelector)
+    assert all(
+        option in DEVICE_CLASS_STATE_CLASSES
+        and SensorStateClass.TOTAL in DEVICE_CLASS_STATE_CLASSES[option]
+        for option in device_class.config["options"]
+    )
 
     with patch(
         "homeassistant.components.integration.async_setup_entry",
