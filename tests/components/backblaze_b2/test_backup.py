@@ -18,6 +18,7 @@ import pytest
 
 from homeassistant.components.backblaze_b2.backup import (
     CACHE_TTL,
+    BackblazeBackupAgent,
     _parse_metadata,
     async_get_backup_agents,
     async_register_backup_agents_listener,
@@ -287,6 +288,15 @@ async def test_delete_during_in_flight_refresh_still_invalidates(
             assert release_fetch.wait(timeout=30)
         return listed
 
+    invalidation_started = threading.Event()
+    invalidation_done = threading.Event()
+    original_invalidate = BackblazeBackupAgent._invalidate_caches
+
+    async def invalidate(self: BackblazeBackupAgent, *args: Any, **kwargs: Any) -> None:
+        invalidation_started.set()
+        await original_invalidate(self, *args, **kwargs)
+        invalidation_done.set()
+
     delete_started = threading.Event()
     release_delete = threading.Event()
     delete_calls = 0
@@ -319,6 +329,7 @@ async def test_delete_during_in_flight_refresh_still_invalidates(
         patch.object(BucketSimulator, "ls", ls, create=True),
         patch.object(FileVersion, "download", download),
         patch.object(FileVersion, "delete", delete),
+        patch.object(BackblazeBackupAgent, "_invalidate_caches", invalidate),
         patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
     ):
         seeded = await agent.async_list_backups()
@@ -336,7 +347,10 @@ async def test_delete_during_in_flight_refresh_still_invalidates(
         assert await hass.async_add_executor_job(fetch_started.wait, 30)
 
         release_delete.set()
-        await asyncio.sleep(0.1)
+        # The invalidation must be reached before the refresh is released, so
+        # the ordering holds on any executor speed (the window interior is
+        # covered by the sibling delete and refresh test below)
+        assert await hass.async_add_executor_job(invalidation_started.wait, 30)
         release_fetch.set()
 
         await refresh_task
@@ -391,6 +405,15 @@ async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
         downloaded.response.content = metadata_contents.get(self.file_name, b"")
         return downloaded
 
+    invalidation_started = threading.Event()
+    invalidation_done = threading.Event()
+    original_invalidate = BackblazeBackupAgent._invalidate_caches
+
+    async def invalidate(self: BackblazeBackupAgent, *args: Any, **kwargs: Any) -> None:
+        invalidation_started.set()
+        await original_invalidate(self, *args, **kwargs)
+        invalidation_done.set()
+
     delete_started = threading.Event()
     release_delete = threading.Event()
     delete_calls = 0
@@ -411,6 +434,7 @@ async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
         patch.object(BucketSimulator, "ls", ls, create=True),
         patch.object(FileVersion, "download", download),
         patch.object(FileVersion, "delete", delete),
+        patch.object(BackblazeBackupAgent, "_invalidate_caches", invalidate),
         patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
     ):
         seeded = await agent.async_list_backups()
@@ -434,7 +458,9 @@ async def test_delete_completing_before_refresh_publishes_keeps_backup_deleted(
         assert await hass.async_add_executor_job(refresh_blocked.wait, 30)
 
         release_delete.set()
-        await asyncio.sleep(0.1)
+        # The delete task must reach the invalidation while the refresh still
+        # holds the list lock, so the pop deterministically races the publish
+        assert await hass.async_add_executor_job(invalidation_started.wait, 30)
         release_refresh.set()
 
         await refresh_task
@@ -492,6 +518,15 @@ async def test_get_suspended_during_delete_does_not_repopulate_cache(
         downloaded.response.content = metadata_contents.get(self.file_name, b"")
         return downloaded
 
+    invalidation_started = threading.Event()
+    invalidation_done = threading.Event()
+    original_invalidate = BackblazeBackupAgent._invalidate_caches
+
+    async def invalidate(self: BackblazeBackupAgent, *args: Any, **kwargs: Any) -> None:
+        invalidation_started.set()
+        await original_invalidate(self, *args, **kwargs)
+        invalidation_done.set()
+
     delete_started = threading.Event()
     release_delete = threading.Event()
     delete_calls = 0
@@ -512,6 +547,7 @@ async def test_get_suspended_during_delete_does_not_repopulate_cache(
         patch.object(BucketSimulator, "ls", ls, create=True),
         patch.object(FileVersion, "download", download),
         patch.object(FileVersion, "delete", delete),
+        patch.object(BackblazeBackupAgent, "_invalidate_caches", invalidate),
         patch("homeassistant.components.backblaze_b2.backup.time", fake_time),
     ):
         seeded = await agent.async_list_backups()
@@ -536,7 +572,9 @@ async def test_get_suspended_during_delete_does_not_repopulate_cache(
         assert await hass.async_add_executor_job(delete_started.wait, 30)
 
         release_delete.set()
-        await asyncio.sleep(0.1)
+        # The invalidation must complete before the suspended get resumes, so
+        # the generation bump deterministically rejects its stale cache write
+        assert await hass.async_add_executor_job(invalidation_done.wait, 30)
         get_release.set()
 
         await refresh_task
