@@ -106,6 +106,7 @@ from .capabilities import (
     AlexaPlaybackStateReporter,
     AlexaPowerController,
     AlexaRangeController,
+    AlexaRTCSessionController,
     AlexaSceneController,
     AlexaSecurityPanelController,
     AlexaSeekController,
@@ -1175,15 +1176,32 @@ class CameraCapabilities(AlexaEntity):
     @override
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
-        if self._check_requirements():
-            supported = self.entity.attributes.get(
-                EntityStateAttribute.SUPPORTED_FEATURES, 0
-            )
-            if supported & camera.CameraEntityFeature.STREAM:
+        supported = self.entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
+        if supported & camera.CameraEntityFeature.STREAM:
+            if self._supports_webrtc():
+                yield AlexaRTCSessionController(self.entity)
+            if self._check_requirements():
                 yield AlexaCameraStreamController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
+
+    def _supports_webrtc(self) -> bool:
+        """Check if the camera can negotiate a WebRTC stream."""
+        component = self.hass.data.get(camera.DATA_COMPONENT)
+        if (
+            component is None
+            or (camera_entity := component.get_entity(self.entity_id)) is None
+        ):
+            _LOGGER.debug("%s not found for AlexaRTCSessionController", self.entity_id)
+            return False
+
+        return (
+            camera.StreamType.WEB_RTC
+            in camera_entity.camera_capabilities.frontend_stream_types
+        )
 
     def _check_requirements(self) -> bool:
         """Check the hass URL for HTTPS scheme."""
