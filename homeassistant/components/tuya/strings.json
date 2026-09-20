@@ -673,6 +673,9 @@
           "level_6": "Level 6"
         }
       },
+      "apparent_power": {
+        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
+      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
@@ -790,9 +793,6 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "indexed_apparent_power": {
-        "name": "Apparent power channel {index}"
-      },
       "indexed_current": {
         "name": "Current channel {index}"
       },
@@ -814,12 +814,6 @@
       },
       "indexed_power": {
         "name": "Power channel {index}"
-      },
-      "indexed_power_factor": {
-        "name": "Power factor channel {index}"
-      },
-      "indexed_reactive_power": {
-        "name": "Reactive power channel {index}"
       },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
@@ -966,6 +960,9 @@
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
       "precipitation_intensity": {
         "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
@@ -977,6 +974,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"

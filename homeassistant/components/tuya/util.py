@@ -5,7 +5,7 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 
 from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
 
@@ -63,8 +63,22 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
         )
 
 
-def get_device_info(device: CustomerDevice) -> DeviceInfo:
+def get_device_info(
+    device: CustomerDevice,
+    *,
+    channel_index: int | None = None,
+    parent_device_id: str | None = None,
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info."""
+    if channel_index is not None:
+        if parent_device_id is None:
+            raise ValueError("A parent device id is required for a channel device")
+        return ChildDeviceInfo(
+            identifiers={(DOMAIN, f"{device.id}_channel_{channel_index}")},
+            name=f"Channel {channel_index}",
+            parent_device_id=parent_device_id,
+        )
+
     manufacturer = "Tuya"
     model: str | None = device.product_name
     model_id: str | None = device.product_id

@@ -6847,7 +6847,7 @@
     'state': '0.12',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6863,7 +6863,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6871,7 +6871,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Apparent power channel 1',
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6882,33 +6882,33 @@
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
-    'original_name': 'Apparent power channel 1',
+    'original_name': 'Apparent power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
+    'translation_key': 'apparent_power',
     'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1apparentpower',
     'unit_of_measurement': 'kVA',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Apparent power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_apparent_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6924,7 +6924,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6932,7 +6932,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current channel 1',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6943,33 +6943,33 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current channel 1',
+    'original_name': 'Current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_current',
+    'translation_key': 'current',
     'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1electriccurrent',
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Current channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_current_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53.86',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6985,7 +6985,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6993,7 +6993,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power channel 1',
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7004,33 +7004,33 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power channel 1',
+    'original_name': 'Power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_power',
+    'translation_key': 'power',
     'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1power',
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.548',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7046,7 +7046,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7054,37 +7054,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power factor channel 1',
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Power factor channel 1',
+    'original_name': 'Power factor',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
+    'translation_key': 'power_factor',
     'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1powerfactor',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Power factor channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_power_factor_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_power_factor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.77',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7100,7 +7100,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7108,7 +7108,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reactive power channel 1',
+    'object_id_base': 'Reactive power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7119,30 +7119,88 @@
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
-    'original_name': 'Reactive power channel 1',
+    'original_name': 'Reactive power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
+    'translation_key': 'reactive_power',
     'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1reactivepower',
     'unit_of_measurement': 'kvar',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Reactive power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_reactive_power_channel_1',
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_reactive_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1voltage',
+    'unit_of_measurement': 'V',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_channel_1_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_supply_frequency-entry]
@@ -7201,64 +7259,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage channel 1',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage channel 1',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_voltage',
-    'unique_id': 'tuya.m2gpwqz5xb4chzqubdnzphase_s1voltage',
-    'unit_of_measurement': 'V',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '多路计量有线demo26082501 Voltage channel 1',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.duo_lu_ji_liang_you_xian_demo26082501_voltage_channel_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.eau_chaude_current-entry]
@@ -27259,7 +27259,7 @@
     'state': '98.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_1-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27275,7 +27275,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27283,7 +27283,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Apparent power channel 1',
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -27294,33 +27294,33 @@
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
-    'original_name': 'Apparent power channel 1',
+    'original_name': 'Apparent power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
+    'translation_key': 'apparent_power',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1apparentpower',
     'unit_of_measurement': 'kVA',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.22',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27336,7 +27336,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27344,312 +27344,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Apparent power channel 2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kVA',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
-    'original_icon': None,
-    'original_name': 'Apparent power channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2apparentpower',
-    'unit_of_measurement': 'kVA',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.44',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Apparent power channel 3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kVA',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
-    'original_icon': None,
-    'original_name': 'Apparent power channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3apparentpower',
-    'unit_of_measurement': 'kVA',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.66',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Apparent power channel 4',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kVA',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
-    'original_icon': None,
-    'original_name': 'Apparent power channel 4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4apparentpower',
-    'unit_of_measurement': 'kVA',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 4',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.88',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Apparent power channel 5',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kVA',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
-    'original_icon': None,
-    'original_name': 'Apparent power channel 5',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5apparentpower',
-    'unit_of_measurement': 'kVA',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 5',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.1',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Apparent power channel 6',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kVA',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
-    'original_icon': None,
-    'original_name': 'Apparent power channel 6',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_apparent_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6apparentpower',
-    'unit_of_measurement': 'kVA',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Apparent power channel 6',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_apparent_power_channel_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.32',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current channel 1',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -27660,33 +27355,33 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current channel 1',
+    'original_name': 'Current',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_current',
+    'translation_key': 'current',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1electriccurrent',
     'unit_of_measurement': 'A',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27702,7 +27397,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27710,312 +27405,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current channel 2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'A',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_current',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2electriccurrent',
-    'unit_of_measurement': 'A',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.2',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current channel 3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'A',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_current',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3electriccurrent',
-    'unit_of_measurement': 'A',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3.3',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current channel 4',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'A',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current channel 4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_current',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4electriccurrent',
-    'unit_of_measurement': 'A',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 4',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4.4',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current channel 5',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'A',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current channel 5',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_current',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5electriccurrent',
-    'unit_of_measurement': 'A',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 5',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.5',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current channel 6',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'A',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current channel 6',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_current',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6electriccurrent',
-    'unit_of_measurement': 'A',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Current channel 6',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_current_channel_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6.6',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power channel 1',
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -28026,33 +27416,33 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power channel 1',
+    'original_name': 'Power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_power',
+    'translation_key': 'power',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1power',
     'unit_of_measurement': 'kW',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power_factor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -28068,7 +27458,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power_factor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28076,342 +27466,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power channel 2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kW',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2power',
-    'unit_of_measurement': 'kW',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.42',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power channel 3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kW',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3power',
-    'unit_of_measurement': 'kW',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.63',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power channel 4',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kW',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power channel 4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4power',
-    'unit_of_measurement': 'kW',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 4',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.84',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power channel 5',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kW',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power channel 5',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5power',
-    'unit_of_measurement': 'kW',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 5',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.05',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power channel 6',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kW',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power channel 6',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6power',
-    'unit_of_measurement': 'kW',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power channel 6',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_channel_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.26',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power factor channel 1',
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Power factor channel 1',
+    'original_name': 'Power factor',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
+    'translation_key': 'power_factor',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1powerfactor',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_power_factor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.95',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_reactive_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -28427,7 +27512,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_reactive_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28435,277 +27520,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power factor channel 2',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2powerfactor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.96',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power factor channel 3',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3powerfactor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.97',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power factor channel 4',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor channel 4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4powerfactor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 4',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.98',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power factor channel 5',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor channel 5',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5powerfactor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 5',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.99',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power factor channel 6',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
-    'original_name': 'Power factor channel 6',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_power_factor',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6powerfactor',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Power factor channel 6',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_power_factor_channel_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.99',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power channel 1',
+    'object_id_base': 'Reactive power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -28716,33 +27531,33 @@
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
-    'original_name': 'Reactive power channel 1',
+    'original_name': 'Reactive power',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
+    'translation_key': 'reactive_power',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1reactivepower',
     'unit_of_measurement': 'kvar',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_reactive_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.05',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -28758,7 +27573,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28766,312 +27581,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reactive power channel 2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kvar',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2reactivepower',
-    'unit_of_measurement': 'kvar',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.1',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power channel 3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kvar',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3reactivepower',
-    'unit_of_measurement': 'kvar',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.15',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power channel 4',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kvar',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power channel 4',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4reactivepower',
-    'unit_of_measurement': 'kvar',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 4',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.2',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power channel 5',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kvar',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power channel 5',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5reactivepower',
-    'unit_of_measurement': 'kvar',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 5',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.25',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power channel 6',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': 'kvar',
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power channel 6',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_reactive_power',
-    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6reactivepower',
-    'unit_of_measurement': 'kvar',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Reactive power channel 6',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_reactive_power_channel_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.3',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage channel 1',
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29079,33 +27589,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 1',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s1voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_1-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_1',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_1_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_2-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29121,7 +27631,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29129,7 +27639,305 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage channel 2',
+    'object_id_base': 'Apparent power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apparent_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_apparent_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_apparent_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.44',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.42',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.96',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_reactive_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_reactive_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_reactive_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_reactive_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29137,33 +27945,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 2',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s2voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_2-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_2',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_2_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.2',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_3-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29179,7 +27987,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_3',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29187,7 +27995,305 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage channel 3',
+    'object_id_base': 'Apparent power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apparent_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_apparent_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_apparent_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.66',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.3',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.63',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.97',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_reactive_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_reactive_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_reactive_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_reactive_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.15',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29195,33 +28301,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 3',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s3voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_3-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_3',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_3_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.3',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_4-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29237,7 +28343,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_4',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29245,7 +28351,305 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage channel 4',
+    'object_id_base': 'Apparent power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apparent_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_apparent_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_apparent_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.88',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.4',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.84',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.98',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_reactive_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_reactive_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_reactive_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_reactive_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29253,33 +28657,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 4',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s4voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_4-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_4',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_4_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.4',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_5-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29295,7 +28699,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_5',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29303,7 +28707,305 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage channel 5',
+    'object_id_base': 'Apparent power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apparent_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_apparent_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_apparent_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.5',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.05',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.99',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_reactive_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_reactive_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_reactive_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_reactive_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.25',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29311,33 +29013,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 5',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s5voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_5-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 5 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_5',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_5_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.5',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_6-entry]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29353,7 +29055,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_6',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29361,7 +29063,305 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage channel 6',
+    'object_id_base': 'Apparent power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kVA',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
+    'original_icon': None,
+    'original_name': 'Apparent power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apparent_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6apparentpower',
+    'unit_of_measurement': 'kVA',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_apparent_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kVA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_apparent_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.32',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'A',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6electriccurrent',
+    'unit_of_measurement': 'A',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.6',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kW',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6power',
+    'unit_of_measurement': 'kW',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.26',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power factor',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': None,
+    'original_name': 'Power factor',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_factor',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_power_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.99',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_reactive_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_reactive_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'kvar',
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power',
+    'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6reactivepower',
+    'unit_of_measurement': 'kvar',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_reactive_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kvar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_reactive_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29369,26 +29369,26 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage channel 6',
+    'original_name': 'Voltage',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_voltage',
+    'translation_key': 'voltage',
     'unique_id': 'tuya.uv6zsquypd4rq1uabdnzphase_s6voltage',
     'unit_of_measurement': 'V',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_6-state]
+# name: test_platform_setup_and_discovery[sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TY智能多路电表 Voltage channel 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 6 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_voltage_channel_6',
+    'entity_id': 'sensor.tyzhi_neng_duo_lu_dian_biao_channel_6_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

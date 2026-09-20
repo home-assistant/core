@@ -9,9 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, json
+from homeassistant.helpers import device_registry as dr, entity_registry as er, json
 from homeassistant.util import json as json_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -44,6 +45,77 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("mock_device_code", ["zndb_au1qr4dpyuqsz6vu"])
+async def test_indexed_phase_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test indexed phase sensors are grouped under stable child devices."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert len(children) == 6
+    assert not any(
+        "phase_s" in entry.unique_id
+        for entry in er.async_entries_for_device(entity_registry, parent.id)
+    )
+    child_ids = {next(iter(child.identifiers)): child.id for child in children}
+    assert set(child_ids) == {
+        (DOMAIN, f"{mock_device.id}_channel_{index}") for index in range(1, 7)
+    }
+    for child in children:
+        assert child.parent_device_id == parent.id
+        assert len(er.async_entries_for_device(entity_registry, child.id)) == 6
+
+    expected_states = {
+        "apparentpower": "0.22",
+        "electriccurrent": "1.1",
+        "power": "0.21",
+        "powerfactor": "0.95",
+        "reactivepower": "0.05",
+        "voltage": "230.1",
+    }
+    for key, expected_state in expected_states.items():
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SENSOR,
+            DOMAIN,
+            f"tuya.{mock_device.id}phase_s1{key}",
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
+
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    reloaded_parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert reloaded_parent is not None
+    reloaded_children = dr.async_entries_for_parent_device(
+        device_registry, reloaded_parent.id
+    )
+    assert {
+        next(iter(child.identifiers)): child.id for child in reloaded_children
+    } == child_ids
+    assert all(
+        child.parent_device_id == reloaded_parent.id for child in reloaded_children
+    )
 
 
 @pytest.mark.parametrize(
