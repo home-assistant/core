@@ -19,23 +19,18 @@ DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
 DEFAULT_USE_TELNET = False
 
-# How long an optimistic pending select/switch value is trusted over
-# the receiver's own reported value, in seconds. Comfortably above the
-# documented worst case (~10s) for the slowest refresh (GetAudyssey).
+# Seconds an optimistic pending value is trusted over the receiver's own,
+# comfortably above the ~10s worst case documented for the slowest refresh.
 PENDING_VALUE_TIMEOUT = 15
 
-# Shared by both DenonAvrDataUpdateCoordinator instances (general status
-# and Audyssey) - matches media_player.py's existing poll rate, since
-# the general one replaces what media_player.py already polled at this
-# interval, and there's no reason for Audyssey to be checked more often.
+# Shared by both coordinators, at the rate media_player.py polls at.
 COORDINATOR_UPDATE_INTERVAL = 10
 
 # Delay action-triggered refreshes so the receiver can settle and coalesce changes.
 ACTION_REFRESH_DEBOUNCE_COOLDOWN = 0.5
 
-# denonavr.const has no "list of valid options" helper for these three
-# (unlike reference_level_offset/dynamic_volume/multi_eq); their option
-# lists are fixed Literal types, reproduced here in the same order.
+# denonavr.const offers no list helper for these three, only a Literal type,
+# so the options are reproduced here in the same order.
 ECO_MODE_OPTIONS = ("On", "Auto", "Off")
 DIMMER_OPTIONS = ("Off", "Dark", "Dim", "Bright")
 AUTO_STANDBY_OPTIONS = ("OFF", "15M", "30M", "60M", "2H", "4H", "8H")

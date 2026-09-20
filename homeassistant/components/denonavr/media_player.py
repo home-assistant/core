@@ -119,11 +119,9 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log command errors and refresh the coordinator after success.
 
-    The refresh is needed because this entity has should_poll=False,
-    so nothing else refreshes it after a successful command. A
-    connectivity-type failure (timeout, network, forbidden, malformed
-    response) also marks the coordinator unavailable immediately,
-    rather than leaving stale data looking current until the next poll.
+    The entity has should_poll=False, so nothing else refreshes it after a
+    successful command. A connectivity failure marks the coordinator
+    unavailable at once rather than leaving stale data looking current.
     """
 
     @wraps(func)
@@ -492,13 +490,9 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
 
     async def async_update_audyssey(self) -> None:
         """Get the latest audyssey information from device."""
-        # Routed through the coordinator, not the receiver directly, so
-        # this correctly updates last_update_success (not just the
-        # receiver's cached values). Undecorated: async_refresh_forced()
-        # already acquires the shared lock itself, so decorating this
-        # too would deadlock. Forced: this action needs a confirmed
-        # fresh read even if Telnet already looks healthy, unlike a
-        # regular scheduled poll.
+        # Routed through the coordinator so last_update_success follows, and
+        # forced because this action needs a confirmed fresh read. Left
+        # undecorated: async_refresh_forced() takes the shared lock itself.
         await self._audyssey_coordinator.async_refresh_forced()
         if not self._audyssey_coordinator.last_update_success:
             # A connectivity failure here means the receiver itself is
@@ -516,9 +510,8 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             else:
                 await self._receiver.async_dynamic_eq_off()
         except UNAVAILABLE_ON:
-            # This command is Audyssey-scoped - a connectivity failure
-            # here means that coordinator's data can't be trusted
-            # either, not just the general one the decorator marks.
+            # An Audyssey-scoped command, so that coordinator's data cannot
+            # be trusted either, not just the general one the decorator marks.
             mark_unavailable(self._audyssey_coordinator)
             raise
 

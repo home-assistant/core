@@ -223,12 +223,8 @@ async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
 ) -> None:
     """The dynamic_eq attribute refreshes when the Audyssey coordinator does.
 
-    It's Audyssey-scoped data, but this entity's own coordinator
-    subscription (from CoordinatorEntity) only covers general status -
-    without a separate subscription to the Audyssey coordinator too,
-    a switch toggle, the update/set services, or a periodic Audyssey
-    refresh would leave this attribute stale until something unrelated
-    (e.g. Telnet or the next general poll) happened to rewrite state.
+    CoordinatorEntity subscribes this entity to the general status
+    coordinator alone, which is not the one that fetches Audyssey data.
     """
     entry = await setup_denonavr(hass)
     client.power = POWER_ON
@@ -294,11 +290,8 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
-    # The Audyssey coordinator also fetches this once at setup (see
-    # homeassistant/components/denonavr/coordinator.py), so the mock
-    # has already been called by the time the service below runs -
-    # assert the service adds exactly one more call, rather than a
-    # fixed total.
+    # Setup fetches this once too, so the assertion is on the one call the
+    # service adds rather than on a fixed total.
     calls_before_service = client.async_update_audyssey.call_count
 
     # Verify call
@@ -345,15 +338,12 @@ async def test_concurrent_forced_refreshes_each_bypass_telnet_skip(
 ) -> None:
     """Overlapping forced refreshes must each fetch, not just the first.
 
-    The force flag lives on the coordinator and async_refresh() only
-    waits on the debouncer lock after it is set, so without its own
-    lock the first caller's cleanup would clear the flag while the
-    second was still queued, and that second refresh would hit the
-    Telnet-healthy skip instead of the fetch it asked for.
+    The force flag lives on the coordinator and async_refresh() reaches the
+    debouncer lock only after it is set, so without a lock of its own the
+    first caller's cleanup clears the flag out from under the second.
 
-    Driven at the coordinator rather than through the service: the
-    media_player platform sets PARALLEL_UPDATES = 1, so entity service
-    calls cannot overlap.
+    Driven at the coordinator because PARALLEL_UPDATES keeps the service
+    calls from overlapping.
     """
     client.telnet_connected = True
     client.telnet_healthy = True
@@ -361,9 +351,8 @@ async def test_concurrent_forced_refreshes_each_bypass_telnet_skip(
     audyssey_coordinator = entry.runtime_data.audyssey_coordinator
 
     async def _suspending_update() -> None:
-        # Yields control so the second caller reaches the coordinator
-        # while the first is still refreshing; without it the mock
-        # never suspends and the two calls can't interleave at all.
+        # Yields so the second caller arrives while the first still
+        # refreshes; without it the mock never suspends.
         await asyncio.sleep(0)
 
     client.async_update_audyssey.side_effect = _suspending_update

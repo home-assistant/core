@@ -29,11 +29,9 @@ from .const import ACTION_REFRESH_DEBOUNCE_COOLDOWN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Matches media_player.py's own existing exception categorization: these
-# indicate the receiver itself is unreachable or misbehaving, and should
-# mark it unavailable. Other DenonAvrError subclasses (e.g.
-# AvrCommandError, a rejected/invalid single command) don't - they're
-# not a connectivity problem, just logged and otherwise ignored.
+# Errors that mean the receiver itself is unreachable or misbehaving, so it
+# is marked unavailable. Every other DenonAvrError is a single rejected
+# command, which is logged and otherwise ignored.
 UNAVAILABLE_ON = (
     AvrTimoutError,
     AvrNetworkError,
@@ -115,11 +113,9 @@ class _RefreshFn(Protocol):
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinate one aspect of a Denon AVR receiver's state.
 
-    Doesn't hold meaningful `.data` itself - entities read live
-    properties directly off the shared `receiver` object, the same way
-    they always have. This coordinator's job is purely to own *when*
-    that object gets refreshed, and to notify every entity that cares
-    when it has been.
+    Holds no `.data`: entities read live properties off the shared
+    `receiver` object. This owns when that object is refreshed, and
+    notifies the entities once it has been.
     """
 
     def __init__(
@@ -134,9 +130,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize the coordinator with a shared receiver lock.
 
-        The lock is passed in rather than derived from the receiver:
-        denonavr's attrs classes are unhashable, so they can't be
-        dict/weak-ref keys.
+        The lock is passed in because denonavr's attrs classes are
+        unhashable and cannot be dict or weak-ref keys.
         """
         super().__init__(
             hass,
@@ -144,9 +139,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN}_{name}",
             config_entry=config_entry,
             update_interval=update_interval,
-            # immediate=False: the receiver needs a moment to settle
-            # before a post-action confirm reads back the right value,
-            # and this coalesces near-simultaneous actions into one refresh.
+            # immediate=False: the receiver needs a moment to settle before a
+            # confirming read, and it coalesces near-simultaneous actions.
             request_refresh_debouncer=Debouncer(
                 hass,
                 _LOGGER,
@@ -163,17 +157,13 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def async_refresh_forced(self) -> None:
         """Refresh immediately, bypassing the Telnet-healthy skip.
 
-        For explicit on-demand refreshes (e.g. the update_audyssey
-        media player action) where the caller needs a confirmed fresh
-        read even though Telnet already looks healthy - regular
-        polling and post-action confirmations still go through
-        async_refresh()/async_request_refresh(), which keep that skip.
+        For on-demand refreshes that need a confirmed fresh read; regular
+        polling and post-action confirmations keep the skip.
 
-        Serialized on its own lock: async_refresh() waits on the
-        debouncer lock only after the flag is set, so overlapping
-        callers would clear it for each other and the later refresh
-        would silently run unforced. Acquired before the debouncer and
-        receiver locks, never after, so it adds no deadlock path.
+        Serialized on its own lock: async_refresh() reaches the debouncer
+        lock only after the flag is set, so overlapping callers would clear
+        it for each other and the later refresh would run unforced. Taken
+        before the debouncer and receiver locks, never after.
         """
         async with self._force_refresh_lock:
             self._force_next_refresh = True
@@ -205,10 +195,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
 def mark_unavailable(coordinator: DenonAvrDataUpdateCoordinator) -> None:
     """Mark a coordinator unavailable after a confirmed connectivity failure.
 
-    For use outside the coordinator's own refresh cycle - e.g. an
-    entity's or media_player.py's own command failing with a
-    connectivity-type error - so availability reflects that
-    immediately rather than waiting for the next scheduled poll.
+    For failures outside the refresh cycle, such as a command of an entity's
+    own, so availability reflects them without waiting for the next poll.
     """
     if coordinator.last_update_success:
         coordinator.last_update_success = False

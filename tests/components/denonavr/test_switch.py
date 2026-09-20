@@ -322,9 +322,7 @@ async def test_turn_on_shows_state_immediately_without_polling(
 ) -> None:
     """Test the switch reflects the new state right after the call.
 
-    Not only once its own independent poll cycle happens to fire -
-    this is the same class of bug reported for the Dimmer select
-    entity.
+    Not only once its own poll cycle happens to fire.
     """
     client.dynamic_eq = False
     await setup_denonavr(hass)

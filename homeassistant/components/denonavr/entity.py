@@ -1,9 +1,8 @@
 """Shared base entity for Denon AVR select/switch entities.
 
-Shows a value optimistically right after a command, since the
-receiver can briefly still report the old one on an immediate
-refresh, then reconciles once it actually catches up (bounded by a
-timeout so a command that never applied doesn't mask reality forever).
+A command's value is shown optimistically, since the receiver can briefly
+still report the old one, and reconciled once it catches up. A timeout keeps
+a command that never applied from masking reality forever.
 """
 
 from collections.abc import Callable, Coroutine
@@ -37,11 +36,9 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         self._receiver = coordinator.receiver
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        # Only guards the "send the command" step. The coordinator's own
-        # refresh shares this same lock (see coordinator.py), so this
-        # closes the gap PARALLEL_UPDATES leaves: it only serializes
-        # calls that target multiple entities at once, not repeated
-        # calls to one entity or calls split across platforms.
+        # Guards sending the command, and is the lock the coordinator
+        # refreshes under. PARALLEL_UPDATES only serializes calls targeting
+        # several entities at once, which leaves the rest to this.
         self._action_lock = coordinator.lock
         self._pending_value: _T | None = None
         self._pending_value_expiry_unsub: Callable[[], None] | None = None
@@ -70,13 +67,9 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
     def _async_handle_pending_expiry(self, _now: Any) -> None:
         """Give up on an unconfirmed pending value and request a fresh read.
 
-        Otherwise HA's stored state would keep showing it past the
-        timeout with nothing to ever correct it - if the receiver
-        actually applied the command but was just slow to confirm (e.g.
-        Audyssey polling is off by default, so the one debounced
-        post-action refresh is the only read that would otherwise ever
-        happen), this catches up instead of getting stuck showing stale
-        cached data indefinitely.
+        The settings poll is off by default, so the debounced post-action
+        refresh can be the only read there is. Without this the state would
+        keep showing the pending value with nothing left to correct it.
         """
         self._pending_value_expiry_unsub = None
         self._pending_value = None
@@ -100,9 +93,8 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
     def _handle_coordinator_update(self) -> None:
         """Clear an optimistic value once confirmed by the receiver.
 
-        Not right after requesting a refresh: that request is
-        debounced (see coordinator.py) and doesn't complete
-        synchronously with the call.
+        Not right after requesting a refresh: that request is debounced and
+        does not complete synchronously with the call.
         """
         if (
             self._pending_value is not None
@@ -134,9 +126,8 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
             try:
                 await send()
             except UNAVAILABLE_ON as err:
-                # A confirmed connectivity failure, not just a
-                # rejected command - mark unavailable now rather than
-                # leave stale data looking current until the next poll.
+                # A connectivity failure rather than a rejected command, so
+                # stale data must not look current until the next poll.
                 mark_unavailable(self.coordinator)
                 raise HomeAssistantError(
                     f"Could not set {error_label} to {value} on"
@@ -151,8 +142,6 @@ class DenonAvrPendingValueEntity[_T](CoordinatorEntity[DenonAvrDataUpdateCoordin
         self._set_pending_value(value)
         self.async_write_ha_state()
 
-        # Confirms via the coordinator this entity belongs to - which
-        # also refreshes and notifies every other entity sharing it, so
-        # e.g. toggling Dynamic EQ correctly updates Reference Level
-        # Offset's availability too, without a separate notification.
+        # Confirming through the coordinator also notifies every other entity
+        # sharing it, which is how Dynamic EQ updates what it makes available.
         await self.coordinator.async_request_refresh()

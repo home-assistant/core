@@ -89,9 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
     update_interval = timedelta(seconds=COORDINATOR_UPDATE_INTERVAL)
 
-    # Shared by both coordinators and all commands to serialize receiver
-    # access. Created once here, not derived from the receiver: denonavr's
-    # attrs classes are unhashable, so they can't be dict/weak-ref keys.
+    # Serializes receiver access across both coordinators and every command.
+    # Not derived from the receiver: denonavr's attrs classes are unhashable.
     lock = asyncio.Lock()
 
     coordinator = DenonAvrDataUpdateCoordinator(
@@ -103,9 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         update_interval=update_interval,
         refresh_fn=async_refresh_status,
     )
-    # A receiver that can't be reached for basic status right after a
-    # successful connection is exceptional enough to treat as "not
-    # ready" (matches this integration's existing behavior).
+    # A receiver unreachable for basic status right after a successful
+    # connection is treated as not ready.
     await coordinator.async_config_entry_first_refresh()
 
     audyssey_coordinator = DenonAvrDataUpdateCoordinator(
@@ -114,12 +112,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         receiver,
         lock,
         name="audyssey",
-        # Only polls on a recurring schedule if the (opt-in, since a
-        # fetch can reportedly take up to ~10s on some receivers)
-        # "Update Audyssey settings" option is on. Either way, it can
-        # still be asked to refresh on demand via async_request_refresh
-        # - the select/switch entities do exactly that right after
-        # their own actions, regardless of this option.
+        # "Update Audyssey settings" is opt-in because the fetch can take
+        # ~10s on some receivers, and it governs the recurring poll alone:
+        # entities still confirm their own actions on demand either way.
         update_interval=update_interval if update_audyssey else None,
         refresh_fn=async_refresh_audyssey,
     )

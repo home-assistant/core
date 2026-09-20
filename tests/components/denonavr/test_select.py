@@ -50,11 +50,9 @@ TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
 def _fast_action_refresh_debounce():
     """Patch the action-refresh debounce cooldown down for every test.
 
-    The real cooldown (see const.py) is a deliberately-short but still
-    real delay so the receiver has a moment to settle before the
-    post-action confirmation fetch. None of these tests are about that
-    timing itself, so patch it down to keep the suite fast and
-    deterministic - same reasoning as patching PENDING_VALUE_TIMEOUT.
+    The real cooldown is a short but real delay before the confirming
+    fetch. No test here is about that timing, so it is patched away to
+    keep the suite fast and deterministic.
     """
     with patch(
         "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
@@ -145,11 +143,9 @@ async def setup_denonavr(
 async def _wait_for_debounced_refresh(hass: HomeAssistant) -> None:
     """Let a coordinator's debounced confirmation refresh actually fire.
 
-    async_request_refresh() with immediate=False (see coordinator.py)
-    schedules a raw event-loop timer rather than a tracked task, so
-    hass.async_block_till_done() alone doesn't wait for it - this gives
-    the loop a tick first, which is enough since the patched cooldown
-    (see _fast_action_refresh_debounce) is 0.
+    A debounced request schedules a raw event-loop timer rather than a
+    tracked task, so async_block_till_done() alone does not wait for it.
+    One tick is enough with the cooldown patched to 0.
     """
     await asyncio.sleep(0)
     await hass.async_block_till_done()
@@ -260,14 +256,9 @@ async def test_connectivity_error_during_audyssey_action_marks_general_unavailab
 ) -> None:
     """An Audyssey action's connectivity failure also marks the general coordinator.
 
-    Mirrors the equivalent media_player.py service paths (see
-    test_update_audyssey_connectivity_error_marks_media_player_unavailable
-    in test_media_player.py), which already propagate both ways - a
-    receiver-wide connectivity failure detected via an Audyssey-backed
-    select/switch action is exactly as significant as one detected via
-    a media_player command or the general status poll, so media_player
-    and the general-coordinator selects (dimmer, eco_mode, ...)
-    shouldn't keep showing available with stale data either.
+    An unreachable receiver found through an Audyssey-backed action is the
+    same news as one found through a media_player command, so the entities
+    on the general coordinator must not keep showing stale data.
     """
     entry = await setup_denonavr(hass)
     entity_id = _entity_id(hass, "reference_level_offset")
@@ -411,15 +402,9 @@ async def test_unavailable_after_connectivity_error_then_recovers(
 ) -> None:
     """A connectivity-type refresh failure marks the entity unavailable.
 
-    Matching media_player.py's own precedent (AvrTimoutError,
-    AvrNetworkError, etc. mark unavailable; a rejected command like
-    AvrCommandError does not - see
-    test_refresh_failure_does_not_fail_an_already_successful_action).
-    Recovers automatically once a later refresh succeeds. Calls
-    coordinator.async_refresh() directly rather than going through an
-    entity, since this needs a synchronous, deterministic refresh for
-    its own assertions - entity actions go through the debounced
-    async_request_refresh() instead (see coordinator.py).
+    A rejected command does not, and a later successful refresh recovers.
+    Calls async_refresh() directly because the assertions need a
+    synchronous refresh rather than the debounced one an action uses.
     """
     entry = await setup_denonavr(hass)
     entity_id = _entity_id(hass, "dimmer")
@@ -445,10 +430,8 @@ async def test_dimmer_refreshes_and_shows_new_state_immediately(
     async def _apply_dimmer_change(*args, **kwargs):
         client.dimmer = "Dark"
 
-    # Must be an async function (AsyncMock only auto-awaits a coroutine
-    # function) and installed after setup (setup's own initial refresh
-    # would otherwise already flip dimmer to "Dark", masking a real
-    # stale-refresh regression).
+    # An async function, since AsyncMock only auto-awaits one, installed
+    # after setup so its initial refresh does not already flip dimmer.
     client.async_update.side_effect = _apply_dimmer_change
 
     await hass.services.async_call(
@@ -506,19 +489,15 @@ async def test_reference_level_offset_always_refreshes_after_change(
 ) -> None:
     """Audyssey-group settings always force-refresh after a change.
 
-    Regardless of the (separate, poll-loop-only) "Update Audyssey
-    settings" option. Gating this refresh on that option - which is off
-    by default - meant the receiver applied the change correctly but
-    the UI never showed it, since Audyssey values aren't otherwise
-    fetched by the regular poll loop at all.
+    "Update Audyssey settings" governs the recurring poll alone, and it is
+    off by default, so gating this refresh on it would leave the UI showing
+    the old value of a change the receiver did apply.
     """
     await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
     entity_id = _entity_id(hass, "reference_level_offset")
 
-    # Setup itself does one initial Audyssey fetch per config entry
-    # (the coordinator refreshes once, before select/switch are even
-    # forwarded), so both entities start with a real value instead of
-    # "unavailable".
+    # Setup does one initial Audyssey fetch per config entry, so both
+    # entities start with a real value rather than unavailable.
     baseline_calls = client.async_update_audyssey.await_count
 
     await hass.services.async_call(
@@ -538,13 +517,9 @@ async def test_coordinators_serialize_command_and_refresh(
 ) -> None:
     """A select action and an Audyssey refresh on the shared lock don't overlap.
 
-    denonavr's attrs classes define a field-based __eq__ without a
-    matching __hash__, so real receiver instances are unhashable and
-    can't be dict/weak-ref keys - a receiver-keyed lock would crash in
-    production. Exercising a command (dimmer, on the status
-    coordinator) concurrently with an Audyssey coordinator refresh
-    proves the one shared lock actually serializes them, rather than
-    just asserting the two lock objects are identical.
+    Running a command concurrently with a refresh on the other coordinator
+    proves the shared lock serializes them, which asserting that the two
+    lock objects are identical would not.
     """
     entry = await setup_denonavr(hass)
     entity_id = _entity_id(hass, "dimmer")
@@ -719,12 +694,9 @@ async def test_rapid_consecutive_selections_do_not_race(
 ) -> None:
     """Two select_option calls fired back-to-back on the same entity must not race.
 
-    Whichever finishes last should reflect the option that was
-    *actually* selected last, not whichever request's response
-    happened to land last. A per-entity lock is required for this -
-    HA's PARALLEL_UPDATES only serializes service calls that target
-    multiple entities at once, not repeated calls each targeting this
-    one entity.
+    The entity must end on the option selected last, not on whichever
+    response landed last. PARALLEL_UPDATES only serializes calls targeting
+    several entities at once, so this needs a lock of its own.
     """
     call_order = []
 
@@ -877,11 +849,9 @@ async def test_pending_option_expires_instead_of_masking_forever(
 ) -> None:
     """The pending override must expire rather than mask reality forever.
 
-    If the receiver's value never actually catches up to what was set
-    (a command that silently didn't apply, or a genuinely different
-    external change landing while a value is pending), the override
-    must not mask reality forever - it should expire and let the
-    receiver's real value show through again.
+    A command that silently did not apply, or an external change landing
+    while a value is pending, leaves the receiver's value never catching
+    up, and the override has to give way to it.
     """
     client.async_update.side_effect = lambda *a, **k: None  # dimmer stays "Bright"
 
@@ -897,10 +867,8 @@ async def test_pending_option_expires_instead_of_masking_forever(
         )
         assert hass.states.get(entity_id).state == "Dark"
 
-        # Someone changes it via the physical remote to something else
-        # entirely while our override is still pending, and enough time
-        # passes (the patched timeout above is 10ms) that the override
-        # should no longer be trusted.
+        # The front panel changes it to something else entirely while the
+        # override is pending, and the patched 10ms timeout then runs out.
         client.dimmer = "Dim"
         await asyncio.sleep(0.02)
         await async_update_entity(hass, entity_id)
