@@ -267,7 +267,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                     xuid, title_id
                 )
             )
-        except (HTTPStatusError, RateLimitExceededException) as e:
+        except (HTTPStatusError, RateLimitExceededException, RequestError) as e:
             _LOGGER.debug(
                 "Unable to retrieve achievement total for %s: %s", title_id, e
             )
