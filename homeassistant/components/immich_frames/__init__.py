@@ -18,6 +18,7 @@ from .const import (
     CONF_MIGRATION_REQUIRED,
     CONF_MODE,
     CONF_ORIENTATION,
+    CONF_ORIGINAL_ASPECT_RATIO,
     CONF_PAIR_WINDOW,
     CONF_PHOTO_FIT,
     CONF_SCREEN_SHAPE,
@@ -26,6 +27,11 @@ from .const import (
     CONF_TIME_RANGE,
     DEFAULT_SOURCE,
     DOMAIN,
+    MODE_PAIRS,
+    MODE_PAIRS_ONLY,
+    PHOTO_FIT_CROP,
+    PHOTO_FIT_FULL,
+    screen_shape,
 )
 from .coordinator import ImmichFramesConfigEntry, ImmichFramesDataUpdateCoordinator
 
@@ -50,8 +56,19 @@ LEGACY_SOURCE_OPTIONS = frozenset({"all", "album", "smart"})
 
 def _endpoint_parts(url: str) -> tuple[bool, str, int] | None:
     """Return the comparable endpoint parts from a legacy URL."""
-    parsed = urlsplit(url if "://" in url else f"http://{url}")
-    if parsed.hostname is None:
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return None
+    if (
+        parsed.scheme.lower() not in {"http", "https"}
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path not in ("", "/")
+        or parsed.query
+        or parsed.fragment
+        or parsed.hostname is None
+    ):
         return None
     try:
         port = parsed.port or (443 if parsed.scheme.lower() == "https" else 80)
@@ -78,12 +95,28 @@ def _legacy_options(data: dict[str, object]) -> dict[str, object]:
     source = str(data.get(CONF_SOURCE, DEFAULT_SOURCE))
     if source not in LEGACY_SOURCE_OPTIONS:
         source = DEFAULT_SOURCE
-    options = {
-        key: data[key] for key in OPTION_KEYS if key in data and key != CONF_ALBUM_IDS
-    }
+    options = {key: data[key] for key in OPTION_KEYS if key in data}
     options[CONF_SOURCE] = source
-    if CONF_ALBUM_IDS not in options and data.get("album_id"):
+    if CONF_ALBUM_IDS in options:
+        raw_album_ids = options[CONF_ALBUM_IDS]
+        options[CONF_ALBUM_IDS] = (
+            [album_id for album_id in raw_album_ids if isinstance(album_id, str)]
+            if isinstance(raw_album_ids, list)
+            else []
+        )
+    elif data.get("album_id"):
         options[CONF_ALBUM_IDS] = [data["album_id"]]
+    if CONF_SCREEN_SHAPE in data:
+        options[CONF_SCREEN_SHAPE] = screen_shape(str(data[CONF_SCREEN_SHAPE]))
+    raw_photo_fit = options.get(CONF_PHOTO_FIT)
+    if raw_photo_fit not in (PHOTO_FIT_CROP, PHOTO_FIT_FULL):
+        mode = str(data.get(CONF_MODE, ""))
+        options[CONF_PHOTO_FIT] = (
+            PHOTO_FIT_CROP
+            if mode in (MODE_PAIRS, MODE_PAIRS_ONLY)
+            and not data.get(CONF_ORIGINAL_ASPECT_RATIO)
+            else PHOTO_FIT_FULL
+        )
     return options
 
 
@@ -98,7 +131,9 @@ def _migrate_legacy_entry(hass: HomeAssistant, entry: ImmichFramesConfigEntry) -
     matches = [
         parent
         for parent in hass.config_entries.async_entries("immich")
-        if _parent_endpoint(parent) == legacy_endpoint
+        if legacy_endpoint is not None
+        and legacy_api_key
+        and _parent_endpoint(parent) == legacy_endpoint
         and str(parent.data.get(CONF_API_KEY, "")) == legacy_api_key
     ]
     if len(matches) == 1 and legacy_source in LEGACY_SOURCE_OPTIONS:
@@ -135,7 +170,7 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> bool:
     """Migrate an older frame entry to the current source model."""
-    if CONF_IMMICH_ENTRY_ID not in entry.data and entry.data.get(LEGACY_URL):
+    if CONF_IMMICH_ENTRY_ID not in entry.data:
         _migrate_legacy_entry(hass, entry)
         return True
     if entry.version < 2:
@@ -172,6 +207,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> bool:
     """Set up an Immich frame."""
+    if CONF_IMMICH_ENTRY_ID not in entry.data:
+        _migrate_legacy_entry(hass, entry)
     if entry.data.get(CONF_MIGRATION_REQUIRED):
         raise ConfigEntryError(
             translation_domain=DOMAIN,

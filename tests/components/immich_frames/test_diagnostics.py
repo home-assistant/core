@@ -12,6 +12,7 @@ from homeassistant.components.immich_frames.const import (
 from homeassistant.components.immich_frames.diagnostics import (
     async_get_config_entry_diagnostics,
 )
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -28,6 +29,11 @@ async def test_diagnostics_exclude_image_bytes(
             CONF_IMMICH_ENTRY_ID: parent_immich_entry.entry_id,
             CONF_FRAME_NAME: "Living room",
             CONF_FRAME_ID: "private-frame",
+            CONF_API_KEY: "private-key",
+            CONF_HOST: "private-host",
+            CONF_PORT: 2283,
+            CONF_SSL: False,
+            CONF_URL: "https://private-host:2283/immich",
         },
         options={
             CONF_ALBUM_IDS: ["private-album"],
@@ -52,6 +58,10 @@ async def test_diagnostics_exclude_image_bytes(
     assert diagnostics["entry"]["data"][CONF_IMMICH_ENTRY_ID] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_FRAME_NAME] == "**REDACTED**"
     assert diagnostics["entry"]["data"][CONF_FRAME_ID] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_API_KEY] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_HOST] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_PORT] == "**REDACTED**"
+    assert diagnostics["entry"]["data"][CONF_URL] == "**REDACTED**"
     assert diagnostics["entry"]["options"][CONF_ALBUM_IDS] == "**REDACTED**"
 
 

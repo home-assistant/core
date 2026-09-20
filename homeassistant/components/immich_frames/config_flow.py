@@ -280,7 +280,13 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options = {
                 key: value
                 for key, value in settings.items()
-                if key not in (CONF_IMMICH_ENTRY_ID, CONF_FRAME_ID, CONF_FRAME_NAME)
+                if key
+                not in (
+                    CONF_IMMICH_ENTRY_ID,
+                    CONF_FRAME_ID,
+                    CONF_FRAME_NAME,
+                    CONF_MIGRATION_REQUIRED,
+                )
             }
             return self.async_update_reload_and_abort(
                 self._reconfigure_entry,
@@ -392,7 +398,12 @@ class ImmichFramesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Select the Core Immich account for a legacy frame entry."""
         entries = self._loaded_immich_entries()
         if not entries:
-            return self.async_abort(reason="immich_required")
+            reason = (
+                "immich_not_ready"
+                if self.hass.config_entries.async_entries("immich")
+                else "immich_required"
+            )
+            return self.async_abort(reason=reason)
         if user_input is not None:
             self._data[CONF_IMMICH_ENTRY_ID] = user_input[CONF_IMMICH_ENTRY_ID]
             self._data.pop(CONF_MIGRATION_REQUIRED, None)

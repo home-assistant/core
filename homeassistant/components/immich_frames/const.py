@@ -15,6 +15,7 @@ CONF_ORIENTATION = "orientation"
 CONF_TIME_RANGE = "time_range"
 CONF_PAIR_WINDOW = "pair_window_days"
 CONF_SCREEN_SHAPE = "screen_shape"
+CONF_ORIGINAL_ASPECT_RATIO = "original_aspect_ratio"
 CONF_PHOTO_FIT = "photo_fit"
 CONF_INTERVAL = "interval"
 CONF_MEMORY_WINDOW = "memory_window_days"
@@ -41,6 +42,11 @@ SCREEN_SIZES = {
     "landscape": (1280, 800),
     "portrait": (800, 1280),
     "square": (720, 720),
+}
+LEGACY_SCREEN_SHAPES = {
+    "jc1060p470": "landscape",
+    "jc4880p443": "portrait",
+    "4848s040": "square",
 }
 DEFAULT_SCREEN_SHAPE = "landscape"
 DEFAULT_PHOTO_FIT = PHOTO_FIT_FULL
@@ -77,6 +83,8 @@ MODE_OPTIONS = (MODE_SINGLE, MODE_PAIRS, MODE_PAIRS_ONLY)
 
 def screen_shape(value: str | None) -> str:
     """Return a supported screen shape."""
+    if value is not None:
+        value = LEGACY_SCREEN_SHAPES.get(value, value)
     return value if value in SCREEN_SIZES else DEFAULT_SCREEN_SHAPE
 
 

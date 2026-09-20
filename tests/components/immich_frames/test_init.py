@@ -14,16 +14,20 @@ import pytest
 
 from homeassistant.components.immich_frames import async_remove_entry
 from homeassistant.components.immich_frames.const import (
+    CONF_ALBUM_IDS,
     CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_IMMICH_ENTRY_ID,
     CONF_MIGRATION_REQUIRED,
     CONF_MODE,
+    CONF_ORIGINAL_ASPECT_RATIO,
     CONF_PHOTO_FIT,
+    CONF_SCREEN_SHAPE,
     CONF_SOURCE,
     DEFAULT_SOURCE,
     DOMAIN,
     PHOTO_FIT_CROP,
+    PHOTO_FIT_FULL,
 )
 from homeassistant.components.immich_frames.coordinator import (
     ImmichFramesData,
@@ -182,10 +186,7 @@ async def test_migrate_entry_adds_default_source(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.version == 4
     assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
@@ -231,8 +232,10 @@ async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
             "url": "http://immich.local:2283",
             CONF_API_KEY: "test-key",
             CONF_SOURCE: DEFAULT_SOURCE,
-            CONF_MODE: "single",
-            "screen_shape": "portrait",
+            CONF_ALBUM_IDS: ["album-a", "album-b"],
+            CONF_MODE: "pairs",
+            CONF_ORIGINAL_ASPECT_RATIO: True,
+            CONF_SCREEN_SHAPE: "jc4880p443",
         },
         version=1,
     )
@@ -250,7 +253,9 @@ async def test_migrate_legacy_hacs_entry_to_matching_immich_account(
     }
     assert CONF_API_KEY not in entry.data
     assert entry.options[CONF_SOURCE] == DEFAULT_SOURCE
-    assert entry.options["screen_shape"] == "portrait"
+    assert entry.options[CONF_ALBUM_IDS] == ["album-a", "album-b"]
+    assert entry.options[CONF_PHOTO_FIT] == PHOTO_FIT_FULL
+    assert entry.options[CONF_SCREEN_SHAPE] == "portrait"
 
 
 async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
@@ -279,6 +284,59 @@ async def test_migrate_legacy_hacs_entry_requires_reconfigure_without_match(
         CONF_FRAME_ID: entry.entry_id,
         CONF_MIGRATION_REQUIRED: True,
     }
+    assert CONF_API_KEY not in entry.data
+
+
+@pytest.mark.parametrize(
+    "legacy_url",
+    [
+        "ftp://immich.local:2283",
+        "https://user:password@immich.local:2283",
+        "https://immich.local:2283/immich",
+    ],
+)
+async def test_migrate_legacy_hacs_entry_rejects_non_core_endpoints(
+    hass: HomeAssistant,
+    parent_immich_entry: MockConfigEntry,
+    legacy_url: str,
+) -> None:
+    """Do not auto-bind URLs the Core entry cannot represent exactly."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy endpoint",
+        data={
+            "url": legacy_url,
+            CONF_API_KEY: "test-key",
+            CONF_SOURCE: DEFAULT_SOURCE,
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.immich_frames.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_MIGRATION_REQUIRED] is True
+    assert CONF_IMMICH_ENTRY_ID not in entry.data
+
+
+async def test_migrate_legacy_hacs_entry_without_url_requires_reconfigure(
+    hass: HomeAssistant,
+) -> None:
+    """Remove credentials even when a damaged legacy entry has no URL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Damaged legacy frame",
+        data={CONF_API_KEY: "old-key"},
+        version=4,
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_MIGRATION_REQUIRED] is True
     assert CONF_API_KEY not in entry.data
 
 
@@ -401,7 +459,7 @@ async def test_coordinator_covers_recovery_and_render_error_paths(
         result = await coordinator._async_update_data()
     assert result.status == "ready"
     assert coordinator._last_cache_write_at == result.updated_at
-    assert render.call_args.args[2] == PHOTO_FIT_CROP
+    assert render.call_args.args[2] == PHOTO_FIT_FULL
 
     companion = copy(portrait)
     companion.asset_id = "companion"

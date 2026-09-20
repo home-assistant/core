@@ -903,6 +903,29 @@ async def test_reconfigure_legacy_entry_selects_core_immich_account(
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_IMMICH_ENTRY_ID] == parent_immich_entry.entry_id
     assert CONF_MIGRATION_REQUIRED not in entry.data
+    assert CONF_MIGRATION_REQUIRED not in entry.options
+
+
+async def test_reconfigure_legacy_entry_reports_unloaded_parent(
+    hass: HomeAssistant, parent_immich_entry: MockConfigEntry
+) -> None:
+    """An existing but unavailable parent is reported as not ready."""
+    parent_immich_entry.mock_state(hass, ConfigEntryState.SETUP_RETRY)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Legacy frame",
+        data={CONF_FRAME_ID: "legacy-frame", CONF_MIGRATION_REQUIRED: True},
+        options={CONF_SOURCE: DEFAULT_SOURCE},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "immich_not_ready"
 
 
 async def test_reconfigure_all_source_preflight_reports_unavailable_assets(
