@@ -25,8 +25,7 @@ from homeassistant.helpers.llm import (
 from .const import DOMAIN
 from .timers import async_device_supports_timers
 
-# Generic intents exposed as LLM tools regardless of a timer-capable device,
-# with the title shown for each.
+# Generic intents exposed as LLM tools regardless of a timer-capable device.
 LLM_INTENTS = {
     intent.INTENT_TURN_ON: "Turn on",
     intent.INTENT_TURN_OFF: "Turn off",
