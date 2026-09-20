@@ -171,13 +171,7 @@ async def test_sqlite_store_is_told_the_configured_timezone(
     hass: HomeAssistant,
     knx: KNXTestKit,
 ) -> None:
-    """Test the SQLite store is given the zone that wrote its legacy rows.
-
-    Databases written before knx-telegram-store 0.14 hold local wall-clock
-    times with no offset, and only Home Assistant knows which zone that was -
-    its own configured one, which need not match the host's. Without it the
-    store cannot convert them and they read as UTC.
-    """
+    """Test the SQLite store receives Home Assistant's configured time zone."""
     await hass.config.async_set_time_zone("Europe/Berlin")
     await knx.setup_integration(real_telegram_store=True)
 
