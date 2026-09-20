@@ -284,11 +284,24 @@ def _last_values_func() -> _ToolFunc:
 
 
 def _topology_func() -> _ToolFunc:
-    """Page through the topology areas, which xknxproject returns in full."""
+    """Page through the topology by line, which xknxproject returns in full.
+
+    Areas are the wrong unit to page on: KNX allows at most 16 of them, so a
+    page of 100 never binds and every call returns the whole topology with all
+    lines and device addresses embedded - half a megabyte on a fully populated
+    installation. Lines are capped at 256 per project and 255 device addresses
+    each, so paging on them actually splits the result. Each line carries its
+    area, so the grouping survives the flattening.
+    """
 
     async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
         result = await xknxproject_mcp.get_topology(await _require_project(knx))
-        return _paginate(result.areas, args, "areas")
+        lines = [
+            {"area": area.name, "area_description": area.description, **asdict(line)}
+            for area in result.areas
+            for line in area.lines
+        ]
+        return _paginate(lines, args, "lines")
 
     return _call
 
@@ -388,7 +401,8 @@ def _tool_specs() -> list[tuple[str, str, probatio.Schema, _ToolFunc]]:
         ),
         (
             "get_topology",
-            "Bus topology: areas, their lines and device addresses.",
+            "Bus topology, one entry per line: the line's area, medium type and "
+            "device addresses.",
             probatio.Schema(dict(_PAGINATION_MARKERS)),
             _topology_func(),
         ),

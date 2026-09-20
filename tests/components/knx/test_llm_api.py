@@ -487,23 +487,43 @@ async def test_get_last_values_is_ordered(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_get_topology_is_paginated(hass: HomeAssistant) -> None:
-    """Xknxproject returns every area at once, which a large bus makes huge."""
+async def test_get_topology_is_paginated_by_line(hass: HomeAssistant) -> None:
+    """Xknxproject returns the whole topology at once, which a large bus makes huge.
+
+    Paging on areas cannot bound it: KNX allows at most 16 of them, so any
+    sensible page size covers them all and each one still carries every line
+    and device address it holds. Lines are the unit that actually splits.
+    """
     project = {
         "topology": {
-            str(index): {"name": f"Area {index}", "description": "", "lines": {}}
-            for index in range(5)
+            str(area): {
+                "name": f"Area {area}",
+                "description": "",
+                "lines": {
+                    str(line): {
+                        "name": f"Line {area}.{line}",
+                        "medium_type": "TP",
+                        "description": "",
+                        "devices": {},
+                    }
+                    for line in range(4)
+                },
+            }
+            for area in range(3)
         }
     }
     tool = _tool(llm_api._build_tools(_mock_knx(project=project)), "get_topology")
 
     result = await tool.async_call(
         hass,
-        llm.ToolInput(tool_name="get_topology", tool_args={"limit": 2}),
+        llm.ToolInput(tool_name="get_topology", tool_args={"limit": 5}),
         _llm_context(),
     )
 
-    assert len(result["areas"]) == 2
-    assert result["total_count"] == 5
-    assert result["next_offset"] == 2
+    # Three areas, twelve lines: a limit of 5 has to bite on the lines.
+    assert len(result["lines"]) == 5
+    assert result["total_count"] == 12
+    assert result["next_offset"] == 5
     assert result["limit_reached"] is True
+    # The area grouping survives the flattening.
+    assert result["lines"][0]["area"] == "Area 0"

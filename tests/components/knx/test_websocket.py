@@ -205,6 +205,9 @@ async def test_knx_project_cache_not_resurrected_by_concurrent_load(
     """A load in flight must not restore a project that was removed meanwhile."""
     await knx.setup_integration()
     project = hass.data[KNX_MODULE_KEY].project
+    # Setup populates the cache, so the load path has to be forced open to
+    # exercise the race the lock guards.
+    project._project = None
     loading = asyncio.Event()
     original_load = project._store.async_load
 
@@ -220,6 +223,25 @@ async def test_knx_project_cache_not_resurrected_by_concurrent_load(
     await load
 
     assert project._project is None
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_knx_project_cache_populated_by_the_startup_load(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Setup already read the project, so the first lookup must not read it again.
+
+    Store.async_load skips its own cache for keys containing "/", so a second
+    read re-parses the multi-megabyte file and leaves a duplicate of it in
+    memory next to the devices and group addresses taken from the first.
+    """
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+
+    with patch.object(project._store, "async_load") as second_read:
+        assert await project.get_knxproject() is not None
+
+    second_read.assert_not_called()
 
 
 @pytest.mark.usefixtures("load_knxproj")

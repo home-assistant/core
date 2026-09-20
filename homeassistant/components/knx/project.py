@@ -93,6 +93,10 @@ class KNXProject:
     ) -> None:
         """Load project data from storage."""
         if project := data or await self._store.async_load():
+            # Keep what was just read: get_knxproject() would otherwise re-read
+            # and re-parse the same multi-megabyte store on first use, leaving a
+            # second copy of it in memory alongside the parts referenced below.
+            self._project = project
             self.devices = project["devices"]
             self.info = project["info"]
             GroupAddress.address_format = self.get_address_format()
