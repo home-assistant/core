@@ -752,7 +752,6 @@ async def test_units(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("source_config", "device_config", "expected_class"),
     [
-        # Water supports the m³ unit, so it will be allowed
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
@@ -768,7 +767,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             SensorDeviceClass.WATER,
         ),
-        # Energy does not support this unit, so the device class will not be applied
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
@@ -784,7 +782,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             None,
         ),
-        # With no user-supplied device class, infer None from the class-less source sensor
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
@@ -799,7 +796,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             None,
         ),
-        # With no user-supplied device class, infer Energy from the source Power sensor
         (
             {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
@@ -817,7 +813,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             SensorDeviceClass.ENERGY,
         ),
-        # User supplied Date class is ignored because it has no supported state class
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
@@ -833,7 +828,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             None,
         ),
-        # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
         (
             {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
             {
@@ -849,7 +843,6 @@ async def test_units(hass: HomeAssistant) -> None:
             },
             SensorDeviceClass.MONETARY,
         ),
-        # Cope with invalid device class in the source sensor. Should result in no inferred device class
         (
             {
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
@@ -889,7 +882,6 @@ async def test_device_class_user(
     state = hass.states.get("sensor.integration")
     assert state is not None
 
-    # Ensure user device class matches expected
     assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
 
 
@@ -921,7 +913,6 @@ async def test_device_class_user_incompatible_logs_warning(
 
     await hass.async_block_till_done()
 
-    # Ensure warning was emitted for invalid device class for unit
     assert "Specified device class" in caplog.text
 
 

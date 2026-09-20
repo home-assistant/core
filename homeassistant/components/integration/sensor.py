@@ -394,8 +394,6 @@ class IntegrationSensor(RestoreSensor):
         if unit_of_measurement is None:
             return None
 
-        # Use the user supplied device class if one was supplied, and it supports
-        # the current unit and state class
         if (device_class := self._configured_device_class) is not None:
             state_classes = DEVICE_CLASS_STATE_CLASSES.get(device_class)
             allowed_units = DEVICE_CLASS_UNITS.get(device_class)
@@ -405,8 +403,8 @@ class IntegrationSensor(RestoreSensor):
                 and (allowed_units is None or unit_of_measurement in allowed_units)
             ):
                 return device_class
-            # User device class is not compatible, issue warning and fall back to
-            # inferred class.
+            # The user supplied device class is not supported by the sensor so we must
+            # ignore the hint and fail back to inferring the device class.
             _LOGGER.warning(
                 "%s: Specified device class '%s' is not compatible with the derived unit '%s' or the state class '%s' of this sensor",
                 self.entity_id,
@@ -415,7 +413,6 @@ class IntegrationSensor(RestoreSensor):
                 self._attr_state_class,
             )
 
-        # Try to infer device class from source sensor
         if (
             source_device_class is None
             or (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None
@@ -444,7 +441,6 @@ class IntegrationSensor(RestoreSensor):
             try:
                 source_device_class = SensorDeviceClass(source_device_class_raw)
             except ValueError:
-                # If the source device class is an invalid string, do not use it.
                 source_device_class = None
 
         # Only update device class if unit of measurement or source device class change,
