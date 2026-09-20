@@ -26,6 +26,31 @@ from .conftest import KNXTestKit
 from tests.common import MockUser
 
 _BUS_TOOLS = {"read_group_value", "send_group_value_read", "send_group_value_write"}
+# The complete set, asserted exactly: a subset check cannot notice a tool that
+# silently stops being registered. `list_locations` is deliberately absent - it
+# is the one library tool with no adapter-side bound, because nesting depth
+# drives its size, and it needs depth/space_id in xknxproject first.
+_EXPECTED_TOOLS = {
+    "count_telegrams",
+    "decode_payload",
+    "describe_dpt",
+    "describe_function",
+    "describe_group_address",
+    "encode_value",
+    "get_connection_status",
+    "get_last_values",
+    "get_project_info",
+    "get_store_capabilities",
+    "get_store_stats",
+    "get_topology",
+    "list_communication_objects",
+    "list_devices",
+    "list_dpts",
+    "list_functions",
+    "list_group_addresses",
+    "query_telegrams",
+    *_BUS_TOOLS,
+}
 
 
 def _mock_knx(
@@ -82,7 +107,7 @@ async def test_llm_api_registered_after_setup(
         hass, llm_api.LLM_API_ID, _llm_context(hass_admin_user.id)
     )
     tool_names = {tool.name for tool in instance.tools}
-    assert "query_telegrams" in tool_names
+    assert tool_names == _EXPECTED_TOOLS
     assert tool_names >= _BUS_TOOLS
 
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
