@@ -229,6 +229,13 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                     and presence_detail.title_id
                     == self.title_data[person.xuid].title_id
                 ):
+                    # Nothing below runs again for an unchanged title, so a
+                    # previously failed achievement lookup is retried here.
+                    await self.update_achievement_total(
+                        person.xuid,
+                        presence_detail.title_id,
+                        self.title_data[person.xuid],
+                    )
                     continue
                 try:
                     title = await self.client.titlehub.get_title_info_by_xuid(
@@ -258,7 +265,11 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
         # achievement has been unlocked, which renders the sensor attribute as
         # "57 / 0". The achievements API still knows the real total. Xbox 360
         # titles are unaffected and are skipped by this check.
-        if title.achievement is None or title.achievement.total_achievements:
+        if (
+            xuid in self.achievement_totals
+            or title.achievement is None
+            or title.achievement.total_achievements
+        ):
             return
 
         try:
@@ -268,13 +279,14 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
                 )
             )
         except (HTTPStatusError, RateLimitExceededException, RequestError) as e:
+            # Leave the total unset so the next update tries again.
             _LOGGER.debug(
                 "Unable to retrieve achievement total for %s: %s", title_id, e
             )
             return
 
-        if total := progress.paging_info.total_records:
-            self.achievement_totals[xuid] = total
+        # A zero is recorded as well, to stop the retry above.
+        self.achievement_totals[xuid] = progress.paging_info.total_records
 
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
