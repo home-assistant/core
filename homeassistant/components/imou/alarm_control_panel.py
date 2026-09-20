@@ -34,7 +34,8 @@ _MODE_TO_STATE = {
 
 ALARM_PANEL_DESCRIPTION = AlarmControlPanelEntityDescription(
     key=PARAM_MODE,
-    translation_key="arming",
+    translation_key="alarm",
+    name=None,
 )
 
 
@@ -117,8 +118,7 @@ class ImouAlarmControlPanel(ImouEntity, AlarmControlPanelEntity):
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current arming state."""
         panel = self.device.alarm_control_panel
-        if not panel:
-            return None
+        assert panel is not None
         mode = panel.get(PARAM_STATE)
         if not isinstance(mode, str):
             return None

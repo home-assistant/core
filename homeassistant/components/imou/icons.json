@@ -1,7 +1,7 @@
 {
   "entity": {
     "alarm_control_panel": {
-      "arming": {
+      "alarm": {
         "default": "mdi:shield-home"
       }
     },

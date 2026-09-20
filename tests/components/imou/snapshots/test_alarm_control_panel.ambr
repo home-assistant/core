@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_alarm_control_panel_snapshot[alarm_mock_devices-platforms0][alarm_control_panel.gateway_arming-entry]
+# name: test_alarm_control_panel_snapshot[alarm_mock_devices-platforms0][alarm_control_panel.gateway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'alarm_control_panel',
     'entity_category': None,
-    'entity_id': 'alarm_control_panel.gateway_arming',
+    'entity_id': 'alarm_control_panel.gateway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,32 +21,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Arming',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arming',
+    'original_name': None,
     'platform': 'imou',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
-    'translation_key': 'arming',
+    'translation_key': 'alarm',
     'unique_id': 'd1$mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel_snapshot[alarm_mock_devices-platforms0][alarm_control_panel.gateway_arming-state]
+# name: test_alarm_control_panel_snapshot[alarm_mock_devices-platforms0][alarm_control_panel.gateway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
       <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
       <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Arming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway',
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'alarm_control_panel.gateway_arming',
+    'entity_id': 'alarm_control_panel.gateway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

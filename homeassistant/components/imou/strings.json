@@ -36,11 +36,6 @@
     }
   },
   "entity": {
-    "alarm_control_panel": {
-      "arming": {
-        "name": "Arming"
-      }
-    },
     "button": {
       "mute": {
         "name": "Mute"
