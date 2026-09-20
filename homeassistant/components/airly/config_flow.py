@@ -102,7 +102,6 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            # A turned off measuring station says nothing about the API key validity
             _, errors = await self.async_check_location(
                 user_input[CONF_API_KEY],
                 reauth_entry.data[CONF_LATITUDE],
@@ -131,6 +130,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         """Check the location and return its validity along with flow errors."""
         websession = async_get_clientsession(self.hass)
         airly = Airly(api_key, websession)
+
         if use_nearest:
             measurements = airly.create_measurements_session_nearest(
                 latitude=latitude, longitude=longitude, max_distance_km=5

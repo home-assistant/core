@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_location": "[%key:component::airly::config::error::wrong_location%]"
     },
     "error": {
