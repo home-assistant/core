@@ -10,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .cache import FrameCache
 from .const import (
     CONF_ALBUM_IDS,
     CONF_FRAME_ID,
@@ -264,8 +263,5 @@ async def async_unload_entry(
 async def async_remove_entry(
     hass: HomeAssistant, entry: ImmichFramesConfigEntry
 ) -> None:
-    """Remove the private cached image for a deleted frame."""
-    cache = FrameCache(
-        Path(hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json"))
-    )
-    await hass.async_add_executor_job(cache.clear)
+    """Remove private cached images for a deleted frame."""
+    await hass.async_add_executor_job(_remove_legacy_cache, hass, entry.entry_id)

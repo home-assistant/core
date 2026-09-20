@@ -168,13 +168,22 @@ async def test_remove_entry_clears_cached_image(
     )
     entry.add_to_hass(hass)
     cache_path = hass.config.path(".storage", f"immich_frames_{entry.entry_id}.json")
+    legacy_cache_path = hass.config.path(
+        ".storage", f"immich_frames_{entry.entry_id}.jpg"
+    )
     await hass.async_add_executor_job(
         lambda: Path(cache_path).write_text("cached", encoding="utf-8")
+    )
+    await hass.async_add_executor_job(
+        lambda: Path(legacy_cache_path).write_bytes(b"legacy cached image")
     )
 
     await async_remove_entry(hass, entry)
 
     assert not await hass.async_add_executor_job(lambda: Path(cache_path).exists())
+    assert not await hass.async_add_executor_job(
+        lambda: Path(legacy_cache_path).exists()
+    )
 
 
 async def test_migrate_entry_adds_default_source(
