@@ -281,33 +281,28 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_charge_on_solar_lower_limit_capped_by_charge_limit_old_firmware(
+async def test_charge_on_solar_lower_limit_old_firmware_ignores_coordinator(
     hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
     mock_old_firmware: AsyncMock,
 ) -> None:
-    """Test a non-polling vehicle below the streaming firmware still tracks coordinator updates."""
+    """Test an explicitly non-polling vehicle's lower limit entity ignores coordinator updates, even on pre-streaming firmware."""
     await _async_enable_charge_on_solar_preview_feature(hass)
     entry = await setup_platform(hass, [Platform.NUMBER])
-    vehicle = entry.runtime_data.vehicles[0]
 
     # This vehicle's raw poll flag is off, so its coordinator gets no initial
-    # refresh; force one so the charge limit is known.
-    await vehicle.coordinator.async_refresh()
-
+    # refresh; the linked charge-limit entity has no value yet, so max falls
+    # back to its default.
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
-    assert state.attributes["max"] == 80
+    assert state.attributes["max"] == 100
 
-    lowered_data = deepcopy(VEHICLE_DATA)
-    lowered_data["response"]["charge_state"]["charge_limit_soc"] = 10
-    mock_vehicle_data.return_value = lowered_data
-    await vehicle.coordinator.async_refresh()
+    await entry.runtime_data.vehicles[0].coordinator.async_refresh()
 
+    # This vehicle is explicitly stream-only (poll=False); a coordinator
+    # refresh must not redraw this entity's own state.
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
-    assert state.attributes["max"] == 10
-    assert state.state == "10"
+    assert state.attributes["max"] == 100
 
 
 async def test_charge_on_solar_lower_limit_restores_max_value(
@@ -411,6 +406,57 @@ async def test_charge_on_solar_lower_limit_set_value_while_enabled(
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
     assert state.state == "35"
+
+
+async def test_charge_on_solar_lower_limit_reaches_vehicle_when_switch_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a number change still reaches the vehicle once the switch entity is registry-disabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc"
+    ) as listener:
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        with patch(
+            "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+            return_value=COMMAND_OK,
+        ):
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                blocking=True,
+            )
+
+        entity_registry.async_update_entity(
+            "switch.test_charge_on_solar",
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+        await hass.async_block_till_done()
+
+        await reload_platform(hass, entry, [Platform.SWITCH, Platform.NUMBER])
+
+    assert hass.states.get("switch.test_charge_on_solar") is None
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 45},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=45,
+            upper_charge_limit=None,
+        )
 
 
 async def test_charge_on_solar_lower_limit_uses_live_charge_limit(

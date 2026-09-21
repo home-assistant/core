@@ -32,7 +32,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .const import DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
+from .const import (
+    CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT,
+    CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
+    DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
+)
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -43,8 +48,6 @@ from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_c
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
-CHARGE_ON_SOLAR_LOWER_LIMIT_KEY = "charge_on_solar_lower_limit"
-CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT = 20
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -402,7 +405,8 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
         self._attr_native_value = value
         self.vehicle.charge_on_solar_lower_limit = value
 
-        if self.vehicle.polls_charge_limit:
+        if self.vehicle.polls_charge_limit and self.vehicle.poll is not False:
+            # poll may be None (unknown); only an explicit False is stream-only
             self.async_on_remove(
                 self.vehicle.coordinator.async_add_listener(
                     self._async_handle_coordinator_update

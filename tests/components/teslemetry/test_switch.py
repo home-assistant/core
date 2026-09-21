@@ -430,6 +430,56 @@ async def test_charge_on_solar_switch_turn_on_uses_restored_charge_limit(
             )
 
 
+async def test_charge_on_solar_switch_uses_limit_when_number_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the switch still sends the user's limit once the number entity is registry-disabled."""
+    await _async_enable_charge_on_solar_preview_feature(hass)
+
+    with patch("teslemetry_stream.TeslemetryStreamVehicle.listen_ChargeLimitSoc") as (
+        listener
+    ):
+        listener.return_value = lambda: None
+        entry = await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                ATTR_VALUE: 35,
+            },
+            blocking=True,
+        )
+
+        entity_registry.async_update_entity(
+            "number.test_charge_on_solar_lower_limit",
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+        await hass.async_block_till_done()
+
+        await reload_platform(hass, entry, [Platform.SWITCH, Platform.NUMBER])
+
+    assert hass.states.get("number.test_charge_on_solar_lower_limit") is None
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",
+        return_value=COMMAND_OK,
+    ) as command:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            blocking=True,
+        )
+        command.assert_called_once_with(
+            enabled=True,
+            lower_charge_limit=35,
+            upper_charge_limit=None,
+        )
+
+
 async def test_charge_on_solar_switch_turn_on_omits_unknown_charge_limit(
     hass: HomeAssistant,
 ) -> None:

@@ -24,7 +24,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
-from .const import DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
+from .const import CHARGE_ON_SOLAR_SWITCH_KEY, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -35,7 +35,6 @@ from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_c
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
-CHARGE_ON_SOLAR_SWITCH_KEY = "charge_on_solar"
 
 
 @dataclass(frozen=True, kw_only=True)

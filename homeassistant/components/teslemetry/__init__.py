@@ -33,12 +33,21 @@ from homeassistant.components.labs import (
     EventLabsUpdatedData,
     async_subscribe_preview_feature,
 )
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberExtraStoredData,
+)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -51,7 +60,9 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
+    restore_state,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -63,6 +74,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
+    CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
+    CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
@@ -188,6 +201,45 @@ def _get_subscribed_ids_from_metadata(
     }
 
     return subscribed_vins, subscribed_site_ids
+
+
+def _async_restore_charge_on_solar_state(
+    hass: HomeAssistant, vehicles: list[TeslemetryVehicleData]
+) -> None:
+    """Populate each vehicle's charge-on-solar state from its last known entity states.
+
+    This is the single source of truth for `charge_on_solar_enabled` and
+    `charge_on_solar_lower_limit`, run once during setup so the shared state is
+    correct regardless of which of the switch/number entities are registry-disabled,
+    since a disabled entity's own `async_added_to_hass` never runs.
+    """
+    entity_registry = er.async_get(hass)
+    restored = restore_state.async_get(hass).last_states
+    for vehicle in vehicles:
+        switch_entity_id = entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, f"{vehicle.vin}-{CHARGE_ON_SOLAR_SWITCH_KEY}"
+        )
+        if switch_entity_id and (stored := restored.get(switch_entity_id)):
+            if stored.state.state == STATE_ON:
+                vehicle.charge_on_solar_enabled = True
+            elif stored.state.state == STATE_OFF:
+                vehicle.charge_on_solar_enabled = False
+
+        number_entity_id = entity_registry.async_get_entity_id(
+            NUMBER_DOMAIN, DOMAIN, f"{vehicle.vin}-{CHARGE_ON_SOLAR_LOWER_LIMIT_KEY}"
+        )
+        if number_entity_id and (stored := restored.get(number_entity_id)):
+            extra_data = (
+                NumberExtraStoredData.from_dict(stored.extra_data.as_dict())
+                if stored.extra_data is not None
+                else None
+            )
+            if (
+                stored.state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and extra_data is not None
+                and extra_data.native_value is not None
+            ):
+                vehicle.charge_on_solar_lower_limit = int(extra_data.native_value)
 
 
 def _setup_dynamic_discovery(
@@ -748,6 +800,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             device_registry.async_remove_device(device_entry.id)
 
     _prune_energy_subentries(hass, entry, scopes, products)
+
+    _async_restore_charge_on_solar_state(hass, vehicles)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
