@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "key_generation_failed": "Failed to generate encryption keys."
+      "key_generation_failed": "Failed to generate encryption keys.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -29,6 +30,16 @@
         },
         "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch. Threema enables end-to-end mode for a Gateway ID manually after you register a public key, which can take a few days — so you may well be completing this step long after the keys were generated.",
         "title": "Gateway credentials"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_secret": "API secret"
+        },
+        "data_description": {
+          "api_secret": "New secret for your Threema Gateway {gateway_id}"
+        },
+        "description": "The API secret for {gateway_id} has expired or is no longer valid. Enter a new secret from gateway.threema.ch.",
+        "title": "Re-authenticate Threema"
       },
       "setup_new": {
         "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste the public key as shown above. Store the private key securely — it cannot be recovered.",
