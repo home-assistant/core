@@ -101,6 +101,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "energy_saving_mode_enabled": {
+        "name": "Energy saving mode"
+      },
       "humidity_warning_enabled": {
         "name": "Humidity warning"
       },

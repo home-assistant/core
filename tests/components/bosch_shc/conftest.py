@@ -206,6 +206,8 @@ def smart_plug_device(
     device_id: str = "hdm:ZigBee:plug1",
     name: str = "Smart Plug",
     routing: RoutingService.State = RoutingService.State.DISABLED,
+    supports_energy_saving_mode: bool = False,
+    energy_saving_mode_enabled: bool = False,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -220,6 +222,8 @@ def smart_plug_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.routing = routing
+    device.supports_energy_saving_mode = supports_energy_saving_mode
+    device.energy_saving_mode_enabled = energy_saving_mode_enabled
     return device
 
 

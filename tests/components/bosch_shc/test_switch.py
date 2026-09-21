@@ -516,3 +516,71 @@ async def test_roomthermostat_gen2_humidity_warning(
         blocking=True,
     )
     assert device.humidity_warning_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    supports_energy_saving_mode=True, energy_saving_mode_enabled=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_energy_saving_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Smart Plug's energy saving mode is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smart_plugs[0]
+
+    state = hass.states.get("switch.smart_plug_energy_saving_mode")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
+        blocking=True,
+    )
+    assert device.energy_saving_mode_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.smart_plug_energy_saving_mode"},
+        blocking=True,
+    )
+    assert device.energy_saving_mode_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device(supports_energy_saving_mode=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_no_energy_saving_mode_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Smart Plug without energy-saving-mode support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smart_plug_energy_saving_mode") is None
