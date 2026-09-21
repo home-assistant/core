@@ -1119,9 +1119,11 @@ class SpeechManager:
 
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
-            _LOGGER.debug("Found audio in cache for %s", message[0:32])
-            cache.async_subscribe_audio_interrupt(on_audio_interrupt)
-            return cache
+            if not cache.was_interrupted:
+                _LOGGER.debug("Found audio in cache for %s", message[0:32])
+                cache.async_subscribe_audio_interrupt(on_audio_interrupt)
+                return cache
+            _LOGGER.debug("Ignoring interrupted audio cache for %s", message[0:32])
 
         store_to_disk = use_file_cache
 

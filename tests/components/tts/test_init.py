@@ -2231,6 +2231,7 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
     """Test an interruption notifies all streams sharing an active cache."""
     await mock_config_entry_setup(hass, mock_tts_entity)
     continue_generation = asyncio.Event()
+    finish_interrupted_generation = asyncio.Event()
     generation_count = 0
 
     async def async_stream_tts_audio(
@@ -2249,6 +2250,7 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
             assert request.on_audio_interrupt is not None
             request.on_audio_interrupt()
             yield b"replacement"
+            await finish_interrupted_generation.wait()
 
         return tts.TTSAudioResponse("mp3", gen_data(), passthrough=True)
 
@@ -2268,9 +2270,6 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
 
     continue_generation.set()
     await interruption_received.wait()
-    assert b"".join([chunk async for chunk in stream1.async_stream_result()]) == (
-        b"replacement"
-    )
     interrupted1.assert_called_once_with()
     interrupted2.assert_called_once_with()
 
@@ -2279,6 +2278,11 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
     assert stream3._result_cache.result() is not stream1._result_cache.result()
     assert b"".join([chunk async for chunk in stream3.async_stream_result()]) == b"fresh"
     assert generation_count == 2
+
+    finish_interrupted_generation.set()
+    assert b"".join([chunk async for chunk in stream1.async_stream_result()]) == (
+        b"replacement"
+    )
 
 
 async def test_completed_cache_releases_interrupt_listeners(
