@@ -70,39 +70,36 @@ class TrimlightLight(CoordinatorEntity[TrimlightCoordinator], LightEntity):
         red = state.red
         green = state.green
         blue = state.blue
-        self._attr_color_mode = (
-            self._color_mode
-            if red is not None and green is not None and blue is not None
-            else ColorMode.UNKNOWN
-        )
+        self._attr_color_mode = ColorMode.UNKNOWN
 
         if self._color_mode is ColorMode.RGB:
-            self._attr_rgb_color = (
-                None
-                if red is None or green is None or blue is None
-                else (red, green, blue)
-            )
+            if red is None or green is None or blue is None:
+                self._attr_rgb_color = None
+                return
+            self._attr_rgb_color = (red, green, blue)
 
         elif self._color_mode is ColorMode.RGBW:
             warm_white = state.warm_white
-            self._attr_rgbw_color = (
-                None
-                if red is None or green is None or blue is None or warm_white is None
-                else (red, green, blue, warm_white)
-            )
+            if red is None or green is None or blue is None or warm_white is None:
+                self._attr_rgbw_color = None
+                return
+            self._attr_rgbw_color = (red, green, blue, warm_white)
 
         else:
             warm_white = state.warm_white
             cold_white = state.cold_white
-            self._attr_rgbww_color = (
-                None
-                if red is None
+            if (
+                red is None
                 or green is None
                 or blue is None
                 or warm_white is None
                 or cold_white is None
-                else (red, green, blue, cold_white, warm_white)
-            )
+            ):
+                self._attr_rgbww_color = None
+                return
+            self._attr_rgbww_color = (red, green, blue, cold_white, warm_white)
+
+        self._attr_color_mode = self._color_mode
 
     @callback
     @override

@@ -225,6 +225,48 @@ async def test_unknown_output(
     assert state.attributes[ATTR_COLOR_MODE] is ColorMode.UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("ic_type", "attribute", "warm_white", "cold_white"),
+    [
+        pytest.param(
+            TrimlightICType.RGBW,
+            ATTR_RGBW_COLOR,
+            None,
+            50,
+            id="rgbw",
+        ),
+        pytest.param(
+            TrimlightICType.RGBCW,
+            ATTR_RGBWW_COLOR,
+            40,
+            None,
+            id="rgbww",
+        ),
+    ],
+)
+async def test_missing_white_channel(
+    hass: HomeAssistant,
+    mock_trimlight: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    attribute: str,
+    warm_white: int | None,
+    cold_white: int | None,
+) -> None:
+    """Test a missing native white channel makes the color mode unknown."""
+    mock_trimlight.get_light_state.return_value = replace(
+        mock_trimlight.get_light_state.return_value,
+        warm_white=warm_white,
+        cold_white=cold_white,
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_COLOR_MODE] is ColorMode.UNKNOWN
+    assert state.attributes[attribute] is None
+
+
 async def test_unavailable_and_recovery(
     hass: HomeAssistant,
     mock_trimlight: MagicMock,
