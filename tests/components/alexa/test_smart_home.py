@@ -1,5 +1,6 @@
 """Test for smart home alexa support."""
 
+import asyncio
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -5853,7 +5854,16 @@ async def test_alexa_config(
 
 
 WEBRTC_OFFER = "v=0\r\no=- 1 1 IN IP4 0.0.0.0\r\ns=-\r\na=group:BUNDLE 0 1\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=recvonly\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=mid:1\r\na=recvonly\r\n"
-WEBRTC_ANSWER = "v=0\r\no=- 2 2 IN IP4 0.0.0.0\r\ns=-\r\na=group:BUNDLE 0 1\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=sendonly\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=mid:1\r\na=sendonly\r\n"
+WEBRTC_CANDIDATE_IN_ANSWER = "candidate:0 1 udp 2130706431 192.168.1.20 4000 typ host"
+WEBRTC_CANDIDATE_IN_ANSWER_IPV6 = (
+    "candidate:0 2 udp 2130706431 2001:db8::20 4000 typ host"
+)
+WEBRTC_ANSWER = (
+    "v=0\r\no=- 2 2 IN IP4 0.0.0.0\r\ns=-\r\na=group:BUNDLE 0 1\r\n"
+    "m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=sendonly\r\n"
+    f"a={WEBRTC_CANDIDATE_IN_ANSWER}\r\na={WEBRTC_CANDIDATE_IN_ANSWER_IPV6}\r\n"
+    "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=mid:1\r\na=sendonly\r\n"
+)
 WEBRTC_CANDIDATE_IPV4 = "candidate:1 1 udp 2130706431 192.168.1.10 5000 typ host"
 WEBRTC_CANDIDATE_IPV6 = "candidate:2 1 udp 2130706431 fe80::1 5000 typ host"
 WEBRTC_CANDIDATE_AUDIO = "candidate:3 1 udp 1694498815 10.0.0.1 6000 typ srflx"
@@ -6028,6 +6038,7 @@ async def test_initiate_session_with_offer(hass: HomeAssistant) -> None:
         "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n"
         "a=mid:0\r\n"
         "a=sendonly\r\n"
+        f"a={WEBRTC_CANDIDATE_IN_ANSWER}\r\n"
         f"a={WEBRTC_CANDIDATE_IPV4}\r\n"
         f"a={WEBRTC_CANDIDATE_RELAY}\r\n"
         "a=end-of-candidates\r\n"
@@ -6139,6 +6150,15 @@ async def test_initiate_session_with_offer_without_media(hass: HomeAssistant) ->
             "Failed to negotiate WebRTC session: ",
             id="timeout",
         ),
+        pytest.param(
+            [
+                camera.WebRTCAnswer(WEBRTC_ANSWER),
+                camera.WebRTCError("webrtc_offer_failed", "Stream lost"),
+            ],
+            1,
+            "Failed to negotiate WebRTC session: Stream lost",
+            id="error_after_answer",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_camera_capabilities")
@@ -6186,6 +6206,47 @@ async def test_initiate_session_with_offer_failure(
     assert response["header"]["name"] == "ErrorResponse"
     assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
     assert response["payload"]["message"] == error_message
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
+
+
+@pytest.mark.parametrize(
+    "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
+)
+@pytest.mark.usefixtures("mock_camera_capabilities")
+async def test_initiate_session_with_offer_slow_camera(hass: HomeAssistant) -> None:
+    """Test a camera that does not return from the offer in time."""
+    request = get_new_request(
+        "Alexa.RTCSessionController",
+        "InitiateSessionWithOffer",
+        DEMO_CAMERA_ENDPOINT,
+    )
+    request["directive"]["payload"] = {
+        "sessionId": RTC_SESSION_ID,
+        "offer": {"format": "SDP", "value": WEBRTC_OFFER},
+    }
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
+    ) -> None:
+        await asyncio.Event().wait()
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch("homeassistant.components.alexa.handlers.RTC_ANSWER_TIMEOUT", 0),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session"
+        ) as mock_close,
+    ):
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
+
+    response = msg["event"]
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
     mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 

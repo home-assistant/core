@@ -2110,7 +2110,13 @@ def _embed_candidates(sdp: str, candidates: list[RTCIceCandidateInit]) -> str:
     for section, start in enumerate(media_starts):
         end = media_starts[section + 1] if section + 1 < len(media_starts) else None
         section_lines = [
-            line for line in lines[start:end] if line != "a=end-of-candidates"
+            line
+            for line in lines[start:end]
+            if line != "a=end-of-candidates"
+            and (
+                not line.startswith("a=candidate:")
+                or _is_ipv4_candidate(line.removeprefix("a="))
+            )
         ]
         result.extend(section_lines)
         result.extend(extra_lines.get(section, []))
@@ -2126,10 +2132,12 @@ async def _async_get_webrtc_answer(
     answer_future: asyncio.Future[str] = hass.loop.create_future()
     gathering_done = asyncio.Event()
     candidates: list[RTCIceCandidateInit] = []
+    error: str | None = None
 
     @ha.callback
     def send_message(message: camera.WebRTCMessage) -> None:
         """Collect the answer and candidates from the camera."""
+        nonlocal error
         match message:
             case camera.WebRTCAnswer():
                 if not answer_future.done():
@@ -2142,14 +2150,16 @@ async def _async_get_webrtc_answer(
             case camera.WebRTCCandidate(candidate=candidate):
                 candidates.append(RTCIceCandidateInit(candidate.candidate))
             case camera.WebRTCError():
+                error = message.message
+                gathering_done.set()
                 if not answer_future.done():
                     answer_future.set_exception(HomeAssistantError(message.message))
 
     try:
-        await camera_entity.async_handle_async_webrtc_offer(
-            offer, session_id, send_message
-        )
         async with asyncio.timeout(RTC_ANSWER_TIMEOUT):
+            await camera_entity.async_handle_async_webrtc_offer(
+                offer, session_id, send_message
+            )
             answer = await answer_future
     except (HomeAssistantError, TimeoutError) as err:
         camera_entity.close_webrtc_session(session_id)
@@ -2162,6 +2172,12 @@ async def _async_get_webrtc_answer(
             await gathering_done.wait()
     except TimeoutError:
         pass
+
+    if error is not None:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            f"Failed to negotiate WebRTC session: {error}"
+        )
 
     return _embed_candidates(answer, candidates)
 
