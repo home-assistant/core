@@ -2,7 +2,7 @@
 
 from json import JSONDecodeError
 import logging
-from unittest.mock import AsyncMock, create_autospec, patch
+from unittest.mock import AsyncMock, call, create_autospec, patch
 
 from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
@@ -149,7 +149,10 @@ async def test_session_relogin(
     failing_method = getattr(mock_vodafone_station_router, method)
     failing_method.side_effect = [CannotAuthenticate(), failing_method.return_value]
 
-    with patch.object(mock_config_entry, "async_start_reauth_if_available") as reauth:
+    with (
+        patch("homeassistant.components.vodafone_station.coordinator.asyncio.sleep"),
+        patch.object(mock_config_entry, "async_start_reauth_if_available") as reauth,
+    ):
         await coordinator.async_refresh()
 
     assert coordinator.last_update_success
@@ -160,11 +163,11 @@ async def test_session_relogin(
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_exception", "reauth_count"),
+    ("error", "expected_exception", "reauth_count", "retry_login_count"),
     [
-        pytest.param(CannotAuthenticate(), ConfigEntryAuthFailed, 1, id="auth"),
-        pytest.param(VodafoneError(), UpdateFailed, 0, id="api"),
-        pytest.param(TimeoutError(), TimeoutError, 0, id="timeout"),
+        pytest.param(CannotAuthenticate(), ConfigEntryAuthFailed, 1, 2, id="auth"),
+        pytest.param(VodafoneError(), UpdateFailed, 0, 1, id="api"),
+        pytest.param(TimeoutError(), TimeoutError, 0, 1, id="timeout"),
     ],
 )
 @pytest.mark.parametrize("failure_stage", ["login", "retry"])
@@ -175,9 +178,10 @@ async def test_session_relogin_failure(
     error: Exception,
     expected_exception: type[Exception],
     reauth_count: int,
+    retry_login_count: int,
     failure_stage: str,
 ) -> None:
-    """Limit recovery to one login and retain normal error handling."""
+    """Bound session recovery and propagate login failures immediately."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     coordinator._session.cookie_jar.update_cookies(
@@ -187,18 +191,28 @@ async def test_session_relogin_failure(
     mock_vodafone_station_router.get_devices_data.side_effect = [
         CannotAuthenticate(),
         error,
+        error,
     ]
     mock_vodafone_station_router.login.side_effect = {
         "login": error,
         "retry": None,
     }[failure_stage]
 
-    with patch.object(mock_config_entry, "async_start_reauth_if_available") as reauth:
+    with (
+        patch("homeassistant.components.vodafone_station.coordinator.asyncio.sleep"),
+        patch.object(mock_config_entry, "async_start_reauth_if_available") as reauth,
+    ):
         await coordinator.async_refresh()
 
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, expected_exception)
-    mock_vodafone_station_router.login.assert_awaited_once_with()
+    assert (
+        mock_vodafone_station_router.login.await_count
+        == {
+            "login": 1,
+            "retry": retry_login_count,
+        }[failure_stage]
+    )
     assert reauth.call_count == reauth_count
 
 
@@ -221,15 +235,22 @@ async def test_initial_login_auth_failure(
 @pytest.mark.parametrize(
     ("errors", "login_count", "success"),
     [
-        pytest.param([GenericResponseError()], 0, True, id="response"),
+        pytest.param([GenericResponseError()], 1, True, id="response"),
         pytest.param(
-            [CannotAuthenticate(), GenericResponseError()], 1, True, id="auth-response"
+            [CannotAuthenticate(), CannotAuthenticate()], 2, True, id="auth-auth"
+        ),
+        pytest.param([GenericResponseError()] * 3, 2, False, id="persistent"),
+        pytest.param(
+            [CannotAuthenticate(), GenericResponseError()], 2, True, id="auth-response"
         ),
         pytest.param(
-            [GenericResponseError(), CannotAuthenticate()], 1, True, id="response-auth"
+            [GenericResponseError(), CannotAuthenticate()], 2, True, id="response-auth"
         ),
         pytest.param(
-            [GenericResponseError(), GenericResponseError()], 0, False, id="persistent"
+            [GenericResponseError(), GenericResponseError()],
+            2,
+            True,
+            id="response-response",
         ),
     ],
 )
@@ -242,7 +263,7 @@ async def test_transient_response_retry(
     login_count: int,
     success: bool,
 ) -> None:
-    """Retry response errors once, including after session recovery."""
+    """Share three attempts across response errors and session recovery."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     coordinator._session.cookie_jar.update_cookies(
@@ -261,7 +282,7 @@ async def test_transient_response_retry(
     ):
         await coordinator.async_refresh()
 
-    sleep.assert_awaited_once_with(2)
+    assert sleep.await_args_list == [call(2)] * min(len(errors), 2)
     assert coordinator.last_update_success is success
     assert failing_method.await_count == len(errors) + int(success)
     assert mock_vodafone_station_router.login.await_count == login_count
