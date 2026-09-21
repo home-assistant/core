@@ -42,7 +42,28 @@ def setup_product_mock(category, feature_mocks, path=None):
 
 def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     """Mock just the feature, without the product setup."""
+    if issubclass(spec, blebox_uniapi.sensor.BaseSensor):
+        # Autospec would leave is_error as a truthy Mock, making entities unavailable.
+        kwargs.setdefault("is_error", False)
     return mock.create_autospec(spec, set_spec, True, **kwargs)
+
+
+def setup_multi_feature_product(category, features, name, model):
+    """Mock a product exposing several features of the same category."""
+    product = setup_product_mock(category, features)
+    type(product).name = PropertyMock(return_value=name)
+    type(product).model = PropertyMock(return_value=model)
+    type(product).product = PropertyMock(return_value=model)
+    type(product).brand = PropertyMock(return_value="BleBox")
+    type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).unique_id = PropertyMock(return_value="aabbcc112233")
+
+    for feature in features:
+        type(feature).product = PropertyMock(return_value=product)
+        type(feature).name = PropertyMock(return_value=None)
+        feature.async_update = AsyncMock()
+
+    return product
 
 
 def mock_feature(category, spec, set_spec: bool = True, **kwargs):

@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from pexpect import pxssh
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -18,13 +18,13 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PASSWORD, default=""): cv.string,
-            vol.Optional(CONF_PORT): cv.port,
+            probatio.Required(CONF_HOST): cv.string,
+            probatio.Required(CONF_USERNAME): cv.string,
+            probatio.Optional(CONF_PASSWORD, default=""): cv.string,
+            probatio.Optional(CONF_PORT): cv.port,
         }
     )
 )

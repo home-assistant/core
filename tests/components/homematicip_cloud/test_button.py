@@ -124,3 +124,54 @@ async def test_hmip_full_flush_lock_controller_button_missing_channel(
     entity_id = "button.universal_motorschloss_controller_door_opener"
     assert hass.states.get(entity_id) is None
     assert entity_id not in mock_hap.hmip_device_by_entity_id
+
+
+async def test_hmip_full_flush_door_controller_button(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    default_mock_hap_factory: HomeFactory,
+    full_flush_door_controller_device_data: dict[str, Any],
+) -> None:
+    """Test the door opener button on an HmIP-FDC (auth channel 4, not 9)."""
+    entity_id = "button.turoffner_haustuer_door_opener"
+    entity_name = "Turoffner Haustuer Door opener"
+    device_model = "HmIP-FDC"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Turoffner Haustuer"],
+        extra_devices=[full_flush_door_controller_device_data],
+    )
+
+    get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model)
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    auth_channel = next(
+        ch
+        for ch in hmip_device.functionalChannels
+        if ch.functionalChannelType.name == "ACCESS_AUTHORIZATION_CHANNEL"
+        and ch.channelRole == "DOOR_OPENER_ACTUATOR"
+    )
+    assert auth_channel.index == 4
+
+    with (
+        patch.object(
+            auth_channel, "async_pull_latch", new_callable=AsyncMock
+        ) as mock_pull_latch,
+        patch.object(
+            hmip_device, "send_start_impulse_async", new_callable=AsyncMock
+        ) as mock_send_start_impulse,
+    ):
+        now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+        freezer.move_to(now)
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_pull_latch.assert_awaited_once_with()
+    mock_send_start_impulse.assert_not_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == now.isoformat()

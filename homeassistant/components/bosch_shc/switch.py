@@ -9,6 +9,7 @@ from boschshcpy import (
     PowerSwitchService,
     PrivacyModeService,
     SHCSmartPlug,
+    ThermostatService,
 )
 from boschshcpy.device import SHCDevice
 
@@ -32,7 +33,7 @@ class SHCSwitchEntityDescription(SwitchEntityDescription):
     """Class describing SHC switch entities."""
 
     on_key: str
-    on_value: Enum
+    on_value: bool | Enum
     should_poll: bool
 
 
@@ -71,6 +72,31 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="privacymode",
         on_value=PrivacyModeService.State.DISABLED,
         should_poll=True,
+    ),
+    "child_lock": SHCSwitchEntityDescription(
+        key="child_lock",
+        translation_key="child_lock",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="child_lock",
+        on_value=True,
+        should_poll=False,
+    ),
+    "child_lock_thermostat": SHCSwitchEntityDescription(
+        key="child_lock_thermostat",
+        translation_key="child_lock",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="child_lock",
+        on_value=ThermostatService.State.ON,
+        should_poll=False,
+    ),
+    "presencesimulation": SHCSwitchEntityDescription(
+        key="presencesimulation",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
     ),
 }
 
@@ -152,6 +178,54 @@ async def async_setup_entry(
         for switch in session.device_helper.camera_360
     )
 
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["child_lock_thermostat"],
+            unique_id_suffix="child_lock",
+        )
+        for switch in (
+            *session.device_helper.thermostats,
+            *session.device_helper.roomthermostats,
+            *session.device_helper.wallthermostats,
+        )
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["child_lock"],
+            unique_id_suffix="child_lock",
+        )
+        for switch in (
+            *session.device_helper.micromodule_shutter_controls,
+            *session.device_helper.micromodule_blinds,
+            *session.device_helper.micromodule_light_attached,
+            *session.device_helper.micromodule_relays,
+            *session.device_helper.micromodule_impulse_relays,
+            *session.device_helper.micromodule_dimmers,
+            *session.device_helper.light_switches_bsm,
+        )
+    )
+
+    presence_simulation_system = session.device_helper.presence_simulation_system
+    if presence_simulation_system is not None:
+        entities.append(
+            SHCSwitch(
+                hass=hass,
+                device=presence_simulation_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=SWITCH_TYPES["presencesimulation"],
+            )
+        )
+
     async_add_entities(entities)
 
 
@@ -167,10 +241,13 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         parent_id: str,
         entry_id: str,
         description: SHCSwitchEntityDescription,
+        unique_id_suffix: str | None = None,
     ) -> None:
         """Initialize a SHC switch."""
         super().__init__(hass, device, parent_id, entry_id)
         self.entity_description = description
+        if unique_id_suffix is not None:
+            self._attr_unique_id = f"{device.serial}_{unique_id_suffix}"
 
     @property
     @override

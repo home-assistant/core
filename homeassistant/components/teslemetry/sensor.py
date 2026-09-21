@@ -3,10 +3,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, override
+from typing import override
 
 from tesla_fleet_api import firmware_at_least
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
+from teslemetry_stream.const import CreditsEvent
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -33,6 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import PressureConverter
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslemetryConfigEntry
@@ -45,9 +48,14 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
+
+# Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
+# vehicles, identified by this driver-assist capability in the vehicle config.
+DRIVER_ASSIST_HW4 = "TeslaAP4"
 
 BMS_STATES = {
     "Standby": "standby",
@@ -205,6 +213,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
         | None
     ) = None
     streaming_firmware: str = "2024.26"
+    requires_hw4: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
@@ -394,7 +403,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="vehicle_state_tpms_pressure_fl",
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureFl(
-            callback
+            lambda x: (
+                callback(None)
+                if x is None
+                else callback(
+                    PressureConverter.convert(x, UnitOfPressure.ATM, UnitOfPressure.BAR)
+                )
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -408,7 +423,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="vehicle_state_tpms_pressure_fr",
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureFr(
-            callback
+            lambda x: (
+                callback(None)
+                if x is None
+                else callback(
+                    PressureConverter.convert(x, UnitOfPressure.ATM, UnitOfPressure.BAR)
+                )
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -422,7 +443,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="vehicle_state_tpms_pressure_rl",
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureRl(
-            callback
+            lambda x: (
+                callback(None)
+                if x is None
+                else callback(
+                    PressureConverter.convert(x, UnitOfPressure.ATM, UnitOfPressure.BAR)
+                )
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -436,7 +463,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="vehicle_state_tpms_pressure_rr",
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsPressureRr(
-            callback
+            lambda x: (
+                callback(None)
+                if x is None
+                else callback(
+                    PressureConverter.convert(x, UnitOfPressure.ATM, UnitOfPressure.BAR)
+                )
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -1111,12 +1144,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="isolation_resistance",
+        # Teslemetry streams this field in kΩ; declare the unit as kΩ.
         streaming_listener=lambda vehicle, callback: vehicle.listen_IsolationResistance(
             callback
         ),
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement="Ω",
+        native_unit_of_measurement="kΩ",
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
@@ -1144,6 +1178,17 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
+        key="lifetime_energy_gained_regen",
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_LifetimeEnergyGainedRegen(callback)
+        ),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="lifetime_energy_used",
         streaming_listener=lambda vehicle, callback: vehicle.listen_LifetimeEnergyUsed(
             callback
@@ -1161,6 +1206,19 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="g",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="miles_since_reset",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_MilesSinceReset(
+            callback
+        ),
+        streaming_firmware="2025.44.25.5",
+        requires_hw4=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1307,6 +1365,21 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.ENUM,
         options=list(SCHEDULED_CHARGING_MODES.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="self_driving_miles_since_reset",
+        streaming_listener=(
+            lambda vehicle, callback: vehicle.listen_SelfDrivingMilesSinceReset(
+                callback
+            )
+        ),
+        streaming_firmware="2025.44.25.5",
+        requires_hw4=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1603,9 +1676,15 @@ async def async_setup_entry(
                 not vehicle.poll
                 and description.streaming_listener
                 and firmware_at_least(vehicle.firmware, description.streaming_firmware)
+                and (
+                    not description.requires_hw4
+                    or vehicle.coordinator.data.get("vehicle_config_driver_assist")
+                    == DRIVER_ASSIST_HW4
+                )
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
-            elif description.polling:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(TeslemetryVehicleSensorEntity(vehicle, description))
 
         for time_description in VEHICLE_TIME_DESCRIPTIONS:
@@ -1663,6 +1742,13 @@ async def async_setup_entry(
             )
         )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.SENSOR,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 
@@ -1939,13 +2025,9 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
 
         self.async_on_remove(self.stream.listen_Credits(self._async_update))
 
-    def _async_update(self, credits: dict[str, Any]) -> None:
+    def _async_update(self, credits: CreditsEvent) -> None:
         """Handle updated data from the stream."""
-        quota = credits.get("quota")
-        if not isinstance(quota, dict):
-            return
-
-        fraction = quota.get("fraction")
+        fraction = credits.quota.get("fraction")
         if not isinstance(fraction, (float, int)) or isinstance(fraction, bool):
             return
 
