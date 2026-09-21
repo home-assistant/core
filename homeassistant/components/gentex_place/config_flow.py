@@ -71,8 +71,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
-        """Create an oauth config entry or update existing entry for reauth."""
-        await self.async_set_unique_id(self.external_data[CONF_UNIQUE_ID])
+        """Create an oauth config entry."""
         entry_title = self.context.get("title_placeholders", {"name": "Place"})["name"]
         self._abort_if_unique_id_configured()
         return self.async_create_entry(data=data, title=entry_title)
