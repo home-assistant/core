@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_STATUS
 from .controller import SmartTubConfigEntry
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD}
+TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, "address"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,7 +22,9 @@ async def async_get_config_entry_diagnostics(
         "config_entry_data": async_redact_data(dict(entry.data), TO_REDACT),
         "spas": [
             {
-                "status": spa_data[ATTR_STATUS].properties,
+                "status": async_redact_data(
+                    spa_data[ATTR_STATUS].properties, TO_REDACT
+                ),
                 "reminders": [
                     {
                         "name": reminder.name,

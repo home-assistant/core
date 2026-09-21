@@ -1,5 +1,9 @@
 """Test SmartTub diagnostics."""
 
+from datetime import UTC, datetime
+from unittest.mock import create_autospec
+
+import smarttub
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -12,11 +16,40 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    spa,
+    spa_state,
     config_entry: MockConfigEntry,
-    setup_entry: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
+    mock_error = create_autospec(smarttub.SpaError, instance=True)
+    mock_error.code = 11
+    mock_error.title = "Flow Switch Stuck Open"
+    mock_error.description = "The flow switch is stuck in the open position."
+    mock_error.active = True
+    mock_error.error_type = "TUB_ERROR"
+    mock_error.created_at = datetime(2021, 1, 1, tzinfo=UTC)
+    mock_error.updated_at = datetime(2021, 1, 2, tzinfo=UTC)
+    spa.get_errors.return_value = [mock_error]
+
+    # a raw external sensor entry, to verify its address is redacted
+    spa_state.properties["sensors"] = [
+        {
+            "address": "AA:BB:CC:DD:EE:FF",
+            "name": "{sensor-name}",
+            "type": "ibs0x",
+            "subType": "magnet",
+            "magnet": True,
+            "pressure": None,
+            "motion": None,
+            "fill_drain": None,
+        }
+    ]
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == snapshot
