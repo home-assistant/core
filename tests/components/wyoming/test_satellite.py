@@ -58,11 +58,11 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def get_test_wav(chunk_copies: int = 1) -> bytes:
+def get_test_wav(chunk_copies: int = 1, sample_rate: int = 22050) -> bytes:
     """Get bytes for test WAV file."""
     with io.BytesIO() as wav_io:
         with wave.open(wav_io, "wb") as wav_file:
-            wav_file.setframerate(22050)
+            wav_file.setframerate(sample_rate)
             wav_file.setsampwidth(2)
             wav_file.setnchannels(1)
 
@@ -1110,7 +1110,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
         satellite: WyomingAssistSatellite = event_callback.__self__
         stream = MockResultStream(hass, "wav", b"")
         stream.supports_audio_interrupt = True
-        wav_data = get_test_wav(2048)
+        wav_data = get_test_wav(2048, sample_rate=16000)
         first_chunk_sent = asyncio.Event()
         release_first_chunk = asyncio.Event()
         continue_stream = asyncio.Event()
@@ -1130,7 +1130,10 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
 
         async def async_stream_result(
             on_audio_interrupt: Callable[[], None],
+            *,
+            accept_native_sample_rate: bool = False,
         ) -> AsyncGenerator[bytes]:
+            assert accept_native_sample_rate
             interrupt.side_effect = on_audio_interrupt
             yield wav_data[:4140]
             await continue_stream.wait()
@@ -1152,6 +1155,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
             async with asyncio.timeout(1):
                 await first_chunk_sent.wait()
             interrupt()
+            interrupt()
             release_first_chunk.set()
 
             async with asyncio.timeout(1):
@@ -1168,16 +1172,22 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
             continue_stream.set()
             await stream_task
         assert mock_client.tts_audio_events[-1] == "audio-stop"
-        assert len(mock_client.tts_audio_chunks) == 3
+        assert len(mock_client.tts_audio_chunks) == 4
         assert mock_client.tts_audio_chunks[1].timestamp == 0
+        assert all(chunk.rate == 22050 for chunk in mock_client.tts_audio_chunks)
+        assert all(chunk.width == 2 for chunk in mock_client.tts_audio_chunks)
+        assert all(chunk.channels == 1 for chunk in mock_client.tts_audio_chunks)
+        replacement_chunks = mock_client.tts_audio_chunks[1:]
+        assert sum(len(chunk.audio) for chunk in replacement_chunks) > 4096
         assert mock_monotonic.call_count == 3
+        assert interrupt.call_count == 2
         assert mock_tts_timeout.call_args.args[0] == pytest.approx(
-            1 + 4096 / (22050 * 2)
+            1 + sum(chunk.seconds for chunk in replacement_chunks)
         )
 
         cleanup_stream = MockResultStream(hass, "wav", b"")
         cleanup_stream.supports_audio_interrupt = True
-        cleanup_wav_data = get_test_wav(512)
+        cleanup_wav_data = get_test_wav(512, sample_rate=16000)
         stream_blocked = asyncio.Event()
         audio_chunk_sent = asyncio.Event()
         interrupt_task_started = asyncio.Event()
@@ -1185,7 +1195,10 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
 
         async def blocked_stream_result(
             on_audio_interrupt: Callable[[], None],
+            *,
+            accept_native_sample_rate: bool = False,
         ) -> AsyncGenerator[bytes]:
+            assert accept_native_sample_rate
             interrupt.side_effect = on_audio_interrupt
             yield cleanup_wav_data
             await stream_blocked.wait()
@@ -1219,6 +1232,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
                 await cleanup_stream_task
 
         assert interrupt_task_cancelled.is_set()
+        assert mock_client.tts_audio_chunks[-1].rate == 22050
 
         await hass.config_entries.async_unload(entry.entry_id)
 

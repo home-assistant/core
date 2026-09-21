@@ -588,9 +588,16 @@ class ResultStream:
         return self._cached_result
 
     async def async_stream_result(
-        self, on_audio_interrupt: Callable[[], None] | None = None
+        self,
+        on_audio_interrupt: Callable[[], None] | None = None,
+        *,
+        accept_native_sample_rate: bool = False,
     ) -> AsyncGenerator[bytes]:
-        """Get the stream of this result."""
+        """Get the stream of this result.
+
+        Consumers that resample interruptible audio can accept the engine's
+        native sample rate while preserving the other requested output options.
+        """
         if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
@@ -626,9 +633,13 @@ class ResultStream:
             engine = get_engine_instance(self.hass, self.engine)
             if not isinstance(engine, TextToSpeechEntity):
                 raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
+            options = self.options
+            if accept_native_sample_rate:
+                options = dict(options)
+                options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
             async with aclosing(
                 self._manager.async_generate_tts_audio(
-                    engine, result, self.language, self.options, on_audio_interrupt
+                    engine, result, self.language, options, on_audio_interrupt
                 )
             ) as audio:
                 async for chunk in audio:

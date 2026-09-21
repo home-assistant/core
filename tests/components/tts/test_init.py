@@ -2347,6 +2347,40 @@ async def test_interruptible_tts_fallback_without_interrupt_callback(
     assert generated.call_count == 1
 
 
+async def test_interruptible_tts_accepts_native_sample_rate(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test a consumer can handle the engine's native sample rate."""
+    mock_tts_entity._attr_supports_audio_interrupt = True
+    mock_tts_entity._supported_options = [tts.ATTR_PREFERRED_FORMAT]
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
+        assert request.options == {tts.ATTR_PREFERRED_FORMAT: "wav"}
+
+        async def audio() -> AsyncGenerator[bytes]:
+            yield b"audio"
+
+        return tts.TTSAudioResponse("wav", audio())
+
+    mock_tts_entity.async_stream_tts_audio = synthesize
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+    stream = tts.async_create_stream(
+        hass,
+        mock_tts_entity.entity_id,
+        options={
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
+        },
+    )
+    stream.async_set_message("hello")
+
+    result = stream.async_stream_result(Mock(), accept_native_sample_rate=True)
+    assert await anext(result) == b"audio"
+    await result.aclose()
+    assert stream.options[tts.ATTR_PREFERRED_SAMPLE_RATE] == 22050
+
+
 async def test_interruptible_tts_rejects_fallback_after_interrupt_claim(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
