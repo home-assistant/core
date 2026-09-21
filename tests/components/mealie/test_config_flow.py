@@ -499,10 +499,10 @@ async def test_options(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"parse_todo_list_items_new": False}
+        result["flow_id"], user_input={"parse_todo_new": False}
     )
 
-    assert not result["data"]["parse_todo_list_items_new"]
-    assert result["data"]["parse_todo_list_items_edit"]
+    assert not result["data"]["parse_todo_new"]
+    assert result["data"]["parse_todo_edit"]
     assert result["data"]["parser"] == "nlp"
     assert result["type"] is FlowResultType.CREATE_ENTRY

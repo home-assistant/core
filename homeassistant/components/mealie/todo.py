@@ -152,12 +152,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         if len(self.shopping_items) > 0:
             position = self.shopping_items[-1].position + 1
 
-        new_shopping_item = MutateShoppingItem(
-            list_id=self._shopping_list_id,
-            note=item.summary.strip() if item.summary else item.summary,
-            position=position,
-            quantity=0.0,
-        )
+        new_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_new:
             parsed_ingredient = await self.coordinator.client.parse_ingredient(
@@ -171,7 +166,6 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 ingredient = parsed_ingredient.ingredient
                 if ingredient.food:
                     new_shopping_item = MutateShoppingItem(
-                        list_id=self._shopping_list_id,
                         is_food=ingredient.food.food_id is not None,
                         food_id=ingredient.food.food_id
                         if ingredient.food.food_id is not None
@@ -181,8 +175,18 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                         else None,
                         unit_id=ingredient.unit.unit_id if ingredient.unit else None,
                         quantity=ingredient.quantity or 0.0,
-                        position=position,
                     )
+
+        # If parsing fails or is not performed, create a fallback shopping item
+        if not new_shopping_item:
+            new_shopping_item = MutateShoppingItem(
+                note=item.summary.strip() if item.summary else item.summary,
+                quantity=0.0,
+            )
+
+        # Update the shopping item with common attributes for parsed or non-parsed items.
+        new_shopping_item.list_id = self._shopping_list_id
+        new_shopping_item.position = position
 
         try:
             await self.coordinator.client.add_shopping_item(new_shopping_item)
@@ -208,31 +212,62 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         assert list_item is not None
         position = list_item.position
 
-        update_shopping_item = MutateShoppingItem(
-            item_id=list_item.item_id,
-            list_id=list_item.list_id,
-            note=list_item.note,
-            display=list_item.display,
-            checked=item.status == TodoItemStatus.COMPLETED,
-            position=position,
-            is_food=list_item.is_food,
-            disable_amount=list_item.disable_amount,
-            quantity=list_item.quantity,
-            label_id=list_item.label_id,
-            food_id=list_item.food_id,
-            unit_id=list_item.unit_id,
-        )
+        update_shopping_item: MutateShoppingItem | None = None
 
-        stripped_item_summary = item.summary.strip() if item.summary else item.summary
+        if item.summary and self.parse_todo_edit:
+            parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                item.summary.strip(), parser=self.parser
+            )
+            if (
+                parsed_ingredient
+                and parsed_ingredient.confidence
+                and (parsed_ingredient.confidence.average or 0.0) >= MINIMUM_CONFIDENCE
+            ):
+                ingredient = parsed_ingredient.ingredient
+                if ingredient.food:
+                    update_shopping_item = MutateShoppingItem(
+                        is_food=ingredient.food.food_id is not None,
+                        food_id=ingredient.food.food_id
+                        if ingredient.food.food_id is not None
+                        else None,
+                        note=ingredient.food.name
+                        if not ingredient.food.food_id
+                        else None,
+                        unit_id=ingredient.unit.unit_id if ingredient.unit else None,
+                        quantity=ingredient.quantity or 0.0,
+                    )
 
-        if list_item.display.strip() != stripped_item_summary:
-            update_shopping_item.note = stripped_item_summary
-            update_shopping_item.position = position
-            if update_shopping_item.is_food is not None:
-                update_shopping_item.is_food = False
-            update_shopping_item.food_id = None
-            update_shopping_item.quantity = 0.0
-            update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+        # If parsing fails or is not performed, create a fallback shopping item
+        if not update_shopping_item:
+            update_shopping_item = MutateShoppingItem(
+                note=list_item.note,
+                display=list_item.display,
+                is_food=list_item.is_food,
+                disable_amount=list_item.disable_amount,
+                quantity=list_item.quantity,
+                label_id=list_item.label_id,
+                food_id=list_item.food_id,
+                unit_id=list_item.unit_id,
+            )
+
+            stripped_item_summary = (
+                item.summary.strip() if item.summary else item.summary
+            )
+
+            if list_item.display.strip() != stripped_item_summary:
+                update_shopping_item.note = stripped_item_summary
+                update_shopping_item.position = position
+                if update_shopping_item.is_food is not None:
+                    update_shopping_item.is_food = False
+                update_shopping_item.food_id = None
+                update_shopping_item.quantity = 0.0
+                update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+
+        # Update the shopping item with common attributes for parsed or non-parsed items.
+        update_shopping_item.item_id = list_item.item_id
+        update_shopping_item.list_id = list_item.list_id
+        update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+        update_shopping_item.position = position
 
         try:
             await self.coordinator.client.update_shopping_item(
