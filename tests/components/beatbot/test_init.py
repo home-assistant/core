@@ -1,5 +1,6 @@
 """Tests for Beatbot config entry setup, polling and event handling."""
 
+import asyncio
 from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, MagicMock
@@ -7,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 from beatbot_cloud import (
     BeatbotAuthenticationError,
     BeatbotConnectionError,
+    BeatbotDeviceData,
     BeatbotEvent,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -167,6 +169,69 @@ async def test_poll_partial_batch_keeps_discovery_values(
     assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
 
 
+@pytest.mark.parametrize("method", ["get_devices", "get_device_states"])
+@pytest.mark.usefixtures("init_integration")
+async def test_poll_preserves_concurrent_push(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    method: str,
+) -> None:
+    """Preserve push events received while either REST request is pending."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+    mock_client.get_devices.return_value = [create_device()]
+    response = getattr(mock_client, method).return_value
+
+    async def delayed_response() -> object:
+        started.set()
+        await release.wait()
+        return response
+
+    getattr(mock_client, method).side_effect = delayed_response
+    refresh = hass.async_create_task(
+        library_callback(mock_event_client, "reconnect_callback")()
+    )
+    await started.wait()
+    state_callback = library_callback(mock_event_client, "state_callback")
+    state_callback(property_change(INTERFACE_BATTERY, 42))
+    state_callback(property_change(INTERFACE_BATTERY, 43))
+    release.set()
+    await refresh
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "43"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_poll_does_not_replay_push_on_next_poll(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Discard the pending event buffer when a refresh fails."""
+
+    async def failed_response() -> None:
+        library_callback(mock_event_client, "state_callback")(
+            property_change(INTERFACE_BATTERY, 42)
+        )
+        raise BeatbotConnectionError("offline")
+
+    mock_client.get_device_states.side_effect = failed_response
+    await poll(hass, freezer)
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_client.get_devices.return_value = [create_device()]
+    mock_client.get_device_states.side_effect = None
+    mock_client.get_device_states.return_value = batch_state(
+        states={INTERFACE_BATTERY: 60}
+    )
+    await poll(hass, freezer)
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "60"
+
+
 async def test_poll_discovers_added_device(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -308,14 +373,25 @@ async def test_device_added_event_reloads_entry(
     assert mock_client.get_devices.call_count == 2
 
 
+@pytest.mark.parametrize(
+    ("response", "expected_state"),
+    [
+        pytest.param([create_device()], "80", id="rest-available"),
+        pytest.param(BeatbotAuthenticationError(), STATE_UNAVAILABLE, id="rest-auth"),
+        pytest.param(BeatbotConnectionError(), STATE_UNAVAILABLE, id="rest-connection"),
+    ],
+)
 async def test_event_stream_stops_on_token_rejection(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     mock_event_client: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    response: list[BeatbotDeviceData] | Exception,
+    expected_state: str,
 ) -> None:
-    """Stop the stream instead of crashing when the server rejects the token."""
+    """Validate REST availability after the event stream rejects the token."""
+    mock_client.get_devices.side_effect = [[create_device()], response]
     mock_event_client.return_value.async_run = AsyncMock(
         side_effect=BeatbotAuthenticationError()
     )
@@ -324,6 +400,9 @@ async def test_event_stream_stops_on_token_rejection(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Beatbot event stream authorization failed" in caplog.text
+    assert mock_client.get_devices.await_count == 2
+    assert hass.states.get(BATTERY_ENTITY_ID).state == expected_state
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_expired_token_is_refreshed_once(

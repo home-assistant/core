@@ -44,11 +44,25 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             update_interval=timedelta(seconds=NETWORK_REFRESH_INTERVAL),
             config_entry=config_entry,
         )
+        self._pending_events: list[BeatbotEvent] | None = None
         self.api = api
         self._reload_scheduled = False
 
     @override
     async def _async_update_data(self) -> dict[str, BeatbotDeviceData]:
+        self._pending_events = []
+        try:
+            result = await self._async_fetch_data()
+            # Preserve pushes received while the REST snapshot was being fetched.
+            for event in self._pending_events:
+                if (device := result.get(event.device_id)) is not None:
+                    event.apply_to(device)
+            return result
+        finally:
+            self._pending_events = None
+
+    async def _async_fetch_data(self) -> dict[str, BeatbotDeviceData]:
+        """Fetch discovery and runtime state from the cloud."""
         try:
             devices = await self.api.get_devices()
         except BeatbotAuthenticationError as err:
@@ -145,6 +159,8 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         event: BeatbotEvent,
     ) -> None:
         """Overlay a pushed state delta without changing the poll cadence."""
+        if self._pending_events is not None:
+            self._pending_events.append(event)
         device = self.data.get(event.device_id)
         if device is None:
             _LOGGER.debug("Ignoring event for undiscovered device %s", event.device_id)

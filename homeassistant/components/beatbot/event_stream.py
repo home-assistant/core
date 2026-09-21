@@ -34,6 +34,7 @@ class BeatbotEventClient:
         coordinator: BeatbotCoordinator,
     ) -> None:
         """Initialize the Beatbot event client."""
+        self._coordinator = coordinator
         self._hass = hass
         self._entry = entry
         self._oauth_session = oauth_session
@@ -73,6 +74,7 @@ class BeatbotEventClient:
             await self._client.async_run()
         except BeatbotAuthenticationError:
             _LOGGER.warning("Beatbot event stream authorization failed")
+            await self._coordinator.async_request_refresh()
 
     async def _async_refresh_token(self, rejected_access_token: str) -> str:
         """Refresh a rejected token through the session's shared rotation lock."""
