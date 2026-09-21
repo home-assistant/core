@@ -16,12 +16,14 @@ from homeassistant.components.valve import (
     ValveEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity, TuyaEntityDescription
+from .entity import TuyaEntity, TuyaEntityDescription, get_child_device_info
 
 
 @dataclass(frozen=True)
@@ -36,53 +38,15 @@ VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "1"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "2"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "3"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "4"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_5,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "5"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_6,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "6"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_7,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "7"},
-            device_class=ValveDeviceClass.WATER,
-        ),
-        TuyaValveEntityDescription(
-            key=DPCode.SWITCH_8,
-            translation_key="indexed_valve",
-            translation_placeholders={"index": "8"},
-            device_class=ValveDeviceClass.WATER,
+        *(
+            TuyaValveEntityDescription(
+                key=DPCode(f"switch_{channel}"),
+                translation_key="valve",
+                device_class=ValveDeviceClass.WATER,
+                channel_index=channel,
+                channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
+            )
+            for channel in range(1, 9)
         ),
     ),
 }
@@ -103,8 +67,19 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
+                parent_device_id = dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, device.id), config_entry_id=entry.entry_id
+                )
                 entities.extend(
-                    TuyaValveEntity(device, manager, description, definition)
+                    TuyaValveEntity(
+                        device,
+                        manager,
+                        description,
+                        definition,
+                        device_info=get_child_device_info(
+                            device, parent_device_id, description
+                        ),
+                    )
                     for description in descriptions
                     if (definition := get_default_definition(device, description.key))
                 )
@@ -129,9 +104,11 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device_manager: Manager,
         description: TuyaValveEntityDescription,
         definition: ValveDefinition,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
         """Init TuyaValveEntity."""
-        super().__init__(device, device_manager, description)
+        super().__init__(device, device_manager, description, device_info=device_info)
         self._dpcode_wrapper = definition.control_wrapper
 
     @property

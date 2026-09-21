@@ -135,6 +135,13 @@ async def test_device_registry(
             name=list(device_registry_entry.identifiers)[0][1]
         )
 
+    for child_device_entry in dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    ):
+        assert child_device_entry == snapshot(
+            name=list(child_device_entry.identifiers)[0][1]
+        )
+
 
 @pytest.mark.parametrize(
     ("mock_device_code", "platforms", "manufacturer", "model", "model_id", "quirks"),
