@@ -31,12 +31,12 @@ from .const import (
     DEFAULT_PARSER,
     DOMAIN,
     LOGGER,
+    MINIMUM_PARSER_CONFIDENCE,
 )
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
-MINIMUM_CONFIDENCE = 0.99
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
@@ -171,7 +171,8 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             if (
                 parsed_ingredient
                 and parsed_ingredient.confidence
-                and (parsed_ingredient.confidence.average or 0.0) >= MINIMUM_CONFIDENCE
+                and (parsed_ingredient.confidence.average or 0.0)
+                >= MINIMUM_PARSER_CONFIDENCE
             ):
                 ingredient = parsed_ingredient.ingredient
                 if ingredient.food:
@@ -240,7 +241,8 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             if (
                 parsed_ingredient
                 and parsed_ingredient.confidence
-                and (parsed_ingredient.confidence.average or 0.0) >= MINIMUM_CONFIDENCE
+                and (parsed_ingredient.confidence.average or 0.0)
+                >= MINIMUM_PARSER_CONFIDENCE
             ):
                 ingredient = parsed_ingredient.ingredient
                 if ingredient.food:
