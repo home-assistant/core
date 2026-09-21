@@ -76,7 +76,15 @@ async def test_flow_fails(
     """Test user initialized flow with invalid username."""
     with patch("pylast.User", return_value=MockUser(thrown_error=error)):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -97,6 +105,43 @@ async def test_flow_fails(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["options"] == CONF_DATA
+
+
+async def test_flow_hidden_recent_tracks(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test user initialized flow when user hides recent listening information."""
+    with patch(
+        "pylast.User",
+        return_value=MockUser(
+            recent_tracks_error=WSError(
+                "network", "17", "Login: User required to be logged in"
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "hidden_recent_tracks"
+
+    with patch("pylast.User", return_value=default_user), patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "friends"
 
 
 async def test_flow_friends_invalid_username(
@@ -233,6 +278,41 @@ async def test_options_flow_incorrect_username(
         CONF_MAIN_USER: USERNAME_1,
         CONF_USERS: [USERNAME_1],
     }
+
+
+async def test_options_flow_hidden_recent_tracks(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+) -> None:
+    """Test updating options fails when user hides recent listening information."""
+    await setup_integration(config_entry, default_user)
+    with patch("pylast.User", return_value=default_user):
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+    with patch(
+        "pylast.User",
+        return_value=MockUser(
+            recent_tracks_error=WSError(
+                "network", "17", "Login: User required to be logged in"
+            )
+        ),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERS: [USERNAME_1]},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"]["base"] == "hidden_recent_tracks"
 
 
 async def test_options_flow_from_import(

@@ -44,7 +44,7 @@ async def test_get_tools_no_exposed_calendar(hass: HomeAssistant) -> None:
     """Test no calendar tool is offered when no calendar is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "calendar_get_events" not in [tool.name for tool in result.tools]
+    assert "calendar__get_events" not in [tool.name for tool in result.tools]
     assert calendar_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
@@ -58,7 +58,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(
-        (tool for tool in result.tools if tool.name == "calendar_get_events"), None
+        (tool for tool in result.tools if tool.name == "calendar__get_events"), None
     )
     assert tool is not None
     assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
@@ -90,7 +90,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     )
 
     tool_input = llm.ToolInput(
-        tool_name="calendar_get_events",
+        tool_name="calendar__get_events",
         tool_args={"calendar": "Mock Calendar Name", "range": "today"},
     )
     now = dt_util.now()
@@ -107,24 +107,25 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         "end_date_time": dt_util.start_of_local_day(now) + timedelta(days=1),
     }
 
-    assert response == {
-        "success": True,
-        "result": [
-            {
-                "start": "2025-09-17",
-                "end": "2025-09-18",
-                "summary": "Home Assistant 12th birthday",
-                "description": "",
-                "all_day": True,
-            },
-            {
-                "start": "2025-09-17T14:00:00-05:00",
-                "end": "2025-09-18T15:00:00-05:00",
-                "summary": "Champagne",
-                "description": "",
-            },
-        ],
-    }
+    assert response == llm.ToolResult(
+        data={
+            "events": [
+                {
+                    "start": "2025-09-17",
+                    "end": "2025-09-18",
+                    "summary": "Home Assistant 12th birthday",
+                    "description": "",
+                    "all_day": True,
+                },
+                {
+                    "start": "2025-09-17T14:00:00-05:00",
+                    "end": "2025-09-18T15:00:00-05:00",
+                    "summary": "Champagne",
+                    "description": "",
+                },
+            ]
+        }
+    )
 
     # The "week" range searches seven days out.
     calls.clear()
@@ -141,7 +142,7 @@ async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
     """Test the tool reports when the requested calendar no longer matches."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
+    tool = next(tool for tool in result.tools if tool.name == "calendar__get_events")
 
     # Unexpose after the tool (and its calendar enum) was built, so the call-time
     # match no longer finds the calendar.
@@ -149,11 +150,11 @@ async def test_calendar_get_events_tool_not_found(hass: HomeAssistant) -> None:
     response = await tool.async_call(
         hass,
         llm.ToolInput(
-            "calendar_get_events", {"calendar": "Mock Calendar Name", "range": "today"}
+            "calendar__get_events", {"calendar": "Mock Calendar Name", "range": "today"}
         ),
         llm_context,
     )
-    assert response == {"success": False, "error": "Calendar not found"}
+    assert response == llm.ToolResult(data={"error": "Calendar not found"}, error=True)
 
 
 async def test_calendar_get_events_tool_uses_aliases(
@@ -168,5 +169,5 @@ async def test_calendar_get_events_tool_uses_aliases(
     async_expose_entity(hass, "conversation", entry.entity_id, True)
 
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    tool = next(tool for tool in result.tools if tool.name == "calendar_get_events")
+    tool = next(tool for tool in result.tools if tool.name == "calendar__get_events")
     assert "Family Calendar" in tool.parameters.schema["calendar"].container

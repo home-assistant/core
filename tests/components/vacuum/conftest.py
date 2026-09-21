@@ -47,7 +47,6 @@ async def vacuum_supported_features() -> VacuumEntityFeature:
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.MAP
         | VacuumEntityFeature.STATE

@@ -10,10 +10,10 @@ from jaraco.abode.exceptions import (
     Exception as AbodeException,
 )
 from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
@@ -29,11 +29,11 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.data_schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
         self.mfa_data_schema = {
-            vol.Required(CONF_MFA): str,
+            probatio.Required(CONF_MFA): str,
         }
 
         self._mfa_code: str | None = None
@@ -67,7 +67,9 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id=step_id, data_schema=vol.Schema(self.data_schema), errors=errors
+                step_id=step_id,
+                data_schema=probatio.Schema(self.data_schema),
+                errors=errors,
             )
 
         return await self._async_create_entry()
@@ -84,7 +86,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         except AbodeAuthenticationException:
             return self.async_show_form(
                 step_id="mfa",
-                data_schema=vol.Schema(self.mfa_data_schema),
+                data_schema=probatio.Schema(self.mfa_data_schema),
                 errors={"base": "invalid_mfa_code"},
             )
 
@@ -98,6 +100,12 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_POLLING: self._polling,
         }
         existing_entry = await self.async_set_unique_id(self._username)
+
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=config_data
+            )
 
         if existing_entry:
             return self.async_update_reload_and_abort(existing_entry, data=config_data)
@@ -113,7 +121,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(self.data_schema)
+                step_id="user", data_schema=probatio.Schema(self.data_schema)
             )
 
         self._username = user_input[CONF_USERNAME]
@@ -127,7 +135,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a multi-factor authentication (MFA) flow."""
         if user_input is None:
             return self.async_show_form(
-                step_id="mfa", data_schema=vol.Schema(self.mfa_data_schema)
+                step_id="mfa", data_schema=probatio.Schema(self.mfa_data_schema)
             )
 
         self._mfa_code = user_input[CONF_MFA]
@@ -149,10 +157,10 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_USERNAME, default=self._username): str,
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_USERNAME, default=self._username): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
             )

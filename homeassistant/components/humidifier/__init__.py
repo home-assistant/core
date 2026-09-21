@@ -1,12 +1,11 @@
 """Provides functionality to interact with humidifier devices."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,6 +33,7 @@ from .const import (  # noqa: F401
     ATTR_TARGET_HUMIDITY_STEP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     MODE_AUTO,
     MODE_AWAY,
@@ -47,6 +47,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
+    HumidifierDeviceClass,
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
     HumidifierEntityStateAttribute,
@@ -60,15 +61,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
 
-
-class HumidifierDeviceClass(StrEnum):
-    """Device class for humidifiers."""
-
-    HUMIDIFIER = "humidifier"
-    DEHUMIDIFIER = "dehumidifier"
-
-
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
 
 # DEVICE_CLASSES below is deprecated as of 2021.12
 # use the HumidifierDeviceClass enum instead.
@@ -97,15 +89,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
     component.async_register_entity_service(
         SERVICE_SET_MODE,
-        {vol.Required(ATTR_MODE): cv.string},
+        {probatio.Required(ATTR_MODE): cv.string},
         "async_set_mode",
         [HumidifierEntityFeature.MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         {
-            vol.Required(ATTR_HUMIDITY): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_HUMIDITY): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         async_service_humidity_set,

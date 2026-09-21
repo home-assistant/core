@@ -7,9 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from pizone import Controller, ControllerEndpoint, DiscoveryService, Zone
 import pytest
 
+from homeassistant.components.izone import discovery as izone_discovery
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -182,8 +184,11 @@ def create_mock_zone(
 @contextmanager
 def patch_discovered_controllers(
     controllers: Mock | dict[str, Mock] | Iterable[Mock],
-) -> Generator[tuple[AsyncMock, AsyncMock]]:
-    """Patch discovery helpers using mock controllers' uid/ip."""
+) -> Generator[tuple[AsyncMock, AsyncMock, AsyncMock]]:
+    """Patch discovery helpers using mock controllers' uid/ip.
+
+    User Search scan notes each controller onto the Discovered shelf.
+    """
     if isinstance(controllers, dict):
         ctrl_list = list(controllers.values())
     elif isinstance(controllers, Mock):
@@ -200,22 +205,92 @@ def patch_discovered_controllers(
     ) -> dict[str, ControllerEndpoint]:
         return dict(endpoints)
 
+    async def _scan(hass: HomeAssistant) -> None:
+        for endpoint in endpoints.values():
+            izone_discovery.async_note_integration_discovery(hass, endpoint)
+
     async def _discover_one(hass: HomeAssistant, uid: str) -> ControllerEndpoint | None:
         return endpoints.get(uid)
 
+    async def _discover_by_host(
+        hass: HomeAssistant, host: str
+    ) -> ControllerEndpoint | None:
+        return next((ep for ep in endpoints.values() if ep.host == host), None)
+
     mock_discover_all = AsyncMock(side_effect=_discover_all)
+    mock_scan = AsyncMock(side_effect=_scan)
     mock_discover_one = AsyncMock(side_effect=_discover_one)
+    mock_discover_by_host = AsyncMock(side_effect=_discover_by_host)
     with (
         patch(
             "homeassistant.components.izone.discovery.async_discover_all_endpoints",
             new=mock_discover_all,
         ),
         patch(
+            "homeassistant.components.izone.discovery.async_scan",
+            new=mock_scan,
+        ),
+        patch(
             "homeassistant.components.izone.discovery.async_discover_endpoint",
             new=mock_discover_one,
         ),
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=mock_discover_by_host,
+        ),
     ):
-        yield mock_discover_all, mock_discover_one
+        yield mock_discover_all, mock_discover_one, mock_scan
+
+
+async def async_start_user_discover(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Select Search from the user menu and return the progress step."""
+    if result["type"] is FlowResultType.MENU:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "discover"}
+        )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "discover"
+    return result
+
+
+async def async_finish_user_discover(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Advance a user Search flow past the menu and SHOW_PROGRESS discover."""
+    result = await async_start_user_discover(hass, result)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    return await hass.config_entries.flow.async_configure(result["flow_id"])
+
+
+async def async_choose_manual_host(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Select Enter host from the user menu."""
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual_host"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_host"
+    return result
+
+
+async def async_follow_user_handoff(
+    hass: HomeAssistant, result: FlowResult
+) -> FlowResult:
+    """Follow Search handoff into the shelf confirm form."""
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "continue_setup"
+    next_flow = result["next_flow"]
+    assert next_flow is not None
+    _flow_type, flow_id = next_flow
+    result = await hass.config_entries.flow.async_configure(flow_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    return result
 
 
 async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
@@ -238,10 +313,16 @@ async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
 
 @pytest.fixture
 def mock_entry_setup() -> Generator[None]:
-    """Skip full entry setup for config-flow create-entry tests."""
-    with patch(
-        "homeassistant.components.izone.async_setup_entry",
-        return_value=True,
+    """Skip full entry setup/unload for config-flow create-entry tests."""
+    with (
+        patch(
+            "homeassistant.components.izone.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.izone.async_unload_entry",
+            return_value=True,
+        ),
     ):
         yield
 
