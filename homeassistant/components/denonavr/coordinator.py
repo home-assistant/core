@@ -40,15 +40,17 @@ UNAVAILABLE_ON = (
 )
 
 
-async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> None:
+async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> bool:
     """Refresh general receiver status for every configured zone.
 
     Skipped while Telnet is healthy; that state lives on the device, not per
     zone. force=True bypasses the skip. Only connectivity errors abort the
     remaining zones, and they re-raise to fail the whole update.
+
+    Returns whether the receiver was queried at all.
     """
     if not force and receiver.telnet_connected and receiver.telnet_healthy:
-        return
+        return False
     for zone_receiver in receiver.zones.values():
         try:
             await zone_receiver.async_update()
@@ -61,18 +63,21 @@ async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> No
                 receiver.name,
                 err,
             )
+    return True
 
 
-async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> None:
+async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> bool:
     """Refresh Audyssey settings for every configured zone.
 
     async_update_audyssey() only updates the zone it is called on, so Zone2
     and Zone3 need their own fetch. Skipped while Telnet is healthy unless
     force=True: Telnet never pushes on connect, so the initial fetch would
     otherwise leave the data unset.
+
+    Returns whether the receiver was queried at all.
     """
     if not force and receiver.telnet_connected and receiver.telnet_healthy:
-        return
+        return False
     for zone_receiver in receiver.zones.values():
         try:
             await zone_receiver.async_update_audyssey()
@@ -85,12 +90,13 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
                 receiver.name,
                 err,
             )
+    return True
 
 
 class _RefreshFn(Protocol):
     """Callback signature shared by async_refresh_status/async_refresh_audyssey."""
 
-    async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> None: ...
+    async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> bool: ...
 
 
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -135,7 +141,18 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lock = lock
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
+        self._last_refresh_read = False
         self._internal_listeners: list[CALLBACK_TYPE] = []
+
+    @property
+    def sees_the_receiver(self) -> bool:
+        """Whether this coordinator's own polling can speak for the receiver.
+
+        False without a recurring poll, and false while its polls are being
+        skipped: neither can discover a failure or confirm a recovery, so the
+        other coordinator has to hand it the verdict.
+        """
+        return self.update_interval is not None and self._last_refresh_read
 
     @callback
     def async_add_internal_listener(
@@ -143,9 +160,11 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> CALLBACK_TYPE:
         """Register one of the integration's own callbacks for updates.
 
-        async_add_listener() starts the update interval for its first
-        listener, so wiring the coordinators to each other through it would
-        keep polling even with every entity disabled.
+        Not async_add_listener(): that starts the update interval for its
+        first listener, which would poll with every entity disabled.
+
+        Runs on every refresh attempt and every out-of-band availability
+        change, so one refresh can run it twice: callbacks must be idempotent.
         """
         self._internal_listeners.append(update_callback)
 
@@ -156,12 +175,28 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         return _remove_listener
 
     @callback
+    def _async_notify_internal_listeners(self) -> None:
+        """Run the integration's own callbacks."""
+        for update_callback in list(self._internal_listeners):
+            update_callback()
+
+    @callback
+    @override
+    def _async_refresh_finished(self) -> None:
+        """Run the integration's own callbacks after every refresh attempt.
+
+        The base class stops notifying listeners once a failure repeats, which
+        would leave the other coordinator available if it had recovered in
+        between two of these failures.
+        """
+        self._async_notify_internal_listeners()
+
+    @callback
     @override
     def async_update_listeners(self) -> None:
         """Notify the entities, then the integration's own callbacks."""
         super().async_update_listeners()
-        for update_callback in list(self._internal_listeners):
-            update_callback()
+        self._async_notify_internal_listeners()
 
     async def async_refresh_forced(self) -> None:
         """Refresh immediately, bypassing the Telnet-healthy skip.
@@ -182,9 +217,13 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         # what clears a confirmed failure. Costs one read per interval, and only
         # while unavailable.
         force = self._force_next_refresh or not self.last_update_success
+        # Only a skip reads nothing, and a skip returns rather than raises.
+        self._last_refresh_read = True
         async with self.lock:
             try:
-                await self._refresh_fn(self.receiver, force=force)
+                self._last_refresh_read = await self._refresh_fn(
+                    self.receiver, force=force
+                )
             except UNAVAILABLE_ON as err:
                 raise UpdateFailed(
                     f"Error communicating with {self.receiver.name}: {err}"

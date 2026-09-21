@@ -48,7 +48,7 @@ def _receiver_with_zones() -> tuple[MagicMock, MagicMock]:
 
 @REFRESH_FUNCTIONS
 async def test_refresh_reaches_every_zone(
-    refresh: Callable[..., Awaitable[None]], update_method: str
+    refresh: Callable[..., Awaitable[bool]], update_method: str
 ) -> None:
     """Each zone caches its own state.
 
@@ -65,7 +65,7 @@ async def test_refresh_reaches_every_zone(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_skips_every_zone_when_telnet_healthy(
-    refresh: Callable[..., Awaitable[None]], update_method: str
+    refresh: Callable[..., Awaitable[bool]], update_method: str
 ) -> None:
     """The Telnet-healthy skip applies to every zone at once, checked only once."""
     main, zone2 = _receiver_with_zones()
@@ -80,7 +80,7 @@ async def test_refresh_skips_every_zone_when_telnet_healthy(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_continues_after_one_zones_command_error(
-    refresh: Callable[..., Awaitable[None]], update_method: str
+    refresh: Callable[..., Awaitable[bool]], update_method: str
 ) -> None:
     """A rejected command in one zone doesn't abort the others.
 
@@ -97,7 +97,7 @@ async def test_refresh_continues_after_one_zones_command_error(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_stops_every_zone_on_a_connectivity_error(
-    refresh: Callable[..., Awaitable[None]], update_method: str
+    refresh: Callable[..., Awaitable[bool]], update_method: str
 ) -> None:
     """A connectivity error means the receiver itself is unreachable.
 
@@ -113,6 +113,21 @@ async def test_refresh_stops_every_zone_on_a_connectivity_error(
     getattr(zone2, update_method).assert_not_awaited()
 
 
+@REFRESH_FUNCTIONS
+async def test_refresh_reports_whether_it_read(
+    refresh: Callable[..., Awaitable[bool]], update_method: str
+) -> None:
+    """Availability propagation turns on which coordinator actually read."""
+    main, _ = _receiver_with_zones()
+
+    assert await refresh(main) is True
+
+    main.telnet_connected = True
+    main.telnet_healthy = True
+
+    assert await refresh(main) is False
+
+
 def _coordinator(
     hass: HomeAssistant, refresh_fn: AsyncMock
 ) -> DenonAvrDataUpdateCoordinator:
@@ -123,6 +138,21 @@ def _coordinator(
     return DenonAvrDataUpdateCoordinator(
         hass, entry, main, asyncio.Lock(), "test", timedelta(seconds=30), refresh_fn
     )
+
+
+async def test_sees_the_receiver_only_after_a_read(hass: HomeAssistant) -> None:
+    """A skipped refresh reports success without asking, so it is no evidence."""
+    refresh_fn = AsyncMock(return_value=False)
+    coordinator = _coordinator(hass, refresh_fn)
+
+    await coordinator.async_refresh()
+
+    assert coordinator.sees_the_receiver is False
+
+    refresh_fn.return_value = True
+    await coordinator.async_refresh()
+
+    assert coordinator.sees_the_receiver is True
 
 
 async def test_internal_listener_does_not_start_the_poll(

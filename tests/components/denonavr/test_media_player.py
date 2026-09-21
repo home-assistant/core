@@ -312,21 +312,33 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
     assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
-async def test_initial_audyssey_failure_marks_status_unavailable(
-    hass: HomeAssistant, client: MagicMock
+@pytest.mark.parametrize(
+    ("options", "status_available"),
+    [
+        pytest.param({}, True, id="status_read"),
+        pytest.param({CONF_USE_TELNET: True}, False, id="status_skipped"),
+    ],
+)
+async def test_initial_audyssey_failure_reaches_a_blind_status_coordinator(
+    hass: HomeAssistant,
+    client: MagicMock,
+    options: dict[str, bool],
+    status_available: bool,
 ) -> None:
-    """A connectivity failure on the setup-time Audyssey fetch reaches both.
+    """The setup-time Audyssey fetch is forced, so it reads where a poll may not.
 
-    The failure listener is registered before that first refresh, so
-    the status coordinator learns about it immediately rather than
-    keeping media_player available until its own next poll.
+    With Telnet healthy the status poll returns without asking the receiver
+    and has to be handed the failure. Polling over HTTP it has just reached
+    the receiver itself, and its own read is the better evidence.
     """
+    client.telnet_connected = options.get(CONF_USE_TELNET, False)
+    client.telnet_healthy = client.telnet_connected
     client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
 
-    entry = await setup_denonavr(hass)
+    entry = await setup_denonavr(hass, options=options)
 
     assert entry.runtime_data.audyssey_coordinator.last_update_success is False
-    assert entry.runtime_data.coordinator.last_update_success is False
+    assert entry.runtime_data.coordinator.last_update_success is status_available
 
 
 @pytest.mark.parametrize(
@@ -408,6 +420,74 @@ async def test_unavailable_coordinator_reads_before_recovering(
 
     assert client.async_update.await_count > reads_before
     assert coordinator.last_update_success is recovers
+
+
+@pytest.mark.parametrize(
+    ("failing", "reading", "failing_method"),
+    [
+        pytest.param(
+            "coordinator", "audyssey_coordinator", "async_update", id="status_fails"
+        ),
+        pytest.param(
+            "audyssey_coordinator",
+            "coordinator",
+            "async_update_audyssey",
+            id="audyssey_fails",
+        ),
+    ],
+)
+async def test_a_coordinator_that_read_keeps_its_own_verdict(
+    hass: HomeAssistant,
+    client: MagicMock,
+    failing: str,
+    reading: str,
+    failing_method: str,
+) -> None:
+    """A poll that reached the receiver outranks the other one's failure.
+
+    Both poll over HTTP here, so neither is guessing, and one endpoint
+    refusing is no reason to hide data the receiver just answered for.
+    """
+    entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
+    failing_coordinator = getattr(entry.runtime_data, failing)
+    reading_coordinator = getattr(entry.runtime_data, reading)
+    await reading_coordinator.async_refresh()
+    getattr(client, failing_method).side_effect = AvrNetworkError(
+        "Network error", "test"
+    )
+
+    await failing_coordinator.async_refresh()
+
+    assert failing_coordinator.last_update_success is False
+    assert reading_coordinator.last_update_success is True
+
+
+async def test_repeated_failure_still_reaches_a_blind_coordinator(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """A failure that repeats must keep reaching a coordinator that cannot read.
+
+    DataUpdateCoordinator stops notifying listeners once a failure repeats, so
+    a peer that went available in between would otherwise stay that way with
+    nothing of its own behind it. Audyssey has no recurring poll here.
+    """
+    entry = await setup_denonavr(hass)
+    coordinator = entry.runtime_data.coordinator
+    audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+    client.async_update.side_effect = AvrNetworkError("Network error", "test")
+
+    await coordinator.async_refresh()
+
+    assert audyssey_coordinator.last_update_success is False
+
+    # Its own fetch answers, but it has no poll to keep confirming that.
+    await audyssey_coordinator.async_refresh()
+
+    assert audyssey_coordinator.last_update_success is True
+
+    await coordinator.async_refresh()
+
+    assert audyssey_coordinator.last_update_success is False
 
 
 async def test_update_audyssey_restores_availability(

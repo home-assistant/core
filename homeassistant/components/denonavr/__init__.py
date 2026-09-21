@@ -120,15 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     def _propagate_connectivity_to_audyssey() -> None:
         """Reflect the status coordinator's connectivity into this one.
 
-        A failure always propagates: the receiver is unreachable, so the
-        Audyssey data cannot be trusted either. A recovery only propagates
-        while this coordinator has no poll of its own, since an unrelated
-        status success is no evidence that its own data is back.
+        Only while this coordinator cannot speak for the receiver itself. One
+        that is reading settles its own state within an interval, and its own
+        read is the better evidence either way.
         """
-        if (
-            coordinator.last_update_success
-            and audyssey_coordinator.update_interval is not None
-        ):
+        if audyssey_coordinator.sees_the_receiver:
             return
         if audyssey_coordinator.last_update_success != coordinator.last_update_success:
             audyssey_coordinator.last_update_success = coordinator.last_update_success
@@ -142,11 +138,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     def _propagate_audyssey_failure_to_general() -> None:
         """Reflect a confirmed Audyssey connectivity failure into the status one.
 
-        Applies regardless of this coordinator's schedule: a connectivity
-        error here means the receiver itself is unreachable. Mirrors failure
-        only - the status coordinator's own poll is what confirms recovery.
+        Only while the status coordinator cannot speak for the receiver
+        itself: its poll is skipped whenever Telnet is healthy, so it would
+        not find the failure on its own, while a forced Audyssey refresh
+        reaches the receiver even then. Failure only; recovery is that
+        coordinator's own to confirm.
         """
-        if not audyssey_coordinator.last_update_success:
+        if (
+            not audyssey_coordinator.last_update_success
+            and not coordinator.sees_the_receiver
+        ):
             mark_unavailable(coordinator)
 
     entry.async_on_unload(
