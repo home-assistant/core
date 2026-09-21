@@ -22,6 +22,7 @@ from homeassistant.components.threema.const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -756,13 +757,18 @@ async def test_subentry_duplicate_recipient(
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_flow_success(
+async def test_reauth_flow_success_before_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_credentials: AsyncMock,
 ) -> None:
-    """Test reauthentication flow updates the API secret and reloads."""
+    """Test reauth updates the secret and reloads when never set up.
+
+    The entry has no update listener yet (setup never ran), so the
+    explicit `async_schedule_reload` path must do the reloading.
+    """
     mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -779,10 +785,12 @@ async def test_reauth_flow_success(
         result["flow_id"],
         user_input={CONF_API_SECRET: "new_api_secret"},
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_SECRET] == "new_api_secret"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
