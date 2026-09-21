@@ -36,6 +36,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import LightSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_COLOR,
     CONF_COLOR_TEMP_MAX,
@@ -603,7 +604,7 @@ class KnxUiLight(_KnxLight, KnxUiEntity):
     _device: XknxLight
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of KNX light."""
         super().__init__(

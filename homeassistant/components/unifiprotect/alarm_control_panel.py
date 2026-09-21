@@ -107,8 +107,9 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
             self._attr_alarm_state = None
             return
         # arm_mode is delivered over the public devices websocket, so
-        # availability tracks the public WS health (like relay/siren), not the
-        # private connection the base class would otherwise apply for the NVR.
+        # availability tracks the public WS health, not the private connection
+        # the base class would otherwise apply for the NVR. The NVR carries no
+        # device state, so there is nothing else to gate on.
         self._attr_available = self.data.last_public_update_success
         # Fall back to DISARMED for unknown future status values rather than
         # rendering the entity as ``unknown``.

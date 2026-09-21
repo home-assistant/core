@@ -12,11 +12,13 @@ from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
+    SHCPresenceSimulationSystem,
     SHCShutterControl,
     SHCThermostat,
     ShutterControlService,
     ThermostatService,
 )
+from boschshcpy.services_impl import PresenceSimulationConfigurationService
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -51,7 +53,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 # Keep in sync with binary_sensor.py's device_helper buckets — a bucket
 # missing here breaks the mock_session fixture.
-_EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
+_EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     bucket: []
     for bucket in (
         "camera_360",
@@ -77,22 +79,26 @@ _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
         "wallthermostats",
         "water_leakage_detectors",
     )
+} | {
+    # Not a list bucket — presence_simulation_system is a single optional
+    # device on device_helper, not a device_helper.<x> list of devices.
+    "presence_simulation_system": None,
 }
 
 
 @pytest.fixture
-def device_buckets(request: pytest.FixtureRequest) -> dict[str, list[Any]]:
+def device_buckets(request: pytest.FixtureRequest) -> dict[str, Any]:
     """device_helper buckets for the mock session.
 
     Empty by default; a test overrides specific buckets via
     ``@pytest.mark.parametrize("device_buckets", [{...}], indirect=True)``.
     """
-    overrides: dict[str, list[Any]] = getattr(request, "param", {})
+    overrides: dict[str, Any] = getattr(request, "param", {})
     return {**_EMPTY_DEVICE_BUCKETS, **overrides}
 
 
 @pytest.fixture
-def mock_session(device_buckets: dict[str, list[Any]]) -> Generator[MagicMock]:
+def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
@@ -247,4 +253,28 @@ def light_switch_bsm_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.child_lock = child_lock
+    return device
+
+
+def presence_simulation_system_device(
+    device_id: str = "presenceSimulationService",
+    name: str = "Presence Simulation",
+    enabled: bool = False,
+) -> SHCPresenceSimulationSystem:
+    """Build a minimal device double for the presence_simulation_system slot."""
+    device = create_autospec(SHCPresenceSimulationSystem, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PRESENCE_SIMULATION_SERVICE"
+    device.device_services = [
+        create_autospec(
+            PresenceSimulationConfigurationService, instance=True, spec_set=True
+        )
+    ]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.enabled = enabled
     return device

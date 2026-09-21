@@ -277,6 +277,34 @@ async def test_light_mode_current_option(
 
 
 @pytest.mark.parametrize(
+    "light_data",
+    [
+        pytest.param({"status": 0}, id="mode_missing"),
+        pytest.param({"mode": 0}, id="status_missing"),
+    ],
+)
+async def test_light_mode_unknown_after_partial_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    light_data: dict[str, Any],
+) -> None:
+    """Test the light mode reports unknown when a push drops a field it derives from."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("select.my_pool_light_mode").state == "auto"
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+    on_data({"main": {"version": 1}, "light": light_data})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.my_pool_light_mode").state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
     ("option", "expected_updates"),
     [
         pytest.param("off", {"light.mode": 0, "light.status": 0}, id="off"),

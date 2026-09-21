@@ -6,6 +6,7 @@ from typing import cast, override
 from midealocal.const import DeviceType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -106,6 +107,7 @@ SELECTS: list[MideaSelectEntityDescription] = [
         translation_key="screen_display",
         models=[DeviceType.FC, DeviceType.FD],
         options_attribute="screen_displays",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
