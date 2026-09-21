@@ -52,6 +52,6 @@ async def async_get_config_entry_diagnostics(
                     for error in spa_data[ATTR_ERRORS]
                 ],
             }
-            for spa_data in controller.coordinator.data.values()
+            for spa_data in (controller.coordinator.data or {}).values()
         ],
     }

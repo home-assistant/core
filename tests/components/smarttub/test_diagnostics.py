@@ -59,3 +59,25 @@ async def test_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == snapshot
+
+
+async def test_entry_diagnostics_no_coordinator_data(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    spa: smarttub.Spa,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test diagnostics doesn't crash when the coordinator has no data yet.
+
+    This can happen if the initial refresh fails, e.g. because the API
+    returned something the smarttub library doesn't know how to parse.
+    """
+    spa.get_status_full.side_effect = RuntimeError("boom")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert result["spas"] == []
