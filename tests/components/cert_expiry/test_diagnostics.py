@@ -14,10 +14,11 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTE
 from homeassistant.core import HomeAssistant
 
 from .const import HOST, PORT
-from .helpers import future_timestamp, static_datetime
+from .helpers import certificate_expiring, future_timestamp, static_datetime
 
 
 @pytest.mark.freeze_time(static_datetime())
+@pytest.mark.usefixtures("cert_verified")
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -37,8 +38,40 @@ async def test_config_entry_diagnostics(
 
     # patch network call and setup integration.
     with patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        return_value=timestamp,
+        "homeassistant.components.cert_expiry.coordinator.async_get_cert",
+        return_value=certificate_expiring(timestamp),
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert (
+            await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+        )
+
+
+@pytest.mark.freeze_time(static_datetime())
+async def test_config_entry_diagnostics_with_handshake_failure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics when the TLS handshake itself fails.
+
+    No certificate is ever obtained, so the coordinator produces no data.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        entry_id="test-entry-error",
+        title=HOST,
+        unique_id=f"{HOST}:{PORT}",
+    )
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.async_get_cert",
+        side_effect=ValidationFailure("certificate error for sensitive.example.com"),
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -56,24 +89,32 @@ async def test_config_entry_diagnostics_with_cert_error(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics with a certificate validation error."""
+    """Test that a verify_cert() error, which embeds the hostname, is redacted."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
-        entry_id="test-entry-error",
+        entry_id="test-entry-cert-error",
         title=HOST,
         unique_id=f"{HOST}:{PORT}",
     )
 
-    with patch(
-        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-        side_effect=ValidationFailure("certificate error for sensitive.example.com"),
+    timestamp = future_timestamp(100)
+
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.async_get_cert",
+            return_value=certificate_expiring(timestamp),
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.coordinator.HandshakePolicyVerifier.verify_cert",
+            return_value=f"hostname mismatch, certificate is not valid for {HOST}",
+        ),
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        assert (
-            await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
-        )
+        diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+        assert diagnostics == snapshot
+        assert diagnostics["coordinator"]["data"]["cert_error"] == "**REDACTED**"

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import socket
 import ssl
+import struct
 
 from .fixtures.generate import ScenarioMetadata
 
@@ -33,6 +34,17 @@ def load_scenario(name: str) -> Scenario:
             (scenario_dir / "metadata.json").read_text()
         ),
     )
+
+
+def trusted_context() -> ssl.SSLContext:
+    """Build a client SSL context trusting only the test root CA.
+
+    Intermediates are supplied to verify_cert() separately, as the chain a
+    real handshake presents, rather than being trusted directly here.
+    """
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(cafile=FIXTURES_DIR / "root_ca.pem")
+    return context
 
 
 def server_context(scenario: Scenario, *, ciphers: str | None = None) -> ssl.SSLContext:
@@ -75,6 +87,92 @@ async def local_tls_server(context: ssl.SSLContext) -> AsyncGenerator[int]:
     task = loop.run_in_executor(None, _accept_once)
     try:
         yield port
+    finally:
+        sock.close()
+        with contextlib.suppress(Exception):
+            await asyncio.wait_for(task, timeout=2)
+
+
+@contextlib.asynccontextmanager
+async def local_unresponsive_server() -> AsyncGenerator[tuple[str, int]]:
+    """Start a local server that accepts connections but never responds.
+
+    Used with a short custom timeout to exercise ConnectionTimeout.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("127.0.0.1", 0))
+    sock.listen(1)
+    port = sock.getsockname()[1]
+    try:
+        yield "127.0.0.1", port
+    finally:
+        sock.close()
+
+
+@contextlib.asynccontextmanager
+async def local_closed_port() -> AsyncGenerator[tuple[str, int]]:
+    """Yield a port with nothing listening on it, to exercise ConnectionRefused."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    yield "127.0.0.1", port
+
+
+@contextlib.asynccontextmanager
+async def local_reset_server() -> AsyncGenerator[tuple[str, int]]:
+    """Start a local server that resets the connection right after accepting it.
+
+    Used to exercise ConnectionReset.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("127.0.0.1", 0))
+    sock.listen(1)
+    port = sock.getsockname()[1]
+
+    def _accept_and_reset() -> None:
+        with contextlib.suppress(OSError), sock:
+            conn, _ = sock.accept()
+            conn.setsockopt(
+                socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0)
+            )
+            conn.close()
+
+    loop = asyncio.get_running_loop()
+    task = loop.run_in_executor(None, _accept_and_reset)
+    try:
+        yield "127.0.0.1", port
+    finally:
+        sock.close()
+        with contextlib.suppress(Exception):
+            await asyncio.wait_for(task, timeout=2)
+
+
+@contextlib.asynccontextmanager
+async def local_garbage_server() -> AsyncGenerator[tuple[str, int]]:
+    """Start a local server that answers a handshake attempt with garbage bytes.
+
+    Used to exercise ValidationFailure via a genuine ssl.SSLError.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("127.0.0.1", 0))
+    sock.listen(1)
+    port = sock.getsockname()[1]
+
+    def _accept_and_send_garbage() -> None:
+        with contextlib.suppress(OSError), sock:
+            conn, _ = sock.accept()
+            with conn:
+                conn.recv(4096)
+                conn.sendall(b"not a tls record")
+
+    loop = asyncio.get_running_loop()
+    task = loop.run_in_executor(None, _accept_and_send_garbage)
+    try:
+        yield "127.0.0.1", port
     finally:
         sock.close()
         with contextlib.suppress(Exception):

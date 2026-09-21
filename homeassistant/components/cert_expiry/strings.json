@@ -36,9 +36,66 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "certificate_invalid": {
+        "name": "Certificate invalid"
+      },
+      "certificate_untrusted": {
+        "name": "Certificate untrusted"
+      },
+      "cipher_unsupported": {
+        "name": "Cipher unsupported"
+      },
+      "problem": {
+        "name": "Problem"
+      },
+      "tls_version_unsupported": {
+        "name": "TLS version unsupported"
+      }
+    },
     "sensor": {
       "certificate_expiry": {
         "name": "Cert expiry"
+      },
+      "certificate_version": {
+        "name": "Certificate version",
+        "state": {
+          "v1": "Version 1",
+          "v3": "Version 3"
+        }
+      },
+      "cipher_suite": {
+        "name": "Cipher suite"
+      },
+      "common_name": {
+        "name": "Common name"
+      },
+      "fingerprint": {
+        "name": "Fingerprint"
+      },
+      "issuer_common_name": {
+        "name": "Issuer common name"
+      },
+      "issuer_organization": {
+        "name": "Issuer organization"
+      },
+      "organization": {
+        "name": "Organization"
+      },
+      "organizational_unit": {
+        "name": "Organizational unit"
+      },
+      "serial_number": {
+        "name": "Serial number"
+      },
+      "tls_version": {
+        "name": "TLS version",
+        "state": {
+          "tls_1_0": "TLS 1.0",
+          "tls_1_1": "TLS 1.1",
+          "tls_1_2": "TLS 1.2",
+          "tls_1_3": "TLS 1.3"
+        }
       }
     }
   },

@@ -2,10 +2,26 @@
 # name: test_config_entry_diagnostics
   dict({
     'coordinator': dict({
-      'cert_error': None,
-      'expiry_datetime': '2020-09-20T15:01:00+00:00',
+      'data': dict({
+        'cert_error': None,
+        'certificate': dict({
+          'common_name': '**REDACTED**',
+          'fingerprint': '29:4B:2B:87:4A:B2:97:E6:93:DF:92:FA:81:56:80:41:4D:FD:3D:EE:53:EC:3F:5B:7E:F2:70:C3:BF:71:4D:C3',
+          'issuer_common_name': '**REDACTED**',
+          'issuer_organization': None,
+          'not_valid_after': '2020-09-20T15:01:00+00:00',
+          'not_valid_before': '2010-09-23T15:01:00+00:00',
+          'organization': None,
+          'organizational_unit': None,
+          'serial_number': '1234ABCD',
+          'version': 'v3',
+        }),
+        'cipher_error': None,
+        'cipher_name': 'TLS_AES_256_GCM_SHA384',
+        'tls_version': 'TLSv1.3',
+        'tls_version_error': None,
+      }),
       'host': '**REDACTED**',
-      'is_cert_valid': True,
       'last_update_success': True,
       'name': '**REDACTED**',
       'port': 443,
@@ -39,11 +55,62 @@
 # name: test_config_entry_diagnostics_with_cert_error
   dict({
     'coordinator': dict({
-      'cert_error': 'homeassistant.components.cert_expiry.errors.ValidationFailure',
-      'expiry_datetime': None,
+      'data': dict({
+        'cert_error': '**REDACTED**',
+        'certificate': dict({
+          'common_name': '**REDACTED**',
+          'fingerprint': '29:4B:2B:87:4A:B2:97:E6:93:DF:92:FA:81:56:80:41:4D:FD:3D:EE:53:EC:3F:5B:7E:F2:70:C3:BF:71:4D:C3',
+          'issuer_common_name': '**REDACTED**',
+          'issuer_organization': None,
+          'not_valid_after': '2020-09-20T15:01:00+00:00',
+          'not_valid_before': '2010-09-23T15:01:00+00:00',
+          'organization': None,
+          'organizational_unit': None,
+          'serial_number': '1234ABCD',
+          'version': 'v3',
+        }),
+        'cipher_error': None,
+        'cipher_name': 'TLS_AES_256_GCM_SHA384',
+        'tls_version': 'TLSv1.3',
+        'tls_version_error': None,
+      }),
       'host': '**REDACTED**',
-      'is_cert_valid': False,
       'last_update_success': True,
+      'name': '**REDACTED**',
+      'port': 443,
+    }),
+    'entry': dict({
+      'created_at': '2020-06-12T08:00:00+00:00',
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 443,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'cert_expiry',
+      'entry_id': 'test-entry-cert-error',
+      'minor_version': 1,
+      'modified_at': '2020-06-12T08:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics_with_handshake_failure
+  dict({
+    'coordinator': dict({
+      'data': None,
+      'host': '**REDACTED**',
+      'last_update_success': False,
       'name': '**REDACTED**',
       'port': 443,
     }),

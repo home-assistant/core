@@ -1,5 +1,6 @@
 """Diagnostics for the cert_expiry integration."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -8,7 +9,20 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import CertExpiryConfigEntry
 
-TO_REDACT = {CONF_HOST, "name", "title", "unique_id"}
+# issuer_common_name is redacted alongside common_name because a self-signed
+# certificate's issuer CN is its subject CN. cert_error is redacted because
+# verify_cert() embeds the configured hostname in its message. fingerprint and
+# serial_number are left unredacted: they identify the certificate, not the
+# host, and are useful for cross-checking against other tools.
+TO_REDACT = {
+    CONF_HOST,
+    "name",
+    "title",
+    "unique_id",
+    "common_name",
+    "issuer_common_name",
+    "cert_error",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,31 +38,18 @@ async def async_get_config_entry_diagnostics(
         "host": None,
         "port": None,
         "name": None,
-        "expiry_datetime": None,
-        "is_cert_valid": None,
-        "cert_error": None,
         "last_update_success": None,
+        "data": None,
     }
 
     if coordinator is not None:
-        expiry = coordinator.data.isoformat() if coordinator.data else None
-        cert_error = (
-            (
-                f"{type(coordinator.cert_error).__module__}."
-                f"{type(coordinator.cert_error).__qualname__}"
-            )
-            if coordinator.cert_error
-            else None
-        )
-
+        data = coordinator.data
         coordinator_diagnostics = {
             "host": coordinator.host,
             "port": coordinator.port,
             "name": coordinator.name,
-            "expiry_datetime": expiry,
-            "is_cert_valid": coordinator.is_cert_valid,
-            "cert_error": cert_error,
             "last_update_success": coordinator.last_update_success,
+            "data": None if data is None else asdict(data),
         }
 
     return {

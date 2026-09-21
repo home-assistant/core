@@ -6,7 +6,7 @@ from homeassistant.helpers.start import async_at_started
 
 from .coordinator import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> None:

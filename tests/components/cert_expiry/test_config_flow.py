@@ -1,7 +1,5 @@
 """Tests for the Cert Expiry config flow."""
 
-import socket
-import ssl
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +7,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.errors import (
+    ConnectionRefused,
+    ConnectionReset,
+    ConnectionTimeout,
+    ResolveFailed,
+    ValidationFailure,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,9 +31,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
         )
@@ -48,8 +51,8 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ssl.SSLError("some error"),
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
+        side_effect=ValidationFailure("some error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
@@ -83,51 +86,52 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
-    """Test we abort of we have errors during socket creation."""
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        pytest.param(
+            ResolveFailed("cannot resolve"), "resolve_failed", id="resolve_failed"
+        ),
+        pytest.param(
+            ConnectionTimeout("timed out"),
+            "connection_timeout",
+            id="connection_timeout",
+        ),
+        pytest.param(
+            ConnectionRefused("refused"), "connection_refused", id="connection_refused"
+        ),
+        pytest.param(
+            ConnectionReset("reset"), "connection_reset", id="connection_reset"
+        ),
+    ],
+)
+async def test_abort_on_socket_failed(
+    hass: HomeAssistant, side_effect: Exception, error_key: str
+) -> None:
+    """Test the form re-shows on socket failure, then recovers on retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=socket.gaierror(),
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "resolve_failed"}
+    assert result["errors"] == {CONF_HOST: error_key}
 
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=TimeoutError,
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_timeout"}
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ConnectionRefusedError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_refused"}
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ConnectionResetError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_reset"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+    assert result["result"].unique_id == f"{HOST}:{PORT}"
 
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
@@ -153,9 +157,7 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 
     new_host = "new.example.com"
     new_port = 8443
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: new_host, CONF_PORT: new_port}
         )
@@ -170,10 +172,10 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (socket.gaierror(), "resolve_failed"),
-        (TimeoutError, "connection_timeout"),
-        (ConnectionRefusedError, "connection_refused"),
-        (ConnectionResetError, "connection_reset"),
+        (ResolveFailed("cannot resolve"), "resolve_failed"),
+        (ConnectionTimeout("timed out"), "connection_timeout"),
+        (ConnectionRefused("refused"), "connection_refused"),
+        (ConnectionReset("reset"), "connection_reset"),
     ],
 )
 async def test_reconfigure_validation_failure_recovers(
@@ -195,7 +197,7 @@ async def test_reconfigure_validation_failure_recovers(
     new_port = 8443
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -209,9 +211,7 @@ async def test_reconfigure_validation_failure_recovers(
     assert entry.data[CONF_HOST] == HOST
     assert entry.data[CONF_PORT] == PORT
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: new_host, CONF_PORT: new_port},
