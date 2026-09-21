@@ -1,8 +1,24 @@
 """Test the adaptive lighting transition protocol of the HomeKit bridge."""
 
 import base64
+from datetime import timedelta
+import time
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.homekit.adaptive_lighting import (
+    DATA_STORE,
+    TAG_CFG_CURVE,
+    TAG_CFG_IID,
+    TAG_CFG_PARAMETERS,
+    TAG_CURVE_ENTRY,
+    TAG_ENTRY_ADJUSTMENT_FACTOR,
+    TAG_ENTRY_VALUE,
+    TAG_PARAM_START_TIME,
+    TAG_PARAM_TRANSITION_ID,
+    TAG_UPDATE_TRANSITION,
+    _get_store,
     _transition_as_dict,
     _transition_from_dict,
     interpolate,
@@ -13,6 +29,25 @@ from homeassistant.components.homekit.adaptive_lighting import (
     tlv_encode_list,
     write_variable_uint_le,
 )
+from homeassistant.components.homekit.const import (
+    CHAR_COLOR_TEMPERATURE,
+    CONF_ADAPTIVE_LIGHTING,
+)
+from homeassistant.components.homekit.type_lights import (
+    CHANGE_COALESCE_TIME_WINDOW,
+    Light,
+)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN as LIGHT_DOMAIN,
+)
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed, async_mock_service
 
 # A real schedule written by the Home app to a colour temperature light. The
 # curve covers 24 hours in 42 points and asks for an update every 60 seconds.
@@ -128,3 +163,455 @@ def test_transition_survives_serialization() -> None:
 def test_parse_rejects_an_empty_write() -> None:
     """Clearing the characteristic does not produce a transition."""
     assert parse_transition_control(base64.b64encode(b"").decode()) is None
+
+
+async def _setup_light(hass: HomeAssistant, hk_driver, state: str = STATE_ON) -> Light:
+    """Create a light accessory with adaptive lighting enabled."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        state,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_TEMP_KELVIN: 4000,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, {CONF_ADAPTIVE_LIGHTING: True})
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    return acc
+
+
+async def _write_control(hass: HomeAssistant, acc: Light, value: str) -> None:
+    """Write the transition control characteristic as the Home app would."""
+    assert acc.adaptive_lighting is not None
+    acc.adaptive_lighting.char_control.client_update_value(value)
+    await hass.async_block_till_done()
+
+
+async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
+    """Wait for the light characteristic writes to be coalesced into a call."""
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
+    )
+    await hass.async_block_till_done()
+
+
+async def test_the_accessory_advertises_adaptive_lighting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A light configured for adaptive lighting exposes the three characteristics."""
+    acc = await _setup_light(hass, hk_driver)
+
+    assert acc.adaptive_lighting is not None
+    controller = acc.adaptive_lighting
+    assert controller.char_active_count.value == 0
+    assert controller.char_supported.value
+    assert base64.b64decode(controller.char_supported.value)
+
+
+async def test_adaptive_lighting_is_off_without_the_option(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Without the option the light behaves exactly as before."""
+    hass.states.async_set(
+        "light.demo", STATE_ON, {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"]}
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", "light.demo", 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.adaptive_lighting is None
+
+
+async def test_a_schedule_applies_a_colour_temperature(
+    hass: HomeAssistant, hk_driver, hass_storage: dict
+) -> None:
+    """A schedule from the Home app drives the light on the next update."""
+    acc = await _setup_light(hass, hk_driver)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.char_active_count.value == 1
+    assert acc.adaptive_lighting.transition is not None
+    assert len(call_turn_on) == 1
+    assert ATTR_COLOR_TEMP_KELVIN in call_turn_on[0].data
+    # The schedule is stored so it survives a restart.
+    assert "light.demo" in hass_storage["homekit.adaptive_lighting"]["data"]
+
+
+async def test_a_control_read_reports_the_running_transition(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Reading the control characteristic answers with the transition status."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    assert acc.adaptive_lighting is not None
+    response = tlv_decode(base64.b64decode(acc.adaptive_lighting.char_control.value))
+    assert response and response[0][0] == 0x01
+
+
+async def test_a_manual_colour_change_stops_adaptive_lighting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """HomeKit expects a manual colour change to disarm adaptive lighting."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is not None
+
+    acc._set_chars({CHAR_COLOR_TEMPERATURE: 300})
+    await hass.async_block_till_done()
+
+    assert acc.adaptive_lighting.transition is None
+    assert acc.adaptive_lighting.char_active_count.value == 0
+    assert acc.adaptive_lighting.char_control.value == ""
+
+
+async def test_clearing_the_control_stops_adaptive_lighting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The Home app disables adaptive lighting with an empty write."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    await _write_control(hass, acc, "")
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is None
+
+
+async def test_a_write_without_a_configuration_stops_adaptive_lighting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A write that carries no configuration disarms rather than raising."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    # Tag 0x01 is a read request, not an update.
+    await _write_control(
+        hass, acc, base64.b64encode(tlv_encode(0x01, b"\x00")).decode()
+    )
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is None
+
+
+async def test_an_unparsable_write_is_ignored(
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A malformed schedule is logged instead of breaking the accessory."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    truncated = tlv_encode(
+        0x02,
+        tlv_encode(
+            0x01,
+            tlv_encode(
+                0x02,
+                tlv_encode(0x01, b"\x01" * 16, 0x02, b"\x00\x00"),
+                0x05,
+                tlv_encode(0x01, b"\x00"),
+            ),
+        ),
+    )
+    await _write_control(hass, acc, base64.b64encode(truncated).decode())
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is None
+    assert "could not parse the transition schedule" in caplog.text
+
+
+async def test_the_light_is_not_switched_on_while_off(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A schedule never turns a light on by itself."""
+    acc = await _setup_light(hass, hk_driver, state=STATE_OFF)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+
+    assert not call_turn_on
+
+
+async def test_the_same_value_is_not_sent_twice(
+    hass: HomeAssistant, hk_driver, freezer: FrozenDateTimeFactory
+) -> None:
+    """Only a changed colour temperature reaches the light."""
+    acc = await _setup_light(hass, hk_driver)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+
+    # One update interval later the curve has barely moved.
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 1
+
+
+async def test_the_end_of_the_curve_stops_adaptive_lighting(
+    hass: HomeAssistant, hk_driver, freezer: FrozenDateTimeFactory
+) -> None:
+    """After 24 hours the schedule is spent and the Home app sends a new one."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is not None
+
+    freezer.tick(timedelta(hours=25))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert acc.adaptive_lighting.transition is None
+
+
+async def test_a_schedule_is_restored_after_a_restart(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The saved schedule is resumed without waiting for the Home app."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    assert acc.adaptive_lighting is not None
+    stored = await _get_store(hass).async_get("light.demo")
+    assert stored is not None
+
+    # A restart builds a new accessory against the same store.
+    hass.data.pop(DATA_STORE)
+    restarted = Light(
+        hass, hk_driver, "Light", "light.demo", 1, {CONF_ADAPTIVE_LIGHTING: True}
+    )
+    hk_driver.add_accessory(restarted)
+    restarted.run()
+    await hass.async_block_till_done()
+
+    assert restarted.adaptive_lighting is not None
+    assert restarted.adaptive_lighting.transition is not None
+    assert restarted.adaptive_lighting.char_active_count.value == 1
+
+
+async def test_an_expired_schedule_is_dropped_on_restart(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A schedule that no longer covers the current time is not resumed."""
+    transition = parse_transition_control(TRANSITION_CONTROL_WRITE)
+    assert transition is not None
+    expired = _transition_as_dict(transition)
+    expired["time_millis_offset"] = int(time.time() * 1000)
+    await _get_store(hass).async_set("light.demo", expired)
+
+    acc = await _setup_light(hass, hk_driver)
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is None
+    assert await _get_store(hass).async_get("light.demo") is None
+
+
+async def test_an_unreadable_stored_schedule_is_dropped(
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A stored schedule from an older version does not break the accessory."""
+    await _get_store(hass).async_set("light.demo", {"transition_id": "not a schedule"})
+
+    acc = await _setup_light(hass, hk_driver)
+
+    assert acc.adaptive_lighting is not None
+    assert acc.adaptive_lighting.transition is None
+    assert "stored transition is unreadable" in caplog.text
+    assert await _get_store(hass).async_get("light.demo") is None
+
+
+async def test_brightness_shifts_the_colour_temperature(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Apple dims a light towards warmer white with the adjustment factor."""
+    acc = await _setup_light(hass, hk_driver)
+    assert acc.adaptive_lighting is not None
+    acc.adaptive_lighting.char_brightness.set_value(100)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    at_full = call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN]
+
+    # Dimming re-applies the same curve point with a smaller multiplier.
+    acc.adaptive_lighting.char_brightness.set_value(10)
+    acc.adaptive_lighting._last_applied = None
+    await acc.adaptive_lighting._async_update()
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] != at_full
+
+
+def _control_write(configuration: bytes) -> str:
+    """Wrap a configuration the way the Home app writes it."""
+    return base64.b64encode(
+        tlv_encode(TAG_UPDATE_TRANSITION, tlv_encode(TAG_CFG_IID, configuration))
+    ).decode()
+
+
+def test_write_variable_uint_le_rejects_impossible_values() -> None:
+    """HAP has no encoding for a negative or larger than 32 bit value."""
+    with pytest.raises(ValueError, match="negative"):
+        write_variable_uint_le(-1)
+    with pytest.raises(ValueError, match="32 bits"):
+        write_variable_uint_le(2**32)
+
+
+def test_tlv_encode_rejects_bad_arguments() -> None:
+    """Tags and values are encoded in pairs of int and bytes."""
+    with pytest.raises(ValueError, match="even number"):
+        tlv_encode(0x01)
+    with pytest.raises(TypeError, match="int tag"):
+        tlv_encode(0x01, "not bytes")
+    assert tlv_encode(0x01, b"") == b"\x01\x00"
+
+
+def test_parse_rejects_incomplete_schedules() -> None:
+    """A write that is not a complete schedule leaves the light alone."""
+    curve = tlv_encode(
+        TAG_CURVE_ENTRY,
+        tlv_encode(
+            TAG_ENTRY_ADJUSTMENT_FACTOR,
+            b"\x00\x00\x00\x00",
+            TAG_ENTRY_VALUE,
+            b"\x00\x00\x7a\x43",
+        ),
+    )
+    parameters = tlv_encode(
+        TAG_PARAM_TRANSITION_ID, b"\x01" * 16, TAG_PARAM_START_TIME, b"\x00" * 8
+    )
+
+    # A read request carries no update at all.
+    assert (
+        parse_transition_control(base64.b64encode(tlv_encode(0x01, b"\x00")).decode())
+        is None
+    )
+    # An update without the parameters and the curve.
+    assert (
+        parse_transition_control(_control_write(tlv_encode(TAG_CFG_IID, b"\x0b")))
+        is None
+    )
+    # Parameters without the start time.
+    assert (
+        parse_transition_control(
+            _control_write(
+                tlv_encode(
+                    TAG_CFG_PARAMETERS,
+                    tlv_encode(TAG_PARAM_TRANSITION_ID, b"\x01" * 16),
+                    TAG_CFG_CURVE,
+                    curve,
+                )
+            )
+        )
+        is None
+    )
+    # A curve needs two points to interpolate between.
+    assert (
+        parse_transition_control(
+            _control_write(
+                tlv_encode(TAG_CFG_PARAMETERS, parameters, TAG_CFG_CURVE, curve)
+            )
+        )
+        is None
+    )
+
+
+async def test_a_new_schedule_replaces_the_running_one(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The Home app renews the schedule roughly daily."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    assert acc.adaptive_lighting is not None
+    first = acc.adaptive_lighting.transition
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    assert acc.adaptive_lighting.transition is not first
+    assert acc.adaptive_lighting.char_active_count.value == 1
+
+
+async def test_the_controller_does_nothing_while_disarmed(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Without a schedule there is nothing to answer, apply or stop."""
+    acc = await _setup_light(hass, hk_driver)
+    controller = acc.adaptive_lighting
+    assert controller is not None
+
+    assert controller._build_control_response() == ""
+    await controller._async_update()
+    controller.notify_manual_change()
+
+    assert controller.transition is None
+    assert controller.char_active_count.value == 0
+
+
+async def test_no_curve_point_applies_past_the_end(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The brightness factor is only known inside the 24 hours of the curve."""
+    acc = await _setup_light(hass, hk_driver)
+    assert acc.adaptive_lighting is not None
+    transition = parse_transition_control(TRANSITION_CONTROL_WRITE)
+    assert transition is not None
+    transition.time_millis_offset -= 48 * 3600 * 1000
+
+    assert acc.adaptive_lighting._current_curve_point(transition) is None
+
+
+def test_an_incomplete_curve_entry_is_skipped() -> None:
+    """A point that carries no value is dropped, the rest of the curve stands."""
+    point = tlv_encode(
+        TAG_ENTRY_ADJUSTMENT_FACTOR,
+        b"\x00\x00\x00\x00",
+        TAG_ENTRY_VALUE,
+        b"\x00\x00\x7a\x43",
+    )
+    schedule = _control_write(
+        tlv_encode(
+            TAG_CFG_PARAMETERS,
+            tlv_encode(
+                TAG_PARAM_TRANSITION_ID, b"\x01" * 16, TAG_PARAM_START_TIME, b"\x00" * 8
+            ),
+            TAG_CFG_CURVE,
+            tlv_encode_list(
+                TAG_CURVE_ENTRY,
+                [
+                    point,
+                    tlv_encode(TAG_ENTRY_ADJUSTMENT_FACTOR, b"\x00\x00\x00\x00"),
+                    point,
+                ],
+            ),
+        )
+    )
+
+    transition = parse_transition_control(schedule)
+
+    assert transition is not None
+    assert len(transition.curve) == 2
