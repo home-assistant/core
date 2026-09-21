@@ -157,6 +157,36 @@ async def test_add_todo_item_parse_fallback(
     )
 
 
+async def test_add_todo_item_parse_error_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test falling back when ingredient parsing raises an error."""
+    mock_mealie_client.parse_ingredient.side_effect = MealieError
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "  Soda  "},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Soda",
+            quantity=0.0,
+        )
+    )
+    assert "Unable to parse to-do item Soda" in caplog.text
+
+
 async def test_update_todo_item_parsed(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
@@ -235,6 +265,43 @@ async def test_update_todo_item_parse_fallback(
             checked=False,
         ),
     )
+
+
+async def test_update_todo_item_parse_error_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test falling back when updating an item raises a parsing error."""
+    mock_mealie_client.parse_ingredient.side_effect = MealieError
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once_with(
+        "69913b9a-7c75-4935-abec-297cf7483f88",
+        MutateShoppingItem(
+            item_id="69913b9a-7c75-4935-abec-297cf7483f88",
+            list_id="9ce096fe-ded2-4077-877d-78ba450ab13e",
+            note="Eggplant",
+            display="aubergine",
+            quantity=0.0,
+            position=2,
+            is_food=False,
+            disable_amount=False,
+            food_id=None,
+            checked=False,
+        ),
+    )
+    assert "Unable to parse to-do item Eggplant" in caplog.text
 
 
 async def test_add_todo_list_item_error(

@@ -30,6 +30,7 @@ from .const import (
     CONF_PARSER,
     DEFAULT_PARSER,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
@@ -155,9 +156,18 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         new_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_new:
-            parsed_ingredient = await self.coordinator.client.parse_ingredient(
-                item.summary.strip(), parser=self.parser
-            )
+            try:
+                parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                    item.summary.strip(), parser=self.parser
+                )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
+            except MealieError as exception:
+                LOGGER.warning(
+                    "Unable to parse to-do item %s: %s; adding it as a note item",
+                    item.summary,
+                    exception,
+                )
+                parsed_ingredient = None
             if (
                 parsed_ingredient
                 and parsed_ingredient.confidence
@@ -215,9 +225,18 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         update_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_edit:
-            parsed_ingredient = await self.coordinator.client.parse_ingredient(
-                item.summary.strip(), parser=self.parser
-            )
+            try:
+                parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                    item.summary.strip(), parser=self.parser
+                )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
+            except MealieError as exception:
+                LOGGER.warning(
+                    "Unable to parse to-do item %s: %s; updating it as a note item",
+                    item.summary,
+                    exception,
+                )
+                parsed_ingredient = None
             if (
                 parsed_ingredient
                 and parsed_ingredient.confidence
