@@ -44,7 +44,13 @@ from .common import (
     retrieve_media,
 )
 
-from tests.common import MockModule, async_mock_service, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    async_mock_service,
+    load_fixture_bytes,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
@@ -2302,3 +2308,22 @@ async def test_stream_override_with_conversion(
         assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
             22050 * 2 * 2
         )  # 1 second @ 22.5Khz/stereo
+
+
+def test_write_tags_keeps_single_id3_tag() -> None:
+    """Test tagging audio that already carries an ID3 tag does not add a second one."""
+    data = load_fixture_bytes("tagged.mp3", DOMAIN)
+    assert data.startswith(b"ID3")
+    assert data.count(b"ID3") == 1
+
+    tagged = ORIG_WRITE_TAGS(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        data,
+        "Test",
+        "There is someone at the door.",
+        "en",
+        None,
+    )
+
+    assert tagged.startswith(b"ID3")
+    assert tagged.count(b"ID3") == 1
