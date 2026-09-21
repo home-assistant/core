@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -104,6 +104,24 @@ async def test_offline_device(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id=ENTITY_ID,
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+        devices_without={},
+    )
 
 
 async def test_service_select_option(
