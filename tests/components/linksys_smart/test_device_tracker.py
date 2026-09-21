@@ -498,3 +498,43 @@ async def test_yaml_config_host_alias_creates_remove_yaml_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert issue is not None
+
+
+async def test_yaml_config_host_alias_creates_remove_yaml_issue_when_devices_unauthorized(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_jnap_client: AsyncMock,
+) -> None:
+    """Test host aliasing still prompts YAML removal if get_devices needs auth."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SERIAL,
+        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"},
+    ).add_to_hass(hass)
+
+    mock_jnap_client.get_devices.side_effect = JNAPUnauthorizedError
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": {
+                "platform": "linksys_smart",
+                "host": "192.168.1.2",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_credentials_required_192.168.1.2"
+        )
+        is None
+    )
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
