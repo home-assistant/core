@@ -137,7 +137,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
             OverkizCommand.REFRESH_WATER_TARGET_TEMPERATURE,
             refresh_afterwards=False,
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @property
     def is_boost_mode_on(self) -> bool:
@@ -180,7 +180,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
 
             await self._async_turn_boost_mode_on()
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
             return
 
@@ -205,7 +205,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
                 refresh_afterwards=False,
             )
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:

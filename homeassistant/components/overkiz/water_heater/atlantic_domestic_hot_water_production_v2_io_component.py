@@ -100,7 +100,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @property
     def is_state_eco(self) -> bool:
@@ -203,7 +203,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
             )
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
         elif operation_mode == STATE_PERFORMANCE:
             if self.is_boost_mode_on:
@@ -217,7 +217,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 refresh_afterwards=False,
             )
 
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
         elif operation_mode == STATE_HEAT_PUMP:
             refresh_target_temp = False
@@ -244,14 +244,14 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                     refresh_afterwards=False,
                 )
 
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
         elif operation_mode == STATE_ELECTRIC:
             if self.is_away_mode_on:
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
             if not self.is_boost_mode_on:
                 await self.async_turn_boost_mode_on(refresh_afterwards=False)
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
@@ -271,7 +271,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             refresh_afterwards=False,
         )
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
@@ -291,7 +291,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             refresh_afterwards=False,
         )
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_boost_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode on."""
@@ -328,7 +328,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             )
 
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_boost_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode off."""
@@ -348,4 +348,4 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()

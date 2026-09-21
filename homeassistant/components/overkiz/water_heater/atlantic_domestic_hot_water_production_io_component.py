@@ -150,7 +150,7 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
 
             await self._async_turn_boost_mode_on()
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
             return
 
         previous_operation = self.current_operation

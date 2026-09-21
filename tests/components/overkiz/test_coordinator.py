@@ -1,8 +1,10 @@
 """Tests for the Overkiz data update coordinator."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
@@ -11,9 +13,17 @@ from pyoverkiz.exceptions import (
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
+from pyoverkiz.models import Command
 import pytest
 
-from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_RATE_LIMITED_MAX,
+)
+from homeassistant.components.overkiz.executor import OverkizExecutor
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -30,6 +40,30 @@ TEMPERATURE_SENSOR = FixtureDevice(
     "sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature",
 )
 
+# Two water heaters in one setup, on platforms that refresh themselves.
+DHW_CE_FLAT_C2 = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/109286#1",
+    "water_heater.my_home_patio_water_heating",
+)
+DHW_ATLANTIC_IO = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/6713703#1",
+    "water_heater.my_home_water_heater",
+)
+
+# Two switches in one setup, so several entities can be commanded at once.
+POOL_PUMP = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16168460",
+    "switch.music_room_pool_pump_on_off",
+)
+POOL_HOUSE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/16580352",
+    "switch.pool_house",
+)
+
 # A TaHoma v2 setup whose gateways list only holds the main box, while a
 # swinging gate device is hosted by a secondary box absent from setup.gateways.
 TAHOMA_V2_FIXTURE = "setup/cloud_somfy_tahoma_v2_europe.json"
@@ -43,7 +77,6 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
     "exception",
     [
         TooManyConcurrentRequestsError("Too many concurrent requests"),
-        TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
         ServiceUnavailableError("Server is unavailable"),
         InvalidEventListenerIdError("Invalid event listener id"),
@@ -52,7 +85,6 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
     ],
     ids=[
         "too_many_concurrent_requests",
-        "too_many_requests",
         "maintenance",
         "service_unavailable",
         "invalid_event_listener_id",
@@ -89,6 +121,222 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_rate_limit_backs_off_and_recovers(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Being rate limited slows polling down; a successful fetch restores it."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
+    assert initial_state.state != STATE_UNAVAILABLE
+
+    # First rate limited refresh: entities go unavailable and polling doubles.
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+    # Nothing is requested at the old cadence any more...
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 0
+
+    # ...only once twice the interval has passed, and that failure doubles again.
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 1
+
+    # A successful fetch clears the back off and restores the default interval.
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(UPDATE_INTERVAL * 4)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "execute",
+    [
+        lambda executor: executor.async_execute_command("on"),
+        lambda executor: executor.async_execute_commands([Command(name="on")]),
+    ],
+    ids=["single_command", "batched_commands"],
+)
+async def test_command_refreshes_are_debounced(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    execute: Callable[[OverkizExecutor], Awaitable[None]],
+) -> None:
+    """Commanding several entities at once coalesces into a single refresh."""
+    entry = await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    coordinator = entry.runtime_data.coordinator
+    mock_client.reset_mock()
+
+    await asyncio.gather(
+        *(
+            execute(OverkizExecutor(device.device_url, coordinator))
+            for device in (POOL_PUMP, POOL_HOUSE)
+        )
+    )
+
+    assert mock_client.execute_action_group.await_count == 2
+    assert mock_client.fetch_events.await_count == 1
+
+
+async def test_rate_limit_back_off_never_polls_faster_than_configured(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An hourly hub is not sped up to the rate limit cap by backing off."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.is_rate_limited
+    assert coordinator.update_interval >= UPDATE_INTERVAL_ALL_ASSUMED_STATE
+    assert coordinator.update_interval > UPDATE_INTERVAL_RATE_LIMITED_MAX
+
+
+async def test_rate_limit_recovery_restores_execution_polling(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Recovering while an execution is pending resumes the faster cadence."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.executions["exec-1"] = []
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.is_rate_limited
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.is_rate_limited
+    assert coordinator.update_interval == UPDATE_INTERVAL_EXECUTION
+
+
+async def test_reconnect_clears_rate_limit_back_off(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Recovering through the reconnect path also restores the cadence."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.is_rate_limited
+
+    # A reconnect returns devices without ever reaching the event loop below it.
+    mock_client.fetch_events.side_effect = ServerDisconnectedError
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+    assert not coordinator.is_rate_limited
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_stateless_recovery_restores_default_interval(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A stateless hub is not left backed off by a pending execution."""
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    coordinator = entry.runtime_data.coordinator
+    coordinator.is_stateless = True
+    coordinator.executions["exec-1"] = []
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.update_interval > UPDATE_INTERVAL
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.is_rate_limited
+    assert coordinator.update_interval == UPDATE_INTERVAL
+
+
+async def test_water_heater_refreshes_are_debounced(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Water heaters refresh through the debouncer, not once per entity.
+
+    These platforms pass refresh_afterwards=False and refresh themselves once
+    the whole command sequence is sent, so they bypass the executor.
+    """
+    await setup_overkiz_integration(fixture=DHW_CE_FLAT_C2.fixture)
+    mock_client.reset_mock()
+
+    await asyncio.gather(
+        *(
+            hass.services.async_call(
+                "water_heater",
+                "set_temperature",
+                {"entity_id": device.entity_id, "temperature": 55.0},
+                blocking=True,
+            )
+            for device in (DHW_CE_FLAT_C2, DHW_ATLANTIC_IO)
+        )
+    )
+
+    assert mock_client.fetch_events.await_count == 1
 
 
 async def test_device_removed_deletes_device(

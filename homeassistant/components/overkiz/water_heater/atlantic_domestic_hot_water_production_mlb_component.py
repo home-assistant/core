@@ -218,7 +218,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             OverkizCommandParam.PROG,
             refresh_afterwards=False,
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_away_mode_off(self) -> None:

@@ -80,8 +80,13 @@ class OverkizExecutor:
                 "command_name": command_name,
             }
         )
+        # Entities derive their in-progress state from coordinator.executions,
+        # which just changed locally, so publish it without waiting for the
+        # debounced refresh.
+        self.coordinator.async_update_listeners()
+
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_execute_commands(
         self, commands: list[Command], refresh_afterwards: bool = True
@@ -119,8 +124,13 @@ class OverkizExecutor:
                 "command_name": commands[-1].name,
             }
         )
+        # Entities derive their in-progress state from coordinator.executions,
+        # which just changed locally, so publish it without waiting for the
+        # debounced refresh.
+        self.coordinator.async_update_listeners()
+
         if refresh_afterwards:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
