@@ -28,6 +28,25 @@ NotificationItem = namedtuple(  # noqa: PYI024
     "NotificationItem", "hnotify huser name plc_datatype callback"
 )
 
+# Types not listed here are handled separately or unsupported.
+UNPACK_FORMATS = {
+    pyads.PLCTYPE_BYTE: "<b",
+    pyads.PLCTYPE_INT: "<h",
+    pyads.PLCTYPE_UINT: "<H",
+    pyads.PLCTYPE_SINT: "<b",
+    pyads.PLCTYPE_USINT: "<B",
+    pyads.PLCTYPE_DINT: "<i",
+    pyads.PLCTYPE_UDINT: "<I",
+    pyads.PLCTYPE_WORD: "<H",
+    pyads.PLCTYPE_DWORD: "<I",
+    pyads.PLCTYPE_LREAL: "<d",
+    pyads.PLCTYPE_REAL: "<f",
+    pyads.PLCTYPE_TOD: "<i",  # Treat as DINT
+    pyads.PLCTYPE_DATE: "<i",  # Treat as DINT
+    pyads.PLCTYPE_DT: "<i",  # Treat as DINT
+    pyads.PLCTYPE_TIME: "<i",  # Treat as DINT
+}
+
 _original_local_net_id: str | None = None
 
 # set_local_address() rebinds the whole process, so a probe must never overlap a
@@ -50,15 +69,6 @@ def apply_local_net_id(local_net_id: str | None) -> None:
             pyads.set_local_address(local_net_id or _original_local_net_id)
         finally:
             pyads.close_port()
-
-
-def _reset_local_net_id_cache() -> None:
-    """Reset the cached original local AMS NetID.
-
-    Only meant for test isolation between config entries.
-    """
-    global _original_local_net_id  # noqa: PLW0603  # pylint: disable=global-statement
-    _original_local_net_id = None
 
 
 @contextmanager
@@ -163,6 +173,11 @@ class AdsHub:
         """Write a value to the device."""
 
         with _ads_lock:
+            # The lock is released again before the client is closed, so I/O
+            # started after shutdown began would race the teardown.
+            if self._closed:
+                _LOGGER.debug("Not writing %s, the hub is shut down", name)
+                return None
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
@@ -172,6 +187,9 @@ class AdsHub:
         """Read a value from the device."""
 
         with _ads_lock:
+            if self._closed:
+                _LOGGER.debug("Not reading %s, the hub is shut down", name)
+                return None
             try:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
@@ -233,34 +251,15 @@ class AdsHub:
             _LOGGER.error("Unknown device notification handle: %d", hnotify)
             return
 
-        # Data parsing based on PLC data type
         plc_datatype = notification_item.plc_datatype
-        unpack_formats = {
-            pyads.PLCTYPE_BYTE: "<b",
-            pyads.PLCTYPE_INT: "<h",
-            pyads.PLCTYPE_UINT: "<H",
-            pyads.PLCTYPE_SINT: "<b",
-            pyads.PLCTYPE_USINT: "<B",
-            pyads.PLCTYPE_DINT: "<i",
-            pyads.PLCTYPE_UDINT: "<I",
-            pyads.PLCTYPE_WORD: "<H",
-            pyads.PLCTYPE_DWORD: "<I",
-            pyads.PLCTYPE_LREAL: "<d",
-            pyads.PLCTYPE_REAL: "<f",
-            pyads.PLCTYPE_TOD: "<i",  # Treat as DINT
-            pyads.PLCTYPE_DATE: "<i",  # Treat as DINT
-            pyads.PLCTYPE_DT: "<i",  # Treat as DINT
-            pyads.PLCTYPE_TIME: "<i",  # Treat as DINT
-        }
-
         if plc_datatype == pyads.PLCTYPE_BOOL:
             value = bool(struct.unpack("<?", bytearray(data))[0])
         elif plc_datatype == pyads.PLCTYPE_STRING:
             value = (
                 bytearray(data).split(b"\x00", 1)[0].decode("utf-8", errors="ignore")
             )
-        elif plc_datatype in unpack_formats:
-            value = struct.unpack(unpack_formats[plc_datatype], bytearray(data))[0]
+        elif plc_datatype in UNPACK_FORMATS:
+            value = struct.unpack(UNPACK_FORMATS[plc_datatype], bytearray(data))[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
@@ -276,12 +275,19 @@ def connect(
     # local AMS NetID out from under the port open or the state read.
     with _ads_lock:
         apply_local_net_id(local_net_id)
-        hub = AdsHub(pyads.Connection(device, port, ip_address))
+        hub: AdsHub | None = None
         try:
+            hub = AdsHub(pyads.Connection(device, port, ip_address))
             hub.read_state()
         except pyads.ADSError, RuntimeError:
-            # No notification is subscribed yet, so this cannot wait on a callback.
-            hub.shutdown()
+            if hub is not None:
+                # No notification is subscribed yet, so this cannot wait on a
+                # callback.
+                hub.shutdown()
+            if local_net_id:
+                # A failed entry is never unloaded, so the process-wide override
+                # has to be undone here or it outlives the failed connection.
+                apply_local_net_id(None)
             raise
         return hub
 

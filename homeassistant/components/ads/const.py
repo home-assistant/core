@@ -4,8 +4,6 @@ from enum import StrEnum
 
 DOMAIN = "ads"
 
-DATA_PREVIOUS_HUB = "previous_hub"
-
 DEFAULT_PORT = 851
 
 CONF_ADS_VAR = "adsvar"

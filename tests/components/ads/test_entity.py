@@ -61,12 +61,24 @@ def test_mark_unavailable_clears_every_cached_state_field() -> None:
     assert entity._state_dict == {STATE_KEY_STATE: None, "position": None}
 
 
-async def test_async_will_remove_from_hass() -> None:
+async def test_unregisters_when_removed(hass: HomeAssistant) -> None:
     """Test the entity unregisters itself from the hub when removed."""
     hub = MagicMock(spec=AdsHub)
     entity = AdsEntity(hub, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
 
-    await entity.async_will_remove_from_hass()
+    await entity.async_remove()
+
+    hub.unregister_device.assert_called_once_with(entity)
+
+
+def test_unregisters_when_not_added() -> None:
+    """Test an entity the platform refuses to add is dropped from the hub."""
+    hub = MagicMock(spec=AdsHub)
+    entity = AdsEntity(hub, "test", "GVL.test")
+
+    entity.add_to_platform_abort()
 
     hub.unregister_device.assert_called_once_with(entity)
 

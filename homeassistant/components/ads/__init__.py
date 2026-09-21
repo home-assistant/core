@@ -19,9 +19,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DATA_PREVIOUS_HUB, DOMAIN, AdsType
+from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DOMAIN, AdsType
 from .hub import AdsConfigEntry, apply_local_net_id, connect
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +98,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ADS_TYPEMAP[ads_type],
         )
 
-    hass.services.async_register(
+    # Writing an arbitrary PLC variable can change machine configuration or
+    # safety-relevant state, so it is restricted to admins.
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_WRITE_DATA_BY_NAME,
         handle_write_data_by_name,
@@ -116,32 +120,24 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
         DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
     )
 
+    # An already configured entry still means the YAML block can go away.
     if (
         result["type"] is FlowResultType.ABORT
         and result["reason"] != "single_instance_allowed"
     ):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version="2027.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-            translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
-        )
-        return
+        issue_id = f"deprecated_yaml_import_issue_{result['reason']}"
+    else:
+        issue_id = "deprecated_yaml"
 
     async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_yaml",
+        issue_id,
         breaks_in_ha_version="2027.4.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
+        translation_key=issue_id,
         translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
     )
 
@@ -165,9 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
 
     entry.runtime_data = hub
 
-    if DOMAIN in hass.data and (
-        previous_hub := hass.data[DOMAIN].pop(DATA_PREVIOUS_HUB, None)
-    ):
+    if previous_hub := hass.data.pop(DOMAIN, None):
         # The previous hub stays the entities' registry while the entry is
         # unloaded, so entities removed in the meantime are already gone here.
         devices = previous_hub.devices
@@ -209,7 +203,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool
             await task
     # Keep the hub as the registry for the YAML entities that outlive the entry,
     # so they can be rebound once it is set up again.
-    hass.data.setdefault(DOMAIN, {})[DATA_PREVIOUS_HUB] = hub
+    hass.data[DOMAIN] = hub
     await hass.async_add_executor_job(hub.shutdown)
     if entry.data.get(CONF_LOCAL_NET_ID):
         # The override is process-wide, so it must not outlive the connection.

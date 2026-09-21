@@ -5,6 +5,7 @@ from asyncio import timeout
 import logging
 from typing import Any, override
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import STATE_KEY_STATE
@@ -24,10 +25,12 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._event: asyncio.Event | None = None
         self._attr_unique_id = ads_var
         self._attr_name = name
         ads_hub.register_device(self)
+        # Also runs when the entity platform refuses to add this entity, so a
+        # rejected one is not left behind on the hub.
+        self.async_on_remove(self._unregister_from_hub)
 
     async def async_initialize_device(
         self,
@@ -47,21 +50,18 @@ class AdsEntity(Entity):
             else:
                 self._state_dict[state_key] = value / factor
 
-            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
+            # Callbacks arrive on a pyads thread, so hop to the event loop.
+            self.hass.loop.call_soon_threadsafe(event.set)
             self.schedule_update_ha_state()
 
-        async def async_event_set():
-            """Set event in async context."""
-            self._event.set()
-
-        self._event = asyncio.Event()
+        event = asyncio.Event()
 
         await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
             async with timeout(10):
-                await self._event.wait()
+                await event.wait()
         except TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
 
@@ -79,9 +79,9 @@ class AdsEntity(Entity):
         if self.hass is not None:
             self.schedule_update_ha_state()
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister this entity from its hub when it is removed."""
+    @callback
+    def _unregister_from_hub(self) -> None:
+        """Unregister this entity from its hub."""
         self._ads_hub.unregister_device(self)
 
     def rebind(self, ads_hub: AdsHub) -> None:

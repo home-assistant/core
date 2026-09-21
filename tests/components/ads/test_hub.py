@@ -80,6 +80,24 @@ def test_read_by_name_error(hub: AdsHub, ads_client: MagicMock) -> None:
     assert hub.read_by_name("GVL.test", pyads.PLCTYPE_INT) is None
 
 
+def test_write_by_name_after_shutdown(hub: AdsHub, ads_client: MagicMock) -> None:
+    """Test a write is refused once the hub is shut down."""
+    hub.shutdown()
+
+    assert hub.write_by_name("GVL.test", 42, pyads.PLCTYPE_INT) is None
+
+    ads_client.write_by_name.assert_not_called()
+
+
+def test_read_by_name_after_shutdown(hub: AdsHub, ads_client: MagicMock) -> None:
+    """Test a read is refused once the hub is shut down."""
+    hub.shutdown()
+
+    assert hub.read_by_name("GVL.test", pyads.PLCTYPE_INT) is None
+
+    ads_client.read_by_name.assert_not_called()
+
+
 def test_add_device_notification(hub: AdsHub, ads_client: MagicMock) -> None:
     """Test adding a device notification stores it on the hub."""
     ads_client.add_device_notification.return_value = (1, 2)

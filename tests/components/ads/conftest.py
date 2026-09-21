@@ -11,10 +11,10 @@ import pyads
 import pytest
 
 from homeassistant.components.ads import hub as ads_hub
-from homeassistant.components.ads.const import DOMAIN
+from homeassistant.components.ads.const import CONF_LOCAL_NET_ID, DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 
-from .const import AMS_NET_ID, AUTO_NET_ID
+from .const import AMS_NET_ID, AUTO_NET_ID, LOCAL_NET_ID
 
 from tests.common import MockConfigEntry
 
@@ -31,7 +31,7 @@ class MockPyadsLocalNetId(NamedTuple):
 @pytest.fixture(autouse=True)
 def _reset_local_net_id_cache() -> None:
     """Ensure the cached original AMS NetID does not leak between tests."""
-    ads_hub._reset_local_net_id_cache()
+    ads_hub._original_local_net_id = None
 
 
 @pytest.fixture
@@ -123,5 +123,20 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DEVICE: AMS_NET_ID,
             CONF_IP_ADDRESS: "192.168.1.10",
             CONF_PORT: 851,
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_local_net_id() -> MockConfigEntry:
+    """Return a mocked config entry with a custom local AMS NetID."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=AMS_NET_ID,
+        data={
+            CONF_DEVICE: AMS_NET_ID,
+            CONF_IP_ADDRESS: "192.168.1.10",
+            CONF_PORT: 851,
+            CONF_LOCAL_NET_ID: LOCAL_NET_ID,
         },
     )
