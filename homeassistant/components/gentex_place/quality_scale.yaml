@@ -52,8 +52,10 @@ rules:
     status: exempt
     comment: Devices are discovered from the cloud, no local network discovery
   discovery:
-    status: exempt
-    comment: Devices are discovered from the cloud, no local network discovery
+    status: todo
+    comment: >-
+      Devices advertise over BLE during provisioning, but place-integration-api
+      does not currently expose this.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
