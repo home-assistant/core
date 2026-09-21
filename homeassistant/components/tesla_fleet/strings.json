@@ -700,10 +700,6 @@
           "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
           "name": "Location"
         },
-        "name": {
-          "description": "The name of the schedule.",
-          "name": "[%key:common::config_flow::data::name%]"
-        },
         "one_time": {
           "description": "If this is a one-time schedule.",
           "name": "One-time"

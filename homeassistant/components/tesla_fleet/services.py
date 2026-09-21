@@ -3,13 +3,12 @@
 from datetime import time
 from typing import TYPE_CHECKING
 
+import probatio
 from tesla_fleet_api.const import Scope
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LOCATION,
-    ATTR_NAME,
     CONF_DEVICE_ID,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -39,7 +38,7 @@ ATTR_ONE_TIME = "one_time"
 ATTR_START_TIME = "start_time"
 
 # The vehicle rejects an ID of zero, which the selector also disallows.
-SCHEDULE_ID = vol.All(cv.positive_int, vol.Range(min=1))
+SCHEDULE_ID = probatio.All(cv.positive_int, probatio.Range(min=1))
 
 SERVICE_ADD_CHARGE_SCHEDULE = "add_charge_schedule"
 SERVICE_REMOVE_CHARGE_SCHEDULE = "remove_charge_schedule"
@@ -65,8 +64,9 @@ def _get_vehicle_for_service_call(
 ) -> TeslaFleetVehicleData:
     """Get the vehicle a charging service call targets."""
     config_entry: TeslaFleetConfigEntry
+    # Vehicles are matched by serial number, which only a main device has.
     device, config_entry = service.async_get_device_and_config_entry(
-        hass, DOMAIN, call.data[CONF_DEVICE_ID]
+        hass, DOMAIN, call.data[CONF_DEVICE_ID], include_child_devices=False
     )
 
     vehicle = next(
@@ -135,7 +135,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     end_time=end_time,
                     one_time=call.data.get(ATTR_ONE_TIME),
                     id=schedule_id,
-                    name=call.data.get(ATTR_NAME),
                 )
             )
         except ValueError as err:
@@ -153,22 +152,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_ADD_CHARGE_SCHEDULE,
         add_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): vol.All(
-                    cv.ensure_list, vol.Length(min=1), [vol.In(DAYS_OF_WEEK_BITS)]
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAYS_OF_WEEK): probatio.All(
+                    cv.ensure_list,
+                    probatio.Length(min=1),
+                    [probatio.In(DAYS_OF_WEEK_BITS)],
                 ),
-                vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_LOCATION): {
-                    vol.Required(CONF_LATITUDE): cv.latitude,
-                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                probatio.Required(ATTR_ENABLE): cv.boolean,
+                probatio.Optional(ATTR_LOCATION): {
+                    probatio.Required(CONF_LATITUDE): cv.latitude,
+                    probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Optional(ATTR_START_TIME): cv.time,
-                vol.Optional(ATTR_END_TIME): cv.time,
-                vol.Optional(ATTR_ONE_TIME): cv.boolean,
-                vol.Optional(ATTR_ID): SCHEDULE_ID,
-                vol.Optional(ATTR_NAME): cv.string,
+                probatio.Optional(ATTR_START_TIME): cv.time,
+                probatio.Optional(ATTR_END_TIME): cv.time,
+                probatio.Optional(ATTR_ONE_TIME): cv.boolean,
+                probatio.Optional(ATTR_ID): SCHEDULE_ID,
             }
         ),
         supports_response=SupportsResponse.OPTIONAL,
@@ -188,10 +188,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_CHARGE_SCHEDULE,
         remove_charge_schedule,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ID): SCHEDULE_ID,
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ID): SCHEDULE_ID,
             }
         ),
     )
