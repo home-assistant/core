@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
-from pyicloud.exceptions import PyiCloudException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -127,87 +126,3 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
-
-
-def _account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
-    """Return an account wired to the mocked service."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
-    )
-    config_entry.add_to_hass(hass)
-    return IcloudAccount(
-        hass,
-        MOCK_CONFIG[CONF_USERNAME],
-        MOCK_CONFIG[CONF_PASSWORD],
-        mock_store,
-        MOCK_CONFIG[CONF_WITH_FAMILY],
-        MOCK_CONFIG[CONF_MAX_INTERVAL],
-        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
-        config_entry,
-    )
-
-
-async def test_poll_asks_icloud_to_locate_the_devices(
-    hass: HomeAssistant,
-    mock_store: Mock,
-    mock_icloud_service: MagicMock,
-) -> None:
-    """Test that a poll requests a fresh fix before the devices are read.
-
-    Nothing else asks for one: reading `devices` only builds the service
-    manager, and the background refresh pyicloud runs alongside it leaves
-    `locate` at its default of False. Without this request the integration
-    only ever sees whichever fix iCloud is already holding, which is the
-    very thing the staleness check then discards.
-    """
-    account = _account(hass, mock_store)
-
-    with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
-        account.keep_alive()
-
-    assert mock_icloud_service.devices.locate_requests == [True]
-
-
-async def test_devices_are_read_even_when_the_locate_request_fails(
-    hass: HomeAssistant,
-    mock_store: Mock,
-    mock_icloud_service: MagicMock,
-) -> None:
-    """Test that a failed locate does not stop the poll.
-
-    Locating is best effort. The cached fixes are still worth reading, so a
-    failure here must not cost the account its update.
-    """
-    account = _account(hass, mock_store)
-
-    with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
-        mock_icloud_service.devices.refresh = Mock(
-            side_effect=PyiCloudException("locate unavailable")
-        )
-        account.keep_alive()
-
-    assert account.devices
-
-
-async def test_no_locate_requested_while_a_verification_code_is_pending(
-    hass: HomeAssistant,
-    mock_store: Mock,
-    mock_icloud_service: MagicMock,
-) -> None:
-    """Test that no locate is requested while the account needs 2FA.
-
-    The session cannot serve one, and asking would only add a failed call to
-    an account that is already waiting on the user.
-    """
-    account = _account(hass, mock_store)
-
-    with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
-        mock_icloud_service.devices.locate_requests.clear()
-        mock_icloud_service.requires_2fa = True
-        with patch.object(account, "_require_reauth"):
-            account.keep_alive()
-
-    assert mock_icloud_service.devices.locate_requests == []

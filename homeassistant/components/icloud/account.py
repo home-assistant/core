@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
-    PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -330,31 +329,7 @@ class IcloudAccount:
             return
 
         self.api.authenticate()
-        self._request_location_refresh()
         self.update_devices()
-
-    def _request_location_refresh(self) -> None:
-        """Ask iCloud to locate the devices before their fixes are read.
-
-        Nothing else does. Reading `PyiCloudService.devices` only builds the
-        service manager, and the background refresh pyicloud runs alongside it
-        leaves `locate` at its default of False, so both return whichever fix
-        iCloud is already holding. A device that is not reporting of its own
-        accord keeps that fix, and iCloud serves it flagged as cached.
-
-        Discarding a cached fix is only sound if something has asked for a
-        fresher one, so the request belongs here, immediately before the
-        devices are read.
-        """
-        if self.api is None or self.api.requires_2fa:
-            return
-
-        try:
-            self.api.devices.refresh(locate=True)
-        except PyiCloudException as err:
-            # Locating is best effort. The fetch that follows still has the
-            # cached fixes to work with, so a failure here must not stop it.
-            _LOGGER.debug("Could not request an iCloud location refresh: %s", err)
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
