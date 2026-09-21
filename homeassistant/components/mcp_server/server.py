@@ -44,7 +44,9 @@ def _format_tool(
 ) -> types.Tool:
     """Format tool specification."""
     input_schema = probatio.to_openapi(
-        tool.parameters, custom_serializer=custom_serializer
+        tool.parameters,
+        custom_serializer=custom_serializer,
+        openapi_version="3.1.0",
     )
     mcp_schema: dict[str, Any] = {
         "type": "object",
