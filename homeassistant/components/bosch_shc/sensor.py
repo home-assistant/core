@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
+    SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
@@ -28,10 +29,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 0
@@ -296,6 +299,57 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
+
+    async_add_entities(
+        [SHCOpenWindowsSensor(session=session, parent_id=shc_info.unique_id)],
+        update_before_add=True,
+    )
+
+
+class SHCOpenWindowsSensor(SensorEntity):
+    """Whole-home summary of open doors/windows (official OpenAPI spec).
+
+    Not tied to one SHC device, so this does not inherit SHCEntity — it's
+    scoped to the config entry and linked to the hub device directly. The
+    underlying doors-windows/openwindows endpoint is a plain GET, not
+    delivered by the long-poll stream, so this needs should_poll=True.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "open_windows_doors"
+    _attr_should_poll = True
+
+    def __init__(self, session: SHCSession, parent_id: str) -> None:
+        """Initialize the open-windows/doors summary sensor."""
+        self._session = session
+        self._attr_unique_id = f"{parent_id}_open_windows_doors"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, parent_id)})
+        self._open_doors: list[dict[str, Any]] = []
+        self._open_windows: list[dict[str, Any]] = []
+        self._open_others: list[dict[str, Any]] = []
+
+    @property
+    @override
+    def native_value(self) -> int:
+        """Return the total count of open doors, windows, and other openings."""
+        return len(self._open_doors) + len(self._open_windows) + len(self._open_others)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, list[str]]:
+        """Return the names of each currently-open door/window/other opening."""
+        return {
+            "open_doors": [d.get("name", "") for d in self._open_doors],
+            "open_windows": [w.get("name", "") for w in self._open_windows],
+            "open_others": [o.get("name", "") for o in self._open_others],
+        }
+
+    def update(self) -> None:
+        """Poll the whole-home open-doors/open-windows summary."""
+        data = self._session.api.get_open_windows()
+        self._open_doors = data.get("openDoors", [])
+        self._open_windows = data.get("openWindows", [])
+        self._open_others = data.get("openOthers", [])
 
 
 class SHCSensor[_DeviceT: SHCDevice](SHCEntity, SensorEntity):
