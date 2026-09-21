@@ -62,12 +62,7 @@ async def test_query_windows_follow_configured_time_zone(
     budget_start_date: str,
     budget_end_date: str,
 ) -> None:
-    """Test query windows use the configured time zone.
-
-    The clock is stopped at a moment that is still 2025 in UTC but already 2026
-    in Pacific/Kiritimati, so a query built from the host clock would ask for
-    the wrong year.
-    """
+    """Test query windows use the configured time zone."""
     await hass.config.async_set_time_zone(time_zone)
     freezer.move_to(frozen_time)
 
