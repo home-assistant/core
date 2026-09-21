@@ -125,9 +125,13 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
         result["type"] is FlowResultType.ABORT
         and result["reason"] != "single_instance_allowed"
     ):
+        # The connection and its YAML entities stay unavailable until the user
+        # acts, so this is more than a deprecation notice.
         issue_id = f"deprecated_yaml_import_issue_{result['reason']}"
+        severity = IssueSeverity.ERROR
     else:
         issue_id = "deprecated_yaml"
+        severity = IssueSeverity.WARNING
 
     async_create_issue(
         hass,
@@ -136,7 +140,7 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
         breaks_in_ha_version="2027.4.0",
         is_fixable=False,
         issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
+        severity=severity,
         translation_key=issue_id,
         translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
     )

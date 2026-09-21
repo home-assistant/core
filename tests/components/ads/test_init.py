@@ -246,7 +246,8 @@ async def test_yaml_import(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 @pytest.mark.usefixtures("mock_pyads_connection")
@@ -284,7 +285,14 @@ async def test_yaml_import_already_configured(
         ),
         pytest.param(
             lambda mock: setattr(
-                mock.return_value.read_state, "side_effect", RuntimeError
+                mock.return_value.open, "side_effect", RuntimeError("router down")
+            ),
+            "cannot_connect",
+            id="router_down",
+        ),
+        pytest.param(
+            lambda mock: setattr(
+                mock.return_value.read_state, "side_effect", TypeError
             ),
             "unknown",
             id="unknown",
@@ -305,9 +313,12 @@ async def test_yaml_import_failed(
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries(DOMAIN)
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{reason}"
     )
+    # The connection is unavailable until the user acts, unlike the plain
+    # deprecation notice.
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
 
 

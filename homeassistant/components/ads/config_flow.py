@@ -66,7 +66,9 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(_validate_connection, data)
         except ValueError:
             return "invalid_net_id"
-        except pyads.ADSError:
+        except pyads.ADSError, RuntimeError:
+            # A missing local AMS router raises RuntimeError; setup treats that
+            # as a connectivity failure too.
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

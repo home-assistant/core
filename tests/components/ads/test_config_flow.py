@@ -128,7 +128,14 @@ CONNECT_ERRORS = [
         id="invalid_net_id",
     ),
     pytest.param(
-        lambda mock: setattr(mock.return_value.read_state, "side_effect", RuntimeError),
+        lambda mock: setattr(
+            mock.return_value.open, "side_effect", RuntimeError("router down")
+        ),
+        "cannot_connect",
+        id="router_down",
+    ),
+    pytest.param(
+        lambda mock: setattr(mock.return_value.read_state, "side_effect", TypeError),
         "unknown",
         id="unknown",
     ),
@@ -156,6 +163,7 @@ async def test_user_flow_errors(
     assert result["errors"] == {"base": error}
 
     mock_pyads_connection.side_effect = None
+    mock_pyads_connection.return_value.open.side_effect = None
     mock_pyads_connection.return_value.read_state.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
