@@ -1,6 +1,5 @@
 """Tests for the Xbox coordinators."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,7 +9,6 @@ from pythonxbox.api.provider.achievements.models import AchievementResponse
 from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.xbox.const import DOMAIN
-from homeassistant.components.xbox.coordinator import XboxPresenceCoordinator
 from homeassistant.core import HomeAssistant
 
 from tests.common import (
@@ -37,16 +35,6 @@ def gameprogress(total: int) -> AchievementResponse:
     return AchievementResponse(
         achievements=[], pagingInfo={"continuationToken": None, "totalRecords": total}
     )
-
-
-@pytest.fixture(autouse=True)
-def clear_coordinator_caches() -> Generator[None]:
-    """title_data and achievement_totals are ClassVars shared between tests."""
-    XboxPresenceCoordinator.title_data.clear()
-    XboxPresenceCoordinator.achievement_totals.clear()
-    yield
-    XboxPresenceCoordinator.title_data.clear()
-    XboxPresenceCoordinator.achievement_totals.clear()
 
 
 @pytest.fixture(name="zero_total")

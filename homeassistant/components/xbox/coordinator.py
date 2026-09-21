@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar, override
+from typing import override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -195,8 +195,18 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
 
     config_entry: XboxConfigEntry
     _update_interval = timedelta(seconds=30)
-    title_data: ClassVar[dict[str, Title]] = {}
-    achievement_totals: ClassVar[dict[str, int]] = {}
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        client: XboxLiveClient,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, client)
+
+        self.title_data: dict[str, Title] = {}
+        self.achievement_totals: dict[str, int] = {}
 
     @override
     async def update_data(self) -> XboxData:
