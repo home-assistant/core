@@ -105,6 +105,7 @@ class OpenThermGatewayHub:
     async def cleanup(self, event=None) -> None:
         """Reset overrides on the gateway."""
         await self.gateway.set_control_setpoint(0)
+        await self.gateway.set_control_setpoint_2(0)
         await self.gateway.set_max_relative_mod("-")
         await self.gateway.disconnect()
 
