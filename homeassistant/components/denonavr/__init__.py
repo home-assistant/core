@@ -74,7 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
         entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET),
-        entry.options.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY),
         lambda: get_async_client(hass),
     )
     try:
@@ -143,9 +142,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     def _propagate_audyssey_failure_to_general() -> None:
         """Reflect a confirmed Audyssey connectivity failure into the status one.
 
-        Applies whatever this coordinator's schedule: a connectivity error
-        here means the receiver itself is unreachable. Mirrors failure only -
-        the status coordinator's own poll is what confirms recovery.
+        Applies regardless of this coordinator's schedule: a connectivity
+        error here means the receiver itself is unreachable. Mirrors failure
+        only - the status coordinator's own poll is what confirms recovery.
         """
         if not audyssey_coordinator.last_update_success:
             mark_unavailable(coordinator)
@@ -156,18 +155,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         )
     )
 
-    # Regular status queries don't populate the Audyssey values, so without
-    # this they start unknown. Runs after the listener above so a failure
-    # still reaches the status coordinator, but does not block setup.
-    if use_telnet and update_audyssey:
-        # receiver.py's connection step already fetched this.
-        pass
-    elif use_telnet:
-        # Telnet pushes Audyssey data on a change and never on connect, so
-        # the regular skip would leave it unset indefinitely.
-        await audyssey_coordinator.async_refresh_forced()
-    else:
-        await audyssey_coordinator.async_refresh()
+    # Nothing else populates these values: status queries skip them and Telnet
+    # only pushes on a change. Forced, and after the listener above so a
+    # failure reaches the status coordinator instead of failing setup.
+    await audyssey_coordinator.async_refresh_forced()
 
     entry.runtime_data = DenonAvrData(
         receiver=receiver,

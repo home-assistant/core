@@ -24,7 +24,12 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ, CONF_USE_TELNET
+from homeassistant.components.denonavr.const import (
+    ATTR_DYNAMIC_EQ,
+    CONF_UPDATE_AUDYSSEY,
+    CONF_USE_TELNET,
+)
+from homeassistant.components.denonavr.coordinator import mark_unavailable
 from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
     SERVICE_GET_COMMAND,
@@ -322,6 +327,87 @@ async def test_initial_audyssey_failure_marks_status_unavailable(
 
     assert entry.runtime_data.audyssey_coordinator.last_update_success is False
     assert entry.runtime_data.coordinator.last_update_success is False
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            AvrProcessingError("Audyssey data not available"), id="processing"
+        ),
+        pytest.param(AvrNetworkError("Network error", "test"), id="network"),
+    ],
+)
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({}, id="http"),
+        pytest.param({CONF_UPDATE_AUDYSSEY: True}, id="http_audyssey"),
+        pytest.param({CONF_USE_TELNET: True}, id="telnet"),
+        pytest.param(
+            {CONF_USE_TELNET: True, CONF_UPDATE_AUDYSSEY: True}, id="telnet_audyssey"
+        ),
+    ],
+)
+async def test_setup_survives_initial_audyssey_failure(
+    hass: HomeAssistant,
+    client: MagicMock,
+    options: dict[str, bool],
+    exception: Exception,
+) -> None:
+    """The setup-time Audyssey fetch must not keep the entry from loading.
+
+    It is an opt-in extra on a receiver the connection step has already
+    reached, so a failure leaves the Audyssey data unset instead of
+    failing or retrying the whole entry.
+    """
+    client.telnet_connected = options.get(CONF_USE_TELNET, False)
+    client.telnet_healthy = client.telnet_connected
+    client.async_update_audyssey.side_effect = exception
+
+    entry = await setup_denonavr(hass, options=options)
+
+    assert entry.state is ConfigEntryState.LOADED
+    # Forced, so the Telnet-healthy skip does not swallow it.
+    client.async_update_audyssey.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "recovers"),
+    [
+        pytest.param(None, True, id="receiver_answers"),
+        pytest.param(
+            AvrNetworkError("Network error", "test"), False, id="still_unreachable"
+        ),
+    ],
+)
+async def test_unavailable_coordinator_reads_before_recovering(
+    hass: HomeAssistant,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception | None,
+    recovers: bool,
+) -> None:
+    """The Telnet-healthy skip must not be what clears a confirmed failure.
+
+    A skipped poll reports success without asking the receiver, so it
+    would restore availability with nothing behind it.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    entry = await setup_denonavr(hass, options={CONF_USE_TELNET: True})
+    coordinator = entry.runtime_data.coordinator
+
+    mark_unavailable(coordinator)
+    client.async_update.side_effect = side_effect
+    reads_before = client.async_update.await_count
+
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update.await_count > reads_before
+    assert coordinator.last_update_success is recovers
 
 
 async def test_update_audyssey_restores_availability(

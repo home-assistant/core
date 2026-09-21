@@ -178,9 +178,13 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Refresh the receiver via this coordinator's refresh_fn."""
+        # A skip reports success without asking the receiver, so it must not be
+        # what clears a confirmed failure. Costs one read per interval, and only
+        # while unavailable.
+        force = self._force_next_refresh or not self.last_update_success
         async with self.lock:
             try:
-                await self._refresh_fn(self.receiver, force=self._force_next_refresh)
+                await self._refresh_fn(self.receiver, force=force)
             except UNAVAILABLE_ON as err:
                 raise UpdateFailed(
                     f"Error communicating with {self.receiver.name}: {err}"
