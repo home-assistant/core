@@ -26,7 +26,10 @@ async def _validate_credentials(hass: HomeAssistant, email: str, password: str) 
     api = VitesyApi(email, password, async_get_clientsession(hass))
     await api.login()
     user = await api.get_user()
-    return str(user["id"])
+    user_id = user.get("id")
+    if not isinstance(user_id, (str, int)):
+        raise VitesyError(f"Profile response is missing a valid user id: {user_id!r}")
+    return str(user_id)
 
 
 class VitesyConfigFlow(ConfigFlow, domain=DOMAIN):

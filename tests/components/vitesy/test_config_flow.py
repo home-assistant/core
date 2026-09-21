@@ -73,6 +73,30 @@ async def test_form_errors_then_recovers(
     assert result["data"] == USER_INPUT
 
 
+async def test_form_invalid_user_id(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test a profile response without a usable id surfaces a recoverable error."""
+    mock_vitesy_client.get_user.return_value = {"id": None}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_vitesy_client.get_user.return_value = {"id": USER_ID}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == USER_INPUT
+
+
 async def test_already_configured(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,

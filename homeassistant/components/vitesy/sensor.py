@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from .const import LOGGER
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
 from .entity import VitesyEntity
 
@@ -46,7 +47,15 @@ def _reading(device: VitesyDevice, group: str, reading_id: str) -> float | None:
         if entry.get("id") == reading_id:
             value = entry.get("value")
             value = value.get("avg") if isinstance(value, dict) else value
-            return value if isinstance(value, (int, float)) else None
+            if isinstance(value, (int, float)):
+                return value
+            LOGGER.warning(
+                "Ignoring non-numeric value for reading %s on %s: %r",
+                reading_id,
+                device.name,
+                value,
+            )
+            return None
     return None
 
 
@@ -64,7 +73,18 @@ def _maintenance_due(component: str) -> Callable[[VitesyDevice], datetime | None
 
     def _value(device: VitesyDevice) -> datetime | None:
         due_date = device.maintenance.get(component, {}).get("due_date")
-        return dt_util.parse_datetime(due_date) if due_date else None
+        if not due_date:
+            return None
+        try:
+            return dt_util.parse_datetime(due_date, raise_on_error=True)
+        except ValueError:
+            LOGGER.warning(
+                "Ignoring unparsable %s due date for %s: %s",
+                component,
+                device.name,
+                due_date,
+            )
+            return None
 
     return _value
 
