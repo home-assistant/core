@@ -11,9 +11,14 @@ from aiomealie import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
@@ -143,9 +148,24 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                reauth_entry = self._get_reauth_entry()
+                data_updated = self.hass.config_entries.async_update_entry(
+                    reauth_entry,
+                    data={
+                        **reauth_entry.data,
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    },
+                )
+                if (
+                    reauth_entry.state is not ConfigEntryState.LOADED
+                    or not data_updated
+                ):
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return self.async_abort(
+                    reason="reauth_successful",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
