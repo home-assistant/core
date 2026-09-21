@@ -35,7 +35,7 @@ from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
-MINIMUM_CONFIDENCE = 0.97
+MINIMUM_CONFIDENCE = 0.99
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
