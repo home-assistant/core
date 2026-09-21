@@ -312,6 +312,41 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
     assert client.async_update_audyssey.call_count == calls_before_service + 1
 
 
+async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Overlapping forced refreshes fetch once, and neither ends up skipping.
+
+    The flag that bypasses the skip lives on the coordinator, and
+    async_refresh() reaches the debouncer lock only after it is set, so a
+    second caller running a refresh of its own would find it already
+    cleared, skip on the healthy Telnet here, and report a read it never
+    made. Joining the one in flight is what keeps its answer honest.
+    """
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    entry = await setup_denonavr(
+        hass, options={CONF_USE_TELNET: True, CONF_UPDATE_AUDYSSEY: True}
+    )
+    audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+
+    async def _suspending_update() -> None:
+        # Yields so the second caller arrives while the first still
+        # refreshes; without it the mock never suspends.
+        await asyncio.sleep(0)
+
+    client.async_update_audyssey.side_effect = _suspending_update
+    calls_before = client.async_update_audyssey.call_count
+
+    await asyncio.gather(
+        audyssey_coordinator.async_refresh_forced(),
+        audyssey_coordinator.async_refresh_forced(),
+    )
+
+    assert client.async_update_audyssey.call_count == calls_before + 1
+    assert audyssey_coordinator.sees_the_receiver
+
+
 @pytest.mark.parametrize(
     ("options", "status_available"),
     [

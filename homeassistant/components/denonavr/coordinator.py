@@ -159,6 +159,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
         self._last_refresh_read = False
+        self._force_refresh_lock = asyncio.Lock()
+        self._forced_refresh_count = 0
         self._internal_listeners: list[CALLBACK_TYPE] = []
 
     @property
@@ -218,14 +220,22 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def async_refresh_forced(self) -> None:
         """Refresh immediately, bypassing the Telnet-healthy skip.
 
-        For on-demand refreshes that need a confirmed fresh read; regular
-        polling and post-action confirmations keep the skip.
+        Overlapping callers join the refresh in flight. Its own lock, not the
+        receiver's: async_refresh() reaches the debouncer lock only after the
+        bypass flag is set, so concurrent callers would clear it for each
+        other and the later one would skip. Taken before the debouncer and
+        receiver locks, never after.
         """
-        self._force_next_refresh = True
-        try:
-            await self.async_refresh()
-        finally:
-            self._force_next_refresh = False
+        joined = self._forced_refresh_count
+        async with self._force_refresh_lock:
+            if self._forced_refresh_count != joined:
+                return
+            self._force_next_refresh = True
+            try:
+                await self.async_refresh()
+            finally:
+                self._force_next_refresh = False
+                self._forced_refresh_count += 1
 
     @override
     async def _async_update_data(self) -> None:
