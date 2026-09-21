@@ -53,6 +53,9 @@
       "humidity_rating": {
         "name": "Humidity rating"
       },
+      "open_windows_doors": {
+        "name": "Open doors and windows"
+      },
       "purity": {
         "name": "Purity"
       },
