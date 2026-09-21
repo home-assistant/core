@@ -31,6 +31,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -383,3 +384,32 @@ async def test_removing_an_entity_drops_its_subscription(
 
     assert not hub._notification_items
     mock_pyads_connection.return_value.del_device_notification.assert_called_once()
+
+
+async def test_renaming_an_entity_keeps_it_subscribed(
+    hass: HomeAssistant,
+    mock_ads_notifications: dict[str, bytes],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity ID change leaves the renamed entity subscribed.
+
+    Home Assistant re-adds the same entity instance after the rename, so the
+    removal it does first must not disarm the new subscription.
+    """
+    mock_ads_notifications["GVL.motion"] = BOOL_TRUE
+
+    assert await setup_ads_platform(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {"platform": DOMAIN, "adsvar": "GVL.motion", "name": "Motion"},
+    )
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "binary_sensor.motion", new_entity_id="binary_sensor.hallway"
+    )
+    await hass.async_block_till_done()
+
+    hub = hass.data[DATA_ADS]
+    assert len(hub._notification_items) == 1
+    assert hass.states.get("binary_sensor.hallway").state == STATE_ON

@@ -1,5 +1,6 @@
 """Test the ADS entity base class."""
 
+import asyncio
 from unittest.mock import MagicMock
 
 import pyads
@@ -52,3 +53,28 @@ async def test_subscription_landing_after_removal_is_dropped(
 
     hub.delete_device_notification.assert_called_once_with(7)
     assert not entity._notification_handles
+
+
+async def test_removal_stops_waiting_for_the_first_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test removal releases a subscription still waiting for its first value.
+
+    The PLC will not push to a deleted notification, so the wait would only run
+    into its timeout and hold up the entity being removed.
+    """
+    hub = MagicMock(spec=AdsHub)
+    hub.add_device_notification.return_value = 7
+    entity = AdsEntity(hub, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
+
+    task = hass.async_create_task(
+        entity.async_initialize_device("GVL.test", pyads.PLCTYPE_BOOL)
+    )
+    async with asyncio.timeout(5):
+        while not entity._notification_handles:
+            await asyncio.sleep(0)
+
+        await entity.async_will_remove_from_hass()
+        await task

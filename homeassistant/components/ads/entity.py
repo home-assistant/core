@@ -5,7 +5,9 @@ from asyncio import timeout
 import logging
 from typing import Any, override
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import EntityPlatform
 
 from .const import STATE_KEY_STATE
 from .hub import AdsHub
@@ -25,9 +27,26 @@ class AdsEntity(Entity):
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._notification_handles: list[int] = []
+        self._first_updates: list[asyncio.Event] = []
         self._removed = False
         self._attr_unique_id = ads_var
         self._attr_name = name
+
+    @callback
+    @override
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform.
+
+        The same instance is added again after an entity ID change, so the
+        removal preceding it must not disarm the new subscriptions.
+        """
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        self._removed = False
 
     async def async_initialize_device(
         self,
@@ -66,11 +85,14 @@ class AdsEntity(Entity):
             )
             return
         self._notification_handles.append(handle)
+        self._first_updates.append(event)
         try:
             async with timeout(10):
                 await event.wait()
         except TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
+        finally:
+            self._first_updates.remove(event)
 
     @property
     @override
@@ -88,6 +110,9 @@ class AdsEntity(Entity):
         # Set before the first await, so a subscription still in flight sees it
         # and cleans up after itself.
         self._removed = True
+        # Nothing will deliver a first update any more, so stop waiting for one.
+        for event in self._first_updates:
+            event.set()
         handles = self._notification_handles
         self._notification_handles = []
         for handle in handles:
