@@ -1319,15 +1319,27 @@ class SpeechManager:
             data_gen = tts_result.data_gen
             passthrough = tts_result.passthrough
 
-        # Only convert if we have a preferred format different than the
-        # expected format from the TTS system, or if a specific sample
-        # rate/format/channel count is requested.
-        needs_conversion = not passthrough and (
+        # Passthrough may skip conversion only for output options the engine
+        # accepted. An extension mismatch must always be converted.
+        passthrough_options = supported_options if passthrough else ()
+        needs_conversion = (
             (final_extension != extension)
-            or (sample_rate is not None)
-            or (sample_channels is not None)
-            or (sample_bytes is not None)
-            or (bitrate is not None)
+            or (
+                sample_rate is not None
+                and ATTR_PREFERRED_SAMPLE_RATE not in passthrough_options
+            )
+            or (
+                sample_channels is not None
+                and ATTR_PREFERRED_SAMPLE_CHANNELS not in passthrough_options
+            )
+            or (
+                sample_bytes is not None
+                and ATTR_PREFERRED_SAMPLE_BYTES not in passthrough_options
+            )
+            or (
+                bitrate is not None
+                and ATTR_PREFERRED_BITRATE not in passthrough_options
+            )
         )
 
         if needs_conversion:

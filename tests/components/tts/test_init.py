@@ -2076,6 +2076,7 @@ async def test_stream_audio_interrupt(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
     """Test interrupting a stream drops queued audio and notifies consumers."""
+    mock_tts_entity._supported_options.append(tts.ATTR_PREFERRED_SAMPLE_RATE)
     await mock_config_entry_setup(hass, mock_tts_entity)
     continue_generation = asyncio.Event()
 
@@ -2125,6 +2126,67 @@ async def test_stream_audio_interrupt(
             await anext(late_result)
 
     convert_audio.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("supported_options", "response_extension", "expect_conversion"),
+    [
+        ([], "mp3", True),
+        ([tts.ATTR_PREFERRED_SAMPLE_RATE], "mp3", False),
+        ([tts.ATTR_PREFERRED_SAMPLE_RATE], "wav", True),
+    ],
+)
+async def test_stream_passthrough_conversion(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    supported_options: list[str],
+    response_extension: str,
+    expect_conversion: bool,
+) -> None:
+    """Test passthrough only skips conversion for accepted output options."""
+    mock_tts_entity._supported_options = supported_options
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    received_options: dict[str, Any] = {}
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        received_options.update(request.options)
+
+        async def gen_data():
+            yield b"native"
+
+        return tts.TTSAudioResponse(
+            response_extension, gen_data(), passthrough=True
+        )
+
+    async def convert_audio(*args, **kwargs):
+        yield b"converted"
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        yield "hello"
+
+    stream = tts.async_create_stream(
+        hass,
+        mock_tts_entity.entity_id,
+        options={tts.ATTR_PREFERRED_SAMPLE_RATE: 16000},
+    )
+    with patch(
+        "homeassistant.components.tts._async_convert_audio", side_effect=convert_audio
+    ) as mock_convert_audio:
+        stream.async_set_message_stream(stream_message())
+        result = b"".join(
+            [chunk async for chunk in stream.async_stream_result()]
+        )
+
+    assert received_options == (
+        {tts.ATTR_PREFERRED_SAMPLE_RATE: 16000} if supported_options else {}
+    )
+    assert result == (b"converted" if expect_conversion else b"native")
+    assert mock_convert_audio.call_count == int(expect_conversion)
 
 
 async def test_stream_audio_immediate_interrupt(
