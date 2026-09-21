@@ -1,6 +1,8 @@
 """Tests for the Opower coordinator."""
 
 from datetime import datetime, timedelta
+from itertools import pairwise
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from opower import AggregateType, CostRead
@@ -636,3 +638,184 @@ async def test_coordinator_no_new_cost_reads_after_initial_load(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
     assert stats[statistic_id][0]["sum"] == 1.5
+
+
+async def test_coordinator_skips_update_when_hourly_reads_are_empty(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test that an empty hourly response does not write daily data over hourly data.
+
+    The account provides hourly reads, so an empty hourly response is a
+    transient failure. Falling back to the daily reads would write a day
+    resolution statistic at the same timestamp as the first hourly statistic of
+    that day, carrying a different running sum, which corrupts the series.
+    """
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    # 08:00 UTC is local midnight for the utility's timezone in January.
+    day1 = dt_util.as_utc(datetime(2023, 1, 1, 8))
+    day2 = dt_util.as_utc(datetime(2023, 1, 2, 8))
+    day3 = dt_util.as_utc(datetime(2023, 1, 3, 8))
+
+    def bill_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=day1,
+                end_time=dt_util.as_utc(datetime(2023, 2, 1, 8)),
+                consumption=60.0,
+                provided_cost=12.0,
+            )
+        ]
+
+    def daily_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=start, end_time=end, consumption=30.0, provided_cost=6.0
+            )
+            for start, end in ((day1, day2), (day2, day3))
+        ]
+
+    def hourly_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=day + timedelta(hours=hour),
+                end_time=day + timedelta(hours=hour + 1),
+                consumption=1.5,
+                provided_cost=0.3,
+            )
+            for day in (day1, day2)
+            for hour in range(3)
+        ]
+
+    async def all_resolutions(acc, aggregate_type, start, end):
+        return {
+            AggregateType.BILL: bill_reads(),
+            AggregateType.DAY: daily_reads(),
+            AggregateType.HOUR: hourly_reads(),
+        }[aggregate_type]
+
+    mock_opower_api.async_get_cost_reads.side_effect = all_resolutions
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    async def stats() -> list[dict[str, Any]]:
+        period_stats = await hass.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            day1,
+            None,
+            {statistic_id},
+            "hour",
+            None,
+            {"start", "state", "sum"},
+        )
+        return period_stats[statistic_id]
+
+    before = await stats()
+    assert len(before) == len(hourly_reads())
+
+    # The hourly endpoint transiently returns nothing.
+    async def no_hourly(acc, aggregate_type, start, end):
+        return {
+            AggregateType.BILL: bill_reads(),
+            AggregateType.DAY: daily_reads(),
+            AggregateType.HOUR: [],
+        }[aggregate_type]
+
+    mock_opower_api.async_get_cost_reads.side_effect = no_hourly
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    after = await stats()
+    assert after == before
+    # Every sum must still be the previous sum plus that hour's state. A daily
+    # read written at local midnight breaks this because it carries its own sum.
+    for previous, current in pairwise(after):
+        assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
+
+
+async def test_coordinator_skips_update_when_daily_reads_are_empty(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test that an empty daily response does not write bill data over daily data."""
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    # The gas account provides daily reads.
+    account = mock_opower_api.async_get_accounts.return_value[1]
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    statistic_id = "opower:pge_gas_222222_energy_consumption"
+    jan1 = dt_util.as_utc(datetime(2023, 1, 1, 8))
+    feb1 = dt_util.as_utc(datetime(2023, 2, 1, 8))
+    mar1 = dt_util.as_utc(datetime(2023, 3, 1, 8))
+
+    # Two bill periods, so the second one is not skipped as the starting anchor.
+    # The coordinator splices the finer reads into the list it is given, so each
+    # call has to hand back a fresh list.
+    def bill_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=jan1, end_time=feb1, consumption=60.0, provided_cost=12.0
+            ),
+            CostRead(
+                start_time=feb1, end_time=mar1, consumption=55.0, provided_cost=11.0
+            ),
+        ]
+
+    def daily_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=start,
+                end_time=start + timedelta(days=1),
+                consumption=2.0,
+                provided_cost=0.4,
+            )
+            for start in (jan1, jan1 + timedelta(days=1), feb1)
+        ]
+
+    async def all_resolutions(acc, aggregate_type, start, end):
+        return {
+            AggregateType.BILL: bill_reads(),
+            AggregateType.DAY: daily_reads(),
+        }[aggregate_type]
+
+    mock_opower_api.async_get_cost_reads.side_effect = all_resolutions
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    async def stats() -> list[dict[str, Any]]:
+        period_stats = await hass.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            jan1,
+            None,
+            {statistic_id},
+            "hour",
+            None,
+            {"start", "state", "sum"},
+        )
+        return period_stats[statistic_id]
+
+    before = await stats()
+    assert len(before) == len(daily_reads())
+
+    # The daily endpoint transiently returns nothing.
+    async def no_daily(acc, aggregate_type, start, end):
+        return {AggregateType.BILL: bill_reads(), AggregateType.DAY: []}[aggregate_type]
+
+    mock_opower_api.async_get_cost_reads.side_effect = no_daily
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    after = await stats()
+    assert after == before
+    for previous, current in pairwise(after):
+        assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
