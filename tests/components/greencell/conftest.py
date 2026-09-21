@@ -55,6 +55,9 @@ TEST_STATUS_PAYLOAD_ERROR_CAR = b'{"state": "ERROR_CAR"}'
 TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
 TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
 
+# MQTT message payloads - Device state
+TEST_DEVICE_STATE_PAYLOAD_EXECUTE = b'{"level": "EXECUTE"}'
+
 
 @pytest.fixture
 def mock_config_entry():

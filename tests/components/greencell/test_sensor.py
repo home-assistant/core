@@ -1,5 +1,7 @@
 """Real integration tests for Greencell EVSE sensors."""
 
+import logging
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,6 +15,8 @@ from .conftest import (
     TEST_CURRENT_PAYLOAD_3PHASE,
     TEST_CURRENT_PAYLOAD_SINGLE,
     TEST_CURRENT_TOPIC,
+    TEST_DEVICE_STATE_PAYLOAD_EXECUTE,
+    TEST_DEVICE_STATE_TOPIC,
     TEST_POWER_PAYLOAD_CHARGING,
     TEST_POWER_TOPIC,
     TEST_SERIAL_NUMBER,
@@ -130,3 +134,28 @@ async def test_sensor_availability_and_errors(
     state = hass.states.get(curr_l1)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Losing and regaining the device is logged exactly once per transition."""
+    caplog.set_level(logging.INFO)
+
+    for _ in range(2):
+        async_fire_mqtt_message(
+            hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_UNAVAILABLE
+        )
+    await hass.async_block_till_done()
+
+    assert caplog.text.count(f"Device {TEST_SERIAL_NUMBER} is unavailable") == 1
+
+    for _ in range(2):
+        async_fire_mqtt_message(
+            hass, TEST_DEVICE_STATE_TOPIC, TEST_DEVICE_STATE_PAYLOAD_EXECUTE
+        )
+    await hass.async_block_till_done()
+
+    assert caplog.text.count(f"Device {TEST_SERIAL_NUMBER} is available again") == 1
