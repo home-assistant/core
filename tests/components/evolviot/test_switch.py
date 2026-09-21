@@ -25,6 +25,7 @@ async def test_switch_state(
 
     assert state is not None
     assert state.state == STATE_OFF
+    assert state.name == "Living Room"
 
 
 @pytest.mark.usefixtures("setup_integration")

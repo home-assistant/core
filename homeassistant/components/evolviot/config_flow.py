@@ -1,17 +1,18 @@
 """Config flow for EvolvIOT."""
 
-from typing import Any, override
+import asyncio
+from typing import TYPE_CHECKING, Any, override
 
 from pyevolviot import (
     EvolvIOTApi,
     EvolvIOTApiError,
     EvolvIOTAuthError,
     EvolvIOTConnectionError,
+    EvolvIOTData,
     EvolvIOTDeviceAuthorizationDenied,
     EvolvIOTDeviceAuthorizationExpired,
     EvolvIOTDeviceAuthorizationPending,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
@@ -19,9 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, DEFAULT_API_BASE_URL, DOMAIN, NAME
 
-
-def _pair_schema() -> vol.Schema:
-    return vol.Schema({})
+type PairingResult = tuple[str, str, EvolvIOTData]
 
 
 def _refresh_token_from_response(token_data: dict[str, Any]) -> str:
@@ -43,6 +42,8 @@ class EvolvIOTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._verify_ssl = True
         self._pairing: dict[str, Any] = {}
+        self._pairing_task: asyncio.Task[PairingResult] | None = None
+        self._pairing_result: PairingResult | None = None
 
     def _api(self, access_token: str = "", refresh_token: str = "") -> EvolvIOTApi:
         """Return an EvolvIOT API client."""
@@ -60,90 +61,114 @@ class EvolvIOTConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Start app-based pairing."""
-        try:
-            self._pairing = await self._api().async_start_device_authorization()
-        except EvolvIOTConnectionError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=_pair_schema(),
-                errors={"base": "cannot_connect"},
-            )
-        except EvolvIOTApiError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=_pair_schema(),
-                errors={"base": "unknown"},
-            )
+        if not self._pairing:
+            try:
+                self._pairing = await self._api().async_start_device_authorization()
+            except EvolvIOTConnectionError:
+                return self.async_abort(reason="cannot_connect")
+            except EvolvIOTApiError:
+                return self.async_abort(reason="unknown")
 
-        if not self._pairing.get("device_code") or not self._pairing.get("user_code"):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=_pair_schema(),
-                errors={"base": "unknown"},
+            if not self._pairing.get("device_code") or not self._pairing.get(
+                "user_code"
+            ):
+                return self.async_abort(reason="unknown")
+
+        if self._pairing_task is None:
+            self._pairing_task = self.hass.async_create_task(
+                self._async_wait_for_pairing()
             )
 
-        return await self.async_step_pair()
+        if self._pairing_task.done():
+            if exception := self._pairing_task.exception():
+                if isinstance(exception, EvolvIOTDeviceAuthorizationDenied):
+                    next_step_id = "authorization_denied"
+                elif isinstance(exception, EvolvIOTDeviceAuthorizationExpired):
+                    next_step_id = "authorization_expired"
+                elif isinstance(exception, EvolvIOTAuthError):
+                    next_step_id = "invalid_auth"
+                elif isinstance(exception, EvolvIOTConnectionError):
+                    next_step_id = "cannot_connect"
+                else:
+                    next_step_id = "unknown"
+                return self.async_show_progress_done(next_step_id=next_step_id)
 
-    async def async_step_pair(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show pairing details and finish after app approval."""
-        errors: dict[str, str] = {}
+            self._pairing_result = self._pairing_task.result()
+            return self.async_show_progress_done(next_step_id="finish")
 
-        if user_input is not None:
-            device_code = str(self._pairing["device_code"])
+        return self.async_show_progress(
+            step_id="user",
+            progress_action="pair",
+            description_placeholders=self._pair_description_placeholders(),
+            progress_task=self._pairing_task,
+        )
+
+    async def _async_wait_for_pairing(self) -> PairingResult:
+        """Wait for the user to approve device authorization."""
+        device_code = str(self._pairing["device_code"])
+        interval = self._pairing.get("interval", 5)
+        while True:
             try:
                 token_data = await self._api().async_exchange_device_code(device_code)
-                access_token = str(token_data[CONF_ACCESS_TOKEN]).strip()
-                refresh_token = _refresh_token_from_response(token_data)
-                data = await self._api(
-                    access_token, refresh_token
-                ).async_validate_data()
             except EvolvIOTDeviceAuthorizationPending:
-                errors["base"] = "authorization_pending"
-            except EvolvIOTDeviceAuthorizationExpired:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=_pair_schema(),
-                    errors={"base": "authorization_expired"},
-                )
-            except EvolvIOTDeviceAuthorizationDenied:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=_pair_schema(),
-                    errors={"base": "authorization_denied"},
-                )
-            except EvolvIOTAuthError:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=_pair_schema(),
-                    errors={"base": "invalid_auth"},
-                )
-            except EvolvIOTConnectionError:
-                errors["base"] = "cannot_connect"
-            except EvolvIOTApiError:
-                errors["base"] = "unknown"
-            else:
-                if not data.user_id:
-                    errors["base"] = "unknown"
-                else:
-                    await self.async_set_unique_id(data.user_id)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=NAME,
-                        data={
-                            CONF_ACCESS_TOKEN: access_token,
-                            CONF_REFRESH_TOKEN: refresh_token,
-                            CONF_VERIFY_SSL: self._verify_ssl,
-                        },
-                    )
+                await asyncio.sleep(interval)
+                continue
+            break
 
-        return self.async_show_form(
-            step_id="pair",
-            data_schema=_pair_schema(),
-            errors=errors,
-            description_placeholders=self._pair_description_placeholders(),
+        access_token = str(token_data[CONF_ACCESS_TOKEN]).strip()
+        refresh_token = _refresh_token_from_response(token_data)
+        data = await self._api(access_token, refresh_token).async_validate_data()
+        if not data.user_id:
+            raise EvolvIOTApiError("Account response did not include a user ID")
+        return access_token, refresh_token, data
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry after device authorization."""
+        if TYPE_CHECKING:
+            assert self._pairing_result is not None
+        access_token, refresh_token, data = self._pairing_result
+        await self.async_set_unique_id(data.user_id)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=NAME,
+            data={
+                CONF_ACCESS_TOKEN: access_token,
+                CONF_REFRESH_TOKEN: refresh_token,
+                CONF_VERIFY_SSL: self._verify_ssl,
+            },
         )
+
+    async def async_step_authorization_denied(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when device authorization is denied."""
+        return self.async_abort(reason="authorization_denied")
+
+    async def async_step_authorization_expired(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when device authorization expires."""
+        return self.async_abort(reason="authorization_expired")
+
+    async def async_step_invalid_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when device authorization fails."""
+        return self.async_abort(reason="invalid_auth")
+
+    async def async_step_cannot_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when EvolvIOT cannot be reached."""
+        return self.async_abort(reason="cannot_connect")
+
+    async def async_step_unknown(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort after an unexpected pairing error."""
+        return self.async_abort(reason="unknown")
 
     def _pair_description_placeholders(self) -> dict[str, str]:
         """Return placeholders shown in the pairing form step."""

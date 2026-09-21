@@ -2,29 +2,36 @@
 
 from typing import Any, override
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from pyevolviot import EvolvIOTEntity as EvolvIOTEntityModel
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import EvolvIOTConfigEntry
 from .coordinator import EvolvIOTDataUpdateCoordinator
 from .entity import EvolvIOTEntity
 
-SUPPORTED_SWITCHES = {("switch", "power")}
+SWITCHES: dict[tuple[str, str], SwitchEntityDescription] = {
+    ("switch", "power"): SwitchEntityDescription(key="power"),
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EvolvIOTConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EvolvIOT switches."""
-    coordinator: EvolvIOTDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     async_add_entities(
-        EvolvIOTSwitch(coordinator, entity)
+        EvolvIOTSwitch(
+            coordinator,
+            entity,
+            SWITCHES[(entity.device.model.casefold(), entity.control.key.casefold())],
+        )
         for entity in coordinator.entities.values()
-        if (entity.device.model.casefold(), entity.control.key.casefold())
-        in SUPPORTED_SWITCHES
+        if (entity.device.model.casefold(), entity.control.key.casefold()) in SWITCHES
     )
 
 
@@ -32,6 +39,17 @@ class EvolvIOTSwitch(EvolvIOTEntity, SwitchEntity):
     """EvolvIOT switch entity."""
 
     _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: EvolvIOTDataUpdateCoordinator,
+        entity: EvolvIOTEntityModel,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, entity)
+        self.entity_description = description
+        self._attr_name = None
 
     @property
     @override

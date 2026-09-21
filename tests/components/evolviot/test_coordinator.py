@@ -2,11 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyevolviot import EvolvIOTApiError, EvolvIOTCommandResult, EvolvIOTConnectionError
+from pyevolviot import EvolvIOTCommandResult, EvolvIOTConnectionError
 import pytest
 
 from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MockEvolvIOTWebSocket
 
@@ -90,7 +91,7 @@ async def test_rejected_websocket_command_raises(
             "async_command",
             AsyncMock(return_value=REJECTED_COMMAND_RESULT),
         ),
-        pytest.raises(EvolvIOTApiError, match="rejected"),
+        pytest.raises(HomeAssistantError, match="rejected"),
     ):
         await coordinator.async_command("switch.evolviot_switch", "turn_on")
 
@@ -109,6 +110,6 @@ async def test_rejected_http_command_raises(
             "async_send_command",
             AsyncMock(return_value=REJECTED_COMMAND_RESULT),
         ),
-        pytest.raises(EvolvIOTApiError, match="rejected"),
+        pytest.raises(HomeAssistantError, match="rejected"),
     ):
         await coordinator.async_command("switch.evolviot_switch", "turn_on")

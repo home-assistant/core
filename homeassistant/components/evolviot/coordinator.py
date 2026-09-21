@@ -1,11 +1,10 @@
 """Data coordinator for EvolvIOT."""
 
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyevolviot import (
     EvolvIOTApi,
-    EvolvIOTApiError,
     EvolvIOTCommandResult,
     EvolvIOTConnectionError,
     EvolvIOTData,
@@ -17,11 +16,14 @@ from pyevolviot import (
     EvolvIOTWebSocket,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import EvolvIOTConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +31,10 @@ _LOGGER = logging.getLogger(__name__)
 class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
     """Coordinate EvolvIOT WebSocket data."""
 
+    config_entry: EvolvIOTConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, api: EvolvIOTApi, entry: ConfigEntry
+        self, hass: HomeAssistant, api: EvolvIOTApi, entry: EvolvIOTConfigEntry
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
@@ -46,13 +50,11 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
     async def async_setup(self) -> None:
         """Connect the EvolvIOT WebSocket and load initial data."""
         self.websocket = await self.api.async_connect_websocket()
-        entry = self.config_entry
-        assert entry is not None
-        entry.async_on_unload(
+        self.config_entry.async_on_unload(
             self.websocket.async_add_listener(self._async_handle_event)
         )
         self.async_set_updated_data(self.websocket.data)
-        entry.async_create_background_task(
+        self.config_entry.async_create_background_task(
             self.hass,
             self.websocket.async_run_forever(),
             f"{DOMAIN}-websocket",
@@ -97,7 +99,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
     def _raise_if_command_rejected(result: EvolvIOTCommandResult) -> None:
         """Raise when EvolvIOT rejects a command."""
         if not result.accepted:
-            raise EvolvIOTApiError("EvolvIOT rejected the command")
+            raise HomeAssistantError("EvolvIOT rejected the command")
 
     @override
     async def _async_update_data(self) -> EvolvIOTData:

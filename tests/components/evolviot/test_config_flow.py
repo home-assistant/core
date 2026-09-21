@@ -17,7 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components.evolviot.const import CONF_REFRESH_TOKEN, DOMAIN, NAME
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -25,12 +25,30 @@ PAIRING_PAYLOAD = {
     "device_code": "mock-device-code",
     "user_code": "MOCK-CODE",
     "expires_in": 600,
+    "interval": 0,
 }
+TOKEN_PAYLOAD = {
+    CONF_ACCESS_TOKEN: "mock-access-token",
+    CONF_REFRESH_TOKEN: "mock-refresh-token",
+}
+
+
+async def _async_start_flow(hass: HomeAssistant) -> FlowResult:
+    """Start the EvolvIOT user flow."""
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+
+async def _async_finish_progress_flow(hass: HomeAssistant, flow_id: str) -> FlowResult:
+    """Wait for and finish a progress flow."""
+    await hass.async_block_till_done()
+    return await hass.config_entries.flow.async_configure(flow_id)
 
 
 @pytest.mark.usefixtures("mock_connect_websocket")
 async def test_pairing_success(hass: HomeAssistant) -> None:
-    """Test a successful pairing flow."""
+    """Test a successful device authorization flow."""
     with (
         patch(
             "pyevolviot.EvolvIOTApi.async_start_device_authorization",
@@ -38,34 +56,22 @@ async def test_pairing_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_exchange_device_code",
-            AsyncMock(
-                return_value={
-                    CONF_ACCESS_TOKEN: "mock-access-token",
-                    CONF_REFRESH_TOKEN: "mock-refresh-token",
-                }
-            ),
+            AsyncMock(return_value=TOKEN_PAYLOAD),
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_validate_data",
             AsyncMock(return_value=EvolvIOTData.from_payload({"user_id": "mock-user"})),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "pair"
-        assert result["errors"] == {}
+        result = await _async_start_flow(hass)
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "user"
+        assert result["progress_action"] == "pair"
         assert result["description_placeholders"] == {
             "user_code": "MOCK-CODE",
             "expires_in": "600",
         }
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
@@ -77,61 +83,51 @@ async def test_pairing_success(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "mock-user"
 
 
-async def test_pairing_pending(hass: HomeAssistant) -> None:
-    """Test pending app approval keeps the flow on the pairing step."""
+@pytest.mark.usefixtures("mock_connect_websocket")
+async def test_pairing_waits_for_approval(hass: HomeAssistant) -> None:
+    """Test device authorization polls until the user approves it."""
+    exchange = AsyncMock(
+        side_effect=[EvolvIOTDeviceAuthorizationPending, TOKEN_PAYLOAD]
+    )
     with (
         patch(
             "pyevolviot.EvolvIOTApi.async_start_device_authorization",
             AsyncMock(return_value=PAIRING_PAYLOAD),
         ),
+        patch("pyevolviot.EvolvIOTApi.async_exchange_device_code", exchange),
         patch(
-            "pyevolviot.EvolvIOTApi.async_exchange_device_code",
-            AsyncMock(side_effect=EvolvIOTDeviceAuthorizationPending),
+            "pyevolviot.EvolvIOTApi.async_validate_data",
+            AsyncMock(return_value=EvolvIOTData.from_payload({"user_id": "mock-user"})),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "authorization_pending"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert exchange.await_count == 2
 
 
-async def test_pairing_start_cannot_connect(hass: HomeAssistant) -> None:
-    """Test connection failure while starting pairing."""
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(EvolvIOTConnectionError, "cannot_connect", id="cannot-connect"),
+        pytest.param(EvolvIOTApiError, "unknown", id="unknown"),
+    ],
+)
+async def test_pairing_start_error(
+    hass: HomeAssistant,
+    exception: type[EvolvIOTApiError],
+    reason: str,
+) -> None:
+    """Test errors while starting device authorization."""
     with patch(
         "pyevolviot.EvolvIOTApi.async_start_device_authorization",
-        AsyncMock(side_effect=EvolvIOTConnectionError),
+        AsyncMock(side_effect=exception),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_flow(hass)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_pairing_start_unknown_error(hass: HomeAssistant) -> None:
-    """Test an API failure while starting pairing."""
-    with patch(
-        "pyevolviot.EvolvIOTApi.async_start_device_authorization",
-        AsyncMock(side_effect=EvolvIOTApiError),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(
@@ -145,63 +141,41 @@ async def test_pairing_start_unknown_error(hass: HomeAssistant) -> None:
 async def test_pairing_start_invalid_response(
     hass: HomeAssistant, pairing_payload: dict[str, str]
 ) -> None:
-    """Test an invalid response while starting pairing."""
+    """Test an invalid device authorization response."""
     with patch(
         "pyevolviot.EvolvIOTApi.async_start_device_authorization",
         AsyncMock(return_value=pairing_payload),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+        result = await _async_start_flow(hass)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 @pytest.mark.parametrize(
-    ("exception", "step_id", "error"),
+    ("exception", "reason"),
     [
         pytest.param(
             EvolvIOTDeviceAuthorizationExpired,
-            "user",
             "authorization_expired",
             id="expired",
         ),
         pytest.param(
             EvolvIOTDeviceAuthorizationDenied,
-            "user",
             "authorization_denied",
             id="denied",
         ),
-        pytest.param(
-            EvolvIOTAuthError,
-            "user",
-            "invalid_auth",
-            id="invalid-auth",
-        ),
-        pytest.param(
-            EvolvIOTConnectionError,
-            "pair",
-            "cannot_connect",
-            id="cannot-connect",
-        ),
-        pytest.param(
-            EvolvIOTApiError,
-            "pair",
-            "unknown",
-            id="unknown",
-        ),
+        pytest.param(EvolvIOTAuthError, "invalid_auth", id="invalid-auth"),
+        pytest.param(EvolvIOTConnectionError, "cannot_connect", id="cannot-connect"),
+        pytest.param(EvolvIOTApiError, "unknown", id="unknown"),
     ],
 )
-async def test_pairing_errors(
+async def test_pairing_error(
     hass: HomeAssistant,
     exception: type[EvolvIOTApiError],
-    step_id: str,
-    error: str,
+    reason: str,
 ) -> None:
-    """Test errors while completing pairing."""
+    """Test errors while completing device authorization."""
     with (
         patch(
             "pyevolviot.EvolvIOTApi.async_start_device_authorization",
@@ -212,79 +186,27 @@ async def test_pairing_errors(
             AsyncMock(side_effect=exception),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == step_id
-    assert result["errors"] == {"base": error}
-
-
-async def test_pairing_validation_unknown_error(hass: HomeAssistant) -> None:
-    """Test an API failure while validating the paired account."""
-    with (
-        patch(
-            "pyevolviot.EvolvIOTApi.async_start_device_authorization",
-            AsyncMock(return_value=PAIRING_PAYLOAD),
-        ),
-        patch(
-            "pyevolviot.EvolvIOTApi.async_exchange_device_code",
-            AsyncMock(
-                return_value={
-                    CONF_ACCESS_TOKEN: "mock-access-token",
-                    CONF_REFRESH_TOKEN: "mock-refresh-token",
-                }
-            ),
-        ),
-        patch(
-            "pyevolviot.EvolvIOTApi.async_validate_data",
-            AsyncMock(side_effect=EvolvIOTApiError),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(
     "token_data",
     [
+        pytest.param({CONF_ACCESS_TOKEN: "mock-access-token"}, id="missing"),
         pytest.param(
-            {CONF_ACCESS_TOKEN: "mock-access-token"},
-            id="missing",
-        ),
-        pytest.param(
-            {
-                CONF_ACCESS_TOKEN: "mock-access-token",
-                CONF_REFRESH_TOKEN: None,
-            },
+            {CONF_ACCESS_TOKEN: "mock-access-token", CONF_REFRESH_TOKEN: None},
             id="null",
         ),
         pytest.param(
-            {
-                CONF_ACCESS_TOKEN: "mock-access-token",
-                CONF_REFRESH_TOKEN: "",
-            },
+            {CONF_ACCESS_TOKEN: "mock-access-token", CONF_REFRESH_TOKEN: ""},
             id="empty",
         ),
         pytest.param(
-            {
-                CONF_ACCESS_TOKEN: "mock-access-token",
-                CONF_REFRESH_TOKEN: "   ",
-            },
+            {CONF_ACCESS_TOKEN: "mock-access-token", CONF_REFRESH_TOKEN: "   "},
             id="whitespace",
         ),
     ],
@@ -303,17 +225,34 @@ async def test_pairing_invalid_refresh_token(
             AsyncMock(return_value=token_data),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_pairing_validation_error(hass: HomeAssistant) -> None:
+    """Test an API error while validating the authorized account."""
+    with (
+        patch(
+            "pyevolviot.EvolvIOTApi.async_start_device_authorization",
+            AsyncMock(return_value=PAIRING_PAYLOAD),
+        ),
+        patch(
+            "pyevolviot.EvolvIOTApi.async_exchange_device_code",
+            AsyncMock(return_value=TOKEN_PAYLOAD),
+        ),
+        patch(
+            "pyevolviot.EvolvIOTApi.async_validate_data",
+            AsyncMock(side_effect=EvolvIOTApiError),
+        ),
+    ):
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_pairing_missing_account_id(hass: HomeAssistant) -> None:
@@ -325,35 +264,23 @@ async def test_pairing_missing_account_id(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_exchange_device_code",
-            AsyncMock(
-                return_value={
-                    CONF_ACCESS_TOKEN: "mock-access-token",
-                    CONF_REFRESH_TOKEN: "mock-refresh-token",
-                }
-            ),
+            AsyncMock(return_value=TOKEN_PAYLOAD),
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_validate_data",
             AsyncMock(return_value=EvolvIOTData.from_payload({})),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_account_already_configured(hass: HomeAssistant) -> None:
     """Test pairing an account that is already configured."""
     MockConfigEntry(domain=DOMAIN, unique_id="mock-user").add_to_hass(hass)
-
     with (
         patch(
             "pyevolviot.EvolvIOTApi.async_start_device_authorization",
@@ -361,25 +288,15 @@ async def test_account_already_configured(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_exchange_device_code",
-            AsyncMock(
-                return_value={
-                    CONF_ACCESS_TOKEN: "mock-access-token",
-                    CONF_REFRESH_TOKEN: "mock-refresh-token",
-                }
-            ),
+            AsyncMock(return_value=TOKEN_PAYLOAD),
         ),
         patch(
             "pyevolviot.EvolvIOTApi.async_validate_data",
             AsyncMock(return_value=EvolvIOTData.from_payload({"user_id": "mock-user"})),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+        result = await _async_start_flow(hass)
+        result = await _async_finish_progress_flow(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
