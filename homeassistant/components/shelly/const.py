@@ -281,6 +281,14 @@ OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
 
+# BLU TRV firmware is first downloaded by the host device and then sent to the TRV,
+# each phase reports its own progress
+OTA_MSG_UPDATING = "Updating"
+
+# The host device reports BLU TRV OTA events on the BTHome device component
+# paired with the BLU TRV component
+BTHOME_DEVICE_IDENTIFIER = "bthomedevice"
+
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"

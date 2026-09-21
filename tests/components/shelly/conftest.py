@@ -717,9 +717,15 @@ async def mock_blu_trv():
                 {}, RpcUpdateType.STATUS
             )
 
+        def event():
+            blu_trv_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.EVENT
+            )
+
         device = _mock_blu_rtv_device()
         blu_trv_device_mock.return_value = device
         blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
+        blu_trv_device_mock.return_value.mock_event = Mock(side_effect=event)
 
         yield blu_trv_device_mock.return_value
 
