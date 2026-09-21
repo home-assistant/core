@@ -1,9 +1,34 @@
 """Constants for the fan component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import FanEntity
 
 DOMAIN: Final = "fan"
+DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
+
+SERVICE_INCREASE_SPEED = "increase_speed"
+SERVICE_DECREASE_SPEED = "decrease_speed"
+SERVICE_OSCILLATE = "oscillate"
+SERVICE_SET_DIRECTION = "set_direction"
+SERVICE_SET_PERCENTAGE = "set_percentage"
+SERVICE_SET_PRESET_MODE = "set_preset_mode"
+
+DIRECTION_FORWARD = "forward"
+DIRECTION_REVERSE = "reverse"
+
+ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
+ATTR_OSCILLATING = "oscillating"
+ATTR_DIRECTION = "direction"
+ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 
 
 class FanEntityCapabilityAttribute(StrEnum):

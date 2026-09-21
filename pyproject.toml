@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==78.1.1"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -67,7 +67,7 @@ dependencies = [
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==8.0.4",
+  "python-slugify==9.0.0",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
@@ -77,7 +77,7 @@ dependencies = [
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.12",
+  "uv==0.12.13",
   "probatio==0.12.1",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
@@ -638,7 +638,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.6"
+required-version = ">=0.16.7"
 
 [tool.ruff.lint]
 select = [
@@ -662,6 +662,7 @@ select = [
   "INP",    # flake8-no-pep420
   "ISC",    # flake8-implicit-str-concat
   "ICN001", # import concentions; {name} should be imported as {asname}
+  "ICN002", # import conventions; {name} should not be imported as {asname}
   "LOG",    # flake8-logging
   "N804",   # First argument of a class method should be named cls
   "N805",   # First argument of a method should be named self
@@ -839,6 +840,9 @@ ignore = [
 "homeassistant.util.ulid" = "ulid_util"
 "homeassistant.util.uuid" = "uuid_util"
 "homeassistant.util.yaml" = "yaml_util"
+
+[tool.ruff.lint.flake8-import-conventions.banned-aliases]
+"probatio" = ["vol"]
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
