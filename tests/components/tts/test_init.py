@@ -2120,6 +2120,7 @@ async def test_stream_audio_interrupt(
             await anext(result)
 
         late_result = stream.async_stream_result()
+        assert await anext(late_result) == b"replacement"
         with pytest.raises(StopAsyncIteration):
             await anext(late_result)
 
@@ -2247,6 +2248,40 @@ async def test_tts_cache() -> None:
         assert await consume_mid_data_task == b"012"
     with pytest.raises(ValueError):
         assert await consume_pre_data_loaded_task == b"012"
+
+
+async def test_tts_cache_interrupt_preserves_wav_header() -> None:
+    """Test an interrupted WAV remains valid for a late consumer."""
+    old_audio = b"old audio"
+    replacement_audio = b"replacement audio"
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(old_audio + replacement_audio)
+        wav_bytes = wav_io.getvalue()
+
+    header = wav_bytes[: -len(old_audio + replacement_audio)]
+
+    async def data_gen(queue: asyncio.Queue[bytes | None]):
+        while chunk := await queue.get():
+            yield chunk
+
+    queue: asyncio.Queue[bytes | None] = asyncio.Queue()
+    cache = tts.TTSCache("test-key", "wav", data_gen(queue))
+    load_data_task = asyncio.create_task(cache.async_load_data())
+    queue.put_nowait(header)
+    queue.put_nowait(old_audio)
+    await asyncio.sleep(0)
+
+    cache.async_interrupt()
+    queue.put_nowait(replacement_audio)
+    queue.put_nowait(None)
+
+    expected = header + replacement_audio
+    assert await load_data_task == expected
+    assert b"".join([chunk async for chunk in cache.async_stream_data()]) == expected
 
 
 async def test_async_internal_get_tts_audio_called(

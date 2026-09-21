@@ -126,6 +126,27 @@ KEY_PATTERN = "{0}_{1}_{2}_{3}"
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
 
+def _wav_stream_prefix(data: bytearray) -> tuple[bool, bytes]:
+    """Return whether a WAV prefix is complete and the bytes before its payload."""
+    if len(data) < 12:
+        return False, b""
+    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        return True, b""
+
+    offset = 12
+    while len(data) >= offset + 8:
+        chunk_id = data[offset : offset + 4]
+        chunk_size = int.from_bytes(data[offset + 4 : offset + 8], "little")
+        if chunk_id == b"data":
+            return True, bytes(data[: offset + 8])
+
+        offset += 8 + chunk_size + (chunk_size & 1)
+        if len(data) < offset:
+            return False, b""
+
+    return False, b""
+
+
 class TTSCache:
     """Cached bytes of a TTS result."""
 
@@ -145,7 +166,7 @@ class TTSCache:
     """Generation of audio currently being loaded."""
 
     _was_interrupted: bool = False
-    """Whether this stream can no longer be replayed."""
+    """Whether this stream was interrupted."""
 
     def __init__(
         self,
@@ -158,6 +179,9 @@ class TTSCache:
         self.extension = extension
         self.last_used = monotonic()
         self._data_gen = data_gen
+        self._stream_prefix = b""
+        self._stream_prefix_buffer = bytearray()
+        self._collect_stream_prefix = extension == "wav"
 
     @property
     def was_interrupted(self) -> bool:
@@ -174,6 +198,14 @@ class TTSCache:
 
         try:
             async for chunk in self._data_gen:
+                if self._collect_stream_prefix:
+                    self._stream_prefix_buffer.extend(chunk)
+                    prefix_complete, self._stream_prefix = _wav_stream_prefix(
+                        self._stream_prefix_buffer
+                    )
+                    if prefix_complete:
+                        self._collect_stream_prefix = False
+                        self._stream_prefix_buffer.clear()
                 self._partial_data.append(chunk)
                 for queue in self._consumers:
                     queue.put_nowait(chunk)
@@ -185,9 +217,7 @@ class TTSCache:
                 queue.put_nowait(None)
             self._consumers = None
 
-        self._result_data = (
-            b"" if self._was_interrupted else b"".join(self._partial_data)
-        )
+        self._result_data = b"".join(self._partial_data)
         self._partial_data = None
         return self._result_data
 
@@ -198,8 +228,6 @@ class TTSCache:
         Will listen for future data returned from the generator.
         Raises error if one occurred.
         """
-        if self._was_interrupted:
-            return
         if self._result_data is not None:
             yield self._result_data
             return
@@ -239,9 +267,14 @@ class TTSCache:
         self._was_interrupted = True
         self._interrupt_generation += 1
         if self._partial_data is not None:
-            self._partial_data.clear()
+            prefix = (
+                bytes(self._stream_prefix_buffer)
+                if self._collect_stream_prefix
+                else self._stream_prefix
+            )
+            self._partial_data[:] = [prefix] if prefix else []
         if self._result_data is not None:
-            self._result_data = b""
+            self._result_data = self._stream_prefix
 
         if self._consumers is None:
             return
@@ -1063,7 +1096,6 @@ class SpeechManager:
             return
 
         if cache.was_interrupted:
-            self.mem_cache.pop(cache.cache_key, None)
             return
 
         if not store_to_disk:
