@@ -202,25 +202,25 @@ class AdsHub:
             return self._client.read_state()
 
     def add_device_notification(self, name, plc_datatype, notification_callback):
-        """Add a notification to the ADS devices."""
+        """Add a notification to the ADS devices, returning its handle."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with _ads_lock:
             if self._closed:
                 _LOGGER.debug("Not subscribing to %s, the hub is shut down", name)
-                return
+                return None
             try:
                 handles = self._client.add_device_notification(
                     name, attr, self._device_notification_callback
                 )
             except pyads.ADSError as err:
                 _LOGGER.error("Error subscribing to %s: %s", name, err)
-                return
+                return None
             if handles is None:
                 # pyads returns None instead of raising once the port is closed.
                 _LOGGER.debug("Not subscribing to %s, the connection is closed", name)
-                return
+                return None
             hnotify, huser = handles
             hnotify = int(hnotify)
             self._notification_items[hnotify] = NotificationItem(
@@ -228,6 +228,25 @@ class AdsHub:
             )
 
             _LOGGER.debug("Added device notification %d for variable %s", hnotify, name)
+            return hnotify
+
+    def delete_device_notification(self, hnotify: int) -> None:
+        """Delete a single device notification."""
+
+        with _ads_lock:
+            notification_item = self._notification_items.pop(hnotify, None)
+        if notification_item is None:
+            # Already gone, most likely torn down by shutdown().
+            return
+        _LOGGER.debug("Deleting device notification %d", hnotify)
+        # Deleting waits for in-flight callbacks, which take _ads_lock
+        # themselves, so this has to run unlocked.
+        try:
+            self._client.del_device_notification(
+                notification_item.hnotify, notification_item.huser
+            )
+        except pyads.ADSError as err:
+            _LOGGER.error(err)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""

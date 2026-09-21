@@ -21,6 +21,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -251,3 +252,46 @@ async def test_yaml_entities_come_up_on_the_importing_start(
     assert state is not None
     assert state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
     assert "not ready yet" not in caplog.text
+
+
+async def test_removing_an_entity_drops_its_subscription(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_notifications: dict[str, bytes],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a YAML entity unsubscribes it from the still-loaded hub.
+
+    Otherwise the hub keeps the notification and its callback, so the PLC goes
+    on pushing values for a variable nobody reads and the entity is pinned.
+    """
+    mock_ads_notifications["GVL.motion"] = BOOL_TRUE
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "adsvar": "GVL.motion",
+                "name": "Motion",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+    assert len(hub._notification_items) == 1
+
+    entity_registry.async_update_entity(
+        "binary_sensor.motion", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert not hub._notification_items
+    assert not hub.devices
+    mock_pyads_connection.return_value.del_device_notification.assert_called_once()

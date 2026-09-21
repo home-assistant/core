@@ -25,6 +25,7 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
+        self._notification_handles: list[int] = []
         self._attr_unique_id = ads_var
         self._attr_name = name
         ads_hub.register_device(self)
@@ -56,9 +57,11 @@ class AdsEntity(Entity):
 
         event = asyncio.Event()
 
-        await self.hass.async_add_executor_job(
+        handle = await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
+        if handle is not None:
+            self._notification_handles.append(handle)
         try:
             async with timeout(10):
                 await event.wait()
@@ -84,7 +87,24 @@ class AdsEntity(Entity):
         """Unregister this entity from its hub."""
         self._ads_hub.unregister_device(self)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Drop the subscriptions this entity added.
+
+        The hub holds the callback, so leaving them behind would keep the PLC
+        pushing values for a variable nobody reads and pin this entity.
+        """
+        handles = self._notification_handles
+        self._notification_handles = []
+        for handle in handles:
+            await self.hass.async_add_executor_job(
+                self._ads_hub.delete_device_notification, handle
+            )
+
     def rebind(self, ads_hub: AdsHub) -> None:
         """Rebind this entity to a new hub after a reload."""
         self._ads_hub = ads_hub
+        # The old hub's handles died with its connection, and pyads can hand
+        # out the same numbers again on the new one.
+        self._notification_handles.clear()
         ads_hub.register_device(self)
