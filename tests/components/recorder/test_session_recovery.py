@@ -1,1 +1,1 @@
-@file:///workspace/agent-tools/push_test_session_recovery.py
+PLACEHOLDER_LOAD_FROM_/tmp/mcp_push_test_only.json
