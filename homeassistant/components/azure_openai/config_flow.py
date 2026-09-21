@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 
 import openai
 import probatio
@@ -11,23 +11,26 @@ import probatio
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -42,19 +45,31 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from .capabilities import (
+    IMAGE_MODEL_FAMILIES,
+    RECOMMENDED_IMAGE_MODEL,
+    RECOMMENDED_MODEL_FAMILIES,
+    STT_MODEL_FAMILIES,
+    TTS_MODEL_FAMILIES,
+    get_capabilities,
+)
+from .client import create_client, normalize_base_url
 from .const import (
+    CONF_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_DEPLOYMENT,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_MODEL_FAMILY,
     CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
-    CONF_SERVICE_TIER,
-    CONF_STORE_RESPONSES,
+    CONF_STT_MODEL,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_TTS_MODEL,
     CONF_TTS_SPEED,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
@@ -72,17 +87,12 @@ from .const import (
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
-    RECOMMENDED_SERVICE_TIER,
-    RECOMMENDED_STORE_RESPONSES,
-    RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -93,12 +103,6 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
-    UNSUPPORTED_CODE_INTERPRETER_MODELS,
-    UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS,
-    UNSUPPORTED_IMAGE_MODELS,
-    UNSUPPORTED_MODELS,
-    UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS,
-    UNSUPPORTED_WEB_SEARCH_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +110,108 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_BASE_URL): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
+    }
+)
+MODEL_FAMILY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=RECOMMENDED_MODEL_FAMILIES,
+        mode=SelectSelectorMode.DROPDOWN,
+        custom_value=True,
+    )
+)
+STT_MODEL_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(STT_MODEL_FAMILIES),
+        mode=SelectSelectorMode.DROPDOWN,
+        custom_value=True,
+    )
+)
+TTS_MODEL_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(TTS_MODEL_FAMILIES),
+        mode=SelectSelectorMode.DROPDOWN,
+        custom_value=True,
+    )
+)
+SECTION_RESPONSE = "response"
+SECTION_REASONING = "reasoning"
+SECTION_TOOLS = "tools"
+SECTION_WEB_SEARCH = "web_search"
+SECTION_IMAGE_GENERATION = "image_generation"
+
+
+def _validate_connection_input(
+    user_input: dict[str, Any], errors: dict[str, str]
+) -> None:
+    """Validate connection fields requiring non-whitespace content."""
+    if not user_input[CONF_BASE_URL].strip():
+        errors[CONF_BASE_URL] = "base_url_required"
+
+
+def _normalize_image_config(
+    section_input: dict[str, Any],
+    options: dict[str, Any],
+    errors: dict[str, str],
+) -> None:
+    """Normalize optional image deployment settings."""
+    if CONF_IMAGE_DEPLOYMENT not in section_input:
+        return
+
+    section_input[CONF_IMAGE_DEPLOYMENT] = section_input[CONF_IMAGE_DEPLOYMENT].strip()
+    if not section_input[CONF_IMAGE_DEPLOYMENT]:
+        section_input.pop(CONF_IMAGE_DEPLOYMENT)
+        section_input.pop(CONF_IMAGE_MODEL, None)
+        options.pop(CONF_IMAGE_DEPLOYMENT, None)
+        options.pop(CONF_IMAGE_MODEL, None)
+        return
+
+    section_input[CONF_IMAGE_MODEL] = section_input.get(CONF_IMAGE_MODEL, "").strip()
+    if not section_input[CONF_IMAGE_MODEL]:
+        errors[CONF_IMAGE_MODEL] = "model_required"
+
+
+STEP_USER_SETUP_SCHEMA = STEP_USER_DATA_SCHEMA.extend(
+    {
+        probatio.Required("conversation"): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_CHAT_MODEL): str,
+                    probatio.Optional(CONF_MODEL_FAMILY): MODEL_FAMILY_SELECTOR,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+        probatio.Required("ai_task_data"): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_CHAT_MODEL): str,
+                    probatio.Optional(CONF_MODEL_FAMILY): MODEL_FAMILY_SELECTOR,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+        probatio.Required("stt"): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_CHAT_MODEL): str,
+                    probatio.Optional(CONF_STT_MODEL): STT_MODEL_SELECTOR,
+                    probatio.Optional(CONF_API_VERSION): str,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+        probatio.Required("tts"): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_CHAT_MODEL): str,
+                    probatio.Optional(CONF_TTS_MODEL): TTS_MODEL_SELECTOR,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
     }
 )
 
@@ -115,19 +221,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
-    )
+    client = create_client(hass, data)
     await client.models.list(timeout=10.0)
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Azure OpenAI Conversation."""
 
-    VERSION = 2
-    MINOR_VERSION = 7
+    VERSION = 1
 
     @override
     async def async_step_user(
@@ -136,11 +237,75 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
+        is_onboarding = self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE)
+
+        conversation_deployment = ""
+        conversation_family = ""
+        ai_task_deployment = ""
+        ai_task_family = ""
+        stt_deployment = ""
+        stt_model = ""
+        stt_api_version = ""
+        tts_deployment = ""
+        tts_model = ""
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            user_input = dict(user_input)
+            _validate_connection_input(user_input, errors)
+
+            if is_onboarding:
+                conversation = user_input.get("conversation", {})
+                ai_task = user_input.get("ai_task_data", {})
+                stt_section = user_input.get("stt", {})
+                tts_section = user_input.get("tts", {})
+
+                conversation_deployment = conversation.get(CONF_CHAT_MODEL, "").strip()
+                conversation_family = conversation.get(CONF_MODEL_FAMILY, "").strip()
+                if bool(conversation_deployment) != bool(conversation_family):
+                    errors["base"] = "deployment_model_family_required"
+                elif conversation_family and (
+                    "unsupported" in get_capabilities(conversation_family).features
+                ):
+                    errors["base"] = "model_not_supported"
+
+                ai_task_deployment = ai_task.get(CONF_CHAT_MODEL, "").strip()
+                ai_task_family = ai_task.get(CONF_MODEL_FAMILY, "").strip()
+                if not errors:
+                    if bool(ai_task_deployment) != bool(ai_task_family):
+                        errors["base"] = "deployment_model_family_required"
+                    elif ai_task_family and (
+                        "unsupported" in get_capabilities(ai_task_family).features
+                    ):
+                        errors["base"] = "model_not_supported"
+
+                stt_deployment = stt_section.get(CONF_CHAT_MODEL, "").strip()
+                stt_model = stt_section.get(CONF_STT_MODEL, "").strip()
+                stt_api_version = stt_section.get(CONF_API_VERSION, "").strip()
+                if not errors and bool(stt_deployment) != bool(stt_model):
+                    errors["base"] = "stt_deployment_model_required"
+
+                tts_deployment = tts_section.get(CONF_CHAT_MODEL, "").strip()
+                tts_model = tts_section.get(CONF_TTS_MODEL, "").strip()
+                if not errors and bool(tts_deployment) != bool(tts_model):
+                    errors["base"] = "tts_deployment_model_required"
+
+        if user_input is not None and not errors:
+            connection_data = {
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_BASE_URL: normalize_base_url(user_input[CONF_BASE_URL]),
+            }
+            self._async_abort_entries_match(
+                {CONF_BASE_URL: connection_data[CONF_BASE_URL]}
+            )
+            if any(
+                entry.entry_id != self.context.get("entry_id")
+                and normalize_base_url(entry.data[CONF_BASE_URL])
+                == connection_data[CONF_BASE_URL]
+                for entry in self._async_current_entries(include_ignore=False)
+            ):
+                return self.async_abort(reason="already_configured")
             try:
-                await validate_input(self.hass, user_input)
+                await validate_input(self.hass, connection_data)
             except openai.APIConnectionError:
                 errors["base"] = "cannot_connect"
             except openai.AuthenticationError:
@@ -149,51 +314,109 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
                     )
-                return self.async_create_entry(
-                    title="ChatGPT",
-                    data=user_input,
-                    subentries=[
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates=connection_data
+                        )
+                    return self.async_update_reload_and_abort(
+                        entry, data_updates=connection_data
+                    )
+                subentries: list[ConfigSubentryData] = []
+                if conversation_deployment:
+                    subentries.append(
                         {
                             "subentry_type": "conversation",
-                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                            "data": {
+                                **RECOMMENDED_CONVERSATION_OPTIONS,
+                                CONF_CHAT_MODEL: conversation_deployment,
+                                CONF_MODEL_FAMILY: conversation_family,
+                            },
                             "title": DEFAULT_CONVERSATION_NAME,
                             "unique_id": None,
-                        },
+                        }
+                    )
+                if ai_task_deployment:
+                    subentries.append(
                         {
                             "subentry_type": "ai_task_data",
-                            "data": RECOMMENDED_AI_TASK_OPTIONS,
+                            "data": {
+                                **RECOMMENDED_AI_TASK_OPTIONS,
+                                CONF_CHAT_MODEL: ai_task_deployment,
+                                CONF_MODEL_FAMILY: ai_task_family,
+                            },
                             "title": DEFAULT_AI_TASK_NAME,
                             "unique_id": None,
-                        },
+                        }
+                    )
+                if stt_deployment:
+                    stt_data: dict[str, Any] = {
+                        **RECOMMENDED_STT_OPTIONS,
+                        CONF_CHAT_MODEL: stt_deployment,
+                        CONF_STT_MODEL: stt_model,
+                    }
+                    if stt_api_version:
+                        stt_data[CONF_API_VERSION] = stt_api_version
+                    subentries.append(
                         {
                             "subentry_type": "stt",
-                            "data": RECOMMENDED_STT_OPTIONS,
+                            "data": stt_data,
                             "title": DEFAULT_STT_NAME,
                             "unique_id": None,
-                        },
+                        }
+                    )
+                if tts_deployment:
+                    subentries.append(
                         {
                             "subentry_type": "tts",
-                            "data": RECOMMENDED_TTS_OPTIONS,
+                            "data": {
+                                **RECOMMENDED_TTS_OPTIONS,
+                                CONF_CHAT_MODEL: tts_deployment,
+                                CONF_TTS_MODEL: tts_model,
+                            },
                             "title": DEFAULT_TTS_NAME,
                             "unique_id": None,
-                        },
-                    ],
+                        }
+                    )
+                return self.async_create_entry(
+                    title="Azure OpenAI",
+                    data=connection_data,
+                    subentries=subentries,
                 )
 
+        step_id = "user"
+        if self.source == SOURCE_REAUTH:
+            step_id = "reauth_confirm"
+        elif self.source == SOURCE_RECONFIGURE:
+            step_id = "reconfigure"
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_USER_SETUP_SCHEMA if step_id == "user" else STEP_USER_DATA_SCHEMA,
+                user_input
+                if user_input is not None
+                else (
+                    self._get_reconfigure_entry().data
+                    if step_id == "reconfigure"
+                    else None
+                ),
             ),
             errors=errors,
             description_placeholders={
-                "instructions_url": "https://www.home-assistant.io/integrations/azure_openai/#generate-an-api-key",
+                "instructions_url": "https://ai.azure.com/",
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -207,7 +430,10 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if not user_input:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, self._get_reauth_entry().data
+                ),
             )
 
         return await self.async_step_user(user_input)
@@ -258,11 +484,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
-        # abort if entry is not loaded
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
+        errors: dict[str, str] = {}
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -310,8 +536,26 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             )
         ] = bool
+        step_schema[probatio.Required(CONF_CHAT_MODEL)] = probatio.All(
+            cv.string, probatio.Length(min=1)
+        )
+        step_schema[probatio.Required(CONF_MODEL_FAMILY)] = MODEL_FAMILY_SELECTOR
 
         if user_input is not None:
+            user_input = dict(user_input)
+            user_input[CONF_CHAT_MODEL] = user_input[CONF_CHAT_MODEL].strip()
+            user_input[CONF_MODEL_FAMILY] = user_input[CONF_MODEL_FAMILY].strip()
+            if not user_input[CONF_CHAT_MODEL]:
+                errors[CONF_CHAT_MODEL] = "deployment_required"
+            elif not user_input[CONF_MODEL_FAMILY]:
+                errors[CONF_MODEL_FAMILY] = "model_family_required"
+            elif (
+                "unsupported"
+                in get_capabilities(user_input[CONF_MODEL_FAMILY]).features
+            ):
+                errors[CONF_MODEL_FAMILY] = "model_not_supported"
+
+        if user_input is not None and not errors:
             if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
 
@@ -327,58 +571,15 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
 
+            if self._subentry_type == "conversation" and CONF_PROMPT not in user_input:
+                options[CONF_PROMPT] = ""
             options.update(user_input)
             if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
                 options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_additional()
+            return await self.async_step_model()
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(step_schema), options
-            ),
-        )
-
-    async def async_step_additional(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage additional options."""
-        options = self.options
-        errors: dict[str, str] = {}
-
-        step_schema: VolDictType = {
-            probatio.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            probatio.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            probatio.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            probatio.Optional(
-                CONF_STORE_RESPONSES,
-                default=RECOMMENDED_STORE_RESPONSES,
-            ): bool,
-        }
-
-        if user_input is not None:
-            options.update(user_input)
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
-                errors[CONF_CHAT_MODEL] = "model_not_supported"
-
-            if not errors:
-                return await self.async_step_model()
-
-        return self.async_show_form(
-            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(step_schema), options
             ),
@@ -392,31 +593,45 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         options = self.options
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {}
+        response_schema: VolDictType = {
+            probatio.Optional(
+                CONF_MAX_TOKENS,
+                default=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            ): int,
+        }
+        reasoning_schema: VolDictType = {}
+        tools_schema: VolDictType = {}
+        web_search_schema: VolDictType = {}
+        image_generation_schema: VolDictType = {}
 
-        model = options[CONF_CHAT_MODEL]
+        capabilities = get_capabilities(options[CONF_MODEL_FAMILY])
 
-        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
-            step_schema.update(
+        if "code" in capabilities.features:
+            tools_schema.update(
                 {
                     probatio.Optional(
                         CONF_CODE_INTERPRETER,
-                        default=RECOMMENDED_CODE_INTERPRETER,
+                        default=options.get(
+                            CONF_CODE_INTERPRETER, RECOMMENDED_CODE_INTERPRETER
+                        ),
                     ): bool,
                 }
             )
         elif CONF_CODE_INTERPRETER in options:
             options.pop(CONF_CODE_INTERPRETER)
 
-        if reasoning_options := self._get_reasoning_options(model):
-            step_schema.update(
+        if reasoning_options := capabilities.reasoning:
+            options[CONF_REASONING_EFFORT] = capabilities.reasoning_effort(
+                options.get(CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT)
+            )
+            reasoning_schema.update(
                 {
                     probatio.Optional(
                         CONF_REASONING_EFFORT,
-                        default=RECOMMENDED_REASONING_EFFORT,
+                        default=options[CONF_REASONING_EFFORT],
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=reasoning_options,
+                            options=list(reasoning_options),
                             translation_key=CONF_REASONING_EFFORT,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -426,24 +641,24 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if model.startswith(("gpt-5.6", "gpt-6")):
-            step_schema.update(
+        if "pro" in capabilities.features:
+            reasoning_schema.update(
                 {
                     probatio.Optional(
                         CONF_PRO_MODE,
-                        default=RECOMMENDED_PRO_MODE,
+                        default=options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE),
                     ): bool,
                 }
             )
         elif CONF_PRO_MODE in options:
             options.pop(CONF_PRO_MODE)
 
-        if model.startswith(("gpt-5", "gpt-6")):
-            step_schema.update(
+        if "verbosity" in capabilities.features:
+            response_schema.update(
                 {
                     probatio.Optional(
                         CONF_VERBOSITY,
-                        default=RECOMMENDED_VERBOSITY,
+                        default=options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY),
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=["low", "medium", "high"],
@@ -456,17 +671,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_VERBOSITY in options:
             options.pop(CONF_VERBOSITY)
 
-        if model.startswith(("o", "gpt-5", "gpt-6")):
-            reasoning_summary_options = ["off", "auto", "concise", "detailed"]
-            if model.startswith("o"):
-                reasoning_summary_options.remove("concise")
+        if reasoning_summary_options := capabilities.reasoning_summary:
             stored_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             )
             if stored_summary not in reasoning_summary_options:
                 stored_summary = RECOMMENDED_REASONING_SUMMARY
                 options[CONF_REASONING_SUMMARY] = stored_summary
-            step_schema.update(
+            reasoning_schema.update(
                 {
                     probatio.Optional(
                         CONF_REASONING_SUMMARY,
@@ -483,37 +695,19 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_SUMMARY in options:
             options.pop(CONF_REASONING_SUMMARY)
 
-        service_tiers = self._get_service_tiers(model)
-        if "flex" in service_tiers or "priority" in service_tiers:
-            step_schema[
-                probatio.Optional(
-                    CONF_SERVICE_TIER,
-                    default=RECOMMENDED_SERVICE_TIER,
-                )
-            ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=service_tiers,
-                    translation_key=CONF_SERVICE_TIER,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            )
-        else:
-            options.pop(CONF_SERVICE_TIER, None)
-        if options.get(CONF_SERVICE_TIER) not in service_tiers:
-            options.pop(CONF_SERVICE_TIER, None)
-
-        if self._subentry_type == "conversation" and not model.startswith(
-            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
-        ):
-            step_schema.update(
+        if self._subentry_type == "conversation" and "web" in capabilities.features:
+            web_search_schema.update(
                 {
                     probatio.Optional(
                         CONF_WEB_SEARCH,
-                        default=RECOMMENDED_WEB_SEARCH,
+                        default=options.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH),
                     ): bool,
                     probatio.Optional(
                         CONF_WEB_SEARCH_CONTEXT_SIZE,
-                        default=RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+                        default=options.get(
+                            CONF_WEB_SEARCH_CONTEXT_SIZE,
+                            RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+                        ),
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=["low", "medium", "high"],
@@ -523,139 +717,185 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     ),
                     probatio.Optional(
                         CONF_WEB_SEARCH_USER_LOCATION,
-                        default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+                        default=options.get(
+                            CONF_WEB_SEARCH_USER_LOCATION,
+                            RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+                        ),
                     ): bool,
                     probatio.Optional(
                         CONF_WEB_SEARCH_INLINE_CITATIONS,
-                        default=RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+                        default=options.get(
+                            CONF_WEB_SEARCH_INLINE_CITATIONS,
+                            RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+                        ),
                     ): bool,
                 }
             )
-        elif CONF_WEB_SEARCH in options:
-            options = {
-                k: v
-                for k, v in options.items()
-                if k
-                not in (
-                    CONF_WEB_SEARCH,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE,
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    CONF_WEB_SEARCH_CITY,
-                    CONF_WEB_SEARCH_REGION,
-                    CONF_WEB_SEARCH_COUNTRY,
-                    CONF_WEB_SEARCH_TIMEZONE,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS,
-                )
-            }
+        else:
+            for key in (
+                CONF_WEB_SEARCH,
+                CONF_WEB_SEARCH_CONTEXT_SIZE,
+                CONF_WEB_SEARCH_USER_LOCATION,
+                CONF_WEB_SEARCH_CITY,
+                CONF_WEB_SEARCH_REGION,
+                CONF_WEB_SEARCH_COUNTRY,
+                CONF_WEB_SEARCH_TIMEZONE,
+                CONF_WEB_SEARCH_INLINE_CITATIONS,
+            ):
+                options.pop(key, None)
 
-        if self._subentry_type == "ai_task_data" and not model.startswith(
-            tuple(UNSUPPORTED_IMAGE_MODELS)
-        ):
-            step_schema[
-                probatio.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
+        if self._subentry_type == "ai_task_data" and "image" in capabilities.features:
+            image_generation_schema[
+                probatio.Optional(
+                    CONF_IMAGE_DEPLOYMENT,
+                    description={"suggested_value": options.get(CONF_IMAGE_DEPLOYMENT)},
+                )
+            ] = str
+            image_generation_schema[
+                probatio.Optional(
+                    CONF_IMAGE_MODEL,
+                    default=options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL),
+                )
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=[
-                        "gpt-image-2.5-sunburst",
-                        "gpt-image-2.5-flare",
-                        "gpt-image-2",
-                        "gpt-image-1.5",
-                        "gpt-image-1",
-                        "gpt-image-1-mini",
-                    ],
+                    options=list(IMAGE_MODEL_FAMILIES),
                     mode=SelectSelectorMode.DROPDOWN,
+                    custom_value=True,
                 )
             )
+        else:
+            options.pop(CONF_IMAGE_MODEL, None)
+            options.pop(CONF_IMAGE_DEPLOYMENT, None)
 
         if user_input is not None:
-            if user_input.get(CONF_WEB_SEARCH):
-                if user_input.get(CONF_REASONING_EFFORT) == "minimal":
-                    errors[CONF_WEB_SEARCH] = "web_search_minimal_reasoning"
-                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION) and not errors:
-                    user_input.update(await self._get_location_data())
-                else:
-                    options.pop(CONF_WEB_SEARCH_CITY, None)
-                    options.pop(CONF_WEB_SEARCH_REGION, None)
-                    options.pop(CONF_WEB_SEARCH_COUNTRY, None)
-                    options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+            section_input = {
+                key: value
+                for section_values in user_input.values()
+                for key, value in section_values.items()
+            }
+            _normalize_image_config(section_input, options, errors)
+            if image_generation_schema and CONF_IMAGE_DEPLOYMENT not in section_input:
+                options.pop(CONF_IMAGE_DEPLOYMENT, None)
             if (
-                user_input.get(CONF_CODE_INTERPRETER)
-                and user_input.get(CONF_REASONING_EFFORT) == "minimal"
+                section_input.get(CONF_WEB_SEARCH)
+                and section_input.get(CONF_REASONING_EFFORT) == "minimal"
+            ):
+                errors[CONF_WEB_SEARCH] = "web_search_minimal_reasoning"
+            await self._async_apply_location_data(section_input, options, errors)
+            if (
+                section_input.get(CONF_CODE_INTERPRETER)
+                and section_input.get(CONF_REASONING_EFFORT) == "minimal"
             ):
                 errors[CONF_CODE_INTERPRETER] = "code_interpreter_minimal_reasoning"
 
-            options.update(user_input)
+            options.update(section_input)
             if not errors:
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=options.pop(CONF_NAME),
-                        data=options,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=options,
+                return await self.async_step_sampling()
+
+        step_schema: VolDictType = {}
+        for section_name, section_schema in (
+            (SECTION_RESPONSE, response_schema),
+            (SECTION_REASONING, reasoning_schema),
+            (SECTION_TOOLS, tools_schema),
+            (SECTION_WEB_SEARCH, web_search_schema),
+            (SECTION_IMAGE_GENERATION, image_generation_schema),
+        ):
+            if section_schema:
+                step_schema[probatio.Required(section_name)] = section(
+                    probatio.Schema(section_schema),
+                    SectionConfig(collapsed=False),
                 )
 
         return self.async_show_form(
             step_id="model",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(step_schema), options
-            ),
+            data_schema=probatio.Schema(step_schema),
             errors=errors,
         )
 
-    def _get_reasoning_options(self, model: str) -> list[str]:
-        """Get reasoning effort options based on model."""
-        if not model.startswith(("o", "gpt-5", "gpt-6")) or model.startswith(
-            "gpt-5-pro"
+    async def async_step_sampling(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Offer sampling controls only after the reasoning effort is known."""
+        options = self.options
+        capabilities = get_capabilities(options[CONF_MODEL_FAMILY])
+        if capabilities.supports_sampling(options.get(CONF_REASONING_EFFORT)):
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="sampling",
+                    data_schema=self.add_suggested_values_to_schema(
+                        probatio.Schema(
+                            {
+                                probatio.Optional(
+                                    CONF_TOP_P, default=RECOMMENDED_TOP_P
+                                ): NumberSelector(
+                                    NumberSelectorConfig(min=0, max=1, step=0.05)
+                                ),
+                                probatio.Optional(
+                                    CONF_TEMPERATURE, default=RECOMMENDED_TEMPERATURE
+                                ): NumberSelector(
+                                    NumberSelectorConfig(min=0, max=2, step=0.05)
+                                ),
+                            }
+                        ),
+                        options,
+                    ),
+                )
+            options.update(user_input)
+        else:
+            options.pop(CONF_TOP_P, None)
+            options.pop(CONF_TEMPERATURE, None)
+        if self._is_new:
+            return self.async_create_entry(title=options.pop(CONF_NAME), data=options)
+        return self.async_update_and_abort(
+            self._get_entry(), self._get_reconfigure_subentry(), data=options
+        )
+
+    async def _async_apply_location_data(
+        self,
+        section_input: dict[str, Any],
+        options: dict[str, Any],
+        errors: dict[str, str],
+    ) -> None:
+        """Keep location data only while web search requests it."""
+        if (
+            section_input.get(CONF_WEB_SEARCH)
+            and section_input.get(CONF_WEB_SEARCH_USER_LOCATION)
+            and not errors
         ):
-            return []
+            if error := await self._async_add_location_data(section_input):
+                errors["base"] = error
+            return
+        for key in (
+            CONF_WEB_SEARCH_CITY,
+            CONF_WEB_SEARCH_REGION,
+            CONF_WEB_SEARCH_COUNTRY,
+            CONF_WEB_SEARCH_TIMEZONE,
+        ):
+            options.pop(key, None)
 
-        models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            "gpt-6": ["low", "medium", "high", "xhigh", "max"],
-            "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
-            ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
-            ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
-                "none",
-                "low",
-                "medium",
-                "high",
-                "xhigh",
-            ],
-            "gpt-5.1": ["none", "low", "medium", "high"],
-            "gpt-5": ["minimal", "low", "medium", "high"],
-            "": ["low", "medium", "high"],  # The default case
-        }
-
-        for prefix, options in models_reasoning_map.items():
-            if model.startswith(prefix):
-                return options
-        return []  # pragma: no cover
-
-    def _get_service_tiers(self, model: str) -> list[str]:
-        """Get service tier options based on model."""
-        service_tiers = ["auto"]
-
-        if not model.startswith(tuple(UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS)):
-            service_tiers.append("flex")
-
-        service_tiers.append("default")
-
-        if not model.startswith(tuple(UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS)):
-            service_tiers.append("priority")
-
-        return service_tiers
+    async def _async_add_location_data(
+        self, section_input: dict[str, Any]
+    ) -> str | None:
+        """Add approximate location data and return an error key on failure."""
+        try:
+            section_input.update(await self._get_location_data())
+        except openai.AuthenticationError:
+            self._get_entry().async_start_reauth(self.hass)
+            return "invalid_auth"
+        except openai.APIConnectionError:
+            return "cannot_connect"
+        except openai.RateLimitError:
+            return "rate_limited"
+        except json.JSONDecodeError, probatio.Invalid, openai.OpenAIError:
+            return "location_lookup_failed"
+        return None
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = openai.AsyncOpenAI(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=cast(Any, get_async_client(self.hass)),
-            )
+            client = create_client(self.hass, self._get_entry().data)
             location_schema = probatio.Schema(
                 {
                     probatio.Optional(
@@ -671,7 +911,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
             response = await client.responses.create(
-                model=RECOMMENDED_CHAT_MODEL,
+                model=self.options[CONF_CHAT_MODEL],
                 input=[
                     {
                         "role": "system",
@@ -692,9 +932,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "strict": False,
                     }
                 },
-                store=self.options.get(
-                    CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
-                ),
+                store=False,
             )
             location_data = location_schema(json.loads(response.output_text) or {})
 
@@ -702,7 +940,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             location_data[CONF_WEB_SEARCH_COUNTRY] = self.hass.config.country
         location_data[CONF_WEB_SEARCH_TIMEZONE] = self.hass.config.time_zone
 
-        _LOGGER.debug("Location data: %s", location_data)
+        _LOGGER.debug("Location data lookup completed")
 
         return location_data
 
@@ -735,13 +973,10 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
-        # abort if entry is not loaded
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
-        errors: dict[str, str] = {}
-
         step_schema: VolDictType = {}
 
         if self._is_new:
@@ -757,25 +992,38 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                 ): TextSelector(
                     TextSelectorConfig(multiline=True, type=TextSelectorType.TEXT)
                 ),
-                probatio.Optional(
-                    CONF_CHAT_MODEL, default=RECOMMENDED_STT_MODEL
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            "gpt-4o-transcribe",
-                            "gpt-4o-mini-transcribe",
-                            "whisper-1",
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
+                probatio.Required(CONF_CHAT_MODEL): probatio.All(
+                    cv.string, probatio.Length(min=1)
                 ),
+                probatio.Required(
+                    CONF_STT_MODEL,
+                    description={"suggested_value": options.get(CONF_STT_MODEL)},
+                ): STT_MODEL_SELECTOR,
+                probatio.Optional(
+                    CONF_API_VERSION,
+                    description={"suggested_value": options.get(CONF_API_VERSION)},
+                ): str,
             }
         )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            options.update(user_input)
+            user_input = dict(user_input)
+            user_input[CONF_CHAT_MODEL] = user_input[CONF_CHAT_MODEL].strip()
+            user_input[CONF_STT_MODEL] = user_input[CONF_STT_MODEL].strip()
+            if CONF_API_VERSION in user_input:
+                user_input[CONF_API_VERSION] = user_input[CONF_API_VERSION].strip()
+            if not user_input[CONF_CHAT_MODEL]:
+                errors[CONF_CHAT_MODEL] = "deployment_required"
+            if not user_input[CONF_STT_MODEL]:
+                errors[CONF_STT_MODEL] = "model_required"
+            if CONF_PROMPT not in user_input:
+                options[CONF_PROMPT] = ""
+            if not user_input.get(CONF_API_VERSION):
+                user_input.pop(CONF_API_VERSION, None)
+                options.pop(CONF_API_VERSION, None)
             if not errors:
+                options.update(user_input)
                 if self._is_new:
                     return self.async_create_entry(
                         title=options.pop(CONF_NAME),
@@ -824,13 +1072,10 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
-        # abort if entry is not loaded
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
-        errors: dict[str, str] = {}
-
         step_schema: VolDictType = {}
 
         if self._is_new:
@@ -838,6 +1083,13 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
 
         step_schema.update(
             {
+                probatio.Required(CONF_CHAT_MODEL): probatio.All(
+                    cv.string, probatio.Length(min=1)
+                ),
+                probatio.Required(
+                    CONF_TTS_MODEL,
+                    description={"suggested_value": options.get(CONF_TTS_MODEL)},
+                ): probatio.All(TTS_MODEL_SELECTOR, probatio.Length(min=1)),
                 probatio.Optional(CONF_PROMPT): TextSelector(
                     TextSelectorConfig(multiline=True, type=TextSelectorType.TEXT)
                 ),
@@ -847,9 +1099,19 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
             }
         )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            options.update(user_input)
+            user_input = dict(user_input)
+            user_input[CONF_CHAT_MODEL] = user_input[CONF_CHAT_MODEL].strip()
+            user_input[CONF_TTS_MODEL] = user_input[CONF_TTS_MODEL].strip()
+            if not user_input[CONF_CHAT_MODEL]:
+                errors[CONF_CHAT_MODEL] = "deployment_required"
+            if not user_input[CONF_TTS_MODEL]:
+                errors[CONF_TTS_MODEL] = "model_required"
+            if CONF_PROMPT not in user_input:
+                options[CONF_PROMPT] = ""
             if not errors:
+                options.update(user_input)
                 if self._is_new:
                     return self.async_create_entry(
                         title=options.pop(CONF_NAME),

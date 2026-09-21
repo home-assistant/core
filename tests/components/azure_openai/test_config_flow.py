@@ -1,29 +1,40 @@
-"""Test the Azure OpenAI Conversation config flow."""
+"""Test the Azure OpenAI config flow."""
 
+import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import httpx
-from openai import APIConnectionError, AuthenticationError, BadRequestError
+from openai import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    RateLimitError,
+)
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
+from probatio import to_field_list
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.azure_openai.config_flow import (
-    RECOMMENDED_CONVERSATION_OPTIONS,
-)
+from homeassistant.components.azure_openai.capabilities import get_capabilities
+from homeassistant.components.azure_openai.client import normalize_base_url
+from homeassistant.components.azure_openai.config_flow import validate_input
 from homeassistant.components.azure_openai.const import (
+    CONF_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_DEPLOYMENT,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_MODEL_FAMILY,
     CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
-    CONF_SERVICE_TIER,
-    CONF_STORE_RESPONSES,
+    CONF_STT_MODEL,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_TTS_MODEL,
     CONF_TTS_SPEED,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
@@ -40,125 +51,818 @@ from homeassistant.components.azure_openai.const import (
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
-    RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlowResult,
+    ConfigSubentry,
+    SubentryFlowResult,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_VERSION,
+    CONF_LLM_HASS_API,
+    CONF_NAME,
+    CONF_PROMPT,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers import config_validation as cv
+
+from .conftest import MOCK_CHAT_MODEL_FAMILY
 
 from tests.common import MockConfigEntry
 
+USER_DATA = {
+    CONF_API_KEY: "bla",
+    CONF_BASE_URL: "https://example.openai.azure.com",
+    "conversation": {},
+    "ai_task_data": {},
+    "stt": {},
+    "tts": {},
+}
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    # Pretend we already set up a config entry.
-    hass.config.components.add("azure_openai")
-    MockConfigEntry(
-        domain=DOMAIN,
-        state=config_entries.ConfigEntryState.LOADED,
-    ).add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+def _get_subentry(entry: MockConfigEntry, subentry_type: str) -> ConfigSubentry:
+    """Return a subentry by type."""
+    return next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+
+
+async def _start_user_flow(hass: HomeAssistant) -> ConfigFlowResult:
+    """Start the user config flow."""
+    return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+
+async def _configure_user_flow(
+    hass: HomeAssistant,
+    flow_id: str,
+    user_input: dict[str, Any],
+) -> ConfigFlowResult:
+    """Submit a user config flow step."""
+    return await hass.config_entries.flow.async_configure(flow_id, user_input)
+
+
+async def _configure_subentry_flow(
+    hass: HomeAssistant,
+    flow_id: str,
+    user_input: dict[str, Any],
+) -> SubentryFlowResult:
+    """Submit a subentry config flow step."""
+    return await hass.config_entries.subentries.async_configure(flow_id, user_input)
+
+
+async def _configure_conversation_init(
+    hass: HomeAssistant,
+    flow_id: str,
+    *,
+    recommended: bool,
+    chat_model: str,
+    model_family: str,
+    prompt: str | None = None,
+    llm_hass_api: list[str] | None = None,
+    name: str | None = None,
+) -> SubentryFlowResult:
+    """Configure the conversation init step."""
+    user_input: dict[str, Any] = {
+        CONF_RECOMMENDED: recommended,
+        CONF_CHAT_MODEL: chat_model,
+        CONF_MODEL_FAMILY: model_family,
+    }
+    if name is not None:
+        user_input[CONF_NAME] = name
+    if prompt is not None:
+        user_input[CONF_PROMPT] = prompt
+    if llm_hass_api is not None:
+        user_input[CONF_LLM_HASS_API] = llm_hass_api
+    return await _configure_subentry_flow(hass, flow_id, user_input)
+
+
+async def _configure_ai_task_init(
+    hass: HomeAssistant,
+    flow_id: str,
+    *,
+    recommended: bool,
+    chat_model: str,
+    model_family: str,
+    name: str | None = None,
+) -> SubentryFlowResult:
+    """Configure the AI task init step."""
+    user_input: dict[str, Any] = {
+        CONF_RECOMMENDED: recommended,
+        CONF_CHAT_MODEL: chat_model,
+        CONF_MODEL_FAMILY: model_family,
+    }
+    if name is not None:
+        user_input[CONF_NAME] = name
+    return await _configure_subentry_flow(hass, flow_id, user_input)
+
+
+def _section_schema(result: SubentryFlowResult, section_name: str) -> dict[Any, Any]:
+    """Return a section's inner schema."""
+    return result["data_schema"].schema[section_name].schema.schema
+
+
+async def _configure_model(
+    hass: HomeAssistant,
+    flow_id: str,
+    result: SubentryFlowResult,
+    *,
+    values: dict[str, Any] | None = None,
+) -> SubentryFlowResult:
+    """Configure the sectioned model options step."""
+    user_input: dict[str, dict[str, Any]] = {}
+    for section_key, section_value in result["data_schema"].schema.items():
+        section_name = section_key.schema
+        user_input[section_name] = section_value.schema({})
+        for key, value in (values or {}).items():
+            if key in section_value.schema.schema:
+                user_input[section_name][key] = value
+    return await _configure_subentry_flow(hass, flow_id, user_input)
+
+
+@pytest.mark.parametrize(
+    ("base_url", "expected"),
+    [
+        (
+            "https://example.openai.azure.com",
+            "https://example.openai.azure.com/openai/v1/",
+        ),
+        (
+            "https://example.openai.azure.us/",
+            "https://example.openai.azure.us/openai/v1/",
+        ),
+        (
+            "https://example.services.ai.azure.com",
+            "https://example.services.ai.azure.com/openai/v1/",
+        ),
+        (
+            "https://EXAMPLE.openai.azure.com/openai/v1",
+            "https://example.openai.azure.com/openai/v1/",
+        ),
+        (
+            "https://example.openai.azure.com/deployments/foo",
+            "https://example.openai.azure.com/deployments/foo",
+        ),
+        ("https://example.com", "https://example.com"),
+    ],
+)
+def test_normalize_base_url(
+    base_url: str,
+    expected: str,
+) -> None:
+    """Test Azure resource URL normalization."""
+    assert normalize_base_url(base_url) == expected
+
+
+def test_unknown_model_family_uses_basic_capabilities() -> None:
+    """Test an unknown family falls back to conservative capabilities."""
+    capabilities = get_capabilities("my-custom-family")
+
+    assert capabilities.features == frozenset({"sampling"})
+    assert capabilities.reasoning == ()
+    assert capabilities.reasoning_summary == []
+    assert capabilities.supports_sampling() is True
+
+
+async def test_form_creates_entry_without_optional_subentries(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating a config entry without any onboarding subentries."""
+    result = await _start_user_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
 
     with (
         patch(
-            "homeassistant.components.azure_openai.config_flow.openai.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
+            "homeassistant.components.azure_openai.config_flow.validate_input",
+            new=AsyncMock(),
+        ) as mock_validate_input,
         patch(
             "homeassistant.components.azure_openai.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await _configure_user_flow(hass, result["flow_id"], USER_DATA)
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Azure OpenAI"
+    assert result["data"] == {
+        CONF_API_KEY: "bla",
+        CONF_BASE_URL: "https://example.openai.azure.com/openai/v1/",
+    }
+    assert result["subentries"] == ()
+    mock_validate_input.assert_awaited_once_with(
+        hass,
+        {
+            CONF_API_KEY: "bla",
+            CONF_BASE_URL: "https://example.openai.azure.com/openai/v1/",
+        },
+    )
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_creates_entry_with_conversation_and_ai_task(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating a config entry with conversation and AI task subentries."""
+    result = await _start_user_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.azure_openai.config_flow.validate_input",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.azure_openai.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await _configure_user_flow(
+            hass,
             result["flow_id"],
             {
-                "api_key": "bla",
+                **USER_DATA,
+                "conversation": {
+                    CONF_CHAT_MODEL: "conversation-deployment",
+                    CONF_MODEL_FAMILY: "gpt-5",
+                },
+                "ai_task_data": {
+                    CONF_CHAT_MODEL: "ai-task-deployment",
+                    CONF_MODEL_FAMILY: "gpt-5",
+                },
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        "api_key": "bla",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_API_KEY: "bla",
+        CONF_BASE_URL: "https://example.openai.azure.com/openai/v1/",
     }
-    assert result2["options"] == {}
-    assert result2["subentries"] == [
+    assert result["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "data": {
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_CHAT_MODEL: "conversation-deployment",
+                CONF_MODEL_FAMILY: "gpt-5",
+            },
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "ai_task_data",
-            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "data": {
+                **RECOMMENDED_AI_TASK_OPTIONS,
+                CONF_CHAT_MODEL: "ai-task-deployment",
+                CONF_MODEL_FAMILY: "gpt-5",
+            },
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+    ]
+
+
+async def test_form_creates_all_optional_subentries(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating every supported onboarding subentry."""
+    result = await _start_user_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.azure_openai.config_flow.validate_input",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.azure_openai.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {
+                **USER_DATA,
+                "conversation": {
+                    CONF_CHAT_MODEL: "chat-deployment",
+                    CONF_MODEL_FAMILY: "gpt-5.6-sol",
+                },
+                "ai_task_data": {
+                    CONF_CHAT_MODEL: "chat-deployment",
+                    CONF_MODEL_FAMILY: "gpt-5.6-sol",
+                },
+                "stt": {
+                    CONF_CHAT_MODEL: "stt-deployment",
+                    CONF_STT_MODEL: "gpt-4o-transcribe",
+                },
+                "tts": {
+                    CONF_CHAT_MODEL: "tts-deployment",
+                    CONF_TTS_MODEL: "gpt-4o-mini-tts",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": {
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_CHAT_MODEL: "chat-deployment",
+                CONF_MODEL_FAMILY: "gpt-5.6-sol",
+            },
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": {
+                **RECOMMENDED_AI_TASK_OPTIONS,
+                CONF_CHAT_MODEL: "chat-deployment",
+                CONF_MODEL_FAMILY: "gpt-5.6-sol",
+            },
             "title": DEFAULT_AI_TASK_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "stt",
-            "data": RECOMMENDED_STT_OPTIONS,
+            "data": {
+                **RECOMMENDED_STT_OPTIONS,
+                CONF_CHAT_MODEL: "stt-deployment",
+                CONF_STT_MODEL: "gpt-4o-transcribe",
+            },
             "title": DEFAULT_STT_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "tts",
-            "data": RECOMMENDED_TTS_OPTIONS,
+            "data": {
+                **RECOMMENDED_TTS_OPTIONS,
+                CONF_CHAT_MODEL: "tts-deployment",
+                CONF_TTS_MODEL: "gpt-4o-mini-tts",
+            },
             "title": DEFAULT_TTS_NAME,
             "unique_id": None,
         },
     ]
-    assert result2["version"] == 2
-    assert result2["minor_version"] == 7
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
-    """Test we abort on duplicate config entry."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "bla"},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
+@pytest.mark.parametrize(
+    "section_input",
+    [
+        pytest.param(
+            {CONF_CHAT_MODEL: "conversation-deployment"},
+            id="deployment-only",
+        ),
+        pytest.param(
+            {CONF_MODEL_FAMILY: "gpt-5"},
+            id="family-only",
+        ),
+    ],
+)
+async def test_form_requires_complete_conversation_routing(
+    hass: HomeAssistant,
+    section_input: dict[str, str],
+) -> None:
+    """Test the conversation section requires both deployment and family."""
+    result = await _start_user_flow(hass)
 
     with patch(
-        "homeassistant.components.azure_openai.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ) as mock_validate_input:
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {**USER_DATA, "conversation": section_input},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "deployment_model_family_required"}
+    assert mock_validate_input.await_count == 0
+
+
+@pytest.mark.parametrize(
+    "section_input",
+    [
+        pytest.param(
+            {CONF_CHAT_MODEL: "stt-deployment"},
+            id="deployment-only",
+        ),
+        pytest.param(
+            {CONF_STT_MODEL: "whisper"},
+            id="model-only",
+        ),
+    ],
+)
+async def test_form_requires_complete_stt_routing(
+    hass: HomeAssistant,
+    section_input: dict[str, str],
+) -> None:
+    """Test the STT section requires both deployment and model."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ) as mock_validate_input:
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {**USER_DATA, "stt": section_input},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "stt_deployment_model_required"}
+    assert mock_validate_input.await_count == 0
+
+
+@pytest.mark.parametrize(
+    "section_input",
+    [
+        pytest.param(
+            {CONF_CHAT_MODEL: "tts-deployment"},
+            id="deployment-only",
+        ),
+        pytest.param(
+            {CONF_TTS_MODEL: "gpt-4o-mini-tts"},
+            id="model-only",
+        ),
+    ],
+)
+async def test_form_requires_complete_tts_routing(
+    hass: HomeAssistant,
+    section_input: dict[str, str],
+) -> None:
+    """Test the TTS section requires both deployment and model."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ) as mock_validate_input:
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {**USER_DATA, "tts": section_input},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "tts_deployment_model_required"}
+    assert mock_validate_input.await_count == 0
+
+
+async def test_form_stores_stt_api_version_override(
+    hass: HomeAssistant,
+) -> None:
+    """Test the STT section stores a manual api-version override."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
     ):
-        result = await hass.config_entries.flow.async_configure(
+        result = await _configure_user_flow(
+            hass,
             result["flow_id"],
             {
-                CONF_API_KEY: "bla",
+                **USER_DATA,
+                "stt": {
+                    CONF_CHAT_MODEL: "stt-deployment",
+                    CONF_STT_MODEL: "whisper",
+                    CONF_API_VERSION: "2025-01-01-preview",
+                },
             },
         )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    stt_subentry = next(
+        subentry
+        for subentry in result["subentries"]
+        if subentry["subentry_type"] == "stt"
+    )
+    assert stt_subentry["data"][CONF_API_VERSION] == "2025-01-01-preview"
+
+
+async def test_form_rejects_unsupported_model_family(
+    hass: HomeAssistant,
+) -> None:
+    """Test the conversation section rejects unsupported model families."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ) as mock_validate_input:
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {
+                **USER_DATA,
+                "conversation": {
+                    CONF_CHAT_MODEL: "starter-deployment",
+                    CONF_MODEL_FAMILY: "o1-mini",
+                },
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "model_not_supported"}
+    assert mock_validate_input.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("deployment", "model_family", "error"),
+    [
+        pytest.param(
+            "ai-task-deployment",
+            "",
+            "deployment_model_family_required",
+            id="missing-family",
+        ),
+        pytest.param(
+            "ai-task-deployment",
+            "o1-mini",
+            "model_not_supported",
+            id="unsupported-family",
+        ),
+    ],
+)
+async def test_form_validates_ai_task_model_family(
+    hass: HomeAssistant,
+    deployment: str,
+    model_family: str,
+    error: str,
+) -> None:
+    """Test the AI Task section validates deployment and model family."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ) as mock_validate_input:
+        result = await _configure_user_flow(
+            hass,
+            result["flow_id"],
+            {
+                **USER_DATA,
+                "ai_task_data": {
+                    CONF_CHAT_MODEL: deployment,
+                    CONF_MODEL_FAMILY: model_family,
+                },
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert mock_validate_input.await_count == 0
+
+
+async def test_duplicate_entry_matches_normalized_base_url(
+    hass: HomeAssistant,
+) -> None:
+    """Test duplicate detection uses normalized connection data."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "different-key",
+            CONF_BASE_URL: "https://EXAMPLE.openai.azure.com/openai/v1",
+        },
+    ).add_to_hass(hass)
+
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(),
+    ):
+        result = await _configure_user_flow(hass, result["flow_id"], USER_DATA)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_creating_conversation_subentry(
+async def test_validate_input(hass: HomeAssistant) -> None:
+    """Test validating connection data."""
+    client = AsyncMock()
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.create_client",
+        return_value=client,
+    ):
+        await validate_input(hass, USER_DATA)
+
+    client.models.list.assert_awaited_once_with(timeout=10.0)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(APIConnectionError(request=None), "cannot_connect", id="connect"),
+        pytest.param(
+            AuthenticationError(
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request("GET", "https://example.com")
+                ),
+                body=None,
+                message=None,
+            ),
+            "invalid_auth",
+            id="auth",
+        ),
+        pytest.param(
+            BadRequestError(
+                response=httpx.Response(
+                    status_code=400, request=httpx.Request("GET", "https://example.com")
+                ),
+                body=None,
+                message=None,
+            ),
+            "unknown",
+            id="unknown",
+        ),
+    ],
+)
+async def test_form_invalid_auth(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test validation errors on the main user flow."""
+    result = await _start_user_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(side_effect=side_effect),
+    ):
+        result = await _configure_user_flow(hass, result["flow_id"], USER_DATA)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+
+async def test_form_rejects_blank_base_url(hass: HomeAssistant) -> None:
+    """Test a whitespace-only base URL is rejected."""
+    result = await _start_user_flow(hass)
+
+    result = await _configure_user_flow(
+        hass, result["flow_id"], {**USER_DATA, CONF_BASE_URL: " "}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_BASE_URL: "base_url_required"}
+
+
+async def test_reauth_updates_connection_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauthentication updates the config entry data."""
+    hass.config.components.add(DOMAIN)
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "old_api_key",
+            CONF_BASE_URL: "https://OLD.openai.azure.com/openai/v1",
+        },
+        state=ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.azure_openai.config_flow.validate_input",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new_api_key",
+                CONF_BASE_URL: "https://old.openai.azure.com",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new_api_key",
+        CONF_BASE_URL: "https://old.openai.azure.com/openai/v1/",
+    }
+    assert mock_async_reload.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "source",
+    [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE],
+)
+async def test_connection_update_recovers_from_invalid_auth(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test connection update flows recover from invalid credentials."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "old_api_key",
+            CONF_BASE_URL: "https://old.openai.azure.com/openai/v1/",
+        },
+        state=ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    if source == config_entries.SOURCE_REAUTH:
+        result = await mock_config_entry.start_reauth_flow(hass)
+    else:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.azure_openai.config_flow.validate_input",
+        new=AsyncMock(
+            side_effect=AuthenticationError(
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request("GET", "https://example.com")
+                ),
+                body=None,
+                message=None,
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "invalid_api_key",
+                CONF_BASE_URL: "https://new.openai.azure.com",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == (
+        "reauth_confirm" if source == config_entries.SOURCE_REAUTH else "reconfigure"
+    )
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_updates_connection_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration updates the config entry data."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with (
+        patch(
+            "homeassistant.components.azure_openai.config_flow.validate_input",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new_api_key",
+                CONF_BASE_URL: "https://new.openai.azure.com",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new_api_key",
+        CONF_BASE_URL: "https://new.openai.azure.com/openai/v1/",
+    }
+    assert mock_async_reload.call_count == 1
+
+
+async def test_creating_conversation_subentry_recommended(
     hass: HomeAssistant,
     mock_init_component: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating a conversation subentry."""
-    mock_config_entry.add_to_hass(hass)
-
+    """Test creating a recommended conversation subentry."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
         context={"source": config_entries.SOURCE_USER},
@@ -166,1066 +870,517 @@ async def test_creating_conversation_subentry(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert not result["errors"]
+    assert result["errors"] == {}
+    assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
 
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await _configure_conversation_init(
+        hass,
         result["flow_id"],
-        {"name": "My Custom Agent", **RECOMMENDED_CONVERSATION_OPTIONS},
+        name="My Custom Agent",
+        prompt="Speak like a pirate",
+        llm_hass_api=["assist"],
+        recommended=True,
+        chat_model=" custom-deployment ",
+        model_family=" gpt-5.1 ",
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "My Custom Agent"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My Custom Agent"
+    assert result["data"] == {
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_RECOMMENDED: True,
+        CONF_CHAT_MODEL: "custom-deployment",
+        CONF_MODEL_FAMILY: "gpt-5.1",
+    }
 
-    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
-    processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
-    assert result2["data"] == processed_options
+async def test_creating_conversation_subentry_rejects_blank_deployment(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a conversation subentry requires a deployment name."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await _configure_conversation_init(
+        hass,
+        result["flow_id"],
+        recommended=True,
+        chat_model="   ",
+        model_family="gpt-5.1",
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {CONF_CHAT_MODEL: "deployment_required"}
 
 
 async def test_creating_conversation_subentry_not_loaded(
     hass: HomeAssistant,
-    mock_init_component,
+    mock_init_component: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating a conversation subentry when entry is not loaded."""
+    """Test creating a conversation subentry when the parent entry is not loaded."""
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    with patch(
-        "homeassistant.components.azure_openai.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        return_value=[],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
 
 
-async def test_subentry_recommended(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test the subentry flow with recommended settings."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    options = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            "prompt": "Speak like a pirate",
-            "recommended": True,
-        },
-    )
-    await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.ABORT
-    assert options["reason"] == "reconfigure_successful"
-    assert subentry.data["prompt"] == "Speak like a pirate"
-
-
-async def test_subentry_unsupported_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test the subentry form giving error about models not supported."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
-    )
-    await hass.async_block_till_done()
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
-
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: "o1-mini",
-        },
-    )
-    await hass.async_block_till_done()
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
-
-
-@pytest.mark.parametrize(
-    ("model", "reasoning_effort_options"),
-    [
-        ("o4-mini", ["low", "medium", "high"]),
-        ("gpt-5", ["minimal", "low", "medium", "high"]),
-        ("gpt-5.1", ["none", "low", "medium", "high"]),
-        ("gpt-5.2", ["none", "low", "medium", "high", "xhigh"]),
-        ("gpt-5.2-pro", ["medium", "high", "xhigh"]),
-        ("gpt-5.3-codex", ["none", "low", "medium", "high", "xhigh"]),
-        ("gpt-5.4", ["none", "low", "medium", "high", "xhigh"]),
-        ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
-        ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
-        ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
-        ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
-        ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
-    ],
-)
-async def test_subentry_reasoning_effort_list(
+async def test_conversation_subentry_recommended_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component: None,
-    model: str,
-    reasoning_effort_options: list[str],
 ) -> None:
-    """Test the list reasoning effort options."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    """Test reconfiguring a conversation subentry with recommended settings."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_conversation_init(
+        hass,
         subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
+        prompt="Speak like a pirate",
+        llm_hass_api=["assist"],
+        recommended=True,
+        chat_model="new-deployment",
+        model_family="gpt-5",
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_RECOMMENDED: True,
+        CONF_CHAT_MODEL: "new-deployment",
+        CONF_MODEL_FAMILY: "gpt-5",
+    }
+
+
+async def test_conversation_advanced_reconfigure_clears_optional_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test advanced reconfiguration clears omitted optional values."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
             CONF_PROMPT: "Speak like a pirate",
             CONF_LLM_HASS_API: ["assist"],
         },
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
+    await hass.async_block_till_done()
 
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: model,
-        },
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        recommended=False,
+        chat_model="new-deployment",
+        model_family="gpt-5",
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+
+    result = await _configure_model(
+        hass,
+        subentry_flow["flow_id"],
+        result,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_PROMPT] == ""
+    assert CONF_LLM_HASS_API not in subentry.data
+
+
+@pytest.mark.parametrize(
+    ("model_family", "error"),
+    [
+        pytest.param("", "model_family_required", id="missing"),
+        pytest.param("o1-mini", "model_not_supported", id="unsupported"),
+    ],
+)
+async def test_conversation_subentry_requires_supported_model_family(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model_family: str,
+    error: str,
+) -> None:
+    """Test the conversation init step validates the model family."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family=model_family,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {CONF_MODEL_FAMILY: error}
+
+
+@pytest.mark.parametrize(
+    ("model_family", "reasoning_effort_options"),
+    [
+        pytest.param("o4-mini", ["low", "medium", "high"], id="o4-mini"),
+        pytest.param(
+            "gpt-5",
+            ["minimal", "low", "medium", "high"],
+            id="gpt-5",
+        ),
+        pytest.param(
+            "gpt-5.1",
+            ["none", "low", "medium", "high"],
+            id="gpt-5.1",
+        ),
+        pytest.param(
+            "gpt-5.2",
+            ["none", "low", "medium", "high", "xhigh"],
+            id="gpt-5.2",
+        ),
+        pytest.param(
+            "gpt-5.6-sol",
+            ["none", "low", "medium", "high", "xhigh", "max"],
+            id="gpt-5.6-sol",
+        ),
+        pytest.param(
+            "gpt-6-astra",
+            ["low", "medium", "high", "xhigh", "max"],
+            id="gpt-6-astra",
+        ),
+    ],
+)
+async def test_conversation_subentry_reasoning_effort_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model_family: str,
+    reasoning_effort_options: list[str],
+) -> None:
+    """Test reasoning effort choices are derived from the declared model family."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        llm_hass_api=["assist"],
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family=model_family,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
     assert (
-        subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
+        _section_schema(result, "reasoning")[CONF_REASONING_EFFORT].config["options"]
         == reasoning_effort_options
     )
 
 
 @pytest.mark.parametrize(
-    ("model", "has_reasoning_summary"),
+    ("model_family", "expected_reasoning_summary"),
     [
-        ("o3", True),
-        ("o4-mini", True),
-        ("gpt-5", True),
-        ("gpt-5-mini", True),
-        ("gpt-5-pro", True),
-        ("gpt-6-astra", True),
-        ("gpt-4o", False),
-        ("gpt-4.1", False),
+        pytest.param("o4-mini", ["off", "auto", "detailed"], id="o4-mini"),
+        pytest.param("gpt-5", ["off", "auto", "detailed"], id="gpt-5"),
+        pytest.param("gpt-6-astra", ["off", "auto", "detailed"], id="gpt-6"),
     ],
 )
-async def test_subentry_reasoning_summary_visibility(
+async def test_conversation_subentry_reasoning_summary_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component: None,
-    model: str,
-    has_reasoning_summary: bool,
+    model_family: str,
+    expected_reasoning_summary: list[str],
 ) -> None:
-    """Test that reasoning_summary option is shown for all reasoning models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    """Test reasoning summary options are driven by the model family."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
 
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_conversation_init(
+        hass,
         subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family=model_family,
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
-
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: model,
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
-    assert (CONF_REASONING_SUMMARY in subentry_flow["data_schema"].schema) == (
-        has_reasoning_summary
-    )
-
-
-@pytest.mark.parametrize(
-    ("model", "reasoning_summary_options"),
-    [
-        ("o3", ["off", "auto", "detailed"]),
-        ("o4-mini", ["off", "auto", "detailed"]),
-        ("gpt-5", ["off", "auto", "concise", "detailed"]),
-        ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
-        ("gpt-6-astra", ["off", "auto", "concise", "detailed"]),
-    ],
-)
-async def test_subentry_reasoning_summary_options(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component: None,
-    model: str,
-    reasoning_summary_options: list[str],
-) -> None:
-    """Test the list of reasoning summary options for reasoning models."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
-
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: model,
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
     assert (
-        subentry_flow["data_schema"].schema[CONF_REASONING_SUMMARY].config["options"]
-        == reasoning_summary_options
+        _section_schema(result, "reasoning")[CONF_REASONING_SUMMARY].config["options"]
+        == expected_reasoning_summary
     )
 
 
-async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
+@pytest.mark.parametrize("model_family", ["gpt-4o", "gpt-4.1"])
+async def test_conversation_subentry_hides_unsupported_reasoning_summary(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model_family: str,
+) -> None:
+    """Test models without reasoning summaries do not show the setting."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family=model_family,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    assert "reasoning" not in result["data_schema"].schema
+
+
+async def test_conversation_subentry_reasoning_summary_default_is_sanitized(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component: None,
 ) -> None:
-    """Test that a stored 'concise' default is sanitized to 'auto' for o* models."""
-    subentry = next(
-        s
-        for s in mock_config_entry.subentries.values()
-        if s.subentry_type == "conversation"
-    )
+    """Test an invalid stored reasoning summary falls back to the recommended value."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         subentry,
-        data={**subentry.data, CONF_REASONING_SUMMARY: "concise"},
+        data={
+            **subentry.data,
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_REASONING_SUMMARY: "concise",
+        },
     )
     await hass.async_block_till_done()
 
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["step_id"] == "init"
-
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_conversation_init(
+        hass,
         subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family="gpt-5",
     )
-    assert subentry_flow["step_id"] == "additional"
+    assert result["step_id"] == "model"
 
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {CONF_CHAT_MODEL: "o3"},
+    summary_key = next(
+        key
+        for key in _section_schema(result, "reasoning")
+        if key == CONF_REASONING_SUMMARY
     )
-    assert subentry_flow["step_id"] == "model"
-
-    schema = subentry_flow["data_schema"].schema
-    summary_key = next(k for k in schema if k == CONF_REASONING_SUMMARY)
     assert summary_key.default() == RECOMMENDED_REASONING_SUMMARY
-
-
-@pytest.mark.parametrize(
-    ("model", "service_tier_options"),
-    [
-        ("gpt-5.6", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.5", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.4", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.4-pro", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.2", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.1", ["auto", "flex", "default", "priority"]),
-        ("gpt-5", ["auto", "flex", "default", "priority"]),
-        ("gpt-5-mini", ["auto", "flex", "default", "priority"]),
-        ("gpt-5-nano", ["auto", "flex", "default"]),
-        ("o3", ["auto", "flex", "default", "priority"]),
-        ("o4-mini", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.3-codex", ["auto", "default", "priority"]),
-        ("gpt-5.2-codex", ["auto", "default", "priority"]),
-        ("gpt-5.1-codex-max", ["auto", "default", "priority"]),
-        ("gpt-5-codex", ["auto", "default", "priority"]),
-        ("gpt-4.1", ["auto", "default", "priority"]),
-        ("gpt-4.1-mini", ["auto", "default", "priority"]),
-        ("gpt-4.1-nano", ["auto", "default", "priority"]),
-        ("gpt-4o", ["auto", "default", "priority"]),
-        ("gpt-4o-2024-05-13", ["auto", "default", "priority"]),
-        ("gpt-4o-mini", ["auto", "default", "priority"]),
-        ("gpt-5-chat-latest", []),
-        ("gpt-5.2-pro", []),
-        ("o3-mini", []),
-    ],
-)
-async def test_subentry_service_tier_list(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    model,
-    service_tier_options,
-) -> None:
-    """Test the list of service tier options."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
-
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: model,
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
-    assert (
-        subentry_flow["data_schema"].schema[CONF_SERVICE_TIER].config["options"]
-        if subentry_flow["data_schema"].schema.get(CONF_SERVICE_TIER)
-        else []
-    ) == service_tier_options
 
 
 @pytest.mark.parametrize(
     ("parameter", "error"),
     [
-        (CONF_WEB_SEARCH, "web_search_minimal_reasoning"),
-        (CONF_CODE_INTERPRETER, "code_interpreter_minimal_reasoning"),
+        pytest.param(
+            CONF_WEB_SEARCH,
+            "web_search_minimal_reasoning",
+            id="web-search",
+        ),
+        pytest.param(
+            CONF_CODE_INTERPRETER,
+            "code_interpreter_minimal_reasoning",
+            id="code-interpreter",
+        ),
     ],
 )
-async def test_subentry_unsupported_reasoning_effort(
-    hass: HomeAssistant, mock_config_entry, mock_init_component, parameter, error
+async def test_conversation_subentry_rejects_minimal_reasoning_conflicts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    parameter: str,
+    error: str,
 ) -> None:
-    """Test subentry form error on unsupported reasoning effort."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    """Test model-step validation for minimal reasoning conflicts."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_conversation_init(
+        hass,
         subentry_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-        },
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family="gpt-5",
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
+    assert result["step_id"] == "model"
 
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_model(
+        hass,
         subentry_flow["flow_id"],
-        {
-            CONF_CHAT_MODEL: "gpt-5",
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
-
-    # Configure model step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
+        result,
+        values={
             CONF_REASONING_EFFORT: "minimal",
             parameter: True,
         },
     )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["errors"] == {parameter: error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {parameter: error}
 
-    # Reconfigure model step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
+    result = await _configure_model(
+        hass,
         subentry_flow["flow_id"],
-        {
+        result,
+        values={
             CONF_REASONING_EFFORT: "low",
             parameter: True,
         },
     )
-    assert subentry_flow["type"] is FlowResultType.ABORT
-    assert subentry_flow["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        (APIConnectionError(request=None), "cannot_connect"),
-        (
-            AuthenticationError(
-                response=httpx.Response(status_code=None, request=""),
-                body=None,
-                message=None,
-            ),
-            "invalid_auth",
-        ),
-        (
-            BadRequestError(
-                response=httpx.Response(status_code=None, request=""),
-                body=None,
-                message=None,
-            ),
-            "unknown",
-        ),
-    ],
-)
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.azure_openai.config_flow.openai.resources.models.AsyncModels.list",
-        new_callable=AsyncMock,
-        side_effect=side_effect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "api_key": "bla",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
-
-
-@pytest.mark.parametrize(
-    ("current_options", "new_options", "expected_options"),
-    [
-        (  # Test clearing every llm api is stored as an empty list
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_PROMPT: "",
-            },
-            (
-                {
-                    CONF_RECOMMENDED: True,
-                    CONF_LLM_HASS_API: [],
-                    CONF_PROMPT: "",
-                },
-            ),
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: [],
-                CONF_PROMPT: "",
-            },
-        ),
-        (  # Test converting single llm api format to list
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
-                CONF_PROMPT: "",
-            },
-            (
-                {
-                    CONF_RECOMMENDED: True,
-                    CONF_LLM_HASS_API: ["assist"],
-                    CONF_PROMPT: "",
-                },
-            ),
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_PROMPT: "",
-            },
-        ),
-        (  # options for reasoning models
-            {},
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pro",
-                },
-                {
-                    CONF_TEMPERATURE: 1.0,
-                    CONF_CHAT_MODEL: "o1-pro",
-                    CONF_TOP_P: RECOMMENDED_TOP_P,
-                    CONF_MAX_TOKENS: 10000,
-                },
-                {
-                    CONF_REASONING_EFFORT: "high",
-                    CONF_CODE_INTERPRETER: True,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pro",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "o1-pro",
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: 10000,
-                CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "high",
-                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
-                CONF_CODE_INTERPRETER: True,
-            },
-        ),
-        (  # options for web search without user location
-            {
-                CONF_RECOMMENDED: True,
-                CONF_PROMPT: "bla",
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 0.3,
-                    CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                    CONF_TOP_P: RECOMMENDED_TOP_P,
-                    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                },
-                {
-                    CONF_WEB_SEARCH: True,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                    CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                    CONF_SERVICE_TIER: "auto",
-                    CONF_CODE_INTERPRETER: False,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_STORE_RESPONSES: False,
-                CONF_SERVICE_TIER: "auto",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_CODE_INTERPRETER: False,
-            },
-        ),
-        # Test that current options are showed as suggested values
-        (  # Case 1: web search
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like super Mario",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: True,
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: True,
-                CONF_WEB_SEARCH_CITY: "San Francisco",
-                CONF_WEB_SEARCH_REGION: "California",
-                CONF_WEB_SEARCH_COUNTRY: "US",
-                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_SERVICE_TIER: "auto",
-                CONF_CODE_INTERPRETER: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like super Mario",
-                },
-                {
-                    CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-4o",
-                    CONF_TOP_P: 0.9,
-                    CONF_MAX_TOKENS: 1000,
-                    CONF_STORE_RESPONSES: True,
-                },
-                {
-                    CONF_WEB_SEARCH: True,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                    CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                    CONF_SERVICE_TIER: "default",
-                    CONF_CODE_INTERPRETER: True,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like super Mario",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: True,
-                CONF_SERVICE_TIER: "default",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_CODE_INTERPRETER: True,
-            },
-        ),
-        (  # Case 2: reasoning model
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "low",
-                CONF_REASONING_SUMMARY: "auto",
-                CONF_VERBOSITY: "high",
-                CONF_CODE_INTERPRETER: False,
-                CONF_SERVICE_TIER: "flex",
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-5.6",
-                    CONF_TOP_P: 0.9,
-                    CONF_MAX_TOKENS: 1000,
-                },
-                {
-                    CONF_REASONING_EFFORT: "max",
-                    CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
-                    CONF_CODE_INTERPRETER: False,
-                    CONF_VERBOSITY: "high",
-                    CONF_SERVICE_TIER: "flex",
-                    CONF_WEB_SEARCH: False,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                    CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                    CONF_PRO_MODE: True,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5.6",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "max",
-                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
-                CONF_CODE_INTERPRETER: False,
-                CONF_VERBOSITY: "high",
-                CONF_SERVICE_TIER: "flex",
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_PRO_MODE: True,
-            },
-        ),
-        # Test that old options are removed after reconfiguration
-        (  # Case 1: web search to recommended
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_CODE_INTERPRETER: True,
-                CONF_SERVICE_TIER: "priority",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: True,
-                CONF_WEB_SEARCH_CITY: "San Francisco",
-                CONF_WEB_SEARCH_REGION: "California",
-                CONF_WEB_SEARCH_COUNTRY: "US",
-                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: True,
-                    CONF_LLM_HASS_API: ["assist"],
-                    CONF_PROMPT: "",
-                },
-            ),
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_PROMPT: "",
-            },
-        ),
-        (  # Case 2: reasoning to recommended
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "high",
-                CONF_SERVICE_TIER: "auto",
-                CONF_CODE_INTERPRETER: True,
-                CONF_VERBOSITY: "low",
-                CONF_WEB_SEARCH: False,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: True,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-            ),
-            {
-                CONF_RECOMMENDED: True,
-                CONF_PROMPT: "Speak like a pirate",
-            },
-        ),
-        (  # Case 3: web search to reasoning
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_SERVICE_TIER: "auto",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-                CONF_WEB_SEARCH_USER_LOCATION: True,
-                CONF_WEB_SEARCH_CITY: "San Francisco",
-                CONF_WEB_SEARCH_REGION: "California",
-                CONF_WEB_SEARCH_COUNTRY: "US",
-                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_CODE_INTERPRETER: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "o3-mini",
-                    CONF_TOP_P: 0.9,
-                    CONF_MAX_TOKENS: 1000,
-                },
-                {
-                    CONF_REASONING_EFFORT: "low",
-                    CONF_CODE_INTERPRETER: True,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o3-mini",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "low",
-                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
-                CONF_CODE_INTERPRETER: True,
-            },
-        ),
-        (  # Case 4: reasoning to web search
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5.6",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "low",
-                CONF_REASONING_SUMMARY: "auto",
-                CONF_SERVICE_TIER: "flex",
-                CONF_CODE_INTERPRETER: True,
-                CONF_VERBOSITY: "medium",
-                CONF_PRO_MODE: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-4o",
-                    CONF_TOP_P: 0.9,
-                    CONF_MAX_TOKENS: 1000,
-                },
-                {
-                    CONF_WEB_SEARCH: True,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-                    CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                    CONF_SERVICE_TIER: "priority",
-                    CONF_CODE_INTERPRETER: False,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: False,
-                CONF_SERVICE_TIER: "priority",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                CONF_CODE_INTERPRETER: False,
-            },
-        ),
-        (  # Case 5: code interpreter supported to not supported model
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: ["assist"],
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "low",
-                CONF_REASONING_SUMMARY: "auto",
-                CONF_CODE_INTERPRETER: True,
-                CONF_VERBOSITY: "medium",
-                CONF_SERVICE_TIER: "auto",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-            },
-            (
-                {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
-                },
-                {
-                    CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "gpt-5-pro",
-                    CONF_TOP_P: 0.9,
-                    CONF_MAX_TOKENS: 1000,
-                },
-                {
-                    CONF_WEB_SEARCH: True,
-                    CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-                    CONF_WEB_SEARCH_USER_LOCATION: False,
-                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-5-pro",
-                CONF_TOP_P: 0.9,
-                CONF_MAX_TOKENS: 1000,
-                CONF_STORE_RESPONSES: False,
-                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
-                CONF_VERBOSITY: "medium",
-                CONF_WEB_SEARCH: True,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
-            },
-        ),
-        (
-            {},
-            (
-                {CONF_RECOMMENDED: False},
-                {CONF_CHAT_MODEL: "gpt-6-astra"},
-                {
-                    CONF_REASONING_EFFORT: "max",
-                    CONF_REASONING_SUMMARY: "detailed",
-                    CONF_PRO_MODE: True,
-                    CONF_VERBOSITY: "low",
-                },
-            ),
-            {
-                CONF_RECOMMENDED: False,
-                CONF_CHAT_MODEL: "gpt-6-astra",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_TEMPERATURE: 1.0,
-                CONF_STORE_RESPONSES: False,
-                CONF_CODE_INTERPRETER: False,
-                CONF_REASONING_EFFORT: "max",
-                CONF_REASONING_SUMMARY: "detailed",
-                CONF_PRO_MODE: True,
-                CONF_VERBOSITY: "low",
-                CONF_SERVICE_TIER: "auto",
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-                CONF_WEB_SEARCH_INLINE_CITATIONS: False,
-            },
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_init_component")
-async def test_subentry_switching(
+async def test_conversation_subentry_unknown_family_removes_gated_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    current_options: dict[str, str | float | bool | list[str]],
-    new_options: tuple[dict[str, str | float | bool | list[str]], ...],
-    expected_options: dict[str, str | float | bool | list[str]],
+    mock_init_component: None,
 ) -> None:
-    """Test the subentry form."""
-    subentry = next(
-        sub
-        for sub in mock_config_entry.subentries.values()
-        if sub.subentry_type == "conversation"
-    )
+    """Test an unknown family falls back to basic chat and sampling options."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
     hass.config_entries.async_update_subentry(
-        mock_config_entry, subentry, data=current_options
-    )
-    await hass.async_block_till_done()
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    assert subentry_flow["step_id"] == "init"
-
-    for step_options in new_options:
-        assert subentry_flow["type"] is FlowResultType.FORM
-
-        # Test that current options are showed as suggested values:
-        for key in subentry_flow["data_schema"].schema:
-            if (
-                isinstance(key.description, dict)
-                and "suggested_value" in key.description
-                and key in current_options
-            ):
-                current_option = current_options[key]
-                if key == CONF_LLM_HASS_API and isinstance(current_option, str):
-                    current_option = [current_option]
-                assert key.description["suggested_value"] == current_option
-
-        # Configure current step
-        subentry_flow = await hass.config_entries.subentries.async_configure(
-            subentry_flow["flow_id"],
-            step_options,
-        )
-        await hass.async_block_till_done()
-
-    assert subentry_flow["type"] is FlowResultType.ABORT
-    assert subentry_flow["reason"] == "reconfigure_successful"
-    assert subentry.data == expected_options
-
-
-@pytest.mark.parametrize("store_responses", [False, True])
-async def test_subentry_web_search_user_location(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    store_responses: bool,
-) -> None:
-    """Test fetching user location."""
-    subentry = next(
-        sub
-        for sub in mock_config_entry.subentries.values()
-        if sub.subentry_type == "conversation"
-    )
-    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "init"
-
-    # Configure initial step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
+        mock_config_entry,
+        subentry,
+        data={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "additional"
-
-    # Configure additional step
-    subentry_flow = await hass.config_entries.subentries.async_configure(
-        subentry_flow["flow_id"],
-        {
-            CONF_TEMPERATURE: 1.0,
-            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-            CONF_TOP_P: RECOMMENDED_TOP_P,
-            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-            CONF_STORE_RESPONSES: store_responses,
+            CONF_CHAT_MODEL: "old-deployment",
+            CONF_MODEL_FAMILY: "gpt-5.6-sol",
+            CONF_MAX_TOKENS: 1200,
+            CONF_CODE_INTERPRETER: True,
+            CONF_REASONING_EFFORT: "max",
+            CONF_REASONING_SUMMARY: "detailed",
+            CONF_PRO_MODE: True,
+            CONF_VERBOSITY: "high",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+            CONF_WEB_SEARCH_USER_LOCATION: False,
+            CONF_WEB_SEARCH_INLINE_CITATIONS: True,
         },
     )
     await hass.async_block_till_done()
-    assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "model"
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="custom-deployment",
+        model_family="my-custom-family",
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+
+    result = await _configure_model(
+        hass,
+        subentry_flow["flow_id"],
+        result,
+        values={CONF_MAX_TOKENS: 900},
+    )
+    assert result["step_id"] == "sampling"
+
+    result = await _configure_subentry_flow(
+        hass,
+        subentry_flow["flow_id"],
+        {
+            CONF_TOP_P: 0.6,
+            CONF_TEMPERATURE: 0.4,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_CHAT_MODEL: "custom-deployment",
+        CONF_MODEL_FAMILY: "my-custom-family",
+        CONF_MAX_TOKENS: 900,
+        CONF_TOP_P: 0.6,
+        CONF_TEMPERATURE: 0.4,
+    }
+
+
+async def test_conversation_subentry_web_search_user_location_uses_deployment(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test location lookup uses the configured deployment name."""
+    caplog.set_level(
+        logging.DEBUG, logger="homeassistant.components.azure_openai.config_flow"
+    )
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="routing-deployment",
+        model_family=MOCK_CHAT_MODEL_FAMILY,
+    )
+    assert result["step_id"] == "model"
 
     hass.config.country = "US"
     hass.config.time_zone = "America/Los_Angeles"
     hass.states.async_set(
         "zone.home", "0", {"latitude": 37.7749, "longitude": -122.4194}
     )
+
     with patch(
         "openai.resources.responses.AsyncResponses.create",
         new_callable=AsyncMock,
@@ -1234,7 +1389,7 @@ async def test_subentry_web_search_user_location(
             object="response",
             id="resp_A",
             created_at=1700000000,
-            model="gpt-4o-mini",
+            model="routing-deployment",
             parallel_tool_calls=True,
             tool_choice="auto",
             tools=[],
@@ -1255,32 +1410,55 @@ async def test_subentry_web_search_user_location(
             ],
         )
 
-        # Configure model step
-        subentry_flow = await hass.config_entries.subentries.async_configure(
+        result = await _configure_model(
+            hass,
             subentry_flow["flow_id"],
-            {
+            result,
+            values={
+                CONF_MAX_TOKENS: 1500,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         )
-        await hass.async_block_till_done()
-    assert (
-        mock_create.call_args.kwargs["input"][0]["content"] == "Where are the following"
-        " coordinates located: (37.7749, -122.4194)?"
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sampling"
+    assert mock_create.call_args.kwargs["model"] == "routing-deployment"
+    assert mock_create.call_args.kwargs["store"] is False
+    config_flow_logs = "\n".join(
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "homeassistant.components.azure_openai.config_flow"
     )
-    assert mock_create.call_args.kwargs["store"] is store_responses
-    assert subentry_flow["type"] is FlowResultType.ABORT
-    assert subentry_flow["reason"] == "reconfigure_successful"
+    assert "Location data lookup completed" in config_flow_logs
+    assert "San Francisco" not in config_flow_logs
+    assert "California" not in config_flow_logs
+    assert "America/Los_Angeles" not in config_flow_logs
+    assert (
+        mock_create.call_args.kwargs["input"][0]["content"]
+        == "Where are the following coordinates located: (37.7749, -122.4194)?"
+    )
+
+    result = await _configure_subentry_flow(
+        hass,
+        subentry_flow["flow_id"],
+        {
+            CONF_TOP_P: 0.9,
+            CONF_TEMPERATURE: 0.7,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert subentry.data == {
         CONF_RECOMMENDED: False,
         CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 1.0,
-        CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-        CONF_TOP_P: RECOMMENDED_TOP_P,
-        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-        CONF_SERVICE_TIER: "auto",
-        CONF_STORE_RESPONSES: store_responses,
+        CONF_CHAT_MODEL: "routing-deployment",
+        CONF_MODEL_FAMILY: MOCK_CHAT_MODEL_FAMILY,
+        CONF_MAX_TOKENS: 1500,
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
         CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -1288,50 +1466,284 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        CONF_WEB_SEARCH_INLINE_CITATIONS: False,
+        CONF_WEB_SEARCH_INLINE_CITATIONS: True,
         CONF_CODE_INTERPRETER: False,
+        CONF_TOP_P: 0.9,
+        CONF_TEMPERATURE: 0.7,
     }
 
 
-async def test_creating_ai_task_subentry(
+async def test_conversation_subentry_disabling_web_search_clears_location(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    mock_init_component: None,
 ) -> None:
-    """Test creating an AI task subentry."""
+    """Test stored location data is dropped when web search is turned off."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_CHAT_MODEL: "routing-deployment",
+            CONF_MODEL_FAMILY: MOCK_CHAT_MODEL_FAMILY,
+            CONF_MAX_TOKENS: 1500,
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="routing-deployment",
+        model_family=MOCK_CHAT_MODEL_FAMILY,
+    )
+    assert result["step_id"] == "model"
+
+    result = await _configure_model(
+        hass,
+        subentry_flow["flow_id"],
+        result,
+        values={
+            CONF_MAX_TOKENS: 1500,
+            CONF_WEB_SEARCH: False,
+            CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+        },
+    )
+    assert result["step_id"] == "sampling"
+
+    result = await _configure_subentry_flow(
+        hass,
+        subentry_flow["flow_id"],
+        {
+            CONF_TOP_P: 0.9,
+            CONF_TEMPERATURE: 0.7,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_WEB_SEARCH] is False
+    assert CONF_WEB_SEARCH_CITY not in subentry.data
+    assert CONF_WEB_SEARCH_REGION not in subentry.data
+    assert CONF_WEB_SEARCH_COUNTRY not in subentry.data
+    assert CONF_WEB_SEARCH_TIMEZONE not in subentry.data
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error", "reauth"),
+    [
+        pytest.param(
+            APIConnectionError(request=None), "cannot_connect", False, id="connection"
+        ),
+        pytest.param(
+            AuthenticationError(
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request("POST", "https://example.com"),
+                ),
+                body=None,
+                message=None,
+            ),
+            "invalid_auth",
+            True,
+            id="authentication",
+        ),
+        pytest.param(
+            RateLimitError(
+                response=httpx.Response(
+                    status_code=429,
+                    request=httpx.Request("POST", "https://example.com"),
+                ),
+                body=None,
+                message=None,
+            ),
+            "rate_limited",
+            False,
+            id="rate-limit",
+        ),
+        pytest.param(
+            BadRequestError(
+                response=httpx.Response(
+                    status_code=400,
+                    request=httpx.Request("POST", "https://example.com"),
+                ),
+                body=None,
+                message=None,
+            ),
+            "location_lookup_failed",
+            False,
+            id="provider",
+        ),
+    ],
+)
+async def test_conversation_subentry_web_search_user_location_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    side_effect: Exception,
+    error: str,
+    reauth: bool,
+) -> None:
+    """Test location lookup API errors are shown in the subentry flow."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="routing-deployment",
+        model_family=MOCK_CHAT_MODEL_FAMILY,
+    )
+    hass.states.async_set("zone.home", "0", {"latitude": 1.0, "longitude": 2.0})
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new=AsyncMock(side_effect=side_effect),
+    ):
+        result = await _configure_model(
+            hass,
+            subentry_flow["flow_id"],
+            result,
+            values={
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    assert result["errors"] == {"base": error}
+    reauth_flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        if flow["context"]["source"] == config_entries.SOURCE_REAUTH
+    ]
+    assert bool(reauth_flows) is reauth
+
+
+@pytest.mark.parametrize("output_text", ["not JSON", '{"city": 1}'])
+async def test_conversation_subentry_web_search_user_location_invalid_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    output_text: str,
+) -> None:
+    """Test invalid location responses are shown in the subentry flow."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await _configure_conversation_init(
+        hass,
+        subentry_flow["flow_id"],
+        prompt="Speak like a pirate",
+        recommended=False,
+        chat_model="routing-deployment",
+        model_family=MOCK_CHAT_MODEL_FAMILY,
+    )
+    hass.states.async_set("zone.home", "0", {"latitude": 1.0, "longitude": 2.0})
+
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        new=AsyncMock(
+            return_value=Response(
+                object="response",
+                id="resp_A",
+                created_at=1700000000,
+                model="routing-deployment",
+                parallel_tool_calls=True,
+                tool_choice="auto",
+                tools=[],
+                output=[
+                    ResponseOutputMessage(
+                        type="message",
+                        id="msg_A",
+                        content=[
+                            ResponseOutputText(
+                                type="output_text",
+                                text=output_text,
+                                annotations=[],
+                            )
+                        ],
+                        role="assistant",
+                        status="completed",
+                    )
+                ],
+            )
+        ),
+    ):
+        result = await _configure_model(
+            hass,
+            subentry_flow["flow_id"],
+            result,
+            values={
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    assert result["errors"] == {"base": "location_lookup_failed"}
+
+
+async def test_creating_ai_task_subentry_recommended(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test creating a recommended AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    assert not result.get("errors")
-
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await _configure_ai_task_init(
+        hass,
         result["flow_id"],
-        {
-            "name": "Custom AI Task",
-            CONF_RECOMMENDED: True,
-        },
+        name="Custom AI Task",
+        recommended=True,
+        chat_model="task-deployment",
+        model_family="gpt-5.1",
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Custom AI Task"
-    assert result2.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Custom AI Task"
+    assert result["data"] == {
         CONF_RECOMMENDED: True,
+        CONF_CHAT_MODEL: "task-deployment",
+        CONF_MODEL_FAMILY: "gpt-5.1",
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + stt + tts + ai_task + new ai_task
-
-    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry_id = next(iter(set(mock_config_entry.subentries) - old_subentries))
     new_subentry = mock_config_entry.subentries[new_subentry_id]
     assert new_subentry.subentry_type == "ai_task_data"
     assert new_subentry.title == "Custom AI Task"
@@ -1341,355 +1753,553 @@ async def test_ai_task_subentry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating an AI task subentry when entry is not loaded."""
-    # Don't call mock_init_component to simulate not loaded state
+    """Test creating an AI task subentry when the parent entry is not loaded."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "entry_not_loaded"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
-@pytest.mark.usefixtures("mock_init_component")
-@pytest.mark.parametrize(
-    ("image_options", "image_model"),
-    [
-        ({}, "gpt-image-2.5-flare"),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
-            "gpt-image-2.5-sunburst",
-        ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
-            "gpt-image-2.5-flare",
-        ),
-        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2"),
-    ],
-)
-async def test_creating_ai_task_subentry_additional(
+async def test_creating_ai_task_subentry_advanced(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    image_options: dict[str, str],
-    image_model: str,
+    mock_init_component: None,
 ) -> None:
-    """Test creating an AI task subentry with additional settings."""
+    """Test creating an AI task subentry with gated model options."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["step_id"] == "init"
+
+    result = await _configure_ai_task_init(
+        hass,
+        result["flow_id"],
+        name="Advanced AI Task",
+        recommended=False,
+        chat_model="task-deployment",
+        model_family="gpt-4o-mini",
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    image_generation_schema = _section_schema(result, "image_generation")
+    assert list(image_generation_schema) == [
+        CONF_IMAGE_DEPLOYMENT,
+        CONF_IMAGE_MODEL,
+    ]
+    assert "web_search" not in result["data_schema"].schema
+
+    result = await _configure_model(
+        hass,
+        result["flow_id"],
+        result,
+        values={
+            CONF_MAX_TOKENS: 200,
+            CONF_CODE_INTERPRETER: False,
+            CONF_IMAGE_MODEL: " gpt-image-1-mini ",
+            CONF_IMAGE_DEPLOYMENT: " custom-image-deployment ",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sampling"
+
+    result = await _configure_subentry_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_TOP_P: 0.9,
+            CONF_TEMPERATURE: 0.5,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Advanced AI Task"
+    assert result["data"] == {
+        CONF_RECOMMENDED: False,
+        CONF_CHAT_MODEL: "task-deployment",
+        CONF_MODEL_FAMILY: "gpt-4o-mini",
+        CONF_MAX_TOKENS: 200,
+        CONF_CODE_INTERPRETER: False,
+        CONF_IMAGE_MODEL: "gpt-image-1-mini",
+        CONF_IMAGE_DEPLOYMENT: "custom-image-deployment",
+        CONF_TOP_P: 0.9,
+        CONF_TEMPERATURE: 0.5,
+    }
+
+
+async def test_creating_ai_task_subentry_without_image_deployment(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test creating an AI task subentry with an image-capable model, image off."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "init"
-
-    # Go to additional settings
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await _configure_ai_task_init(
+        hass,
         result["flow_id"],
-        {
-            "name": "Advanced AI Task",
-            CONF_RECOMMENDED: False,
-        },
+        name="Text-Only AI Task",
+        recommended=False,
+        chat_model="task-deployment",
+        model_family="gpt-4o-mini",
     )
+    assert result["step_id"] == "model"
+    assert CONF_IMAGE_DEPLOYMENT in _section_schema(result, "image_generation")
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "additional"
-
-    # Configure additional settings
-    result3 = await hass.config_entries.subentries.async_configure(
+    result = await _configure_model(
+        hass,
         result["flow_id"],
-        {
-            CONF_CHAT_MODEL: "gpt-4o",
+        result,
+        values={
             CONF_MAX_TOKENS: 200,
-            CONF_STORE_RESPONSES: True,
-            CONF_TEMPERATURE: 0.5,
-            CONF_TOP_P: 0.9,
-        },
-    )
-
-    assert result3.get("type") is FlowResultType.FORM
-    assert result3.get("step_id") == "model"
-
-    # Configure model settings
-    result4 = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
             CONF_CODE_INTERPRETER: False,
-            **image_options,
         },
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sampling"
 
-    assert result4.get("type") is FlowResultType.CREATE_ENTRY
-    assert result4.get("title") == "Advanced AI Task"
-    assert result4.get("data") == {
-        CONF_RECOMMENDED: False,
-        CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: image_model,
-        CONF_MAX_TOKENS: 200,
-        CONF_STORE_RESPONSES: True,
-        CONF_TEMPERATURE: 0.5,
-        CONF_TOP_P: 0.9,
-        CONF_CODE_INTERPRETER: False,
-        CONF_SERVICE_TIER: "auto",
-    }
+    result = await _configure_subentry_flow(
+        hass,
+        result["flow_id"],
+        {CONF_TOP_P: 0.9, CONF_TEMPERATURE: 0.5},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_IMAGE_DEPLOYMENT not in result["data"]
 
 
 async def test_creating_stt_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    mock_init_component: None,
 ) -> None:
-    """Test creating a STT subentry."""
+    """Test creating an STT subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "stt"),
         context={"source": config_entries.SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    assert not result.get("errors")
-
-    result = await hass.config_entries.subentries.async_configure(
+    result = await _configure_subentry_flow(
+        hass,
         result["flow_id"],
         {
-            "name": "Custom STT",
-            CONF_PROMPT: (
-                "Umm, let me think like, hmm\u2026 Okay,"
-                " here’s what I’m, like, thinking."
-            ),
-            CONF_CHAT_MODEL: "gpt-4o-transcribe",
+            CONF_NAME: "Custom STT",
+            CONF_PROMPT: "Transcribe pirate radio.",
+            CONF_CHAT_MODEL: " stt-custom-deployment ",
+            CONF_STT_MODEL: " gpt-4o-transcribe ",
         },
     )
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Custom STT"
-    assert result.get("data") == {
-        CONF_PROMPT: (
-            "Umm, let me think like, hmm\u2026 Okay, here’s what I’m, like, thinking."
-        ),
-        CONF_CHAT_MODEL: "gpt-4o-transcribe",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Custom STT"
+    assert result["data"] == {
+        CONF_PROMPT: "Transcribe pirate radio.",
+        CONF_CHAT_MODEL: "stt-custom-deployment",
+        CONF_STT_MODEL: "gpt-4o-transcribe",
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + tts + original stt + new stt
-
-    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry_id = next(iter(set(mock_config_entry.subentries) - old_subentries))
     new_subentry = mock_config_entry.subentries[new_subentry_id]
     assert new_subentry.subentry_type == "stt"
     assert new_subentry.title == "Custom STT"
+
+
+async def test_creating_stt_subentry_with_api_version_override(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test creating an STT subentry with a manual API version override."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "stt"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await _configure_subentry_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_NAME: "Custom STT",
+            CONF_PROMPT: "Transcribe pirate radio.",
+            CONF_CHAT_MODEL: "stt-custom-deployment",
+            CONF_STT_MODEL: "gpt-4o-transcribe",
+            CONF_API_VERSION: " 2025-01-01-preview ",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_PROMPT: "Transcribe pirate radio.",
+        CONF_CHAT_MODEL: "stt-custom-deployment",
+        CONF_STT_MODEL: "gpt-4o-transcribe",
+        CONF_API_VERSION: "2025-01-01-preview",
+    }
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "user_input", "error"),
+    [
+        pytest.param(
+            "stt",
+            {
+                CONF_NAME: "Custom STT",
+                CONF_CHAT_MODEL: "   ",
+                CONF_STT_MODEL: "gpt-4o-transcribe",
+            },
+            {CONF_CHAT_MODEL: "deployment_required"},
+            id="stt-deployment",
+        ),
+        pytest.param(
+            "stt",
+            {
+                CONF_NAME: "Custom STT",
+                CONF_CHAT_MODEL: "stt-deployment",
+                CONF_STT_MODEL: "   ",
+            },
+            {CONF_STT_MODEL: "model_required"},
+            id="stt-model",
+        ),
+        pytest.param(
+            "tts",
+            {
+                CONF_NAME: "Custom TTS",
+                CONF_CHAT_MODEL: "   ",
+                CONF_TTS_MODEL: "gpt-4o-mini-tts",
+                CONF_TTS_SPEED: 1.0,
+            },
+            {CONF_CHAT_MODEL: "deployment_required"},
+            id="tts-deployment",
+        ),
+        pytest.param(
+            "tts",
+            {
+                CONF_NAME: "Custom TTS",
+                CONF_CHAT_MODEL: "tts-deployment",
+                CONF_TTS_MODEL: "   ",
+                CONF_TTS_SPEED: 1.0,
+            },
+            {CONF_TTS_MODEL: "model_required"},
+            id="tts-model",
+        ),
+    ],
+)
+async def test_creating_speech_subentry_rejects_blank_identifiers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    subentry_type: str,
+    user_input: dict[str, Any],
+    error: dict[str, str],
+) -> None:
+    """Test speech subentries require deployment and model identifiers."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await _configure_subentry_flow(hass, result["flow_id"], user_input)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == error
 
 
 async def test_stt_subentry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating a STT subentry when entry is not loaded."""
-    # Don't call mock_init_component to simulate not loaded state
+    """Test creating an STT subentry when the parent entry is not loaded."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "stt"),
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "entry_not_loaded"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 async def test_stt_reconfigure(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
 ) -> None:
-    """Test reconfiguring the STT subentry updates prompt and chat model."""
-    subentry = [
-        s for s in mock_config_entry.subentries.values() if s.subentry_type == "stt"
-    ][0]
+    """Test reconfiguring the STT subentry."""
+    subentry = _get_subentry(mock_config_entry, "stt")
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    options = await hass.config_entries.subentries.async_configure(
+
+    result = await _configure_subentry_flow(
+        hass,
         subentry_flow["flow_id"],
         {
-            "prompt": "This is a conversation about smart pirate ships.",
-            "chat_model": "gpt-4o-mini-transcribe-2025-12-15",
+            CONF_PROMPT: "This is a conversation about smart pirate ships.",
+            CONF_CHAT_MODEL: "transcription-deployment-v2",
+            CONF_STT_MODEL: "gpt-4o-transcribe",
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.ABORT
-    assert options["reason"] == "reconfigure_successful"
-    assert subentry.data["prompt"] == "This is a conversation about smart pirate ships."
-    assert subentry.data["chat_model"] == "gpt-4o-mini-transcribe-2025-12-15"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_CHAT_MODEL: "transcription-deployment-v2",
+        CONF_PROMPT: "This is a conversation about smart pirate ships.",
+        CONF_STT_MODEL: "gpt-4o-transcribe",
+    }
+
+
+async def test_stt_reconfigure_clears_optional_text(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test reconfiguring STT clears omitted optional text."""
+    subentry = _get_subentry(mock_config_entry, "stt")
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_PROMPT: "Transcribe pirate radio.",
+            CONF_API_VERSION: "2025-01-01-preview",
+        },
+    )
+    await hass.async_block_till_done()
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_subentry_flow(
+        hass,
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "transcription-deployment-v2",
+            CONF_STT_MODEL: "gpt-4o-transcribe",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_CHAT_MODEL: "transcription-deployment-v2",
+        CONF_PROMPT: "",
+        CONF_STT_MODEL: "gpt-4o-transcribe",
+    }
 
 
 async def test_creating_tts_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    mock_init_component: None,
 ) -> None:
     """Test creating a TTS subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
         context={"source": config_entries.SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert to_field_list(result["data_schema"], custom_serializer=cv.custom_serializer)
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "init"
-    assert not result.get("errors")
-
-    result = await hass.config_entries.subentries.async_configure(
+    result = await _configure_subentry_flow(
+        hass,
         result["flow_id"],
         {
-            "name": "Custom TTS",
-            CONF_PROMPT: "Speak like a drunk pirate",
+            CONF_NAME: "Custom TTS",
+            CONF_CHAT_MODEL: " tts-custom-deployment ",
+            CONF_TTS_MODEL: " tts-hd ",
+            CONF_PROMPT: "Speak like a pirate",
             CONF_TTS_SPEED: 0.85,
         },
     )
 
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Custom TTS"
-    assert result.get("data") == {
-        CONF_PROMPT: "Speak like a drunk pirate",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Custom TTS"
+    assert result["data"] == {
+        CONF_CHAT_MODEL: "tts-custom-deployment",
+        CONF_TTS_MODEL: "tts-hd",
+        CONF_PROMPT: "Speak like a pirate",
         CONF_TTS_SPEED: 0.85,
-        CONF_CHAT_MODEL: "gpt-4o-mini-tts",
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + stt + tts + new tts
-
-    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry_id = next(iter(set(mock_config_entry.subentries) - old_subentries))
     new_subentry = mock_config_entry.subentries[new_subentry_id]
     assert new_subentry.subentry_type == "tts"
     assert new_subentry.title == "Custom TTS"
+
+
+async def test_creating_tts_subentry_requires_nonempty_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test creating a TTS subentry rejects an empty model."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    with pytest.raises(InvalidData, match="Schema validation failed at 'tts_model'"):
+        await _configure_subentry_flow(
+            hass,
+            result["flow_id"],
+            {
+                CONF_NAME: "Custom TTS",
+                CONF_CHAT_MODEL: "tts-custom-deployment",
+                CONF_TTS_MODEL: "",
+                CONF_TTS_SPEED: 1.0,
+            },
+        )
 
 
 async def test_tts_subentry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating a TTS subentry when entry is not loaded."""
-    # Don't call mock_init_component to simulate not loaded state
+    """Test creating a TTS subentry when the parent entry is not loaded."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "entry_not_loaded"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 async def test_tts_reconfigure(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
 ) -> None:
-    """Test the tts subentry reconfigure flow."""
-    subentry = [
-        s for s in mock_config_entry.subentries.values() if s.subentry_type == "tts"
-    ][0]
+    """Test reconfiguring the TTS subentry."""
+    subentry = _get_subentry(mock_config_entry, "tts")
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    options = await hass.config_entries.subentries.async_configure(
+
+    result = await _configure_subentry_flow(
+        hass,
         subentry_flow["flow_id"],
         {
-            "prompt": "Speak like a pirate",
-            "tts_speed": 0.5,
+            CONF_CHAT_MODEL: "gpt-4o-mini-tts-preview-2025-12-15",
+            CONF_TTS_MODEL: "gpt-4o-mini-tts",
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_TTS_SPEED: 0.5,
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.ABORT
-    assert options["reason"] == "reconfigure_successful"
-    assert subentry.data["prompt"] == "Speak like a pirate"
-    assert subentry.data["tts_speed"] == 0.5
-
-
-async def test_reauth(hass: HomeAssistant) -> None:
-    """Test we can reauthenticate."""
-    # Pretend we already set up a config entry.
-    hass.config.components.add("azure_openai")
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with (
-        patch(
-            "homeassistant.components.azure_openai.config_flow.openai.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.azure_openai.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new_api_key",
-            },
-        )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_CHAT_MODEL: "gpt-4o-mini-tts-preview-2025-12-15",
+        CONF_TTS_MODEL: "gpt-4o-mini-tts",
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_TTS_SPEED: 0.5,
+    }
+
+
+async def test_tts_reconfigure_clears_instructions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test reconfiguring TTS clears omitted instructions."""
+    subentry = _get_subentry(mock_config_entry, "tts")
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_PROMPT: "Speak like a pirate"},
+    )
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    result = await _configure_subentry_flow(
+        hass,
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-4o-mini-tts-preview-2025-12-15",
+            CONF_TTS_MODEL: "gpt-4o-mini-tts",
+            CONF_TTS_SPEED: 0.5,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        CONF_CHAT_MODEL: "gpt-4o-mini-tts-preview-2025-12-15",
+        CONF_TTS_MODEL: "gpt-4o-mini-tts",
+        CONF_PROMPT: "",
+        CONF_TTS_SPEED: 0.5,
+    }
 
 
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        pytest.param("assist", ["assist"], ["assist"], id="string-assist"),
+        pytest.param(["assist"], ["assist"], ["assist"], id="list-assist"),
+        pytest.param("non-existent", [], ["assist"], id="string-invalid"),
+        pytest.param(["non-existent"], [], ["assist"], id="list-invalid"),
+        pytest.param(
+            ["assist", "non-existent"],
+            ["assist"],
+            ["assist"],
+            id="mixed",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    current_llm_apis: list[str],
+    mock_init_component: None,
+    current_llm_apis: str | list[str],
     suggested_llm_apis: list[str],
     expected_options: list[str],
 ) -> None:
-    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
-    subentry = next(iter(mock_config_entry.subentries.values()))
+    """Test llm_hass_api suggestions are sanitized on reconfigure."""
+    subentry = _get_subentry(mock_config_entry, "conversation")
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         subentry,
-        data={**subentry.data, CONF_LLM_HASS_API: current_llm_apis},
+        data={
+            **subentry.data,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: current_llm_apis,
+        },
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.azure_openai.config_flow.openai.AsyncOpenAI.models",
-    ):
-        subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-            hass, subentry.subentry_id
-        )
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
 
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
-    # Only valid LLM APIs should be suggested and shown as options
     schema = subentry_flow["data_schema"].schema
-    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    key = next(key for key in schema if key == CONF_LLM_HASS_API)
     assert key.description
     assert key.description.get("suggested_value") == suggested_llm_apis
     field_schema = schema[key]
     assert field_schema.config
     assert [
-        opt["value"] for opt in field_schema.config.get("options")
+        option["value"] for option in field_schema.config["options"]
     ] == expected_options

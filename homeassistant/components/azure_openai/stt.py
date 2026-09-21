@@ -6,14 +6,16 @@ import logging
 from typing import TYPE_CHECKING, override
 import wave
 
-from openai import OpenAIError
+from openai import AuthenticationError, OpenAIError
 
 from homeassistant.components import stt
-from homeassistant.const import CONF_PROMPT
+from homeassistant.const import CONF_API_VERSION, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, RECOMMENDED_STT_MODEL
+from .capabilities import DEFAULT_STT_API_VERSION
+from .client import create_classic_deployment_client
+from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -166,7 +168,7 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
             audio_bytes.extend(chunk)
         audio_data = bytes(audio_bytes)
         if metadata.format == stt.AudioFormats.WAV:
-            # Add missing wav header
+            # Home Assistant supplies WAV audio without a container header.
             wav_buffer = io.BytesIO()
 
             with wave.open(wav_buffer, "wb") as wf:
@@ -178,16 +180,22 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
             audio_data = wav_buffer.getvalue()
 
         options = self.subentry.data
-        client = self.entry.runtime_data
+        api_version = options.get(CONF_API_VERSION) or DEFAULT_STT_API_VERSION
+        client = create_classic_deployment_client(
+            self.hass, self.entry.data, options[CONF_CHAT_MODEL], api_version
+        )
 
         try:
             response = await client.audio.transcriptions.create(
-                model=options.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
+                model=options[CONF_CHAT_MODEL],
                 file=(f"a.{metadata.format.value}", audio_data),
                 response_format="json",
                 language=metadata.language.split("-")[0],
                 prompt=options.get(CONF_PROMPT, DEFAULT_STT_PROMPT),
             )
+        except AuthenticationError:
+            self.entry.async_start_reauth(self.hass)
+            _LOGGER.exception("Authentication failed during STT")
         except OpenAIError:
             _LOGGER.exception("Error during STT")
         else:

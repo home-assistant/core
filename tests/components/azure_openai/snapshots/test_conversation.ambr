@@ -15,10 +15,6 @@
       'id': 'ci_A',
       'outputs': list([
         dict({
-          'logs': '''
-            235.70108188126758
-  
-          ''',
           'type': 'logs',
         }),
       ]),
@@ -58,10 +54,6 @@
       'id': 'ci_A',
       'outputs': list([
         dict({
-          'logs': '''
-            235.70108188126758
-  
-          ''',
           'type': 'logs',
         }),
       ]),
@@ -101,10 +93,6 @@
       'id': 'ci_A',
       'outputs': list([
         dict({
-          'logs': '''
-            235.70108188126758
-  
-          ''',
           'type': 'logs',
         }),
       ]),
@@ -137,7 +125,7 @@
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -154,7 +142,7 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'result': dict({
         'data': dict({
@@ -182,7 +170,7 @@
       'tool_name': 'HassGetCurrentTime',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': '12:00 PM',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -197,7 +185,7 @@
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -206,7 +194,7 @@
       'tool_calls': None,
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
@@ -215,7 +203,7 @@
       'tool_calls': None,
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -233,7 +221,7 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'result': dict({
         'data': 'value1',
@@ -244,7 +232,7 @@
       'tool_name': 'test_tool',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -262,7 +250,7 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'result': dict({
         'data': 'value2',
@@ -273,7 +261,7 @@
       'tool_name': 'test_tool',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': 'Cool',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -364,7 +352,7 @@
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': None,
       'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -382,7 +370,7 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'result': dict({
         'data': 'value1',
@@ -393,7 +381,7 @@
       'tool_name': 'test_tool',
     }),
     dict({
-      'agent_id': 'conversation.azure_openai',
+      'agent_id': 'conversation.azure_openai_conversation',
       'content': 'Cool',
       'created': HAFakeDatetime(2025, 10, 31, 18, 0, tzinfo=datetime.timezone.utc),
       'native': None,
@@ -403,91 +391,23 @@
     }),
   ])
 # ---
-# name: test_model_args[subentry_options0]
+# name: test_model_args[basic-family]
   dict({
     'max_output_tokens': 3000,
-    'model': 'gpt-4o-mini',
-    'service_tier': 'auto',
+    'model': 'basic-deployment',
     'store': False,
     'stream': True,
     'temperature': 1.0,
     'top_p': 1.0,
   })
 # ---
-# name: test_model_args[subentry_options1]
+# name: test_model_args[gpt6-default]
   dict({
     'include': list([
       'reasoning.encrypted_content',
     ]),
     'max_output_tokens': 3000,
-    'model': 'gpt-5.5',
-    'prompt_cache_retention': '24h',
-    'reasoning': dict({
-      'effort': 'low',
-      'summary': 'auto',
-    }),
-    'service_tier': 'auto',
-    'store': False,
-    'stream': True,
-    'text': dict({
-      'verbosity': 'medium',
-    }),
-  })
-# ---
-# name: test_model_args[subentry_options2]
-  dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
-    'max_output_tokens': 3000,
-    'model': 'gpt-5.6-sol',
-    'prompt_cache_options': dict({
-      'ttl': '30m',
-    }),
-    'reasoning': dict({
-      'effort': 'low',
-      'mode': 'pro',
-      'summary': 'auto',
-    }),
-    'service_tier': 'auto',
-    'store': False,
-    'stream': True,
-    'text': dict({
-      'verbosity': 'medium',
-    }),
-  })
-# ---
-# name: test_model_args[subentry_options3]
-  dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
-    'max_output_tokens': 3000,
-    'model': 'gpt-5.6-sol',
-    'prompt_cache_options': dict({
-      'ttl': '30m',
-    }),
-    'reasoning': dict({
-      'effort': 'none',
-      'summary': 'auto',
-    }),
-    'service_tier': 'auto',
-    'store': False,
-    'stream': True,
-    'temperature': 0.5,
-    'text': dict({
-      'verbosity': 'medium',
-    }),
-    'top_p': 0.9,
-  })
-# ---
-# name: test_model_args[subentry_options4]
-  dict({
-    'include': list([
-      'reasoning.encrypted_content',
-    ]),
-    'max_output_tokens': 3000,
-    'model': 'gpt-6-astra',
+    'model': 'gpt6-default-deployment',
     'prompt_cache_options': dict({
       'ttl': '30m',
     }),
@@ -495,7 +415,6 @@
       'effort': 'low',
       'summary': 'auto',
     }),
-    'service_tier': 'auto',
     'store': False,
     'stream': True,
     'text': dict({
@@ -503,13 +422,13 @@
     }),
   })
 # ---
-# name: test_model_args[subentry_options5]
+# name: test_model_args[gpt6-pro]
   dict({
     'include': list([
       'reasoning.encrypted_content',
     ]),
     'max_output_tokens': 3000,
-    'model': 'gpt-6-astra',
+    'model': 'gpt6-pro-deployment',
     'prompt_cache_options': dict({
       'ttl': '30m',
     }),
@@ -518,7 +437,6 @@
       'mode': 'pro',
       'summary': 'detailed',
     }),
-    'service_tier': 'auto',
     'store': False,
     'stream': True,
     'text': dict({
@@ -526,25 +444,88 @@
     }),
   })
 # ---
-# name: test_model_args[subentry_options6]
+# name: test_model_args[gpt6-summary-off]
   dict({
     'include': list([
       'reasoning.encrypted_content',
     ]),
     'max_output_tokens': 3000,
-    'model': 'gpt-6-astra',
+    'model': 'gpt6-summary-off-deployment',
     'prompt_cache_options': dict({
       'ttl': '30m',
     }),
     'reasoning': dict({
       'effort': 'high',
     }),
-    'service_tier': 'auto',
     'store': False,
     'stream': True,
     'text': dict({
       'verbosity': 'high',
     }),
+  })
+# ---
+# name: test_model_args[pro-mode]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt56-pro-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'low',
+      'mode': 'pro',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[reasoning-verbosity-cache24]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt55-deployment',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
+# name: test_model_args[sampling-none]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt56-sampling-deployment',
+    'prompt_cache_options': dict({
+      'ttl': '30m',
+    }),
+    'reasoning': dict({
+      'effort': 'none',
+      'summary': 'auto',
+    }),
+    'store': False,
+    'stream': True,
+    'temperature': 0.5,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+    'top_p': 0.9,
   })
 # ---
 # name: test_web_search[False]

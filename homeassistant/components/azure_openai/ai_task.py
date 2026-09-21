@@ -13,13 +13,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_IMAGE_MODEL,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_IMAGE_MODEL,
-    UNSUPPORTED_IMAGE_MODELS,
-)
+from .capabilities import RECOMMENDED_IMAGE_MODEL, get_capabilities
+from .const import CONF_IMAGE_DEPLOYMENT, CONF_IMAGE_MODEL, CONF_MODEL_FAMILY, DOMAIN
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -61,8 +56,10 @@ class OpenAITaskEntity(
             ai_task.AITaskEntityFeature.GENERATE_DATA
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
-        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-        if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
+        capabilities = get_capabilities(self.subentry.data.get(CONF_MODEL_FAMILY, ""))
+        if "image" in capabilities.features and self.subentry.data.get(
+            CONF_IMAGE_DEPLOYMENT
+        ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
     @override
@@ -78,7 +75,8 @@ class OpenAITaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_chat_log_content",
             )
 
         text = chat_log.content[-1].content or ""
@@ -91,12 +89,11 @@ class OpenAITaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
-            _LOGGER.error(
-                "Failed to parse JSON response: %s. Response: %s",
-                err,
-                text,
-            )
-            raise HomeAssistantError("Error with Azure OpenAI structured response") from err
+            _LOGGER.error("Failed to parse JSON response: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_structured_response",
+            ) from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
@@ -114,7 +111,8 @@ class OpenAITaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
-                "Last content in chat log is not an AssistantContent"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_chat_log_content",
             )
 
         image_call: ImageGenerationCall | None = None
@@ -128,7 +126,10 @@ class OpenAITaskEntity(
                     content.native.result = None
 
         if image_call is None or image_call.result is None:
-            raise HomeAssistantError("No image returned")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_image_returned",
+            )
 
         image_data = base64.b64decode(image_call.result)
         image_call.result = None

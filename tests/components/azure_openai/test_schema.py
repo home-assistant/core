@@ -7,6 +7,7 @@ import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.azure_openai.const import DOMAIN
 from homeassistant.components.azure_openai.entity import _format_structured_output
 from homeassistant.components.azure_openai.schema import adjust_schema
 from homeassistant.exceptions import HomeAssistantError
@@ -195,7 +196,7 @@ def test_reference_constraint_siblings(
     field: dict[str, Any], keyword: str, required: list[str]
 ) -> None:
     """Reject reference constraints instead of dropping them or expanding cycles."""
-    with pytest.raises(HomeAssistantError, match="reference siblings") as err:
+    with pytest.raises(HomeAssistantError) as err:
         adjust_schema(
             {
                 "type": "object",
@@ -204,8 +205,11 @@ def test_reference_constraint_siblings(
                 "$defs": {"value": {"type": "string"}},
             }
         )
-    assert "$.properties.value" in str(err.value)
-    assert keyword in str(err.value)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "schema_reference_siblings"
+    assert err.value.translation_placeholders is not None
+    assert err.value.translation_placeholders["path"] == "$.properties.value"
+    assert keyword in err.value.translation_placeholders["siblings"]
 
 
 @pytest.mark.parametrize(
@@ -236,46 +240,58 @@ def test_selector_schemas(
     assert schema == snapshot
 
 
-@pytest.mark.parametrize(
-    ("field", "message"),
-    [
-        pytest.param(
-            selector.ObjectSelector(),
-            "explicitly defined object fields",
-            id="free-object",
-        ),
-    ],
-)
-def test_unsupported_selectors(field: selector.Selector, message: str) -> None:
+def test_unsupported_selectors() -> None:
     """Reject constraints that cannot be preserved in strict output."""
-    with pytest.raises(HomeAssistantError, match=message):
+    with pytest.raises(HomeAssistantError) as err:
         _format_structured_output(
-            probatio.Schema({probatio.Required("value"): field}), None
+            probatio.Schema({probatio.Required("value"): selector.ObjectSelector()}),
+            None,
         )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "schema_object_fields_required"
+    assert err.value.translation_placeholders == {"path": "$.properties.value"}
 
 
 @pytest.mark.parametrize(
-    ("field", "message"),
+    ("field", "translation_key"),
     [
         pytest.param(
-            {"allOf": [{"type": "string"}, {"type": "integer"}]}, "allOf", id="all-of"
+            {"allOf": [{"type": "string"}, {"type": "integer"}]},
+            "schema_all_of_unsupported",
+            id="all-of",
         ),
         pytest.param(
             {"type": "string", "allOf": [{"type": "integer"}]},
-            "Conflicting",
+            "schema_all_of_conflict",
             id="conflicting-all-of",
         ),
-        pytest.param({"type": "string", "not": {"enum": ["a"]}}, "not", id="not"),
-        pytest.param({"type": "array"}, "array items", id="array-without-items"),
-        pytest.param({}, "schema", id="unconstrained"),
-        pytest.param(True, "schema", id="boolean-schema"),
+        pytest.param(
+            {"type": "string", "not": {"enum": ["a"]}},
+            "schema_keywords_unsupported",
+            id="not",
+        ),
+        pytest.param(
+            {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+            "schema_keywords_unsupported",
+            id="one-of",
+        ),
+        pytest.param(
+            {"type": "array"},
+            "schema_array_items_required",
+            id="array-without-items",
+        ),
+        pytest.param({}, "schema_unsupported", id="unconstrained"),
+        pytest.param(True, "schema_unsupported", id="boolean-schema"),
     ],
 )
-def test_unsupported_schema(field: dict[str, Any] | bool, message: str) -> None:
+def test_unsupported_schema(field: dict[str, Any] | bool, translation_key: str) -> None:
     """Unsupported schemas fail locally with their field location."""
-    with pytest.raises(HomeAssistantError, match=message) as err:
+    with pytest.raises(HomeAssistantError) as err:
         adjust_schema({"type": "object", "properties": {"value": field}})
-    assert "$.properties.value" in str(err.value)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders is not None
+    assert err.value.translation_placeholders["path"] == "$.properties.value"
 
 
 @pytest.mark.parametrize(
@@ -287,8 +303,10 @@ def test_unsupported_schema(field: dict[str, Any] | bool, message: str) -> None:
 )
 def test_invalid_root(schema: dict[str, Any]) -> None:
     """Require an object at the root of a structured output schema."""
-    with pytest.raises(HomeAssistantError, match="object root"):
+    with pytest.raises(HomeAssistantError) as err:
         adjust_schema(schema)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "structured_output_object_root"
 
 
 @pytest.mark.parametrize(
@@ -328,15 +346,27 @@ def test_recoverable_schemas(
 
 
 @pytest.mark.parametrize(
-    "reference",
+    ("reference", "translation_key"),
     [
-        pytest.param("#/$defs/missing", id="missing"),
-        pytest.param("https://example.com/schema", id="remote"),
-        pytest.param("#/properties/value/anyOf/01", id="invalid-index"),
-        pytest.param("#/properties/value/anyOf/9", id="out-of-range"),
+        pytest.param("#/$defs/missing", "schema_reference_invalid", id="missing"),
+        pytest.param(
+            "https://example.com/schema",
+            "schema_reference_unsupported",
+            id="remote",
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/01",
+            "schema_reference_invalid",
+            id="invalid-index",
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/9",
+            "schema_reference_invalid",
+            id="out-of-range",
+        ),
     ],
 )
-def test_invalid_reference(reference: str) -> None:
+def test_invalid_reference(reference: str, translation_key: str) -> None:
     """Report invalid references before modifying their targets."""
     schema = {
         "type": "object",
@@ -345,8 +375,11 @@ def test_invalid_reference(reference: str) -> None:
             "alias": {"$ref": reference},
         },
     }
-    with pytest.raises(HomeAssistantError, match="reference"):
+    with pytest.raises(HomeAssistantError) as err:
         adjust_schema(schema)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {"reference": reference}
 
 
 @pytest.mark.parametrize("alias_first", [True, False])

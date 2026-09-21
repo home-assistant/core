@@ -3,20 +3,129 @@
 from pathlib import Path
 from unittest.mock import patch
 
+from openai.types.responses import ResponseTextDeltaEvent, ResponseTextDoneEvent
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
+from homeassistant.components.azure_openai.const import DOMAIN
 from homeassistant.components.azure_openai.entity import (
     _convert_content_to_param,
+    _filter_citations,
     _format_structured_output,
+    _transform_stream,
     async_prepare_files_for_prompt,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm, selector
 from homeassistant.util.json import JsonObjectType
+
+
+@pytest.mark.parametrize(
+    ("chunks", "expected"),
+    [
+        pytest.param(
+            ["Text ([source](https://example.com/)) end"],
+            "Text end",
+            id="single",
+        ),
+        pytest.param(
+            ["Text ([source](", "https://example.com/)) end"],
+            "Text end",
+            id="split",
+        ),
+        pytest.param(
+            ["A ([one](https://one/)) B ([two](https://two/)) C"],
+            "A B C",
+            id="multiple",
+        ),
+        pytest.param(
+            ["A ([source](https://example.com/a_(", "b))) tail"],
+            "A tail",
+            id="parenthesized-url",
+        ),
+        pytest.param(
+            ["Text ([source"],
+            "Text ([source",
+            id="incomplete-label",
+        ),
+        pytest.param(
+            ["Text ([source](ftp://example.com/)) end"],
+            "Text ([source](ftp://example.com/)) end",
+            id="unsupported-scheme",
+        ),
+        pytest.param(
+            [r"Text ([source](https://example.com/a\)b)) end"],
+            "Text end",
+            id="escaped-parenthesis",
+        ),
+        pytest.param(
+            ["Text ([source](https://example.com/) end"],
+            "Text ([source](https://example.com/) end",
+            id="malformed-closing-parenthesis",
+        ),
+    ],
+)
+def test_filter_citations(chunks: list[str], expected: str) -> None:
+    """Test citations are removed across arbitrary text chunks."""
+    output = ""
+    pending = ""
+    for chunk in chunks:
+        emitted, pending = _filter_citations(pending + chunk)
+        output += emitted
+    emitted, pending = _filter_citations(pending, final=True)
+    assert output + emitted == expected
+    assert pending == ""
+
+
+async def test_filter_citations_tracks_each_output() -> None:
+    """Test citation buffering does not consume text from another output."""
+
+    async def events():
+        yield ResponseTextDeltaEvent(
+            content_index=0,
+            delta="A ([one](",
+            item_id="a",
+            logprobs=[],
+            output_index=0,
+            sequence_number=0,
+            type="response.output_text.delta",
+        )
+        yield ResponseTextDeltaEvent(
+            content_index=0,
+            delta=") visible",
+            item_id="b",
+            logprobs=[],
+            output_index=1,
+            sequence_number=1,
+            type="response.output_text.delta",
+        )
+        yield ResponseTextDeltaEvent(
+            content_index=0,
+            delta="https://one/)) end",
+            item_id="a",
+            logprobs=[],
+            output_index=0,
+            sequence_number=2,
+            type="response.output_text.delta",
+        )
+        for sequence_number, item_id, output_index in ((3, "a", 0), (4, "b", 1)):
+            yield ResponseTextDoneEvent(
+                content_index=0,
+                item_id=item_id,
+                logprobs=[],
+                output_index=output_index,
+                sequence_number=sequence_number,
+                text="",
+                type="response.output_text.done",
+            )
+
+    assert [
+        item["content"]
+        async for item in _transform_stream(None, events(), remove_citations=True)
+    ] == ["A", ") visible", " end"]
 
 
 @pytest.mark.parametrize(
@@ -160,7 +269,7 @@ async def test_format_structured_output() -> None:
             id="jpeg",
         ),
         pytest.param(
-            "document.pdf",
+            "/config/media/documents/document.pdf",
             {
                 "type": "input_file",
                 "filename": "document.pdf",
@@ -186,29 +295,69 @@ async def test_prepare_files_for_prompt_infers_mime_type(
 
 
 @pytest.mark.parametrize(
-    ("filename", "exists", "mime_type", "error"),
+    "mime_type",
     [
-        pytest.param("image.jpg", False, None, "does not exist", id="missing_file"),
+        "application/pdf",
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    ],
+)
+async def test_prepare_files_for_prompt_supported_mime_type(
+    hass: HomeAssistant,
+    mime_type: str,
+) -> None:
+    """Test supported attachment MIME types are accepted."""
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.read_bytes", return_value=b"ABC"),
+    ):
+        result = await async_prepare_files_for_prompt(
+            hass, [(Path("attachment"), mime_type)]
+        )
+
+    assert len(result) == 1
+
+
+@pytest.mark.parametrize(
+    ("filename", "exists", "mime_type", "translation_key"),
+    [
+        pytest.param("image.jpg", False, None, "attachment_missing", id="missing_file"),
         pytest.param(
             "document.txt",
             True,
             None,
-            "not an image file or PDF",
+            "attachment_unsupported",
             id="unsupported_inferred_mime_type",
         ),
         pytest.param(
             "document.unknown_openai_attachment",
             True,
             None,
-            "not an image file or PDF",
+            "attachment_unsupported",
             id="unknown_mime_type",
         ),
         pytest.param(
             "image.jpg",
             True,
             "text/plain",
-            "not an image file or PDF",
+            "attachment_unsupported",
             id="unsupported_explicit_mime_type",
+        ),
+        pytest.param(
+            "image.svg",
+            True,
+            "image/svg+xml",
+            "attachment_unsupported",
+            id="unsupported_image_mime_type",
+        ),
+        pytest.param(
+            "document.pdf",
+            True,
+            "application/pdf-other",
+            "attachment_unsupported",
+            id="pdf_prefix",
         ),
     ],
 )
@@ -217,11 +366,15 @@ async def test_prepare_files_for_prompt_invalid_file(
     filename: str,
     exists: bool,
     mime_type: str | None,
-    error: str,
+    translation_key: str,
 ) -> None:
     """Test missing files and unsupported attachment types."""
     with (
         patch("pathlib.Path.exists", return_value=exists),
-        pytest.raises(HomeAssistantError, match=error),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await async_prepare_files_for_prompt(hass, [(Path(filename), mime_type)])
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {"file_path": filename}

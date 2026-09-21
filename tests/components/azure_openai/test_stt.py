@@ -4,7 +4,7 @@ from collections.abc import AsyncIterable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
-from openai import RateLimitError
+from openai import AuthenticationError, RateLimitError
 import pytest
 
 from homeassistant.components import stt
@@ -23,7 +23,9 @@ async def test_stt_entity_properties(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test STT entity properties."""
-    entity: stt.SpeechToTextEntity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    entity: stt.SpeechToTextEntity = hass.data[stt.DOMAIN].get_entity(
+        "stt.azure_openai_stt"
+    )
     assert entity is not None
     assert isinstance(entity.supported_languages, list)
     assert len(entity.supported_languages)
@@ -55,7 +57,7 @@ async def test_stt_process_audio_stream_success_wav(
     mock_create_transcription: AsyncMock,
 ) -> None:
     """Test STT processing audio stream successfully."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.azure_openai_stt")
     mock_create_transcription.return_value = "This is a test transcription."
 
     metadata = stt.SpeechMetadata(
@@ -97,7 +99,7 @@ async def test_stt_process_audio_stream_success_wav(
 
     mock_create_transcription.assert_called_once()
     call_args = mock_create_transcription.call_args
-    assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
+    assert call_args.kwargs["model"] == "stt-deployment"
 
     contents = call_args.kwargs["file"]
     assert contents[0].endswith(".wav")
@@ -111,7 +113,7 @@ async def test_stt_process_audio_stream_success_ogg(
     mock_create_transcription: AsyncMock,
 ) -> None:
     """Test STT processing audio stream successfully."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.azure_openai_stt")
     mock_create_transcription.return_value = "This is a test transcription."
 
     metadata = stt.SpeechMetadata(
@@ -150,7 +152,7 @@ async def test_stt_process_audio_stream_success_ogg(
 
     mock_create_transcription.assert_called_once()
     call_args = mock_create_transcription.call_args
-    assert call_args.kwargs["model"] == "gpt-4o-mini-transcribe"
+    assert call_args.kwargs["model"] == "stt-deployment"
 
     contents = call_args.kwargs["file"]
     assert contents[0].endswith(".ogg")
@@ -164,7 +166,7 @@ async def test_stt_process_audio_stream_api_error(
     mock_create_transcription: AsyncMock,
 ) -> None:
     """Test STT processing audio stream with API errors."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.azure_openai_stt")
     mock_create_transcription.side_effect = RateLimitError(
         response=httpx.Response(status_code=429, request=""),
         body=None,
@@ -188,13 +190,44 @@ async def test_stt_process_audio_stream_api_error(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_stt_authentication_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_transcription: AsyncMock,
+) -> None:
+    """Test STT authentication failures start reauthentication."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.azure_openai_stt")
+    mock_create_transcription.side_effect = AuthenticationError(
+        response=httpx.Response(status_code=401, request=""),
+        body=None,
+        message=None,
+    )
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+
+    with patch.object(mock_config_entry, "async_start_reauth") as mock_reauth:
+        result = await entity.async_process_audio_stream(
+            metadata, _async_get_audio_stream(b"test_audio_bytes")
+        )
+
+    assert result.result is stt.SpeechResultState.ERROR
+    mock_reauth.assert_called_once_with(hass)
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_stt_process_audio_stream_empty_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_transcription: AsyncMock,
 ) -> None:
     """Test STT processing with an empty response from the API."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
+    entity = hass.data[stt.DOMAIN].get_entity("stt.azure_openai_stt")
     mock_create_transcription.return_value = ""
 
     metadata = stt.SpeechMetadata(

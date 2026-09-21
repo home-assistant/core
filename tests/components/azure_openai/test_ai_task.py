@@ -1,42 +1,54 @@
 """Test AI Task platform of Azure OpenAI integration."""
 
+from collections.abc import Awaitable, Callable
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import httpx
-from openai import PermissionDeniedError
+from openai import AuthenticationError
 import probatio
 import pytest
 
-from homeassistant.components import ai_task, media_source
-from homeassistant.components.azure_openai import DOMAIN
+from homeassistant.components import ai_task, conversation, media_source
+from homeassistant.components.azure_openai.ai_task import OpenAITaskEntity
+from homeassistant.components.azure_openai.capabilities import RECOMMENDED_IMAGE_MODEL
 from homeassistant.components.azure_openai.const import (
+    CONF_CHAT_MODEL,
+    CONF_IMAGE_DEPLOYMENT,
     CONF_IMAGE_MODEL,
-    CONF_STORE_RESPONSES,
+    CONF_MODEL_FAMILY,
+    CONF_VERBOSITY,
+    DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
+from homeassistant.helpers import entity_registry as er, selector
 
 from . import create_image_gen_call_item, create_message_item, create_reasoning_item
 
 from tests.common import MockConfigEntry
 
+AI_TASK_ENTITY_ID = "ai_task.azure_openai_ai_task"
+
+
+@pytest.fixture
+def ai_task_entity(hass: HomeAssistant) -> Any:
+    """Return the Azure OpenAI AI Task entity."""
+    return hass.data[ai_task.DOMAIN].get_entity(AI_TASK_ENTITY_ID)
+
 
 @pytest.mark.usefixtures("mock_init_component")
-@pytest.mark.parametrize("expected_store", [False, True])
 async def test_generate_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
-    expected_store: bool,
 ) -> None:
     """Test AI Task data generation."""
-    entity_id = "ai_task.openai_ai_task"
+    entity_id = AI_TASK_ENTITY_ID
 
-    # Ensure entity is linked to the subentry
     entity_entry = entity_registry.async_get(entity_id)
     ai_task_entry = next(
         iter(
@@ -45,17 +57,10 @@ async def test_generate_data(
             if entry.subentry_type == "ai_task_data"
         )
     )
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        ai_task_entry,
-        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
-    )
-    await hass.async_block_till_done()
     assert entity_entry is not None
     assert entity_entry.config_entry_id == mock_config_entry.entry_id
     assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
 
-    # Mock the Azure OpenAI response stream
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="The test data", output_index=0)
     ]
@@ -69,11 +74,44 @@ async def test_generate_data(
 
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
-    assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert (
+        mock_create_stream.call_args.kwargs["model"]
+        == ai_task_entry.data[CONF_CHAT_MODEL]
+    )
+    assert mock_create_stream.call_args.kwargs["store"] is False
     assert (
         mock_create_stream.call_args.kwargs["prompt_cache_key"]
         == ai_task_entry.subentry_id
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_authentication_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test AI Task authentication failures start reauthentication."""
+    mock_create_stream.return_value = [
+        AuthenticationError(
+            response=httpx.Response(status_code=401, request=""),
+            body=None,
+            message=None,
+        )
+    ]
+
+    with (
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+        pytest.raises(HomeAssistantError),
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=AI_TASK_ENTITY_ID,
+            instructions="Generate test data",
+        )
+
+    mock_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -110,7 +148,6 @@ async def test_generate_structured_data(
     )
     await hass.async_block_till_done()
 
-    # Mock the Azure OpenAI response stream with JSON data
     mock_create_stream.return_value = [
         create_message_item(
             id="msg_A", text='{"characters": ["Mario", "Luigi"]}', output_index=0
@@ -120,7 +157,7 @@ async def test_generate_structured_data(
     result = await ai_task.async_generate_data(
         hass,
         task_name="Test Task",
-        entity_id="ai_task.openai_ai_task",
+        entity_id=AI_TASK_ENTITY_ID,
         instructions="Generate test data",
         structure=probatio.Schema(
             {
@@ -136,6 +173,14 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args is not None
+    assert (
+        mock_create_stream.call_args.kwargs["model"]
+        == ai_task_entry.data[CONF_CHAT_MODEL]
+    )
+    text = mock_create_stream.call_args.kwargs["text"]
+    assert text["format"]["strict"] is True
+    assert text.get("verbosity") == expected_verbosity
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -144,20 +189,18 @@ async def test_generate_invalid_structured_data(
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test AI Task with invalid JSON response."""
-    # Mock the Azure OpenAI response stream with invalid JSON
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="INVALID JSON RESPONSE", output_index=0)
     ]
 
-    with pytest.raises(
-        HomeAssistantError, match="Error with Azure OpenAI structured response"
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.openai_ai_task",
+            entity_id=AI_TASK_ENTITY_ID,
             instructions="Generate test data",
             structure=probatio.Schema(
                 {
@@ -171,6 +214,96 @@ async def test_generate_invalid_structured_data(
                 },
             ),
         )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "invalid_structured_response"
+    azure_logs = "\n".join(
+        record.getMessage()
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.azure_openai")
+    )
+    assert "Failed to parse JSON response" in azure_logs
+    assert "INVALID JSON RESPONSE" not in azure_logs
+
+    ai_task_entry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    assert mock_create_stream.call_args is not None
+    assert (
+        mock_create_stream.call_args.kwargs["model"]
+        == ai_task_entry.data[CONF_CHAT_MODEL]
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("generate", "task"),
+    [
+        pytest.param(
+            OpenAITaskEntity._async_generate_data,
+            ai_task.GenDataTask(name="Task", instructions="Generate"),
+            id="data",
+        ),
+        pytest.param(
+            OpenAITaskEntity._async_generate_image,
+            ai_task.GenImageTask(name="Task", instructions="Generate"),
+            id="image",
+        ),
+    ],
+)
+async def test_generation_requires_assistant_content(
+    hass: HomeAssistant,
+    ai_task_entity: Any,
+    generate: Callable[..., Awaitable[Any]],
+    task: ai_task.GenDataTask | ai_task.GenImageTask,
+) -> None:
+    """Test generated results require assistant content."""
+    chat_log = conversation.ChatLog(hass, "conversation-id")
+    chat_log.async_add_user_content(conversation.UserContent(content="Generate"))
+
+    with (
+        patch.object(ai_task_entity, "_async_handle_chat_log", new=AsyncMock()),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await generate(ai_task_entity, task, chat_log)
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "unexpected_chat_log_content"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image_requires_image_result(
+    hass: HomeAssistant,
+    ai_task_entity: Any,
+) -> None:
+    """Test image generation requires an image result."""
+    chat_log = conversation.ChatLog(hass, "conversation-id")
+
+    async def add_assistant_content(*_args: Any, **_kwargs: Any) -> None:
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id=AI_TASK_ENTITY_ID,
+                content="No image was generated",
+            )
+        )
+
+    with (
+        patch.object(
+            ai_task_entity,
+            "_async_handle_chat_log",
+            new=AsyncMock(side_effect=add_assistant_content),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await ai_task_entity._async_generate_image(
+            ai_task.GenImageTask(name="Task", instructions="Generate"),
+            chat_log,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "no_image_returned"
 
 
 @pytest.fixture
@@ -231,14 +364,12 @@ async def test_generate_data_with_attachments(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation with attachments."""
-    entity_id = "ai_task.openai_ai_task"
+    entity_id = AI_TASK_ENTITY_ID
 
-    # Mock the Azure OpenAI response stream
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="Hi there!", output_index=0)
     ]
 
-    # Test with attachments
     with (
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -275,21 +406,24 @@ async def test_generate_data_with_attachments(
 
     assert result.data == "Hi there!"
 
-    # Verify that the create stream was called with the correct parameters
-    # The last call should have the user message with attachments
+    ai_task_entry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+
     call_args = mock_create_stream.call_args
     assert call_args is not None
 
-    # Check that the input includes the attachments
+    assert call_args.kwargs["model"] == ai_task_entry.data[CONF_CHAT_MODEL]
     input_messages = call_args[1]["input"]
     assert len(input_messages) > 0
 
-    # Find the user message with attachments
     user_message_with_attachments = input_messages[-2]
 
     assert user_message_with_attachments is not None
     assert isinstance(user_message_with_attachments["content"], list)
-    assert len(user_message_with_attachments["content"]) == 3  # Text + attachments
+    assert len(user_message_with_attachments["content"]) == 3
     assert user_message_with_attachments["content"] == [
         {"type": "input_text", "text": "Test prompt"},
         {
@@ -307,33 +441,13 @@ async def test_generate_data_with_attachments(
 
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
-@pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
-    ("image_options", "image_model", "input_fidelity_options"),
+    ("image_options", "image_model"),
     [
-        ({}, "gpt-image-2.5-flare", {}),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
-            "gpt-image-2.5-sunburst",
-            {},
-        ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
-            "gpt-image-2.5-flare",
-            {},
-        ),
-        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2", {}),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-1.5"},
-            "gpt-image-1.5",
-            {"input_fidelity": "high"},
-        ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-1"},
-            "gpt-image-1",
-            {"input_fidelity": "high"},
-        ),
-        ({CONF_IMAGE_MODEL: "gpt-image-1-mini"}, "gpt-image-1-mini", {}),
+        ({}, RECOMMENDED_IMAGE_MODEL),
+        ({CONF_IMAGE_MODEL: "gpt-image-1.5"}, "gpt-image-1.5"),
+        ({CONF_IMAGE_MODEL: "gpt-image-1"}, "gpt-image-1"),
+        ({CONF_IMAGE_MODEL: "gpt-image-1-mini"}, "gpt-image-1-mini"),
     ],
 )
 async def test_generate_image(
@@ -341,16 +455,13 @@ async def test_generate_image(
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
     image_options: dict[str, str],
     image_model: str,
-    input_fidelity_options: dict[str, str],
-    configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
-    entity_id = "ai_task.openai_ai_task"
+    entity_id = AI_TASK_ENTITY_ID
+    image_deployment = "custom-image-deployment"
 
-    # Ensure entity is linked to the subentry
     entity_entry = entity_registry.async_get(entity_id)
     ai_task_entry = next(
         iter(
@@ -365,7 +476,7 @@ async def test_generate_image(
         data={
             **ai_task_entry.data,
             **image_options,
-            CONF_STORE_RESPONSES: configured_store,
+            CONF_IMAGE_DEPLOYMENT: image_deployment,
         },
     )
     await hass.async_block_till_done()
@@ -373,7 +484,6 @@ async def test_generate_image(
     assert entity_entry.config_entry_id == mock_config_entry.entry_id
     assert entity_entry.config_subentry_id == ai_task_entry.subentry_id
 
-    # Mock the Azure OpenAI response stream
     mock_create_stream.return_value = [
         (
             *create_reasoning_item(
@@ -394,7 +504,7 @@ async def test_generate_image(
         result = await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.openai_ai_task",
+            entity_id=AI_TASK_ENTITY_ID,
             instructions="Generate test image",
         )
 
@@ -406,6 +516,10 @@ async def test_generate_image(
 
     mock_upload_media.assert_called_once()
     assert mock_create_stream.call_args is not None
+    assert (
+        mock_create_stream.call_args.kwargs["model"]
+        == ai_task_entry.data[CONF_CHAT_MODEL]
+    )
     assert mock_create_stream.call_args.kwargs["store"] is True
     image_tool = next(
         iter(
@@ -418,45 +532,32 @@ async def test_generate_image(
         "type": "image_generation",
         "model": image_model,
         "output_format": "png",
-        **input_fidelity_options,
+    }
+    assert mock_create_stream.call_args.kwargs["extra_headers"] == {
+        "x-ms-oai-image-generation-deployment": image_deployment
     }
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
     assert image_data.content_type == "image/png"
     assert image_data.filename == "2025-06-14_155900_test_task.png"
 
-    assert (
-        issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
-        is None
-    )
-
 
 @pytest.mark.usefixtures("mock_init_component")
-async def test_repair_issue(
+async def test_generate_image_requires_deployment(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that repair issue is raised when verification is required."""
-    with (
-        patch(
-            "openai.resources.responses.AsyncResponses.create",
-            side_effect=PermissionDeniedError(
-                response=httpx.Response(
-                    status_code=403, request=httpx.Request(method="GET", url="")
-                ),
-                body=None,
-                message="Please click on Verify Organization.",
-            ),
+    """Test AI Task image generation is unavailable without a deployment."""
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "AI Task entity ai_task.azure_openai_ai_task "
+            "does not support generating images"
         ),
-        pytest.raises(HomeAssistantError, match="Error talking to Azure OpenAI"),
     ):
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.openai_ai_task",
+            entity_id=AI_TASK_ENTITY_ID,
             instructions="Generate test image",
         )
-
-    assert issue_registry.async_get_issue(DOMAIN, "organization_verification_required")

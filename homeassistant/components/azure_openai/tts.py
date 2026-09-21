@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, Literal, override
 
-from openai import OpenAIError
+from openai import AuthenticationError, OpenAIError, omit
 from propcache.api import cached_property
 
 from homeassistant.components.tts import (
@@ -14,13 +14,19 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
+from .capabilities import get_tts_voices
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_TTS_MODEL,
+    CONF_TTS_SPEED,
+    DOMAIN,
+    RECOMMENDED_TTS_SPEED,
+)
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -50,6 +56,8 @@ async def async_setup_entry(
 class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     """Azure OpenAI TTS entity."""
 
+    _attr_name = "Text-to-speech"
+    _attr_translation_key = "tts"
     _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
     # https://platform.openai.com/docs/guides/text-to-speech#supported-languages
     # The model may also generate the audio in different
@@ -117,47 +125,23 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     # The models detect the input language automatically.
     _attr_default_language = "en-US"
 
-    # https://platform.openai.com/docs/guides/text-to-speech#voice-options
-    _supported_voices = [
-        Voice(voice.lower(), voice)
-        for voice in (
-            "Marin",
-            "Cedar",
-            "Alloy",
-            "Ash",
-            "Ballad",
-            "Coral",
-            "Echo",
-            "Fable",
-            "Nova",
-            "Onyx",
-            "Sage",
-            "Shimmer",
-            "Verse",
-        )
-    ]
-
     _supported_formats = ["mp3", "opus", "aac", "flac", "wav", "pcm"]
-
-    _attr_has_entity_name = False
-
-    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, subentry)
-        self._attr_name = subentry.title
 
     @callback
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
-        return self._supported_voices
+        return [
+            Voice(voice, voice.title())
+            for voice in get_tts_voices(self.subentry.data[CONF_TTS_MODEL])
+        ]
 
     @cached_property
     @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
-            ATTR_VOICE: self._supported_voices[0].voice_id,
+            ATTR_VOICE: get_tts_voices(self.subentry.data[CONF_TTS_MODEL])[0],
             ATTR_PREFERRED_FORMAT: "mp3",
         }
 
@@ -186,15 +170,25 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 model=options[CONF_CHAT_MODEL],
                 voice=options[ATTR_VOICE],
                 input=message,
-                instructions=str(options.get(CONF_PROMPT)),
+                instructions=options.get(CONF_PROMPT) or omit,
                 speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
                 response_format=codec,
             ) as response:
                 response_data = bytearray()
                 async for chunk in response.iter_bytes():
                     response_data.extend(chunk)
+        except AuthenticationError as exc:
+            self.entry.async_start_reauth(self.hass)
+            _LOGGER.exception("Authentication failed during TTS")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="tts_error",
+            ) from exc
         except OpenAIError as exc:
             _LOGGER.exception("Error during TTS")
-            raise HomeAssistantError(exc) from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="tts_error",
+            ) from exc
 
         return response_format, bytes(response_data)

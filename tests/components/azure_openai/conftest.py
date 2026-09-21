@@ -23,6 +23,9 @@ import pytest
 
 from homeassistant.components.azure_openai.const import (
     CONF_CHAT_MODEL,
+    CONF_MODEL_FAMILY,
+    CONF_STT_MODEL,
+    CONF_TTS_MODEL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
@@ -39,12 +42,26 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.conversation import mock_chat_log  # noqa: F401
+
+# Deployment names are deliberately unrelated to their model family strings so
+# tests can prove request routing and capability gating are driven by the two
+# independently, never by parsing the deployment name.
+MOCK_CHAT_DEPLOYMENT = "chat-deployment"
+MOCK_CHAT_MODEL_FAMILY = "gpt-4o-mini"
+MOCK_STT_DEPLOYMENT = "stt-deployment"
+MOCK_STT_MODEL = "gpt-4o-transcribe"
+MOCK_TTS_DEPLOYMENT = "tts-deployment"
+MOCK_TTS_MODEL = "gpt-4o-mini-tts"
 
 
 @pytest.fixture
 def mock_conversation_subentry_data() -> dict[str, Any]:
     """Mock subentry data."""
-    return {}
+    return {
+        CONF_CHAT_MODEL: MOCK_CHAT_DEPLOYMENT,
+        CONF_MODEL_FAMILY: MOCK_CHAT_MODEL_FAMILY,
+    }
 
 
 @pytest.fixture
@@ -57,9 +74,9 @@ def mock_config_entry(
         domain=DOMAIN,
         data={
             "api_key": "bla",
+            "base_url": "https://example.openai.azure.com/openai/v1/",
         },
-        version=2,
-        minor_version=7,
+        version=1,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -68,19 +85,31 @@ def mock_config_entry(
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=RECOMMENDED_AI_TASK_OPTIONS,
+                data={
+                    **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_CHAT_MODEL: MOCK_CHAT_DEPLOYMENT,
+                    CONF_MODEL_FAMILY: MOCK_CHAT_MODEL_FAMILY,
+                },
                 subentry_type="ai_task_data",
                 title=DEFAULT_AI_TASK_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=RECOMMENDED_STT_OPTIONS,
+                data={
+                    **RECOMMENDED_STT_OPTIONS,
+                    CONF_CHAT_MODEL: MOCK_STT_DEPLOYMENT,
+                    CONF_STT_MODEL: MOCK_STT_MODEL,
+                },
                 subentry_type="stt",
                 title=DEFAULT_STT_NAME,
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=RECOMMENDED_TTS_OPTIONS,
+                data={
+                    **RECOMMENDED_TTS_OPTIONS,
+                    CONF_CHAT_MODEL: MOCK_TTS_DEPLOYMENT,
+                    CONF_TTS_MODEL: MOCK_TTS_MODEL,
+                },
                 subentry_type="tts",
                 title=DEFAULT_TTS_NAME,
                 unique_id=None,
@@ -99,7 +128,11 @@ async def mock_config_entry_with_assist(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: MOCK_CHAT_DEPLOYMENT,
+            CONF_MODEL_FAMILY: MOCK_CHAT_MODEL_FAMILY,
+        },
     )
     await hass.async_block_till_done()
     return mock_config_entry
@@ -109,11 +142,15 @@ async def mock_config_entry_with_assist(
 async def mock_config_entry_with_reasoning_model(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
-    """Mock a config entry with assist."""
+    """Mock a config entry with assist, backed by a reasoning-capable family."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "gpt-5-mini"},
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: MOCK_CHAT_DEPLOYMENT,
+            CONF_MODEL_FAMILY: "gpt-5-mini",
+        },
     )
     await hass.async_block_till_done()
     return mock_config_entry
@@ -153,7 +190,7 @@ def mock_create_stream() -> Generator[AsyncMock]:
             incomplete_details=None,
             instructions=kwargs.get("instructions"),
             metadata=kwargs.get("metadata", {}),
-            model=kwargs.get("model", "gpt-4o-mini"),
+            model=kwargs.get("model", MOCK_CHAT_DEPLOYMENT),
             object="response",
             output=[],
             parallel_tool_calls=kwargs.get("parallel_tool_calls", True),

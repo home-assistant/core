@@ -9,6 +9,8 @@ from urllib.parse import unquote
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 _ANNOTATIONS = {
@@ -20,6 +22,7 @@ _ANNOTATIONS = {
     "writeOnly",
 }
 _UNSUPPORTED_KEYWORDS = {
+    "oneOf",
     "not",
     "dependentRequired",
     "dependentSchemas",
@@ -35,7 +38,7 @@ _SCHEMA_MAPS = (
     "patternProperties",
     "dependentSchemas",
 )
-_SCHEMA_LISTS = ("anyOf", "oneOf", "allOf", "prefixItems")
+_SCHEMA_LISTS = ("anyOf", "allOf", "prefixItems")
 _SCHEMA_VALUES = (
     "items",
     "contains",
@@ -53,7 +56,10 @@ def adjust_schema(schema: dict[str, Any]) -> None:
     _stabilize_references(schema)
     _adjust_schema(schema, "$")
     if schema.get("type") != "object" or "anyOf" in schema:
-        raise HomeAssistantError("OpenAI structured output requires an object root")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="structured_output_object_root",
+        )
 
 
 def _walk_schemas(schema: dict[str, Any]) -> Iterator[dict[str, Any]]:
@@ -93,7 +99,7 @@ def _stabilize_references(schema: dict[str, Any]) -> None:
 
     if definitions:
         schema.setdefault("$defs", {}).update(definitions)
-    # Legacy definitions have been copied to $defs wherever they are referenced.
+    # References now target $defs, so the duplicate definitions can be discarded.
     for node in _walk_schemas(schema):
         node.pop("definitions", None)
         if "$ref" in node:
@@ -106,7 +112,9 @@ def _reference_parts(reference: str) -> list[str]:
         return []
     if not reference.startswith("#/"):
         raise HomeAssistantError(
-            f"Unsupported OpenAI output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="schema_reference_unsupported",
+            translation_placeholders={"reference": reference},
         )
     return [
         part.replace("~1", "/").replace("~0", "~")
@@ -125,11 +133,15 @@ def _resolve_reference(reference: str, root: dict[str, Any]) -> dict[str, Any]:
                 target = target[part]
     except (KeyError, IndexError, TypeError, ValueError) as err:
         raise HomeAssistantError(
-            f"Invalid OpenAI output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="schema_reference_invalid",
+            translation_placeholders={"reference": reference},
         ) from err
     if not isinstance(target, dict):
         raise HomeAssistantError(
-            f"Unsupported OpenAI output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="schema_reference_unsupported",
+            translation_placeholders={"reference": reference},
         )
     return target
 
@@ -151,7 +163,9 @@ def _flatten_all_of(schema: dict[str, Any], path: str) -> None:
         branches = schema["allOf"]
         if len(branches) != 1 or not isinstance(branches[0], dict):
             raise HomeAssistantError(
-                f"Unsupported OpenAI output schema allOf at {path}"
+                translation_domain=DOMAIN,
+                translation_key="schema_all_of_unsupported",
+                translation_placeholders={"path": path},
             )
         branch = branches[0]
         siblings = schema.keys() - {"allOf", "description", "title"} - _ANNOTATIONS
@@ -160,7 +174,12 @@ def _flatten_all_of(schema: dict[str, Any], path: str) -> None:
         }
         if conflicts:
             raise HomeAssistantError(
-                f"Conflicting OpenAI output schema allOf at {path}: {', '.join(sorted(conflicts))}"
+                translation_domain=DOMAIN,
+                translation_key="schema_all_of_conflict",
+                translation_placeholders={
+                    "path": path,
+                    "conflicts": ", ".join(sorted(conflicts)),
+                },
             )
         del schema["allOf"]
         for key, value in branch.items():
@@ -171,7 +190,12 @@ def _adjust_reference(schema: dict[str, Any], path: str, *, nullable: bool) -> N
     """Keep references bare and preserve annotations on nullable wrappers."""
     if siblings := schema.keys() - {"$ref", "title", "description"}:
         raise HomeAssistantError(
-            f"Unsupported OpenAI output schema reference siblings at {path}: {', '.join(sorted(siblings))}"
+            translation_domain=DOMAIN,
+            translation_key="schema_reference_siblings",
+            translation_placeholders={
+                "path": path,
+                "siblings": ", ".join(sorted(siblings)),
+            },
         )
     annotations: dict[str, Any] = {
         keyword: schema.pop(keyword)
@@ -194,16 +218,29 @@ def _adjust_schema(
 ) -> None:
     """Normalize nested schemas and keep unsupported enforcement out of requests."""
     if not isinstance(schema, dict):
-        raise HomeAssistantError(f"Unsupported OpenAI output schema at {path}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="schema_unsupported",
+            translation_placeholders={"path": path},
+        )
     _flatten_all_of(schema, path)
     for keyword in _ANNOTATIONS:
         schema.pop(keyword, None)
     if unsupported := schema.keys() & _UNSUPPORTED_KEYWORDS:
         raise HomeAssistantError(
-            f"Unsupported OpenAI output schema keywords at {path}: {', '.join(sorted(unsupported))}"
+            translation_domain=DOMAIN,
+            translation_key="schema_keywords_unsupported",
+            translation_placeholders={
+                "path": path,
+                "keywords": ", ".join(sorted(unsupported)),
+            },
         )
     if not schema:
-        raise HomeAssistantError(f"Unsupported OpenAI output schema at {path}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="schema_unsupported",
+            translation_placeholders={"path": path},
+        )
     if schema.get("format") in _SELECTOR_FORMATS:
         del schema["format"]
     if schema.pop("uniqueItems", None) is True:
@@ -217,16 +254,17 @@ def _adjust_schema(
 
     for name, definition in schema.get("$defs", {}).items():
         _adjust_schema(definition, f"{path}.$defs.{name}")
-    for keyword in ("anyOf", "oneOf"):
-        for index, variant in enumerate(schema.get(keyword, [])):
-            _adjust_schema(variant, f"{path}.{keyword}[{index}]")
+    for index, variant in enumerate(schema.get("anyOf", [])):
+        _adjust_schema(variant, f"{path}.anyOf[{index}]")
 
     schema_type = schema.get("type", [])
     types = [schema_type] if isinstance(schema_type, str) else schema_type
     if "object" in types:
         if schema.get("additionalProperties", False) is not False:
             raise HomeAssistantError(
-                f"OpenAI output schema requires explicitly defined object fields at {path}"
+                translation_domain=DOMAIN,
+                translation_key="schema_object_fields_required",
+                translation_placeholders={"path": path},
             )
         schema["additionalProperties"] = False
         properties = schema.setdefault("properties", {})
@@ -240,7 +278,9 @@ def _adjust_schema(
     if "array" in types:
         if "items" not in schema:
             raise HomeAssistantError(
-                f"OpenAI output schema requires array items at {path}"
+                translation_domain=DOMAIN,
+                translation_key="schema_array_items_required",
+                translation_placeholders={"path": path},
             )
         _adjust_schema(schema["items"], f"{path}.items")
     if nullable:
@@ -249,7 +289,7 @@ def _adjust_schema(
 
 def _make_nullable(schema: dict[str, Any]) -> None:
     """Allow null without weakening the non-null schema's constraints."""
-    if "type" not in schema or schema.keys() & {"$ref", "const", "anyOf", "oneOf"}:
+    if "type" not in schema or schema.keys() & {"$ref", "const", "anyOf"}:
         original = schema.copy()
         schema.clear()
         schema["anyOf"] = [original, {"type": "null"}]

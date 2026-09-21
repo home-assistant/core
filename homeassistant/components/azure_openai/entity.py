@@ -5,8 +5,7 @@ from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-import re
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, NoReturn, cast
 
 import openai
 from openai._streaming import AsyncStream
@@ -38,6 +37,7 @@ from openai.types.responses import (
     ResponseReasoningSummaryTextDeltaEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
+    ResponseTextDoneEvent,
     ToolChoiceTypesParam,
     ToolParam,
     WebSearchToolParam,
@@ -45,10 +45,7 @@ from openai.types.responses import (
 from openai.types.responses.response_code_interpreter_tool_call_param import (
     Output as CodeInterpreterOutputParam,
 )
-from openai.types.responses.response_create_params import (
-    Reasoning,
-    ResponseCreateParamsStreaming,
-)
+from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -60,27 +57,29 @@ from openai.types.responses.tool_param import (
     ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
+from openai.types.shared_params.reasoning import Reasoning
 import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
+from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from .capabilities import RECOMMENDED_IMAGE_MODEL, get_capabilities
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_DEPLOYMENT,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_MODEL_FAMILY,
     CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
-    CONF_SERVICE_TIER,
-    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -94,21 +93,15 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
-    RECOMMENDED_SERVICE_TIER,
-    RECOMMENDED_STORE_RESPONSES,
-    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
-    UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS,
 )
 from .schema import adjust_schema
 
@@ -116,8 +109,92 @@ if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
 
-# Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+SUPPORTED_ATTACHMENT_MIME_TYPES = {
+    "application/pdf",
+    "image/gif",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+}
+_CITATION_OPENERS = (" ([", "([")
+_CITATION_SCHEMES = ("http://", "https://")
+
+
+def _citation_end(text: str, start: int) -> int | None:
+    """Return the end of a complete citation, or None if it may be incomplete."""
+    label_end = text.find("](", start + 2)
+    if label_end in (-1, start + 2):
+        return None
+
+    url_start = label_end + 2
+    remaining = text[url_start:]
+    if not remaining.startswith(_CITATION_SCHEMES):
+        if any(scheme.startswith(remaining) for scheme in _CITATION_SCHEMES):
+            return None
+        return -1
+
+    depth = 0
+    index = url_start
+    while index < len(text):
+        char = text[index]
+        if char == "\\" and index + 1 < len(text):
+            index += 2
+            continue
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            if depth:
+                depth -= 1
+            elif index + 1 == len(text):
+                return None
+            elif text[index + 1] == ")":
+                return index + 2
+            else:
+                return -1
+        index += 1
+    return None
+
+
+def _filter_citations(text: str, *, final: bool = False) -> tuple[str, str]:
+    """Remove complete citations and retain a possible incomplete suffix."""
+    output: list[str] = []
+    position = 0
+    search_from = 0
+    while (start := text.find("([", search_from)) != -1:
+        citation_start = start - 1 if start and text[start - 1] == " " else start
+        if (end := _citation_end(text, start)) == -1:
+            search_from = start + 2
+            continue
+        if end is None:
+            if not final:
+                return "".join(output) + text[position:citation_start], text[
+                    citation_start:
+                ]
+            search_from = start + 2
+            continue
+        output.append(text[position:citation_start])
+        position = end
+        search_from = end
+    text = "".join(output) + text[position:]
+    if final:
+        return text, ""
+
+    if (start := text.find("([")) != -1:
+        if start and text[start - 1] == " ":
+            start -= 1
+        return text[:start], text[start:]
+
+    pending = ""
+    for opener in _CITATION_OPENERS:
+        for length in range(1, len(opener)):
+            prefix = opener[:length]
+            if len(prefix) > len(pending) and text.endswith(prefix):
+                pending = prefix
+    if pending:
+        return text[: -len(pending)], pending
+    return text, ""
 
 
 def _format_structured_output(
@@ -289,33 +366,31 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     """Transform an OpenAI delta stream into HA format."""
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
-
-    # Non-reasoning models don't follow our request to remove citations, so we remove
-    # them manually here. They always follow the same pattern: the citation is always
-    # in parentheses in Markdown format, the citation is always in a single delta event,
-    # and sometimes the closing parenthesis is split into a separate delta event.
-    remove_parentheses: bool = False
-    citation_regexp = re.compile(r"\(\[([^\]]+)\]\((https?:\/\/[^\)]+)\)")
+    tool_calls: dict[str, ResponseFunctionToolCall] = {}
+    citation_buffers: dict[tuple[str, int], str] = {}
 
     async for event in stream:
-        LOGGER.debug("Received event: %s", event)
+        LOGGER.debug("Received event: %s", event.type)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
             if isinstance(event.item, ResponseFunctionToolCall):
-                # OpenAI has tool calls as individual events
-                # while HA puts tool calls inside the assistant message.
-                # We turn them into individual assistant content for HA
-                # to ensure that tools are called as soon as possible.
+                # HA embeds tool calls in assistant content, unlike OpenAI's separate
+                # events, so emit assistant content as soon as each call arrives.
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
-                current_tool_call = event.item
+                if event.item.id is None:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="provider_error",
+                    )
+                tool_calls[event.item.id] = event.item
             elif (
                 isinstance(event.item, ResponseOutputMessage)
                 or (
                     isinstance(event.item, ResponseReasoningItem)
                     and last_summary_index is not None
-                )  # Subsequent ResponseReasoningItem
+                )
                 or last_role != "assistant"
             ):
                 yield {"role": "assistant"}
@@ -327,7 +402,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "native": ResponseReasoningItem(
                         type="reasoning",
                         id=event.item.id,
-                        summary=[],  # Remove summaries
+                        summary=[],
                         encrypted_content=event.item.encrypted_content,
                     )
                 }
@@ -395,27 +470,23 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
             data = event.delta
-            if remove_parentheses:
-                data = data.removeprefix(")")
-                remove_parentheses = False
-            elif remove_citations and (match := citation_regexp.search(data)):
-                match_start, match_end = match.span()
-                # remove leading space if any
-                if data[match_start - 1 : match_start] == " ":
-                    match_start -= 1
-                # remove closing parenthesis:
-                if data[match_end : match_end + 1] == ")":
-                    match_end += 1
-                else:
-                    remove_parentheses = True
-                data = data[:match_start] + data[match_end:]
+            if remove_citations:
+                key = (event.item_id, event.content_index)
+                data, pending = _filter_citations(citation_buffers.pop(key, "") + data)
+                if pending:
+                    citation_buffers[key] = pending
             if data:
                 yield {"content": data}
+        elif isinstance(event, ResponseTextDoneEvent):
+            if remove_citations:
+                key = (event.item_id, event.content_index)
+                if pending := citation_buffers.pop(key, ""):
+                    data, _ = _filter_citations(pending, final=True)
+                    if data:
+                        yield {"content": data}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
-            # OpenAI can output several reasoning summaries
-            # in a single ResponseReasoningItem. We split them as separate
-            # AssistantContent messages. Only last of them will have
-            # the reasoning `native` field set.
+            # Split multiple OpenAI summaries into separate assistant messages; only
+            # the final summary carries the native reasoning item.
             if (
                 last_summary_index is not None
                 and event.summary_index != last_summary_index
@@ -425,15 +496,16 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
-            current_tool_call.arguments += event.delta
+            tool_calls[event.item_id].arguments += event.delta
         elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
-            current_tool_call.status = "completed"
+            tool_call = tool_calls.pop(event.item_id)
+            tool_call.status = "completed"
             yield {
                 "tool_calls": [
                     llm.ToolInput(
-                        id=current_tool_call.call_id,
-                        tool_name=current_tool_call.name,
-                        tool_args=json.loads(current_tool_call.arguments),
+                        id=tool_call.call_id,
+                        tool_name=tool_call.name,
+                        tool_args=json.loads(tool_call.arguments),
                     )
                 ]
             }
@@ -471,7 +543,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             elif reason == "content_filter":
                 reason = "content filter triggered"
 
-            raise HomeAssistantError(f"Azure OpenAI response incomplete: {reason}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="response_incomplete",
+                translation_placeholders={"reason": reason},
+            )
         elif isinstance(event, ResponseFailedEvent):
             if event.response.usage is not None:
                 chat_log.async_trace(
@@ -485,9 +561,21 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             reason = "unknown reason"
             if event.response.error is not None:
                 reason = event.response.error.message
-            raise HomeAssistantError(f"Azure OpenAI response failed: {reason}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="response_failed",
+                translation_placeholders={"reason": reason},
+            )
         elif isinstance(event, ResponseErrorEvent):
-            raise HomeAssistantError(f"Azure OpenAI response error: {event.message}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="response_error",
+                translation_placeholders={"error": event.message},
+            )
+
+    for pending in citation_buffers.values():
+        if data := _filter_citations(pending, final=True)[0]:
+            yield {"content": data}
 
 
 class OpenAIBaseLLMEntity(Entity):
@@ -505,16 +593,31 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Azure OpenAI",
-            model=subentry.data.get(
-                CONF_CHAT_MODEL,
-                RECOMMENDED_CHAT_MODEL
-                if subentry.subentry_type != "stt"
-                else RECOMMENDED_STT_MODEL,
-            ),
+            model=subentry.data[CONF_CHAT_MODEL],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(  # noqa: C901
+    def _raise_openai_error(self, err: openai.OpenAIError) -> NoReturn:
+        """Raise a translated Home Assistant error for an OpenAI error."""
+        if isinstance(err, openai.AuthenticationError):
+            self.entry.async_start_reauth(self.hass)
+            LOGGER.error("Authentication failed for Azure OpenAI: %s", err)
+            translation_key = "provider_error"
+        elif isinstance(err, openai.RateLimitError):
+            LOGGER.error("Rate limited by Azure OpenAI: %s", err)
+            translation_key = "rate_limited"
+        elif isinstance(err, openai.APIError) and err.type == "insufficient_quota":
+            LOGGER.error("Insufficient funds for Azure OpenAI: %s", err)
+            translation_key = "insufficient_quota"
+        else:
+            LOGGER.error("Error talking to Azure OpenAI: %s", err)
+            translation_key = "provider_error"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+        ) from err
+
+    async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -524,62 +627,60 @@ class OpenAIBaseLLMEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
+        capabilities = get_capabilities(options.get(CONF_MODEL_FAMILY, ""))
 
         messages = _convert_content_to_param(chat_log.content)
 
         model_args = ResponseCreateParamsStreaming(
-            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=options[CONF_CHAT_MODEL],
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            safety_identifier=chat_log.conversation_id,
             prompt_cache_key=self.subentry.subentry_id,
-            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
-            store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
+            store=False,
             stream=True,
         )
 
-        if model_args["model"].startswith(("o", "gpt-5", "gpt-6")):
+        effort = None
+        if capabilities.reasoning:
+            effort = capabilities.reasoning_effort(
+                options.get(CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT)
+            )
             reasoning: Reasoning = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
-                if not model_args["model"].startswith("gpt-5-pro")
-                else "high",  # GPT-5 pro only supports reasoning.effort: high
+                "effort": effort,
             }
 
             reasoning_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             )
-            if reasoning_summary != "off":
+            if (
+                reasoning_summary != "off"
+                and reasoning_summary in capabilities.reasoning_summary
+            ):
                 reasoning["summary"] = reasoning_summary
 
-            if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
+            if "pro" in capabilities.features and options.get(
+                CONF_PRO_MODE, RECOMMENDED_PRO_MODE
+            ):
                 reasoning["mode"] = "pro"
 
             model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
-        if (
-            not model_args["model"].startswith(("gpt-5", "gpt-6"))
-            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
-        ):
+        if capabilities.supports_sampling(effort):
             model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
             model_args["temperature"] = options.get(
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             )
 
-        if model_args["model"].startswith(("gpt-5", "gpt-6")):
+        if "verbosity" in capabilities.features:
             model_args["text"] = {
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
 
-        if not model_args["model"].startswith(
-            tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
-        ):
-            if model_args["model"].startswith(("gpt-5.6", "gpt-6")):
-                model_args["prompt_cache_options"] = {"ttl": "30m"}
-            else:
-                model_args["prompt_cache_retention"] = "24h"
+        if "cache30" in capabilities.features:
+            model_args["prompt_cache_options"] = {"ttl": "30m"}
+        elif "cache24" in capabilities.features:
+            model_args["prompt_cache_retention"] = "24h"
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -589,7 +690,11 @@ class OpenAIBaseLLMEntity(Entity):
             ]
 
         remove_citations = False
-        if options.get(CONF_WEB_SEARCH):
+        if (
+            "web" in capabilities.features
+            and effort != "minimal"
+            and options.get(CONF_WEB_SEARCH)
+        ):
             web_search = WebSearchToolParam(
                 type="web_search",
                 search_context_size=options.get(
@@ -621,13 +726,17 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
 
-                if not model_args["model"].startswith("o"):
+                if not capabilities.reasoning or "verbosity" in capabilities.features:
                     # o-series models handle this correctly with just a prompt
                     remove_citations = True
 
             tools.append(web_search)
 
-        if options.get(CONF_CODE_INTERPRETER):
+        if (
+            "code" in capabilities.features
+            and effort != "minimal"
+            and options.get(CONF_CODE_INTERPRETER)
+        ):
             tools.append(
                 CodeInterpreter(
                     type="code_interpreter",
@@ -639,26 +748,30 @@ class OpenAIBaseLLMEntity(Entity):
             model_args.setdefault("include", []).append("code_interpreter_call.outputs")  # type: ignore[union-attr]
 
         if force_image:
-            image_model = options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL)
-            image_tool = ImageGeneration(
-                type="image_generation",
-                model=image_model,
-                output_format="png",
+            tools.append(
+                ImageGeneration(
+                    type="image_generation",
+                    model=options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL),
+                    output_format="png",
+                )
             )
-            if image_model in ("gpt-image-1", "gpt-image-1.5"):
-                image_tool["input_fidelity"] = "high"
-            tools.append(image_tool)
-            # Keep image state on OpenAI so follow-up prompts can continue by
-            # conversation ID without resending the generated image data.
+            # Store the generated image so follow-up requests can reference its
+            # image-generation call ID without resending the image data.
             model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
+            # Azure routes the image generation tool to a deployment via this
+            # header; the tool's "model" field only selects the base model.
+            model_args["extra_headers"] = {  # type: ignore[typeddict-unknown-key]
+                "x-ms-oai-image-generation-deployment": cast(
+                    str, options[CONF_IMAGE_DEPLOYMENT]
+                )
+            }
 
         if tools:
             model_args["tools"] = tools
 
         last_content = chat_log.content[-1]
 
-        # Handle attachments by adding them to the last user message
         if last_content.role == "user" and last_content.attachments:
             files = await async_prepare_files_for_prompt(
                 self.hass,
@@ -685,7 +798,6 @@ class OpenAIBaseLLMEntity(Entity):
 
         client = self.entry.runtime_data
 
-        # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
@@ -699,43 +811,8 @@ class OpenAIBaseLLMEntity(Entity):
                         [content async for content in content_stream]
                     )
                 )
-            except openai.RateLimitError as err:
-                if (
-                    model_args["service_tier"] == "flex"
-                    and "resource unavailable" in (err.message or "").lower()
-                ):
-                    LOGGER.info(
-                        "Flex tier is not available at the moment,"
-                        " continuing with default tier"
-                    )
-                    model_args["service_tier"] = "default"
-                    continue
-                LOGGER.error("Rate limited by Azure OpenAI: %s", err)
-                raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
-                if (
-                    isinstance(err, openai.APIError)
-                    and err.type == "insufficient_quota"
-                ):
-                    LOGGER.error("Insufficient funds for Azure OpenAI: %s", err)
-                    raise HomeAssistantError("Insufficient funds for Azure OpenAI") from err
-                if "Verify Organization" in str(err):
-                    ir.async_create_issue(
-                        self.hass,
-                        DOMAIN,
-                        "organization_verification_required",
-                        is_fixable=False,
-                        is_persistent=False,
-                        learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",
-                        severity=ir.IssueSeverity.WARNING,
-                        translation_key="organization_verification_required",
-                        translation_placeholders={
-                            "platform_settings": "https://platform.openai.com/settings/organization/general"
-                        },
-                    )
-
-                LOGGER.error("Error talking to Azure OpenAI: %s", err)
-                raise HomeAssistantError("Error talking to Azure OpenAI") from err
+                self._raise_openai_error(err)
 
             if not chat_log.unresponded_tool_results:
                 break
@@ -754,15 +831,20 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="attachment_missing",
+                    translation_placeholders={"file_path": str(file_path)},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+            if mime_type not in SUPPORTED_ATTACHMENT_MIME_TYPES:
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the OpenAI API,"
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="attachment_unsupported",
+                    translation_placeholders={"file_path": str(file_path)},
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
@@ -775,11 +857,11 @@ async def async_prepare_files_for_prompt(
                         detail="auto",
                     )
                 )
-            elif mime_type.startswith("application/pdf"):
+            else:
                 content.append(
                     ResponseInputFileParam(
                         type="input_file",
-                        filename=str(file_path),
+                        filename=file_path.name,
                         file_data=f"data:{mime_type};base64,{base64_file}",
                     )
                 )
