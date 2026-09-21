@@ -1250,14 +1250,49 @@ DISCOVERY_SCHEMAS = [
 ]
 
 
+# Temporary workaround for new schemas
+ALL_DISCOVERY_SCHEMAS: tuple[ZWaveDiscoverySchema | NewZWaveDiscoverySchema, ...] = (
+    *(
+        new_schema
+        for _schemas in NEW_DISCOVERY_SCHEMAS.values()
+        for new_schema in _schemas
+    ),
+    *DISCOVERY_SCHEMAS,
+)
+
+# Nearly every schema selects its primary value by command class, so grouping the
+# schemas by command class lets a value skip the ones that can never match it. Networks
+# with a hundred devices have tens of thousands of values, and without this every one of
+# them is checked against every schema.
+_SCHEMAS_BY_COMMAND_CLASS: dict[
+    int, tuple[ZWaveDiscoverySchema | NewZWaveDiscoverySchema, ...]
+] = {}
+
+
+@callback
+def _async_schemas_for_command_class(
+    command_class: int,
+) -> tuple[ZWaveDiscoverySchema | NewZWaveDiscoverySchema, ...]:
+    """Return the schemas that can match a value of the given command class."""
+    if (schemas := _SCHEMAS_BY_COMMAND_CLASS.get(command_class)) is None:
+        schemas = _SCHEMAS_BY_COMMAND_CLASS[command_class] = tuple(
+            schema
+            for schema in ALL_DISCOVERY_SCHEMAS
+            if (schema_command_class := schema.primary_value.command_class) is None
+            or command_class in schema_command_class
+        )
+    return schemas
+
+
 @callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo]:
     """Run discovery on ZWave node and return matching (primary) values."""
+    device_discovered_value_ids = discovered_value_ids[device.id]
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
-        if value.value_id not in discovered_value_ids[device.id]:
+        if value.value_id not in device_discovered_value_ids:
             yield from async_discover_single_value(value, device, discovered_value_ids)
 
 
@@ -1266,19 +1301,12 @@ def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
-    # Temporary workaround for new schemas
-    schemas: tuple[ZWaveDiscoverySchema | NewZWaveDiscoverySchema, ...] = (
-        *(
-            new_schema
-            for _schemas in NEW_DISCOVERY_SCHEMAS.values()
-            for new_schema in _schemas
-        ),
-        *DISCOVERY_SCHEMAS,
-    )
+    value_id = value.value_id
+    device_discovered_value_ids = discovered_value_ids[device.id]
 
-    for schema in schemas:
+    for schema in _async_schemas_for_command_class(value.command_class):
         # abort if attribute(s) already discovered
-        if value.value_id in discovered_value_ids[device.id]:
+        if value_id in device_discovered_value_ids:
             continue
 
         # check manufacturer_id, product_id, product_type
@@ -1463,10 +1491,10 @@ def async_discover_single_value(
 
         # prevent re-discovery of the (primary) value if not allowed
         if not schema.allow_multi:
-            discovered_value_ids[device.id].add(value.value_id)
+            device_discovered_value_ids.add(value_id)
 
     # prevent re-discovery of the (primary) value after all schemas have been checked
-    discovered_value_ids[device.id].add(value.value_id)
+    device_discovered_value_ids.add(value_id)
 
     if value.command_class == CommandClass.CONFIGURATION:
         yield from async_discover_single_configuration_value(
