@@ -98,6 +98,26 @@ async def test_stream_wav_discards_buffered_audio_on_interrupt() -> None:
     ]
 
 
+async def test_stream_wav_discards_remaining_audio_on_interrupt() -> None:
+    """Test interruption while yielding the penultimate chunk discards the last chunk."""
+    audio_data = b"a" * 600
+    audio_interrupt = asyncio.Event()
+    chunks = stream_wav(
+        _async_generator(_create_wav(data=audio_data), chunk_size=1024),
+        expected_channels=1,
+        expected_width=2,
+        expected_sample_rate=16000,
+        samples_per_chunk=256,
+        audio_interrupt=audio_interrupt,
+    )
+
+    assert await anext(chunks) == (audio_data[:512], False)
+    audio_interrupt.set()
+
+    assert [chunk async for chunk in chunks] == []
+    assert not audio_interrupt.is_set()
+
+
 async def test_stream_wav_unsupported_format() -> None:
     """Test streaming with an unsupported format."""
     wav_bytes = _create_wav()

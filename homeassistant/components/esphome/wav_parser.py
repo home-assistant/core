@@ -159,6 +159,9 @@ async def stream_wav(
         remaining = bytes(bytes_buffer[:remaining_bytes_to_read])
         if pending_chunk is not None:
             yield pending_chunk, False
+            if audio_interrupt is not None and audio_interrupt.is_set():
+                discard_buffered_audio()
+                return
         pending_chunk = remaining
 
     if pending_chunk is not None:
