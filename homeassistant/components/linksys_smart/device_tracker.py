@@ -147,6 +147,14 @@ class LinksysScannerEntity(
 
     @property
     @override
+    def entity_registry_enabled_default(self) -> bool:
+        """Enable by default for routers migrated from YAML to preserve prior behavior."""
+        if self.coordinator.config_entry.source == SOURCE_IMPORT:
+            return True
+        return super().entity_registry_enabled_default
+
+    @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is currently connected to the router."""
         return self._mac in self.coordinator.data
