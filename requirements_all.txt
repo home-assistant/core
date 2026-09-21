@@ -1845,7 +1845,7 @@ openerz-api==0.3.0
 openhomedevice==2.5
 
 # homeassistant.components.openrgb
-openrgb-python==0.3.6
+openrgb-python==0.3.7
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.4.1
