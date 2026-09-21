@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -62,24 +62,41 @@ async def async_setup_entry(
 ) -> None:
     """Set up Place alarm binary sensor entities."""
     coordinator = entry.runtime_data
+    known_entities: set[tuple[str, str]] = set()
 
     def _alarm_is_supported(
         device: DiscoverDevice, description: PlaceAlarmBinarySensorEntityDescription
     ) -> bool:
-        """Return True only if the discovery shadow confirms this alarm is present."""
+        """Return True only if the shadow confirms this alarm is present."""
         shadow = (coordinator.data or {}).get(device.thing_name)
         return (
             shadow is not None
             and description.value_fn(shadow) is not AlarmStatus.NOT_PRESENT
         )
 
-    async_add_entities(
-        PlaceAlarmBinarySensorEntity(coordinator, device, description)
-        for device in coordinator.devices
-        if device.thing_name
-        for description in ALARM_BINARY_SENSOR_DESCRIPTIONS
-        if _alarm_is_supported(device, description)
-    )
+    @callback
+    def _add_new_entities() -> None:
+        """Add entities for alarms newly confirmed present since last check."""
+        matches = [
+            (device, description)
+            for device in coordinator.devices
+            if device.thing_name
+            for description in ALARM_BINARY_SENSOR_DESCRIPTIONS
+            if (device.thing_name, description.key) not in known_entities
+            and _alarm_is_supported(device, description)
+        ]
+        if not matches:
+            return
+        known_entities.update(
+            (device.thing_name, description.key) for device, description in matches
+        )
+        async_add_entities(
+            PlaceAlarmBinarySensorEntity(coordinator, device, description)
+            for device, description in matches
+        )
+
+    _add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 class PlaceAlarmBinarySensorEntity(

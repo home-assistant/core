@@ -168,3 +168,61 @@ async def test_binary_sensor_skip_unknown_alarms(
     assert hass.states.get("binary_sensor.hallway_smoke") is None
     assert hass.states.get("binary_sensor.hallway_heat_alarm") is None
     assert hass.states.get("binary_sensor.hallway_carbon_monoxide") is None
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+)
+async def test_binary_sensor_late_shadow_adds_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an entity is added once a later shadow confirms alarm support.
+
+    Discovery returned no shadow, so no entities were created at setup. Once
+    the requested MQTT shadow arrives confirming a smoke alarm is present, the
+    entity should be added without requiring a reload.
+    """
+    unknown_device = DiscoverDevice(
+        location="Hallway",
+        shadow={},
+        device_name="Hallway Detector",
+        thing_name="hallway-001",
+        firmware_version="1.0.0",
+        model_number="MODEL-X",
+        device_id="hallway-device-001",
+        online=True,
+    )
+
+    with patch(
+        "homeassistant.components.gentex_place.Provider", autospec=True
+    ) as mock_provider_cls:
+        mock_provider_instance = mock_provider_cls.return_value
+        mock_provider_instance.enable = AsyncMock()
+        mock_provider_instance.discover = AsyncMock(return_value=[unknown_device])
+
+        with patch(
+            "homeassistant.components.gentex_place.MqttClient", autospec=True
+        ) as mock_mqtt_cls:
+            mock_mqtt_instance = mock_mqtt_cls.return_value
+            mock_mqtt_instance._client = MagicMock()
+
+            await setup_integration(hass, mock_config_entry)
+
+            assert hass.states.get("binary_sensor.hallway_smoke") is None
+
+            payload = json.dumps(
+                {"state": {"reported": {"smokeAlarmStatus": int(AlarmStatus.IDLE)}}}
+            ).encode()
+            trigger_shadow_callback(
+                mock_mqtt_instance,
+                "$aws/things/hallway-001/shadow/update/accepted",
+                payload,
+            )
+            await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.hallway_smoke").state == STATE_OFF
+    # co/heat still absent — the payload didn't confirm them
+    assert hass.states.get("binary_sensor.hallway_heat_alarm") is None
+    assert hass.states.get("binary_sensor.hallway_carbon_monoxide") is None
