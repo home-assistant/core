@@ -1,14 +1,18 @@
 """Test security filter middleware."""
 
 import asyncio
+from collections.abc import Generator
 from http import HTTPStatus
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import web
+from aiohttp import ClientSession, UnixConnector, web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.test_utils import make_mocked_request
 import pytest
+from pytest_socket import socket_allow_hosts
 import urllib3
 
 from homeassistant.components.http.security_filter import FILTERS, setup_security_filter
@@ -18,6 +22,13 @@ from homeassistant.setup import async_setup_component
 
 from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture
+def unix_socket_path() -> Generator[str]:
+    """Keep the Unix socket path below the platform's length limit."""
+    with TemporaryDirectory() as directory:
+        yield str(Path(directory) / "http.sock")
 
 
 async def mock_handler(request):
@@ -407,6 +418,41 @@ async def test_filtered_cloud_request_source(
         in caplog.text
     )
     assert "192.0.2.1" not in caplog.text
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_filtered_unix_socket_request_with_forwarding_headers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    unix_socket_path: str,
+) -> None:
+    """Unix socket requests ignore claimed IPs and still reach the security filter."""
+    socket_allow_hosts(["127.0.0.1"], allow_unix_socket=True)
+    assert await async_setup_component(
+        hass,
+        "http",
+        {"http": {"use_x_forwarded_for": True, "trusted_proxies": ["127.0.0.1"]}},
+    )
+    runner = web.AppRunner(hass.http.app)
+    await runner.setup()
+    try:
+        await web.UnixSite(runner, unix_socket_path).start()
+        async with ClientSession(
+            connector=UnixConnector(path=unix_socket_path)
+        ) as client:
+            response = await client.get(
+                "http://localhost/proc/self/environ",
+                headers={X_FORWARDED_FOR: "198.51.100.1"},
+            )
+            assert response.status == HTTPStatus.BAD_REQUEST
+    finally:
+        await runner.cleanup()
+
+    assert (
+        "Filtered a potential harmful request from unknown: /proc/self/environ"
+        in caplog.text
+    )
+    assert "198.51.100.1" not in caplog.text
 
 
 @pytest.mark.parametrize("peername", [None, "", "/run/supervisor.sock"])
