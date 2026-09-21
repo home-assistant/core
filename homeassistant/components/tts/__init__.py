@@ -1212,6 +1212,7 @@ class SpeechManager:
                     tts_file["artist"] = artist
                     tts_file["album"] = album
                     tts_file["title"] = message
+                data_bytes.seek(0)
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
             _LOGGER.error("ID3 tag error: %s", err)
