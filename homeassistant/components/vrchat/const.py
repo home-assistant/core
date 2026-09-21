@@ -27,8 +27,6 @@ class VRChatUserState(StrEnum):
     ASK_ME = "ask_me"
     BUSY = "busy"
     OFFLINE = "offline"
-    # ACTIVE_ON_WEB = "active on web"
-    # ACTIVE_ON_MOBILE = "active on mobile"
     ACTIVE_ON_WEB_OR_MOBILE = "active_on_web_or_mobile"
 
 
