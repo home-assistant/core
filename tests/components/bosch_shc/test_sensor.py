@@ -34,17 +34,17 @@ async def test_open_windows_doors_sensor(
     mock_session.api.get_open_windows.return_value = {
         "openDoors": [{"name": "Front Door"}],
         "openWindows": [{"name": "Kitchen Window"}, {"name": "Bedroom Window"}],
-        "openOthers": [],
+        "openOthers": [{"name": "Cat Flap"}],
     }
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "sensor.mock_title_open_doors_and_windows"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "3"
+    assert state.state == "4"
     assert state.attributes["open_doors"] == ["Front Door"]
     assert state.attributes["open_windows"] == ["Kitchen Window", "Bedroom Window"]
-    assert state.attributes["open_others"] == []
+    assert state.attributes["open_others"] == ["Cat Flap"]
 
     hub_device = device_registry.async_get_device_by_identifier(
         ("bosch_shc", "test-mac"), mock_config_entry.entry_id
