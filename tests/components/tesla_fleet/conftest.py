@@ -95,6 +95,20 @@ def readonly_config_entry(expires_at: int) -> MockConfigEntry:
 
 
 @pytest.fixture
+def vehicle_cmds_config_entry(expires_at: int) -> MockConfigEntry:
+    """Create Tesla Fleet entry with vehicle_cmds but not vehicle_charging_cmds."""
+    return create_config_entry(
+        expires_at,
+        [
+            Scope.OPENID,
+            Scope.OFFLINE_ACCESS,
+            Scope.VEHICLE_DEVICE_DATA,
+            Scope.VEHICLE_CMDS,
+        ],
+    )
+
+
+@pytest.fixture
 def bad_config_entry(expires_at: int) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     return create_config_entry(expires_at, SCOPES, "bad")

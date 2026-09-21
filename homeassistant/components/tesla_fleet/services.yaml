@@ -48,6 +48,10 @@ add_charge_schedule:
         number:
           min: 1
           mode: box
+    name:
+      required: false
+      selector:
+        text:
 
 remove_charge_schedule:
   fields:

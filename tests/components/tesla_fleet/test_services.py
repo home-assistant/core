@@ -20,6 +20,7 @@ from homeassistant.components.tesla_fleet.services import (
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LOCATION,
+    ATTR_NAME,
     CONF_DEVICE_ID,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -87,6 +88,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 ATTR_END_TIME: time(18, 30),
                 ATTR_ONE_TIME: False,
                 ATTR_ID: 3,
+                ATTR_NAME: "Off-peak",
             },
             {
                 "days_of_week": 6,
@@ -97,6 +99,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 "end_time": 1110,
                 "one_time": False,
                 "id": 3,
+                "name": "Off-peak",
             },
             id="all_fields",
         ),
@@ -115,6 +118,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 "end_time": None,
                 "one_time": None,
                 "id": GENERATED_ID,
+                "name": None,
             },
             id="minimal_fields_default_to_home_location",
         ),
@@ -141,6 +145,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 "end_time": 1439,
                 "one_time": None,
                 "id": GENERATED_ID,
+                "name": None,
             },
             id="every_day_is_full_bitmask",
         ),
@@ -159,6 +164,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 "end_time": None,
                 "one_time": None,
                 "id": GENERATED_ID,
+                "name": None,
             },
             id="repeated_days_are_not_double_counted",
         ),
@@ -178,6 +184,7 @@ def _get_vehicle_coordinator(config_entry: MockConfigEntry, vin: str) -> AsyncMo
                 "end_time": 1439,
                 "one_time": None,
                 "id": GENERATED_ID,
+                "name": None,
             },
             id="midnight_start_with_a_real_end_time",
         ),
@@ -327,6 +334,46 @@ async def test_charge_schedule_without_scope(
     device_id = await _async_get_device_id(hass, readonly_config_entry, VEHICLE_VIN)
 
     with pytest.raises(ServiceValidationError, match="charging commands scope"):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_DEVICE_ID: device_id} | service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "target", "service_data"),
+    [
+        pytest.param(
+            SERVICE_ADD_CHARGE_SCHEDULE,
+            ADD_CHARGE_SCHEDULE,
+            {
+                ATTR_DAYS_OF_WEEK: ["monday"],
+                ATTR_ENABLE: True,
+                ATTR_START_TIME: time(7, 0),
+            },
+            id="add",
+        ),
+        pytest.param(
+            SERVICE_REMOVE_CHARGE_SCHEDULE,
+            REMOVE_CHARGE_SCHEDULE,
+            {ATTR_ID: 3},
+            id="remove",
+        ),
+    ],
+)
+async def test_charge_schedule_with_vehicle_cmds_scope(
+    hass: HomeAssistant,
+    vehicle_cmds_config_entry: MockConfigEntry,
+    service: str,
+    target: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test the charge schedule services accept the broader vehicle_cmds scope."""
+    device_id = await _async_get_device_id(hass, vehicle_cmds_config_entry, VEHICLE_VIN)
+
+    with patch(target, return_value=COMMAND_OK):
         await hass.services.async_call(
             DOMAIN,
             service,

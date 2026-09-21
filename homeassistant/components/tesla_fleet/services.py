@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LOCATION,
+    ATTR_NAME,
     CONF_DEVICE_ID,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -85,7 +86,10 @@ def _get_vehicle_for_service_call(
             },
         )
 
-    if Scope.VEHICLE_CHARGING_CMDS not in config_entry.runtime_data.scopes:
+    if not any(
+        scope in config_entry.runtime_data.scopes
+        for scope in (Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS)
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="missing_scope_vehicle_charging_cmds",
@@ -131,6 +135,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     end_time=end_time,
                     one_time=call.data.get(ATTR_ONE_TIME),
                     id=schedule_id,
+                    name=call.data.get(ATTR_NAME),
                 )
             )
         except ValueError as err:
@@ -163,6 +168,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_END_TIME): cv.time,
                 vol.Optional(ATTR_ONE_TIME): cv.boolean,
                 vol.Optional(ATTR_ID): SCHEDULE_ID,
+                vol.Optional(ATTR_NAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.OPTIONAL,
