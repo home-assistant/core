@@ -16,8 +16,8 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    spa,
-    spa_state,
+    spa: smarttub.Spa,
+    spa_state: smarttub.SpaStateFull,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
