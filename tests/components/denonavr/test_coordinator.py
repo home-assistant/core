@@ -1,20 +1,33 @@
 """The tests for denonavr's coordinator module-level refresh functions."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from denonavr.exceptions import AvrCommandError
+from denonavr.exceptions import AvrCommandError, AvrNetworkError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.denonavr.const import DOMAIN
 from homeassistant.components.denonavr.coordinator import (
     DenonAvrDataUpdateCoordinator,
     async_refresh_audyssey,
+    async_refresh_status,
 )
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+# Both refresh functions carry the same per-zone contract, so each case below
+# runs against both.
+REFRESH_FUNCTIONS = pytest.mark.parametrize(
+    ("refresh", "update_method"),
+    [
+        pytest.param(async_refresh_status, "async_update", id="status"),
+        pytest.param(async_refresh_audyssey, "async_update_audyssey", id="audyssey"),
+    ],
+)
 
 
 def _receiver_with_zones() -> tuple[MagicMock, MagicMock]:
@@ -23,54 +36,81 @@ def _receiver_with_zones() -> tuple[MagicMock, MagicMock]:
     main.name = "Main Receiver"
     main.telnet_connected = False
     main.telnet_healthy = False
+    main.async_update = AsyncMock()
     main.async_update_audyssey = AsyncMock()
     zone2 = MagicMock()
     zone2.zone = "Zone2"
+    zone2.async_update = AsyncMock()
     zone2.async_update_audyssey = AsyncMock()
     main.zones = {"Main": main, "Zone2": zone2}
     return main, zone2
 
 
-async def test_async_refresh_audyssey_refreshes_every_zone() -> None:
-    """Each zone caches its own Audyssey state.
+@REFRESH_FUNCTIONS
+async def test_refresh_reaches_every_zone(
+    refresh: Callable[..., Awaitable[None]], update_method: str
+) -> None:
+    """Each zone caches its own state.
 
-    async_update_audyssey() only updates the zone it is called on, so Zone2
-    and Zone3 would otherwise never be refreshed.
+    Both update calls only touch the zone they are called on, so Zone2 and
+    Zone3 would otherwise never be refreshed.
     """
     main, zone2 = _receiver_with_zones()
 
-    await async_refresh_audyssey(main)
+    await refresh(main)
 
-    main.async_update_audyssey.assert_awaited_once()
-    zone2.async_update_audyssey.assert_awaited_once()
+    getattr(main, update_method).assert_awaited_once()
+    getattr(zone2, update_method).assert_awaited_once()
 
 
-async def test_async_refresh_audyssey_skips_every_zone_when_telnet_healthy() -> None:
+@REFRESH_FUNCTIONS
+async def test_refresh_skips_every_zone_when_telnet_healthy(
+    refresh: Callable[..., Awaitable[None]], update_method: str
+) -> None:
     """The Telnet-healthy skip applies to every zone at once, checked only once."""
     main, zone2 = _receiver_with_zones()
     main.telnet_connected = True
     main.telnet_healthy = True
 
-    await async_refresh_audyssey(main)
+    await refresh(main)
 
-    main.async_update_audyssey.assert_not_awaited()
-    zone2.async_update_audyssey.assert_not_awaited()
+    getattr(main, update_method).assert_not_awaited()
+    getattr(zone2, update_method).assert_not_awaited()
 
 
-async def test_async_refresh_audyssey_continues_after_one_zones_command_error() -> None:
+@REFRESH_FUNCTIONS
+async def test_refresh_continues_after_one_zones_command_error(
+    refresh: Callable[..., Awaitable[None]], update_method: str
+) -> None:
     """A rejected command in one zone doesn't abort the others.
 
-    Not every zone supports Audyssey identically, and one zone's
+    Zones do not all support the same settings, and one zone's
     AvrCommandError shouldn't leave the rest unrefreshed.
     """
     main, zone2 = _receiver_with_zones()
-    main.async_update_audyssey = AsyncMock(
-        side_effect=AvrCommandError("not supported", "GetAudyssey")
-    )
+    getattr(main, update_method).side_effect = AvrCommandError("not supported", "Get")
 
-    await async_refresh_audyssey(main)
+    await refresh(main)
 
-    zone2.async_update_audyssey.assert_awaited_once()
+    getattr(zone2, update_method).assert_awaited_once()
+
+
+@REFRESH_FUNCTIONS
+async def test_refresh_stops_every_zone_on_a_connectivity_error(
+    refresh: Callable[..., Awaitable[None]], update_method: str
+) -> None:
+    """A connectivity error means the receiver itself is unreachable.
+
+    It re-raises so the whole update fails, rather than the remaining zones
+    each reporting the same failure.
+    """
+    main, zone2 = _receiver_with_zones()
+    getattr(main, update_method).side_effect = AvrNetworkError("Network error", "test")
+
+    with pytest.raises(AvrNetworkError):
+        await refresh(main)
+
+    getattr(zone2, update_method).assert_not_awaited()
 
 
 def _coordinator(
