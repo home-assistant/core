@@ -63,11 +63,22 @@ async def async_setup_entry(
     """Set up Place alarm binary sensor entities."""
     coordinator = entry.runtime_data
 
+    def _alarm_is_supported(
+        device: DiscoverDevice, description: PlaceAlarmBinarySensorEntityDescription
+    ) -> bool:
+        """Return True only if the discovery shadow confirms this alarm is present."""
+        shadow = (coordinator.data or {}).get(device.thing_name)
+        return (
+            shadow is not None
+            and description.value_fn(shadow) is not AlarmStatus.NOT_PRESENT
+        )
+
     async_add_entities(
         PlaceAlarmBinarySensorEntity(coordinator, device, description)
         for device in coordinator.devices
         if device.thing_name
         for description in ALARM_BINARY_SENSOR_DESCRIPTIONS
+        if _alarm_is_supported(device, description)
     )
 
 
@@ -111,13 +122,18 @@ class PlaceAlarmBinarySensorEntity(
     @property
     @override
     def available(self) -> bool:
-        """Unavailable when the device does not have this alarm type."""
+        """Unavailable if the coordinator no longer reports this alarm as present.
+
+        Entities are only created once discovery confirms this alarm type is
+        present, so this is a defensive backstop, not the primary gate.
+        """
         if not super().available:
             return False
         shadow = self._shadow()
-        if shadow is None:
-            return True
-        return self.entity_description.value_fn(shadow) is not AlarmStatus.NOT_PRESENT
+        return (
+            shadow is not None
+            and self.entity_description.value_fn(shadow) is not AlarmStatus.NOT_PRESENT
+        )
 
     @property
     @override

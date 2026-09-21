@@ -1,8 +1,10 @@
 """Tests for the Place binary sensor platform."""
 
 import json
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from place.models.device_shadow import AlarmStatus
+from place.models.discover_device import DiscoverDevice
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -69,3 +71,100 @@ async def test_binary_sensor_alarm_states(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.master_bedroom_smoke").state == expected_state
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+)
+async def test_binary_sensor_skip_absent_alarms(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that entities are not created for alarms absent from discovery.
+
+    Garage units have heat alarms but not smoke alarms; verify entities are only
+    created for supported alarm types.
+    """
+    garage_device = DiscoverDevice(
+        location="Garage",
+        shadow={
+            "coAlarmStatus": int(AlarmStatus.IDLE),
+            "heatAlarmStatus": int(AlarmStatus.IDLE),
+            "smokeAlarmStatus": int(AlarmStatus.NOT_PRESENT),
+            "temperatureC": 20.0,
+            "humidity": 50,
+            "batteryStatus": 0,
+        },
+        device_name="Garage Detector",
+        thing_name="garage-001",
+        firmware_version="1.0.0",
+        model_number="GARAGE-MODEL",
+        device_id="garage-device-001",
+        online=True,
+    )
+
+    with patch(
+        "homeassistant.components.gentex_place.Provider", autospec=True
+    ) as mock_provider_cls:
+        mock_provider_instance = mock_provider_cls.return_value
+        mock_provider_instance.enable = AsyncMock()
+        mock_provider_instance.discover = AsyncMock(return_value=[garage_device])
+
+        with patch(
+            "homeassistant.components.gentex_place.MqttClient", autospec=True
+        ) as mock_mqtt_cls:
+            mock_mqtt_instance = mock_mqtt_cls.return_value
+            mock_mqtt_instance._client = MagicMock()
+
+            await setup_integration(hass, mock_config_entry)
+
+    # Smoke alarm should not be created for garage unit
+    assert hass.states.get("binary_sensor.garage_smoke") is None
+    # Heat and CO alarms should still be created
+    assert hass.states.get("binary_sensor.garage_heat_alarm") is not None
+    assert hass.states.get("binary_sensor.garage_carbon_monoxide") is not None
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+)
+async def test_binary_sensor_skip_unknown_alarms(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that no entities are created when discovery has no shadow at all.
+
+    Alarm support cannot be confirmed without a shadow, so no entities should
+    be created until a shadow becomes available.
+    """
+    unknown_device = DiscoverDevice(
+        location="Hallway",
+        shadow={},
+        device_name="Hallway Detector",
+        thing_name="hallway-001",
+        firmware_version="1.0.0",
+        model_number="MODEL-X",
+        device_id="hallway-device-001",
+        online=True,
+    )
+
+    with patch(
+        "homeassistant.components.gentex_place.Provider", autospec=True
+    ) as mock_provider_cls:
+        mock_provider_instance = mock_provider_cls.return_value
+        mock_provider_instance.enable = AsyncMock()
+        mock_provider_instance.discover = AsyncMock(return_value=[unknown_device])
+
+        with patch(
+            "homeassistant.components.gentex_place.MqttClient", autospec=True
+        ) as mock_mqtt_cls:
+            mock_mqtt_instance = mock_mqtt_cls.return_value
+            mock_mqtt_instance._client = MagicMock()
+
+            await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.hallway_smoke") is None
+    assert hass.states.get("binary_sensor.hallway_heat_alarm") is None
+    assert hass.states.get("binary_sensor.hallway_carbon_monoxide") is None
