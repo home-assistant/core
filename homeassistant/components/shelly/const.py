@@ -91,7 +91,7 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
 # Interval for checking the BLU TRV firmware repository for a newer version
-BLU_TRV_UPDATE_CHECK_INTERVAL: Final = 3600
+BLU_TRV_UPDATE_CHECK_INTERVAL: Final = 12 * 3600
 
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
