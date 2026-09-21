@@ -147,19 +147,39 @@ def _wav_stream_prefix(data: bytearray) -> tuple[bool, bytes]:
     return False, b""
 
 
+def _wav_prefix_with_payload_size(prefix: bytes, payload_size: int | None) -> bytes:
+    """Return a WAV prefix with sizes for a payload, or streaming sizes."""
+    size = 0xFFFFFFFF if payload_size is None else payload_size
+    riff_size = 0xFFFFFFFF if payload_size is None else len(prefix) - 8 + payload_size
+    result = bytearray(prefix)
+    result[4:8] = riff_size.to_bytes(4, "little")
+    result[-4:] = size.to_bytes(4, "little")
+    return bytes(result)
+
+
+@dataclass(slots=True)
+class _TTSCacheConsumer:
+    """Consumer of a TTS cache while it is loading."""
+
+    queue: asyncio.Queue[tuple[bytes, bool] | None] = field(
+        default_factory=asyncio.Queue
+    )
+    prefix_delivered: bool = False
+
+
 class TTSCache:
     """Cached bytes of a TTS result."""
 
     _result_data: bytes | None = None
     """When fully loaded, contains the result data."""
 
-    _partial_data: list[bytes] | None = None
+    _partial_data: list[tuple[bytes, bool]] | None = None
     """While loading, contains the data already received from the generator."""
 
     _loading_error: Exception | None = None
     """If an error occurred while loading, contains the error."""
 
-    _consumers: list[asyncio.Queue[bytes | None]] | None = None
+    _consumers: list[_TTSCacheConsumer] | None = None
     """Queue for consumers to receive data while loading."""
 
     _interrupt_generation: int = 0
@@ -182,6 +202,7 @@ class TTSCache:
         self._stream_prefix = b""
         self._stream_prefix_buffer = bytearray()
         self._collect_stream_prefix = extension == "wav"
+        self._interrupt_listeners: set[Callable[[], None]] = set()
 
     @property
     def was_interrupted(self) -> bool:
@@ -198,26 +219,47 @@ class TTSCache:
 
         try:
             async for chunk in self._data_gen:
+                chunks = [(chunk, False)]
                 if self._collect_stream_prefix:
                     self._stream_prefix_buffer.extend(chunk)
-                    prefix_complete, self._stream_prefix = _wav_stream_prefix(
+                    prefix_complete, prefix = _wav_stream_prefix(
                         self._stream_prefix_buffer
                     )
-                    if prefix_complete:
-                        self._collect_stream_prefix = False
-                        self._stream_prefix_buffer.clear()
-                self._partial_data.append(chunk)
-                for queue in self._consumers:
-                    queue.put_nowait(chunk)
+                    if not prefix_complete:
+                        continue
+
+                    buffered_data = bytes(self._stream_prefix_buffer)
+                    self._stream_prefix_buffer.clear()
+                    self._collect_stream_prefix = False
+                    if prefix:
+                        self._stream_prefix = prefix
+                        chunks = [(self._stream_prefix, True)]
+                        if payload := buffered_data[len(prefix) :]:
+                            chunks.append((payload, False))
+                    else:
+                        chunks = [(buffered_data, False)]
+
+                for cache_chunk in chunks:
+                    self._partial_data.append(cache_chunk)
+                    for consumer in self._consumers:
+                        consumer.queue.put_nowait(cache_chunk)
         except Exception as err:
             self._loading_error = err
             raise
         finally:
-            for queue in self._consumers:
-                queue.put_nowait(None)
+            for consumer in self._consumers:
+                consumer.queue.put_nowait(None)
             self._consumers = None
 
-        self._result_data = b"".join(self._partial_data)
+        if self._stream_prefix and self._was_interrupted:
+            payload_size = sum(
+                len(chunk) for chunk, is_prefix in self._partial_data if not is_prefix
+            )
+            self._partial_data[0] = (
+                _wav_prefix_with_payload_size(self._stream_prefix, payload_size),
+                True,
+            )
+        self._result_data = b"".join(chunk for chunk, _ in self._partial_data)
         self._partial_data = None
         return self._result_data
 
@@ -237,23 +279,28 @@ class TTSCache:
         if self._partial_data is None:
             raise RuntimeError("Data not being loaded")
 
-        queue: asyncio.Queue[bytes | None] | None = None
+        consumer: _TTSCacheConsumer | None = None
         # Check if generator is still feeding data
         if self._consumers is not None:
-            queue = asyncio.Queue()
-            self._consumers.append(queue)
+            consumer = _TTSCacheConsumer()
+            self._consumers.append(consumer)
 
         interrupt_generation = self._interrupt_generation
-        for chunk in list(self._partial_data):
+        for chunk, is_prefix in list(self._partial_data):
             if interrupt_generation != self._interrupt_generation:
                 break
+            if consumer is not None and is_prefix:
+                consumer.prefix_delivered = True
             yield chunk
 
         if self._loading_error:
             raise self._loading_error
 
-        if queue is not None:
-            while (chunk2 := await queue.get()) is not None:
+        if consumer is not None:
+            while (cache_chunk := await consumer.queue.get()) is not None:
+                chunk2, is_prefix = cache_chunk
+                if is_prefix:
+                    consumer.prefix_delivered = True
                 yield chunk2
 
         if self._loading_error:
@@ -266,29 +313,49 @@ class TTSCache:
         """Discard audio waiting for active stream consumers."""
         self._was_interrupted = True
         self._interrupt_generation += 1
-        if self._partial_data is not None:
-            prefix = (
-                bytes(self._stream_prefix_buffer)
-                if self._collect_stream_prefix
-                else self._stream_prefix
+        if self._stream_prefix:
+            self._stream_prefix = _wav_prefix_with_payload_size(
+                self._stream_prefix, None
             )
-            self._partial_data[:] = [prefix] if prefix else []
+        if self._partial_data is not None:
+            self._partial_data[:] = (
+                [(self._stream_prefix, True)] if self._stream_prefix else []
+            )
         if self._result_data is not None:
-            self._result_data = self._stream_prefix
+            self._result_data = (
+                _wav_prefix_with_payload_size(self._stream_prefix, 0)
+                if self._stream_prefix
+                else b""
+            )
 
-        if self._consumers is None:
-            return
+        if self._consumers is not None:
+            for consumer in self._consumers:
+                stream_finished = False
+                while True:
+                    try:
+                        if consumer.queue.get_nowait() is None:
+                            stream_finished = True
+                    except asyncio.QueueEmpty:
+                        break
+                if self._stream_prefix and not consumer.prefix_delivered:
+                    consumer.queue.put_nowait((self._stream_prefix, True))
+                if stream_finished:
+                    consumer.queue.put_nowait(None)
 
-        for queue in self._consumers:
-            stream_finished = False
-            while True:
-                try:
-                    if queue.get_nowait() is None:
-                        stream_finished = True
-                except asyncio.QueueEmpty:
-                    break
-            if stream_finished:
-                queue.put_nowait(None)
+        for listener in tuple(self._interrupt_listeners):
+            listener()
+
+    @callback
+    def async_subscribe_audio_interrupt(
+        self, listener: Callable[[], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to interruptions of this cached audio response."""
+        self._interrupt_listeners.add(listener)
+
+        def unsubscribe() -> None:
+            self._interrupt_listeners.discard(listener)
+
+        return unsubscribe
 
 
 @callback
@@ -998,7 +1065,6 @@ class SpeechManager:
         def handle_audio_interrupt() -> None:
             assert cache is not None
             cache.async_interrupt()
-            on_audio_interrupt()
 
         data_gen = self._async_generate_tts_audio(
             engine_instance,
@@ -1013,6 +1079,7 @@ class SpeechManager:
             extension=extension,
             data_gen=data_gen,
         )
+        cache.async_subscribe_audio_interrupt(on_audio_interrupt)
         self.mem_cache[cache_key] = cache
         self.hass.async_create_background_task(
             self._load_data_into_cache(
@@ -1049,6 +1116,7 @@ class SpeechManager:
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
             _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            cache.async_subscribe_audio_interrupt(on_audio_interrupt)
             return cache
 
         store_to_disk = use_file_cache
@@ -1069,7 +1137,6 @@ class SpeechManager:
             def handle_audio_interrupt() -> None:
                 assert cache is not None
                 cache.async_interrupt()
-                on_audio_interrupt()
 
             data_gen = self._async_generate_tts_audio(
                 engine_instance, message, language, options, handle_audio_interrupt
@@ -1080,6 +1147,7 @@ class SpeechManager:
             extension=extension,
             data_gen=data_gen,
         )
+        cache.async_subscribe_audio_interrupt(on_audio_interrupt)
         self.mem_cache[cache_key] = cache
         self.hass.async_create_background_task(
             self._load_data_into_cache(

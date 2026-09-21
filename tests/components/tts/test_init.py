@@ -2163,6 +2163,50 @@ async def test_stream_audio_immediate_interrupt(
     interrupted.assert_called_once_with()
 
 
+async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test an interruption notifies all streams sharing an active cache."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    continue_generation = asyncio.Event()
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock an interrupted streaming TTS response."""
+
+        async def gen_data():
+            yield b"stale"
+            await continue_generation.wait()
+            assert request.on_audio_interrupt is not None
+            request.on_audio_interrupt()
+            yield b"replacement"
+
+        return tts.TTSAudioResponse("mp3", gen_data(), passthrough=True)
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    stream1 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream2 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    interruption_received = asyncio.Event()
+    interrupted1 = Mock(side_effect=interruption_received.set)
+    interrupted2 = Mock()
+    stream1.async_subscribe_audio_interrupt(interrupted1)
+    stream2.async_subscribe_audio_interrupt(interrupted2)
+    stream1.async_set_message("hello")
+    stream2.async_set_message("hello")
+    assert stream1._result_cache.result() is stream2._result_cache.result()
+
+    continue_generation.set()
+    await interruption_received.wait()
+    assert b"".join([chunk async for chunk in stream1.async_stream_result()]) == (
+        b"replacement"
+    )
+    interrupted1.assert_called_once_with()
+    interrupted2.assert_called_once_with()
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
@@ -2315,9 +2359,52 @@ async def test_tts_cache_interrupt_preserves_wav_header() -> None:
     queue.put_nowait(replacement_audio)
     queue.put_nowait(None)
 
-    expected = header + replacement_audio
+    expected_header = bytearray(header)
+    expected_header[4:8] = (len(header) - 8 + len(replacement_audio)).to_bytes(
+        4, "little"
+    )
+    expected_header[-4:] = len(replacement_audio).to_bytes(4, "little")
+    expected = bytes(expected_header) + replacement_audio
     assert await load_data_task == expected
     assert b"".join([chunk async for chunk in cache.async_stream_data()]) == expected
+
+
+async def test_tts_cache_interrupt_preserves_queued_wav_header() -> None:
+    """Test flushing an active consumer retains its undelivered WAV header."""
+    old_audio = b"old audio"
+    replacement_audio = b"replacement audio"
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(old_audio + replacement_audio)
+        wav_bytes = wav_io.getvalue()
+
+    header = wav_bytes[: -len(old_audio + replacement_audio)]
+    start_generation = asyncio.Event()
+
+    async def data_gen():
+        await start_generation.wait()
+        yield header + old_audio
+        cache.async_interrupt()
+        yield replacement_audio
+
+    cache = tts.TTSCache("test-key", "wav", data_gen())
+    load_data_task = asyncio.create_task(cache.async_load_data())
+    await asyncio.sleep(0)
+    consumer = cache.async_stream_data()
+    first_chunk_task = asyncio.create_task(anext(consumer))
+    await asyncio.sleep(0)
+
+    start_generation.set()
+    first_chunk = await first_chunk_task
+    remaining = b"".join([chunk async for chunk in consumer])
+    await load_data_task
+
+    assert first_chunk.startswith(b"RIFF")
+    assert old_audio not in first_chunk + remaining
+    assert (first_chunk + remaining).endswith(replacement_audio)
 
 
 async def test_async_internal_get_tts_audio_called(
