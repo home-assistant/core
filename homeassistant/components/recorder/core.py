@@ -1,1 +1,1 @@
-@include(/workspace/agent-tools/push_core.py)
+${file:/workspace/agent-tools/push_core.py}
