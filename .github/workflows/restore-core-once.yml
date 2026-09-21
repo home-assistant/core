@@ -14,14 +14,11 @@ jobs:
         with:
           ref: cursor/recorder-reconnect-mid-session-a09b
           fetch-depth: 0
-      - name: Restore core.py from last good blob + apply review gate
-        env:
-          PATCH_B64: "LS0tIGhvbWVhc3Npc3RhbnQvY29tcG9uZW50cy9yZWNvcmRlci9jb3JlLnB5CisrKyBob21lYXNzaXN0YW50L2NvbXBvbmVudHMvcmVjb3JkZXIvY29yZS5weQpAQCAtOTAxLDkgKzkwMSwxNSBAQAogICAgICAgICAgICAgICAgIGVyciwgc2V0dXBfcnVuPVRydWUKICAgICAgICAgICAgICk6CiAgICAgICAgICAgICAgICAgcmV0dXJuCi0gICAgICAgICAgICAjIEludGVyZmFjZUVycm9yIGlzIGEgREJBUElFcnJvciwgbm90IGEgRGF0YWJhc2VFcnJvci4KLSAgICAgICAgICAgIGlmIGlzaW5zdGFuY2UoCi0gICAgICAgICAgICAgICAgZXJyLCAoZXhjLkludGVyZmFjZUVycm9yLCBleGMuT3BlcmF0aW9uYWxFcnJvciwgZXhjLkludGVybmFsRXJyb3IpCisgICAgICAgICAgICAjIEludGVyZmFjZUVycm9yIGlzIGEgREJBUElFcnJvciwgbm90IGEgRGF0YWJhc2VFcnJvci4gT25seSByZWNvbm5lY3QKKyAgICAgICAgICAgICMgd2hlbiBTUUxBbGNoZW15IG1hcmtlZCB0aGUgY29ubmVjdGlvbiBpbnZhbGlkYXRlZDsgT3BlcmF0aW9uYWxFcnJvcgorICAgICAgICAgICAgIyAvIEludGVybmFsRXJyb3IgYWxzbyBjb3ZlciBsb2NrcywgZGVhZGxvY2tzLCBhbmQgZGlzay1mdWxsIG9uIGEKKyAgICAgICAgICAgICMgbGl2ZSBjb25uZWN0aW9uLCB3aGljaCBtdXN0IGtlZXAgdXNpbmcgX3Jlb3Blbl9ldmVudF9zZXNzaW9uKCkuCisgICAgICAgICAgICBpZiAoCisgICAgICAgICAgICAgICAgaXNpbnN0YW5jZSgKKyAgICAgICAgICAgICAgICAgICAgZXJyLCAoZXhjLkludGVyZmFjZUVycm9yLCBleGMuT3BlcmF0aW9uYWxFcnJvciwgZXhjLkludGVybmFsRXJyb3IpCisgICAgICAgICAgICAgICAgKQorICAgICAgICAgICAgICAgIGFuZCBlcnIuY29ubmVjdGlvbl9pbnZhbGlkYXRlZAogICAgICAgICAgICAgKToKICAgICAgICAgICAgICAgICBpZiBzZWxmLmhhc3MuaXNfc3RvcHBpbmc6CiAgICAgICAgICAgICAgICAgICAgICMgRG8gbm90IG9wZW4gYSBuZXcgc2Vzc2lvbiBhZ2FpbnN0IGEgZGF0YWJhc2Ugd2UgYXJlIGFib3V0CkBAIC0xMzQ2LDEyICsxMzUyLDE3IEBACiAgICAgICAgICAgICByZW1haW5pbmcgLT0gc2xlcHQKIAogICAgIGRlZiBfcmVjb25uZWN0X2RhdGFiYXNlKHNlbGYpIC0+IE5vbmU6Ci0gICAgICAgICIiIlJlY29ubmVjdCBhZnRlciBhIG1pZC1zZXNzaW9uIGNvbm5lY3Rpb24gZmFpbHVyZS4KKyAgICAgICAgIiIiUmVjb25uZWN0IGFmdGVyIGEgbWlkLXNlc3Npb24gaW52YWxpZGF0ZWQgY29ubmVjdGlvbi4KIAogICAgICAgICBTdGFydHVwIHVzZXMgYSBmaW5pdGUgcmV0cnkgYnVkZ2V0IHNvIGEgbWlzc2luZyBvciBtaXNjb25maWd1cmVkCiAgICAgICAgIGRhdGFiYXNlIGRvZXMgbm90IGJsb2NrIEhvbWUgQXNzaXN0YW50IGZvcmV2ZXIuIEFmdGVyIHRoZSByZWNvcmRlcgogICAgICAgICBoYXMgdGFscmVhZHkgYmVlbiBydW5uaW5nLCBrZWVwIHJldHJ5aW5nIHVudGlsIHRoZSBkYXRhYmFzZSBpcwotICAgICAgICByZWFjaGFibGUgYWdhaW4gb3IgSG9tZSBBc3Npc3RhbnQgaXMgc3RvcHBpbmcuCisgICAgICAgIHJlYWNoYWJsZSBhZ2FpbiBvciBIb21lIEFzc2lzdGFudCBpcyBzdG9wcGluZy4gRHVyYXRpb24gaXMKKyAgICAgICAgaW50ZW50aW9uYWxseSB1bmJvdW5kZWQ6IGNhcHBpbmcgd291bGQgcmVpbnRyb2R1Y2UgYSByZWNvcmRlciB0aGF0CisgICAgICAgIHN0YXlzIGRvd24gdW50aWwgSG9tZSBBc3Npc3RhbnQgcmVzdGFydHMgKCMxODAwNDEpLiBRdWV1ZSBncm93dGgKKyAgICAgICAgZHVyaW5nIHRoZSB3YWl0IGlzIGFscmVhZHkgYm91bmRlZCBieSBgX3JlYWNoZWRfbWF4X2JhY2tsb2coKWAgLworICAgICAgICB0aGUgYmFja2xvZyB3YXRjaGVyLCB3aGljaCBzdG9wcyBgX2V2ZW50X2xpc3RlbmVyYDsgb24gc3VjY2VzcworICAgICAgICBgX2ZpbmlzaF9yZWNvbm5lY3RfYXR0ZW1wdCgpYCByZS1iaW5kcyBpdCB3aGVuIG5lZWRlZC4KICAgICAgICAgIiIiCiAgICAgICAgIHNlbGYuX2Nsb3NlX2V2ZW50X3Nlc3Npb24oKQogICAgICAgICBkaXNwb3NlX2VuZ2luZSA9IHNlbGYuX3JlY29ubmVjdF9kaXNwb3Nlc19lbmdpbmUoKQo="
+      - name: Restore and gate core.py
         run: |
           set -euo pipefail
           git checkout e0cbd88f40e0dd11b96b6b91a639584e0059f933 -- homeassistant/components/recorder/core.py
-          python3 -c 'import os,base64,pathlib; pathlib.Path("/tmp/core_gate.patch").write_bytes(base64.b64decode(os.environ["PATCH_B64"]))'
-          patch -p0 --fuzz=3 < /tmp/core_gate.patch
+          python3 .github/workflows/_apply_gate_once.py
           grep -q 'and err.connection_invalidated' homeassistant/components/recorder/core.py
           grep -q 'intentionally unbounded' homeassistant/components/recorder/core.py
           test $(wc -c < homeassistant/components/recorder/core.py) -gt 60000
@@ -30,13 +27,13 @@ jobs:
           git add homeassistant/components/recorder/core.py
           git commit -m "Restore recorder core.py and gate reconnect on connection_invalidated"
           git push origin HEAD:cursor/recorder-reconnect-mid-session-a09b
-      - name: Remove one-shot workflow
+      - name: Remove one-shot workflow files
         if: always()
         run: |
           set -euo pipefail
           git fetch origin cursor/recorder-reconnect-mid-session-a09b
           git reset --hard origin/cursor/recorder-reconnect-mid-session-a09b
-          rm -f .github/workflows/restore-core-once.yml
+          rm -f .github/workflows/restore-core-once.yml .github/workflows/_apply_gate_once.py
           git config user.name "Kailash Nelson"
           git config user.email "37966146+KingLizard1020@users.noreply.github.com"
           git add -A
