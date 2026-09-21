@@ -36,7 +36,7 @@ NUMBER_DESCRIPTIONS: tuple[OpenThermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_max_value=100,
+        native_max_value=90,
         native_min_value=0,
         native_step=0.1,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
@@ -49,7 +49,7 @@ NUMBER_DESCRIPTIONS: tuple[OpenThermNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_max_value=100,
+        native_max_value=90,
         native_min_value=0,
         native_step=0.1,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
@@ -74,6 +74,7 @@ async def async_setup_entry(
 class OpenThermNumber(OpenThermEntity, NumberEntity):
     """Represent an OpenTherm Gateway number."""
 
+    _attr_assumed_state = True
     entity_description: OpenThermNumberEntityDescription
 
     @override
