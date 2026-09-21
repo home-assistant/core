@@ -35,6 +35,7 @@ def mock_pyotgw() -> Generator[MagicMock]:
             return_value=MagicMock(
                 connect=AsyncMock(return_value=MINIMAL_STATUS),
                 set_control_setpoint=AsyncMock(),
+                set_control_setpoint_2=AsyncMock(),
                 set_max_relative_mod=AsyncMock(),
                 disconnect=AsyncMock(),
             ),
