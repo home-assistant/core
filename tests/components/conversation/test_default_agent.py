@@ -3287,6 +3287,11 @@ async def test_handle_intents_with_response_errors(
             False,
         ),
         (
+            intent.IntentNoResultsError(),
+            intent.IntentResponseErrorCode.NO_RESULTS,
+            False,
+        ),
+        (
             intent.IntentHandleError(),
             intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
             True,
