@@ -1037,7 +1037,10 @@ async def test_blu_trv_update(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
     assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature.INSTALL
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-blutrv:200-blutrv_fwupdate"
@@ -1050,6 +1053,87 @@ async def test_blu_trv_update(
     )
 
     mock_blu_trv.blu_trv_update_firmware.assert_called_once_with(200)
+
+
+async def test_blu_trv_update_progress(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV update entity progress reporting."""
+    entity_id = "update.trv_name_firmware"
+    ota_events = [
+        {"component": "bthomedevice:200", "event": "ota_begin", "msg": "Downloading"},
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Downloading",
+            "progress_percent": 39,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Downloading",
+            "progress_percent": 80,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Updating",
+            "progress_percent": 0,
+        },
+        {
+            "component": "bthomedevice:200",
+            "event": "ota_progress",
+            "msg": "Updating",
+            "progress_percent": 100,
+        },
+        {"component": "bthomedevice:200", "event": "ota_success", "msg": "Success"},
+    ]
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    progress: list[tuple[bool, int | None]] = []
+
+    async def _update_firmware(trv_id: int) -> None:
+        """Report OTA progress while the call is pending."""
+        for event in ota_events:
+            inject_rpc_device_event(
+                monkeypatch, mock_blu_trv, {"events": [event], "ts": 1789992654.77}
+            )
+            assert (state := hass.states.get(entity_id))
+            progress.append(
+                (
+                    state.attributes[ATTR_IN_PROGRESS],
+                    state.attributes[ATTR_UPDATE_PERCENTAGE],
+                )
+            )
+
+    mock_blu_trv.blu_trv_update_firmware.side_effect = _update_firmware
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert progress == [
+        (True, 0),
+        (True, 19),
+        (True, 40),
+        (True, 50),
+        (True, 100),
+        (False, None),
+    ]
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 async def test_blu_trv_update_shared_firmware_check(

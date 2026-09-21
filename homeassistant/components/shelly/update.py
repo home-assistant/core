@@ -22,11 +22,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    BTHOME_DEVICE_IDENTIFIER,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
     OTA_BEGIN,
     OTA_ERROR,
+    OTA_MSG_UPDATING,
     OTA_PROGRESS,
     OTA_SUCCESS,
 )
@@ -181,7 +183,9 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     """Represent a RPC BLU TRV update entity."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
     entity_description: RpcBluTrvUpdateDescription
 
     def __init__(
@@ -210,6 +214,9 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             assert update_coordinator
 
         self._update_coordinator = update_coordinator
+        self._ota_component = f"{BTHOME_DEVICE_IDENTIFIER}:{self._id}"
+        self._ota_in_progress = False
+        self._ota_progress_percentage: int | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -218,6 +225,41 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self.async_on_remove(
             self._update_coordinator.async_add_listener(self._update_callback)
         )
+        self.async_on_remove(
+            self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
+        )
+
+    @callback
+    def _ota_progress_callback(self, event: dict[str, Any]) -> None:
+        """Handle BLU TRV OTA progress."""
+        if not self._ota_in_progress or event.get("component") != self._ota_component:
+            return
+
+        event_type = event["event"]
+        if event_type == OTA_BEGIN:
+            self._ota_progress_percentage = 0
+        elif event_type == OTA_PROGRESS:
+            # Both OTA phases count from 0 to 100, map them onto the first and the
+            # second half of the progress bar
+            offset = 50 if event["msg"] == OTA_MSG_UPDATING else 0
+            self._ota_progress_percentage = offset + event["progress_percent"] // 2
+        elif event_type in (OTA_ERROR, OTA_SUCCESS):
+            self._ota_in_progress = False
+            self._ota_progress_percentage = None
+
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self._ota_in_progress
+
+    @property
+    @override
+    def update_percentage(self) -> int | None:
+        """Update installation progress."""
+        return self._ota_progress_percentage
 
     @property
     @override
@@ -252,7 +294,13 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         if TYPE_CHECKING:
             assert self._id is not None
 
-        await self.coordinator.device.blu_trv_update_firmware(self._id)
+        self._ota_in_progress = True
+
+        try:
+            await self.coordinator.device.blu_trv_update_firmware(self._id)
+        finally:
+            self._ota_in_progress = False
+            self._ota_progress_percentage = None
 
 
 RPC_UPDATES: Final = {
