@@ -37,6 +37,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 STEP_SUBENTRY_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_UUID): cv.string})
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -120,6 +126,48 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: import_data[CONF_PORT],
             },
             subentries=[channel_subentry.as_dict()],
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)))
+            if error := await _async_validate_input_errors(
+                self.hass,
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_UUID: subentry.data[CONF_UUID],
+                },
+            ):
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self.add_suggested_values_to_schema(
+                        RECONFIGURE_SCHEMA, user_input
+                    ),
+                    errors={"base": error},
+                )
+
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates=user_input,
+                reason="reconfigure_successful",
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                {
+                    CONF_HOST: entry.data[CONF_HOST],
+                    CONF_PORT: entry.data.get(CONF_PORT, DEFAULT_PORT),
+                },
+            ),
         )
 
     @override
