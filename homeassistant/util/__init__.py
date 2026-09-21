@@ -14,6 +14,23 @@ import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
+
+def _slugify_backend() -> unicode_slug.Backend:
+    """Resolve the transliteration backend python-slugify should use.
+
+    Its "auto" backend retries importing the optional Unidecode package on every
+    call. A failed import is not cached, so without Unidecode installed every
+    single slug runs the module finder over the whole import path again.
+    """
+    try:
+        import unidecode  # noqa: F401, PLC0415
+    except ImportError:
+        return "text-unidecode"
+    return "unidecode"
+
+
+_SLUGIFY_BACKEND: unicode_slug.Backend = _slugify_backend()
+
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
@@ -40,7 +57,7 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
     if text == "" or text is None:
         return ""
-    slug = unicode_slug.slugify(text, separator=separator)
+    slug = unicode_slug.slugify(text, separator=separator, backend=_SLUGIFY_BACKEND)
     return "unknown" if slug == "" else slug
 
 
