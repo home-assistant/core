@@ -355,6 +355,9 @@ async def _async_convert_audio(
     if to_sample_bytes == 2:
         # 16-bit samples.
         command.extend(["-sample_fmt", "s16"])
+    # Do not write the muxer's own encoder metadata; metadata from the input
+    # is still copied.
+    command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
     process = await asyncio.create_subprocess_exec(
