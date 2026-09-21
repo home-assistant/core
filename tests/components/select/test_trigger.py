@@ -4,13 +4,16 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.select.trigger import TRIGGERS
 from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -27,6 +30,11 @@ async def target_selects(hass: HomeAssistant) -> dict[str, list[str]]:
 async def target_input_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_select entities associated with different targets."""
     return await target_entities(hass, "input_select")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "selection_changed": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -50,6 +58,11 @@ async def test_select_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 STATE_SEQUENCE = [

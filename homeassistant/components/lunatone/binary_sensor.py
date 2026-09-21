@@ -62,4 +62,4 @@ class LunatoneDALIScanStatus(
     @override
     def is_on(self) -> bool:
         """Return true if the DALI scan is on."""
-        return self.coordinator.dali_scan_api.is_busy
+        return self.coordinator.data.busy

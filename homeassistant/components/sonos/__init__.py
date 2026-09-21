@@ -13,13 +13,13 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
+import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -73,17 +73,23 @@ DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 10
 
-CONFIG_SCHEMA = vol.Schema(
+
+def _get_soco_uid(soco: SoCo) -> str:
+    """Get SoCo uid as a typed helper for executor jobs."""
+    return soco.uid
+
+
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                MP_DOMAIN: vol.All(
+                MP_DOMAIN: probatio.All(
                     cv.deprecated(CONF_INTERFACE_ADDR),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-                            vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-                            vol.Optional(CONF_HOSTS): vol.All(
+                            probatio.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            probatio.Optional(CONF_INTERFACE_ADDR): cv.string,
+                            probatio.Optional(CONF_HOSTS): probatio.All(
                                 cv.ensure_list_csv, [cv.string]
                             ),
                         }
@@ -92,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -531,9 +537,11 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-            if not known_speaker:
+            if known_speaker:
+                uid = known_speaker.uid
+            else:
                 try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                    uid = await self.hass.async_add_executor_job(_get_soco_uid, soco)
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -545,6 +553,14 @@ class SonosDiscoveryManager:
                 ) as ex:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
                     continue
+
+            if self.is_device_disabled(uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    uid,
+                )
+                continue
+            if not known_speaker:
                 try:
                     await self._async_handle_discovery_message(
                         uid,

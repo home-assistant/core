@@ -5,9 +5,9 @@ from datetime import date, datetime, timedelta
 import logging
 from typing import Any, override
 
+import probatio
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Label, Project, Task
-import voluptuous as vol
 
 from homeassistant.components.calendar import (
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
@@ -52,21 +52,26 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_EXTRA_PROJECTS, default=[]): probatio.All(
             cv.ensure_list,
-            vol.Schema(
+            probatio.Schema(
                 [
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required(CONF_NAME): cv.string,
-                            vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
-                            vol.Optional(CONF_PROJECT_WHITELIST, default=[]): vol.All(
-                                cv.ensure_list, [vol.All(cv.string, vol.Lower)]
+                            probatio.Required(CONF_NAME): cv.string,
+                            probatio.Optional(CONF_PROJECT_DUE_DATE): probatio.Coerce(
+                                int
                             ),
-                            vol.Optional(
+                            probatio.Optional(
+                                CONF_PROJECT_WHITELIST, default=[]
+                            ): probatio.All(
+                                cv.ensure_list,
+                                [probatio.All(cv.string, probatio.Lower)],
+                            ),
+                            probatio.Optional(
                                 CONF_PROJECT_LABEL_WHITELIST, default=[]
-                            ): vol.All(cv.ensure_list, [vol.All(cv.string)]),
+                            ): probatio.All(cv.ensure_list, [probatio.All(cv.string)]),
                         }
                     )
                 ]
@@ -513,10 +518,15 @@ class TodoistProjectData:
             start = parse_due_date(task.due)
             if start is None:
                 continue
+            duration = (
+                timedelta(minutes=30)
+                if isinstance(start, datetime)
+                else timedelta(days=1)
+            )
             event = CalendarEvent(
                 summary=task.content,
                 start=start,
-                end=start + timedelta(days=1),
+                end=start + duration,
             )
             if (
                 event.start_datetime_local is not None
@@ -525,7 +535,7 @@ class TodoistProjectData:
                 continue
             if (
                 event.end_datetime_local is not None
-                and event.end_datetime_local < start_date
+                and event.end_datetime_local <= start_date
             ):
                 continue
             events.append(event)

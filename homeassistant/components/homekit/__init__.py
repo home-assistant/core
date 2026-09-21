@@ -11,12 +11,12 @@ import socket
 from typing import Any, cast
 
 from aiohttp import web
+import probatio
 from pyhap import util as pyhap_util
 from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
 from pyhap.service import Service
-import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
 from homeassistant.components import device_automation, network, zeroconf
@@ -191,46 +191,52 @@ def _has_all_unique_names_and_ports(
     """Validate that each homekit bridge configured has a unique name."""
     names = [bridge[CONF_NAME] for bridge in bridges]
     ports = [bridge[CONF_PORT] for bridge in bridges]
-    vol.Schema(vol.Unique())(names)
-    vol.Schema(vol.Unique())(ports)
+    probatio.Schema(probatio.Unique())(names)
+    probatio.Schema(probatio.Unique())(ports)
     return bridges
 
 
-BRIDGE_SCHEMA = vol.All(
-    vol.Schema(
+BRIDGE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
-                HOMEKIT_MODES
+            probatio.Optional(
+                CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE
+            ): probatio.In(HOMEKIT_MODES),
+            probatio.Optional(CONF_NAME, default=BRIDGE_NAME): probatio.All(
+                cv.string, probatio.Length(min=3, max=25)
             ),
-            vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
-                cv.string, vol.Length(min=3, max=25)
+            probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            probatio.Optional(CONF_IP_ADDRESS): probatio.All(
+                ipaddress.ip_address, cv.string
             ),
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-            vol.Optional(CONF_ADVERTISE_IP): vol.All(
+            probatio.Optional(CONF_ADVERTISE_IP): probatio.All(
                 cv.ensure_list, [ipaddress.ip_address], [cv.string]
             ),
-            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
-            vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-            vol.Optional(CONF_DEVICES): cv.ensure_list,
+            probatio.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            probatio.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+            probatio.Optional(CONF_DEVICES): cv.ensure_list,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [BRIDGE_SCHEMA], _has_all_unique_names_and_ports)},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.All(
+            cv.ensure_list, [BRIDGE_SCHEMA], _has_all_unique_names_and_ports
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
-RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids}
+RESET_ACCESSORY_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_ENTITY_ID): cv.entity_ids}
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str])}
+UNPAIR_SERVICE_SCHEMA = probatio.Schema(
+    {probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [str])}
 )
 
 
@@ -1071,9 +1077,17 @@ class HomeKit:
         dev_reg = dr.async_get(self.hass)
         valid_device_ids = []
         for device_id in self._devices:
-            if dev_reg.async_get(device_id, include_child_devices=False):
-                valid_device_ids.append(device_id)
-            elif dev_reg.async_get(device_id, include_main_devices=False):
+            device = dev_reg.async_get(device_id)
+            if device is None:
+                _LOGGER.warning(
+                    (
+                        "HomeKit %s cannot add device %s because it is missing from the"
+                        " device registry"
+                    ),
+                    self._name,
+                    device_id,
+                )
+            elif isinstance(device, dr.ChildDeviceEntry):
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because a child device cannot"
@@ -1083,14 +1097,8 @@ class HomeKit:
                     device_id,
                 )
             else:
-                _LOGGER.warning(
-                    (
-                        "HomeKit %s cannot add device %s because it is missing from the"
-                        " device registry"
-                    ),
-                    self._name,
-                    device_id,
-                )
+                # A main or composite device is a valid HomeKit accessory
+                valid_device_ids.append(device_id)
         for device_id, device_triggers in (
             await device_automation.async_get_device_automations(
                 self.hass,
@@ -1104,7 +1112,7 @@ class HomeKit:
             for trigger in device_triggers:
                 try:
                     await async_validate_trigger_config(self.hass, trigger)
-                except vol.Invalid as ex:
+                except probatio.Invalid as ex:
                     _LOGGER.debug(
                         (
                             "%s: cannot add unsupported trigger %s because it requires"
@@ -1231,7 +1239,9 @@ class HomeKit:
             dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
             if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
                 # A child device has no hardware info of its own; use the parent's
-                dev_reg_ent = dev_reg.devices.get(dev_reg_ent.parent_device_id)
+                dev_reg_ent = dev_reg.async_get(
+                    dev_reg_ent.parent_device_id, include_child_devices=False
+                )
             if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
@@ -1255,10 +1265,10 @@ class HomeKit:
             config[ATTR_SW_VERSION] = device_entry.sw_version
         if device_entry.hw_version:
             config[ATTR_HW_VERSION] = device_entry.hw_version
-        if device_entry.config_entries:
-            first_entry = list(device_entry.config_entries)[0]
-            if entry := self.hass.config_entries.async_get_entry(first_entry):
-                config[ATTR_INTEGRATION] = entry.domain
+        if entry := self.hass.config_entries.async_get_entry(
+            device_entry.config_entry_id
+        ):
+            config[ATTR_INTEGRATION] = entry.domain
 
 
 class HomeKitPairingQRView(HomeAssistantView):

@@ -64,6 +64,8 @@ async def test_intent(
             assert intent_obj.slots.get("entity", {}).get("value") == "value"
             assert intent_obj.satellite_id == satellite_id
             assert intent_obj.device_id == device_id
+            # Entities must be filtered by exposure to the conversation assistant
+            assert intent_obj.assistant == conversation.DOMAIN
             response = intent_obj.create_response()
 
             # Add parts to test response rendering

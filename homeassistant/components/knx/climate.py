@@ -50,6 +50,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
+from .storage.config_store import KnxEntityData
 from .storage.const import (
     CONF_ENTITY,
     CONF_GA_ACTIVE,
@@ -103,7 +104,7 @@ async def async_setup_entry(
             KnxYamlClimate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.CLIMATE):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.CLIMATE):
         entities.extend(
             KnxUiClimate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -554,7 +555,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
     @property
     @override
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
 
         fan_speed = self._device.current_fan_speed
@@ -563,6 +564,10 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             return self.fan_zero_mode
 
         if self._device.fan_speed_mode is FanSpeedMode.STEP:
+            # DPT 5.010 fits any 1-byte value (0-255), so a gateway may report
+            # a step beyond the configured fan_max_step
+            if fan_speed >= len(self._attr_fan_modes):
+                return None
             return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage
@@ -694,7 +699,7 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
     _device: XknxClimate
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(

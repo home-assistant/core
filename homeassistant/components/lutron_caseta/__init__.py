@@ -6,9 +6,9 @@ import logging
 import ssl
 from typing import Any, cast
 
+import probatio
 from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
@@ -76,21 +76,21 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_KEYFILE): cv.string,
-                    vol.Required(CONF_CERTFILE): cv.string,
-                    vol.Required(CONF_CA_CERTS): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_KEYFILE): cv.string,
+                    probatio.Required(CONF_CERTFILE): cv.string,
+                    probatio.Required(CONF_CA_CERTS): cv.string,
                 }
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [
@@ -243,15 +243,7 @@ def _async_register_bridge_device(
     if area != UNASSIGNED_AREA:
         device_args["suggested_area"] = area
 
-    device = device_registry.async_get_or_create(
-        **device_args, config_entry_id=config_entry_id
-    )
-    if device.via_device_id is not None:
-        # Existing installations may still have the bridge device linked to
-        # itself via via_device_id, from when it was (incorrectly) registered
-        # as its own via device. Clear it explicitly since async_get_or_create
-        # above leaves via_device_id untouched when it's not passed.
-        device_registry.async_update_device(device.id, via_device_id=None)
+    device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
 
 
 @callback
@@ -348,13 +340,13 @@ def _async_setup_keypads(
 @callback
 def _async_build_trigger_schemas(
     keypad_button_names_to_leap: dict[int, dict[str, int]],
-) -> dict[int, vol.Schema]:
+) -> dict[int, probatio.Schema]:
     """Build device trigger schemas."""
 
     return {
         keypad_id: LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
             {
-                vol.Required(CONF_SUBTYPE): vol.In(
+                probatio.Required(CONF_SUBTYPE): probatio.In(
                     keypad_button_names_to_leap[keypad_id]
                 ),
             }

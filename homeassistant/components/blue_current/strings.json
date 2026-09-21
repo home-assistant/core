@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     },
     "error": {
@@ -135,17 +134,6 @@
       "plug_and_charge": {
         "name": "Plug & Charge"
       }
-    }
-  },
-  "exceptions": {
-    "config_entry_not_loaded": {
-      "message": "Config entry not loaded."
-    },
-    "invalid_device_id": {
-      "message": "Invalid device ID given."
-    },
-    "no_config_entry": {
-      "message": "Device has not a valid blue_current config entry."
     }
   },
   "options": {

@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 import pysnmp.hlapi.v3arch.asyncio as hlapi
 from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
@@ -27,7 +28,6 @@ from pysnmp.proto.rfc1902 import (
     TimeTicks,
     Unsigned32,
 )
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -101,27 +101,29 @@ MAP_SNMP_VARTYPES = {
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BASEOID): cv.string,
-        vol.Optional(CONF_COMMAND_OID): cv.string,
-        vol.Optional(CONF_COMMAND_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_COMMAND_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTH_KEY): cv.string,
-        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
-            MAP_AUTH_PROTOCOLS
+        probatio.Required(CONF_BASEOID): cv.string,
+        probatio.Optional(CONF_COMMAND_OID): cv.string,
+        probatio.Optional(CONF_COMMAND_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_COMMAND_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
+            SNMP_VERSIONS
         ),
-        vol.Optional(CONF_PRIV_KEY): cv.string,
-        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
-            MAP_PRIV_PROTOCOLS
-        ),
-        vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_AUTH_KEY): cv.string,
+        probatio.Optional(
+            CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
+        ): probatio.In(MAP_AUTH_PROTOCOLS),
+        probatio.Optional(CONF_PRIV_KEY): cv.string,
+        probatio.Optional(
+            CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
+        ): probatio.In(MAP_PRIV_PROTOCOLS),
+        probatio.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 

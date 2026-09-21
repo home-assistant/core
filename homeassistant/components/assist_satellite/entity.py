@@ -7,7 +7,6 @@ import contextlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-import time
 from typing import Any, Literal, final, override
 
 from hassil import Intents, recognize
@@ -442,6 +441,8 @@ class AssistSatelliteEntity(entity.Entity):
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
         wake_word_phrase: str | None = None,
+        *,
+        context: Context | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
@@ -485,15 +486,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
-        # Refresh context if necessary
-        if (
-            (self._context is None)
-            or (self._context_set is None)
-            or ((time.time() - self._context_set) > entity.CONTEXT_RECENT_TIME_SECONDS)
-        ):
-            self.async_set_context(Context())
-
-        assert self._context is not None
+        context = context or Context()
+        self.async_set_context(context)
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -511,7 +505,7 @@ class AssistSatelliteEntity(entity.Entity):
                     self.hass,
                     async_pipeline_from_audio_stream(
                         self.hass,
-                        context=self._context,
+                        context=context,
                         event_callback=self._internal_on_pipeline_event,
                         stt_metadata=stt.SpeechMetadata(
                             language="",  # set in async_pipeline_from_audio_stream
