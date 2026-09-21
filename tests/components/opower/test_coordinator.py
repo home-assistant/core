@@ -819,3 +819,55 @@ async def test_coordinator_skips_update_when_daily_reads_are_empty(
     assert after == before
     for previous, current in pairwise(after):
         assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
+
+
+async def test_coordinator_initial_import_keeps_older_billing_history(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test that an account with only history older than the finer windows imports.
+
+    The daily reads are fetched for the last three years and the hourly ones for
+    the last two months, so an account whose data ends before those windows
+    returns nothing for both. There are no statistics to overwrite on the first
+    import, so the bill reads it does return must still be stored.
+    """
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    old = dt_util.as_utc(datetime(2015, 1, 1, 8))
+
+    async def only_bills(acc, aggregate_type, start, end):
+        if aggregate_type is not AggregateType.BILL:
+            return []
+        return [
+            CostRead(
+                start_time=old + timedelta(days=31 * month),
+                end_time=old + timedelta(days=31 * (month + 1)),
+                consumption=100.0,
+                provided_cost=20.0,
+            )
+            for month in range(3)
+        ]
+
+    mock_opower_api.async_get_cost_reads.side_effect = only_bills
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        old,
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"start", "state", "sum"},
+    )
+    # The first read starts the series, so it is stored along with the rest.
+    assert len(stats[statistic_id]) == 3
+    assert stats[statistic_id][-1]["sum"] == pytest.approx(300.0)

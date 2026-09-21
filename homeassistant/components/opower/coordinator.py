@@ -585,11 +585,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting daily cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
-        if not daily_cost_reads:
-            # The account provides daily reads, so an empty response is a
-            # transient failure rather than a gap in the data. Keeping the bill
-            # reads would write bill resolution statistics over the daily ones,
-            # see the comment on the hourly reads below.
+        if not daily_cost_reads and start_time is not None:
+            # Same as for the hourly reads below, one resolution coarser.
             _LOGGER.debug("No daily cost reads. Skipping update")
             return []
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
@@ -610,16 +607,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting hourly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
-        if not hourly_cost_reads:
-            # The account provides hourly reads, so an empty response is a
-            # transient failure rather than a gap in the data. Keeping the daily
-            # reads would write a day resolution statistic at local midnight on
-            # top of the hourly series, and because that statistic carries its
-            # own running sum the series ends up with two interleaved sums: the
-            # midnight rows on one and the rest of the day on the other. The
-            # next update then reads one of those midnight rows back as its
-            # starting sum, which shifts every later sum and shows up in the
-            # energy dashboard as a large negative day.
+        if not hourly_cost_reads and start_time is not None:
+            # A day read starts at local midnight, where that day's first hourly
+            # statistic already is, so keeping the daily reads would replace it
+            # with a coarser one carrying a different running sum. Only a concern
+            # once statistics exist: on the initial import there is nothing to
+            # overwrite and the daily reads are the best available data.
             _LOGGER.debug("No hourly cost reads. Skipping update")
             return []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
