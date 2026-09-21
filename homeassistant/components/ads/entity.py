@@ -24,7 +24,8 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._event: asyncio.Event | None = None
+        self._notification_handles: list[int] = []
+        self._removed = False
         self._attr_unique_id = ads_var
         self._attr_name = name
 
@@ -46,21 +47,28 @@ class AdsEntity(Entity):
             else:
                 self._state_dict[state_key] = value / factor
 
-            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
+            # Callbacks arrive on a pyads thread, so hop to the event loop.
+            self.hass.loop.call_soon_threadsafe(event.set)
             self.schedule_update_ha_state()
 
-        async def async_event_set():
-            """Set event in async context."""
-            self._event.set()
+        event = asyncio.Event()
 
-        self._event = asyncio.Event()
-
-        await self.hass.async_add_executor_job(
+        handle = await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
+        if handle is None:
+            return
+        if self._removed:
+            # Removed while this was subscribing, so the removal has already
+            # drained the handles and will not come back for this one.
+            await self.hass.async_add_executor_job(
+                self._ads_hub.delete_device_notification, handle
+            )
+            return
+        self._notification_handles.append(handle)
         try:
             async with timeout(10):
-                await self._event.wait()
+                await event.wait()
         except TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
 
@@ -69,3 +77,20 @@ class AdsEntity(Entity):
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
         return self._state_dict[STATE_KEY_STATE] is not None
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Drop the subscriptions this entity added.
+
+        The hub holds the callback, so leaving them behind would keep the PLC
+        pushing values for a variable nobody reads and pin this entity.
+        """
+        # Set before the first await, so a subscription still in flight sees it
+        # and cleans up after itself.
+        self._removed = True
+        handles = self._notification_handles
+        self._notification_handles = []
+        for handle in handles:
+            await self.hass.async_add_executor_job(
+                self._ads_hub.delete_device_notification, handle
+            )
