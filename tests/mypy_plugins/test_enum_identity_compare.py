@@ -1,8 +1,9 @@
 """Tests for the enum_identity_compare mypy plugin.
 
-Each test snippet is run through mypy in a subprocess with the plugin enabled.
-Tests assert the number of ``home-assistant-enum-identity-compare`` errors emitted
-and the relevant message content (operator pair and enum class name).
+Every test snippet is type-checked by a single mypy subprocess with the plugin
+enabled, and each test asserts on the errors reported for its own snippet: the
+number of ``home-assistant-enum-identity-compare`` errors emitted and the
+relevant message content (operator pair and enum class name).
 
 The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
 subclasses (where ``__eq__`` is identity-based) plus a small set of
@@ -395,11 +396,14 @@ class DerivedStates(_BaseStates):
 
 @pytest.fixture(scope="module")
 def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]]:
-    """Type-check every case in one mypy run and return the errors per snippet.
+    """Type-check every case in one mypy run and return the errors per case id.
 
     Analysing typeshed dominates a mypy run and dwarfs the few lines each case
     contributes. The cases never import each other, so checking them together
     reports the same errors as checking them one at a time.
+
+    Cases are keyed by their parametrize id, which pytest keeps unique, so two
+    cases that happen to share a snippet stay separate.
 
     Each error is normalized to ``LINE: MESSAGE`` form.
     """
@@ -408,21 +412,21 @@ def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]
 
     sources = {
         **{
-            case.values[0]: _PRELUDE + case.values[0]
+            case.id: _PRELUDE + case.values[0]
             for case in (*_PLAIN_ENUM_CASES, *_NO_FLAG_CASES)
         },
-        **{case.values[0]: case.values[0] for case in _FRAMEWORK_CASES},
+        **{case.id: case.values[0] for case in _FRAMEWORK_CASES},
     }
 
-    snippet_by_module: dict[str, str] = {}
+    case_id_by_module: dict[str, str] = {}
     paths: list[Path] = []
-    for index, (snippet, source) in enumerate(sources.items()):
+    for index, (case_id, source) in enumerate(sources.items()):
         path = tmp_path / f"case_{index}.py"
         path.write_text(textwrap.dedent(source))
-        snippet_by_module[path.stem] = snippet
+        case_id_by_module[path.stem] = case_id
         paths.append(path)
 
-    errors: dict[str, list[str]] = {snippet: [] for snippet in sources}
+    errors: dict[str, list[str]] = {case_id: [] for case_id in sources}
     for line in _run_mypy(paths, tmp_path).splitlines():
         if "[home-assistant-enum-identity-compare]" not in line:
             continue
@@ -430,10 +434,18 @@ def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]
         prefix, _, msg = line.partition(": error: ")
         path_text, _, line_no = prefix.rpartition(":")
         msg_clean = msg.split("  [home-assistant-enum-identity-compare]", 1)[0].strip()
-        errors[snippet_by_module[Path(path_text).stem]].append(
+        errors[case_id_by_module[Path(path_text).stem]].append(
             f"{line_no.strip()}: {msg_clean}"
         )
     return errors
+
+
+@pytest.fixture
+def case_errors(
+    request: pytest.FixtureRequest, mypy_errors: dict[str, list[str]]
+) -> list[str]:
+    """Return the errors mypy reported for the running case."""
+    return mypy_errors[request.node.callspec.id]
 
 
 @pytest.mark.parametrize(
@@ -441,26 +453,24 @@ def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]
     _PLAIN_ENUM_CASES,
 )
 def test_bad_plain_enum(
-    mypy_errors: dict[str, list[str]],
+    case_errors: list[str],
     snippet: str,
     enum_name: str,
     op_substrings: tuple[str, str],
 ) -> None:
     """Comparisons on plain ``Enum`` operands must flag a single error."""
-    errors = mypy_errors[snippet]
-    assert len(errors) == 1
-    assert enum_name in errors[0]
-    assert all(op in errors[0] for op in op_substrings)
+    assert len(case_errors) == 1
+    assert enum_name in case_errors[0]
+    assert all(op in case_errors[0] for op in op_substrings)
 
 
 @pytest.mark.parametrize(
     "snippet",
     _NO_FLAG_CASES,
 )
-def test_good_no_flag(mypy_errors: dict[str, list[str]], snippet: str) -> None:
+def test_good_no_flag(case_errors: list[str], snippet: str) -> None:
     """Legitimate comparisons must not emit any error."""
-    errors = mypy_errors[snippet]
-    assert errors == []
+    assert case_errors == []
 
 
 @pytest.mark.parametrize(
@@ -468,12 +478,11 @@ def test_good_no_flag(mypy_errors: dict[str, list[str]], snippet: str) -> None:
     _FRAMEWORK_CASES,
 )
 def test_bad_framework_guaranteed(
-    mypy_errors: dict[str, list[str]],
+    case_errors: list[str],
     snippet: str,
     op_substrings: tuple[str, str],
 ) -> None:
     """The framework-guaranteed ``FlowResultType`` StrEnum must flag a single error."""
-    errors = mypy_errors[snippet]
-    assert len(errors) == 1
-    assert "FlowResultType" in errors[0]
-    assert all(op in errors[0] for op in op_substrings)
+    assert len(case_errors) == 1
+    assert "FlowResultType" in case_errors[0]
+    assert all(op in case_errors[0] for op in op_substrings)
