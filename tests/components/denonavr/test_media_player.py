@@ -513,6 +513,30 @@ async def test_update_audyssey_restores_availability(
     assert entry.runtime_data.audyssey_coordinator.last_update_success is True
 
 
+async def test_update_audyssey_action_survives_a_receiver_without_audyssey(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """The action reads through the same tolerance the coordinator's refresh does.
+
+    A receiver that answers the query short has no Audyssey, which is not a
+    reason to raise at the caller or to hide the rest of its entities.
+    """
+    entry = await setup_denonavr(hass)
+    client.async_update_audyssey.side_effect = AvrIncompleteResponseError(
+        "Invalid length of response XML", "test"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert entry.runtime_data.audyssey_coordinator.last_update_success is True
+    assert entry.runtime_data.coordinator.last_update_success is True
+
+
 async def test_update_audyssey_fetches_only_the_targeted_zone(
     hass: HomeAssistant, client: MagicMock
 ) -> None:

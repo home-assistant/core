@@ -5,7 +5,11 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from denonavr.exceptions import AvrCommandError, AvrNetworkError
+from denonavr.exceptions import (
+    AvrCommandError,
+    AvrIncompleteResponseError,
+    AvrNetworkError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -126,6 +130,35 @@ async def test_refresh_reports_whether_it_read(
     main.telnet_healthy = True
 
     assert await refresh(main) is False
+
+
+async def test_audyssey_refresh_tolerates_a_receiver_without_audyssey() -> None:
+    """A receiver that does not know the query answers it short.
+
+    denonavr tolerates the AvrProcessingError form of that but not this one,
+    and a missing feature is not an unreachable receiver.
+    """
+    main, zone2 = _receiver_with_zones()
+    main.async_update_audyssey.side_effect = AvrIncompleteResponseError(
+        "Invalid length of response XML", "test"
+    )
+
+    assert await async_refresh_audyssey(main) is True
+
+    zone2.async_update_audyssey.assert_awaited_once()
+
+
+async def test_status_refresh_still_fails_on_an_incomplete_response() -> None:
+    """Only the Audyssey query carries a tag a receiver may not know."""
+    main, zone2 = _receiver_with_zones()
+    main.async_update.side_effect = AvrIncompleteResponseError(
+        "Invalid length of response XML", "test"
+    )
+
+    with pytest.raises(AvrIncompleteResponseError):
+        await async_refresh_status(main)
+
+    zone2.async_update.assert_not_awaited()
 
 
 def _coordinator(

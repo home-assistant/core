@@ -48,7 +48,12 @@ from .const import (
     DOMAIN,
     TELNET_EVENTS,
 )
-from .coordinator import UNAVAILABLE_ON, DenonAvrDataUpdateCoordinator, mark_unavailable
+from .coordinator import (
+    UNAVAILABLE_ON,
+    DenonAvrDataUpdateCoordinator,
+    async_update_zone_audyssey,
+    mark_unavailable,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +99,7 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     receiver = data.receiver
     for receiver_zone in receiver.zones.values():
-        if config_entry.data.get(CONF_SERIAL_NUMBER) is not None:
+        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
@@ -494,7 +499,7 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
         time would square these slow queries.
         """
         try:
-            await self._receiver.async_update_audyssey()
+            await async_update_zone_audyssey(self._receiver)
         except UNAVAILABLE_ON:
             # Audyssey-scoped, so that coordinator's data is suspect too.
             mark_unavailable(self._audyssey_coordinator)

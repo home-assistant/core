@@ -66,6 +66,23 @@ async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> bo
     return True
 
 
+async def async_update_zone_audyssey(zone_receiver: DenonAVR) -> None:
+    """Read one zone's Audyssey settings.
+
+    A receiver without Audyssey answers the query short, which is a missing
+    feature rather than an unreachable receiver.
+    """
+    try:
+        await zone_receiver.async_update_audyssey()
+    except AvrIncompleteResponseError as err:
+        _LOGGER.debug(
+            "No Audyssey data for zone %s for %s: %s",
+            zone_receiver.zone,
+            zone_receiver.name,
+            err,
+        )
+
+
 async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> bool:
     """Refresh Audyssey settings for every configured zone.
 
@@ -80,7 +97,7 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
         return False
     for zone_receiver in receiver.zones.values():
         try:
-            await zone_receiver.async_update_audyssey()
+            await async_update_zone_audyssey(zone_receiver)
         except UNAVAILABLE_ON:
             raise
         except DenonAvrError as err:
