@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from pyrtl_433.normalizer import NormalizedEvent
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rtl_433.const import (
@@ -30,6 +31,15 @@ from .conftest import MOCK_HOST, MOCK_PATH, MOCK_PORT, MOCK_UNIQUE_ID
 from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_ENTITY_ID = "sensor.acurite_606tx_temperature_c"
+DEVICE_KEY = "Acurite-606TX-42"
+
+# A later frame from the same device carrying a field the first one did not.
+HUMIDITY_EVENT = NormalizedEvent(
+    device_key=DEVICE_KEY,
+    model="Acurite-606TX",
+    identity={"model": "Acurite-606TX", "id": 42},
+    fields={"humidity": 55},
+)
 
 
 async def test_sensors(
@@ -118,3 +128,61 @@ async def test_sensors_restored_from_entry_devices(
     assert entity_entry.unique_id == f"{entry.entry_id}:Acurite-606TX-42:temperature_C"
     # It has never transmitted in this session, so it reads unavailable.
     assert hass.states.get(TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("extra_events", "expected_fields"),
+    [
+        pytest.param([], ["battery_ok", "temperature_C"], id="first_sighting"),
+        pytest.param(
+            [HUMIDITY_EVENT],
+            ["battery_ok", "humidity", "temperature_C"],
+            id="new_field_unioned",
+        ),
+    ],
+)
+async def test_discovered_devices_persisted(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rtl433_client: MagicMock,
+    mock_event: NormalizedEvent,
+    extra_events: list[NormalizedEvent],
+    expected_fields: list[str],
+) -> None:
+    """Test discovered devices and fields are recorded on the config entry."""
+    await setup_integration(hass, mock_config_entry)
+    assert CONF_DEVICES not in mock_config_entry.data
+
+    for event in (mock_event, *extra_events):
+        await emit_event(hass, mock_rtl433_client, event)
+
+    assert mock_config_entry.data[CONF_DEVICES] == {
+        DEVICE_KEY: {
+            CONF_MODEL: "Acurite-606TX",
+            DEVICE_FIELDS: expected_fields,
+        }
+    }
+
+
+async def test_repeated_event_does_not_rewrite_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rtl433_client: MagicMock,
+    mock_event: NormalizedEvent,
+) -> None:
+    """Test a device transmitting again leaves the stored record untouched.
+
+    RF devices retransmit every few seconds, so an unconditional write would
+    churn the config entry for the life of the process.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await emit_event(hass, mock_rtl433_client, mock_event)
+
+    with patch.object(
+        hass.config_entries,
+        "async_update_entry",
+        wraps=hass.config_entries.async_update_entry,
+    ) as mock_update_entry:
+        await emit_event(hass, mock_rtl433_client, mock_event)
+
+    mock_update_entry.assert_not_called()

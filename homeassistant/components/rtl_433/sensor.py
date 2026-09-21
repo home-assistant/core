@@ -3,7 +3,8 @@
 Each rtl_433 device transmits a flat set of measurement fields. This platform
 creates one :class:`Rtl433Sensor` per (device, field): entities for devices
 already recorded on the config entry are built at setup, and entities for
-devices/fields first observed at runtime are added as their events arrive.
+devices/fields first observed at runtime are added as their events arrive and
+recorded on the entry so the next startup rebuilds them.
 
 Entity and device identity matches the custom component of the same domain, so
 an entry migrated from it keeps its entities. Only that direction is supported:
@@ -18,7 +19,7 @@ produced by :mod:`pyrtl_433.normalizer`, and ``object_suffix`` is the field key.
 """
 
 from datetime import timedelta
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_DEVICES, CONF_MODEL
@@ -37,6 +38,39 @@ from .coordinator import Rtl433ConfigEntry, Rtl433Coordinator
 def _device_name(model: str, device_key: str) -> str:
     """Return a human-readable device name (falls back to the device key)."""
     return model or device_key
+
+
+@callback
+def _persist_devices(
+    hass: HomeAssistant,
+    entry: Rtl433ConfigEntry,
+    sources: dict[str, tuple[str, set[str]]],
+) -> None:
+    """Merge discovered devices and their fields into ``entry.data[CONF_DEVICES]``.
+
+    Fields are unioned rather than clobbered, and the entry is written only when
+    a record actually changes, so a device transmitting every few seconds does
+    not rewrite the entry with each event.
+    """
+    devices: dict[str, dict[str, Any]] = {
+        device_key: dict(record)
+        for device_key, record in entry.data.get(CONF_DEVICES, {}).items()
+    }
+    changed = False
+    for device_key, (model, fields) in sources.items():
+        record = devices.setdefault(device_key, {CONF_MODEL: "", DEVICE_FIELDS: []})
+        if model and record.get(CONF_MODEL) != model:
+            record[CONF_MODEL] = model
+            changed = True
+        merged = sorted(set(record.get(DEVICE_FIELDS, [])) | fields)
+        if merged != record.get(DEVICE_FIELDS, []):
+            record[DEVICE_FIELDS] = merged
+            changed = True
+
+    if changed:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_DEVICES: devices}
+        )
 
 
 async def async_setup_entry(
@@ -63,6 +97,7 @@ async def async_setup_entry(
         for device_key, event in (coordinator.data or {}).items():
             model, fields = sources.get(device_key, ("", set()))
             sources[device_key] = (model or event.model, fields | set(event.fields))
+        _persist_devices(hass, entry, sources)
 
         new_entities: list[Rtl433Sensor] = []
         for device_key, (model, fields) in sources.items():

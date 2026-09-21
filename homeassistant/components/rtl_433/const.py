@@ -26,8 +26,8 @@ CONF_SECURE: Final = "secure"
 
 # ``entry.data[CONF_DEVICES]`` maps ``device_key`` -> a record carrying the
 # device's model (``CONF_MODEL``) and the sorted list of observed field keys.
-# Read at setup so entities for known devices exist before the device next
-# transmits.
+# Written as devices and fields are discovered and read back at setup, so
+# entities for known devices exist before the device next transmits.
 DEVICE_FIELDS: Final = "fields"
 
 # Default rtl_433 HTTP server port and WebSocket path (the "-F http" defaults).
