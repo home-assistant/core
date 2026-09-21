@@ -422,6 +422,42 @@ async def test_reload_resubscribe_error_is_contained(
     assert "Error resubscribing binary_sensor.failing" in caplog.text
 
 
+async def test_reload_resubscribes_devices_concurrently(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+) -> None:
+    """Test a symbol the PLC never answers does not hold up the other entities."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hub = mock_config_entry.runtime_data
+    # Registration order is the order a serial resubscribe would work through.
+    for name in ("slow", "fast"):
+        entity = AdsEntity(hub, name, f"GVL.{name}")
+        entity.hass = hass
+        entity.entity_id = f"binary_sensor.{name}"
+
+    never_answers = asyncio.Event()
+    fast_resubscribed = asyncio.Event()
+
+    async def _async_added_to_hass(self: AdsEntity) -> None:
+        if self.entity_id == "binary_sensor.slow":
+            await never_answers.wait()
+        else:
+            fast_resubscribed.set()
+
+    with patch.object(AdsEntity, "async_added_to_hass", _async_added_to_hass):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        # Serial resubscription would leave this waiting behind the slow symbol.
+        async with asyncio.timeout(1):
+            await fast_resubscribed.wait()
+
+        never_answers.set()
+        await hass.async_block_till_done()
+
+
 async def test_unload_cancels_resubscribe_task(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

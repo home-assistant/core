@@ -23,6 +23,7 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADS_VAR, CONF_LOCAL_NET_ID, DOMAIN, AdsType
+from .entity import AdsEntity
 from .hub import AdsConfigEntry, apply_local_net_id, connect
 
 _LOGGER = logging.getLogger(__name__)
@@ -175,12 +176,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> bool:
         for device in devices:
             device.rebind(hub)
 
+        async def _async_resubscribe_device(device: AdsEntity) -> None:
+            try:
+                await device.async_added_to_hass()
+            except Exception:
+                _LOGGER.exception("Error resubscribing %s", device.entity_id)
+
         async def _async_resubscribe_devices() -> None:
-            for device in devices:
-                try:
-                    await device.async_added_to_hass()
-                except Exception:
-                    _LOGGER.exception("Error resubscribing %s", device.entity_id)
+            # Each subscription waits up to 10s for its first notification, so
+            # a symbol the PLC never answers must not hold up the rest.
+            await asyncio.gather(*(_async_resubscribe_device(d) for d in devices))
 
         hub.resubscribe_task = entry.async_create_task(
             hass, _async_resubscribe_devices(), "ads resubscribe devices"
