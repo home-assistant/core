@@ -101,6 +101,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "humidity_warning_enabled": {
+        "name": "Humidity warning"
+      },
       "nightly_promise_enabled": {
         "name": "Heartbeat"
       },

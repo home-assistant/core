@@ -25,6 +25,7 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_device,
     thermostat_device,
+    thermostat_gen2_device,
     twinguard_device,
 )
 
@@ -415,3 +416,64 @@ async def test_twinguard_no_nightly_promise_support(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.twinguard_heartbeat") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_configuration=True,
+                    humidity_warning_enabled=False,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_gen2_humidity_warning(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Thermostat Gen2's humidity warning is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    state = hass.states.get("switch.thermostat_gen2_humidity_warning")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_gen2_device(supports_display_configuration=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_no_humidity_warning_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a thermostat without display-configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.thermostat_gen2_humidity_warning") is None

@@ -20,6 +20,7 @@ from boschshcpy import (
     SHCShutterControl,
     SHCSmartPlug,
     SHCThermostat,
+    SHCThermostatGen2,
     SHCTwinguard,
     ShutterControlService,
     ThermostatService,
@@ -243,6 +244,28 @@ def thermostat_device(
     device.child_lock = child_lock
     device.position = position
     device.valvestate = valvestate
+    return device
+
+
+def thermostat_gen2_device(
+    device_id: str = "hdm:ZigBee:thermostatgen2_1",
+    name: str = "Thermostat Gen2",
+    supports_display_configuration: bool = False,
+    humidity_warning_enabled: bool = False,
+) -> SHCThermostatGen2:
+    """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
+    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TRV_GEN2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_display_configuration = supports_display_configuration
+    device.humidity_warning_enabled = humidity_warning_enabled
     return device
 
 
