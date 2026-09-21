@@ -1,0 +1,22 @@
+--- homeassistant/components/recorder/core.py
++++ homeassistant/components/recorder/core.py
+@@ -1352,12 +1358,17 @@
+             remaining -= slept
+ 
+     def _reconnect_database(self) -> None:
+-        """Reconnect after a mid-session connection failure.
++        """Reconnect after a mid-session invalidated connection.
+ 
+         Startup uses a finite retry budget so a missing or misconfigured
+         database does not block Home Assistant forever. After the recorder
+         has talready been running, keep retrying until the database is
+-        reachable again or Home Assistant is stopping.
++        reachable again or Home Assistant is stopping. Duration is
++        intentionally unbounded: capping would reintroduce a recorder that
++        stays down until Home Assistant restarts (#180041). Queue growth
++        during the wait is already bounded by `_reached_max_backlog()` /
++        the backlog watcher, which stops `_event_listener`; on success
++        `_finish_reconnect_attempt()` re-binds it when needed.
+         """
+         self._close_event_session()
+         dispose_engine = self._reconnect_disposes_engine()
