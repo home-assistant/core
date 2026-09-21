@@ -559,24 +559,32 @@ class ResultStream:
 
         Creates the cached result from the raw input if it does not exist yet.
         """
-        if self._cached_result is None:
-            if isinstance(result, str):
-                self._cached_result = self._manager.async_cache_message_in_memory(
-                    engine=self.engine,
-                    message=result,
-                    use_file_cache=self.use_file_cache,
-                    language=self.language,
-                    options=self.options,
-                )
-            else:
-                self._cached_result = (
-                    self._manager.async_cache_message_stream_in_memory(
-                        engine=self.engine,
-                        message_stream=result,
-                        language=self.language,
-                        options=self.options,
-                    )
-                )
+        if self._cached_result is not None:
+            return self._cached_result
+
+        if isinstance(result, str):
+            self._cached_result = self._manager.async_cache_message_in_memory(
+                engine=self.engine,
+                message=result,
+                use_file_cache=self.use_file_cache,
+                language=self.language,
+                options=self.options,
+            )
+            return self._cached_result
+
+        # A message input stream can only be consumed once, so caching it
+        # claims it exclusively against interruptible playback.
+        if self._stream_claimed:
+            raise HomeAssistantError(
+                "Interruptible TTS streams can only be consumed once"
+            )
+        self._stream_claimed = True
+        self._cached_result = self._manager.async_cache_message_stream_in_memory(
+            engine=self.engine,
+            message_stream=result,
+            language=self.language,
+            options=self.options,
+        )
         return self._cached_result
 
     async def async_stream_result(
@@ -592,15 +600,24 @@ class ResultStream:
             return
 
         result = await asyncio.shield(self._result)
+
         if isinstance(result, TTSCache):
             async for chunk in result.async_stream_data():
                 yield chunk
-        elif on_audio_interrupt is None:
-            # Interruptible playback is opt-in; other consumers play from the cache.
+
+            self.last_used = monotonic()
+            return
+
+        # Only engines that support audio interrupt keep their raw input
+        # instead of a cache, so everything below is exclusive to them.
+        if on_audio_interrupt is None:
+            # Consumers that cannot interrupt playback fall back to regular
+            # cached audio, the same as engines without interrupt support.
             cache = self._async_get_cached_result(result)
             async for chunk in cache.async_stream_data():
                 yield chunk
         else:
+            # Interruptible playback generates live for a single consumer.
             if self._stream_claimed:
                 raise HomeAssistantError(
                     "Interruptible TTS streams can only be consumed once"

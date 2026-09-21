@@ -2347,6 +2347,63 @@ async def test_interruptible_tts_fallback_without_interrupt_callback(
     assert generated.call_count == 1
 
 
+async def test_interruptible_tts_rejects_fallback_after_interrupt_claim(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Cached fallback cannot consume the input stream claimed by live playback."""
+    mock_tts_entity._attr_supports_audio_interrupt = True
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
+        async def audio() -> AsyncGenerator[bytes]:
+            yield b"audio"
+
+        return tts.TTSAudioResponse("mp3", audio())
+
+    async def message() -> AsyncGenerator[str]:
+        yield "hello"
+
+    mock_tts_entity.async_stream_tts_audio = synthesize
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message_stream(message())
+
+    interrupt_result = stream.async_stream_result(Mock())
+    assert await anext(interrupt_result) == b"audio"
+
+    with pytest.raises(HomeAssistantError, match="only be consumed once"):
+        await anext(stream.async_stream_result())
+
+    await interrupt_result.aclose()
+
+
+async def test_interruptible_tts_rejects_interrupt_after_fallback_claim(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Live playback cannot consume the input stream claimed by cached fallback."""
+    mock_tts_entity._attr_supports_audio_interrupt = True
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
+        async def audio() -> AsyncGenerator[bytes]:
+            yield b"audio"
+
+        return tts.TTSAudioResponse("mp3", audio())
+
+    async def message() -> AsyncGenerator[str]:
+        yield "hello"
+
+    mock_tts_entity.async_stream_tts_audio = synthesize
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message_stream(message())
+
+    assert await get_stream_data(stream) == b"audio"
+
+    with pytest.raises(HomeAssistantError, match="only be consumed once"):
+        await anext(stream.async_stream_result(Mock()))
+
+
 @pytest.mark.parametrize("streaming_input", [False, True])
 async def test_interruptible_tts_bypasses_cache(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity, streaming_input: bool
