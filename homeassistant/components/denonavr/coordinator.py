@@ -124,6 +124,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     notifies the entities once it has been.
     """
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -167,11 +169,16 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def sees_the_receiver(self) -> bool:
         """Whether this coordinator's own polling can speak for the receiver.
 
-        False without a recurring poll, and false while its polls are being
-        skipped: neither can discover a failure or confirm a recovery, so the
-        other coordinator has to hand it the verdict.
+        False without a recurring poll, with polling disabled for the entry,
+        and while its polls are being skipped: none of those can discover a
+        failure or confirm a recovery, so the other coordinator has to hand it
+        the verdict.
         """
-        return self.update_interval is not None and self._last_refresh_read
+        return (
+            self.update_interval is not None
+            and not self.config_entry.pref_disable_polling
+            and self._last_refresh_read
+        )
 
     @callback
     def async_add_internal_listener(

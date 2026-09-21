@@ -162,10 +162,10 @@ async def test_status_refresh_still_fails_on_an_incomplete_response() -> None:
 
 
 def _coordinator(
-    hass: HomeAssistant, refresh_fn: AsyncMock
+    hass: HomeAssistant, refresh_fn: AsyncMock, *, pref_disable_polling: bool = False
 ) -> DenonAvrDataUpdateCoordinator:
     """Build a coordinator polling every 30s through refresh_fn."""
-    entry = MockConfigEntry(domain=DOMAIN)
+    entry = MockConfigEntry(domain=DOMAIN, pref_disable_polling=pref_disable_polling)
     entry.add_to_hass(hass)
     main, _ = _receiver_with_zones()
     return DenonAvrDataUpdateCoordinator(
@@ -186,6 +186,23 @@ async def test_sees_the_receiver_only_after_a_read(hass: HomeAssistant) -> None:
     await coordinator.async_refresh()
 
     assert coordinator.sees_the_receiver is True
+
+
+async def test_polling_disabled_for_the_entry_sees_nothing(
+    hass: HomeAssistant,
+) -> None:
+    """An interval alone does not mean the coordinator is still asking.
+
+    _schedule_refresh() returns early on pref_disable_polling, so the read
+    below is the last one and nothing will contradict it.
+    """
+    coordinator = _coordinator(
+        hass, AsyncMock(return_value=True), pref_disable_polling=True
+    )
+
+    await coordinator.async_refresh()
+
+    assert coordinator.sees_the_receiver is False
 
 
 async def test_internal_listener_does_not_start_the_poll(
