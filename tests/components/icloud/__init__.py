@@ -24,6 +24,11 @@ class MockDevicesContainer:
         """Initialize with userinfo and list of device objects."""
         self.user_info = userinfo
         self._devices = devices
+        self.locate_requests: list[bool] = []
+
+    def refresh(self, locate: bool = True) -> None:
+        """Record a refresh, as pyicloud's device manager does."""
+        self.locate_requests.append(locate)
 
     def __iter__(self):
         """Iterate returns device objects (each must have .status(...))."""
