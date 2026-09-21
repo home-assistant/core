@@ -8,12 +8,14 @@ from unittest.mock import MagicMock, create_autospec, patch
 from boschshcpy import (
     BatteryLevelService,
     PowerSwitchService,
+    RoutingService,
     SHCBatteryDevice,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
     SHCPresenceSimulationSystem,
     SHCShutterControl,
+    SHCSmartPlug,
     SHCThermostat,
     ShutterControlService,
     ThermostatService,
@@ -188,6 +190,27 @@ def micromodule_blinds_device(
     device.level = level
     device.current_angle = current_angle
     device.operation_state = operation_state
+    return device
+
+
+def smart_plug_device(
+    device_id: str = "hdm:ZigBee:plug1",
+    name: str = "Smart Plug",
+    routing: RoutingService.State = RoutingService.State.DISABLED,
+) -> SHCSmartPlug:
+    """Build a minimal device double for the smart_plugs bucket."""
+    device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PSM"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
+    device.routing = routing
     return device
 
 

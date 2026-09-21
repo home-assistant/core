@@ -21,6 +21,7 @@ from .conftest import (
     micromodule_relay_device,
     presence_simulation_system_device,
     setup_integration,
+    smart_plug_device,
     thermostat_device,
 )
 
@@ -193,3 +194,24 @@ async def test_no_presence_simulation_system(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.presence_simulation") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_routing_switch_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Smart Plug's routing switch is named "Range extension", not "Routing"."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("switch.smart_plug_range_extension")
+    assert entry is not None
+    state = hass.states.get("switch.smart_plug_range_extension")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Smart Plug Range extension"
