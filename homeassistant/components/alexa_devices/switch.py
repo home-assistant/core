@@ -122,6 +122,7 @@ async def async_setup_entry(
 
         # DND state may arrive after device discovery (initial sync failure,
         # or a later push), so track it separately from `known_devices`.
+        known_dnd_devices.intersection_update(current_devices)
         new_dnd_devices = (
             current_devices & coordinator.dnd_states.keys()
         ) - known_dnd_devices
