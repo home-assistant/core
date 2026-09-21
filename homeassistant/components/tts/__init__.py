@@ -18,7 +18,7 @@ from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
-from mutagen.id3 import TextFrame as ID3Text
+from mutagen.id3 import TALB, TIT2, TPE1, Encoding
 import probatio
 from propcache.api import cached_property
 
@@ -1195,18 +1195,9 @@ class SpeechManager:
             if tts_file is not None:
                 if not tts_file.tags:
                     tts_file.add_tags()
-                tts_file["artist"] = ID3Text(
-                    encoding=3,
-                    text=artist,  # type: ignore[no-untyped-call]
-                )
-                tts_file["album"] = ID3Text(
-                    encoding=3,
-                    text=album,  # type: ignore[no-untyped-call]
-                )
-                tts_file["title"] = ID3Text(
-                    encoding=3,
-                    text=message,  # type: ignore[no-untyped-call]
-                )
+                tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TIT2(encoding=Encoding.UTF8, text=message))  # type: ignore[no-untyped-call]
                 data_bytes.seek(0)
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
