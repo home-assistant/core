@@ -2281,6 +2281,35 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
     assert generation_count == 2
 
 
+async def test_completed_cache_releases_interrupt_listeners(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test a completed cache does not retain ResultStream callbacks."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        async def gen_data():
+            yield b"audio"
+
+        return tts.TTSAudioResponse("mp3", gen_data())
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    stream1 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream1.async_set_message("hello")
+    cache = stream1._result_cache.result()
+    assert await get_stream_data(stream1) == b"audio"
+    assert not cache._interrupt_listeners
+
+    stream2 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream2.async_set_message("hello")
+    assert stream2._result_cache.result() is cache
+    assert not cache._interrupt_listeners
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
