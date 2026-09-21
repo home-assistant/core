@@ -41,6 +41,11 @@
       "tare": {
         "name": "Tare"
       }
+    },
+    "switch": {
+      "keep_connected": {
+        "name": "Keep connected"
+      }
     }
   }
 }
