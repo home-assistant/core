@@ -230,16 +230,11 @@ async def test_call_tool_deprecated_json_object_custom_integration(
     assert "returns a JSON object from a tool" in caplog.text
 
 
-async def test_api_instance_reports_untagged_tool(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a directly registered API is reported for an untagged tool."""
-    mock_integration(hass, MockModule("my_custom"), built_in=False)
+def _untagged_tool(module: str) -> llm.Tool:
+    """Return a tool that does not record the integration providing it."""
 
-    class CustomTool(llm.Tool):
-        """Tool provided by a custom integration."""
+    class UntaggedTool(llm.Tool):
+        """Tool that declares no integration."""
 
         name = "test_tool"
 
@@ -248,12 +243,39 @@ async def test_api_instance_reports_untagged_tool(
         ) -> llm.ToolResult:
             return llm.ToolResult(data={})
 
-    CustomTool.__module__ = "custom_components.my_custom.llm"
-    llm.APIInstance(
-        MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [CustomTool()]
-    )
+    # The tool is reported against the integration its class comes from.
+    UntaggedTool.__module__ = module
+    return UntaggedTool()
+
+
+async def test_api_instance_reports_untagged_tool_for_custom_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration is warned about a tool without an integration."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    tool = _untagged_tool("custom_components.my_custom.llm")
+
+    llm.APIInstance(MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool])
 
     assert "provides the LLM tool test_tool without an integration" in caplog.text
+
+
+async def test_api_instance_raises_untagged_tool_for_core_integration(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test a core integration must record the integration on its tools."""
+    mock_integration(hass, MockModule("my_core"))
+    tool = _untagged_tool("homeassistant.components.my_core.llm")
+
+    with pytest.raises(
+        RuntimeError, match="provides the LLM tool test_tool without an integration"
+    ):
+        llm.APIInstance(
+            MyAPI(hass=hass, id="test", name="Test"), "", llm_context, [tool]
+        )
 
 
 def test_tool_metadata_defaults() -> None:
