@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 
 from . import get_api
 from .const import (
@@ -132,8 +132,12 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
                 if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
                     errors["base"] = "transmission_version"
                 else:
-                    return self.async_update_reload_and_abort(
+                    self.hass.config_entries.async_update_entry(
                         reauth_entry, data=user_input
+                    )
+                    return self.async_abort(
+                        reason="reauth_successful",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
                     )
 
         return self.async_show_form(

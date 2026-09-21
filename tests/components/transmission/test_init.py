@@ -231,9 +231,9 @@ async def test_coordinator_update_error(
     assert state.state == "unavailable"
 
 
+@pytest.mark.usefixtures("mock_transmission_client")
 async def test_update_options(
     hass: HomeAssistant,
-    mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reloading the config entry when options updated."""
