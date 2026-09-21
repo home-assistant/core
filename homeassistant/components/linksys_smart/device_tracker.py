@@ -136,7 +136,7 @@ class LinksysScannerEntity(
     def name(self) -> str | None:
         """Return the device's current name, falling back when disconnected."""
         if device := self.coordinator.data.get(self._mac):
-            return device.name
+            self._fallback_name = device.name
         return self._fallback_name
 
     @property
