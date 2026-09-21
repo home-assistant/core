@@ -142,7 +142,7 @@ async def test_add_todo_item_parse_fallback(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "  Soda  "},
+        {ATTR_ITEM: "Misc Item"},
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
@@ -151,7 +151,7 @@ async def test_add_todo_item_parse_fallback(
         MutateShoppingItem(
             list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
             position=1,
-            note="Soda",
+            note="Misc Item",
             quantity=0.0,
         )
     )
@@ -171,7 +171,7 @@ async def test_add_todo_item_parse_error_fallback(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "  Soda  "},
+        {ATTR_ITEM: "Misc Item"},
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
@@ -180,11 +180,11 @@ async def test_add_todo_item_parse_error_fallback(
         MutateShoppingItem(
             list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
             position=1,
-            note="Soda",
+            note="Misc Item",
             quantity=0.0,
         )
     )
-    assert "Unable to parse to-do item Soda" in caplog.text
+    assert "Unable to parse to-do item Misc Item" in caplog.text
 
 
 async def test_update_todo_item_parsed(
