@@ -191,6 +191,18 @@ class Light(HomeAccessory):
 
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
+        # The adaptive lighting characteristics share the light service, so a
+        # schedule written by the Home app arrives here too. The controller has
+        # already handled it through its own setter and it says nothing about
+        # brightness or colour; left in, it falls through to the SERVICE_TURN_ON
+        # default below and switches the light on by itself.
+        char_values = {
+            char: value
+            for char, value in char_values.items()
+            if char not in ADAPTIVE_LIGHTING_CHARS
+        }
+        if not char_values:
+            return
         if self.adaptive_lighting and (
             char_values.keys() & {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
         ):
