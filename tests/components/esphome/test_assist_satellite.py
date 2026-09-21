@@ -976,6 +976,7 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
     assert satellite is not None
     stream = MockResultStream(hass, "wav", b"")
+    stream.supports_audio_interrupt = True
     stream_requested = asyncio.Event()
     continue_stream = asyncio.Event()
 

@@ -1109,6 +1109,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
         event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
         satellite: WyomingAssistSatellite = event_callback.__self__
         stream = MockResultStream(hass, "wav", b"")
+        stream.supports_audio_interrupt = True
         wav_data = get_test_wav(2048)
         first_chunk_sent = asyncio.Event()
         release_first_chunk = asyncio.Event()
@@ -1175,6 +1176,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
         )
 
         cleanup_stream = MockResultStream(hass, "wav", b"")
+        cleanup_stream.supports_audio_interrupt = True
         cleanup_wav_data = get_test_wav(512)
         stream_blocked = asyncio.Event()
         audio_chunk_sent = asyncio.Event()

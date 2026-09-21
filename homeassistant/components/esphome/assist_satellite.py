@@ -752,22 +752,28 @@ class EsphomeAssistSatellite(
             seconds_in_chunk = samples_per_chunk / sample_rate
             start_time: float | None = None
             audio_duration_sent = 0.0
-            audio_interrupt = asyncio.Event()
 
-            @callback
-            def on_audio_interrupt() -> None:
-                nonlocal start_time, audio_duration_sent
-                self.cli.send_voice_assistant_event(
-                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
-                )
-                self.cli.send_voice_assistant_event(
-                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
-                )
-                audio_interrupt.set()
-                start_time = None
-                audio_duration_sent = 0.0
+            if tts_result.supports_audio_interrupt:
+                audio_interrupt = asyncio.Event()
 
-            audio_stream = tts_result.async_stream_result(on_audio_interrupt)
+                @callback
+                def on_audio_interrupt() -> None:
+                    nonlocal start_time, audio_duration_sent
+                    self.cli.send_voice_assistant_event(
+                        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+                    )
+                    self.cli.send_voice_assistant_event(
+                        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
+                    )
+                    audio_interrupt.set()
+                    start_time = None
+                    audio_duration_sent = 0.0
+
+                audio_stream = tts_result.async_stream_result(on_audio_interrupt)
+            else:
+                audio_interrupt = None
+                audio_stream = tts_result.async_stream_result()
+
             async for chunk, is_last in stream_wav(
                 audio_stream,
                 expected_format="pcm",

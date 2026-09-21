@@ -805,7 +805,94 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 f"Cannot stream audio format to satellite: {tts_result.extension}"
             )
 
+        if tts_result.supports_audio_interrupt:
+            # Playback can be restarted mid-stream to discard buffered audio.
+            await self._async_stream_tts_interruptible(client, tts_result)
+            return
+
         # Track the total duration of TTS audio for response timeout
+        total_seconds = 0.0
+        start_time = monotonic()
+        try:
+            header_data = b""
+            header_complete = False
+            sample_rate: int | None = None
+            sample_width: int | None = None
+            sample_channels: int | None = None
+            timestamp = 0
+
+            async for data_chunk in tts_result.async_stream_result():
+                if not header_complete:
+                    # Accumulate data until we can parse the header and get
+                    # sample rate, etc.
+                    header_data += data_chunk
+                    # Most WAVE headers are 44 bytes in length
+                    if (len(header_data) >= 44) and (
+                        audio_info := _try_parse_wav_header(header_data)
+                    ):
+                        # Overwrite chunk with audio after header
+                        sample_rate, sample_width, sample_channels, data_chunk = (
+                            audio_info
+                        )
+                        await client.write_event(
+                            AudioStart(
+                                rate=sample_rate,
+                                width=sample_width,
+                                channels=sample_channels,
+                                timestamp=timestamp,
+                            ).event()
+                        )
+                        header_complete = True
+
+                        if not data_chunk:
+                            # No audio after header
+                            continue
+                    else:
+                        # Header is incomplete
+                        continue
+
+                # Streaming audio
+                assert sample_rate is not None
+                assert sample_width is not None
+                assert sample_channels is not None
+
+                data_chunk_idx = 0
+                while data_chunk_idx < len(data_chunk):
+                    audio_chunk = AudioChunk(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        audio=data_chunk[
+                            data_chunk_idx : data_chunk_idx + _AUDIO_CHUNK_BYTES
+                        ],
+                        timestamp=timestamp,
+                    )
+
+                    await client.write_event(audio_chunk.event())
+                    timestamp += audio_chunk.milliseconds
+                    total_seconds += audio_chunk.seconds
+                    data_chunk_idx += _AUDIO_CHUNK_BYTES
+
+            await client.write_event(AudioStop(timestamp=timestamp).event())
+            _LOGGER.debug("TTS streaming complete")
+        finally:
+            send_duration = monotonic() - start_time
+            timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._tts_timeout(timeout_seconds, self._run_loop_id),
+                name="wyoming TTS timeout",
+            )
+
+    async def _async_stream_tts_interruptible(
+        self, client: AsyncTcpClient, tts_result: tts.ResultStream
+    ) -> None:
+        """Stream TTS WAV audio that can be interrupted mid-playback.
+
+        Restarts the satellite's audio output when the TTS engine reports an
+        interrupt, discarding any buffered audio before replacement audio
+        arrives.
+        """
         total_seconds = 0.0
         start_time = monotonic()
         write_lock = asyncio.Lock()
