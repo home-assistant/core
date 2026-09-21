@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfRatio,
@@ -56,6 +57,7 @@ _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterCont
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
 VALVE_TAPPET_SENSOR = "valvetappet"
+VALVE_TAPPET_STATE_SENSOR = "valve_tappet_state"
 PURITY_SENSOR = "purity"
 AIR_QUALITY_SENSOR = "airquality"
 TEMPERATURE_RATING_SENSOR = "temperature_rating"
@@ -64,6 +66,15 @@ PURITY_RATING_SENSOR = "purity_rating"
 POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
+
+
+def _valve_tappet_state_value(device: SHCThermostat) -> str | None:
+    """Return the valve motor status enum string, or None on unknown value."""
+    try:
+        return str(device.valvestate.name.lower())
+    except ValueError, AttributeError:
+        return None
+
 
 _THERMOSTAT_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
     SHCSensorEntityDescription(
@@ -80,10 +91,44 @@ _VALVE_TAPPET_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
         translation_key=VALVE_TAPPET_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        # Superseded by the "valve" platform's position entity; kept
+        # available (opt-in) for anyone already relying on the raw percentage.
+        entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda device: device.position,
-        attributes_fn=lambda device: {
-            "valve_tappet_state": device.valvestate.name,
-        },
+        # Kept for anyone already reading this attribute in a template or
+        # automation, even though the same value is now also a first-class
+        # sensor below (_VALVE_TAPPET_STATE_DESCRIPTION).
+        attributes_fn=lambda device: {"valve_tappet_state": device.valvestate.name},
+    )
+)
+_VALVE_TAPPET_STATE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
+    SHCSensorEntityDescription(
+        key=VALVE_TAPPET_STATE_SENSOR,
+        translation_key=VALVE_TAPPET_STATE_SENSOR,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=[
+            "valve_adaption_successful",
+            "valve_adaption_in_progress",
+            "valve_adaption_requested",
+            "range_too_big",
+            "range_too_small",
+            "run_to_start_position",
+            "start_position_requested",
+            "in_start_position",
+            "not_available",
+            "no_valve_body_error",
+            "no_motor_error",
+            "valve_too_tight",
+            "fix_motor_logic_requested",
+            "fix_motor_logic_in_progress",
+            "fix_motor_logic_successful",
+            "error",
+            "unknown",
+        ],
+        value_fn=_valve_tappet_state_value,
     )
 )
 _WALLTHERMOSTAT_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[
@@ -226,6 +271,7 @@ async def async_setup_entry(
         for description in (
             _THERMOSTAT_TEMPERATURE_DESCRIPTION,
             _VALVE_TAPPET_DESCRIPTION,
+            _VALVE_TAPPET_STATE_DESCRIPTION,
         )
     ]
 
