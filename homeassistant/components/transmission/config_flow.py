@@ -12,6 +12,7 @@ from transmission_rpc.error import (
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -132,9 +133,16 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
                 if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
                     errors["base"] = "transmission_version"
                 else:
-                    self.hass.config_entries.async_update_entry(
+                    data_updated = self.hass.config_entries.async_update_entry(
                         reauth_entry, data=user_input
                     )
+                    if (
+                        reauth_entry.state is not ConfigEntryState.LOADED
+                        or not data_updated
+                    ):
+                        self.hass.config_entries.async_schedule_reload(
+                            reauth_entry.entry_id
+                        )
                     return self.async_abort(
                         reason="reauth_successful",
                         translation_domain=HOMEASSISTANT_DOMAIN,
