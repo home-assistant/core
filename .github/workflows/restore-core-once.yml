@@ -1,0 +1,46 @@
+name: restore-core-once
+on:
+  push:
+    paths:
+      - ".github/workflows/restore-core-once.yml"
+jobs:
+  restore:
+    if: contains(github.event.head_commit.message, 'Add one-shot')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cursor/recorder-reconnect-mid-session-a09b
+          fetch-depth: 0
+      - name: Restore core.py from last good blob
+        run: |
+          set -euo pipefail
+          git checkout e0cbd88f40e0dd11b96b6b91a639584e0059f933 -- homeassistant/components/recorder/core.py
+          grep -q 'and err.connection_invalidated' homeassistant/components/recorder/core.py
+          grep -q 'intentionally unbounded' homeassistant/components/recorder/core.py
+          test $(wc -c < homeassistant/components/recorder/core.py) -gt 60000
+          git config user.name "Kailash Nelson"
+          git config user.email "37966146+KingLizard1020@users.noreply.github.com"
+          git add homeassistant/components/recorder/core.py
+          if git diff --cached --quiet; then
+            echo "already restored"
+          else
+            git commit -m "Restore recorder core.py and gate reconnect on connection_invalidated"
+            git push origin HEAD:cursor/recorder-reconnect-mid-session-a09b
+          fi
+      - name: Remove one-shot workflow
+        if: always()
+        run: |
+          set -euo pipefail
+          git fetch origin cursor/recorder-reconnect-mid-session-a09b
+          git reset --hard origin/cursor/recorder-reconnect-mid-session-a09b
+          rm -f .github/workflows/restore-core-once.yml
+          git config user.name "Kailash Nelson"
+          git config user.email "37966146+KingLizard1020@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove one-shot restore-core workflow"
+            git push origin HEAD:cursor/recorder-reconnect-mid-session-a09b
+          fi
