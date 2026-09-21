@@ -489,6 +489,7 @@ class ResultStream:
 
     supports_audio_interrupt: bool = field(default=False, init=False)
     _stream_claimed: bool = field(default=False, init=False)
+    _cached_result: TTSCache | None = field(default=None, init=False)
 
     # Override
     _override_media_path: Path | None = None
@@ -552,6 +553,32 @@ class ResultStream:
             )
         )
 
+    @callback
+    def _async_get_cached_result(self, result: str | AsyncGenerator[str]) -> TTSCache:
+        """Return the cached result for non-interruptible playback.
+
+        Creates the cached result from the raw input if it does not exist yet.
+        """
+        if self._cached_result is None:
+            if isinstance(result, str):
+                self._cached_result = self._manager.async_cache_message_in_memory(
+                    engine=self.engine,
+                    message=result,
+                    use_file_cache=self.use_file_cache,
+                    language=self.language,
+                    options=self.options,
+                )
+            else:
+                self._cached_result = (
+                    self._manager.async_cache_message_stream_in_memory(
+                        engine=self.engine,
+                        message_stream=result,
+                        language=self.language,
+                        options=self.options,
+                    )
+                )
+        return self._cached_result
+
     async def async_stream_result(
         self, on_audio_interrupt: Callable[[], None] | None = None
     ) -> AsyncGenerator[bytes]:
@@ -568,11 +595,12 @@ class ResultStream:
         if isinstance(result, TTSCache):
             async for chunk in result.async_stream_data():
                 yield chunk
+        elif on_audio_interrupt is None:
+            # Interruptible playback is opt-in; other consumers play from the cache.
+            cache = self._async_get_cached_result(result)
+            async for chunk in cache.async_stream_data():
+                yield chunk
         else:
-            if on_audio_interrupt is None:
-                raise HomeAssistantError(
-                    "This TTS engine requires interruptible playback"
-                )
             if self._stream_claimed:
                 raise HomeAssistantError(
                     "Interruptible TTS streams can only be consumed once"

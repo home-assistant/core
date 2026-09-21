@@ -2305,6 +2305,49 @@ async def test_stream_override_with_conversion(
 
 
 @pytest.mark.parametrize("streaming_input", [False, True])
+async def test_interruptible_tts_fallback_without_interrupt_callback(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity, streaming_input: bool
+) -> None:
+    """Consumers without an interrupt callback play cached, non-interruptible audio."""
+    mock_tts_entity._attr_supports_audio_interrupt = True
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    generated = Mock()
+
+    async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
+        generated()
+
+        async def audio() -> AsyncGenerator[bytes]:
+            yield b"first"
+            yield b"second"
+
+        return tts.TTSAudioResponse("mp3", audio())
+
+    async def message() -> AsyncGenerator[str]:
+        yield "hello"
+
+    mock_tts_entity.async_stream_tts_audio = synthesize
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    setter = (
+        stream.async_set_message_stream if streaming_input else stream.async_set_message
+    )
+    setter(message() if streaming_input else "hello")
+    await hass.async_block_till_done()
+    assert generated.call_count == 0
+
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data == b"firstsecond"
+    assert generated.call_count == 1
+    assert len(manager.mem_cache) == 1
+
+    # Additional consumers are served from the same cache entry
+    assert await get_stream_data(stream) == result_data
+    assert generated.call_count == 1
+
+
+@pytest.mark.parametrize("streaming_input", [False, True])
 async def test_interruptible_tts_bypasses_cache(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity, streaming_input: bool
 ) -> None:
@@ -2365,11 +2408,10 @@ async def test_interruptible_tts_bypasses_cache(
 
 
 @pytest.mark.parametrize(
-    ("options", "extension", "with_callback", "error"),
+    ("options", "extension", "error"),
     [
-        ({}, "mp3", False, "requires interruptible playback"),
-        ({tts.ATTR_PREFERRED_SAMPLE_RATE: 16000}, "mp3", True, "native output options"),
-        ({}, "wav", True, "requested audio format"),
+        ({tts.ATTR_PREFERRED_SAMPLE_RATE: 16000}, "mp3", "native output options"),
+        ({}, "wav", "requested audio format"),
     ],
 )
 async def test_interruptible_tts_rejects_incompatible_playback(
@@ -2377,10 +2419,9 @@ async def test_interruptible_tts_rejects_incompatible_playback(
     mock_tts_entity: MockTTSEntity,
     options: dict[str, int],
     extension: str,
-    with_callback: bool,
     error: str,
 ) -> None:
-    """Do not send interruptible audio through a buffer or an incompatible converter."""
+    """Do not send interruptible audio through an incompatible converter."""
     mock_tts_entity._attr_supports_audio_interrupt = True
     mock_tts_entity._supported_options = []
     await mock_config_entry_setup(hass, mock_tts_entity)
@@ -2396,4 +2437,4 @@ async def test_interruptible_tts_rejects_incompatible_playback(
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id, options=options)
     stream.async_set_message("hello")
     with pytest.raises(HomeAssistantError, match=error):
-        await anext(stream.async_stream_result(Mock() if with_callback else None))
+        await anext(stream.async_stream_result(Mock()))
