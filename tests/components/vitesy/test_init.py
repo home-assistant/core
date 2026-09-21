@@ -74,7 +74,7 @@ async def test_update_auth_failure(
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test rejected credentials during a refresh mark the coordinator failed."""
+    """Test rejected credentials during a refresh keep the coordinator polling."""
     await setup_integration(hass, mock_config_entry)
 
     mock_vitesy_client.get_all_devices.side_effect = CannotAuthenticate
@@ -82,3 +82,11 @@ async def test_update_auth_failure(
     await hass.async_block_till_done()
 
     assert not mock_config_entry.runtime_data.last_update_success
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_vitesy_client.get_all_devices.side_effect = None
+    mock_vitesy_client.get_all_devices.return_value = {}
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.last_update_success

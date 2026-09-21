@@ -23,11 +23,21 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 
 
 @contextmanager
-def _translate_errors() -> Iterator[None]:
-    """Convert aiovitesy errors into coordinator setup/update failures."""
+def _translate_errors(*, auth_recoverable: bool = False) -> Iterator[None]:
+    """Convert aiovitesy errors into coordinator setup/update failures.
+
+    On a refresh, auth_recoverable must be True: the config flow has no
+    reauth step yet, so raising ConfigEntryAuthFailed there would stop
+    polling forever with no way to recover.
+    """
     try:
         yield
     except CannotAuthenticate as err:
+        if auth_recoverable:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
@@ -69,5 +79,5 @@ class VitesyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, VitesyDevice]]
     @override
     async def _async_update_data(self) -> dict[str, VitesyDevice]:
         """Fetch the latest state for every device in the account."""
-        with _translate_errors():
+        with _translate_errors(auth_recoverable=True):
             return await self.api.get_all_devices()

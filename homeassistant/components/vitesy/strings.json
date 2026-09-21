@@ -44,7 +44,7 @@
   },
   "exceptions": {
     "invalid_auth": {
-      "message": "Vitesy Hub credentials are no longer valid, please reauthenticate."
+      "message": "Vitesy Hub credentials are no longer valid."
     },
     "update_failed": {
       "message": "Error communicating with Vitesy Hub: {error}"
