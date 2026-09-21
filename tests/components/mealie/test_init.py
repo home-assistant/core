@@ -1,6 +1,6 @@
 """Tests for the Mealie integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
@@ -118,6 +118,24 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_update_options(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reloading the config entry when options updated."""
+    await setup_integration(hass, mock_config_entry)
+
+    async_reload = AsyncMock()
+    with patch.object(hass.config_entries, "async_reload", async_reload):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={"parser": "brute"}
+        )
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
