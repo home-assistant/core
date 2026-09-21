@@ -64,8 +64,9 @@ INTENT_ANNOTATIONS = {
     intent.INTENT_CANCEL_TIMER: _CONTROL,
     intent.INTENT_PAUSE_TIMER: _CONTROL,
     intent.INTENT_UNPAUSE_TIMER: _CONTROL,
-    # Starting a timer and adding time only add, and both act on every call.
-    intent.INTENT_START_TIMER: _ADDS,
+    # A started timer can carry a command to run when it finishes, so it is
+    # not only additive. Adding time to a timer is.
+    intent.INTENT_START_TIMER: _REPEATS,
     intent.INTENT_INCREASE_TIMER: _ADDS,
     intent.INTENT_DECREASE_TIMER: _REPEATS,
     intent.INTENT_TIMER_STATUS: _READ_ONLY,

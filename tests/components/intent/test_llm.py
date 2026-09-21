@@ -138,6 +138,10 @@ async def test_tool_annotations(hass: HomeAssistant) -> None:
     assert tools["intent__HassIncreaseTimer"].annotations == llm.ToolAnnotations(
         destructive=False, open_world=False
     )
+    # A started timer can carry a command to run when it finishes.
+    assert tools["intent__HassStartTimer"].annotations == llm.ToolAnnotations(
+        open_world=False
+    )
     assert tools["intent__HassTimerStatus"].annotations == llm.ToolAnnotations(
         read_only=True, open_world=False
     )
