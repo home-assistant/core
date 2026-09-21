@@ -178,6 +178,83 @@ async def test_new_device_added_on_coordinator_update(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_name_updates_on_coordinator_refresh(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a router-side rename is reflected after a coordinator refresh."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
+    )
+    mock_client = await _setup_entry(hass, entry, [LAPTOP])
+
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "My Laptop"
+
+    renamed_laptop = JNAPDevice(
+        mac="aa:bb:cc:dd:ee:ff",
+        name="Someone's Laptop",
+        ip_address="192.168.1.10",
+        hostname="my-laptop",
+    )
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[renamed_laptop])
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Someone's Laptop"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_restored_entity_name_updates_once_reconnected(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a restored entity picks up the router's name once the device reconnects."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
+    )
+    await _setup_entry(hass, entry, [LAPTOP])
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    mock_client = AsyncMock(spec=JNAPClient)
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[])
+    with patch(
+        "homeassistant.components.linksys_smart.util.JNAPClient",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"{entry.entry_id}_aa:bb:cc:dd:ee:ff"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "My Laptop"
+
+    renamed_laptop = JNAPDevice(
+        mac="aa:bb:cc:dd:ee:ff",
+        name="Someone's Laptop",
+        ip_address="192.168.1.10",
+        hostname="my-laptop",
+    )
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[renamed_laptop])
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Someone's Laptop"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_restored_when_offline_at_startup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

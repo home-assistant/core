@@ -129,7 +129,15 @@ class LinksysScannerEntity(
         super().__init__(coordinator)
         self._mac = mac
         self._attr_mac_address = mac
-        self._attr_name = name
+        self._fallback_name = name
+
+    @property
+    @override
+    def name(self) -> str | None:
+        """Return the device's current name, falling back when disconnected."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.name
+        return self._fallback_name
 
     @property
     @override
