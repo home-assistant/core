@@ -6,9 +6,12 @@ body:
       value: |
         This issue form is for reporting bugs only!
 
+        Please read our [issue reporting guide][reporting-issues] before submitting a report.
+
         If you have a feature or enhancement request, please [request them here instead][fr].
 
         [fr]: https://github.com/orgs/home-assistant/discussions
+        [reporting-issues]: https://www.home-assistant.io/help/reporting_issues/
   - type: textarea
     id: problem
     validations:
