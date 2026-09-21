@@ -52,7 +52,7 @@ from .data import ProtectData, ProtectDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
+T = TypeVar("T", bound=ProtectDeviceType)
 
 
 class PermRequired(int, Enum):
@@ -144,7 +144,7 @@ def _async_public_only_entities(
         entities.append(
             klass(
                 data,
-                device=cast(ProtectDeviceType, public),
+                device=public,
                 description=description,
             )
         )
@@ -332,7 +332,7 @@ class BaseProtectEntity(Entity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectDeviceType | PublicDeviceModel,
+        device: ProtectDeviceType,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -342,7 +342,7 @@ class BaseProtectEntity(Entity):
             self._ufp_has_private = False
             self._ufp_public_obj = device
         # The base keys on the mac, which both model trees carry.
-        self.device = cast(ProtectDeviceType, device)
+        self.device = device
 
         if description is None:
             self._attr_unique_id = self.device.mac
@@ -417,7 +417,7 @@ class BaseProtectEntity(Entity):
             self._attr_available = available
 
     @callback
-    def _ufp_set_target(self) -> ProtectDeviceType | PublicDeviceModel:
+    def _ufp_set_target(self) -> ProtectDeviceType:
         """Return the object a description's setter is called on.
 
         A migrated description writes through the public object it reads from,
@@ -505,9 +505,7 @@ class ProtectIsOnEntity(BaseProtectEntity):
     entity_description: ProtectEntityDescription
 
     @override
-    def _async_update_device_from_protect(
-        self, device: ProtectAdoptableDeviceModel | NVR
-    ) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         was_on = self._attr_is_on
         value = self.entity_description.get_value(device, self._ufp_public_obj)
@@ -521,30 +519,27 @@ class ProtectDeviceEntity(BaseProtectEntity):
     @callback
     @override
     def _async_set_device_info(self) -> None:
-        if not self._ufp_has_private:
+        if isinstance(device := self.device, PublicDeviceModel):
             # market_name/firmware/URL are private-only; the NVR link uses the
             # device id registered at setup.
-            public = self._ufp_public_obj
-            if TYPE_CHECKING:
-                assert public is not None
             self._attr_device_info = DeviceInfo(
-                name=public.display_name,
-                model=public.type,
-                model_id=public.type,
+                name=device.display_name,
+                model=device.type,
+                model_id=device.type,
                 manufacturer=DEFAULT_BRAND,
-                connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
+                connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
                 via_device_id=self.data.nvr_device_id,
             )
             return
         self._attr_device_info = DeviceInfo(
-            name=self.device.display_name,
+            name=device.display_name,
             manufacturer=DEFAULT_BRAND,
-            model=self.device.market_name or self.device.type,
-            model_id=self.device.type,
+            model=device.market_name or device.type,
+            model_id=device.type,
             via_device_id=self.data.nvr_device_id,
-            sw_version=self.device.firmware_version,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            configuration_url=self.device.protect_url,
+            sw_version=device.firmware_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            configuration_url=device.protect_url,
         )
 
 
@@ -575,7 +570,10 @@ class ProtectFobEntity(Entity):
     ``ProtectApiClient.public_bootstrap.fobs`` and is refreshed over the public
     devices websocket, so it does not use the private-device machinery in
     :class:`BaseProtectEntity`. Availability follows the public websocket health
-    and the fob's presence in the bootstrap, mirroring the relay switch.
+    and the fob's presence in the bootstrap. Unlike every other public device it
+    deliberately ignores ``state``: Protect models a fob's reachability as
+    ``away_state``, which the status sensor surfaces, so gating on ``state``
+    would take that sensor away exactly when it has something to report.
     Subclasses fed by the events websocket set ``_ufp_requires_events_ws`` so
     they also go unavailable when that stream drops.
     """

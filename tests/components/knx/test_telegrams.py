@@ -167,6 +167,22 @@ async def test_store_telegram_history_error_handling(
     assert issue is not None
 
 
+async def test_sqlite_store_is_told_the_configured_timezone(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test the SQLite store receives Home Assistant's configured time zone."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    await knx.setup_integration(real_telegram_store=True)
+
+    store = hass.data[KNX_MODULE_KEY].telegrams.store
+    assert store is not None
+    # The zone the store was handed, read back off the real store rather than
+    # off a mock: the store fixture rebuilds the class during setup, so a patch
+    # placed around setup_integration never sees the call.
+    assert store._legacy_timestamp_timezone is dt_util.get_default_time_zone()
+
+
 async def test_store_telegram_history_needs_migration_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
