@@ -1,14 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The authenticated Monarch Money account does not match the configured account."
     },
     "error": {
       "bad_mfa": "Your code was invalid, please try again or use a recovery token.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "mfa_required": "Multi-factor authentication required."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "mfa_code": "[%key:component::monarch_money::config::step::user::data::mfa_code%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Your Monarch Money credentials have expired. Enter your email and password to reconnect your existing account. If required, you will also be prompted for your MFA code."
+      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
