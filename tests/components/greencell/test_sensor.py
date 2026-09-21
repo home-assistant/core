@@ -136,21 +136,13 @@ async def test_sensor_availability_and_errors(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_log_when_unavailable(
-    hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Losing and regaining the device is logged exactly once per transition."""
-    caplog.set_level(logging.INFO)
-
+async def _cycle_offline_and_back(hass: HomeAssistant) -> None:
+    """Take the device offline and bring it back, repeating each message."""
     for _ in range(2):
         async_fire_mqtt_message(
             hass, TEST_STATUS_TOPIC, TEST_STATUS_PAYLOAD_UNAVAILABLE
         )
     await hass.async_block_till_done()
-
-    assert caplog.text.count(f"Device {TEST_SERIAL_NUMBER} is unavailable") == 1
 
     for _ in range(2):
         async_fire_mqtt_message(
@@ -158,4 +150,23 @@ async def test_log_when_unavailable(
         )
     await hass.async_block_till_done()
 
-    assert caplog.text.count(f"Device {TEST_SERIAL_NUMBER} is available again") == 1
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Losing and regaining the device is logged exactly once per transition."""
+    caplog.set_level(logging.INFO)
+    unavailable = f"Device {TEST_SERIAL_NUMBER} is unavailable"
+    recovered = f"Device {TEST_SERIAL_NUMBER} is available again"
+
+    await _cycle_offline_and_back(hass)
+
+    assert caplog.text.count(unavailable) == 1
+    assert caplog.text.count(recovered) == 1
+
+    await _cycle_offline_and_back(hass)
+
+    assert caplog.text.count(unavailable) == 2
+    assert caplog.text.count(recovered) == 2
