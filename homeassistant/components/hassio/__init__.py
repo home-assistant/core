@@ -18,6 +18,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, HASSIO_USER_NAME, Platform
@@ -57,7 +58,6 @@ from .const import (
     ADDONS_COORDINATOR,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
-    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
@@ -340,7 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if legacy_data is not None:
         legacy_user_id = legacy_data.get("hassio_user")
 
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
+    hass.data[DATA_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
         hass, entry, legacy_user_id
     )
 
@@ -386,7 +386,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_legacy_store = True
 
     # Async setup runs first unconditionally and always populates this field
-    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    user = hass.data[DATA_SUPERVISOR_USER]
     if entry.data.get(ENTRY_DATA_USER) != user.id:
         hass.config_entries.async_update_entry(
             entry,

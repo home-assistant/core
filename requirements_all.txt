@@ -600,7 +600,7 @@ asusrouter==1.21.3
 # homeassistant.components.upnp
 # homeassistant.components.wiim
 # homeassistant.components.yeelight
-async-upnp-client==0.48.1
+async-upnp-client==0.48.2
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1887,7 +1887,7 @@ p1monitor==3.2.0
 paho-mqtt==2.1.0
 
 # homeassistant.components.paj_gps
-pajgps-api==0.4.0
+pajgps-api==0.4.1
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.2

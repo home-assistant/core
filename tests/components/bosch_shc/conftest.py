@@ -7,18 +7,25 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import (
     BatteryLevelService,
+    BypassService,
     PowerSwitchService,
+    RoutingService,
     SHCBatteryDevice,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
     SHCPresenceSimulationSystem,
+    SHCShutterContact2,
     SHCShutterControl,
+    SHCSmartPlug,
     SHCThermostat,
     ShutterControlService,
     ThermostatService,
 )
-from boschshcpy.services_impl import PresenceSimulationConfigurationService
+from boschshcpy.services_impl import (
+    PresenceSimulationConfigurationService,
+    ValveTappetService,
+)
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -191,10 +198,33 @@ def micromodule_blinds_device(
     return device
 
 
+def smart_plug_device(
+    device_id: str = "hdm:ZigBee:plug1",
+    name: str = "Smart Plug",
+    routing: RoutingService.State = RoutingService.State.DISABLED,
+) -> SHCSmartPlug:
+    """Build a minimal device double for the smart_plugs bucket."""
+    device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PSM"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
+    device.routing = routing
+    return device
+
+
 def thermostat_device(
     device_id: str = "hdm:ZigBee:thermostat1",
     name: str = "Thermostat",
     child_lock: ThermostatService.State = ThermostatService.State.OFF,
+    position: int = 50,
+    valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -208,6 +238,8 @@ def thermostat_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.position = position
+    device.valvestate = valvestate
     return device
 
 
@@ -277,4 +309,26 @@ def presence_simulation_system_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.enabled = enabled
+    return device
+
+
+def shutter_contact2_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
+    bypass_infinite: bool = False,
+) -> SHCShutterContact2:
+    """Build a minimal device double for the shutter_contacts2 bucket."""
+    device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.bypass = bypass
+    device.bypass_infinite = bypass_infinite
     return device
