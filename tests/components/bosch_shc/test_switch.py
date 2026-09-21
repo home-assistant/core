@@ -25,6 +25,7 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_device,
     thermostat_device,
+    twinguard_device,
 )
 
 from tests.common import MockConfigEntry
@@ -354,3 +355,63 @@ async def test_motion_detector2_pet_immunity(
         blocking=True,
     )
     assert device.pet_immunity_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "twinguards": [
+                twinguard_device(
+                    supports_nightly_promise=True, nightly_promise_enabled=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_nightly_promise(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Twinguard's nightly promise (Heartbeat) is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.twinguards[0]
+
+    state = hass.states.get("switch.twinguard_heartbeat")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        blocking=True,
+    )
+    assert device.nightly_promise_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        blocking=True,
+    )
+    assert device.nightly_promise_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"twinguards": [twinguard_device(supports_nightly_promise=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_no_nightly_promise_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Twinguard without nightly-promise support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.twinguard_heartbeat") is None
