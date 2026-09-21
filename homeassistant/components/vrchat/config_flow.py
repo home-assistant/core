@@ -2,6 +2,7 @@
 
 from typing import Any, Final, override
 
+from aiohttp import ClientError
 import probatio
 import vrchatapi.exceptions
 from vrchatapi.highlevel import VRChatAPI
@@ -93,10 +94,16 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
             api = self._api
             assert api is not None
             try:
-                await api.verify2_fa_email_code(user_input[CONF_EMAIL_2FA_CODE])
-                return await self._async_authenticate()
-            except vrchatapi.exceptions.ApiException:
+                try:
+                    await api.verify2_fa_email_code(user_input[CONF_EMAIL_2FA_CODE])
+                except vrchatapi.exceptions.BadRequestException:
+                    errors["base"] = "invalid_auth"
+                else:
+                    return await self._async_authenticate()
+            except vrchatapi.exceptions.UnauthorizedException:
                 errors["base"] = "invalid_auth"
+            except vrchatapi.exceptions.ApiException, ClientError, TimeoutError:
+                errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="email_2fa",
             data_schema=probatio.Schema(
@@ -114,10 +121,16 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
             api = self._api
             assert api is not None
             try:
-                await api.verify2_fa(user_input[CONF_2FA_CODE])
-                return await self._async_authenticate()
-            except vrchatapi.exceptions.ApiException:
+                try:
+                    await api.verify2_fa(user_input[CONF_2FA_CODE])
+                except vrchatapi.exceptions.BadRequestException:
+                    errors["base"] = "invalid_auth"
+                else:
+                    return await self._async_authenticate()
+            except vrchatapi.exceptions.UnauthorizedException:
                 errors["base"] = "invalid_auth"
+            except vrchatapi.exceptions.ApiException, ClientError, TimeoutError:
+                errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="2fa",
             data_schema=probatio.Schema(

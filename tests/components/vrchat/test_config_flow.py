@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+from aiohttp import ClientConnectionError
 import pytest
 import vrchatapi
 
@@ -273,19 +274,75 @@ async def test_cancel_two_factor_flow_closes_api(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("verification_results", "user_results", "error"),
+    [
+        pytest.param(
+            [vrchatapi.exceptions.BadRequestException(status=400), None],
+            [MOCK_USER],
+            "invalid_auth",
+            id="invalid_code_bad_request",
+        ),
+        pytest.param(
+            [None, None],
+            [vrchatapi.exceptions.BadRequestException(status=400), MOCK_USER],
+            "cannot_connect",
+            id="current_user_bad_request",
+        ),
+        pytest.param(
+            [vrchatapi.exceptions.UnauthorizedException(status=401), None],
+            [MOCK_USER],
+            "invalid_auth",
+            id="invalid_code",
+        ),
+        pytest.param(
+            [vrchatapi.exceptions.ServiceException(status=500), None],
+            [MOCK_USER],
+            "cannot_connect",
+            id="server_error",
+        ),
+        pytest.param(
+            [vrchatapi.exceptions.ApiException(status=429), None],
+            [MOCK_USER],
+            "cannot_connect",
+            id="rate_limit",
+        ),
+        pytest.param(
+            [ClientConnectionError(), None],
+            [MOCK_USER],
+            "cannot_connect",
+            id="connection_error",
+        ),
+        pytest.param(
+            [TimeoutError(), None],
+            [MOCK_USER],
+            "cannot_connect",
+            id="timeout",
+        ),
+        pytest.param(
+            [None, None],
+            [vrchatapi.exceptions.ServiceException(status=500), MOCK_USER],
+            "cannot_connect",
+            id="current_user_server_error",
+        ),
+    ],
+)
 async def test_two_factor_error(
     hass: HomeAssistant,
     step_id: str,
     verification_method: str,
     verification_key: str,
     reason: str,
+    verification_results: list[Exception | None],
+    user_results: list[Exception | dict[str, str]],
+    error: str,
 ) -> None:
-    """Test that a failed two-factor code returns to the same form."""
+    """Test two-factor errors preserve the flow and allow a successful retry."""
     unauthorized = vrchatapi.exceptions.UnauthorizedException(status=200, reason=reason)
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",
-            new=AsyncMock(side_effect=unauthorized),
+            new=AsyncMock(side_effect=[unauthorized, *user_results]),
         ),
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.close",
@@ -293,11 +350,16 @@ async def test_two_factor_error(
         ) as mock_close,
         patch(
             f"homeassistant.components.vrchat.config_flow.VRChatAPI.{verification_method}",
-            new=AsyncMock(
-                side_effect=vrchatapi.exceptions.ApiException(
-                    status=401, reason="Invalid code"
-                )
-            ),
+            new=AsyncMock(side_effect=verification_results),
+        ),
+        patch(
+            "homeassistant.components.vrchat.config_flow.VRChatAPI.cookie",
+            new_callable=PropertyMock,
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.vrchat.async_setup_entry",
+            new=AsyncMock(return_value=True),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -311,7 +373,16 @@ async def test_two_factor_error(
             result["flow_id"], {verification_key: "123456"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == step_id
-    assert result["errors"] == {"base": "invalid_auth"}
-    mock_close.assert_not_awaited()
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == step_id
+        assert result["errors"] == {"base": error}
+        mock_close.assert_not_awaited()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {verification_key: "123456"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_USER["id"]
+    mock_close.assert_awaited_once()
