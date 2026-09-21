@@ -40,9 +40,6 @@
   },
   "config_subentries": {
     "device": {
-      "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      },
       "entry_type": "Device",
       "error": {
         "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",

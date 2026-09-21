@@ -1,14 +1,13 @@
 """Provides functionality to interact with fans."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,27 +28,20 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
+from .const import (
+    DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "fan"
 DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-
-class FanEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
-
-    SET_SPEED = 1
-    OSCILLATE = 2
-    DIRECTION = 4
-    PRESET_MODE = 8
-    TURN_OFF = 16
-    TURN_ON = 32
 
 
 SERVICE_INCREASE_SPEED = "increase_speed"
@@ -107,10 +99,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_TURN_ON,
         {
-            vol.Optional(ATTR_PERCENTAGE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(ATTR_PERCENTAGE): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             ),
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
+            probatio.Optional(ATTR_PRESET_MODE): cv.string,
         },
         "async_handle_turn_on_service",
         [FanEntityFeature.TURN_ON],
@@ -127,8 +119,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_INCREASE_SPEED,
         {
-            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(ATTR_PERCENTAGE_STEP): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         "async_increase_speed",
@@ -137,8 +129,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_DECREASE_SPEED,
         {
-            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Optional(ATTR_PERCENTAGE_STEP): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         "async_decrease_speed",
@@ -146,21 +138,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_OSCILLATE,
-        {vol.Required(ATTR_OSCILLATING): cv.boolean},
+        {probatio.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
         [FanEntityFeature.OSCILLATE],
     )
     component.async_register_entity_service(
         SERVICE_SET_DIRECTION,
-        {vol.Optional(ATTR_DIRECTION): cv.string},
+        {probatio.Optional(ATTR_DIRECTION): cv.string},
         "async_set_direction",
         [FanEntityFeature.DIRECTION],
     )
     component.async_register_entity_service(
         SERVICE_SET_PERCENTAGE,
         {
-            vol.Required(ATTR_PERCENTAGE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_PERCENTAGE): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         "async_set_percentage",
@@ -168,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
-        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        {probatio.Required(ATTR_PRESET_MODE): cv.string},
         "async_handle_set_preset_mode_service",
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )

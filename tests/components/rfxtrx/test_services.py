@@ -1,7 +1,7 @@
 """The tests for the Rfxtrx services."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,7 @@ async def test_send_invalid_event(hass: HomeAssistant) -> None:
     """Test send of an invalid event fails validation."""
     await async_setup_component(hass, DOMAIN, {})
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, "send", {"event": "invalid"}, blocking=True
         )

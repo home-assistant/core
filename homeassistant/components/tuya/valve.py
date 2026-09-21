@@ -1,5 +1,6 @@
 """Support for Tuya valves."""
 
+from dataclasses import dataclass
 from typing import override
 
 from tuya_device_handlers.definition.valve import (
@@ -20,58 +21,64 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
+
+@dataclass(frozen=True)
+class TuyaValveEntityDescription(TuyaEntityDescription, ValveEntityDescription):
+    """Describes a Tuya valve entity."""
+
+
+VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH,
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_valve",
             translation_placeholders={"index": "1"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_2,
             translation_key="indexed_valve",
             translation_placeholders={"index": "2"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_3,
             translation_key="indexed_valve",
             translation_placeholders={"index": "3"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_4,
             translation_key="indexed_valve",
             translation_placeholders={"index": "4"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_5,
             translation_key="indexed_valve",
             translation_placeholders={"index": "5"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_6,
             translation_key="indexed_valve",
             translation_placeholders={"index": "6"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_7,
             translation_key="indexed_valve",
             translation_placeholders={"index": "7"},
             device_class=ValveDeviceClass.WATER,
         ),
-        ValveEntityDescription(
+        TuyaValveEntityDescription(
             key=DPCode.SWITCH_8,
             translation_key="indexed_valve",
             translation_placeholders={"index": "8"},
@@ -120,7 +127,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: ValveEntityDescription,
+        description: TuyaValveEntityDescription,
         definition: ValveDefinition,
     ) -> None:
         """Init TuyaValveEntity."""
