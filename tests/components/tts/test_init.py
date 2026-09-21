@@ -2113,6 +2113,8 @@ async def test_stream_audio_interrupt(
         result = stream.async_stream_result()
 
         assert await anext(result) == b"playing"
+        collected_result = asyncio.create_task(stream.async_get_result())
+        await asyncio.sleep(0)
         continue_generation.set()
         assert await anext(result) == b"replacement"
         assert interrupted.is_set()
@@ -2124,8 +2126,47 @@ async def test_stream_audio_interrupt(
         assert await anext(late_result) == b"replacement"
         with pytest.raises(StopAsyncIteration):
             await anext(late_result)
+        assert await collected_result == b"replacement"
 
     convert_audio.assert_not_called()
+
+
+async def test_http_stream_stops_on_audio_interrupt(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test an HTTP stream does not mix replacement audio into its response."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    continue_generation = asyncio.Event()
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        async def gen_data():
+            yield b"playing"
+            await continue_generation.wait()
+            assert request.on_audio_interrupt is not None
+            request.on_audio_interrupt()
+            yield b"replacement"
+
+        return tts.TTSAudioResponse("mp3", gen_data(), passthrough=True)
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        yield "hello"
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message_stream(stream_message())
+    client = await hass_client()
+    response = await client.get(stream.url)
+
+    continue_generation.set()
+
+    assert response.status == HTTPStatus.OK
+    assert await response.read() == b"playing"
 
 
 @pytest.mark.parametrize(
@@ -2147,6 +2188,7 @@ async def test_stream_passthrough_conversion(
     mock_tts_entity._supported_options = supported_options
     await mock_config_entry_setup(hass, mock_tts_entity)
     received_options: dict[str, Any] = {}
+    interrupted = Mock()
 
     async def async_stream_tts_audio(
         request: tts.TTSAudioRequest,
@@ -2154,13 +2196,17 @@ async def test_stream_passthrough_conversion(
         received_options.update(request.options)
 
         async def gen_data():
+            yield b"stale"
+            assert request.on_audio_interrupt is not None
+            request.on_audio_interrupt()
             yield b"native"
 
         return tts.TTSAudioResponse(
             response_extension, gen_data(), passthrough=True
         )
 
-    async def convert_audio(*args, **kwargs):
+    async def convert_audio(_hass, _extension, audio_input, **kwargs):
+        _ = b"".join([chunk async for chunk in audio_input])
         yield b"converted"
 
     mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
@@ -2174,6 +2220,7 @@ async def test_stream_passthrough_conversion(
         mock_tts_entity.entity_id,
         options={tts.ATTR_PREFERRED_SAMPLE_RATE: 16000},
     )
+    stream.async_subscribe_audio_interrupt(interrupted)
     with patch(
         "homeassistant.components.tts._async_convert_audio", side_effect=convert_audio
     ) as mock_convert_audio:
@@ -2187,6 +2234,7 @@ async def test_stream_passthrough_conversion(
     )
     assert result == (b"converted" if expect_conversion else b"native")
     assert mock_convert_audio.call_count == int(expect_conversion)
+    assert interrupted.call_count == int(not expect_conversion)
 
 
 async def test_stream_audio_immediate_interrupt(

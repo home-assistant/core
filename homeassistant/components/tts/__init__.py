@@ -434,8 +434,7 @@ async def async_get_media_source_audio(
     else:
         stream = manager.async_create_result_stream(**parsed["options"])
         stream.async_set_message(parsed["message"])
-    data = b"".join([chunk async for chunk in stream.async_stream_result()])
-    return stream.extension, data
+    return stream.extension, await stream.async_get_result()
 
 
 @callback
@@ -727,6 +726,30 @@ class ResultStream:
             yield chunk
 
         self.last_used = monotonic()
+
+    async def async_get_result(self) -> bytes:
+        """Collect the current uninterrupted audio response."""
+        chunks: list[bytes] = []
+
+        @callback
+        def on_audio_interrupt() -> None:
+            if self.extension == "wav" and chunks:
+                # TTSCache yields the WAV prefix as its own first chunk.
+                chunks[1:] = []
+            else:
+                chunks.clear()
+
+        unsubscribe_interrupt = self.async_subscribe_audio_interrupt(
+            on_audio_interrupt
+        )
+        try:
+            async for chunk in self.async_stream_result():
+                # Append incrementally so an interruption can clear collected data.
+                chunks.append(chunk)  # noqa: PERF401
+        finally:
+            unsubscribe_interrupt()
+
+        return b"".join(chunks)
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
@@ -1234,6 +1257,16 @@ class SpeechManager:
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
         passthrough = False
+        interrupt_enabled: bool | None = None
+        interrupt_pending = False
+
+        @callback
+        def handle_audio_interrupt() -> None:
+            nonlocal interrupt_pending
+            if interrupt_enabled:
+                on_audio_interrupt()
+            elif interrupt_enabled is None:
+                interrupt_pending = True
 
         # Extract preferred format options.
         #
@@ -1319,7 +1352,7 @@ class SpeechManager:
                 stream = message_or_stream
 
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, stream, on_audio_interrupt)
+                TTSAudioRequest(language, options, stream, handle_audio_interrupt)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
@@ -1347,6 +1380,9 @@ class SpeechManager:
                 and ATTR_PREFERRED_BITRATE not in passthrough_options
             )
         )
+        interrupt_enabled = not needs_conversion
+        if interrupt_enabled and interrupt_pending:
+            on_audio_interrupt()
 
         if needs_conversion:
             data_gen = _async_convert_audio(
@@ -1545,8 +1581,20 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         response: web.StreamResponse | None = None
+        interrupted = False
+
+        @callback
+        def on_audio_interrupt() -> None:
+            nonlocal interrupted
+            interrupted = True
+
+        unsubscribe_interrupt = stream.async_subscribe_audio_interrupt(
+            on_audio_interrupt
+        )
         try:
             async for data in stream.async_stream_result():
+                if interrupted:
+                    break
                 if response is None:
                     response = web.StreamResponse()
                     response.content_type = stream.content_type
@@ -1555,6 +1603,8 @@ class TextToSpeechView(HomeAssistantView):
                 await response.write(data)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error streaming tts: %s", err)
+        finally:
+            unsubscribe_interrupt()
 
         # Empty result or exception happened
         if response is None:
