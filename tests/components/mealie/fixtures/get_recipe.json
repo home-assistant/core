@@ -249,19 +249,34 @@
       "id": "2d558dbf-5361-4ef2-9d86-4161f5eb6146",
       "title": "",
       "text": "Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.",
-      "ingredientReferences": []
+      "ingredientReferences": [
+        {
+          "referenceId": "a3adfe78-d157-44d8-98be-9c133e45bb4e"
+        },
+        {
+          "referenceId": "ef023f23-7816-4871-87f6-4d29f9a283f7"
+        }
+      ],
+      "noteReferences": [
+        {
+          "referenceId": "d2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032"
+        },
+        {
+          "referenceId": "f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143"
+        }
+      ]
     },
     {
       "id": "dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a",
       "title": "",
       "text": "Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.",
-      "ingredientReferences": []
+      "ingredientReferences": [],
+      "noteReferences": []
     },
     {
       "id": "2265bd14-a691-40b1-9fe6-7b5dfeac8401",
       "title": "",
-      "text": "Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.",
-      "ingredientReferences": []
+      "text": "Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites."
     },
     {
       "id": "0aade447-dfac-4aae-8e67-ac250ad13ae2",
@@ -313,7 +328,23 @@
     "locked": false
   },
   "assets": [],
-  "notes": [],
+  "notes": [
+    {
+      "title": "Baking tip",
+      "text": "Use room-temperature ingredients for a smoother batter.",
+      "referenceId": "d2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032"
+    },
+    {
+      "title": "Cooling",
+      "text": "Let the cake cool completely before adding the glaze.",
+      "referenceId": "f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143"
+    },
+    {
+      "title": "Serving",
+      "text": "Serve with unsweetened whipped cream.",
+      "referenceId": "9c4e2a71-6d38-4f05-b927-1a8e3c6d5024"
+    }
+  ],
   "extras": {
     "Energy Consumption": "5"
   },

@@ -590,7 +590,6 @@
           'config': dict({
             'fields': dict({
             }),
-            'prefer_typed': None,
           }),
         }),
       }),

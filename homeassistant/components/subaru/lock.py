@@ -3,17 +3,12 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    ATTR_DOOR,
-    SERVICE_UNLOCK_SPECIFIC_DOOR,
     UNLOCK_DOOR_ALL,
     UNLOCK_VALID_DOORS,
     VEHICLE_HAS_REMOTE_SERVICE,
@@ -39,14 +34,6 @@ async def async_setup_entry(
         SubaruLock(vehicle, controller, coordinator)
         for vehicle in vehicle_info.values()
         if vehicle[VEHICLE_HAS_REMOTE_SERVICE]
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_UNLOCK_SPECIFIC_DOOR,
-        {vol.Required(ATTR_DOOR): vol.In(UNLOCK_VALID_DOORS)},
-        "async_unlock_specific_door",
     )
 
 
