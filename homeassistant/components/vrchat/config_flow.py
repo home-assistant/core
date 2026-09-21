@@ -1,9 +1,10 @@
 """Config flow for the VRChat integration."""
 
-from typing import Any, Final, cast, override
+from typing import Any, Final, override
 
 import probatio
 import vrchatapi.exceptions
+from vrchatapi.highlevel import VRChatAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,13 +16,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .api import VRChatAPI
-from .const import CONF_2FA_CODE, CONF_EMAIL_2FA_CODE, DOMAIN
-from .store import (
-    InitialCurrentUserData,
-    VRChatConfigData,
-    get_vrchat_auth_cookie_store,
-)
+from .const import CONF_2FA_CODE, CONF_EMAIL_2FA_CODE, DOMAIN, USER_AGENT
+from .store import InitialCurrentUserData, get_vrchat_auth_cookie_store
 
 
 class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,7 +50,7 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             await self._async_close_api()
-            self._api = VRChatAPI(cast(VRChatConfigData, user_input))
+            self._api = VRChatAPI(user_input, user_agent=USER_AGENT)
             try:
                 return await self._async_authenticate()
             except vrchatapi.exceptions.UnauthorizedException as err:

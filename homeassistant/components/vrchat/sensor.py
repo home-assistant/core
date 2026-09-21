@@ -3,6 +3,13 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+from vrchatapi.highlevel.presence import (
+    VRCHAT_WORLD_ID_PREFIX,
+    VRChatSpecialLocationString,
+    is_user_in_game,
+    process_vrchat_string,
+)
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,14 +29,7 @@ from .const import (
 )
 from .coordinator import VRChatConfigEntry
 from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
-from .utils import (
-    VRCHAT_WORLD_ID_PREFIX,
-    VRChatSpecialLocationString,
-    is_user_in_game,
-    normalize_vrchat_enum_value,
-    process_vrchat_string,
-)
-from .world import VRChatWorldData
+from .utils import normalize_vrchat_enum_value
 
 
 async def async_setup_entry(
@@ -112,9 +112,11 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
         """Return the user icon or avatar image."""
         user_data_get = self.user.data.get
         return process_vrchat_string(
-            user_data_get("userIcon")
+            user_data_get("iconUrl")
+            or user_data_get("userIcon")
             or user_data_get("imageUrl")
             or user_data_get("currentAvatarThumbnailImageUrl")
+            or user_data_get("currentAvatarImageUrl")
         )
 
     @classmethod
@@ -159,6 +161,8 @@ class VRChatUserLocationSensor(
     @override
     def options(self):
         """Dynamically return options based on known locations."""
+        client = self.user.account.client
+        assert client is not None
         special_options = [
             *(location.value for location in VRChatSpecialLocationString),
             VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value,
@@ -168,7 +172,7 @@ class VRChatUserLocationSensor(
             *sorted(
                 {
                     name
-                    for world in VRChatWorldData.registry.values()
+                    for world in client.worlds.registry.values()
                     if (data := world.data) is not None
                     and (name := data.get("name")) is not None
                     and name not in special_options
@@ -189,6 +193,11 @@ class VRChatUserLocationSensor(
             location := self.get_state_from_user_data(self.user.data, "location")
         ) is not None and location.startswith(VRChatSpecialLocationString.TRAVELING):
             self._attr_native_value = VRChatSpecialLocationString.TRAVELING.value
+        elif location in (
+            VRChatSpecialLocationString.PRIVATE,
+            VRChatSpecialLocationString.OFFLINE,
+        ):
+            self._attr_native_value = location
         else:
             name = self.vrchat_user_world_data_get("name")
             if name is None:

@@ -3,8 +3,13 @@
 import asyncio
 from types import SimpleNamespace
 from typing import cast
+from unittest.mock import AsyncMock
 
-from homeassistant.components.vrchat.api_data_types import World
+import pytest
+from vrchatapi.highlevel import WorldCache
+from vrchatapi.highlevel.presence import VRChatSpecialLocationString
+from vrchatapi.highlevel.types import World
+
 from homeassistant.components.vrchat.const import (
     VRCHAT_USER_STATE_OPTIONS,
     VRCHAT_USER_STATUS_OPTIONS,
@@ -17,8 +22,6 @@ from homeassistant.components.vrchat.sensor import (
     VRChatUserStatusDescriptionSensor,
     VRChatUserStatusSensor,
 )
-from homeassistant.components.vrchat.utils import VRChatSpecialLocationString
-from homeassistant.components.vrchat.world import VRChatWorldData
 
 
 def test_location_sensor_without_world_metadata() -> None:
@@ -37,17 +40,43 @@ def test_location_sensor_without_world_metadata() -> None:
     assert sensor.native_value is None
 
 
+@pytest.mark.parametrize(
+    "location",
+    [pytest.param("private", id="private"), pytest.param("offline", id="offline")],
+)
+def test_special_location_overrides_previous_destination(location: str) -> None:
+    """An old destination must not hide an explicit private or offline location."""
+    world = SimpleNamespace(data={"name": "Previous map"})
+    user = SimpleNamespace(
+        data={"location": "wrld_test:instance", "worldId": "wrld_test"},
+        world=world,
+        destination_world=world,
+    )
+    sensor = VRChatUserLocationSensor(cast(VRChatUserDataCoordinator, user))
+    assert sensor.native_value == "Previous map"
+
+    user.data = {"location": location, "worldId": location, "status": "offline"}
+    user.world = None
+
+    assert sensor.native_value == location
+
+
 def test_location_sensor_options_are_stable_and_unique() -> None:
     """Test location sensor options have a stable order without duplicates."""
-    VRChatWorldData.registry.clear()
-    VRChatWorldData.get("wrld_first", cast(World, {"name": "World one"}))
-    VRChatWorldData.get("wrld_second", cast(World, {"name": "World one"}))
-    VRChatWorldData.get("wrld_third", cast(World, {"name": "World two"}))
-    VRChatWorldData.get("wrld_offline", cast(World, {"name": "offline"}))
+    cache = WorldCache(AsyncMock())
+    cache.get("wrld_first", cast(World, {"name": "World one"}))
+    cache.get("wrld_second", cast(World, {"name": "World one"}))
+    cache.get("wrld_third", cast(World, {"name": "World two"}))
+    cache.get("wrld_offline", cast(World, {"name": "offline"}))
     sensor = VRChatUserLocationSensor(
         cast(
             VRChatUserDataCoordinator,
-            SimpleNamespace(data={}, world=None, destination_world=None),
+            SimpleNamespace(
+                data={},
+                world=None,
+                destination_world=None,
+                account=SimpleNamespace(client=SimpleNamespace(worlds=cache)),
+            ),
         )
     )
 
@@ -147,7 +176,58 @@ def test_state_sensor_handles_unknown_presence() -> None:
     assert VRChatUserStateSensor(user).native_value is None
 
 
-def test_state_sensor_avatar_fallbacks() -> None:
+@pytest.mark.parametrize(
+    ("image_data", "expected"),
+    [
+        pytest.param(
+            {"iconUrl": "https://example.com/icon.png"},
+            "https://example.com/icon.png",
+            id="friend-icon",
+        ),
+        pytest.param(
+            {
+                "iconUrl": "https://example.com/icon.png",
+                "userIcon": "https://example.com/old-icon.png",
+                "currentAvatarImageUrl": "https://example.com/avatar.png",
+            },
+            "https://example.com/icon.png",
+            id="prefer-friend-icon",
+        ),
+        pytest.param(
+            {"iconUrl": "", "userIcon": "https://example.com/user.png"},
+            "https://example.com/user.png",
+            id="legacy-user-icon",
+        ),
+        pytest.param(
+            {
+                "imageUrl": "https://example.com/image.png",
+                "currentAvatarThumbnailImageUrl": "https://example.com/thumb.png",
+            },
+            "https://example.com/image.png",
+            id="legacy-image",
+        ),
+        pytest.param(
+            {
+                "currentAvatarThumbnailImageUrl": "https://example.com/thumb.png",
+                "currentAvatarImageUrl": "https://example.com/avatar.png",
+            },
+            "https://example.com/thumb.png",
+            id="prefer-thumbnail",
+        ),
+        pytest.param(
+            {"iconUrl": "", "currentAvatarImageUrl": "https://example.com/avatar.png"},
+            "https://example.com/avatar.png",
+            id="avatar-fallback",
+        ),
+        pytest.param({}, None, id="missing-images"),
+        pytest.param(
+            {"iconUrl": "", "currentAvatarImageUrl": ""}, None, id="empty-images"
+        ),
+    ],
+)
+def test_state_sensor_avatar_fallbacks(
+    image_data: dict[str, str], expected: str | None
+) -> None:
     """Test state sensor avatar URL fallback order."""
     user = cast(
         VRChatUserDataCoordinator,
@@ -155,7 +235,7 @@ def test_state_sensor_avatar_fallbacks() -> None:
             data={
                 "location": "offline",
                 "status": "offline",
-                "currentAvatarThumbnailImageUrl": "https://example.com/avatar.png",
+                **image_data,
             },
             world=None,
             destination_world=None,
@@ -164,10 +244,7 @@ def test_state_sensor_avatar_fallbacks() -> None:
 
     sensor = VRChatUserStateSensor(user)
 
-    assert sensor.entity_picture == "https://example.com/avatar.png"
-    user.data["currentAvatarThumbnailImageUrl"] = ""
-    user.data["imageUrl"] = "https://example.com/image.png"
-    assert sensor.entity_picture == "https://example.com/image.png"
+    assert sensor.entity_picture == expected
 
 
 def test_location_sensor_world_attributes() -> None:
@@ -198,7 +275,9 @@ def test_location_sensor_world_attributes() -> None:
 async def test_entity_world_data_helpers() -> None:
     """Test world data lookup and update waiting helpers."""
     world_task = asyncio.create_task(asyncio.sleep(0))
-    world = SimpleNamespace(data={"name": "Test world"}, task=world_task)
+    world = SimpleNamespace(
+        data={"name": "Test world"}, task=world_task, get_data=AsyncMock()
+    )
     user = cast(
         VRChatUserDataCoordinator,
         SimpleNamespace(

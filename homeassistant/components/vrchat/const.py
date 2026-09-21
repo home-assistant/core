@@ -9,31 +9,14 @@ from .utils import svg_file_uri
 
 DOMAIN = "vrchat"
 
-RETRY_DELAY_SECOND: Final = 60
-WEBSOCKET_INACTIVE_TIMEOUT_SECOND: Final = 600
-
 CONF_2FA_CODE: Final = "2fa_code"
 CONF_EMAIL_2FA_CODE: Final = "email_2fa_code"
-CONF_COOKIE_AUTH: Final = "auth"
-CONF_COOKIE_2FA: Final = "twoFactorAuth"
 
 USER_AGENT: Final = (
     f"HomeAssistant/{__version__} https://github.com/home-assistant/core"
 )
 
-VRCHAT_API_HOST: Final = "api.vrchat.cloud"
 VRCHAT_USER_PAGE_BASE_URL: Final = "https://vrchat.com/home/user/"
-VRCHAT_WEBSOCKET_URL: Final = "wss://pipeline.vrchat.cloud"
-
-
-class VRChatWebsocketEventType(StrEnum):
-    """VRChat websocket event type enum."""
-
-    FRIEND_DELETE = "friend-delete"
-    FRIEND_OFFLINE = "friend-offline"
-    FRIEND_ACTIVE = "friend-active"
-
-    USER_UPDATE = "user-update"
 
 
 class VRChatUserState(StrEnum):

@@ -1,27 +1,11 @@
 """Data store for the VRChat integration."""
 
-from typing import TypedDict
+from vrchatapi.highlevel.types import CurrentUser, VRChatAuthCookie
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .api_data_types import CurrentUser
 from .const import DOMAIN
-
-
-class VRChatConfigData(TypedDict, total=False):
-    """VRChat credentials stored in a config entry."""
-
-    username: str
-    password: str
-
-
-class VRChatAuthCookie(TypedDict, total=False):
-    """VRChat auth cookie."""
-
-    auth: str
-    twoFactorAuth: str
-
 
 VRChatAuthCookieStore: dict[str, Store[VRChatAuthCookie]] = {}
 

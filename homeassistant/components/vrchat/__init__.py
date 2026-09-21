@@ -1,14 +1,15 @@
 """The VRChat integration."""
 
 import logging
-from typing import cast
 
-from homeassistant.const import CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from vrchatapi.highlevel import VRChatAPI
 
-from .api import VRChatAPI
+from homeassistant.const import CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
+
+from .const import USER_AGENT
 from .coordinator import VRChatAccountDataCoordinator, VRChatConfigEntry
-from .store import VRChatAuthCookieStore, VRChatConfigData, get_vrchat_auth_cookie_store
+from .store import VRChatAuthCookieStore, get_vrchat_auth_cookie_store
 
 _PLATFORMS = [Platform.SENSOR]
 
@@ -18,8 +19,23 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> bool:
     """Set up VRChat from a config entry."""
     entry.runtime_data = VRChatAccountDataCoordinator(hass, entry)
-    await entry.runtime_data.starting_task
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    try:
+        await entry.runtime_data.async_start()
+    except BaseException:
+        await entry.runtime_data.close()
+        raise
+
+    async def async_stop(event: Event) -> None:
+        await entry.runtime_data.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
+    )
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    except BaseException:
+        await entry.runtime_data.close()
+        raise
     return True
 
 
@@ -39,7 +55,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: VRChatConfigEntry) -> N
     if CONF_PASSWORD in entry.data:
         try:
             async with VRChatAPI(
-                cast(VRChatConfigData, entry.data), await cookie_store.async_load()
+                entry.data,
+                await cookie_store.async_load(),
+                user_agent=USER_AGENT,
             ) as api:
                 await api.logout()
         except Exception:

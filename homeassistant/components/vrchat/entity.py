@@ -1,16 +1,16 @@
 """Entity base classes for the VRChat integration."""
 
+from collections.abc import Mapping
 import re
 from typing import TYPE_CHECKING, override
 
 from propcache.api import cached_property
+from vrchatapi.highlevel import VRChatWorldData
+from vrchatapi.highlevel.presence import process_vrchat_string
+from vrchatapi.highlevel.types import User
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-
-from .api_data_types import User
-from .utils import process_vrchat_string
-from .world import VRChatWorldData
 
 if TYPE_CHECKING:
     from .coordinator import VRChatUserDataCoordinator
@@ -88,7 +88,8 @@ class VRChatUserDataEntity(Entity):
             key = cls.entity_description.key
         if key in user_data:
             return user_data.get(key)
-        return user_data.get("presence", {}).get(key)
+        presence = user_data.get("presence")
+        return presence.get(key) if isinstance(presence, Mapping) else None
 
     @classmethod
     def get_state_from_user_data(cls, user_data: User, key: str | None = None):
@@ -150,4 +151,4 @@ class VRChatUserLocationEntityMixin:
         if world is None or world.data is not None:
             return
         if world.task is not None:
-            await world.task
+            await world.get_data()
