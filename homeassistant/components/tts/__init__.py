@@ -637,10 +637,7 @@ class ResultStream:
 
     @callback
     def _async_handle_audio_interrupt(self) -> None:
-        """Discard buffered audio and notify active stream consumers."""
-        if self._result_cache.done():
-            self._result_cache.result().async_interrupt()
-
+        """Notify active stream consumers of discarded audio."""
         for listener in tuple(self._audio_interrupt_listeners):
             listener()
 
@@ -994,12 +991,21 @@ class SpeechManager:
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+        cache: TTSCache | None = None
+
+        @callback
+        def handle_audio_interrupt() -> None:
+            assert cache is not None
+            cache.async_interrupt()
+            on_audio_interrupt()
+
         data_gen = self._async_generate_tts_audio(
             engine_instance,
             message_stream,
             language,
             options,
-            on_audio_interrupt,
+            handle_audio_interrupt,
         )
 
         cache = TTSCache(
@@ -1056,8 +1062,17 @@ class SpeechManager:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+            cache: TTSCache | None = None
+
+            @callback
+            def handle_audio_interrupt() -> None:
+                assert cache is not None
+                cache.async_interrupt()
+                on_audio_interrupt()
+
             data_gen = self._async_generate_tts_audio(
-                engine_instance, message, language, options, on_audio_interrupt
+                engine_instance, message, language, options, handle_audio_interrupt
             )
 
         cache = TTSCache(

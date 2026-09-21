@@ -2127,6 +2127,42 @@ async def test_stream_audio_interrupt(
     convert_audio.assert_not_called()
 
 
+async def test_stream_audio_immediate_interrupt(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test an interruption before the result cache is assigned."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock a synchronously interrupted streaming TTS response."""
+
+        async def gen_data():
+            yield b"stale"
+            assert request.on_audio_interrupt is not None
+            request.on_audio_interrupt()
+            yield b"replacement"
+
+        return tts.TTSAudioResponse("mp3", gen_data(), passthrough=True)
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        yield "hello"
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    interrupted = Mock()
+    stream.async_subscribe_audio_interrupt(interrupted)
+    stream.async_set_message_stream(stream_message())
+
+    assert b"".join([chunk async for chunk in stream.async_stream_result()]) == (
+        b"replacement"
+    )
+    interrupted.assert_called_once_with()
+
+
 async def test_result_stream_message_set_idempotent(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
