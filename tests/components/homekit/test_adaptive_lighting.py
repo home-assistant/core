@@ -3,6 +3,7 @@
 import base64
 from datetime import timedelta
 import time
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -230,7 +231,7 @@ async def test_adaptive_lighting_is_off_without_the_option(
 
 
 async def test_a_schedule_applies_a_colour_temperature(
-    hass: HomeAssistant, hk_driver, hass_storage: dict
+    hass: HomeAssistant, hk_driver, hass_storage: dict[str, Any]
 ) -> None:
     """A schedule from the Home app drives the light on the next update."""
     acc = await _setup_light(hass, hk_driver)
