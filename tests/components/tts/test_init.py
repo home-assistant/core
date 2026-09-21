@@ -1920,6 +1920,8 @@ async def test_async_convert_audio_probe_size(
         "1",
         "-sample_fmt",
         "s16",
+        "-fflags",
+        "+bitexact",
         "pipe:1",
     ]
 
@@ -1968,6 +1970,8 @@ async def test_async_convert_audio_mp3_bitrate(
         "-ac",
         "1",
         *expected_encoder_args,
+        "-fflags",
+        "+bitexact",
         "pipe:1",
     ]
 
