@@ -298,9 +298,12 @@ async def async_setup_entry(
         )
     )
 
-    entities.append(SHCOpenWindowsSensor(session=session, parent_id=shc_info.unique_id))
-
     async_add_entities(entities)
+
+    async_add_entities(
+        [SHCOpenWindowsSensor(session=session, parent_id=shc_info.unique_id)],
+        update_before_add=True,
+    )
 
 
 class SHCOpenWindowsSensor(SensorEntity):
