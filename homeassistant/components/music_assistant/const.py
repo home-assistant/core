@@ -11,6 +11,8 @@ DEFAULT_NAME = "Music Assistant"
 AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+# Schema version where a user can be referenced by auth provider link
+LINKED_USER_SCHEMA_VERSION = 44
 
 # The official Music Assistant Home Assistant app
 APP_SLUG = "d5369777_music_assistant"
