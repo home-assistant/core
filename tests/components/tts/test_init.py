@@ -2169,13 +2169,19 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
     """Test an interruption notifies all streams sharing an active cache."""
     await mock_config_entry_setup(hass, mock_tts_entity)
     continue_generation = asyncio.Event()
+    generation_count = 0
 
     async def async_stream_tts_audio(
         request: tts.TTSAudioRequest,
     ) -> tts.TTSAudioResponse:
         """Mock an interrupted streaming TTS response."""
+        nonlocal generation_count
+        generation_count += 1
 
         async def gen_data():
+            if generation_count > 1:
+                yield b"fresh"
+                return
             yield b"stale"
             await continue_generation.wait()
             assert request.on_audio_interrupt is not None
@@ -2205,6 +2211,12 @@ async def test_stream_audio_interrupt_notifies_shared_cache_consumers(
     )
     interrupted1.assert_called_once_with()
     interrupted2.assert_called_once_with()
+
+    stream3 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream3.async_set_message("hello")
+    assert stream3._result_cache.result() is not stream1._result_cache.result()
+    assert b"".join([chunk async for chunk in stream3.async_stream_result()]) == b"fresh"
+    assert generation_count == 2
 
 
 async def test_result_stream_message_set_idempotent(

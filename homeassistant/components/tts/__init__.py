@@ -1179,6 +1179,8 @@ class SpeechManager:
             return
 
         if cache.was_interrupted:
+            if self.mem_cache.get(cache.cache_key) is cache:
+                self.mem_cache.pop(cache.cache_key)
             return
 
         if not store_to_disk:
