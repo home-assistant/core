@@ -203,7 +203,6 @@ class TTSCache:
         self._stream_prefix_buffer = bytearray()
         self._collect_stream_prefix = extension == "wav"
         self._interrupt_listeners: set[Callable[[], None]] = set()
-        self._generation_finished = False
 
     @property
     def was_interrupted(self) -> bool:
@@ -251,7 +250,6 @@ class TTSCache:
             for consumer in self._consumers:
                 consumer.queue.put_nowait(None)
             self._consumers = None
-            self._generation_finished = True
             self._interrupt_listeners.clear()
 
         if self._stream_prefix and self._was_interrupted:
@@ -353,7 +351,7 @@ class TTSCache:
         self, listener: Callable[[], None]
     ) -> CALLBACK_TYPE:
         """Subscribe to interruptions of this cached audio response."""
-        if self._generation_finished:
+        if self._result_data is not None or self._loading_error is not None:
             return lambda: None
 
         self._interrupt_listeners.add(listener)
