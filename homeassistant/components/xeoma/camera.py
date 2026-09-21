@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
+import probatio
 from pyxeoma.xeoma import Xeoma, XeomaError
-import voluptuous as vol
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -25,24 +25,24 @@ CONF_NEW_VERSION = "new_version"
 CONF_VIEWER_PASSWORD = "viewer_password"
 CONF_VIEWER_USERNAME = "viewer_username"
 
-CAMERAS_SCHEMA = vol.Schema(
+CAMERAS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IMAGE_NAME): cv.string,
-        vol.Optional(CONF_HIDE, default=False): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_IMAGE_NAME): cv.string,
+        probatio.Optional(CONF_HIDE, default=False): cv.boolean,
+        probatio.Optional(CONF_NAME): cv.string,
     },
     required=False,
 )
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_CAMERAS): vol.Schema(
-            vol.All(cv.ensure_list, [CAMERAS_SCHEMA])
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_CAMERAS): probatio.Schema(
+            probatio.All(cv.ensure_list, [CAMERAS_SCHEMA])
         ),
-        vol.Optional(CONF_NEW_VERSION, default=True): cv.boolean,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_NEW_VERSION, default=True): cv.boolean,
+        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
     }
 )
 

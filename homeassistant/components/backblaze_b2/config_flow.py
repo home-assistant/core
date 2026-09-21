@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from b2sdk.v2 import exception
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PREFIX
@@ -31,14 +31,14 @@ _LOGGER = logging.getLogger(__name__)
 # Constants
 REQUIRED_CAPABILITIES = {"writeFiles", "listFiles", "deleteFiles", "readFiles"}
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_KEY_ID): cv.string,
-        vol.Required(CONF_APPLICATION_KEY): TextSelector(
+        probatio.Required(CONF_KEY_ID): cv.string,
+        probatio.Required(CONF_APPLICATION_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_BUCKET): cv.string,
-        vol.Optional(CONF_PREFIX, default=""): cv.string,
+        probatio.Required(CONF_BUCKET): cv.string,
+        probatio.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 
@@ -250,10 +250,10 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_KEY_ID): cv.string,
-                    vol.Required(CONF_APPLICATION_KEY): TextSelector(
+                    probatio.Required(CONF_KEY_ID): cv.string,
+                    probatio.Required(CONF_APPLICATION_KEY): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
