@@ -9,7 +9,14 @@ from homeassistant.core import HomeAssistant
 from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_STATUS
 from .controller import SmartTubConfigEntry
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, "address"}
+TO_REDACT = {
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    "address",
+    "panelSerialNumber",
+    "spaId",
+    "ssid",
+}
 
 
 async def async_get_config_entry_diagnostics(

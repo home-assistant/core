@@ -32,10 +32,11 @@ async def test_entry_diagnostics(
     mock_error.updated_at = datetime(2021, 1, 2, tzinfo=UTC)
     spa.get_errors.return_value = [mock_error]
 
-    # a raw external sensor entry, to verify its address is redacted
+    # raw fields not otherwise parsed by the smarttub library, to verify they're redacted
     spa_state.properties["sensors"] = [
         {
             "address": "AA:BB:CC:DD:EE:FF",
+            "spaId": "100672945",
             "name": "{sensor-name}",
             "type": "ibs0x",
             "subType": "magnet",
@@ -45,6 +46,11 @@ async def test_entry_diagnostics(
             "fill_drain": None,
         }
     ]
+    spa_state.properties["panelSerialNumber"] = "SN0123456789"
+    spa_state.properties["lastWifi"] = {
+        "ssid": "MyHomeWiFi",
+        "lastConnectionTimestamp": "2025-08-29T18:26:25.689257Z",
+    }
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

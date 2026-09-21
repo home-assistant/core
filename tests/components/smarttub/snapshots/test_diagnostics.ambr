@@ -30,10 +30,15 @@
           'flowSwitch': 'OPEN',
           'heatMode': 'AUTO',
           'heater': 'ON',
+          'lastWifi': dict({
+            'lastConnectionTimestamp': '2025-08-29T18:26:25.689257Z',
+            'ssid': '**REDACTED**',
+          }),
           'lights': list([
           ]),
           'online': True,
           'ozone': 'OFF',
+          'panelSerialNumber': '**REDACTED**',
           'primaryFiltration': dict({
             'cycle': 1,
             'duration': 4,
@@ -57,6 +62,7 @@
               'motion': None,
               'name': '{sensor-name}',
               'pressure': None,
+              'spaId': '**REDACTED**',
               'subType': 'magnet',
               'type': 'ibs0x',
             }),
