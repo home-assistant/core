@@ -586,9 +586,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         if not daily_cost_reads and start_time is not None:
-            # Same as for the hourly reads below, one resolution coarser.
-            _LOGGER.debug("No daily cost reads. Skipping update")
-            return []
+            if account.read_resolution is ReadResolution.DAY:
+                # Nothing finer to fall back to, and see the hourly reads below.
+                _LOGGER.debug("No daily cost reads. Skipping update")
+                return []
+            # The hourly reads below are still finer than the statistics they
+            # land on, so only drop the bill reads and carry on with those.
+            _LOGGER.debug("No daily cost reads. Trying the hourly ones")
+            cost_reads = []
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution is ReadResolution.DAY:
             return cost_reads
