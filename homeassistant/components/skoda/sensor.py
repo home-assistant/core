@@ -216,16 +216,14 @@ def _remaining_time_to_full_charge_value(entity: SkodaEntity) -> float | None:
 
 def _charge_type_value(entity: SkodaEntity) -> str | None:
     charging = entity.open_api_charging
-    if (
-        not charging
-        or not charging.status
-        or not charging.status.charge_type
-        or not charging.status.state
-    ):
+    if not charging or not charging.status or not charging.status.state:
         return None
 
     if charging.status.state != ChargingState.CHARGING:
         return "not_charging"
+
+    if not charging.status.charge_type:
+        return None
 
     return _CHARGE_TYPE_MAP.get(charging.status.charge_type)
 

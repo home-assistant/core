@@ -328,6 +328,25 @@ def test_charge_type_reports_not_charging_when_not_charging() -> None:
     assert sensor.native_value == "not_charging"
 
 
+def test_charge_type_returns_none_without_charging() -> None:
+    """No charge type is reported when the vehicle has no charging data at all."""
+    coordinator = _make_charging_coordinator(None)
+    sensor = SkodaSensor(coordinator, _description("charge_type"))
+
+    assert sensor.native_value is None
+
+
+def test_charge_type_reports_not_charging_without_charge_type() -> None:
+    """A vehicle that isn't charging reports 'not_charging' even if no charge type is sent."""
+    charging = SimpleNamespace(
+        status=SimpleNamespace(state=ChargingState.CONSERVING, charge_type=None)
+    )
+    coordinator = _make_charging_coordinator(charging)
+    sensor = SkodaSensor(coordinator, _description("charge_type"))
+
+    assert sensor.native_value == "not_charging"
+
+
 def test_charging_state_returns_none_without_status() -> None:
     """Charging present without a status sub-object must not raise."""
     charging = SimpleNamespace(status=None)

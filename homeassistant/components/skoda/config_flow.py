@@ -20,16 +20,23 @@ from skoda_public_api.models.vehicle import VehicleResponse
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_VIN, DOMAIN, MYSKODA_URL
 
 _LOGGER = logging.getLogger(__name__)
 
+API_KEY_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
 # Form for initial user input: VIN and API key.
 STEP_VEHICLE_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_VIN): str,
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): API_KEY_SELECTOR,
     }
 )
 
@@ -146,6 +153,8 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_API_KEY): API_KEY_SELECTOR}
+            ),
             errors=errors,
         )

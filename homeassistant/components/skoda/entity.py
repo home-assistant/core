@@ -24,7 +24,7 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
     def __init__(self, coordinator: SkodaUpdateCoordinator, vin: str) -> None:
         """Initialize the entity with a unique ID based on VIN and entity key."""
         super().__init__(coordinator)
-        self.vin = vin  # coordinator.vin
+        self.vin = vin
         self._attr_unique_id = f"{vin}_{self.entity_description.key}"
 
         vehicle_name = "Škoda Vehicle"

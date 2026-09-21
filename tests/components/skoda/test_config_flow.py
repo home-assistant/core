@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from probatio import to_field_list
 import pytest
 from skoda_public_api.api_layer.exceptions import (
     OpenApiAuthenticationError,
@@ -21,6 +22,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
 
 from tests.common import MockConfigEntry
 
@@ -72,6 +74,36 @@ async def test_form_shown(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+
+
+def _serialized_api_key_field(result: ConfigFlowResult) -> dict:
+    """Return the API key field as the frontend receives it."""
+    fields = to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    )
+    return next(
+        field
+        for field in fields
+        if isinstance(field, dict) and field["name"] == CONF_API_KEY
+    )
+
+
+async def test_user_form_masks_api_key(hass: HomeAssistant) -> None:
+    """Test the API key is entered in a masked password field."""
+    result = await _init_flow(hass)
+
+    assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
+
+
+async def test_reauth_form_masks_api_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the replacement API key is entered in a masked password field."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
 
 
 async def test_success(
