@@ -12,8 +12,8 @@ from unittest import mock
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
@@ -453,7 +453,7 @@ async def test_service_response_data_errors(
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid, match=expected_error):
+    with pytest.raises(probatio.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
 
 
@@ -4129,13 +4129,13 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     """Test that a script aborts when we send invalid service data."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    calls = async_mock_service(hass, "test", "script", vol.Schema({"text": str}))
+    calls = async_mock_service(hass, "test", "script", probatio.Schema({"text": str}))
     sequence = cv.SCRIPT_SCHEMA(
         [{"action": "test.script", "data": {"text": 1}}, {"event": event}]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -5991,7 +5991,7 @@ async def test_validate_action_config(
             validated_config[action_type] = await script.async_validate_action_config(
                 hass, validated_config[action_type]
             )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             pytest.fail(f"{action_type} config invalid: {err}")
 
     # Verify non-static actions have validated

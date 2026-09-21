@@ -1,6 +1,6 @@
 """Provides device automations for Climate."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
@@ -23,7 +23,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -33,29 +34,29 @@ TRIGGER_TYPES = {
 
 HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): "hvac_mode_changed",
-        vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): "hvac_mode_changed",
+        probatio.Required(state_trigger.CONF_TO): probatio.In(const.HVAC_MODES),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
-CURRENT_TRIGGER_SCHEMA = vol.All(
+CURRENT_TRIGGER_SCHEMA = probatio.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(
                 ["current_temperature_changed", "current_humidity_changed"]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            probatio.Optional(CONF_BELOW): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_ABOVE): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-TRIGGER_SCHEMA = vol.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -171,7 +172,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     trigger_type = config[CONF_TYPE]
 
@@ -180,10 +181,12 @@ async def async_get_trigger_capabilities(
 
     if trigger_type == "hvac_mode_changed":
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
-                    vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                    probatio.Required(state_trigger.CONF_TO): probatio.In(
+                        const.HVAC_MODES
+                    ),
+                    probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
                 }
             )
         }
@@ -194,15 +197,15 @@ async def async_get_trigger_capabilities(
         unit_of_measurement = PERCENTAGE
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                ): probatio.Coerce(float),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

@@ -1,6 +1,6 @@
 """Support for tag triggers."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant
@@ -12,9 +12,9 @@ from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(TAG_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(TAG_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
     }
 )
 
