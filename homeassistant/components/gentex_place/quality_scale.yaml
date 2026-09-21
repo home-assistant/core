@@ -50,7 +50,9 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: Devices are discovered from the cloud, no local network discovery
+    comment: >-
+      Devices communicate via the cloud API and a fixed AWS IoT endpoint, never
+      a local IP address, so there is no network information to update.
   discovery:
     status: todo
     comment: >-
