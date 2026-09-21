@@ -259,10 +259,22 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during reauth")
                 errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_SECRET: new_api_secret},
-                )
+                # The entry already has an update listener (registered in
+                # __init__.py) that reloads on any data change, so only
+                # schedule an explicit reload when that listener isn't
+                # present yet (e.g. reauth triggered before initial setup
+                # ever completed) — doing both double-reloads the entry.
+                if (
+                    self.hass.config_entries.async_update_entry(
+                        reauth_entry,
+                        data={**reauth_entry.data, CONF_API_SECRET: new_api_secret},
+                    )
+                    and not reauth_entry.update_listeners
+                ):
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

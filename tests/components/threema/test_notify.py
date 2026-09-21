@@ -276,6 +276,11 @@ async def test_send_message_auth_error_triggers_reauth(
             blocking=True,
         )
 
+    # async_start_reauth() schedules a separate task; the service call
+    # above only waits for the notify handler itself, so the reauth flow
+    # may not be registered yet without waiting for pending tasks too.
+    await hass.async_block_till_done()
+
     flows = hass.config_entries.flow.async_progress()
     assert any(
         f["context"]["source"] == config_entries.SOURCE_REAUTH
