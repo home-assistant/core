@@ -56,6 +56,12 @@ TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
 
+LOCATION = {
+    "latitude": 60.2,
+    "longitude": 24.7,
+    "horizontalAccuracy": 10,
+}
+
 DEVICE = {
     "id": "device1",
     "name": "iPhone",
@@ -65,6 +71,37 @@ DEVICE = {
     "rawDeviceModel": "iPhone14,2",
     "deviceClass": "iPhone",
     "deviceDisplayName": "iPhone",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": LOCATION,
+}
+
+# iCloud reports no battery for a device that is asleep or has none of its
+# own, such as a Mac mini, but still reports where it is.
+DEVICE_WITHOUT_BATTERY = {
+    "id": "device2",
+    "name": "Mac mini",
+    "deviceStatus": "200",
+    "batteryStatus": "Unknown",
+    "batteryLevel": None,
+    "rawDeviceModel": "Macmini9,1",
+    "deviceClass": "Mac",
+    "deviceDisplayName": "Mac mini",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": LOCATION,
+}
+
+# An account that is not sharing its location reports no location at all.
+DEVICE_WITHOUT_LOCATION = {
+    "id": "device3",
+    "name": "iPad",
+    "deviceStatus": "200",
+    "batteryStatus": "NotCharging",
+    "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
     "prsId": None,
     "lowPowerMode": False,
     "location": None,
