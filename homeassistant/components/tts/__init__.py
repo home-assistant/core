@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, MutableMapping
+from contextlib import aclosing
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -126,67 +127,20 @@ KEY_PATTERN = "{0}_{1}_{2}_{3}"
 FFMPEG_CHUNK_SIZE: Final[int] = 4096
 
 
-def _wav_stream_prefix(data: bytearray) -> tuple[bool, bytes]:
-    """Return whether a WAV prefix is complete and the bytes before its payload."""
-    if len(data) < 12:
-        return False, b""
-    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
-        return True, b""
-
-    offset = 12
-    while len(data) >= offset + 8:
-        chunk_id = data[offset : offset + 4]
-        chunk_size = int.from_bytes(data[offset + 4 : offset + 8], "little")
-        if chunk_id == b"data":
-            return True, bytes(data[: offset + 8])
-
-        offset += 8 + chunk_size + (chunk_size & 1)
-        if len(data) < offset:
-            return False, b""
-
-    return False, b""
-
-
-def _wav_prefix_with_payload_size(prefix: bytes, payload_size: int | None) -> bytes:
-    """Return a WAV prefix with sizes for a payload, or streaming sizes."""
-    size = 0xFFFFFFFF if payload_size is None else payload_size
-    riff_size = 0xFFFFFFFF if payload_size is None else len(prefix) - 8 + payload_size
-    result = bytearray(prefix)
-    result[4:8] = riff_size.to_bytes(4, "little")
-    result[-4:] = size.to_bytes(4, "little")
-    return bytes(result)
-
-
-@dataclass(slots=True)
-class _TTSCacheConsumer:
-    """Consumer of a TTS cache while it is loading."""
-
-    queue: asyncio.Queue[tuple[bytes, bool] | None] = field(
-        default_factory=asyncio.Queue
-    )
-    prefix_delivered: bool = False
-
-
 class TTSCache:
     """Cached bytes of a TTS result."""
 
     _result_data: bytes | None = None
     """When fully loaded, contains the result data."""
 
-    _partial_data: list[tuple[bytes, bool]] | None = None
+    _partial_data: list[bytes] | None = None
     """While loading, contains the data already received from the generator."""
 
     _loading_error: Exception | None = None
     """If an error occurred while loading, contains the error."""
 
-    _consumers: list[_TTSCacheConsumer] | None = None
+    _consumers: list[asyncio.Queue[bytes | None]] | None = None
     """Queue for consumers to receive data while loading."""
-
-    _interrupt_generation: int = 0
-    """Generation of audio currently being loaded."""
-
-    _was_interrupted: bool = False
-    """Whether this stream was interrupted."""
 
     def __init__(
         self,
@@ -199,15 +153,6 @@ class TTSCache:
         self.extension = extension
         self.last_used = monotonic()
         self._data_gen = data_gen
-        self._stream_prefix = b""
-        self._stream_prefix_buffer = bytearray()
-        self._collect_stream_prefix = extension == "wav"
-        self._interrupt_listeners: set[Callable[[], None]] = set()
-
-    @property
-    def was_interrupted(self) -> bool:
-        """Return whether this stream was interrupted."""
-        return self._was_interrupted
 
     async def async_load_data(self) -> bytes:
         """Load the data from the generator."""
@@ -219,48 +164,18 @@ class TTSCache:
 
         try:
             async for chunk in self._data_gen:
-                chunks = [(chunk, False)]
-                if self._collect_stream_prefix:
-                    self._stream_prefix_buffer.extend(chunk)
-                    prefix_complete, prefix = _wav_stream_prefix(
-                        self._stream_prefix_buffer
-                    )
-                    if not prefix_complete:
-                        continue
-
-                    buffered_data = bytes(self._stream_prefix_buffer)
-                    self._stream_prefix_buffer.clear()
-                    self._collect_stream_prefix = False
-                    if prefix:
-                        self._stream_prefix = prefix
-                        chunks = [(self._stream_prefix, True)]
-                        if payload := buffered_data[len(prefix) :]:
-                            chunks.append((payload, False))
-                    else:
-                        chunks = [(buffered_data, False)]
-
-                for cache_chunk in chunks:
-                    self._partial_data.append(cache_chunk)
-                    for consumer in self._consumers:
-                        consumer.queue.put_nowait(cache_chunk)
+                self._partial_data.append(chunk)
+                for queue in self._consumers:
+                    queue.put_nowait(chunk)
         except Exception as err:
             self._loading_error = err
             raise
         finally:
-            for consumer in self._consumers:
-                consumer.queue.put_nowait(None)
+            for queue in self._consumers:
+                queue.put_nowait(None)
             self._consumers = None
-            self._interrupt_listeners.clear()
 
-        if self._stream_prefix and self._was_interrupted:
-            payload_size = sum(
-                len(chunk) for chunk, is_prefix in self._partial_data if not is_prefix
-            )
-            self._partial_data[0] = (
-                _wav_prefix_with_payload_size(self._stream_prefix, payload_size),
-                True,
-            )
-        self._result_data = b"".join(chunk for chunk, _ in self._partial_data)
+        self._result_data = b"".join(self._partial_data)
         self._partial_data = None
         return self._result_data
 
@@ -280,86 +195,26 @@ class TTSCache:
         if self._partial_data is None:
             raise RuntimeError("Data not being loaded")
 
-        consumer: _TTSCacheConsumer | None = None
+        queue: asyncio.Queue[bytes | None] | None = None
         # Check if generator is still feeding data
         if self._consumers is not None:
-            consumer = _TTSCacheConsumer()
-            self._consumers.append(consumer)
+            queue = asyncio.Queue()
+            self._consumers.append(queue)
 
-        interrupt_generation = self._interrupt_generation
-        for chunk, is_prefix in list(self._partial_data):
-            if interrupt_generation != self._interrupt_generation:
-                break
-            if consumer is not None and is_prefix:
-                consumer.prefix_delivered = True
+        for chunk in list(self._partial_data):
             yield chunk
 
         if self._loading_error:
             raise self._loading_error
 
-        if consumer is not None:
-            while (cache_chunk := await consumer.queue.get()) is not None:
-                chunk2, is_prefix = cache_chunk
-                if is_prefix:
-                    consumer.prefix_delivered = True
+        if queue is not None:
+            while (chunk2 := await queue.get()) is not None:
                 yield chunk2
 
         if self._loading_error:
             raise self._loading_error
 
         self.last_used = monotonic()
-
-    @callback
-    def async_interrupt(self) -> None:
-        """Discard audio waiting for active stream consumers."""
-        self._was_interrupted = True
-        self._interrupt_generation += 1
-        if self._stream_prefix:
-            self._stream_prefix = _wav_prefix_with_payload_size(
-                self._stream_prefix, None
-            )
-        if self._partial_data is not None:
-            self._partial_data[:] = (
-                [(self._stream_prefix, True)] if self._stream_prefix else []
-            )
-        if self._result_data is not None:
-            self._result_data = (
-                _wav_prefix_with_payload_size(self._stream_prefix, 0)
-                if self._stream_prefix
-                else b""
-            )
-
-        if self._consumers is not None:
-            for consumer in self._consumers:
-                stream_finished = False
-                while True:
-                    try:
-                        if consumer.queue.get_nowait() is None:
-                            stream_finished = True
-                    except asyncio.QueueEmpty:
-                        break
-                if self._stream_prefix and not consumer.prefix_delivered:
-                    consumer.queue.put_nowait((self._stream_prefix, True))
-                if stream_finished:
-                    consumer.queue.put_nowait(None)
-
-        for listener in tuple(self._interrupt_listeners):
-            listener()
-
-    @callback
-    def async_subscribe_audio_interrupt(
-        self, listener: Callable[[], None]
-    ) -> CALLBACK_TYPE:
-        """Subscribe to interruptions of this cached audio response."""
-        if self._result_data is not None or self._loading_error is not None:
-            return lambda: None
-
-        self._interrupt_listeners.add(listener)
-
-        def unsubscribe() -> None:
-            self._interrupt_listeners.discard(listener)
-
-        return unsubscribe
 
 
 @callback
@@ -434,7 +289,8 @@ async def async_get_media_source_audio(
     else:
         stream = manager.async_create_result_stream(**parsed["options"])
         stream.async_set_message(parsed["message"])
-    return stream.extension, await stream.async_get_result()
+    data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    return stream.extension, data
 
 
 @callback
@@ -631,9 +487,8 @@ class ResultStream:
 
     _manager: SpeechManager
 
-    _audio_interrupt_listeners: set[Callable[[], None]] = field(
-        default_factory=set, init=False
-    )
+    supports_audio_interrupt: bool = field(default=False, init=False)
+    _stream_claimed: bool = field(default=False, init=False)
 
     # Override
     _override_media_path: Path | None = None
@@ -652,8 +507,8 @@ class ResultStream:
         )
 
     @cached_property
-    def _result_cache(self) -> asyncio.Future[TTSCache]:
-        """Get the future that returns the cache."""
+    def _result(self) -> asyncio.Future[TTSCache | str | AsyncGenerator[str]]:
+        """Get the cached response or the input for a single-use live stream."""
         return asyncio.Future()
 
     @callback
@@ -662,16 +517,18 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
-        if self._result_cache.done():
+        if self._result.done():
             return
-        self._result_cache.set_result(
+        if self.supports_audio_interrupt:
+            self._result.set_result(message)
+            return
+        self._result.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
                 message=message,
                 use_file_cache=self.use_file_cache,
                 language=self.language,
                 options=self.options,
-                on_audio_interrupt=self._async_handle_audio_interrupt,
             )
         )
 
@@ -681,37 +538,23 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
-        if self._result_cache.done():
+        if self._result.done():
             return
-        self._result_cache.set_result(
+        if self.supports_audio_interrupt:
+            self._result.set_result(message_stream)
+            return
+        self._result.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
                 message_stream=message_stream,
                 language=self.language,
                 options=self.options,
-                on_audio_interrupt=self._async_handle_audio_interrupt,
             )
         )
 
-    @callback
-    def async_subscribe_audio_interrupt(
-        self, listener: Callable[[], None]
-    ) -> CALLBACK_TYPE:
-        """Subscribe to interruptions of the current audio response."""
-        self._audio_interrupt_listeners.add(listener)
-
-        def unsubscribe() -> None:
-            self._audio_interrupt_listeners.discard(listener)
-
-        return unsubscribe
-
-    @callback
-    def _async_handle_audio_interrupt(self) -> None:
-        """Notify active stream consumers of discarded audio."""
-        for listener in tuple(self._audio_interrupt_listeners):
-            listener()
-
-    async def async_stream_result(self) -> AsyncGenerator[bytes]:
+    async def async_stream_result(
+        self, on_audio_interrupt: Callable[[], None] | None = None
+    ) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
         if self._override_media_path is not None:
             # Overridden
@@ -721,35 +564,32 @@ class ResultStream:
             self.last_used = monotonic()
             return
 
-        cache = await self._result_cache
-        async for chunk in cache.async_stream_data():
-            yield chunk
+        result = await asyncio.shield(self._result)
+        if isinstance(result, TTSCache):
+            async for chunk in result.async_stream_data():
+                yield chunk
+        else:
+            if on_audio_interrupt is None:
+                raise HomeAssistantError(
+                    "This TTS engine requires interruptible playback"
+                )
+            if self._stream_claimed:
+                raise HomeAssistantError(
+                    "Interruptible TTS streams can only be consumed once"
+                )
+            self._stream_claimed = True
+            engine = get_engine_instance(self.hass, self.engine)
+            if not isinstance(engine, TextToSpeechEntity):
+                raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
+            async with aclosing(
+                self._manager.async_generate_tts_audio(
+                    engine, result, self.language, self.options, on_audio_interrupt
+                )
+            ) as audio:
+                async for chunk in audio:
+                    yield chunk
 
         self.last_used = monotonic()
-
-    async def async_get_result(self) -> bytes:
-        """Collect the current uninterrupted audio response."""
-        chunks: list[bytes] = []
-
-        @callback
-        def on_audio_interrupt() -> None:
-            if self.extension == "wav" and chunks:
-                # TTSCache yields the WAV prefix as its own first chunk.
-                chunks[1:] = []
-            else:
-                chunks.clear()
-
-        unsubscribe_interrupt = self.async_subscribe_audio_interrupt(
-            on_audio_interrupt
-        )
-        try:
-            async for chunk in self.async_stream_result():
-                # Append incrementally so an interruption can clear collected data.
-                chunks.append(chunk)  # noqa: PERF401
-        finally:
-            unsubscribe_interrupt()
-
-        return b"".join(chunks)
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
@@ -779,12 +619,16 @@ class ResultStream:
                 return None
             return self._override_media_path
 
-        if not self.use_file_cache or not self._result_cache.done():
+        if (
+            self.supports_audio_interrupt
+            or not self.use_file_cache
+            or not self._result.done()
+        ):
             return None
 
-        return self._manager.async_get_cache_file_path(
-            self._result_cache.result().cache_key
-        )
+        cache = self._result.result()
+        assert isinstance(cache, TTSCache)
+        return self._manager.async_get_cache_file_path(cache.cache_key)
 
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
@@ -1063,6 +907,10 @@ class SpeechManager:
             hass=self.hass,
             _manager=self,
         )
+        result_stream.supports_audio_interrupt = (
+            isinstance(engine_instance, TextToSpeechEntity)
+            and engine_instance.supports_audio_interrupt
+        )
         self.token_to_stream[token] = result_stream
         self.token_to_stream_cleanup.schedule()
         return result_stream
@@ -1074,7 +922,6 @@ class SpeechManager:
         message_stream: AsyncGenerator[str],
         language: str,
         options: dict,
-        on_audio_interrupt: Callable[[], None],
     ) -> TTSCache:
         """Make sure a message stream will be cached in memory and returns cache object.
 
@@ -1085,20 +932,8 @@ class SpeechManager:
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
-
-        cache: TTSCache | None = None
-
-        @callback
-        def handle_audio_interrupt() -> None:
-            assert cache is not None
-            cache.async_interrupt()
-
-        data_gen = self._async_generate_tts_audio(
-            engine_instance,
-            message_stream,
-            language,
-            options,
-            handle_audio_interrupt,
+        data_gen = self.async_generate_tts_audio(
+            engine_instance, message_stream, language, options
         )
 
         cache = TTSCache(
@@ -1106,7 +941,6 @@ class SpeechManager:
             extension=extension,
             data_gen=data_gen,
         )
-        cache.async_subscribe_audio_interrupt(on_audio_interrupt)
         self.mem_cache[cache_key] = cache
         self.hass.async_create_background_task(
             self._load_data_into_cache(
@@ -1125,7 +959,6 @@ class SpeechManager:
         use_file_cache: bool,
         language: str,
         options: dict,
-        on_audio_interrupt: Callable[[], None],
     ) -> TTSCache:
         """Make sure a message will be cached in memory and returns cache object.
 
@@ -1142,11 +975,8 @@ class SpeechManager:
 
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
-            if not cache.was_interrupted:
-                _LOGGER.debug("Found audio in cache for %s", message[0:32])
-                cache.async_subscribe_audio_interrupt(on_audio_interrupt)
-                return cache
-            _LOGGER.debug("Ignoring interrupted audio cache for %s", message[0:32])
+            _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            return cache
 
         store_to_disk = use_file_cache
 
@@ -1159,16 +989,8 @@ class SpeechManager:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
-
-            cache: TTSCache | None = None
-
-            @callback
-            def handle_audio_interrupt() -> None:
-                assert cache is not None
-                cache.async_interrupt()
-
-            data_gen = self._async_generate_tts_audio(
-                engine_instance, message, language, options, handle_audio_interrupt
+            data_gen = self.async_generate_tts_audio(
+                engine_instance, message, language, options
             )
 
         cache = TTSCache(
@@ -1176,7 +998,6 @@ class SpeechManager:
             extension=extension,
             data_gen=data_gen,
         )
-        cache.async_subscribe_audio_interrupt(on_audio_interrupt)
         self.mem_cache[cache_key] = cache
         self.hass.async_create_background_task(
             self._load_data_into_cache(
@@ -1205,11 +1026,6 @@ class SpeechManager:
             trunc_msg = message if len(message) < 35 else f"{message[0:32]}…"
             _LOGGER.error("Error getting audio for %s: %s", trunc_msg, err)
             self.mem_cache.pop(cache.cache_key, None)
-            return
-
-        if cache.was_interrupted:
-            if self.mem_cache.get(cache.cache_key) is cache:
-                self.mem_cache.pop(cache.cache_key)
             return
 
         if not store_to_disk:
@@ -1245,28 +1061,22 @@ class SpeechManager:
         else:
             self.file_cache[cache.cache_key] = filename
 
-    async def _async_generate_tts_audio(
+    async def async_generate_tts_audio(
         self,
         engine_instance: TextToSpeechEntity | Provider,
         message_or_stream: str | AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
-        on_audio_interrupt: Callable[[], None],
+        on_audio_interrupt: Callable[[], None] | None = None,
     ) -> AsyncGenerator[bytes]:
         """Generate TTS audio from an engine."""
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
-        passthrough = False
-        interrupt_enabled: bool | None = None
-        interrupt_pending = False
-
-        @callback
-        def handle_audio_interrupt() -> None:
-            nonlocal interrupt_pending
-            if interrupt_enabled:
-                on_audio_interrupt()
-            elif interrupt_enabled is None:
-                interrupt_pending = True
+        if on_audio_interrupt is not None and any(
+            option in options and option not in supported_options
+            for option in _PREFFERED_FORMAT_OPTIONS
+        ):
+            raise HomeAssistantError("Interruptible TTS requires native output options")
 
         # Extract preferred format options.
         #
@@ -1352,37 +1162,31 @@ class SpeechManager:
                 stream = message_or_stream
 
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, stream, handle_audio_interrupt)
+                TTSAudioRequest(language, options, stream, on_audio_interrupt)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
-            passthrough = tts_result.passthrough
 
-        # Passthrough may skip conversion only for output options the engine
-        # accepted. An extension mismatch must always be converted.
-        passthrough_options = supported_options if passthrough else ()
+        if on_audio_interrupt is not None:
+            async with aclosing(data_gen):
+                if extension != final_extension:
+                    raise HomeAssistantError(
+                        "Interruptible TTS requires the requested audio format"
+                    )
+                async for chunk in data_gen:
+                    yield chunk
+            return
+
+        # Only convert if we have a preferred format different than the
+        # expected format from the TTS system, or if a specific sample
+        # rate/format/channel count is requested.
         needs_conversion = (
             (final_extension != extension)
-            or (
-                sample_rate is not None
-                and ATTR_PREFERRED_SAMPLE_RATE not in passthrough_options
-            )
-            or (
-                sample_channels is not None
-                and ATTR_PREFERRED_SAMPLE_CHANNELS not in passthrough_options
-            )
-            or (
-                sample_bytes is not None
-                and ATTR_PREFERRED_SAMPLE_BYTES not in passthrough_options
-            )
-            or (
-                bitrate is not None
-                and ATTR_PREFERRED_BITRATE not in passthrough_options
-            )
+            or (sample_rate is not None)
+            or (sample_channels is not None)
+            or (sample_bytes is not None)
+            or (bitrate is not None)
         )
-        interrupt_enabled = not needs_conversion
-        if interrupt_enabled and interrupt_pending:
-            on_audio_interrupt()
 
         if needs_conversion:
             data_gen = _async_convert_audio(
@@ -1581,20 +1385,8 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         response: web.StreamResponse | None = None
-        interrupted = False
-
-        @callback
-        def on_audio_interrupt() -> None:
-            nonlocal interrupted
-            interrupted = True
-
-        unsubscribe_interrupt = stream.async_subscribe_audio_interrupt(
-            on_audio_interrupt
-        )
         try:
             async for data in stream.async_stream_result():
-                if interrupted:
-                    break
                 if response is None:
                     response = web.StreamResponse()
                     response.content_type = stream.content_type
@@ -1603,8 +1395,6 @@ class TextToSpeechView(HomeAssistantView):
                 await response.write(data)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error streaming tts: %s", err)
-        finally:
-            unsubscribe_interrupt()
 
         # Empty result or exception happened
         if response is None:

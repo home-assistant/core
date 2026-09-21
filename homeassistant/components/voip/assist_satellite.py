@@ -562,7 +562,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             if self.transport is None:
                 return  # not connected
 
-            data = await tts_stream.async_get_result()
+            data = b"".join([chunk async for chunk in tts_stream.async_stream_result()])
 
             if tts_stream.extension != "wav":
                 raise ValueError(

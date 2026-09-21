@@ -49,12 +49,12 @@ class TTSAudioResponse:
 
     extension: str
     data_gen: AsyncGenerator[bytes]
-    passthrough: bool = False
 
 
 class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
+    _attr_supports_audio_interrupt = False
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
 
@@ -91,6 +91,16 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
         return self._attr_default_options
+
+    @property
+    def supports_audio_interrupt(self) -> bool:
+        """Return whether playback requires a single-use, native-format interruptible stream.
+
+        The engine must discard its pending audio before invoking the callback,
+        preserve the stream header, and yield only replacement audio afterward.
+        Such streams bypass memory/disk caching and audio conversion.
+        """
+        return self._attr_supports_audio_interrupt
 
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""

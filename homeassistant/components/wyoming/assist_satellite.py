@@ -809,7 +809,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         total_seconds = 0.0
         start_time = monotonic()
         write_lock = asyncio.Lock()
-        interrupt_tasks: set[asyncio.Task[None]] = set()
         latest_interrupt_task: asyncio.Task[None] | None = None
         interrupt_generation = 0
 
@@ -819,12 +818,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         sample_channels: int | None = None
         timestamp = 0
 
-        async def interrupt_playback(
-            previous_task: asyncio.Task[None] | None,
-        ) -> None:
+        async def interrupt_playback() -> None:
             nonlocal start_time, timestamp, total_seconds
-            if previous_task is not None:
-                await previous_task
             if sample_rate is None or sample_width is None or sample_channels is None:
                 return
 
@@ -846,20 +841,16 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         def on_audio_interrupt() -> None:
             nonlocal interrupt_generation, latest_interrupt_task
             interrupt_generation += 1
-            task = self.hass.async_create_task(
-                interrupt_playback(latest_interrupt_task)
-            )
-            latest_interrupt_task = task
-            interrupt_tasks.add(task)
+            if latest_interrupt_task is None or latest_interrupt_task.done():
+                latest_interrupt_task = self.hass.async_create_task(
+                    interrupt_playback()
+                )
 
-        unsubscribe_interrupt = tts_result.async_subscribe_audio_interrupt(
-            on_audio_interrupt
-        )
-
+        audio_stream = tts_result.async_stream_result(on_audio_interrupt)
         try:
             header_data = b""
 
-            async for data_chunk in tts_result.async_stream_result():
+            async for data_chunk in audio_stream:
                 data_chunk_generation = interrupt_generation
                 if not header_complete:
                     # Accumulate data until we can parse the header and get
@@ -929,11 +920,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 await client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
         finally:
-            unsubscribe_interrupt()
-            for task in interrupt_tasks:
-                task.cancel()
-            if interrupt_tasks:
-                await asyncio.gather(*interrupt_tasks, return_exceptions=True)
+            await audio_stream.aclose()
+            if latest_interrupt_task is not None:
+                latest_interrupt_task.cancel()
+                await asyncio.gather(latest_interrupt_task, return_exceptions=True)
             send_duration = monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(

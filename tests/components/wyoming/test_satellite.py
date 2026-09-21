@@ -1,7 +1,7 @@
 """Test Wyoming satellite."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -1125,7 +1125,12 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
                 first_chunk_sent.set()
                 await release_first_chunk.wait()
 
-        async def async_stream_result():
+        interrupt = MagicMock()
+
+        async def async_stream_result(
+            on_audio_interrupt: Callable[[], None],
+        ) -> AsyncGenerator[bytes]:
+            interrupt.side_effect = on_audio_interrupt
             yield wav_data[:4140]
             await continue_stream.wait()
             yield wav_data[4140:]
@@ -1145,7 +1150,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
 
             async with asyncio.timeout(1):
                 await first_chunk_sent.wait()
-            stream._async_handle_audio_interrupt()
+            interrupt()
             release_first_chunk.set()
 
             async with asyncio.timeout(1):
@@ -1176,7 +1181,10 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
         interrupt_task_started = asyncio.Event()
         interrupt_task_cancelled = asyncio.Event()
 
-        async def blocked_stream_result():
+        async def blocked_stream_result(
+            on_audio_interrupt: Callable[[], None],
+        ) -> AsyncGenerator[bytes]:
+            interrupt.side_effect = on_audio_interrupt
             yield cleanup_wav_data
             await stream_blocked.wait()
 
@@ -1202,7 +1210,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
             )
             async with asyncio.timeout(1):
                 await audio_chunk_sent.wait()
-                cleanup_stream._async_handle_audio_interrupt()
+                interrupt()
                 await interrupt_task_started.wait()
             cleanup_stream_task.cancel()
             with pytest.raises(asyncio.CancelledError):

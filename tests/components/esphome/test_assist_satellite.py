@@ -1,6 +1,7 @@
 """Test ESPHome voice assistant server."""
 
 import asyncio
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
 from http import HTTPStatus
 import io
@@ -922,7 +923,9 @@ async def test_streaming_tts_errors(
 
     mock_tts_result_stream = MockResultStream(hass, "wav", b"")
 
-    async def async_stream_result_slowly():
+    async def async_stream_result_slowly(
+        on_audio_interrupt: Callable[[], None] | None = None,
+    ) -> AsyncGenerator[bytes]:
         media_fetched.set()
         await asyncio.sleep(1)
         yield mock_wav
@@ -976,7 +979,12 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
     stream_requested = asyncio.Event()
     continue_stream = asyncio.Event()
 
-    async def async_stream_result():
+    interrupt = Mock()
+
+    async def async_stream_result(
+        on_audio_interrupt: Callable[[], None],
+    ) -> AsyncGenerator[bytes]:
+        interrupt.side_effect = on_audio_interrupt
         stream_requested.set()
         await continue_stream.wait()
         yield mock_wav
@@ -987,7 +995,7 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
 
     async with asyncio.timeout(1):
         await stream_requested.wait()
-    stream._async_handle_audio_interrupt()
+    interrupt()
 
     assert [
         call.args[0] for call in mock_client.send_voice_assistant_event.call_args_list
@@ -2528,7 +2536,9 @@ class _ChunkedMockResultStream(MockResultStream):
         super().__init__(hass, extension, b"")
         self.chunks = chunks
 
-    async def async_stream_result(self):
+    async def async_stream_result(
+        self, on_audio_interrupt: Callable[[], None] | None = None
+    ) -> AsyncGenerator[bytes]:
         for chunk in self.chunks:
             yield chunk
 
@@ -2699,7 +2709,9 @@ async def test_stream_tts_audio_cancel_between_chunks(
 
     header_chunk = _make_wav_header(data_chunk_size=8)
 
-    async def async_stream_cancel():
+    async def async_stream_cancel(
+        on_audio_interrupt: Callable[[], None] | None = None,
+    ) -> AsyncGenerator[bytes]:
         yield header_chunk
         satellite._is_running = False
         yield b"\x00" * 8
@@ -2802,3 +2814,40 @@ async def test_stream_tts_audio_trailing_metadata(
     stream = _ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)
+
+
+async def test_interruptible_tts_starts_before_intent_finishes(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Drain the live stream during intent processing and do not consume it twice."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+        },
+    )
+    await hass.async_block_till_done()
+    satellite = get_satellite_entity(hass, device.device_info.mac_address)
+    assert satellite is not None
+    stream = MockResultStream(hass, "wav", b"")
+    stream.supports_audio_interrupt = True
+    output = {"token": stream.token, "url": stream.url}
+    with patch.object(satellite, "_stream_tts_audio", new_callable=AsyncMock) as play:
+        satellite.on_pipeline_event(
+            PipelineEvent(PipelineEventType.RUN_START, {"tts_output": output})
+        )
+        satellite.on_pipeline_event(
+            PipelineEvent(
+                PipelineEventType.INTENT_PROGRESS, {"tts_start_streaming": True}
+            )
+        )
+        await hass.async_block_till_done()
+        play.assert_awaited_once_with(stream)
+        satellite.on_pipeline_event(
+            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": output})
+        )
+        await hass.async_block_till_done()
+        play.assert_awaited_once_with(stream)
