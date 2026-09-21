@@ -217,3 +217,37 @@ def test_valve_actions_write_to_the_plc(action: str, written: bool) -> None:
     getattr(entity, action)()
 
     hub.write_by_name.assert_called_once_with("GVL.valve", written, pyads.PLCTYPE_BOOL)
+
+
+async def test_yaml_entities_come_up_on_the_importing_start(
+    hass: HomeAssistant,
+    mock_ads_notifications: dict[str, bytes],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test YAML entities come up on the start that imports the connection.
+
+    Core waits for pending import flows before it sets up the config entries of
+    a domain, so the platform finds a loaded hub instead of having to retry.
+    """
+    mock_ads_notifications["GVL.motion"] = BOOL_TRUE
+    config = {
+        DOMAIN: {
+            "device": "192.168.1.10.1.1",
+            "ip_address": "192.168.1.10",
+            "port": 851,
+        },
+        BINARY_SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "adsvar": "GVL.motion",
+            "name": "Motion",
+        },
+    }
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # No clock advancing, so a deferred platform would leave no state at all.
+    state = hass.states.get("binary_sensor.motion")
+    assert state is not None
+    assert state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+    assert "not ready yet" not in caplog.text
