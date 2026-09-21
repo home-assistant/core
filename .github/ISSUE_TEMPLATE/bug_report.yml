@@ -1,6 +1,5 @@
 name: Report an issue with Home Assistant Core
 description: Report an issue with Home Assistant Core.
-# Keep field IDs stable: the frontend log-report action uses them for URL prefill.
 body:
   - type: markdown
     attributes:
