@@ -81,14 +81,14 @@ class StatesManager:
         self._last_reported.clear()
 
     def reset(self) -> None:
-        """Reset pending and last-committed caches after the event session is closed.
+        """Reset after the database has been reset or changed.
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
         self._last_committed_id.clear()
         self._pending.clear()
-        # _oldest_ts is a database aggregate, not session state.
+        self._oldest_ts = None
 
     def load_from_db(self, session: Session) -> None:
         """Update the cache.
