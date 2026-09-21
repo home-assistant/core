@@ -62,7 +62,7 @@ async def test_achievement_total_retried_after_failure(
     zero_total: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed achievement lookup is retried while the title is unchanged."""
+    """Test achievement total is retried after a failed lookup."""
     achievements = zero_total.achievements
     achievements.get_achievements_xboxone_gameprogress.side_effect = ConnectError(
         "Network is unreachable"
@@ -96,7 +96,7 @@ async def test_achievement_total_fetched_once(
     zero_total: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """The achievements API is not called again once a total is known."""
+    """Test achievement total is only fetched once."""
     achievements = zero_total.achievements
     achievements.get_achievements_xboxone_gameprogress.return_value = gameprogress(
         TRUE_TOTAL
@@ -120,7 +120,7 @@ async def test_achievement_total_failure_keeps_entities_available(
     config_entry: MockConfigEntry,
     zero_total: AsyncMock,
 ) -> None:
-    """A failed achievement lookup does not take presence entities down."""
+    """Test entities stay available when the achievement lookup fails."""
     request = Request("GET", "https://achievements.xboxlive.com")
     zero_total.achievements.get_achievements_xboxone_gameprogress.side_effect = (
         HTTPStatusError(
