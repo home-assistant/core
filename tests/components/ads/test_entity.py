@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pyads
+
 from homeassistant.components.ads.const import STATE_KEY_STATE
 from homeassistant.components.ads.entity import AdsEntity
 from homeassistant.components.ads.hub import AdsHub
@@ -92,3 +94,24 @@ def test_rebind() -> None:
 
     assert entity._ads_hub is new_hub
     new_hub.register_device.assert_called_once_with(entity)
+
+
+async def test_subscription_landing_after_removal_is_dropped(
+    hass: HomeAssistant,
+) -> None:
+    """Test a subscription that completes after removal is deleted again.
+
+    A reload resubscribes in the background, so an entity disabled during that
+    window would otherwise be left subscribed and pinned until hub shutdown.
+    """
+    hub = MagicMock(spec=AdsHub)
+    hub.add_device_notification.return_value = 7
+    entity = AdsEntity(hub, "test", "GVL.test")
+    entity.hass = hass
+    entity.entity_id = "binary_sensor.test"
+
+    await entity.async_will_remove_from_hass()
+    await entity.async_initialize_device("GVL.test", pyads.PLCTYPE_BOOL)
+
+    hub.delete_device_notification.assert_called_once_with(7)
+    assert not entity._notification_handles

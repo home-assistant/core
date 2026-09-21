@@ -26,6 +26,7 @@ class AdsEntity(Entity):
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._notification_handles: list[int] = []
+        self._removed = False
         self._attr_unique_id = ads_var
         self._attr_name = name
         ads_hub.register_device(self)
@@ -60,8 +61,16 @@ class AdsEntity(Entity):
         handle = await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
-        if handle is not None:
-            self._notification_handles.append(handle)
+        if handle is None:
+            return
+        if self._removed:
+            # Removed while this was subscribing, so the removal has already
+            # drained the handles and will not come back for this one.
+            await self.hass.async_add_executor_job(
+                self._ads_hub.delete_device_notification, handle
+            )
+            return
+        self._notification_handles.append(handle)
         try:
             async with timeout(10):
                 await event.wait()
@@ -94,6 +103,9 @@ class AdsEntity(Entity):
         The hub holds the callback, so leaving them behind would keep the PLC
         pushing values for a variable nobody reads and pin this entity.
         """
+        # Set before the first await, so a subscription still in flight sees it
+        # and cleans up after itself.
+        self._removed = True
         handles = self._notification_handles
         self._notification_handles = []
         for handle in handles:
