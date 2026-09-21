@@ -6,7 +6,6 @@ import logging
 from typing import Any, override
 
 from pyhausbus.HomeServer import HomeServer
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -18,8 +17,6 @@ from .gateway import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_USER_SCHEMA = vol.Schema({})
 
 _DEVICE_SEARCH_TIMEOUT = 5  # seconds
 
@@ -65,11 +62,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_wait_for_device()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_SCHEMA,
-            errors={},
-        )
+        return self.async_show_form(step_id="user")
 
     async def async_step_wait_for_device(
         self, user_input: dict[str, Any] | None = None
