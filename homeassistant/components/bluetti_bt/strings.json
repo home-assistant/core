@@ -77,7 +77,7 @@
         "name": "AC ECO Switch"
       },
       "ac_i_f": {
-        "name": "AC Input Fault"
+        "name": "AC Input Frequency"
       },
       "ac_i_p_total": {
         "name": "AC Input Power Total"
@@ -86,7 +86,7 @@
         "name": "AC Output Energy Total"
       },
       "ac_o_f": {
-        "name": "AC Output Fault"
+        "name": "AC Output Frequency"
       },
       "ac_o_mode": {
         "name": "AC Output Mode"
@@ -236,7 +236,7 @@
         "name": "Generator Input Energy Total"
       },
       "g_i_f": {
-        "name": "Generator Input Fault"
+        "name": "Generator Input Frequency"
       },
       "g_i_p_total": {
         "name": "Generator Input Power Total"
