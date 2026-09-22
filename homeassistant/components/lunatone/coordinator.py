@@ -1,21 +1,13 @@
 """Coordinator for handling data fetching and updates."""
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
 import aiohttp
-from lunatone_rest_api_client import (
-    DALIBroadcast,
-    DALIScan,
-    Device,
-    Devices,
-    Info,
-    Sensor,
-    Sensors,
-)
+from lunatone_rest_api_client import DALIScan, Device, Devices, Info, Sensor, Sensors
 from lunatone_rest_api_client.models import InfoData, ScanData, ScanLineData
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,7 +32,6 @@ class LunatoneData:
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
     coordinator_scan: LunatoneScanDataUpdateCoordinator
     coordinator_sensors: LunatoneSensorsDataUpdateCoordinator | None = None
-    dali_line_broadcasts: list[DALIBroadcast] = field(default_factory=list)
 
 
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
