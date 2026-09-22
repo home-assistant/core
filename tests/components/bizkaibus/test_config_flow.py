@@ -640,6 +640,73 @@ async def test_import_flow_from_yaml(hass: HomeAssistant) -> None:
     }
 
 
+async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> None:
+    """Test importing a line adds it to an existing stop."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry") as mock_setup,
+    ):
+        mock_api_class.return_value.TestConnection = AsyncMock(return_value=True)
+        mock_api_class.return_value.GetLinesOnStop = AsyncMock(
+            return_value=[
+                SimpleNamespace(id="A", route="Route A"),
+                SimpleNamespace(id="B", route="Route B"),
+            ]
+        )
+        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+        mock_setup.return_value = True
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "B"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.options == {
+        CONF_LINE_IDS: ["A", "B"],
+        CONF_LINES: {"A": "Route A", "B": "Route B"},
+    }
+
+
+async def test_import_flow_aborts_for_existing_line(hass: HomeAssistant) -> None:
+    """Test importing an existing line is rejected."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STOP_ID: "1234"},
+        options={CONF_LINE_IDS: ["A"], CONF_LINES: {"A": "Route A"}},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api_class.return_value.TestConnection = AsyncMock(return_value=True)
+        mock_api_class.return_value.GetLinesOnStop = AsyncMock(
+            return_value=[SimpleNamespace(id="A", route="Route A")]
+        )
+        mock_api_class.return_value.GetTimetable = AsyncMock(return_value=None)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "A"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_import_flow_without_stop_id(hass: HomeAssistant) -> None:
     """Test importing without a stop ID is rejected."""
     result = await hass.config_entries.flow.async_init(

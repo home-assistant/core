@@ -218,11 +218,6 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not stop_id:
             return self.async_abort(reason="invalid_stop_id")
 
-        await self.async_set_unique_id(stop_id)
-        self._abort_if_unique_id_configured()
-
-        options: dict[str, Any] = {}
-
         api = BizkaibusAPI(BizkaibusLanguages.ES, stop_id)
         line_ids, lines = await _async_get_lines(api)
         if line_ids == []:
@@ -231,7 +226,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         route_id = info.get(CONF_LINE_IDS, info.get(OLD_CONF_ROUTE_ID))
 
         if route_id in line_ids:
-            options = {
+            imported_options: dict[str, Any] = {
                 CONF_LINE_IDS: [route_id],
                 CONF_LINES: {route_id: lines[route_id]},
             }
@@ -242,10 +237,38 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if title is None:
             return self.async_abort(reason="cannot_connect")
 
+        existing_entry = next(
+            (
+                entry
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get(CONF_STOP_ID) == stop_id
+            ),
+            None,
+        )
+        if existing_entry:
+            existing_line_ids = existing_entry.options.get(CONF_LINE_IDS, [])
+            if route_id in existing_line_ids:
+                return self.async_abort(reason="already_configured")
+
+            return self.async_update_reload_and_abort(
+                existing_entry,
+                title=title,
+                options={
+                    CONF_LINE_IDS: [*existing_line_ids, route_id],
+                    CONF_LINES: {
+                        **existing_entry.options.get(CONF_LINES, {}),
+                        **imported_options[CONF_LINES],
+                    },
+                },
+            )
+
+        await self.async_set_unique_id(stop_id)
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=title,
             data={CONF_STOP_ID: stop_id},
-            options=options,
+            options=imported_options,
         )
 
 
