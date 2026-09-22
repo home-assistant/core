@@ -142,6 +142,7 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
+| `W7438` | [`home-assistant-entity-id`](#w7438-home-assistant-entity-id) | Entity class sets `self.entity_id` instead of letting Home Assistant generate it |
 
 
 ## `home_assistant_logger` checker
@@ -656,6 +657,27 @@ are in scope. `entity.py`, `__init__.py` at the integration root, and
 other helper sub-modules are out of scope because the platform
 context is ambiguous there. The three in-class scan locations are
 the same as for `W7425`.
+
+
+## `home_assistant_entity_id` checker
+
+Prohibits assigning to `self.entity_id` in entity classes.
+
+### `W7438`: `home-assistant-entity-id`
+
+Home Assistant assigns an entity's `entity_id` automatically, derived
+from the entity's platform together with its name (`has_entity_name`)
+or the object id suggested via `_attr_suggested_object_id` /
+`suggested_object_id`. Setting `self.entity_id` directly bypasses the
+entity registry's collision handling and the user's ability to rename
+an entity, and it hard-codes an `entity_id` that ignores the configured
+naming.
+
+The rule fires on `self.entity_id = ...` assignments (including
+augmented and annotated assignments) at any depth inside a class that
+inherits from `homeassistant.helpers.entity.Entity`, in any integration
+module. Assignments to `entity_id` on other objects, and on classes that
+are not entities, are not flagged.
 
 
 ## `home_assistant_entity_description_defaults` checker

@@ -179,6 +179,7 @@ disable = [
 
   # Disabled while existing violations are being cleaned up
   "home-assistant-unused-test-fixture-argument",
+  "home-assistant-entity-id",
 
   # Handled by ruff
   # Ref: <https://github.com/astral-sh/ruff/issues/970>
