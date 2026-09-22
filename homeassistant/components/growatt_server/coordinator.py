@@ -697,16 +697,48 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return [
             {
                 "period_id": i,
-                "start_time": self._format_time(
+                "start_time": self._parse_ac_time(
                     settings[f"forced{time_type}TimeStart{i}"]
                 ),
-                "end_time": self._format_time(
+                "end_time": self._parse_ac_time(
                     settings[f"forced{time_type}TimeStop{i}"]
                 ),
-                "enabled": int(settings[f"forced{time_type}StopSwitch{i}"]) == 1,
+                "enabled": self._parse_ac_int(
+                    settings[f"forced{time_type}StopSwitch{i}"]
+                )
+                == 1,
             }
             for i in range(1, 4)
         ]
+
+    @staticmethod
+    def _invalid_mix_settings() -> HomeAssistantError:
+        """Build the error raised when a Mix settings value cannot be parsed."""
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="mix_settings_invalid",
+        )
+
+    def _parse_ac_time(self, time_raw: Any) -> str:
+        """Parse a classic Mix schedule time, rejecting values that do not parse.
+
+        _format_time maps anything unparsable to 00:00, which a read-merge-write
+        would then write over the device's real period.
+        """
+        try:
+            hour, minute = (int(part) for part in str(time_raw).split(":"))
+        except ValueError as err:
+            raise self._invalid_mix_settings() from err
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise self._invalid_mix_settings()
+        return f"{hour:02d}:{minute:02d}"
+
+    def _parse_ac_int(self, raw: Any) -> int:
+        """Parse an integer classic Mix setting, rejecting values that do not parse."""
+        try:
+            return int(raw)
+        except (TypeError, ValueError) as err:
+            raise self._invalid_mix_settings() from err
 
     def _format_time(self, time_raw: str) -> str:
         """Format time string to HH:MM format."""
@@ -783,7 +815,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_key="api_error",
                     translation_placeholders={"error": str(err)},
                 ) from err
-            if result.get("success") is not True:
+            if not isinstance(result, dict) or result.get("success") is not True:
                 _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -870,7 +902,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_key="api_error",
                     translation_placeholders={"error": str(err)},
                 ) from err
-            if result.get("success") is not True:
+            if not isinstance(result, dict) or result.get("success") is not True:
                 _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
