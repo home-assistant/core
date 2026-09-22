@@ -1,7 +1,10 @@
 """Tests for Broadlink switches."""
 
-from unittest.mock import MagicMock
+from base64 import b64decode
+from datetime import timedelta
+from unittest.mock import MagicMock, call
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -17,13 +20,33 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
+from homeassistant.setup import async_setup_component
 
 from . import get_device
+
+from tests.common import async_fire_time_changed
 
 IR_PACKET = (
     "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
     "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
 )
+
+CONFIG = {
+    SWITCH_DOMAIN: [
+        {
+            "platform": "broadlink",
+            "mac": "34:ea:34:be:fc:25",
+            "switches": [
+                {
+                    "name": "Custom IR switch",
+                    "command_on": IR_PACKET,
+                    "command_off": IR_PACKET,
+                }
+            ],
+        }
+    ]
+}
 
 
 async def test_switch_setup_works(
@@ -176,3 +199,37 @@ async def test_custom_ir_switch_setup_works(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": entity_ids[0]}, blocking=True
     )
     assert mock_setup.api.send_data.call_count == 1
+
+
+async def test_yaml_switch_gets_unique_id(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a switch configured in YAML gets a unique ID.
+
+    An entity without a unique ID cannot be attached to a device, which
+    Home Assistant reports as a deprecation.
+    """
+    # The YAML platform is set up before the device is known, so it is
+    # retried in the background once the device is available.
+    assert await async_setup_component(hass, SWITCH_DOMAIN, CONFIG)
+    mock_setup = await get_device("Entrance").setup_entry(hass)
+
+    freezer.tick(timedelta(seconds=PLATFORM_NOT_READY_BASE_WAIT_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, f"{mock_setup.entry.unique_id}-custom_ir_switch"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert mock_setup.api.send_data.call_args == call(b64decode(IR_PACKET))
