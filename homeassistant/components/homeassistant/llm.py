@@ -7,6 +7,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -172,6 +173,14 @@ def async_get_exposed_entities(
                 if attr_name in interesting_attributes
             }
         ):
+            # Tools take brightness as a 0-100 percentage; the attribute is 0-255.
+            if state.domain == LIGHT_DOMAIN and isinstance(
+                brightness := state.attributes.get("brightness"), int
+            ):
+                pct = round(brightness / 255 * 100)
+                attributes["brightness_pct"] = str(
+                    max(pct, 1) if brightness > 0 else pct
+                )
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
