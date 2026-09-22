@@ -15,13 +15,16 @@ import pytest
 from homeassistant.components.delijn.const import (
     CONF_NUMBER_OF_DEPARTURES,
     CONF_STOP_NUMBER,
+    CONF_SUBENTRIES,
     DOMAIN,
     SUBENTRY_TYPE_STOP,
 )
 from homeassistant.config_entries import (
+    SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigFlowResult,
+    ConfigSubentryData,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -118,6 +121,64 @@ async def test_user_flow_errors(
         result["flow_id"], {CONF_API_KEY: API_KEY}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_delijn_client")
+async def test_import_flow_creates_entry_with_subentries(
+    hass: HomeAssistant,
+) -> None:
+    """Test the import step creates the entry together with its stops."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_SUBENTRIES: [
+                ConfigSubentryData(
+                    data={
+                        CONF_STOP_NUMBER: STOP_NUMBER,
+                        CONF_NUMBER_OF_DEPARTURES: 3,
+                    },
+                    subentry_type=SUBENTRY_TYPE_STOP,
+                    title=STOP_TITLE,
+                    unique_id=STOP_NUMBER,
+                )
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "De Lijn"
+    assert result["data"] == {CONF_API_KEY: API_KEY}
+
+    entry = result["result"]
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.subentry_type == SUBENTRY_TYPE_STOP
+    assert subentry.title == STOP_TITLE
+    assert subentry.unique_id == STOP_NUMBER
+    assert subentry.data == {
+        CONF_STOP_NUMBER: STOP_NUMBER,
+        CONF_NUMBER_OF_DEPARTURES: 3,
+    }
+
+
+async def test_import_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the import step aborts when the API key is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_API_KEY: API_KEY, CONF_SUBENTRIES: []},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_reauth_success(
