@@ -324,7 +324,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.lanbon
-aiolanbon==0.2.0
+aiolanbon==0.2.1
 
 # homeassistant.components.librenms
 aiolibrenms==0.0.3
