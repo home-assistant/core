@@ -286,6 +286,9 @@
       "time": {
         "name": "Time"
       },
+      "valve_opening": {
+        "name": "Valve opening"
+      },
       "video_brightness": {
         "name": "Video brightness"
       },

@@ -325,6 +325,12 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
+        TuyaNumberEntityDescription(
+            key=DPCode.PERCENT_CONTROL,
+            translation_key="valve_opening",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SGBJ: (
         TuyaNumberEntityDescription(
