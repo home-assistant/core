@@ -48,6 +48,27 @@ CONFIG = {
     ]
 }
 
+CONFIG_SIMILAR_NAMES = {
+    SWITCH_DOMAIN: [
+        {
+            "platform": "broadlink",
+            "mac": "34:ea:34:be:fc:25",
+            "switches": [
+                {
+                    "name": "TV-1",
+                    "command_on": IR_PACKET,
+                    "command_off": IR_PACKET,
+                },
+                {
+                    "name": "TV 1",
+                    "command_on": IR_PACKET,
+                    "command_off": IR_PACKET,
+                },
+            ],
+        }
+    ]
+}
+
 
 async def test_switch_setup_works(
     hass: HomeAssistant,
@@ -217,7 +238,7 @@ async def test_yaml_switch_gets_unique_id(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, DOMAIN, f"{mock_setup.entry.unique_id}-custom_ir_switch"
+        SWITCH_DOMAIN, DOMAIN, f"{mock_setup.entry.unique_id}-Custom IR switch"
     )
     assert entity_id is not None
 
@@ -229,3 +250,27 @@ async def test_yaml_switch_gets_unique_id(
     )
 
     assert mock_setup.api.send_data.call_args == call(b64decode(IR_PACKET))
+
+
+async def test_yaml_switches_with_similar_names_get_unique_ids(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test names that only differ in punctuation get different unique IDs."""
+    assert await async_setup_component(hass, SWITCH_DOMAIN, CONFIG_SIMILAR_NAMES)
+    mock_setup = await get_device("Entrance").setup_entry(hass)
+
+    freezer.tick(timedelta(seconds=PLATFORM_NOT_READY_BASE_WAIT_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_ids = [
+        entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, f"{mock_setup.entry.unique_id}-{name}"
+        )
+        for name in ("TV-1", "TV 1")
+    ]
+
+    assert None not in entity_ids
+    assert len(set(entity_ids)) == 2

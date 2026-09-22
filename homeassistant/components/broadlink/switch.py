@@ -35,7 +35,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 
 from . import BroadlinkDevice
 from .const import DOMAIN, DOMAINS_AND_TYPES
@@ -185,7 +184,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._attr_name = config[CONF_NAME]
-        self._attr_unique_id = f"{device.unique_id}-{slugify(config[CONF_NAME])}"
+        self._attr_unique_id = f"{device.unique_id}-{config[CONF_NAME]}"
 
     @override
     async def _async_send_packet(self, packet):
