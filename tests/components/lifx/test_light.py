@@ -1716,6 +1716,26 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
 
 
 @pytest.mark.parametrize(
+    ("service", "default"),
+    [
+        pytest.param(SERVICE_EFFECT_MOVE, None, id="move"),
+        pytest.param(SERVICE_PAINT_THEME, "exciting", id="paint_theme"),
+    ],
+)
+def test_theme_field_default_matches_the_action(
+    service: str, default: str | None
+) -> None:
+    """Test the UI pre-fills the theme the action applies when none is given.
+
+    Move applies no theme without one, so a default would suggest a color
+    change the action does not otherwise make.
+    """
+    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
+
+    assert services[service]["fields"][ATTR_THEME].get("default") == default
+
+
+@pytest.mark.parametrize(
     ("service", "factory", "palette"),
     [
         pytest.param(
