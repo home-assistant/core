@@ -407,6 +407,16 @@ class AlexaEntity:
 
 
 @callback
+def async_get_camera_entity(
+    hass: HomeAssistant, entity_id: str
+) -> camera.Camera | None:
+    """Return the camera entity, regardless of whether it is turned on."""
+    if (component := hass.data.get(camera.DATA_COMPONENT)) is None:
+        return None
+    return component.get_entity(entity_id)
+
+
+@callback
 def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[AlexaEntity]:
@@ -1190,11 +1200,9 @@ class CameraCapabilities(AlexaEntity):
 
     def _supports_webrtc(self) -> bool:
         """Check if the camera can negotiate a WebRTC stream."""
-        component = self.hass.data.get(camera.DATA_COMPONENT)
         if (
-            component is None
-            or (camera_entity := component.get_entity(self.entity_id)) is None
-        ):
+            camera_entity := async_get_camera_entity(self.hass, self.entity_id)
+        ) is None:
             _LOGGER.debug("%s not found for AlexaRTCSessionController", self.entity_id)
             return False
 

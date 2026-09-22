@@ -125,7 +125,7 @@ from .const import (
     Cause,
     Inputs,
 )
-from .entities import async_get_entities
+from .entities import async_get_camera_entity, async_get_entities
 from .errors import (
     AlexaEndpointUnreachableError,
     AlexaInvalidDirectiveError,
@@ -2161,7 +2161,12 @@ async def _async_get_webrtc_answer(
                 offer, session_id, send_message
             )
             answer = await answer_future
-    except (HomeAssistantError, TimeoutError) as err:
+    except TimeoutError as err:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: camera did not answer in time"
+        ) from err
+    except HomeAssistantError as err:
         camera_entity.close_webrtc_session(session_id)
         raise AlexaEndpointUnreachableError(
             f"Failed to negotiate WebRTC session: {err}"
@@ -2243,14 +2248,10 @@ async def async_api_rtc_session_disconnected(
 ) -> AlexaResponse:
     """Process a SessionDisconnected request."""
     session_id: str = directive.payload["sessionId"]
-    try:
-        camera_entity = camera.get_camera_from_entity_id(
-            hass, directive.entity.entity_id
-        )
-    except HomeAssistantError as err:
-        _LOGGER.debug("Cannot close WebRTC session %s: %s", session_id, err)
-    else:
+    if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):
         camera_entity.close_webrtc_session(session_id)
+    else:
+        _LOGGER.debug("Cannot close WebRTC session %s: camera not found", session_id)
 
     return directive.response(
         name="SessionDisconnected",

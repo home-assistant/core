@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
@@ -6147,7 +6148,7 @@ async def test_initiate_session_with_offer_without_media(hass: HomeAssistant) ->
         pytest.param(
             [],
             0,
-            "Failed to negotiate WebRTC session: ",
+            "Failed to negotiate WebRTC session: camera did not answer in time",
             id="timeout",
         ),
         pytest.param(
@@ -6247,6 +6248,10 @@ async def test_initiate_session_with_offer_slow_camera(hass: HomeAssistant) -> N
     response = msg["event"]
     assert response["header"]["name"] == "ErrorResponse"
     assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+    assert (
+        response["payload"]["message"]
+        == "Failed to negotiate WebRTC session: camera did not answer in time"
+    )
     mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
@@ -6314,9 +6319,16 @@ async def test_rtc_session_connected(hass: HomeAssistant) -> None:
     assert response["payload"] == {"sessionId": RTC_SESSION_ID}
 
 
+@pytest.mark.parametrize("camera_on", [True, False])
 @pytest.mark.usefixtures("mock_camera")
-async def test_rtc_session_disconnected(hass: HomeAssistant) -> None:
-    """Test SessionDisconnected closes the WebRTC session."""
+async def test_rtc_session_disconnected(hass: HomeAssistant, camera_on: bool) -> None:
+    """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
+    await hass.services.async_call(
+        camera.DOMAIN,
+        SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "camera.demo_camera"},
+        blocking=True,
+    )
     request = get_new_request(
         "Alexa.RTCSessionController", "SessionDisconnected", DEMO_CAMERA_ENDPOINT
     )
