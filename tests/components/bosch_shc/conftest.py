@@ -14,6 +14,7 @@ from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
+    SHCMotionDetector2,
     SHCPresenceSimulationSystem,
     SHCShutterContact2,
     SHCShutterControl,
@@ -73,6 +74,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "micromodule_relays",
         "micromodule_shutter_controls",
         "motion_detectors",
+        "motion_detectors2",
         "roomthermostats",
         "shutter_contacts",
         "shutter_contacts2",
@@ -331,4 +333,24 @@ def shutter_contact2_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    return device
+
+
+def motion_detector2_device(
+    device_id: str = "hdm:ZigBee:motiondetector1",
+    name: str = "Motion Detector",
+    pet_immunity_enabled: bool = False,
+) -> SHCMotionDetector2:
+    """Build a minimal device double for the motion_detectors2 bucket."""
+    device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MD2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.pet_immunity_enabled = pet_immunity_enabled
     return device
