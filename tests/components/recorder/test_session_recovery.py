@@ -5,13 +5,19 @@ import sqlite3
 from unittest.mock import patch
 
 import pytest
-from sqlalchemy.exc import IntegrityError, InterfaceError, InternalError, OperationalError
+from sqlalchemy.exc import (
+    IntegrityError,
+    InterfaceError,
+    InternalError,
+    OperationalError,
+)
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.db_schema import States
 from homeassistant.components.recorder.util import dburl_to_path, session_scope
 from homeassistant.core import HomeAssistant
+
 from .common import async_wait_recording_done
 
 
@@ -79,7 +85,9 @@ async def test_recorder_retries_until_connection_restored(
         patch("time.sleep"),
         patch.object(instance, "db_max_retries", 1),
         patch.object(instance, "db_retry_wait", 0),
-        patch.object(instance, "_restore_connection_tied_caches", side_effect=flaky_restore),
+        patch.object(
+            instance, "_restore_connection_tied_caches", side_effect=flaky_restore
+        ),
         patch.object(
             event_session,
             "flush",
