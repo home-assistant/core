@@ -31,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    CoreState,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -948,28 +947,25 @@ class Recorder(threading.Thread):
             self._log_setup_failure(err, log_exception=log_exception)
             return None, False
 
-    def _hass_is_stopping(self) -> bool:
-        """Return True once hass is past running, read safely off the loop.
-
-        hass.is_stopping is a cached_property invalidated only on the event
-        loop, and it excludes not_running. hass.state is a plain attribute.
-        """
-        return self.hass.state not in (CoreState.starting, CoreState.running)
-
     def _sleep_unless_stopping(self, wait: float) -> bool:
         """Sleep in slices, returning False as soon as hass is stopping."""
         remaining = wait
         while remaining > 0:
-            if self._hass_is_stopping():
+            if self.hass.is_stopping:
                 return False
             slice_ = min(DB_SETUP_STOP_POLL_INTERVAL, remaining)
             time.sleep(slice_)
             remaining -= slice_
-        return not self._hass_is_stopping()
+        return not self.hass.is_stopping
 
     def _setup_recorder_extended(self, deadline: float) -> bool:
         """Keep retrying the connection on a backoff, within both bounds."""
-        wait = float(max(self.db_retry_wait, DB_SETUP_RETRY_WAIT_MIN))
+        wait = float(
+            min(
+                max(self.db_retry_wait, DB_SETUP_RETRY_WAIT_MIN),
+                DB_SETUP_RETRY_WAIT_MAX,
+            )
+        )
 
         for _ in range(MAX_DB_SETUP_RETRIES):
             remaining = deadline - time.monotonic()
