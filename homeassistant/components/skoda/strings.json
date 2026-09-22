@@ -6,9 +6,9 @@
     },
     "error": {
       "access_forbidden": "Access to this vehicle is forbidden.",
-      "api_error": "Communication error with Škoda API. Check validity of VIN and API-KEY",
+      "api_error": "Communication error with the Škoda API. Check the validity of the VIN and API key.",
       "cannot_connect": "Cannot connect to Škoda servers.",
-      "invalid_auth": "Invalid or expired API Key.",
+      "invalid_auth": "Invalid or expired API key.",
       "invalid_vin_length": "VIN must be exactly 17 characters long.",
       "rate_limit_exceeded": "Rate limit exceeded or low 12V battery.",
       "timeout_connect": "Connection to the vehicle timed out.",
@@ -18,7 +18,7 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "API-Key"
+          "api_key": "API key"
         },
         "data_description": {
           "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home."
@@ -28,7 +28,7 @@
       },
       "user": {
         "data": {
-          "api_key": "API-Key",
+          "api_key": "API key",
           "vin": "Vehicle VIN (17 characters)"
         },
         "data_description": {

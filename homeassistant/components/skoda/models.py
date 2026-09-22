@@ -17,7 +17,7 @@ class SkodaState:
     """Vehicle state model reflecting OpenAPI status."""
 
     vin: str
-    vehicle_response: VehicleResponse | None = None
+    vehicle_response: VehicleResponse
 
 
 @dataclass
