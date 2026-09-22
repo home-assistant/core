@@ -115,7 +115,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.52
+SQLAlchemy==2.0.53
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
