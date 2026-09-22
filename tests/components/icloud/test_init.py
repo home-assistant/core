@@ -52,6 +52,7 @@ def mock_controller_2fa_service():
         service_mock.return_value.requires_2sa = True
         service_mock.return_value.validate_2fa_code = Mock(return_value=True)
         service_mock.return_value.is_trusted_session = False
+        service_mock.return_value.two_factor_delivery_method = "trusted_device"
         yield service_mock
 
 
@@ -845,6 +846,53 @@ async def test_auth_status_at_login_starts_reauth(
     # the user has to log in again even though a code is what iCloud wants.
     assert config_entry.runtime_data.api is None
     assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(
+            PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+            id="challenge_as_exception",
+        ),
+        pytest.param(
+            PyiCloudAPIResponseException(
+                "Authentication required for Account.",
+                AppleAuthError.TWO_FACTOR_REQUIRED,
+            ),
+            id="challenge_as_status",
+        ),
+    ],
+)
+async def test_a_challenge_that_cannot_send_a_code_is_retried(
+    hass: HomeAssistant, service_2fa: Mock, failure: Exception
+) -> None:
+    """Test that setup is retried when the challenge can deliver no code.
+
+    The options fetch that sets a delivery route up can be refused on its own.
+    iCloud still reports the challenge, but nothing can send a code for it, so
+    asking leaves the user on a form they cannot complete. Retrying is what
+    recovers this, and both shapes the challenge arrives in have to do it.
+    """
+    service_2fa.return_value.requires_2fa = False
+    service_2fa.return_value.requires_2sa = False
+    service_2fa.return_value.two_factor_delivery_method = "unknown"
+    type(service_2fa.return_value).devices = PropertyMock(side_effect=failure)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
