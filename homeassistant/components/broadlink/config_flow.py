@@ -309,31 +309,22 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose a name for the device and create config entry."""
+        """Create the config entry."""
         device = self.device
-        errors: dict[str, str] = {}
 
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-        if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={
-                    CONF_HOST: device.host[0],
-                    CONF_MAC: device.mac.hex(),
-                    CONF_TYPE: device.devtype,
-                    CONF_TIMEOUT: device.timeout,
-                },
-            )
-
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        data_schema = {probatio.Required(CONF_NAME, default=device.name): str}
-        return self.async_show_form(
-            step_id="finish", data_schema=probatio.Schema(data_schema), errors=errors
+        return self.async_create_entry(
+            title=device.name or device.model,
+            data={
+                CONF_HOST: device.host[0],
+                CONF_MAC: device.mac.hex(),
+                CONF_TYPE: device.devtype,
+                CONF_TIMEOUT: device.timeout,
+            },
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
