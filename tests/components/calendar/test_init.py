@@ -17,6 +17,7 @@ from homeassistant.components.calendar import (
     SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityDescription,
+    CalendarEvent,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
@@ -78,6 +79,56 @@ async def test_events_http_api(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert events[0]["summary"] == "Future Event"
+
+
+async def test_events_http_api_color(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test that a per-event color is included in the calendar HTTP API."""
+    client = await hass_client()
+    start = dt_util.now() - timedelta(days=1)
+    end = start + timedelta(days=2)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_2?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert events[0]["summary"] == "Current Event"
+    assert events[0]["color"] == "#00FF00"
+
+    # Calendar 1's event does not set a color; the field is still present
+    # (like the other optional fields on this endpoint) but null.
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert events[0]["summary"] == "Future Event"
+    assert events[0]["color"] is None
+
+
+def test_calendar_event_color() -> None:
+    """Test that CalendarEvent.color is optional and round-trips via as_dict()."""
+    now = dt_util.now()
+    later = now + timedelta(hours=1)
+
+    event_without_color = CalendarEvent(start=now, end=later, summary="No color")
+    assert event_without_color.color is None
+    assert "color" not in event_without_color.as_dict()
+
+    event_with_hex_color = CalendarEvent(
+        start=now, end=later, summary="Hex color", color="#0088aa"
+    )
+    assert event_with_hex_color.color == "#0088aa"
+    assert event_with_hex_color.as_dict()["color"] == "#0088aa"
+
+    # RFC 7986 Section 5.9 also allows a CSS3 color name, as used by
+    # local_calendar/remote_calendar/caldav backends.
+    event_with_named_color = CalendarEvent(
+        start=now, end=later, summary="Named color", color="turquoise"
+    )
+    assert event_with_named_color.color == "turquoise"
+    assert event_with_named_color.as_dict()["color"] == "turquoise"
 
 
 async def test_events_http_api_missing_fields(
@@ -759,6 +810,39 @@ async def test_websocket_handle_subscribe_calendar_events(
     assert events[0]["uid"] == "calendar-event-uid-1"
     assert events[0]["rrule"] == "FREQ=WEEKLY;COUNT=3"
     assert events[0]["recurrence_id"] == "20260415"
+    # This event does not set a color, and as_dict() omits None fields,
+    # so it should not be present in the websocket payload at all.
+    assert "color" not in events[0]
+
+
+async def test_websocket_handle_subscribe_calendar_events_color(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a per-event color is included in the websocket subscribe payload."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now() - timedelta(days=1)
+    end = start + timedelta(days=2)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_2",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    events = msg["event"]["events"]
+    assert len(events) == 1
+    assert events[0]["summary"] == "Current Event"
+    assert events[0]["color"] == "#00FF00"
 
 
 async def test_websocket_subscribe_updates_on_state_change(

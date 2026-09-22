@@ -376,6 +376,16 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
+    color: str | None = None
+    """A color for this specific event, overriding the calendar's own color.
+
+    Per RFC 7986 Section 5.9, this MAY be a CSS3 color name (e.g.
+    "turquoise") or a hex color (e.g. "#0088aa"); backends supply whichever
+    form they natively have. None means "use the calendar's own default
+    color". A value the frontend doesn't recognize as a valid CSS color is
+    ignored (falls back to the calendar's color), the same handling as the
+    existing calendar-level color option.
+    """
 
     uid: str | None = None
     recurrence_id: str | None = None
