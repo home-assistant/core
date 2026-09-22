@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from aiohttp import ClientConnectionError
 import pytest
 import vrchatapi
+from vrchatapi.highlevel import TwoFactorAuthChallenge, TwoFactorAuthRequired
 
 from homeassistant import config_entries
 from homeassistant.components.vrchat.const import (
@@ -104,6 +105,18 @@ async def test_user_flow_duplicate_account(hass: HomeAssistant) -> None:
             id="invalid_auth",
         ),
         pytest.param(
+            vrchatapi.exceptions.UnauthorizedException(status=401),
+            "invalid_auth",
+            id="missing_reason",
+        ),
+        pytest.param(
+            vrchatapi.exceptions.UnauthorizedException(
+                status=401, reason="Email 2 Factor Authentication"
+            ),
+            "invalid_auth",
+            id="untyped_challenge_message",
+        ),
+        pytest.param(
             vrchatapi.exceptions.ApiException(status=500, reason="Server error"),
             "cannot_connect",
             id="cannot_connect",
@@ -145,9 +158,7 @@ async def test_user_flow_error(
 
 async def test_authenticator_two_factor_flow(hass: HomeAssistant) -> None:
     """Test authenticator-app two-factor authentication."""
-    unauthorized = vrchatapi.exceptions.UnauthorizedException(
-        status=200, reason="2 Factor Authentication"
-    )
+    unauthorized = TwoFactorAuthRequired(TwoFactorAuthChallenge.TOTP)
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",
@@ -190,9 +201,7 @@ async def test_authenticator_two_factor_flow(hass: HomeAssistant) -> None:
 
 async def test_email_two_factor_flow(hass: HomeAssistant) -> None:
     """Test email two-factor authentication."""
-    unauthorized = vrchatapi.exceptions.UnauthorizedException(
-        status=200, reason="Email 2 Factor Authentication"
-    )
+    unauthorized = TwoFactorAuthRequired(TwoFactorAuthChallenge.EMAIL_OTP)
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",
@@ -235,9 +244,7 @@ async def test_email_two_factor_flow(hass: HomeAssistant) -> None:
 
 async def test_cancel_two_factor_flow_closes_api(hass: HomeAssistant) -> None:
     """Test that cancelling a two-factor flow closes its API client."""
-    unauthorized = vrchatapi.exceptions.UnauthorizedException(
-        status=200, reason="2 Factor Authentication"
-    )
+    unauthorized = TwoFactorAuthRequired(TwoFactorAuthChallenge.TOTP)
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",
@@ -262,20 +269,20 @@ async def test_cancel_two_factor_flow_closes_api(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("step_id", "verification_method", "verification_key", "reason"),
+    ("step_id", "verification_method", "verification_key", "challenge"),
     [
         pytest.param(
             "2fa",
             "verify2_fa",
             CONF_2FA_CODE,
-            "2 Factor Authentication",
+            TwoFactorAuthChallenge.TOTP,
             id="authenticator_app",
         ),
         pytest.param(
             "email_2fa",
             "verify2_fa_email_code",
             CONF_EMAIL_2FA_CODE,
-            "Email 2 Factor Authentication",
+            TwoFactorAuthChallenge.EMAIL_OTP,
             id="email",
         ),
     ],
@@ -338,13 +345,13 @@ async def test_two_factor_error(
     step_id: str,
     verification_method: str,
     verification_key: str,
-    reason: str,
+    challenge: TwoFactorAuthChallenge,
     verification_results: list[Exception | None],
     user_results: list[Exception | dict[str, str]],
     error: str,
 ) -> None:
     """Test two-factor errors preserve the flow and allow a successful retry."""
-    unauthorized = vrchatapi.exceptions.UnauthorizedException(status=200, reason=reason)
+    unauthorized = TwoFactorAuthRequired(challenge)
     with (
         patch(
             "homeassistant.components.vrchat.config_flow.VRChatAPI.get_current_user",

@@ -5,7 +5,7 @@ from typing import Any, Final, override
 from aiohttp import ClientError
 import probatio
 import vrchatapi.exceptions
-from vrchatapi.highlevel import VRChatAPI
+from vrchatapi.highlevel import TwoFactorAuthChallenge, TwoFactorAuthRequired, VRChatAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -54,11 +54,11 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
             self._api = VRChatAPI(user_input, user_agent=USER_AGENT)
             try:
                 return await self._async_authenticate()
-            except vrchatapi.exceptions.UnauthorizedException as err:
-                if "Email 2 Factor Authentication" in err.reason:
+            except TwoFactorAuthRequired as err:
+                if err.challenge is TwoFactorAuthChallenge.EMAIL_OTP:
                     return await self.async_step_email_2fa()
-                if "2 Factor Authentication" in err.reason:
-                    return await self.async_step_2fa()
+                return await self.async_step_2fa()
+            except vrchatapi.exceptions.UnauthorizedException:
                 await self._async_close_api()
                 errors["base"] = "invalid_auth"
             except vrchatapi.exceptions.ApiException, ClientError, TimeoutError:
