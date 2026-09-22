@@ -34,6 +34,7 @@ def mock_ecobee() -> Generator[MagicMock]:
         "thermostatList"
     ]
     ecobee.get_thermostat = lambda index: ecobee.thermostats[index]
+    ecobee.get_remote_sensors = lambda index: ecobee.thermostats[index]["remoteSensors"]
     ecobee.get_equipment_notifications = lambda index: ecobee.thermostats[index][
         "notificationSettings"
     ]["equipment"]
