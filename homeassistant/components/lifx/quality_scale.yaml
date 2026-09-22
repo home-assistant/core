@@ -75,7 +75,7 @@ rules:
       The integration has no user-actionable issues to raise. An unreachable
       device is reported through entity availability instead.
   stale-devices:
-    status: done
+    status: exempt
     comment: |
       Each device owns a config entry, so removing the entry removes the device.
 
