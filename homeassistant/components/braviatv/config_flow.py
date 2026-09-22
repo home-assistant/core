@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -84,11 +85,15 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_connect_device()
 
         system_info = await self.client.get_system_info()
-        cid = system_info[ATTR_CID].lower()
+        mac = system_info[ATTR_MAC]
 
-        self.device_config[CONF_MAC] = system_info[ATTR_MAC]
+        # Some televisions report an empty CID. Without a fallback every one of
+        # them would claim the same unique ID, so only the first could be added.
+        unique_id = system_info[ATTR_CID].lower() or format_mac(mac)
 
-        await self.async_set_unique_id(cid)
+        self.device_config[CONF_MAC] = mac
+
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

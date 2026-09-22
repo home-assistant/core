@@ -22,6 +22,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -455,3 +456,38 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert config_entry.data[CONF_PIN] == new_pin
+
+
+async def test_create_entry_with_empty_cid(hass: HomeAssistant) -> None:
+    """Test two televisions that report an empty CID can both be added."""
+    for host, mac in (
+        ("bravia-host", "AA:BB:CC:DD:EE:FF"),
+        ("bravia-host-2", "11:22:33:44:55:66"),
+    ):
+        with (
+            patch("pybravia.BraviaClient.connect"),
+            patch("pybravia.BraviaClient.pair"),
+            patch("pybravia.BraviaClient.set_wol_mode"),
+            patch(
+                "pybravia.BraviaClient.get_system_info",
+                return_value=BRAVIA_SYSTEM_INFO | {"cid": "", "macAddr": mac},
+            ),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_HOST: host}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_USE_PSK: True, CONF_USE_SSL: False},
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_PIN: "secret"}
+            )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == format_mac(mac)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
