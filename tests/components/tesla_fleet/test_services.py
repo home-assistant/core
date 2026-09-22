@@ -5,6 +5,8 @@ from datetime import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import ec
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -465,9 +467,14 @@ async def test_add_charge_schedule_signed_vehicle(
     new_product["response"][0]["command_signing"] = "required"
     mock_products.return_value = new_product
 
-    # Let the real key generation run so the entry actually finishes setup
-    # as a signed vehicle, rather than mocking it away and silently failing.
-    device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
+    # Provide a private key directly, rather than mocking get_private_key
+    # away (which leaves the entry with no key and setup silently fails) or
+    # letting it generate a real one (which writes a key file to disk).
+    with patch(
+        "homeassistant.components.tesla_fleet.TeslaFleetApi.private_key",
+        ec.generate_private_key(ec.SECP256R1(), default_backend()),
+    ):
+        device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
 
     with patch(
         "tesla_fleet_api.tesla.VehicleSigned.add_charge_schedule",
