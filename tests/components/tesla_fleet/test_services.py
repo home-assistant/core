@@ -230,10 +230,42 @@ async def test_remove_charge_schedule(
     refresh.assert_called_once()
 
 
+async def test_add_charge_schedule_requires_a_time(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test add_charge_schedule rejects a schedule with neither time set.
+
+    This is guaranteed to fail regardless of the library's midnight quirk,
+    so it's rejected before waking the vehicle or calling the library.
+    """
+    device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
+
+    with (
+        patch(
+            "homeassistant.components.tesla_fleet.services.wake_up_vehicle"
+        ) as wake_up,
+        patch(ADD_CHARGE_SCHEDULE) as call,
+        pytest.raises(ServiceValidationError, match="start time"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CHARGE_SCHEDULE,
+            {
+                CONF_DEVICE_ID: device_id,
+                ATTR_DAYS_OF_WEEK: ["monday"],
+                ATTR_ENABLE: True,
+            },
+            blocking=True,
+        )
+
+    wake_up.assert_not_called()
+    call.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "service_data",
     [
-        pytest.param({}, id="no_times"),
         pytest.param({ATTR_START_TIME: time(0, 0)}, id="midnight_start_only"),
         pytest.param({ATTR_END_TIME: time(0, 0)}, id="midnight_end_only"),
         pytest.param(
@@ -242,7 +274,7 @@ async def test_remove_charge_schedule(
         ),
     ],
 )
-async def test_add_charge_schedule_requires_a_time(
+async def test_add_charge_schedule_rejects_midnight_only(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     service_data: dict[str, Any],

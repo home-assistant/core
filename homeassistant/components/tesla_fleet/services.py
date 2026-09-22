@@ -108,6 +108,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         start_time = _minutes_after_midnight(call.data.get(ATTR_START_TIME))
         end_time = _minutes_after_midnight(call.data.get(ATTR_END_TIME))
+        if start_time is None and end_time is None:
+            # Guaranteed to fail regardless of the library's midnight quirk,
+            # so reject it before waking the vehicle rather than after.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="charge_schedule_requires_time",
+            )
 
         location = call.data.get(
             ATTR_LOCATION,
