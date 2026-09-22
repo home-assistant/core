@@ -7,7 +7,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.const import MAX_DB_SETUP_RETRIES
+from homeassistant.components.recorder.const import (
+    DB_SETUP_RETRY_WAIT_MAX,
+    MAX_DB_SETUP_RETRIES,
+)
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.core import CoreState, HomeAssistant
 
@@ -33,35 +36,68 @@ async def _make_instance(
     return instance
 
 
+@pytest.mark.parametrize("state", [CoreState.not_running, CoreState.running])
 async def test_extends_retries_past_db_max_retries(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
+    state: CoreState,
 ) -> None:
-    """A database that appears after db_max_retries is still picked up."""
+    """A database that appears after db_max_retries is still picked up.
+
+    not_running is the state integration setup actually runs in: async_run()
+    only moves to starting once bootstrap has set every integration up.
+    """
     instance = await _make_instance(async_setup_recorder_instance, hass)
     instance.db_url = "postgresql://u@db/ha"
     instance.db_max_retries = 2
     instance.db_retry_wait = 0
 
-    with (
-        patch.object(instance, "_close_connection"),
-        patch.object(
-            instance,
-            "_try_setup_recorder_once",
-            side_effect=[(None, True), (None, True), (True, False)],
-        ) as attempt,
-    ):
-        assert (
-            await hass.async_add_executor_job(
-                partial(instance._setup_recorder, extended_retry=True)
+    hass.set_state(state)
+    try:
+        with (
+            patch.object(instance, "_close_connection"),
+            patch("homeassistant.components.recorder.core.DB_SETUP_RETRY_WAIT_MIN", 0),
+            patch.object(
+                instance,
+                "_try_setup_recorder_once",
+                side_effect=[(None, True), (None, True), (True, False)],
+            ) as attempt,
+        ):
+            assert (
+                await hass.async_add_executor_job(
+                    partial(instance._setup_recorder, extended_retry=True)
+                )
+                is True
             )
-            is True
-        )
+    finally:
+        hass.set_state(CoreState.running)
 
     assert attempt.call_count == 3
     assert "retrying for up to" in caplog.text
     assert "Database is reachable again" in caplog.text
+
+
+async def test_extended_retry_wait_is_capped(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """db_retry_wait has no upper bound, the extended backoff does."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance.db_retry_wait = 600
+
+    with (
+        patch.object(instance, "_close_connection"),
+        patch.object(instance, "_sleep_unless_stopping", return_value=False) as sleep,
+    ):
+        assert (
+            await hass.async_add_executor_job(
+                instance._setup_recorder_extended, time.monotonic() + 600
+            )
+            is False
+        )
+
+    assert sleep.call_args[0][0] == DB_SETUP_RETRY_WAIT_MAX
 
 
 async def test_gives_up_after_max_db_setup_wait(
@@ -210,18 +246,13 @@ async def test_extended_retry_aborts_when_hass_is_stopping(
     assert attempt.call_count == 0
 
 
-@pytest.mark.parametrize(
-    "state", [CoreState.stopping, CoreState.final_write, CoreState.not_running]
-)
+@pytest.mark.parametrize("state", [CoreState.stopping, CoreState.final_write])
 async def test_sleep_unless_stopping_reports_shutdown(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     state: CoreState,
 ) -> None:
-    """The sliced sleep returns False without waiting out the interval.
-
-    not_running is included because hass.is_stopping excludes it.
-    """
+    """The sliced sleep returns False without waiting out the interval."""
     instance = await _make_instance(async_setup_recorder_instance, hass)
 
     assert await hass.async_add_executor_job(instance._sleep_unless_stopping, 0) is True
