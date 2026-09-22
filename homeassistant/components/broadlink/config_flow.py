@@ -349,7 +349,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             entry_data[CONF_TYPE],
             (entry_data[CONF_HOST], DEFAULT_PORT),
             bytes.fromhex(entry_data[CONF_MAC]),
-            name=entry_data[CONF_NAME],
+            name=entry_data.get(CONF_NAME, ""),
         )
         device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)

@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -761,6 +762,23 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     assert dict(mock_entry.data) == device.get_entry_data()
     assert mock_api.auth.call_count == 1
     assert mock_hello.call_count == 1
+
+
+async def test_flow_reauth_without_stored_name(hass: HomeAssistant) -> None:
+    """Test reauthentication of an entry that has no name in its data."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+    assert CONF_NAME not in mock_entry.data
+
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
+
+    with patch(DEVICE_FACTORY, return_value=mock_api):
+        result = await mock_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reset"
 
 
 async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
