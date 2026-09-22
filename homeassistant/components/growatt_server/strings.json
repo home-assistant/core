@@ -656,6 +656,9 @@
     "mix_settings_incomplete": {
       "message": "The Growatt Mix device returned incomplete charge/discharge settings."
     },
+    "mix_settings_invalid": {
+      "message": "The Growatt Mix device returned invalid charge/discharge settings."
+    },
     "mix_settings_read_failed": {
       "message": "Failed to read charge/discharge settings from the Growatt Mix device."
     },

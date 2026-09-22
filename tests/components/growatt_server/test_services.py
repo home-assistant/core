@@ -1837,6 +1837,96 @@ async def test_write_ac_charge_times_classic_auth_incomplete_settings(
     mock_growatt_classic_api.update_mix_inverter_setting.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        pytest.param("forcedChargeTimeStart1", "not-a-time", id="unparsable"),
+        pytest.param("forcedChargeTimeStart1", "25:00", id="hour_out_of_range"),
+        pytest.param("forcedChargeTimeStart1", "01:70", id="minute_out_of_range"),
+        pytest.param("forcedChargeStopSwitch1", "yes", id="switch_not_an_int"),
+    ],
+)
+async def test_write_ac_charge_times_classic_auth_invalid_settings(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    key: str,
+    value: str,
+) -> None:
+    """Test a partial write aborts when the device returns an unparsable value.
+
+    _format_time maps a bad time to 00:00, which the read-merge-write would
+    then write over the period the caller never mentioned.
+    """
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
+    assert device_entry is not None
+
+    mock_growatt_classic_api.get_mix_inverter_settings.return_value["obj"]["mixBean"][
+        key
+    ] = value
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "write_ac_charge_times",
+            {"device_id": device_entry.id, "period_2_start": "02:00"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "mix_settings_invalid"
+    mock_growatt_classic_api.update_mix_inverter_setting.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "service",
+    ["write_ac_charge_times", "write_ac_discharge_times"],
+)
+@pytest.mark.parametrize(
+    "result",
+    [
+        pytest.param("server error", id="string"),
+        pytest.param(["server error"], id="list"),
+        pytest.param(None, id="null"),
+    ],
+)
+async def test_write_ac_times_classic_auth_non_dict_response(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    result: object,
+) -> None:
+    """Test a non-object write response surfaces as a translated error."""
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
+    assert device_entry is not None
+
+    mock_growatt_classic_api.update_mix_inverter_setting.return_value = result
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"device_id": device_entry.id, "period_1_start": "02:00"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "mix_write_rejected"
+
+
 async def test_read_ac_charge_times_classic_auth(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
