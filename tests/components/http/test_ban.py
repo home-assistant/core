@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from typing import NoReturn
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
@@ -469,7 +470,7 @@ async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
     app = web.Application()
     app[KEY_HASS] = hass
 
-    async def unauth_handler(request):
+    async def unauth_handler(request: web.Request) -> NoReturn:
         """Return a mock web response."""
         raise HTTPUnauthorized
 
