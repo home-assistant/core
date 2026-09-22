@@ -130,6 +130,14 @@ def test_calendar_event_color() -> None:
     assert event_with_named_color.color == "turquoise"
     assert event_with_named_color.as_dict()["color"] == "turquoise"
 
+    # color is appended after the existing fields, so positional construction
+    # of the fields that predate it keeps working unchanged.
+    positional = CalendarEvent(
+        now, later, "Positional", "Description", "Location", "uid-1"
+    )
+    assert positional.uid == "uid-1"
+    assert positional.color is None
+
 
 async def test_events_http_api_missing_fields(
     hass: HomeAssistant, hass_client: ClientSessionGenerator

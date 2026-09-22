@@ -376,21 +376,22 @@ class CalendarEvent:
     summary: str
     description: str | None = None
     location: str | None = None
-    color: str | None = None
-    """A color for this specific event, overriding the calendar's own color.
-
-    Per RFC 7986 Section 5.9, this MAY be a CSS3 color name (e.g.
-    "turquoise") or a hex color (e.g. "#0088aa"); backends supply whichever
-    form they natively have. None means "use the calendar's own default
-    color". A value the frontend doesn't recognize as a valid CSS color is
-    ignored (falls back to the calendar's color), the same handling as the
-    existing calendar-level color option.
-    """
 
     uid: str | None = None
     recurrence_id: str | None = None
     rrule: str | None = None
     status: CalendarEventStatus | None = None
+
+    color: str | None = None
+    """A color for this specific event, overriding the calendar's own color.
+
+    RFC 7986 Section 5.9 defines the value as a CSS3 color name, for example
+    "turquoise". A hex color, for example "#0088aa", is also accepted, since
+    that is the form the calendar-level color option uses and the form
+    backends such as Google Calendar report. None means the calendar's own
+    color is used, as does a value the frontend cannot resolve to a valid
+    CSS color.
+    """
 
     @property
     def start_datetime_local(self) -> datetime.datetime:
