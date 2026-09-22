@@ -807,6 +807,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "LD-0003",
     },
     {
+        "domain": "matter",
+        "service_data_uuid": "0000fff6-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "medcom_ble",
         "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },

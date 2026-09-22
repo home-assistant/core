@@ -40,7 +40,15 @@ from homeassistant.helpers.typing import ConfigType
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
+from .ble_discovery import MatterBleAdvertisement
+from .const import (
+    CONF_ADDON_BLE_PROXY,
+    CONF_ADDON_BLUETOOTH_ADAPTER_ID,
+    CONF_INTEGRATION_CREATED_ADDON,
+    CONF_USE_ADDON,
+    DOMAIN,
+    LOGGER,
+)
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
     MatterConfigEntry,
@@ -230,6 +238,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             setup_error = listen_err
 
     if setup_error is None:
+        if (
+            "bluetooth" in hass.config.components
+            and server_info
+            and server_info.bluetooth_enabled
+        ):
+            _async_rediscover_commissionable_devices(hass)
         return True
 
     await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
@@ -242,6 +256,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         await matter_client.disconnect()
     finally:
         raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+@callback
+def _async_rediscover_commissionable_devices(hass: HomeAssistant) -> None:
+    """Surface commissionable devices seen before a server was available."""
+    from homeassistant.components import bluetooth  # noqa: PLC0415
+
+    for service_info in bluetooth.async_discovered_service_info(hass):
+        if MatterBleAdvertisement.from_service_info(service_info) is not None:
+            bluetooth.async_rediscover_address(hass, service_info.address)
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
@@ -460,6 +484,27 @@ async def _async_ensure_addon_running(
             translation_domain=DOMAIN,
             translation_key="addon_not_running",
         )
+
+    options = addon_info.options
+    if (
+        "bluetooth" not in hass.config.components
+        or options.get(CONF_ADDON_BLE_PROXY)
+        # A local adapter is configured; the proxy is mutually exclusive with it.
+        or options.get(CONF_ADDON_BLUETOOTH_ADAPTER_ID) is not None
+    ):
+        return
+    try:
+        await addon_manager.async_set_addon_options(
+            {**options, CONF_ADDON_BLE_PROXY: True}
+        )
+    except AddonError as err:
+        LOGGER.warning("Failed to enable the Matter Server add-on BLE proxy: %s", err)
+        return
+    addon_manager.async_schedule_restart_addon(catch_error=True)
+    raise ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="addon_ble_proxy_enabling",
+    )
 
 
 @callback

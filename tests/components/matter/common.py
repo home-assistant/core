@@ -10,12 +10,45 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.matter import DOMAIN
+from homeassistant.components.matter.ble_discovery import MATTER_BLE_SERVICE_DATA_UUID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+
+MATTER_BLE_ADDRESS = "AA:BB:CC:DD:EE:F0"
+MATTER_BLE_NAME = "MATTER-3840"
+# Commissionable, discriminator 3840, vendor 0xFFF1, product 0x8000.
+MATTER_BLE_SERVICE_DATA = bytes([0x00, 0x00, 0x0F, 0xF1, 0xFF, 0x00, 0x80, 0x00])
+
+
+def matter_ble_service_info(
+    address: str = MATTER_BLE_ADDRESS,
+    service_data: bytes = MATTER_BLE_SERVICE_DATA,
+    name: str = MATTER_BLE_NAME,
+) -> BluetoothServiceInfoBleak:
+    """Return a Matter commissionable Bluetooth discovery."""
+    return BluetoothServiceInfoBleak(
+        name=name,
+        address=address,
+        rssi=-60,
+        manufacturer_data={},
+        service_uuids=[],
+        service_data={MATTER_BLE_SERVICE_DATA_UUID: service_data},
+        source="local",
+        device=generate_ble_device(address=address, name=name),
+        advertisement=generate_advertisement_data(
+            local_name=name, service_data={MATTER_BLE_SERVICE_DATA_UUID: service_data}
+        ),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    )
+
 
 FIXTURES = [
     "air_quality_sensor",
