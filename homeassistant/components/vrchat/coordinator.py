@@ -97,11 +97,9 @@ class VRChatAccountDataCoordinator:
         user.setup_entities()
         user.async_update_entities(force_refresh=True, world_update=world_update)
         if (device := user.device_entry) is not None:
-            bio = data.data.get("bio")
             self.device_registry.async_update_device(
                 device.id,
                 name=data.data.get("displayName"),
-                model=bio if isinstance(bio, str) else None,
             )
 
     def _user_removed(self, user_id: str) -> None:
@@ -195,12 +193,9 @@ class VRChatUserDataCoordinator:
     @property
     def device_info(self) -> DeviceInfo:
         """Device info."""
-        return self._calculate_device_info(
-            self.data.get("displayName"),
-            bio if isinstance(bio := self.data.get("bio"), str) else None,
-        )
+        return self._calculate_device_info(self.data.get("displayName"))
 
-    def _calculate_device_info(self, name: str | None, bio: str | None) -> DeviceInfo:
+    def _calculate_device_info(self, name: str | None) -> DeviceInfo:
         user_id = self.data["id"]
         return DeviceInfo(
             identifiers={
@@ -210,7 +205,6 @@ class VRChatUserDataCoordinator:
                 )
             },
             name=name,
-            model=bio,
             configuration_url=VRCHAT_USER_PAGE_BASE_URL + user_id,
         )
 
