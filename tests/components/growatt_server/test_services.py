@@ -1747,11 +1747,23 @@ async def test_read_ac_charge_times_classic_auth_transport_error(
     assert not excinfo.value.translation_placeholders
 
 
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        pytest.param({"success": False}, id="no_obj"),
+        pytest.param({"obj": {"mixBean": {}}}, id="empty_bean"),
+        pytest.param({"obj": {"mixBean": None}}, id="null_bean"),
+        pytest.param({"obj": "server error"}, id="obj_not_object"),
+        pytest.param({"obj": {"mixBean": "server error"}}, id="bean_not_object"),
+        pytest.param(["server error"], id="response_not_object"),
+    ],
+)
 async def test_read_ac_charge_times_classic_auth_empty_settings(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
     mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
+    malformed: dict | list,
 ) -> None:
     """Test a classic Mix settings response with no mixBean raises HomeAssistantError.
 
@@ -1768,7 +1780,7 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
     )
     assert device_entry is not None
 
-    mock_growatt_classic_api.get_mix_inverter_settings.return_value = {"success": False}
+    mock_growatt_classic_api.get_mix_inverter_settings.return_value = malformed
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(

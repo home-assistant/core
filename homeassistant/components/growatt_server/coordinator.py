@@ -655,9 +655,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_read_failed",
             ) from err
-        # Unlike its siblings, this endpoint returns the raw envelope, so unwrap obj here.
-        settings = (response.get("obj") or {}).get("mixBean")
-        if not settings:
+        # Unlike its siblings, this endpoint returns the raw envelope unvalidated,
+        # so any level of it can be a non-object on a failure payload.
+        obj = response.get("obj") if isinstance(response, dict) else None
+        settings = obj.get("mixBean") if isinstance(obj, dict) else None
+        if not isinstance(settings, dict) or not settings:
             _LOGGER.debug(
                 "No mixBean in settings response for %s: %r", self.device_id, response
             )
