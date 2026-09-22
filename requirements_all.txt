@@ -724,7 +724,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.4
+boschshcpy==0.6.10
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -3341,7 +3341,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==16.13.0
+uiprotect==16.14.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
