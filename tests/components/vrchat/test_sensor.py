@@ -6,22 +6,29 @@ from typing import cast
 from unittest.mock import AsyncMock
 
 import pytest
-from vrchatapi.highlevel import WorldCache
+from vrchatapi.highlevel import VRChatAccount, WorldCache
 from vrchatapi.highlevel.presence import VRChatSpecialLocationString
 from vrchatapi.highlevel.types import World
 
 from homeassistant.components.vrchat.const import (
+    DOMAIN,
     VRCHAT_USER_STATE_OPTIONS,
     VRCHAT_USER_STATUS_OPTIONS,
     VRChatUserState,
 )
-from homeassistant.components.vrchat.coordinator import VRChatUserDataCoordinator
+from homeassistant.components.vrchat.coordinator import (
+    VRChatAccountDataCoordinator,
+    VRChatUserDataCoordinator,
+)
 from homeassistant.components.vrchat.sensor import (
     VRChatUserLocationSensor,
     VRChatUserStateSensor,
     VRChatUserStatusDescriptionSensor,
     VRChatUserStatusSensor,
 )
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 def test_location_sensor_without_world_metadata() -> None:
@@ -46,7 +53,12 @@ def test_location_sensor_without_world_metadata() -> None:
 )
 def test_special_location_overrides_previous_destination(location: str) -> None:
     """An old destination must not hide an explicit private or offline location."""
-    world = SimpleNamespace(data={"name": "Previous map"})
+    world = SimpleNamespace(
+        data={
+            "name": "Previous map",
+            "thumbnailImageUrl": "https://example.com/previous.png",
+        }
+    )
     user = SimpleNamespace(
         data={"location": "wrld_test:instance", "worldId": "wrld_test"},
         world=world,
@@ -54,28 +66,36 @@ def test_special_location_overrides_previous_destination(location: str) -> None:
     )
     sensor = VRChatUserLocationSensor(cast(VRChatUserDataCoordinator, user))
     assert sensor.native_value == "Previous map"
+    assert sensor.entity_picture == "https://example.com/previous.png"
 
     user.data = {"location": location, "worldId": location, "status": "offline"}
     user.world = None
 
     assert sensor.native_value == location
+    assert sensor.entity_picture is None
 
 
-def test_location_sensor_options_are_stable_and_unique() -> None:
-    """Test location sensor options have a stable order without duplicates."""
+def test_location_sensor_options_are_stable_and_unique(
+    hass: HomeAssistant,
+) -> None:
+    """All cached worlds are selectable, with stable ordering and no duplicates."""
     cache = WorldCache(AsyncMock())
     cache.get("wrld_first", cast(World, {"name": "World one"}))
     cache.get("wrld_second", cast(World, {"name": "World one"}))
     cache.get("wrld_third", cast(World, {"name": "World two"}))
     cache.get("wrld_offline", cast(World, {"name": "offline"}))
+    account = VRChatAccountDataCoordinator(
+        hass, MockConfigEntry(domain=DOMAIN, unique_id="usr_test")
+    )
+    account.client = cast(VRChatAccount, SimpleNamespace(worlds=cache))
     sensor = VRChatUserLocationSensor(
         cast(
             VRChatUserDataCoordinator,
             SimpleNamespace(
-                data={},
+                data={"location": "offline", "status": "offline"},
                 world=None,
                 destination_world=None,
-                account=SimpleNamespace(client=SimpleNamespace(worlds=cache)),
+                account=account,
             ),
         )
     )
@@ -87,6 +107,75 @@ def test_location_sensor_options_are_stable_and_unique() -> None:
         "World two",
     ]
     assert all(type(option) is str for option in sensor.options)
+
+    cache.get("wrld_third", cast(World, {"name": "Renamed world"}))
+    assert sensor.options[-2:] == ["Renamed world", "World one"]
+    cache.get("wrld_new", cast(World, {"name": "New world"}))
+    assert sensor.options[-3:] == ["New world", "Renamed world", "World one"]
+
+
+def test_location_follows_travel_and_preserves_pending_name() -> None:
+    """Keep the previous name during metadata retries and show travel images."""
+    user = SimpleNamespace(
+        data={"location": "wrld_first:instance", "worldId": "wrld_first"},
+        world=SimpleNamespace(data={"name": "First world"}),
+        destination_world=None,
+    )
+    sensor = VRChatUserLocationSensor(cast(VRChatUserDataCoordinator, user))
+    assert sensor.native_value == "First world"
+
+    user.world = SimpleNamespace(data=None)
+    assert sensor.native_value == "First world"
+
+    user.data = {"location": "traveling", "worldId": "traveling"}
+    user.world = None
+    user.destination_world = SimpleNamespace(
+        data={"name": "Next world", "thumbnailImageUrl": "https://example.com/next.png"}
+    )
+    assert sensor.native_value == "traveling"
+    assert sensor.entity_picture == "https://example.com/next.png"
+
+    user.data = {"location": "wrld_next:instance", "worldId": "wrld_next"}
+    user.world = user.destination_world
+    user.destination_world = None
+    assert sensor.native_value == "Next world"
+
+
+def test_state_attributes_exclude_account_details_without_mutating_user() -> None:
+    """Filter private and bulky fields while retaining other user metadata."""
+    data = {
+        "id": "usr_test",
+        "displayName": "Test user",
+        "bio": "Profile",
+        "status": "active",
+        "location": "private",
+        "customField": "preserved",
+        "authToken": "test-token",
+        "friendKey": "test-key",
+        "friends": ["usr_friend"],
+        "activeFriends": ["usr_friend"],
+        "onlineFriends": ["usr_friend"],
+        "offlineFriends": [],
+        "friendGroupNames": ["Private group"],
+        "obfuscatedEmail": "t***@example.com",
+        "steamDetails": {"steamId": "private-id"},
+        "steamId": "private-id",
+        "statusHistory": ["old status"],
+    }
+    original = data.copy()
+    sensor = VRChatUserStateSensor(
+        cast(VRChatUserDataCoordinator, SimpleNamespace(data=data))
+    )
+
+    assert sensor.extra_state_attributes == {
+        "id": "usr_test",
+        "displayName": "Test user",
+        "bio": "Profile",
+        "status": "active",
+        "location": "private",
+        "customField": "preserved",
+    }
+    assert data == original
 
 
 def test_user_state_options_are_strings() -> None:

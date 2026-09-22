@@ -108,6 +108,12 @@ async def test_user_flow_duplicate_account(hass: HomeAssistant) -> None:
             "cannot_connect",
             id="cannot_connect",
         ),
+        pytest.param(
+            ClientConnectionError("Connection failed"),
+            "cannot_connect",
+            id="connection_error",
+        ),
+        pytest.param(TimeoutError(), "cannot_connect", id="timeout"),
     ],
 )
 async def test_user_flow_error(

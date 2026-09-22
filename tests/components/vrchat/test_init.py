@@ -22,7 +22,12 @@ from homeassistant.components.vrchat.store import (
     VRChatAuthCookieStore,
 )
 from homeassistant.config_entries import ConfigEntryAuthFailed, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -200,6 +205,10 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             entity_registry, f"state.{CURRENT_USER_ID}:{CURRENT_USER_ID}"
         )
         assert hass.states.get(state_entity_id).state == "offline"
+        assert "friends" not in hass.states.get(state_entity_id).attributes
+        assert entry.runtime_data.client.current_user_data["friends"] == [
+            FRIEND_USER_ID
+        ]
         assert (
             hass.states.get(state_entity_id).attributes["entity_picture"]
             == "https://example.com/current-icon.png"
@@ -234,6 +243,19 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
 
         coordinator = entry.runtime_data
         assert coordinator.client.api.api_client.user_agent == USER_AGENT
+        await coordinator.client.handle_event(
+            VRChatEvent(
+                "friend-update",
+                {
+                    "userId": FRIEND_USER_ID,
+                    "user": {"status": "unknown", "location": "private"},
+                },
+            )
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(status_entity_id).state == STATE_UNKNOWN
+        assert hass.states.get(friend_state_entity_id).state == STATE_UNKNOWN
+
         await coordinator.client.handle_event(
             VRChatEvent(
                 "user-update", {"userId": FRIEND_USER_ID, "user": {"status": "ask me"}}

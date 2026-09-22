@@ -61,7 +61,7 @@ class VRChatConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_2fa()
                 await self._async_close_api()
                 errors["base"] = "invalid_auth"
-            except vrchatapi.exceptions.ApiException:
+            except vrchatapi.exceptions.ApiException, ClientError, TimeoutError:
                 await self._async_close_api()
                 errors["base"] = "cannot_connect"
 

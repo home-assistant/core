@@ -31,6 +31,39 @@ from .coordinator import VRChatConfigEntry
 from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
 from .utils import normalize_vrchat_enum_value
 
+_EXCLUDED_USER_ATTRIBUTES = frozenset(
+    {
+        "authToken",
+        "friendKey",
+        "friends",
+        "activeFriends",
+        "onlineFriends",
+        "offlineFriends",
+        "friendGroupNames",
+        "email",
+        "obfuscatedEmail",
+        "obfuscatedPendingEmail",
+        "accountDeletionLog",
+        "pastDisplayNames",
+        "statusHistory",
+        "pronounsHistory",
+        "platform_history",
+        "appleDetails",
+        "appleId",
+        "discordDetails",
+        "discordId",
+        "googleDetails",
+        "googleId",
+        "oculusId",
+        "picoId",
+        "steamDetails",
+        "steamId",
+        "twitchDetails",
+        "twitchId",
+        "viveId",
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,9 +99,10 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
     @override
     def get_state_from_user_data(cls, user_data, key=None):
         """Return a normalized VRChat user status."""
-        return normalize_vrchat_enum_value(
+        status = normalize_vrchat_enum_value(
             super().get_state_from_user_data(user_data, key)
         )
+        return status if status in VRCHAT_USER_STATUS_OPTIONS else None
 
     @property
     @override
@@ -136,8 +170,12 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """User data."""
-        return self.user.data
+        """User data without credentials, account details, or large lists."""
+        return {
+            key: value
+            for key, value in self.user.data.items()
+            if key not in _EXCLUDED_USER_ATTRIBUTES
+        }
 
 
 class VRChatUserLocationSensor(
@@ -155,12 +193,17 @@ class VRChatUserLocationSensor(
     @override
     def entity_picture(self):
         """Return the world thumbnail URL."""
+        if self.get_state_from_user_data(self.user.data, "location") in (
+            VRChatSpecialLocationString.PRIVATE,
+            VRChatSpecialLocationString.OFFLINE,
+        ):
+            return None
         return self.vrchat_user_world_data_get("thumbnailImageUrl")
 
     @property
     @override
     def options(self):
-        """Dynamically return options based on known locations."""
+        """Return special locations and all cached world names."""
         client = self.user.account.client
         assert client is not None
         special_options = [
@@ -169,14 +212,10 @@ class VRChatUserLocationSensor(
         ]
         return [
             *special_options,
-            *sorted(
-                {
-                    name
-                    for world in client.worlds.registry.values()
-                    if (data := world.data) is not None
-                    and (name := data.get("name")) is not None
-                    and name not in special_options
-                }
+            *(
+                name
+                for name in client.worlds.sorted_names
+                if name not in special_options
             ),
         ]
 
