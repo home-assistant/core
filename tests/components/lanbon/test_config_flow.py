@@ -4,7 +4,7 @@ from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
-from aiolanbon import LanbonAuthError, LanbonConnectionError
+from aiolanbon import LanbonAuthError, LanbonConnectionError, LanbonRateLimitError
 import pytest
 
 from homeassistant.components.lanbon.config_flow import ApiDisabled
@@ -12,7 +12,7 @@ from homeassistant.components.lanbon.const import CONF_GATEWAY_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import GATEWAY_ID, HOST, PORT, TOKEN, gateway_info
@@ -195,6 +195,68 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.parametrize("port", [0, -1, 65536, 70000])
+async def test_invalid_port_rejected_before_connecting(
+    hass: HomeAssistant, port: int
+) -> None:
+    """The Core form schema rejects invalid TCP ports before doing I/O."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
+        new=AsyncMock(return_value=gateway_info()),
+    ) as mock_info:
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {CONF_HOST: HOST, CONF_PORT: port, CONF_TOKEN: TOKEN},
+            )
+        mock_info.assert_not_awaited()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_missing_unique_id_aborts(hass: HomeAssistant) -> None:
+    """Do not fall back to the IP when the gateway has no stable id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
+        new=AsyncMock(return_value=gateway_info(gateway_id="")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_unique_id"
+
+
+async def test_rate_limit_is_retryable(hass: HomeAssistant) -> None:
+    """API/rate-limit errors stay on the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.lanbon.config_flow.LanbonClient.get_info",
+        new=AsyncMock(side_effect=LanbonRateLimitError("rate_limited")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_TOKEN: TOKEN},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "unknown"
 
 
 async def test_zeroconf_updates_host_when_already_configured(
@@ -224,3 +286,39 @@ async def test_zeroconf_updates_host_when_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "10.0.0.9"
     assert entry.data[CONF_PORT] == 9000
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (LanbonAuthError("bad token"), "invalid_auth"),
+        (LanbonConnectionError("offline"), "cannot_connect"),
+        (LanbonRateLimitError("rate limited"), "unknown"),
+        (ApiDisabled(), "api_disabled"),
+    ],
+)
+async def test_discovery_recovers_after_error(
+    hass: HomeAssistant, error: Exception, expected: str
+) -> None:
+    """Discovery keeps its form on failure and accepts a corrected retry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(id=GATEWAY_ID)
+    )
+    with patch(
+        "homeassistant.components.lanbon.config_flow._validate",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: TOKEN}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
+    with patch(
+        "homeassistant.components.lanbon.config_flow._validate",
+        return_value=gateway_info(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: TOKEN}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
