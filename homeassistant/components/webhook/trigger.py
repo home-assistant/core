@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import hdrs, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -32,14 +32,14 @@ CONF_LOCAL_ONLY = "local_only"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "webhook",
-        vol.Required(CONF_WEBHOOK_ID): cv.template,
-        vol.Optional(CONF_ALLOWED_METHODS): vol.All(
+        probatio.Required(CONF_PLATFORM): "webhook",
+        probatio.Required(CONF_WEBHOOK_ID): cv.template,
+        probatio.Optional(CONF_ALLOWED_METHODS): probatio.All(
             cv.ensure_list,
-            [vol.All(vol.Upper, vol.In(SUPPORTED_METHODS))],
-            vol.Unique(),
+            [probatio.All(probatio.Upper, probatio.In(SUPPORTED_METHODS))],
+            probatio.Unique(),
         ),
-        vol.Optional(CONF_LOCAL_ONLY): bool,
+        probatio.Optional(CONF_LOCAL_ONLY): bool,
     }
 )
 

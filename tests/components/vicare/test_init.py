@@ -12,6 +12,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
 )
 
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
@@ -38,6 +39,11 @@ from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+# From a real rate limit response: 2026-09-09T00:00:04.144Z.
+QUOTA_RESET_MS = 1788912004144
+
+SENSOR_ID = "sensor.model0_outside_temperature"
 
 # 16-character zigbee IEEE address shared by the FHT fixtures.
 ZIGBEE_IEEE = "#" * 16
@@ -310,6 +316,108 @@ async def test_setup_entry_transient_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_backs_off_until_the_quota_resets(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rate limited refresh defers the next one to the reset time."""
+    freezer.move_to("2026-09-08 20:00:04+00:00")
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    service.fetch_all_features.side_effect = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": QUOTA_RESET_MS,
+            }
+        }
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    # The quota resets four hours out, so nothing may go out at the ordinary
+    # interval in between.
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count > calls
+
+
+async def test_coordinator_backs_off_when_the_reset_has_passed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a reset time in the past still defers, instead of retrying at once."""
+    freezer.move_to("2026-09-09 01:00:04+00:00")
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    service.fetch_all_features.side_effect = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": QUOTA_RESET_MS,
+            }
+        }
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(SENSOR_ID).state == STATE_UNAVAILABLE
+    calls = service.fetch_all_features.call_count
+
+    # A zero delay would reschedule at once and hammer a quota that is still
+    # spent, so the wait stays at the ordinary interval.
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count == calls
+
+    freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert service.fetch_all_features.call_count > calls
+
+
 async def test_setup_entry_invalid_credentials(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -330,6 +438,42 @@ async def test_setup_entry_invalid_credentials(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_rate_limited(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the daily API quota is spent."""
+    mock_config_entry.add_to_hass(hass)
+
+    rate_limit_error = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "development portal",
+                "requestCountLimit": 1450,
+                "limitReset": 1757376004000,
+            }
+        }
+    )
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            side_effect=rate_limit_error,
+        ) as setup_api,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    setup_api.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # SETUP_RETRY alone would also match an unrelated ConfigEntryNotReady.
+    assert "rate limit" in mock_config_entry.reason
+    assert str(rate_limit_error.limitResetDate) in mock_config_entry.reason
 
 
 async def test_setup_entry_invalid_configuration(

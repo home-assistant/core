@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any, Final, TypedDict
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
@@ -52,8 +52,8 @@ SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = SignalType[
     UpdateType, dict[str, Notification]
 ]("persistent_notifications_updated")
 
-SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
-    {vol.Required(ATTR_NOTIFICATION_ID): cv.string}
+SCHEMA_SERVICE_NOTIFICATION = probatio.Schema(
+    {probatio.Required(ATTR_NOTIFICATION_ID): cv.string}
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,11 +178,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         "create",
         create_service,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_MESSAGE): cv.string,
-                vol.Optional(ATTR_TITLE): cv.string,
-                vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+                probatio.Required(ATTR_MESSAGE): cv.string,
+                probatio.Optional(ATTR_TITLE): cv.string,
+                probatio.Optional(ATTR_NOTIFICATION_ID): cv.string,
             }
         ),
     )
@@ -200,7 +200,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "persistent_notification/get"}
+)
 def websocket_get_notifications(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -231,7 +233,7 @@ def _async_send_notification_update(
 
 @callback
 @websocket_api.websocket_command(
-    {vol.Required("type"): "persistent_notification/subscribe"}
+    {probatio.Required("type"): "persistent_notification/subscribe"}
 )
 def websocket_subscribe_notifications(
     hass: HomeAssistant,
