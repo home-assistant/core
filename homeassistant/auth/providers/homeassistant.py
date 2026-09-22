@@ -367,7 +367,8 @@ class HassAuthProvider(AuthProvider):
             assert self.data is not None
 
         try:
-            self.data.async_remove_auth(credentials.data["username"])
+            async with self._write_lock:
+                self.data.async_remove_auth(credentials.data["username"])
             await self.data.async_save()
         except InvalidUser:
             # Can happen if somehow we didn't clean up a credential
