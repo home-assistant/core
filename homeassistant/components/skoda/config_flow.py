@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 API_KEY_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-# Form for initial user input: VIN and API key.
 STEP_VEHICLE_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_VIN): str,
@@ -87,11 +86,9 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
             vin = user_input[CONF_VIN].strip().upper()
             api_key = user_input[CONF_API_KEY].strip()
 
-            # Basic format validation for the VIN
             if len(vin) != 17:
                 errors[CONF_VIN] = "invalid_vin_length"
             else:
-                # Setting a unique ID for the config entry based on the VIN to prevent duplicates.
                 await self.async_set_unique_id(vin)
                 self._abort_if_unique_id_configured()
 
@@ -99,7 +96,6 @@ class SkodaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if error:
                     errors["base"] = error
                 else:
-                    # Try to get a vehicle model name as an entry title, fallback to VIN if not available.
                     title = f"Škoda {vin}"
                     if (
                         vehicle_response

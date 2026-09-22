@@ -114,7 +114,6 @@ def _last_synchronization_value(entity: SkodaEntity) -> datetime | None:
 def _fuel_level_value(entity: SkodaEntity) -> int | None:
     driving_range = entity.open_api_driving_range
     if driving_range is not None:
-        # Display primary engine range
         primary_engine = driving_range.primary_engine_range
         if (
             primary_engine is not None
@@ -122,7 +121,6 @@ def _fuel_level_value(entity: SkodaEntity) -> int | None:
         ):
             return primary_engine.current_fuel_level_in_percent
 
-        # Display secondary engine range
         secondary_engine = driving_range.secondary_engine_range
         if secondary_engine is not None:
             return secondary_engine.current_fuel_level_in_percent
