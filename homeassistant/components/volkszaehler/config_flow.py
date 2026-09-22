@@ -156,6 +156,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 entry,
                 data_updates=user_input,
+                title=user_input[CONF_HOST],
                 reason="reconfigure_successful",
             )
 
