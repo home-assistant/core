@@ -44,7 +44,7 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -99,6 +99,39 @@ async def test_climate_entity(
         [call(key=1, target_temperature=25.0, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
+
+
+async def test_climate_missing_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a climate that has no state yet is unknown rather than off."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supported_modes=[ClimateMode.OFF, ClimateMode.COOL],
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=ClimateMode.OFF,
+            missing_state=True,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_climate_entity_with_step_and_two_point(
