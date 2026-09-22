@@ -56,11 +56,13 @@ EVENT_END = "dtend"
 EVENT_SUMMARY = "summary"
 EVENT_DESCRIPTION = "description"
 EVENT_LOCATION = "location"
-EVENT_COLOR = "color"
 EVENT_RECURRENCE_ID = "recurrence_id"
 EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
 EVENT_STATUS = "status"
+
+# rfc7986 fields
+EVENT_COLOR = "color"
 
 # Service call fields
 EVENT_START_DATE = "start_date"

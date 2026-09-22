@@ -383,14 +383,13 @@ class CalendarEvent:
     status: CalendarEventStatus | None = None
 
     color: str | None = None
-    """A color for this specific event, overriding the calendar's own color.
+    """A color for this event, overriding the color of its calendar entity.
 
     RFC 7986 Section 5.9 defines the value as a CSS3 color name, for example
     "turquoise". A hex color, for example "#0088aa", is also accepted, since
     that is the form the calendar-level color option uses and the form
-    backends such as Google Calendar report. None means the calendar's own
-    color is used, as does a value the frontend cannot resolve to a valid
-    CSS color.
+    backends such as Google Calendar report. None means the calendar
+    entity's own color is used.
     """
 
     @property
