@@ -152,11 +152,12 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
         probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A saturation of zero switches the bulb to color temperature mode
         ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
         ATTR_CHANGE: probatio.All(

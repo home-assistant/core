@@ -390,6 +390,24 @@ async def test_effect_colorloop_orders_saturation_bounds(
     assert effect.saturation_max == 0.8
 
 
+async def test_effect_colorloop_clamps_saturation_above_zero(
+    hass: HomeAssistant, mock_effect_conductor: MagicMock
+) -> None:
+    """Test a zero saturation is raised, as it switches the bulb to white."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SATURATION_MIN: 0, ATTR_SATURATION_MAX: 0},
+        blocking=True,
+    )
+
+    effect = mock_effect_conductor.start.await_args.args[0]
+    assert effect.saturation_min == 0.01
+    assert effect.saturation_max == 0.01
+
+
 async def test_effect_colorloop_accepts_absolute_brightness(
     hass: HomeAssistant, mock_effect_conductor: MagicMock
 ) -> None:
