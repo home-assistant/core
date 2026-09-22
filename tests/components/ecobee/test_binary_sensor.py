@@ -1,7 +1,5 @@
 """Tests for ecobee binary sensors."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -10,20 +8,12 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Return the platforms to set up."""
-    return [Platform.BINARY_SENSOR]
+pytestmark = pytest.mark.usefixtures("mock_ecobee")
 
 
-async def test_occupancy_sensor(
-    hass: HomeAssistant,
-    mock_ecobee,
-    platforms: list[Platform],
-) -> None:
+async def test_occupancy_sensor(hass: HomeAssistant) -> None:
     """Test the occupancy binary sensor."""
-    await setup_platform(hass, platforms)
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     state = hass.states.get("binary_sensor.remote_sensor_1_occupancy")
     assert state is not None
@@ -31,13 +21,9 @@ async def test_occupancy_sensor(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.OCCUPANCY
 
 
-async def test_alert_sensor_firing(
-    hass: HomeAssistant,
-    mock_ecobee,
-    platforms: list[Platform],
-) -> None:
+async def test_alert_sensor_firing(hass: HomeAssistant) -> None:
     """Test alert binary sensor when an alert is actively firing."""
-    await setup_platform(hass, platforms)
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     state = hass.states.get("binary_sensor.ecobee_furnace_filter")
     assert state is not None
@@ -49,13 +35,9 @@ async def test_alert_sensor_firing(
     assert state.attributes["severity"] == "low"
 
 
-async def test_alert_sensor_not_firing(
-    hass: HomeAssistant,
-    mock_ecobee,
-    platforms: list[Platform],
-) -> None:
+async def test_alert_sensor_not_firing(hass: HomeAssistant) -> None:
     """Test alert binary sensor when no matching alert is firing."""
-    await setup_platform(hass, platforms)
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     state = hass.states.get("binary_sensor.ecobee_uv_lamp")
     assert state is not None
@@ -65,26 +47,17 @@ async def test_alert_sensor_not_firing(
     assert state.attributes["equipment_type"] == "uvLamp"
 
 
-async def test_disabled_equipment_not_created(
-    hass: HomeAssistant,
-    mock_ecobee,
-    platforms: list[Platform],
-) -> None:
+async def test_disabled_equipment_not_created(hass: HomeAssistant) -> None:
     """Test that disabled equipment reminders don't create entities."""
-    await setup_platform(hass, platforms)
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     state = hass.states.get("binary_sensor.ecobee_humidifier_filter")
     assert state is None
 
 
-async def test_no_alert_entities_when_no_equipment(
-    hass: HomeAssistant,
-    mock_ecobee,
-    platforms: list[Platform],
-) -> None:
+async def test_no_alert_entities_when_no_equipment(hass: HomeAssistant) -> None:
     """Test that thermostats with no equipment notifications don't create alert entities."""
-    await setup_platform(hass, platforms)
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
-    # ecobee2 has empty equipment list
     state = hass.states.get("binary_sensor.ecobee2_furnace_filter")
     assert state is None

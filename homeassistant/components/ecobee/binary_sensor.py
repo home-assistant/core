@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import EcobeeConfigEntry, EcobeeData
 from .const import (
     DOMAIN,
-    ECOBEE_ALERT_NUMBER_TO_NAME,
+    ECOBEE_ALERT_NUMBER_TO_TRANSLATION_KEY,
     ECOBEE_EQUIPMENT_TYPE_TO_ALERT_NUMBER,
     ECOBEE_MODEL_TO_NAME,
     MANUFACTURER,
@@ -147,8 +147,8 @@ class EcobeeAlertBinarySensor(EcobeeBaseEntity, BinarySensorEntity):
         self._alert_number = alert_number
         self._equipment_type = equipment_type
         self._attr_unique_id = f"{self.base_unique_id}_alert_{alert_number}"
-        self._attr_name = ECOBEE_ALERT_NUMBER_TO_NAME.get(
-            alert_number, equipment_type
+        self._attr_translation_key = ECOBEE_ALERT_NUMBER_TO_TRANSLATION_KEY.get(
+            alert_number
         )
 
     async def async_update(self) -> None:
