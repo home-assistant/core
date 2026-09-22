@@ -1646,6 +1646,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -1661,9 +1662,8 @@ async def test_reconfigure(
             new_callable=AsyncMock,
         ),
         patch(
-            "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
-        ),
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as mock_async_reload,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "new_api_key"}
@@ -1673,6 +1673,7 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert mock_async_reload.call_count == 1
 
 
 async def test_reconfigure_invalid_auth(

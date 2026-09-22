@@ -155,13 +155,18 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
                     )
-                if self.source == SOURCE_RECONFIGURE:
+                    if entry.update_listeners:
+                        return self.async_update_and_abort(
+                            entry, data_updates=user_input
+                        )
                     return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), data_updates=user_input
+                        entry, data_updates=user_input
                     )
                 return self.async_create_entry(
                     title="ChatGPT",
