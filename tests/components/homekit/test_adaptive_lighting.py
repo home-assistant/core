@@ -502,6 +502,63 @@ async def test_brightness_shifts_the_colour_temperature(
     assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] != at_full
 
 
+async def test_switching_the_light_on_applies_the_curve_at_once(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A light coming on gets its colour now, not at the next update."""
+    acc = await _setup_light(hass, hk_driver, state=STATE_OFF)
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    hass.states.async_set(
+        "light.demo",
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_TEMP_KELVIN: 4000,
+        },
+    )
+    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 1
+    assert ATTR_COLOR_TEMP_KELVIN in call_turn_on[0].data
+
+
+async def test_a_brightness_change_applies_the_curve_at_once(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Apple shifts the colour with brightness, so a new level is a new colour."""
+    acc = await _setup_light(hass, hk_driver)
+    assert acc.adaptive_lighting is not None
+    acc.adaptive_lighting.char_brightness.set_value(100)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+    at_full = call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN]
+
+    # Dimming lands on another point of the curve, with no update in between.
+    acc.adaptive_lighting.char_brightness.set_value(10)
+    hass.states.async_set(
+        "light.demo",
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_BRIGHTNESS: 26,
+            ATTR_COLOR_TEMP_KELVIN: 4000,
+        },
+    )
+    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] != at_full
+
+
 def _control_write(configuration: bytes) -> str:
     """Wrap a configuration the way the Home app writes it."""
     return base64.b64encode(
