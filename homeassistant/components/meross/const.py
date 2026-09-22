@@ -12,5 +12,4 @@ DEVICE_STARTUP_TIMEOUT = 30
 # async_track_unavailable may never fire after battery removal / BT off.
 ADVERTISEMENT_STALE_SECONDS = 600
 
-USER_SETUP_MODELS = ("ms120", "ms220", "ms420", "ms700")
 MANUAL_SCAN_DURATION = 15

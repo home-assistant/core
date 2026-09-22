@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from meross_ble import MerossBLEError
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.meross.const import DOMAIN
@@ -144,34 +143,18 @@ async def test_bluetooth_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_user_menu(hass: HomeAssistant) -> None:
-    """Test the user step shows the model menu."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "user"
-    assert set(result["menu_options"]) == {"ms120", "ms220", "ms420", "ms700"}
-
-
-@pytest.mark.parametrize("model", ["ms120", "ms220", "ms420", "ms700"])
-async def test_user_model_no_adapter(hass: HomeAssistant, model: str) -> None:
+async def test_user_no_adapter(hass: HomeAssistant) -> None:
     """Test manual setup aborts without a Bluetooth adapter."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": model},
-    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_bluetooth_adapter"
 
 
-async def test_user_ms120_no_devices_found(hass: HomeAssistant) -> None:
-    """Test manual MS120 setup aborts when nothing is discovered."""
+async def test_user_no_devices_found(hass: HomeAssistant) -> None:
+    """Test manual setup aborts when nothing is discovered."""
     with (
         patch(
             "homeassistant.components.meross.config_flow.bluetooth.async_request_active_scan"
@@ -189,17 +172,13 @@ async def test_user_ms120_no_devices_found(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": "ms120"},
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_ms120_single_device(hass: HomeAssistant) -> None:
-    """Test manual MS120 setup with a single discovered device."""
+async def test_user_single_device(hass: HomeAssistant) -> None:
+    """Test manual setup with a single discovered device."""
     with (
         patch(
             "homeassistant.components.meross.config_flow.bluetooth.async_request_active_scan"
@@ -229,10 +208,6 @@ async def test_user_ms120_single_device(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": "ms120"},
-        )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "bluetooth_confirm"
 
@@ -247,8 +222,8 @@ async def test_user_ms120_single_device(hass: HomeAssistant) -> None:
     assert result2["data"][CONF_MODEL] == "ms120"
 
 
-async def test_user_ms120_multiple_devices(hass: HomeAssistant) -> None:
-    """Test manual MS120 setup asks the user to pick among matches."""
+async def test_user_multiple_devices(hass: HomeAssistant) -> None:
+    """Test manual setup asks the user to pick among matches."""
     second = BluetoothServiceInfoBleak(
         name="Meross-MS120-0002",
         address="AA:BB:CC:DD:00:02",
@@ -296,12 +271,8 @@ async def test_user_ms120_multiple_devices(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": "ms120"},
-        )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "bluetooth_setup"
+        assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -319,8 +290,8 @@ async def test_user_ms120_multiple_devices(hass: HomeAssistant) -> None:
     assert result3["data"][CONF_ADDRESS] == MEROSS_MS120_ADDRESS
 
 
-async def test_user_ms120_filters_other_models(hass: HomeAssistant) -> None:
-    """Test manual MS120 setup ignores other Meross Bluetooth models."""
+async def test_user_lists_all_meross_models(hass: HomeAssistant) -> None:
+    """Test manual setup lists every discovered Meross model."""
     with (
         patch(
             "homeassistant.components.meross.config_flow.bluetooth.async_request_active_scan"
@@ -331,23 +302,45 @@ async def test_user_ms120_filters_other_models(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.meross.config_flow.async_discovered_service_info",
-            return_value=[MEROSS_MS220_SERVICE_INFO],
+            return_value=[MEROSS_MS120_SERVICE_INFO, MEROSS_MS220_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.meross.config_flow.bluetooth.async_ble_device_from_address",
+            return_value=MEROSS_MS220_SERVICE_INFO.device,
+        ),
+        patch(
+            "homeassistant.components.meross.config_flow.create_device"
+        ) as mock_create,
+        patch(
+            "homeassistant.components.meross.async_setup_entry",
+            return_value=True,
         ),
     ):
+        mock_create.return_value.identify = AsyncMock(return_value=True)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = await hass.config_entries.flow.async_configure(
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"next_step_id": "ms120"},
+            user_input={CONF_ADDRESS: MEROSS_MS220_SERVICE_INFO.address},
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "bluetooth_confirm"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={},
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_MODEL] == "ms220"
 
 
-async def test_user_ms120_already_configured(hass: HomeAssistant) -> None:
+async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test manual setup aborts when the only match is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -375,10 +368,6 @@ async def test_user_ms120_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": "ms120"},
         )
 
     assert result["type"] is FlowResultType.ABORT

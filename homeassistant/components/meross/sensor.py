@@ -82,7 +82,6 @@ SENSOR_TYPES: dict[str, MerossBLESensorEntityDescription] = {
     ),
     "absolute_humidity": MerossBLESensorEntityDescription(
         key="absolute_humidity",
-        translation_key="absolute_humidity",
         native_unit_of_measurement=UnitOfDensity.GRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -128,7 +127,4 @@ class MerossBLESensor(MerossBLEEntity, SensorEntity):
     @override
     def native_value(self) -> float | int | None:
         """Return the sensor value."""
-        value = self.parsed_data.get(self._sensor)
-        if isinstance(value, (int, float)):
-            return value
-        return None
+        return self.parsed_data.get(self._sensor)

@@ -1,29 +1,15 @@
 """The Meross Bluetooth integration."""
 
-import asyncio
-
 from meross_ble import DEFAULT_RETRY_COUNT, MerossModel, create_device
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER
-from .coordinator import MerossBLEDataUpdateCoordinator
+from .coordinator import MerossBLEDataUpdateCoordinator, MerossConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type MerossConfigEntry = ConfigEntry[MerossBLEDataUpdateCoordinator]
-
-# Shared across all Meross BLE entries: Pi/USB adapters often have 1 connection slot.
-_SHARED_LOCKS: dict[str, asyncio.Lock] = {}
-
-
-def _async_ble_gatt_lock() -> asyncio.Lock:
-    """One shared GATT lock for all Meross BLE devices on this HA instance."""
-    return _SHARED_LOCKS.setdefault("ble_gatt", asyncio.Lock())
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MerossConfigEntry) -> bool:
@@ -31,13 +17,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MerossConfigEntry) -> bo
     assert entry.unique_id is not None
     address: str = entry.data[CONF_ADDRESS]
     model = MerossModel(entry.data[CONF_MODEL])
-    # GATT Identify still needs a connectable BLEDevice from the cache.
-    gatt_connectable = True
-    # False = receive connectable and non-connectable advertisements.
-    advertisement_connectable = False
-
+    # False accepts connectable and non-connectable advertisements (common on macOS).
     ble_device = bluetooth.async_ble_device_from_address(
-        hass, address.upper(), gatt_connectable
+        hass, address.upper(), connectable=False
     )
     if not ble_device:
         raise ConfigEntryNotReady(
@@ -47,20 +29,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MerossConfigEntry) -> bo
     device = create_device(ble_device, model, retry_count=DEFAULT_RETRY_COUNT)
     coordinator = entry.runtime_data = MerossBLEDataUpdateCoordinator(
         hass,
-        LOGGER,
+        entry,
         ble_device,
         device,
-        entry.unique_id,
-        entry.title,
-        advertisement_connectable,
-        model,
-        entry,
     )
     device.bind_runtime(
         refresh_ble_device=lambda: bluetooth.async_ble_device_from_address(
             hass, address.upper(), True
         ),
-        gatt_lock=_async_ble_gatt_lock(),
         wait_advertisement=coordinator.async_wait_next_advertisement,
         last_service_info=lambda: bluetooth.async_last_service_info(
             hass, address, connectable=False

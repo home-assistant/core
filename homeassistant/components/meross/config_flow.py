@@ -3,10 +3,8 @@
 from typing import Any, override
 
 from meross_ble import (
-    MODEL_FRIENDLY_NAME,
     MerossAdvertisement,
     MerossBLEError,
-    MerossModel,
     create_device,
     parse_advertisement_data,
 )
@@ -21,7 +19,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, LOGGER, MANUAL_SCAN_DURATION, USER_SETUP_MODELS
+from .const import DOMAIN, LOGGER, MANUAL_SCAN_DURATION
 
 
 def _format_ble_unique_id(address: str) -> str:
@@ -71,77 +69,12 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize flow state used by Bluetooth setup."""
         self._discovered: MerossAdvertisement | None = None
         self._discovered_devices: dict[str, MerossAdvertisement] = {}
-        self._setup_model: str | None = None
-        self._setup_ble_model: MerossModel | None = None
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for product model."""
-        return self.async_show_menu(
-            step_id="user",
-            menu_options=list(USER_SETUP_MODELS),
-        )
-
-    async def async_step_ms120(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User selected Bluetooth model MS120."""
-        return await self._async_start_model_setup("ms120")
-
-    async def async_step_ms220(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User selected Bluetooth model MS220."""
-        return await self._async_start_model_setup("ms220")
-
-    async def async_step_ms420(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User selected Bluetooth model MS420."""
-        return await self._async_start_model_setup("ms420")
-
-    async def async_step_ms700(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """User selected Bluetooth model MS700."""
-        return await self._async_start_model_setup("ms700")
-
-    async def _async_start_model_setup(self, model: str) -> ConfigFlowResult:
-        """Store selected model and continue Bluetooth setup."""
-        self._setup_model = model
-        self._setup_ble_model = MerossModel(model)
-        return await self.async_step_bluetooth_setup()
-
-    @override
-    async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfoBleak
-    ) -> ConfigFlowResult:
-        """HA bluetooth matched manifest rules."""
-        await self.async_set_unique_id(_format_ble_unique_id(discovery_info.address))
-        self._abort_if_unique_id_configured()
-
-        parsed = parse_advertisement_data(
-            discovery_info.device, discovery_info.advertisement
-        )
-        if not parsed:
-            return self.async_abort(reason="not_supported")
-
-        self._discovered = parsed
-        self.context["title_placeholders"] = _discovery_title_placeholders(parsed)
-        return await self.async_step_bluetooth_confirm()
-
-    async def async_step_bluetooth_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manual Bluetooth add after choosing a BLE product model."""
-        model_label = (
-            MODEL_FRIENDLY_NAME.get(self._setup_ble_model, self._setup_model or "BLE")
-            if self._setup_ble_model is not None
-            else (self._setup_model or "Meross BLE")
-        )
-
+        """Handle a flow initialized by the user: pick a discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             discovery = self._discovered_devices[address]
@@ -169,18 +102,10 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
             parsed = parse_advertisement_data(info.device, info.advertisement)
             if not parsed:
                 continue
-            if (
-                self._setup_ble_model is not None
-                and parsed.model is not self._setup_ble_model
-            ):
-                continue
             self._discovered_devices[address] = parsed
 
         if not self._discovered_devices:
-            return self.async_abort(
-                reason="no_devices_found",
-                description_placeholders={"model": model_label},
-            )
+            return self.async_abort(reason="no_devices_found")
 
         if len(self._discovered_devices) == 1:
             discovery = next(iter(self._discovered_devices.values()))
@@ -195,7 +120,7 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_bluetooth_confirm()
 
         return self.async_show_form(
-            step_id="bluetooth_setup",
+            step_id="user",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_ADDRESS): probatio.In(
@@ -206,8 +131,25 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            description_placeholders={"model": model_label},
         )
+
+    @override
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> ConfigFlowResult:
+        """HA bluetooth matched manifest rules."""
+        await self.async_set_unique_id(_format_ble_unique_id(discovery_info.address))
+        self._abort_if_unique_id_configured()
+
+        parsed = parse_advertisement_data(
+            discovery_info.device, discovery_info.advertisement
+        )
+        if not parsed:
+            return self.async_abort(reason="not_supported")
+
+        self._discovered = parsed
+        self.context["title_placeholders"] = _discovery_title_placeholders(parsed)
+        return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None

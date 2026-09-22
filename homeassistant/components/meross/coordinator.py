@@ -3,7 +3,6 @@
 import asyncio
 import contextlib
 from datetime import datetime
-import logging
 from typing import TYPE_CHECKING, override
 
 from meross_ble import (
@@ -18,15 +17,14 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
     ActiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
-from .const import ADVERTISEMENT_STALE_SECONDS, DEVICE_STARTUP_TIMEOUT
+from .const import ADVERTISEMENT_STALE_SECONDS, DEVICE_STARTUP_TIMEOUT, LOGGER
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 type MerossConfigEntry = ConfigEntry[MerossBLEDataUpdateCoordinator]
 
@@ -50,31 +48,28 @@ class MerossBLEDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
     def __init__(
         self,
         hass: HomeAssistant,
-        logger: logging.Logger,
+        config_entry: MerossConfigEntry,
         ble_device: BLEDevice,
         device: MerossBLEDevice,
-        base_unique_id: str,
-        device_name: str,
-        connectable: bool,
-        model: MerossModel,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize Meross BLE data updater."""
+        assert config_entry.unique_id is not None
         super().__init__(
             hass=hass,
-            logger=logger,
+            logger=LOGGER,
             address=ble_device.address,
             needs_poll_method=self._needs_poll,
             poll_method=self._async_update,
             mode=bluetooth.BluetoothScanningMode.ACTIVE,
-            connectable=connectable,
+            # False = receive connectable and non-connectable advertisements.
+            connectable=False,
         )
+        self.config_entry = config_entry
         self.ble_device = ble_device
         self.device = device
-        self.device_name = device_name
-        self.base_unique_id = base_unique_id
-        self.model = model
-        self.config_entry = config_entry
+        self.base_unique_id = config_entry.unique_id
+        self.device_name = config_entry.title
+        self.model = MerossModel(config_entry.data[CONF_MODEL])
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
         self._stale_unsub: CALLBACK_TYPE | None = None
@@ -125,8 +120,8 @@ class MerossBLEDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
             return
         self._available = False
         self._was_unavailable = True
-        _LOGGER.debug(
-            "%s: no parseable BLE advertisement for %ss → marking unavailable",
+        LOGGER.info(
+            "%s: no parseable BLE advertisement for %ss; marking unavailable",
             self.address,
             ADVERTISEMENT_STALE_SECONDS,
         )
@@ -140,7 +135,6 @@ class MerossBLEDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
     ) -> bool:
         return (
             self.hass.state is CoreState.running
-            and self.connectable
             and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(
@@ -186,7 +180,7 @@ class MerossBLEDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
             service_info.device, service_info.advertisement, self.model
         )
         if not adv or "status" not in adv.data:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "%s: advertisement could not be parsed (service_data=%s)",
                 service_info.address,
                 raw_hex,
@@ -198,6 +192,7 @@ class MerossBLEDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self._async_notify_advertisement_waiters()
         if recovered:
             self._was_unavailable = False
+            LOGGER.info("%s: Meross BLE device is available", self.address)
         super()._async_handle_bluetooth_event(service_info, change)
 
     async def async_wait_ready(self) -> bool:
