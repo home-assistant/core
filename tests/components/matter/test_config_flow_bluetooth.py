@@ -1,5 +1,6 @@
 """Test the Matter config flow Bluetooth discovery."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
@@ -22,6 +23,7 @@ from .common import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
+    _get_manager,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_time_and_source_connectable,
@@ -99,6 +101,16 @@ async def test_discovery_without_name(hass: HomeAssistant) -> None:
     result = await _async_start_discovery(hass, matter_ble_service_info(name=""))
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"]["name"] == "Matter device 3840"
+
+
+async def test_only_ignored_entries_is_not_a_server(hass: HomeAssistant) -> None:
+    """An ignored device on its own does not count as a Matter server."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id=UNIQUE_ID
+    ).add_to_hass(hass)
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_entry_not_loaded_shows_confirm(hass: HomeAssistant) -> None:
@@ -281,3 +293,36 @@ async def test_commission_without_loaded_entry(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_loaded"
+
+
+@pytest.mark.usefixtures("bluetooth_enabled", "integration")
+async def test_commissioning_in_progress_is_never_aborted(
+    hass: HomeAssistant, matter_client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A flow that started commissioning survives the device going silent."""
+    commissioning = asyncio.Event()
+
+    async def _commission(*_args: object, **_kwargs: object) -> None:
+        await commissioning.wait()
+
+    matter_client.commission_with_code.side_effect = _commission
+    result = await _async_start_discovery(hass)
+    configure = hass.async_create_background_task(
+        hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": PAIRING_CODE}
+        ),
+        "commission",
+    )
+    await asyncio.sleep(0)
+
+    # The device stops advertising while the server is connected to it.
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    _get_manager()._address_disappeared(MATTER_BLE_ADDRESS)
+    await hass.async_block_till_done()
+    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    commissioning.set()
+    result = await configure
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "commission_successful"

@@ -129,7 +129,8 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Install the Matter Server add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_install_addon()
-        # A fresh install has no user options to preserve.
+        # Supervisor merges the app defaults with the user options, so a fresh
+        # install has nothing to preserve.
         if "bluetooth" in self.hass.config.components:
             await addon_manager.async_set_addon_options({CONF_ADDON_BLE_PROXY: True})
 
@@ -277,7 +278,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         advertisement = MatterBleAdvertisement.from_service_info(discovery_info)
         if advertisement is None:
             return self.async_abort(reason="not_commissionable")
-        if not self._async_current_entries():
+        if not self._async_current_entries(include_ignore=False):
             # No server to commission with; offer to set up the integration first.
             return await self._async_step_discovery_without_unique_id()
         if self.hass.config_entries.async_loaded_entries(DOMAIN):
@@ -353,6 +354,8 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not self.hass.config_entries.async_loaded_entries(DOMAIN):
                 return self.async_abort(reason="not_loaded")
+            # The device stops advertising once the server connects to it.
+            self._async_stop_ble_tracking()
             matter_client = get_matter(self.hass).matter_client
             try:
                 await matter_client.commission_with_code(
@@ -383,6 +386,11 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_remove(self) -> None:
         """Clean up Bluetooth subscriptions when the flow ends."""
+        self._async_stop_ble_tracking()
+
+    @callback
+    def _async_stop_ble_tracking(self) -> None:
+        """Stop watching the device's advertisements."""
         if self._ble_unsub is not None:
             self._ble_unsub()
             self._ble_unsub = None
