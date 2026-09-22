@@ -201,6 +201,32 @@
       "description": "Retrieves the forecast from selected weather services.",
       "name": "Get forecasts"
     },
+    "get_precipitation_forecast": {
+      "description": "Retrieves the precipitation forecast series from the selected weather service.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Environment Canada service to retrieve the precipitation forecast from.",
+          "name": "Environment Canada service"
+        },
+        "future_minutes": {
+          "description": "How far ahead the short-interval series reaches.",
+          "name": "Future minutes"
+        },
+        "hourly_hours": {
+          "description": "Length of the hourly series. Zero disables it.",
+          "name": "Hourly hours"
+        },
+        "past_minutes": {
+          "description": "How far back the short-interval series reaches.",
+          "name": "Past minutes"
+        },
+        "precip_type": {
+          "description": "Which precipitation type to report. Automatically detects it from radar.",
+          "name": "Precipitation type"
+        }
+      },
+      "name": "Get precipitation forecast"
+    },
     "set_radar_type": {
       "description": "Sets the type of radar image to retrieve.",
       "fields": {
