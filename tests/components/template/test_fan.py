@@ -362,63 +362,120 @@ async def test_percentage_template(
     _verify(hass, STATE_ON, expected, None, None, None)
 
 
-@pytest.mark.parametrize(
-    ("count", "config", "extra_config"),
-    [
-        (
-            1,
-            {
-                "state": "{{ 1 == 1 }}",
-                "percentage": "{{ states('sensor.test_sensor') }}",
-                # A second, independently-changing attribute -- standing in
-                # for something like a live wattage reading on a real fan.
-                # It has nothing to do with percentage, but its own renders
-                # trigger this entity's batched state write.
-                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
-            },
-            OPTIMISTIC_PERCENTAGE_CONFIG,
-        )
-    ],
-)
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
+@pytest.mark.parametrize(
+    (
+        "config",
+        "extra_config",
+        "attribute",
+        "action",
+        "initial_source",
+        "initial_verify",
+        "requested",
+        "coro",
+    ),
+    [
+        (
+            {
+                "state": "{{ 1 == 1 }}",
+                "percentage": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_PERCENTAGE_CONFIG,
+            "percentage",
+            "set_percentage",
+            "50",
+            {"expected_percentage": 50},
+            100,
+            common.async_set_percentage,
+        ),
+        (
+            {
+                "state": "{{ 1 == 1 }}",
+                "preset_modes": ["auto", "smart"],
+                "preset_mode": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            {**OPTIMISTIC_ON_OFF_ACTIONS, **PRESET_MODE_ACTION},
+            "preset_mode",
+            "set_preset_mode",
+            "auto",
+            {"expected_preset_mode": "auto"},
+            "smart",
+            common.async_set_preset_mode,
+        ),
+        (
+            {
+                "state": "{{ 1 == 1 }}",
+                "oscillating": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            "oscillating",
+            "set_oscillating",
+            STATE_ON,
+            {"expected_oscillating": True},
+            False,
+            common.async_oscillate,
+        ),
+        (
+            {
+                "state": "{{ 1 == 1 }}",
+                "direction": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_DIRECTION_CONFIG,
+            "direction",
+            "set_direction",
+            DIRECTION_FORWARD,
+            {"expected_direction": DIRECTION_FORWARD},
+            DIRECTION_REVERSE,
+            common.async_set_direction,
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_fan")
-async def test_set_percentage_does_not_stick_when_template_does_not_confirm(
-    hass: HomeAssistant, calls: list[ServiceCall]
+async def test_set_does_not_stick_when_template_does_not_confirm(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    attribute: str,
+    action: str,
+    initial_source: str,
+    initial_verify: dict,
+    requested: Any,
+    coro,
 ) -> None:
-    """A set_percentage call must not permanently override a templated percentage when the requested change does not actually happen.
+    """A set_* call must not override a templated attribute the request did not confirm.
 
-    Regression test: async_set_percentage() used to write
-    self._attr_percentage unconditionally, even though a `percentage`
-    template makes the template the source of truth. That write bypasses
-    the template-tracker's own cache of the template's last-rendered
-    result, so if the template's real source never changes (the command had
-    no effect), its next render is identical to what the tracker already had
-    cached, the tracker sees "no change" from its own point of view, and the
-    optimistic value is never corrected in place -- yet it still gets
-    republished by any unrelated state write on the same entity, such as
-    another attribute template (here, `watts`) firing on its own trigger.
+    Regression test for async_set_percentage(), async_set_preset_mode(),
+    async_oscillate() and async_set_direction() all writing their `_attr_*`
+    unconditionally, clobbering a configured template even though the
+    template is the actual source of truth for that attribute.
     """
-    # The template starts out reporting 50 (from the driving sensor), and
-    # the tracker's cache is now primed with that render.
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, "50")
-    _verify(hass, STATE_ON, 50, None, None, None)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, initial_source)
+    _verify(hass, STATE_ON, **initial_verify)
 
-    # Ask for 100. The configured set_percentage action does not touch
+    # Ask for a new value. The configured action script does not touch
     # sensor.test_sensor, so nothing about the underlying reality changes.
-    await common.async_set_percentage(hass, TEST_FAN.entity_id, 100)
+    await coro(hass, TEST_FAN.entity_id, requested)
 
-    # Fire an UNRELATED attribute template's own trigger (not the one behind
-    # percentage). This is what a live wattage reading does every time it
-    # updates: it forces a state write for the whole entity, without ever
-    # giving percentage's own template a reason to re-fire.
+    # The action must still receive the requested value, even though it is
+    # not taken as the new truth.
+    assert_action(TEST_FAN, calls, 1, action, **{attribute: requested})
+
+    # Fire an unrelated attribute template's own trigger (not the one behind
+    # `attribute`). This is what a live wattage reading does every time it
+    # updates: it forces a state write for the whole entity, without giving
+    # the templated attribute's own template a reason to re-render.
     await async_trigger(hass, "sensor.test_extra_attributes", "1")
 
-    # The template is the source of truth here: the entity must reflect it,
-    # not the unconfirmed 100 that was requested and never took effect.
-    _verify(hass, STATE_ON, 50, None, None, None)
+    # The template is the source of truth: the entity must still reflect it,
+    # not the unconfirmed value that was requested and never took effect.
+    _verify(hass, STATE_ON, **initial_verify)
 
 
 @pytest.mark.parametrize(

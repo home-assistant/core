@@ -313,17 +313,9 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
-        # Only take the requested percentage as truth when nothing else will
-        # correct it. When a `percentage` template is configured it is the
-        # source of truth, and setting `_attr_percentage` here regardless
-        # desyncs it from the template-tracker's own cache of that
-        # template's last-rendered result (see TrackTemplateResultInfo):
-        # if the template's next real render happens to equal what it was
-        # BEFORE this call (e.g. the requested change did not actually take
-        # effect), the tracker sees no change from its own point of view and
-        # never fires the callback that would overwrite this optimistic
-        # value, leaving it stuck indefinitely -- including being republished
-        # by unrelated state writes that read the current `_attr_percentage`.
+        # Only self-assign when nothing else will: with a `percentage`
+        # template configured, it is the source of truth and must not be
+        # overwritten with an unconfirmed value.
         if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
             self._attr_percentage = percentage
 
@@ -343,8 +335,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        # See the matching comment in async_set_percentage: only take this
-        # as truth when a preset_mode template will not correct it itself.
+        # See async_set_percentage: only self-assign when a preset_mode
+        # template will not itself be the source of truth.
         if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
             self._attr_preset_mode = preset_mode
 
@@ -364,8 +356,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
-        # See the matching comment in async_set_percentage: only take this
-        # as truth when an oscillating template will not correct it itself.
+        # See async_set_percentage: only self-assign when an oscillating
+        # template will not itself be the source of truth.
         if CONF_OSCILLATING not in self._templates:
             self._attr_oscillating = oscillating
         if (
@@ -384,8 +376,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:
-            # See the matching comment in async_set_percentage: only take
-            # this as truth when a direction template will not correct it.
+            # See async_set_percentage: only self-assign when a direction
+            # template will not itself be the source of truth.
             if CONF_DIRECTION not in self._templates:
                 self._attr_current_direction = direction
             if (
