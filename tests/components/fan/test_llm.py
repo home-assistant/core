@@ -43,7 +43,14 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed fan entity."""
-    assert "fan__HassFanSetSpeed" in await _tool_names(hass)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert "fan__HassFanSetSpeed" in tools
+
+    tool = tools["fan__HassFanSetSpeed"]
+    assert tool.title == "Set fan speed"
+    assert tool.integration == "fan"
+    assert tool.annotations == llm.ToolAnnotations(idempotent=True, open_world=False)
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:

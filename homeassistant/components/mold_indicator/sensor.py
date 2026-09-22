@@ -5,7 +5,7 @@ import logging
 import math
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import util
 from homeassistant.components.sensor import (
@@ -63,12 +63,12 @@ MAGNUS_K3 = 243.12
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
-        vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
-        vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
-        vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_INDOOR_TEMP): cv.entity_id,
+        probatio.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
+        probatio.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
+        probatio.Optional(CONF_CALIBRATION_FACTOR): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 

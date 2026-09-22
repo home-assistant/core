@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -45,9 +45,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(OLD_CONF_STOP_ID): cv.string,
-        vol.Required(OLD_CONF_ROUTE_ID): cv.string,
-        vol.Optional(OLD_CONF_NAME, default=OLD_DEFAULT_NAME): cv.string,
+        probatio.Required(OLD_CONF_STOP_ID): cv.string,
+        probatio.Required(OLD_CONF_ROUTE_ID): cv.string,
+        probatio.Optional(OLD_CONF_NAME, default=OLD_DEFAULT_NAME): cv.string,
     }
 )
 
