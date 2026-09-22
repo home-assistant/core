@@ -36,14 +36,14 @@
   },
   "entity": {
     "binary_sensor": {
-      "furnace_filter_reminder": {
-        "name": "Furnace filter"
+      "ac_maintenance_reminder": {
+        "name": "AC maintenance"
       },
-      "humidifier_filter_reminder": {
-        "name": "Humidifier filter"
+      "air_cleaner_reminder": {
+        "name": "Air cleaner"
       },
-      "ventilator_reminder": {
-        "name": "Ventilator"
+      "air_filter_reminder": {
+        "name": "Air filter"
       },
       "dehumidifier_filter_reminder": {
         "name": "Dehumidifier filter"
@@ -51,20 +51,20 @@
       "economizer_reminder": {
         "name": "Economizer"
       },
-      "uv_lamp_reminder": {
-        "name": "UV lamp"
+      "furnace_filter_reminder": {
+        "name": "Furnace filter"
       },
-      "ac_maintenance_reminder": {
-        "name": "AC maintenance"
-      },
-      "air_filter_reminder": {
-        "name": "Air filter"
-      },
-      "air_cleaner_reminder": {
-        "name": "Air cleaner"
+      "humidifier_filter_reminder": {
+        "name": "Humidifier filter"
       },
       "hvac_maintenance_reminder": {
         "name": "HVAC maintenance"
+      },
+      "uv_lamp_reminder": {
+        "name": "UV lamp"
+      },
+      "ventilator_reminder": {
+        "name": "Ventilator"
       }
     },
     "climate": {
