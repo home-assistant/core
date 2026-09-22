@@ -58,6 +58,35 @@ MANUFACTURER = "ecobee"
 
 ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
 
+# ecobee alertNumber codes for maintenance reminders.
+# See ecobee API docs, Alert Object.
+ECOBEE_ALERT_NUMBER_TO_NAME: dict[int, str] = {
+    3130: "Furnace Filter",
+    3131: "Humidifier Filter",
+    3132: "Ventilator",
+    3133: "Dehumidifier Filter",
+    3134: "Economizer",
+    3135: "UV Lamp",
+    3136: "AC Maintenance",
+    3137: "Air Filter",
+    3138: "Air Cleaner",
+    3140: "HVAC Maintenance",
+}
+
+# Maps ecobee's notificationSettings.equipment[].type to the alertNumber
+# that fires when the reminder is due.
+ECOBEE_EQUIPMENT_TYPE_TO_ALERT_NUMBER: dict[str, int] = {
+    "hvac": 3140,
+    "furnaceFilter": 3130,
+    "humidifierFilter": 3131,
+    "dehumidifierFilter": 3133,
+    "ventilator": 3132,
+    "ac": 3136,
+    "airFilter": 3137,
+    "airCleaner": 3138,
+    "uvLamp": 3135,
+}
+
 # Translates ecobee API weatherSymbol to Home Assistant usable names
 # https://www.ecobee.com/home/developer/api/documentation/v1/objects/WeatherForecast.shtml
 ECOBEE_WEATHER_SYMBOL_TO_HASS = {

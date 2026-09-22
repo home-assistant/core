@@ -68,6 +68,44 @@
         "humidity": "30"
       },
       "equipmentStatus": "fan,humidifier",
+      "alerts": [
+        {
+          "acknowledgeRef": "abc123",
+          "date": "2022-01-01",
+          "time": "06:00:00",
+          "severity": "low",
+          "text": "Change Furnace Filter",
+          "alertNumber": 3130,
+          "alertType": "reminder",
+          "isOperatorAlert": false,
+          "reminder": "furnaceFilter"
+        }
+      ],
+      "notificationSettings": {
+        "equipment": [
+          {
+            "filterLastChanged": "2021-06-01",
+            "remindMeDate": "2022-01-01",
+            "enabled": true,
+            "type": "furnaceFilter",
+            "remindTechnician": false
+          },
+          {
+            "filterLastChanged": "2021-06-01",
+            "remindMeDate": "2023-06-01",
+            "enabled": true,
+            "type": "uvLamp",
+            "remindTechnician": false
+          },
+          {
+            "filterLastChanged": "2021-06-01",
+            "remindMeDate": "2023-06-01",
+            "enabled": false,
+            "type": "humidifierFilter",
+            "remindTechnician": false
+          }
+        ]
+      },
       "events": [
         {
           "name": "Event1",
@@ -164,6 +202,10 @@
         "humidity": "30"
       },
       "equipmentStatus": "fan",
+      "alerts": [],
+      "notificationSettings": {
+        "equipment": []
+      },
       "events": [
         {
           "name": "Event1",
@@ -259,6 +301,10 @@
         "humidity": "30"
       },
       "equipmentStatus": "fan",
+      "alerts": [],
+      "notificationSettings": {
+        "equipment": []
+      },
       "events": [
         {
           "name": "Event1",
