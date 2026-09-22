@@ -82,9 +82,6 @@
       "ac_i_p_total": {
         "name": "AC Input Power Total"
       },
-      "ac_o_e_total": {
-        "name": "AC Output Energy Total"
-      },
       "ac_o_f": {
         "name": "AC Output Frequency"
       },
@@ -103,27 +100,6 @@
       "ac_ups_mode": {
         "name": "AC UPS Mode"
       },
-      "b_c": {
-        "name": "Battery Current"
-      },
-      "b_c_total": {
-        "name": "Battery Current Total"
-      },
-      "b_cell_count": {
-        "name": "Battery Cell Count"
-      },
-      "b_cycle_count": {
-        "name": "Battery Cycle Count"
-      },
-      "b_i_e": {
-        "name": "Battery Input Energy"
-      },
-      "b_ntc_count": {
-        "name": "Battery NTC Count"
-      },
-      "b_o_e": {
-        "name": "Battery Output Energy"
-      },
       "b_soc": {
         "name": "Battery SOC"
       },
@@ -136,23 +112,11 @@
       "b_soc_total": {
         "name": "Battery SOC Total"
       },
-      "b_soh": {
-        "name": "Battery SOH"
-      },
-      "b_soh_total": {
-        "name": "Battery SOH Total"
-      },
-      "b_t_avg": {
-        "name": "Battery Temperature Average"
-      },
       "b_type": {
         "name": "Battery Type"
       },
       "b_v": {
         "name": "Battery Voltage"
-      },
-      "b_v_total": {
-        "name": "Battery Voltage Total"
       },
       "b_ver_bms": {
         "name": "Battery BMS Version"
@@ -163,32 +127,11 @@
       "d_display_mode": {
         "name": "Display Mode"
       },
-      "d_i_e_total": {
-        "name": "Total Energy In"
-      },
-      "d_inverter_fault": {
-        "name": "Inverter Fault"
-      },
-      "d_inverter_status": {
-        "name": "Inverter Status"
-      },
-      "d_inverter_total": {
-        "name": "Inverter Total"
-      },
       "d_inverter_type": {
         "name": "Inverter Type"
       },
-      "d_inverter_warning": {
-        "name": "Inverter Warning"
-      },
       "d_led_mode": {
         "name": "LED Mode"
-      },
-      "d_num_battery_packs": {
-        "name": "Number of Battery Packs"
-      },
-      "d_num_inverters": {
-        "name": "Number of Inverters"
       },
       "d_power_off": {
         "name": "Power Off"
@@ -232,23 +175,8 @@
       "dc_o_switch": {
         "name": "DC Output Switch"
       },
-      "g_i_e_total": {
-        "name": "Generator Input Energy Total"
-      },
       "g_i_f": {
         "name": "Generator Input Frequency"
-      },
-      "g_i_p_total": {
-        "name": "Generator Input Power Total"
-      },
-      "g_i_switch": {
-        "name": "Generator Input Switch"
-      },
-      "g_o_e_total": {
-        "name": "Generator Output Energy Total"
-      },
-      "g_o_switch": {
-        "name": "Generator Output Switch"
       },
       "pv_1_i_c": {
         "name": "PV 1 Input Current"
@@ -295,17 +223,8 @@
       "pv_5_i_v": {
         "name": "PV 5 Input Voltage"
       },
-      "pv_ac_e": {
-        "name": "PV-AC Energy"
-      },
-      "pv_ac_p": {
-        "name": "PV-AC Power"
-      },
       "pv_i_e_total": {
         "name": "PV Input Energy Total"
-      },
-      "pv_i_p_total": {
-        "name": "PV Input Power Total"
       }
     }
   }
