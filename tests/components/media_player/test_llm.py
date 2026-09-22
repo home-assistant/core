@@ -54,7 +54,39 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed media_player entity."""
-    assert await _tool_names(hass) >= TOOL_NAMES
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert tools.keys() >= TOOL_NAMES
+
+    control = llm.ToolAnnotations(idempotent=True, open_world=False)
+    repeats = llm.ToolAnnotations(open_world=False)
+    assert {
+        name: (tool.title, tool.integration, tool.annotations)
+        for name, tool in tools.items()
+        if name in TOOL_NAMES
+    } == {
+        "media_player__HassMediaNext": ("Next track", "media_player", repeats),
+        "media_player__HassMediaPause": ("Pause media", "media_player", control),
+        "media_player__HassMediaPlayerMute": ("Mute player", "media_player", control),
+        "media_player__HassMediaPlayerUnmute": (
+            "Unmute player",
+            "media_player",
+            control,
+        ),
+        "media_player__HassMediaPrevious": ("Previous track", "media_player", repeats),
+        "media_player__HassMediaSearchAndPlay": (
+            "Search and play media",
+            "media_player",
+            llm.ToolAnnotations(),
+        ),
+        "media_player__HassMediaUnpause": ("Resume media", "media_player", repeats),
+        "media_player__HassSetVolume": ("Set volume", "media_player", control),
+        "media_player__HassSetVolumeRelative": (
+            "Change volume",
+            "media_player",
+            repeats,
+        ),
+    }
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
