@@ -3782,7 +3782,7 @@
       "name": "LANBON",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_polling"
     },
     "landisgyr_heat_meter": {
       "name": "Landis+Gyr Heat Meter",
