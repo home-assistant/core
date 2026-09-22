@@ -1,5 +1,6 @@
 """The tests for the Template fan platform."""
 
+from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from itertools import chain
 from typing import Any
@@ -379,7 +380,7 @@ async def test_percentage_template(
         "coro",
     ),
     [
-        (
+        pytest.param(
             {
                 "state": "{{ 1 == 1 }}",
                 "percentage": "{{ states('sensor.test_sensor') }}",
@@ -392,8 +393,9 @@ async def test_percentage_template(
             {"expected_percentage": 50},
             100,
             common.async_set_percentage,
+            id="percentage",
         ),
-        (
+        pytest.param(
             {
                 "state": "{{ 1 == 1 }}",
                 "preset_modes": ["auto", "smart"],
@@ -407,8 +409,9 @@ async def test_percentage_template(
             {"expected_preset_mode": "auto"},
             "smart",
             common.async_set_preset_mode,
+            id="preset_mode",
         ),
-        (
+        pytest.param(
             {
                 "state": "{{ 1 == 1 }}",
                 "oscillating": "{{ is_state('sensor.test_sensor', 'on') }}",
@@ -421,8 +424,9 @@ async def test_percentage_template(
             {"expected_oscillating": True},
             False,
             common.async_oscillate,
+            id="oscillating",
         ),
-        (
+        pytest.param(
             {
                 "state": "{{ 1 == 1 }}",
                 "direction": "{{ states('sensor.test_sensor') }}",
@@ -435,6 +439,7 @@ async def test_percentage_template(
             {"expected_direction": DIRECTION_FORWARD},
             DIRECTION_REVERSE,
             common.async_set_direction,
+            id="direction",
         ),
     ],
 )
@@ -445,9 +450,9 @@ async def test_set_does_not_stick_when_template_does_not_confirm(
     attribute: str,
     action: str,
     initial_source: str,
-    initial_verify: dict,
-    requested: Any,
-    coro,
+    initial_verify: dict[str, int | str | bool],
+    requested: int | str | bool,
+    coro: Callable[[HomeAssistant, str, int | str | bool], Awaitable[None]],
 ) -> None:
     """A set_* call must not override a templated attribute the request did not confirm.
 

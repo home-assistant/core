@@ -358,7 +358,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         """Set oscillation of the fan."""
         # See async_set_percentage: only self-assign when an oscillating
         # template will not itself be the source of truth.
-        if CONF_OSCILLATING not in self._templates:
+        if self._attr_assumed_state or CONF_OSCILLATING not in self._templates:
             self._attr_oscillating = oscillating
         if (
             script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
@@ -369,7 +369,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                 context=self._context,
             )
 
-        if CONF_OSCILLATING not in self._templates:
+        if self._attr_assumed_state or CONF_OSCILLATING not in self._templates:
             self.async_write_ha_state()
 
     @override
@@ -378,7 +378,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         if direction in _VALID_DIRECTIONS:
             # See async_set_percentage: only self-assign when a direction
             # template will not itself be the source of truth.
-            if CONF_DIRECTION not in self._templates:
+            if self._attr_assumed_state or CONF_DIRECTION not in self._templates:
                 self._attr_current_direction = direction
             if (
                 script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
@@ -388,7 +388,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
                     run_variables={FanScriptVariable.DIRECTION: direction},
                     context=self._context,
                 )
-            if CONF_DIRECTION not in self._templates:
+            if self._attr_assumed_state or CONF_DIRECTION not in self._templates:
                 self.async_write_ha_state()
         else:
             _LOGGER.error(
