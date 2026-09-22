@@ -4,6 +4,9 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_appliance_id, merge_dict_recursive, setup_integration
@@ -162,3 +165,69 @@ async def test_command_errors(
         )
     assert exc_info.value.translation_key == error_reason
     appliances.send_command.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_fixture",
+        "entity_id",
+    ),
+    [
+        # child lock command error tests
+        (
+            "peacock_hob",
+            "switch.peacock_hob_child_lock",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "error",
+        "ha_error_reason",
+    ),
+    [
+        # child lock command error tests
+        (
+            ApplianceClientException(status=401),
+            "authorization_failed",
+        ),
+        (
+            ApplianceClientException(status=403),
+            "authorization_failed",
+        ),
+        (
+            ApplianceClientException(status=406),
+            "command_validation_failed",
+        ),
+        (
+            ApplianceClientException(status=500),
+            "generic_error",
+        ),
+        (
+            ApplianceClientException(),
+            "generic_error",
+        ),
+    ],
+)
+async def test_command_backend_errors(
+    hass: HomeAssistant,
+    appliances: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    error: Exception,
+    ha_error_reason: str,
+) -> None:
+    """Test switch commands."""
+
+    appliances.send_command.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == ha_error_reason
