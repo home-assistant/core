@@ -4,13 +4,26 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
 from .const import DOMAIN
 from .intent import INTENT_LANW_MOWER_DOCK, INTENT_LANW_MOWER_START_MOWING
 
+# Each intent sets a value on the user's own entities, so calling one again
+# with the same arguments has no further effect.
+LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
+
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_LANW_MOWER_DOCK, INTENT_LANW_MOWER_START_MOWING)
+LLM_INTENTS = {
+    INTENT_LANW_MOWER_DOCK: "Dock lawn mower",
+    INTENT_LANW_MOWER_START_MOWING: "Start mowing",
+}
 
 
 @callback
@@ -31,7 +44,13 @@ def async_get_tools(
         return None
 
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=LLM_ANNOTATIONS,
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     ]

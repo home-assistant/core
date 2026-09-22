@@ -1352,10 +1352,27 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("image_options", "image_model"),
+    [
+        ({}, "gpt-image-2.5-flare"),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
+            "gpt-image-2.5-sunburst",
+        ),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
+            "gpt-image-2.5-flare",
+        ),
+        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2"),
+    ],
+)
 async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    image_options: dict[str, str],
+    image_model: str,
 ) -> None:
     """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
@@ -1398,6 +1415,7 @@ async def test_creating_ai_task_subentry_additional(
         result["flow_id"],
         {
             CONF_CODE_INTERPRETER: False,
+            **image_options,
         },
     )
 
@@ -1406,7 +1424,7 @@ async def test_creating_ai_task_subentry_additional(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-2",
+        CONF_IMAGE_MODEL: image_model,
         CONF_MAX_TOKENS: 200,
         CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,

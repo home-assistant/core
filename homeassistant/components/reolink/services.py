@@ -1,8 +1,8 @@
 """Reolink additional services."""
 
+import probatio
 from reolink_aio.api import Chime
 from reolink_aio.enums import ChimeToneEnum
-import voluptuous as vol
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID
@@ -29,7 +29,9 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
             service_call.hass, DOMAIN, device_id
         )
         host: ReolinkHost = config_entry.runtime_data.host
-        (_device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
+        (_device_uid, chime_id, is_chime) = get_device_uid_and_ch(
+            device.identifiers, host
+        )
         chime: Chime | None = host.api.chime(chime_id)
         if not is_chime or chime is None:
             raise ServiceValidationError(
@@ -50,10 +52,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "play_chime",
         _async_play_chime,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): list[str],
-                vol.Required(ATTR_RINGTONE): vol.In(
+                probatio.Required(ATTR_DEVICE_ID): list[str],
+                probatio.Required(ATTR_RINGTONE): probatio.In(
                     [method.name for method in ChimeToneEnum][1:]
                 ),
             }
@@ -64,7 +66,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PTZ_MOVE,
         entity_domain=BUTTON_DOMAIN,
-        schema={vol.Required(ATTR_SPEED): cv.positive_int},
+        schema={probatio.Required(ATTR_SPEED): cv.positive_int},
         func="async_ptz_move",
         required_features=[SUPPORT_PTZ_SPEED],
     )

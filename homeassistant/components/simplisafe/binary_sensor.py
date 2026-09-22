@@ -43,7 +43,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
 TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.CARBON_MONOXIDE: BinarySensorDeviceClass.GAS,
     DeviceTypes.ENTRY: BinarySensorDeviceClass.DOOR,
-    DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.GLASS_BREAK,
     DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
     DeviceTypes.MOTION_V2: BinarySensorDeviceClass.MOTION,

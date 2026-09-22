@@ -1,5 +1,6 @@
 """Test the Sofar Inverter Modbus integration setup and unload."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -16,8 +17,8 @@ from homeassistant.components.sofar.const import (
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -28,10 +29,17 @@ from . import (
     MOCK_SERIAL,
     MOCK_SW_VERSION,
     MOCK_USER_INPUT,
+    deny_meter_energy,
     seed_hybrid_inverter,
+    serve_meter_energy,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.typing import WebSocketGenerator
 
 PV_POWER_REGISTER = 0x0586
@@ -108,6 +116,170 @@ async def test_setup_removes_the_stale_waiting_time_entity(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(entry.entity_id) is None
+
+
+def _seed_without_extra_data(hass: HomeAssistant, entity_id: str) -> None:
+    """Restore a total the way a non-sensor entity stores it: no extra data."""
+    mock_restore_cache(hass, [State(entity_id, "120.0")])
+
+
+def _seed_with_unusable_value(hass: HomeAssistant, entity_id: str) -> None:
+    """Restore a total that was unknown when it was written."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(entity_id, STATE_UNKNOWN),
+                {"native_value": None, "native_unit_of_measurement": "kWh"},
+            )
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "seed_restore_cache",
+    [
+        pytest.param(_seed_without_extra_data, id="no_extra_data"),
+        pytest.param(_seed_with_unusable_value, id="no_value"),
+    ],
+)
+async def test_setup_skips_seeding_an_unusable_restored_total(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    seed_restore_cache: Callable[[HomeAssistant, str], None],
+) -> None:
+    """Test a restored total without a usable number seeds no high-water mark."""
+    mock_config_entry.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL}_load_consumption_total",
+        config_entry=mock_config_entry,
+    )
+    seed_restore_cache(hass, entry.entity_id)
+
+    with (
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "sofar_modbus.model.TornReadCorrectedComponent.seed_high_water"
+        ) as mock_seed,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A seed attempt would raise on the unusable value, so setup surviving
+    # is half the assertion.
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_seed.assert_not_called()
+
+
+METER_ENERGY_KEYS = (
+    "load_consumption_today",
+    "load_consumption_total",
+    "import_energy_today",
+    "import_energy_total",
+    "export_energy_today",
+    "export_energy_total",
+)
+
+
+async def test_setup_creates_no_meter_sensors_a_model_denies(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an unmetered model publishes none of the meter sensors."""
+    mock_config_entry.add_to_hass(hass)
+    deny_meter_energy(mock_connection.for_unit(1))
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not any(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
+    # Solar generation shares the block but its own addresses stay valid.
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_solar_generation_total"
+        )
+        is not None
+    )
+
+
+async def test_setup_keeps_meter_sensors_a_model_serves(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a metered model keeps all six sensors and their real values."""
+    mock_config_entry.add_to_hass(hass)
+    serve_meter_energy(mock_connection.for_unit(1))
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert all(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_load_consumption_total"
+    )
+    assert hass.states.get(entity_id).state == "1000.0"
+
+
+async def test_setup_keeps_meter_sensors_when_no_mask_is_published(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a model publishing no usable mask keeps polling the meter block."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert all(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        is not None
+        for key in METER_ENERGY_KEYS
+    )
 
 
 async def test_setup_entry_unrecognized_inverter_raises_setup_error(
