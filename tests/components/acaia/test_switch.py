@@ -100,12 +100,17 @@ async def test_turning_on_reconnects_scale(
     assert state.state == STATE_ON
 
 
-async def test_switch_state_survives_reload(
+async def test_switch_state_survives_reload_without_reconnecting(
     hass: HomeAssistant,
     mock_scale: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the switch restores its last state across a config entry reload."""
+    """Test the switch restores its last state across a config entry reload.
+
+    The preference is read from config entry options during coordinator
+    init, before the first refresh runs, so a restored "off" state must not
+    cause the coordinator to reconnect the scale on that first refresh.
+    """
 
     await setup_integration(hass, mock_config_entry)
 
@@ -116,9 +121,13 @@ async def test_switch_state_survives_reload(
         blocking=True,
     )
 
+    mock_scale.connected = False
+    mock_scale.connect.reset_mock()
+
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    mock_scale.connect.assert_not_called()
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_OFF

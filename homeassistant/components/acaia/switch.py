@@ -3,9 +3,8 @@
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AcaiaConfigEntry
@@ -33,18 +32,8 @@ async def async_setup_entry(
     )
 
 
-class AcaiaKeepConnectedSwitch(AcaiaEntity, restore_state.RestoreEntity, SwitchEntity):
+class AcaiaKeepConnectedSwitch(AcaiaEntity, SwitchEntity):
     """Switch to keep a persistent connection to the scale between brews."""
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore the previous state on startup."""
-        await super().async_added_to_hass()
-
-        state = await self.async_get_last_state()
-        await self.coordinator.async_set_keep_connected(
-            state is None or state.state == STATE_ON
-        )
 
     @property
     @override
