@@ -186,7 +186,6 @@ effect_move:
             - left
     theme:
       example: exciting
-      default: exciting
       selector:
         select:
           mode: dropdown
