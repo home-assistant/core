@@ -19,6 +19,8 @@ async def async_get_config_entry_diagnostics(
         "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(dt_util.naive_now().astimezone().tzinfo),
+        "last_update_success": coordinator.last_update_success,
+        "last_exception": repr(coordinator.last_exception),
     }
     payload["ics"] = "\n".join(redact_ics(coordinator.ics))
     return payload
