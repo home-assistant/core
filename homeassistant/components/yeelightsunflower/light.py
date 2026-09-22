@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import yeelightsunflower
 
 from homeassistant.components.light import (
@@ -22,7 +22,9 @@ from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
+    {probatio.Required(CONF_HOST): cv.string}
+)
 
 
 def setup_platform(

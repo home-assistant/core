@@ -1,17 +1,15 @@
 """Provides functionality to interact with fans."""
 
 from datetime import timedelta
-from enum import IntFlag
 import functools as ft
 import logging
 import math
-from typing import Any, Final, final, override
+from typing import Any, final, override
 
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -23,51 +21,40 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from .const import FanEntityCapabilityAttribute, FanEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DATA_COMPONENT,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    DOMAIN,
+    SERVICE_DECREASE_SPEED,
+    SERVICE_INCREASE_SPEED,
+    SERVICE_OSCILLATE,
+    SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
+    FanEntityCapabilityAttribute,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN: Final = "fan"
-DATA_COMPONENT: HassKey[EntityComponent[FanEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-
-class FanEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
-
-    SET_SPEED = 1
-    OSCILLATE = 2
-    DIRECTION = 4
-    PRESET_MODE = 8
-    TURN_OFF = 16
-    TURN_ON = 32
-
-
-SERVICE_INCREASE_SPEED = "increase_speed"
-SERVICE_DECREASE_SPEED = "decrease_speed"
-SERVICE_OSCILLATE = "oscillate"
-SERVICE_SET_DIRECTION = "set_direction"
-SERVICE_SET_PERCENTAGE = "set_percentage"
-SERVICE_SET_PRESET_MODE = "set_preset_mode"
-
-DIRECTION_FORWARD = "forward"
-DIRECTION_REVERSE = "reverse"
-
-ATTR_PERCENTAGE = "percentage"
-ATTR_PERCENTAGE_STEP = "percentage_step"
-ATTR_OSCILLATING = "oscillating"
-ATTR_DIRECTION = "direction"
-ATTR_PRESET_MODE = "preset_mode"
-ATTR_PRESET_MODES = "preset_modes"
 
 # mypy: disallow-any-generics
 
@@ -102,76 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
-    # After the transition to percentage and preset_modes concludes,
-    # switch this back to async_turn_on and remove async_turn_on_compat
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {
-            vol.Optional(ATTR_PERCENTAGE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            ),
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
-        },
-        "async_handle_turn_on_service",
-        [FanEntityFeature.TURN_ON],
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, None, "async_turn_off", [FanEntityFeature.TURN_OFF]
-    )
-    component.async_register_entity_service(
-        SERVICE_TOGGLE,
-        None,
-        "async_toggle",
-        [FanEntityFeature.TURN_OFF, FanEntityFeature.TURN_ON],
-    )
-    component.async_register_entity_service(
-        SERVICE_INCREASE_SPEED,
-        {
-            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            )
-        },
-        "async_increase_speed",
-        [FanEntityFeature.SET_SPEED],
-    )
-    component.async_register_entity_service(
-        SERVICE_DECREASE_SPEED,
-        {
-            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            )
-        },
-        "async_decrease_speed",
-        [FanEntityFeature.SET_SPEED],
-    )
-    component.async_register_entity_service(
-        SERVICE_OSCILLATE,
-        {vol.Required(ATTR_OSCILLATING): cv.boolean},
-        "async_oscillate",
-        [FanEntityFeature.OSCILLATE],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_DIRECTION,
-        {vol.Optional(ATTR_DIRECTION): cv.string},
-        "async_set_direction",
-        [FanEntityFeature.DIRECTION],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_PERCENTAGE,
-        {
-            vol.Required(ATTR_PERCENTAGE): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            )
-        },
-        "async_set_percentage",
-        [FanEntityFeature.SET_SPEED],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE,
-        {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_handle_set_preset_mode_service",
-        [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
-    )
+    async_setup_services(hass)
 
     return True
 

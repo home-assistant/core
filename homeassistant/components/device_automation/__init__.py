@@ -9,8 +9,7 @@ import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from probatio import to_field_list
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -59,12 +58,12 @@ DOMAIN = "device_automation"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
+DEVICE_TRIGGER_BASE_SCHEMA: probatio.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "device",
-        vol.Required(CONF_DOMAIN): str,
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Remove("metadata"): dict,
+        probatio.Required(CONF_PLATFORM): "device",
+        probatio.Required(CONF_DOMAIN): str,
+        probatio.Required(CONF_DEVICE_ID): str,
+        probatio.Remove("metadata"): dict,
     }
 )
 
@@ -324,7 +323,7 @@ async def _async_get_device_automation_capabilities(
     if (extra_fields := capabilities.get("extra_fields")) is None:
         capabilities["extra_fields"] = []
     else:
-        capabilities["extra_fields"] = to_field_list(
+        capabilities["extra_fields"] = probatio.to_field_list(
             extra_fields, custom_serializer=cv.custom_serializer
         )
 
@@ -382,8 +381,8 @@ def handle_device_errors(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/action/list",
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "device_automation/action/list",
+        probatio.Required("device_id"): str,
     }
 )
 @websocket_api.async_response
@@ -403,8 +402,8 @@ async def websocket_device_automation_list_actions(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/condition/list",
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "device_automation/condition/list",
+        probatio.Required("device_id"): str,
     }
 )
 @websocket_api.async_response
@@ -424,8 +423,8 @@ async def websocket_device_automation_list_conditions(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/trigger/list",
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "device_automation/trigger/list",
+        probatio.Required("device_id"): str,
     }
 )
 @websocket_api.async_response
@@ -445,8 +444,8 @@ async def websocket_device_automation_list_triggers(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/action/capabilities",
-        vol.Required("action"): dict,
+        probatio.Required("type"): "device_automation/action/capabilities",
+        probatio.Required("action"): dict,
     }
 )
 @websocket_api.async_response
@@ -464,9 +463,9 @@ async def websocket_device_automation_get_action_capabilities(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/condition/capabilities",
-        vol.Required("condition"): cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
-            {}, extra=vol.ALLOW_EXTRA
+        probatio.Required("type"): "device_automation/condition/capabilities",
+        probatio.Required("condition"): cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
+            {}, extra=probatio.ALLOW_EXTRA
         ),
     }
 )
@@ -485,12 +484,12 @@ async def websocket_device_automation_get_condition_capabilities(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/trigger/capabilities",
+        probatio.Required("type"): "device_automation/trigger/capabilities",
         # The frontend responds with `trigger` as key, while the
         # `DEVICE_TRIGGER_BASE_SCHEMA` expects `platform1` as key.
-        vol.Required("trigger"): vol.All(
+        probatio.Required("trigger"): probatio.All(
             cv._trigger_pre_validator,  # noqa: SLF001
-            DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+            DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA),
         ),
     }
 )

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -27,8 +27,8 @@ def async_setup(hass: HomeAssistant) -> None:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "sensor/device_class_convertible_units",
-        vol.Required("device_class"): str,
+        probatio.Required("type"): "sensor/device_class_convertible_units",
+        probatio.Required("device_class"): str,
     }
 )
 def ws_device_class_units(
@@ -48,7 +48,7 @@ def ws_device_class_units(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "sensor/numeric_device_classes",
+        probatio.Required("type"): "sensor/numeric_device_classes",
     }
 )
 def ws_numeric_device_classes(
