@@ -14,7 +14,7 @@ def get_vrchat_auth_cookie_store(hass: HomeAssistant, user_id: str):
     """Get an auth cookie store for given user id."""
     store = VRChatAuthCookieStore.get(user_id)
     if store is None:
-        store = Store[VRChatAuthCookie](hass, 1, f"{DOMAIN}.{user_id}")
+        store = Store[VRChatAuthCookie](hass, 1, f"{DOMAIN}.{user_id}", private=True)
         VRChatAuthCookieStore[user_id] = store
     return store
 
