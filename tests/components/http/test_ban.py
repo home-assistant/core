@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from socket import gaierror, herror
 import threading
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
@@ -498,6 +499,55 @@ async def test_failed_login_slow_reverse_dns(
     ):
         resp = await client.get("/")
     release_lookup.set()
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
+    assert (
+        "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)." in caplog.text
+    )
+    notifications = async_get_persistent_notifications(hass)
+    assert (
+        notifications["http-login"]["message"]
+        == "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)."
+        " See the log for details."
+    )
+
+
+@pytest.mark.parametrize(
+    "lookup_error",
+    [
+        herror(1, "Unknown host"),
+        gaierror(-3, "Temporary failure in name resolution"),
+        UnicodeDecodeError("utf-8", b"@\x8a\xed\xbe", 1, 2, "invalid start byte"),
+        UnicodeEncodeError("idna", "fe80::1%..", 9, 10, "label empty"),
+    ],
+    ids=["herror", "gaierror", "undecodable_hostname", "unencodable_scope_id"],
+)
+async def test_failed_login_reverse_dns_error(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    lookup_error: Exception,
+) -> None:
+    """Test that a failing reverse DNS lookup still records the failed login."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/", unauth_handler)
+    setup_bans(hass, app, 5)
+    mock_real_ip(app)("200.201.202.204")
+    client = await aiohttp_client(app)
+
+    with patch(
+        "homeassistant.components.http.ban.gethostbyaddr", side_effect=lookup_error
+    ):
+        resp = await client.get("/")
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1

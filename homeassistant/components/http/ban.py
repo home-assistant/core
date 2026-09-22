@@ -123,7 +123,7 @@ async def process_wrong_login(request: Request) -> None:
     remote_addr = ip_address(request.remote)
     remote_host = request.remote
     # The hostname only feeds the log and notification below
-    with suppress(TimeoutError, OSError):
+    with suppress(TimeoutError, OSError, UnicodeError):
         async with asyncio.timeout(REVERSE_DNS_TIMEOUT):
             remote_host, _, _ = await hass.async_add_executor_job(
                 gethostbyaddr, request.remote
