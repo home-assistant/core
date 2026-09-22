@@ -401,7 +401,12 @@ async def rollback_migration_plan(hass: HomeAssistant, plan: MigrationPlan) -> b
             rollback_failed = True
 
     try:
-        restore_registry_snapshots(hass, plan.entity_snapshots, plan.device_snapshots)
+        restore_registry_snapshots(
+            hass,
+            plan.entity_snapshots,
+            plan.device_snapshots,
+            anchor_entry_id=plan.anchor_entry_id,
+        )
     except Exception:  # noqa: BLE001
         rollback_failed = True
 

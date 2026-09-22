@@ -330,7 +330,7 @@ def local_state(hass: HomeAssistant, entries, records):
         },
         "devices": {
             device.id: (
-                device_registry.async_get(device.id).config_entries,
+                device_registry.async_get(device.id).config_entry_id,
                 device_registry.async_get(device.id).identifiers,
                 device_registry.async_get(device.id).name,
                 device_registry.async_get(device.id).name_by_user,
@@ -585,18 +585,15 @@ async def test_customized_entity_and_device_survive_initialization(
     assert migrated_entity.labels == {label.label_id}
     assert migrated_entity.config_entry_id == entry.entry_id
 
-    devices = [
-        item
-        for item in device_registry.devices.values()
-        if (DOMAIN, "ABC123") in item.identifiers
-    ]
-    assert len(devices) == 1
-    migrated_device = devices[0]
+    migrated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC123"), entry.entry_id
+    )
+    assert migrated_device is not None
     assert migrated_device.id == original_device.id
     assert migrated_device.area_id == device_area.id
     assert migrated_device.name_by_user == "Custom device ABC123"
     assert migrated_device.model == "nVent Signature"
-    assert migrated_device.config_entries == {entry.entry_id}
+    assert migrated_device.config_entry_id == entry.entry_id
 
 
 @pytest.mark.asyncio
@@ -642,16 +639,18 @@ async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
     assert device_registry.async_get(device_a.id).id == device_a.id
     migrated_device_b = device_registry.async_get(device_b.id)
     assert migrated_device_b.id == device_b.id
-    assert migrated_device_b.config_entries == {anchor.entry_id}
+    assert migrated_device_b.config_entry_id == anchor.entry_id
     assert (
-        len(
-            [
-                item
-                for item in device_registry.devices.values()
-                if item.identifiers & {(DOMAIN, "ABC123"), (DOMAIN, "XYZ789")}
-            ]
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "ABC123"), anchor.entry_id
         )
-        == 2
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "XYZ789"), anchor.entry_id
+        )
+        is not None
     )
 
 
@@ -701,7 +700,7 @@ async def test_wrong_account_rolls_back_without_registry_changes(
     assert entry.unique_id == "ABC123"
     assert entry.data == original_data
     assert entity_registry.async_get(entity.entity_id).config_entry_id == entry.entry_id
-    assert device_registry.async_get(device.id).config_entries == {entry.entry_id}
+    assert device_registry.async_get(device.id).config_entry_id == entry.entry_id
 
 
 @pytest.mark.asyncio
@@ -752,7 +751,7 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
     assert entry.version == 1
     assert hass.config_entries.async_get_entry(entry.entry_id) is entry
     assert entity_registry.async_get(entity.entity_id).config_entry_id == entry.entry_id
-    assert device_registry.async_get(device.id).config_entries == {entry.entry_id}
+    assert device_registry.async_get(device.id).config_entry_id == entry.entry_id
     assert LEGACY_PASSWORD not in caplog.text
     assert authorization_code not in caplog.text
     assert "synthetic-refresh-token" not in caplog.text
@@ -809,9 +808,9 @@ async def test_existing_oauth_account_absorbs_matching_legacy_entry(
     assert entity_registry.async_get(entity.entity_id).config_entry_id == (
         account_entry.entry_id
     )
-    assert device_registry.async_get(device.id).config_entries == {
-        account_entry.entry_id
-    }
+    assert (
+        device_registry.async_get(device.id).config_entry_id == account_entry.entry_id
+    )
 
 
 @pytest.mark.asyncio
@@ -1226,9 +1225,9 @@ async def test_later_cleanup_failure_is_resumable_after_restart(
         assert entity_registry.async_get(entity.entity_id).config_entry_id == (
             entries[0].entry_id
         )
-        assert device_registry.async_get(device.id).config_entries == {
-            entries[0].entry_id
-        }
+        assert (
+            device_registry.async_get(device.id).config_entry_id == entries[0].entry_id
+        )
 
 
 @pytest.mark.asyncio

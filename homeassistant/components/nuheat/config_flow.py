@@ -10,7 +10,7 @@ from chemelex_nuheat import (
     NuHeatClient,
     NuHeatDataError,
 )
-import voluptuous as vol
+from probatio import Schema
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -176,7 +176,7 @@ class NuHeatConfigFlow(
         if user_input is None:
             return self.async_show_form(
                 step_id="migration_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=Schema({}),
                 description_placeholders={"thermostat": entry.title},
             )
         return await self.async_step_user()
@@ -189,7 +189,7 @@ class NuHeatConfigFlow(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=Schema({}),
                 description_placeholders={"account": entry.title},
             )
         return await self.async_step_user()

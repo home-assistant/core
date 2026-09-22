@@ -240,16 +240,16 @@ def test_registry_snapshot_rejects_unrelated_records() -> None:
         )
 
     entity_registry.async_get.return_value.config_entry_id = "legacy"
-    device_registry.async_get_device.return_value = SimpleNamespace(
-        id="device", identifiers=set(), config_entries={"legacy"}
+    device_registry.async_get_device_by_identifier.return_value = SimpleNamespace(
+        id="device", identifiers=set(), config_entry_id="legacy"
     )
     with entity_patch, device_patch, pytest.raises(RegistryMigrationError):
         build_registry_snapshots(
             hass, serial_entry_ids=(("SERIAL", "legacy"),), anchor_entry_id="anchor"
         )
 
-    device_registry.async_get_device.return_value = SimpleNamespace(
-        id="device", identifiers={(DOMAIN, "SERIAL")}, config_entries={"other"}
+    device_registry.async_get_device_by_identifier.return_value = SimpleNamespace(
+        id="device", identifiers={(DOMAIN, "SERIAL")}, config_entry_id="other"
     )
     with entity_patch, device_patch, pytest.raises(RegistryMigrationError):
         build_registry_snapshots(
@@ -270,9 +270,9 @@ def test_validate_registry_snapshot_changes(case: str) -> None:
     entity_registry.async_get.return_value = SimpleNamespace(
         config_entry_id="changed" if case == "entity_owner" else "legacy"
     )
-    device_registry.async_get_device.return_value = SimpleNamespace(
+    device_registry.async_get_device_by_identifier.return_value = SimpleNamespace(
         id="changed" if case == "device_id" else "device",
-        config_entries={"changed" if case == "device_owner" else "legacy"},
+        config_entry_id="changed" if case == "device_owner" else "legacy",
     )
     entity = EntityAssociationSnapshot("SERIAL", "climate.serial", "legacy", "legacy")
     device = DeviceAssociationSnapshot(
@@ -301,7 +301,9 @@ def test_validate_registry_snapshot_changes(case: str) -> None:
             "device_add_failed",
             SimpleNamespace(entity_id="climate.serial", config_entry_id="anchor"),
             SimpleNamespace(
-                id="device", identifiers={(DOMAIN, "SERIAL")}, config_entries={"legacy"}
+                id="device",
+                identifiers={(DOMAIN, "SERIAL")},
+                config_entry_id="legacy",
             ),
         ),
         (
@@ -310,7 +312,7 @@ def test_validate_registry_snapshot_changes(case: str) -> None:
             SimpleNamespace(
                 id="device",
                 identifiers={(DOMAIN, "SERIAL")},
-                config_entries={"anchor", "other"},
+                config_entry_id="other",
             ),
         ),
     ],
@@ -352,7 +354,7 @@ def test_verify_registry_ownership_failures(case: str) -> None:
     entity_registry.async_get.return_value = (
         None if case == "entity" else SimpleNamespace(config_entry_id="anchor")
     )
-    device_registry.async_get_device.return_value = None
+    device_registry.async_get_device_by_identifier.return_value = None
     hass, entity_patch, device_patch = _registry_hass(entity_registry, device_registry)
     with entity_patch, device_patch, pytest.raises(RegistryMigrationError):
         verify_registry_ownership(
@@ -393,19 +395,17 @@ def test_restore_registry_snapshot_paths(case: str) -> None:
         "legacy",
         frozenset({"legacy"}),
     )
-    device = SimpleNamespace(id="device", config_entries={"legacy"})
+    device = SimpleNamespace(id="device", config_entry_id="legacy")
     if case == "device_identity":
         device = None
-    elif case in ("add_failed", "not_converged"):
-        device.config_entries = {"anchor"}
-    elif case == "remove_failed":
-        device.config_entries = {"legacy", "anchor"}
-    device_registry.async_get_device.return_value = device
+    elif case in ("add_failed", "not_converged", "remove_failed"):
+        device.config_entry_id = "anchor"
+    device_registry.async_get_device_by_identifier.return_value = device
     if case in ("add_failed", "remove_failed"):
         device_registry.async_update_device.return_value = None
     elif case == "not_converged":
         device_registry.async_update_device.return_value = SimpleNamespace(
-            id="device", config_entries={"legacy", "anchor"}
+            id="device", config_entry_id="anchor"
         )
 
     hass, entity_patch, device_patch = _registry_hass(entity_registry, device_registry)
@@ -416,7 +416,17 @@ def test_restore_registry_snapshot_paths(case: str) -> None:
     )
     if case in ("remove_new", "remove_new_device"):
         with entity_patch, device_patch:
-            restore_registry_snapshots(hass, (entity_snapshot,), (device_snapshot,))
+            restore_registry_snapshots(
+                hass,
+                (entity_snapshot,),
+                (device_snapshot,),
+                anchor_entry_id="anchor",
+            )
         return
     with entity_patch, device_patch, context:
-        restore_registry_snapshots(hass, (entity_snapshot,), (device_snapshot,))
+        restore_registry_snapshots(
+            hass,
+            (entity_snapshot,),
+            (device_snapshot,),
+            anchor_entry_id="anchor",
+        )

@@ -29,7 +29,7 @@ from .behavior import (
     preset_for_thermostat,
     setpoint_command_mode,
 )
-from .const import DOMAIN, PRESET_MODES, PRESET_PERMANENT_HOLD
+from .const import DOMAIN, PRESET_MODES
 from .coordinator import NuHeatCoordinator
 
 
@@ -75,10 +75,8 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         """Initialize a NuHeat thermostat entity."""
         super().__init__(coordinator)
         self._serial_number = serial_number
-        # Standby is verified as Manual at 5°C, but documented GET fields cannot
-        # distinguish it. This memory is authoritative only for commands sent by
-        # this running entity; external changes may remain invisible until HA
-        # sends another command or restarts.
+        # Preserve OFF immediately after a successful write until the first
+        # coordinator refresh confirms the corrected Standby GET response.
         self._optimistic_standby = False
         self._attr_unique_id = serial_number
         self._attr_temperature_unit = coordinator.hass.config.units.temperature_unit
@@ -118,7 +116,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def target_temperature(self) -> float | None:
-        if self._optimistic_standby:
+        if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
             return None
         if (temperature := self.thermostat.target_temperature) is None:
             return None
@@ -146,14 +144,14 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def hvac_action(self) -> HVACAction:
-        if self._optimistic_standby:
+        if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
             return HVACAction.OFF
         return HVACAction.HEATING if self.thermostat.heating else HVACAction.IDLE
 
     @property
     @override
     def assumed_state(self) -> bool:
-        """Return whether OFF is remembered from an unobservable command."""
+        """Return whether OFF is awaiting authoritative GET confirmation."""
         return self._optimistic_standby
 
     @property
@@ -167,8 +165,8 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         if temperature is None:
             return
         requested_hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        if self._optimistic_standby and requested_hvac_mode is None:
-            # A setpoint from optimistic OFF exits Standby using Manual.
+        if self.hvac_mode is HVACMode.OFF and requested_hvac_mode is None:
+            # A setpoint from OFF exits Standby using Manual.
             requested_hvac_mode = HVACMode.HEAT
         try:
             mode = setpoint_command_mode(self.thermostat, requested_hvac_mode)
@@ -222,6 +220,8 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         await self.coordinator.api.set_standby(self._serial_number)
         self._optimistic_standby = True
         await self.coordinator.async_request_refresh()
+        if self.thermostat.state is ThermostatState.STANDBY:
+            self._optimistic_standby = False
 
     @override
     async def async_turn_on(self) -> None:
@@ -230,11 +230,6 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        if preset_mode == PRESET_PERMANENT_HOLD:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="indefinite_hold_unsupported",
-            )
         try:
             mode = api_mode_for_preset(preset_mode)
         except ValueError as err:

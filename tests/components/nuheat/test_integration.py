@@ -42,7 +42,6 @@ from homeassistant.components.nuheat.const import (
     AUTHORIZE_URL,
     DOMAIN,
     OAUTH_SCOPES,
-    PRESET_PERMANENT_HOLD,
     PRESET_RUN,
     PRESET_TEMPORARY_HOLD,
     TOKEN_URL,
@@ -737,7 +736,8 @@ async def test_scheduled_target_change_holds_until_next_schedule(
 ) -> None:
     """A scheduled setpoint write omits the end and refreshes the coordinator."""
     scheduled = thermostat(
-        raw_target_temperature=0,
+        mode=1,
+        raw_target_temperature=500,
         hold_until=None,
         hold_until_status=HoldUntilStatus.NULL,
     )
@@ -768,22 +768,23 @@ async def test_hvac_action_follows_is_heating(
 
 
 @pytest.mark.asyncio
-async def test_off_remains_optimistic_across_indistinguishable_get(
+async def test_standby_get_is_authoritative_across_restart(
     hass: HomeAssistant,
 ) -> None:
-    """A local OFF command survives GET data shared by Manual and Standby."""
-    ambiguous = thermostat(
+    """A confirmed Standby response reports OFF without command memory."""
+    standby = thermostat(
         mode=3,
-        raw_target_temperature=0,
+        raw_target_temperature=500,
         hold_until=None,
         hold_until_status=HoldUntilStatus.NULL,
         heating=False,
     )
-    coordinator, api, _ = await coordinator_with(hass, ambiguous)
+    coordinator, api, _ = await coordinator_with(hass, thermostat())
+    api.list_thermostats.return_value = [standby]
     entity = NuHeatClimateEntity(coordinator, "ABC123")
 
     assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-    assert entity.hvac_mode is None
+    assert entity.hvac_mode is HVACMode.AUTO
     assert entity.assumed_state is False
 
     await entity.async_set_hvac_mode(HVACMode.OFF)
@@ -793,13 +794,12 @@ async def test_off_remains_optimistic_across_indistinguishable_get(
     assert entity.hvac_mode is HVACMode.OFF
     assert entity.hvac_action is HVACAction.OFF
     assert entity.target_temperature is None
-    assert entity.assumed_state is True
+    assert entity.assumed_state is False
 
-    # A newly created entity has no command memory and never infers OFF from
-    # the same mode-3/null-hold/zero-target GET response.
+    # A newly created entity derives the same state from GET after restart.
     restarted_entity = NuHeatClimateEntity(coordinator, "ABC123")
-    assert restarted_entity.hvac_mode is None
-    assert restarted_entity.hvac_action is HVACAction.IDLE
+    assert restarted_entity.hvac_mode is HVACMode.OFF
+    assert restarted_entity.hvac_action is HVACAction.OFF
     assert restarted_entity.target_temperature is None
     assert restarted_entity.assumed_state is False
 
@@ -884,7 +884,8 @@ async def test_successful_control_command_clears_optimistic_off(
     [
         (
             thermostat(
-                raw_target_temperature=0,
+                mode=1,
+                raw_target_temperature=500,
                 hold_until=None,
                 hold_until_status=HoldUntilStatus.NULL,
             ),
@@ -895,16 +896,27 @@ async def test_successful_control_command_clears_optimistic_off(
         (
             thermostat(
                 mode=3,
+                raw_target_temperature=2111,
                 hold_until=None,
                 hold_until_status=HoldUntilStatus.NULL,
             ),
-            PRESET_PERMANENT_HOLD,
-            HVACMode.AUTO,
+            None,
+            HVACMode.HEAT,
+        ),
+        (
+            thermostat(
+                mode=3,
+                raw_target_temperature=500,
+                hold_until=None,
+                hold_until_status=HoldUntilStatus.NULL,
+            ),
+            None,
+            HVACMode.OFF,
         ),
     ],
 )
 def test_live_read_state_mapping(
-    value: Thermostat, expected_preset: str, expected_hvac: HVACMode
+    value: Thermostat, expected_preset: str | None, expected_hvac: HVACMode
 ) -> None:
     """Only live-validated complete states receive presets and HVAC modes."""
     assert preset_for_thermostat(value) == expected_preset
@@ -964,14 +976,15 @@ async def test_legacy_hvac_command_support_remains_separate_from_read_state(
     coordinator, api, _ = await coordinator_with(hass, thermostat())
     refreshed = (
         thermostat(
-            raw_target_temperature=0,
+            mode=1,
+            raw_target_temperature=500,
             hold_until=None,
             hold_until_status=HoldUntilStatus.NULL,
         )
         if hvac_mode is HVACMode.AUTO
         else thermostat(
             mode=3,
-            raw_target_temperature=0,
+            raw_target_temperature=2111,
             hold_until=None,
             hold_until_status=HoldUntilStatus.NULL,
         )
@@ -982,7 +995,6 @@ async def test_legacy_hvac_command_support_remains_separate_from_read_state(
     assert entity.preset_modes == [
         PRESET_RUN,
         PRESET_TEMPORARY_HOLD,
-        PRESET_PERMANENT_HOLD,
     ]
 
     await entity.async_set_hvac_mode(hvac_mode)
@@ -994,7 +1006,9 @@ async def test_legacy_hvac_command_support_remains_separate_from_read_state(
             "ABC123", schedule_mode, temperature=temperature
         )
     assert api_mode_for_hvac_mode(hvac_mode) is schedule_mode
-    assert entity.hvac_mode is (HVACMode.AUTO if hvac_mode is HVACMode.AUTO else None)
+    assert entity.hvac_mode is (
+        HVACMode.AUTO if hvac_mode is HVACMode.AUTO else HVACMode.HEAT
+    )
     assert api.list_thermostats.await_count == 2
 
 
@@ -1051,20 +1065,22 @@ async def test_bodyless_command_success_relies_on_coordinator_refresh(
 
 
 def test_setpoint_command_mapping_uses_derived_state() -> None:
-    """Setpoints never infer Manual from numeric mode 3 alone."""
+    """Setpoints follow corrected states without treating Standby as heat."""
     scheduled = thermostat(
-        raw_target_temperature=0,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    permanent = thermostat(
-        mode=3,
+        mode=1,
+        raw_target_temperature=500,
         hold_until=None,
         hold_until_status=HoldUntilStatus.NULL,
     )
     ambiguous = thermostat(
         mode=3,
-        raw_target_temperature=0,
+        raw_target_temperature=2111,
+        hold_until=None,
+        hold_until_status=HoldUntilStatus.NULL,
+    )
+    standby = thermostat(
+        mode=3,
+        raw_target_temperature=500,
         hold_until=None,
         hold_until_status=HoldUntilStatus.NULL,
     )
@@ -1077,8 +1093,9 @@ def test_setpoint_command_mapping_uses_derived_state() -> None:
 
     assert setpoint_command_mode(scheduled) is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
     assert setpoint_command_mode(thermostat()) is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+    assert setpoint_command_mode(ambiguous) is ScheduleMode.MANUAL
     assert setpoint_command_mode(ambiguous, HVACMode.HEAT) is ScheduleMode.MANUAL
-    for value in (permanent, ambiguous, unknown):
+    for value in (standby, unknown):
         with pytest.raises(ValueError, match="Unsupported thermostat state"):
             setpoint_command_mode(value)
 
@@ -1088,12 +1105,6 @@ def test_setpoint_command_mapping_uses_derived_state() -> None:
     "value",
     [
         thermostat(
-            mode=3,
-            raw_target_temperature=0,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        ),
-        thermostat(
             mode=999,
             raw_target_temperature=0,
             hold_until=None,
@@ -1101,7 +1112,7 @@ def test_setpoint_command_mapping_uses_derived_state() -> None:
         ),
     ],
 )
-async def test_ambiguous_and_unknown_states_remain_available_but_unlabeled(
+async def test_unknown_state_remains_available_but_unlabeled(
     hass: HomeAssistant, value: Thermostat
 ) -> None:
     """Unknown read semantics do not make an online thermostat unavailable."""
@@ -1112,36 +1123,12 @@ async def test_ambiguous_and_unknown_states_remain_available_but_unlabeled(
     assert entity.target_temperature is None
     assert entity.hvac_mode is None
     assert entity.preset_mode is None
-    assert value.state in (
-        ThermostatState.AMBIGUOUS_MANUAL_OR_STANDBY,
-        ThermostatState.UNKNOWN,
-    )
+    assert value.state is ThermostatState.UNKNOWN
     with pytest.raises(ServiceValidationError) as raised:
         await entity.async_set_temperature(temperature=22.0)
     assert raised.value.translation_domain == DOMAIN
     assert raised.value.translation_key == "unsupported_state"
     api.set_target_temperature.assert_not_awaited()
-
-
-@pytest.mark.asyncio
-async def test_permanent_hold_is_readable_but_not_writable(
-    hass: HomeAssistant,
-) -> None:
-    """Permanent Hold has a dedicated translated error for its unknown write."""
-    permanent = thermostat(
-        mode=3,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    coordinator, api, _ = await coordinator_with(hass, permanent)
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    assert entity.preset_mode == PRESET_PERMANENT_HOLD
-    with pytest.raises(ServiceValidationError) as raised:
-        await entity.async_set_preset_mode(PRESET_PERMANENT_HOLD)
-    assert raised.value.translation_domain == DOMAIN
-    assert raised.value.translation_key == "indefinite_hold_unsupported"
-    api.set_schedule_mode.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -1165,13 +1152,9 @@ def test_climate_preset_translations() -> None:
     assert strings["entity"]["climate"]["thermostat"]["state_attributes"][
         "preset_mode"
     ]["state"] == {
-        PRESET_PERMANENT_HOLD: "Permanent hold",
         PRESET_RUN: "Run schedule",
         PRESET_TEMPORARY_HOLD: "Temporary hold",
     }
-    assert strings["exceptions"]["indefinite_hold_unsupported"]["message"] == (
-        "Creating an indefinite hold is not supported by the documented NuHeat API."
-    )
 
 
 @pytest.mark.asyncio

@@ -4,12 +4,11 @@ from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
 
 from homeassistant.components.climate import HVACMode
 
-from .const import PRESET_PERMANENT_HOLD, PRESET_RUN, PRESET_TEMPORARY_HOLD
+from .const import PRESET_RUN, PRESET_TEMPORARY_HOLD
 
 STATE_TO_PRESET = {
     ThermostatState.SCHEDULED: PRESET_RUN,
     ThermostatState.TIMED_HOLD: PRESET_TEMPORARY_HOLD,
-    ThermostatState.PERMANENT_HOLD: PRESET_PERMANENT_HOLD,
 }
 PRESET_TO_MODE = {
     PRESET_RUN: ScheduleMode.AUTO,
@@ -36,17 +35,16 @@ def api_mode_for_preset(preset: str) -> ScheduleMode:
 
 
 def hvac_mode_for_thermostat(thermostat: Thermostat) -> HVACMode | None:
-    """Map only unambiguous Auto-family read states.
-
-    A Manual command remains supported, but its mode-3/zero-target readback is
-    indistinguishable from Standby and therefore cannot safely report HEAT.
-    """
+    """Map the corrected GET state while preserving unresolved ambiguity."""
+    if thermostat.state is ThermostatState.STANDBY:
+        return HVACMode.OFF
     if thermostat.state in (
         ThermostatState.SCHEDULED,
         ThermostatState.TIMED_HOLD,
-        ThermostatState.PERMANENT_HOLD,
     ):
         return HVACMode.AUTO
+    if thermostat.state is ThermostatState.AMBIGUOUS_MANUAL_OR_PERMANENT_HOLD:
+        return HVACMode.HEAT
     return None
 
 
@@ -70,9 +68,9 @@ def setpoint_command_mode(
     An explicit HEAT request retains the existing documented Manual command.
     Scheduled operation uses Hold-until-next-schedule for a setpoint change.
     An existing timed hold keeps its explicit end in the entity write path.
-    Permanent Hold remains readable but is not writable because its documented
-    creation request is unknown. Ambiguous and unknown read states require an
-    explicit command so Standby is never guessed.
+    The mode-3 Manual/permanent-hold overlap uses Manual for setpoint changes;
+    both states are constant-target heating rather than scheduled operation.
+    Standby and unknown responses require an explicit command.
     """
     if requested_hvac_mode is HVACMode.HEAT:
         return ScheduleMode.MANUAL
@@ -81,4 +79,6 @@ def setpoint_command_mode(
         ThermostatState.TIMED_HOLD,
     ):
         return ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
+    if thermostat.state is ThermostatState.AMBIGUOUS_MANUAL_OR_PERMANENT_HOLD:
+        return ScheduleMode.MANUAL
     raise ValueError(f"Unsupported thermostat state: {thermostat.state}")
