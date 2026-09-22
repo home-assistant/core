@@ -18,6 +18,7 @@ from aiolanbon import (
 from aiolanbon.models import DeviceSnapshot, Event, GatewayInfo
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -86,18 +87,21 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         self.client = client
         self.info: GatewayInfo | None = None
         self._etag: str | None = None
+        self._snapshot_events: (
+            dict[tuple[str, str | None, str | None], Event] | None
+        ) = None
+        self._force_snapshot = False
         self._events_task: asyncio.Task | None = None
         self._use_ws = False
-        self._refresh_dirty = False
-        self._refresh_task: asyncio.Task | None = None
 
     @override
     async def _async_setup(self) -> None:
         """Read gateway info and whether events WebSocket is advertised."""
         try:
             self.info = await self.client.get_info()
+        except LanbonAuthError as err:
+            raise ConfigEntryAuthFailed("unauthorized") from err
         except (
-            LanbonAuthError,
             LanbonConnectionError,
             LanbonTimeoutError,
             LanbonError,
@@ -108,22 +112,39 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     @override
     async def _async_update_data(self) -> DeviceSnapshot:
         """GET /devices, using If-None-Match when a revision is already known."""
+        events: dict[tuple[str, str | None, str | None], Event] = {}
         try:
             if self.info is None:
                 await self._async_setup()
+            if self._force_snapshot:
+                self._etag = None
+                self._force_snapshot = False
+            # Retain only the latest event per field during this request.
+            self._snapshot_events = events
             snap = await self.client.get_devices(if_none_match=self._etag)
+        except LanbonAuthError as err:
+            raise ConfigEntryAuthFailed("unauthorized") from err
         except (
-            LanbonAuthError,
             LanbonConnectionError,
             LanbonTimeoutError,
             LanbonError,
         ) as err:
             raise UpdateFailed(type(err).__name__) from err
+        finally:
+            self._snapshot_events = None
         if snap is None:
             if self.data is None:
                 raise UpdateFailed("empty snapshot")
             return self.data
-        self._etag = snap.revision
+        self._etag = None if events else snap.revision
+        for event in events.values():
+            if event.type == "state_changed":
+                patched = _patch_state_changed(snap, event)
+            else:
+                patched = _patch_availability(snap, event)
+            # The full snapshot owns topology; events cannot resurrect removals.
+            if patched is not None:
+                snap = patched
         return snap
 
     @override
@@ -134,28 +155,6 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             self._events_task = self.config_entry.async_create_background_task(
                 self.hass, self._events_loop(), name="lanbon-loip-events"
             )
-
-    def _request_snapshot(self) -> None:
-        """Clear ETag and GET /devices. Coalesce overlapping SnapshotRefresh."""
-        self._etag = None
-        self._refresh_dirty = True
-        if self._refresh_task is None or self._refresh_task.done():
-            self._refresh_task = asyncio.get_running_loop().create_task(
-                self._drain_snapshot_refresh()
-            )
-
-    async def _drain_snapshot_refresh(self) -> None:
-        try:
-            while self._refresh_dirty:
-                self._refresh_dirty = False
-                await self.async_request_refresh()
-        finally:
-            self._refresh_task = None
-
-    async def _await_snapshot_refresh(self) -> None:
-        task = self._refresh_task
-        if task is not None:
-            await task
 
     def _apply_event(self, event: Event) -> bool:
         """Patch coordinator data from a WS event. False → caller must GET /devices."""
@@ -171,19 +170,35 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             return False
         if patched is None:
             return False
-        self._etag = patched.revision
-        self.async_set_updated_data(patched)
+        if self._snapshot_events is not None:
+            key = (
+                event.type,
+                event.device_id,
+                event.component_id if event.type == "state_changed" else None,
+            )
+            self._snapshot_events.pop(key, None)
+            self._snapshot_events[key] = event
+        # An event updates only part of the snapshot, not a complete HTTP ETag.
+        self._etag = None
+        # Partial updates must not postpone polling or clear a full-refresh error.
+        self.data = patched
+        self.async_update_listeners()
         return True
 
     async def _events_loop(self) -> None:
         try:
             async for item in self.client.listen():
                 if isinstance(item, SnapshotRefresh):
-                    self._request_snapshot()
+                    self._force_snapshot = True
+                elif self._apply_event(item):
                     continue
-                if self._apply_event(item):
-                    continue
-                self._request_snapshot()
+                else:
+                    self._force_snapshot = True
+                # Wait for the HTTP response even during debounce cooldown.
+                await self.async_refresh()
+                if not self.last_update_success:
+                    self._use_ws = False
+                    return
         except LanbonEventsUnsupportedError:
             _LOGGER.debug("events websocket unsupported; polling /devices")
             self._use_ws = False
@@ -198,8 +213,6 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         ):
             _LOGGER.debug("events loop ended; stay on polling")
             self._use_ws = False
-        finally:
-            await self._await_snapshot_refresh()
 
     def async_on_unload(self) -> None:
         """Cancel the events task."""

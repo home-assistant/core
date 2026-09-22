@@ -8,6 +8,7 @@ from aiolanbon.models import Component, Device, DeviceSnapshot
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -67,15 +68,37 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         self._device_id = device_id
         self._component_id = component_id
         self._attr_unique_id = f"{device_id}_{component_id}"
-        info = coordinator.info
-        model = info.model if info else None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            manufacturer=MANUFACTURER,
-            model=model,
-            name=(info.model or MANUFACTURER) if info else MANUFACTURER,
-        )
         self._sync_name()
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Use the snapshot device identity, not the gateway info for every child."""
+        device, _component = self._pair()
+        snap = self.coordinator.data
+        info = self.coordinator.info
+        gateway_id = (info.gateway_id if info else "") or (
+            snap.gateway_id if snap else ""
+        )
+        if device is None:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self._device_id)},
+                manufacturer=MANUFACTURER,
+            )
+        gateway = dr.async_get(self.coordinator.hass).async_get_device_by_identifier(
+            (DOMAIN, gateway_id), self.coordinator.config_entry.entry_id
+        )
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.id)},
+            manufacturer=device.manufacturer or MANUFACTURER,
+            model=device.model or None,
+            name=device.name or device.model or MANUFACTURER,
+            sw_version=device.firmware_version,
+            hw_version=device.hardware_version,
+        )
+        if gateway and device.id != gateway_id:
+            device_info["via_device_id"] = gateway.id
+        return device_info
 
     def _pair(self):
         snap = self.coordinator.data
@@ -112,7 +135,10 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         _device, component = self._pair()
         if component is None:
             return None
-        return bool(component.state.get("on"))
+        value = component.state.get("on")
+        if isinstance(value, bool):
+            return value
+        return None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

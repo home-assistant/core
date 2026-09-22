@@ -1,12 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This gateway is already configured"
+      "already_configured": "This gateway is already configured",
+      "missing_unique_id": "The gateway did not report a stable id"
     },
     "error": {
       "api_disabled": "Open Integration is off on the device",
       "cannot_connect": "Cannot reach the device. Enable Open Integration on the panel, then retry.",
       "invalid_auth": "Invalid token",
+      "invalid_port": "Port must be between 1 and 65535",
       "unknown": "Unexpected error"
     },
     "step": {

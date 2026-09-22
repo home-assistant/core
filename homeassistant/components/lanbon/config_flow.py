@@ -6,6 +6,7 @@ from aiolanbon import (
     LanbonAuthError,
     LanbonClient,
     LanbonConnectionError,
+    LanbonError,
     LanbonTimeoutError,
 )
 from aiolanbon.discovery import discovered_from_mdns
@@ -15,7 +16,13 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_GATEWAY_ID, CONF_SCHEME, DEFAULT_PORT, DOMAIN
@@ -64,6 +71,8 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         token: str,
         scheme: str,
         errors: dict[str, str],
+        *,
+        discovery_update: bool = False,
     ) -> ConfigFlowResult | None:
         try:
             info = await _validate(self.hass, host, port, token, scheme)
@@ -81,13 +90,21 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             errors["base"] = "cannot_connect"
             return None
+        except LanbonError, ValueError, TypeError:
+            errors["base"] = "unknown"
+            return None
 
-        gateway_id = info.gateway_id or self._gateway_id or host
+        gateway_id = info.gateway_id or self._gateway_id
+        if not gateway_id:
+            return self.async_abort(reason="missing_unique_id")
         title = info.model or info.manufacturer or "LANBON"
         await self.async_set_unique_id(gateway_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host, CONF_PORT: port, CONF_SCHEME: scheme}
-        )
+        if discovery_update:
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: host, CONF_PORT: port, CONF_SCHEME: scheme}
+            )
+        else:
+            self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=title,
             data={
@@ -108,7 +125,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             result = await self._finish(
                 user_input[CONF_HOST],
-                int(user_input.get(CONF_PORT, DEFAULT_PORT)),
+                user_input.get(CONF_PORT, DEFAULT_PORT),
                 user_input[CONF_TOKEN],
                 user_input.get(CONF_SCHEME, "http"),
                 errors,
@@ -118,8 +135,10 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=self._host or ""): str,
-                vol.Required(CONF_PORT, default=self._port): int,
-                vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_PORT, default=self._port): cv.port,
+                vol.Required(CONF_TOKEN): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -163,12 +182,19 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TOKEN],
                 self._scheme,
                 errors,
+                discovery_update=True,
             )
             if result is not None:
                 return result
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self._placeholders(),
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             errors=errors,
         )
