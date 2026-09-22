@@ -657,3 +657,69 @@ async def test_smart_plug_compact_energy_saving_mode(
         blocking=True,
     )
     assert device.energy_saving_mode_enabled is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    supports_smart_sensitivity=True, smart_sensitivity_enabled=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_smart_sensitivity(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector 2's automatic sensitivity is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    state = hass.states.get("switch.motion_detector_automatic_sensitivity")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        blocking=True,
+    )
+    assert device.smart_sensitivity_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.motion_detector_automatic_sensitivity"},
+        blocking=True,
+    )
+    assert device.smart_sensitivity_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(supports_smart_sensitivity=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_no_smart_sensitivity_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Motion Detector 2 without smart-sensitivity support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.motion_detector_automatic_sensitivity") is None

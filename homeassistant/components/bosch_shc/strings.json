@@ -116,6 +116,9 @@
       "routing": {
         "name": "Range extension"
       },
+      "smart_sensitivity_enabled": {
+        "name": "Automatic sensitivity"
+      },
       "tamper_protection_enabled": {
         "name": "Sabotage detection"
       }
