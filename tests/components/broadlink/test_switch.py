@@ -206,11 +206,7 @@ async def test_yaml_switch_gets_unique_id(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a switch configured in YAML gets a unique ID.
-
-    An entity without a unique ID cannot be attached to a device, which
-    Home Assistant reports as a deprecation.
-    """
+    """Test a switch configured in YAML gets a unique ID."""
     # The YAML platform is set up before the device is known, so it is
     # retried in the background once the device is available.
     assert await async_setup_component(hass, SWITCH_DOMAIN, CONFIG)
