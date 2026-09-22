@@ -1,6 +1,7 @@
 """Test VoIP protocol."""
 
 import asyncio
+import contextlib
 import io
 from pathlib import Path
 from typing import Any
@@ -765,6 +766,116 @@ async def test_pipeline_error(
 
         assert sum(played_audio_bytes) > 0
         assert played_audio_bytes == snapshot
+
+
+async def test_hangup_during_listening_tone(
+    hass: HomeAssistant,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test a hang-up during the listening tone doesn't block the next call."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    pipeline_started = asyncio.Event()
+    tone_playing = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        pipeline_started.set()
+
+    async def async_send_audio_forever(*args, **kwargs):
+        tone_playing.set()
+        await asyncio.Event().wait()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        satellite._tones = Tones.LISTENING
+        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio_forever)  # type: ignore[method-assign]
+
+        # First call hangs up while the listening tone is still playing,
+        # before the pipeline task reaches its try/finally block
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await tone_playing.wait()
+
+        first_task = satellite._run_pipeline_task
+        assert first_task is not None
+
+        satellite.disconnect()
+        with pytest.raises(asyncio.CancelledError):
+            await first_task
+
+        assert satellite._run_pipeline_task is None
+        assert not pipeline_started.is_set()
+
+        # The next call must still start a pipeline
+        satellite._async_send_audio = AsyncMock()  # type: ignore[method-assign]
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await pipeline_started.wait()
+
+
+async def test_cancelled_pipeline_keeps_next_call_pipeline(
+    hass: HomeAssistant,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test a cancelled pipeline's cleanup doesn't clear the next call's pipeline."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    pipeline_runs = 0
+    pipeline_running = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        nonlocal pipeline_runs
+        pipeline_runs += 1
+        pipeline_running.set()
+        await asyncio.Event().wait()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        satellite._tones = Tones(0)
+
+        # First call hangs up while its pipeline is running
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await pipeline_running.wait()
+
+        first_task = satellite._run_pipeline_task
+        assert first_task is not None
+        satellite.disconnect()
+
+        # Next call starts before the first pipeline has run its cleanup
+        pipeline_running.clear()
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        second_task = satellite._run_pipeline_task
+        assert second_task is not None
+        assert second_task is not first_task
+
+        try:
+            with contextlib.suppress(asyncio.CancelledError):
+                await first_task
+
+            # The first pipeline's cleanup must not clear the second's
+            # reference, or disconnect() can no longer cancel it
+            assert satellite._run_pipeline_task is second_task
+
+            async with asyncio.timeout(1):
+                await pipeline_running.wait()
+
+            # More audio on the same call must not start another pipeline
+            satellite.on_chunk(bytes(_ONE_SECOND))
+            await asyncio.sleep(0)
+            assert pipeline_runs == 2
+        finally:
+            second_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await second_task
 
 
 @pytest.mark.usefixtures("socket_enabled")

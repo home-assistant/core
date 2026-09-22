@@ -376,6 +376,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._run_pipeline_task is not None:
             _LOGGER.debug("Cancelling running pipeline")
             self._run_pipeline_task.cancel()
+            # Clear it now rather than relying on the task's own cleanup, which
+            # never runs if it is cancelled before reaching its try block (e.g.
+            # a hang-up during the listening tone). A stale reference stops
+            # on_chunk() from starting a pipeline for the next call.
+            self._run_pipeline_task = None
         if not self._call_end_future.done():
             self._call_end_future.set_result(None)
         self._last_chunk_time = None
@@ -480,7 +485,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop audio stream
             await self._audio_queue.put(None)
 
-            self._run_pipeline_task = None
+            # disconnect() may already have cleared this and a new call may
+            # have started its own pipeline, so only clear our own reference.
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
             _LOGGER.debug("Pipeline finished")
 
     async def _play_announcement(
@@ -509,7 +517,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._announcement = None
             raise
         finally:
-            self._run_pipeline_task = None
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
             _LOGGER.debug("Announcement finished")
 
             if self._run_pipeline_after_announce:
