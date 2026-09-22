@@ -239,11 +239,16 @@ class VRChatUserLocationSensor(
             self._attr_native_value = location
         else:
             name = self.vrchat_user_world_data_get("name")
-            if name is None:
-                name = self.get_state_from_user_data(self.user.data, "worldId")
-            # Preserve the last resolved name while metadata retries to avoid showing a world ID.
-            if name is not None and not name.startswith(VRCHAT_WORLD_ID_PREFIX):
-                self._attr_native_value = name
+            if name == "":
+                self._attr_native_value = self.get_state_from_user_data(
+                    self.user.data, "worldId"
+                )
+            else:
+                if name is None:
+                    name = self.get_state_from_user_data(self.user.data, "worldId")
+                # Preserve the last resolved name while metadata retries to avoid showing a world ID.
+                if name is not None and not name.startswith(VRCHAT_WORLD_ID_PREFIX):
+                    self._attr_native_value = name
         return self._attr_native_value
 
     @property

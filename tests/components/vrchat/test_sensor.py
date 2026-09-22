@@ -47,6 +47,22 @@ def test_location_sensor_without_world_metadata() -> None:
     assert sensor.native_value is None
 
 
+def test_location_sensor_uses_world_id_for_empty_world_name() -> None:
+    """Test an empty world name falls back to the world ID."""
+    sensor = VRChatUserLocationSensor(
+        cast(
+            VRChatUserDataCoordinator,
+            SimpleNamespace(
+                data={"location": "wrld_test", "worldId": "wrld_test"},
+                world=SimpleNamespace(data={"name": ""}),
+                destination_world=None,
+            ),
+        )
+    )
+
+    assert sensor.native_value == "wrld_test"
+
+
 @pytest.mark.parametrize(
     "location",
     [pytest.param("private", id="private"), pytest.param("offline", id="offline")],
@@ -83,6 +99,7 @@ def test_location_sensor_options_are_stable_and_unique(
     cache.get("wrld_first", cast(World, {"name": "World one"}))
     cache.get("wrld_second", cast(World, {"name": "World one"}))
     cache.get("wrld_third", cast(World, {"name": "World two"}))
+    cache.get("wrld_empty", cast(World, {"name": ""}))
     cache.get("wrld_offline", cast(World, {"name": "offline"}))
     account = VRChatAccountDataCoordinator(
         hass, MockConfigEntry(domain=DOMAIN, unique_id="usr_test")
@@ -105,13 +122,19 @@ def test_location_sensor_options_are_stable_and_unique(
         VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE,
         "World one",
         "World two",
+        "wrld_empty",
     ]
     assert all(type(option) is str for option in sensor.options)
 
     cache.get("wrld_third", cast(World, {"name": "Renamed world"}))
-    assert sensor.options[-2:] == ["Renamed world", "World one"]
+    assert sensor.options[-3:] == ["Renamed world", "World one", "wrld_empty"]
     cache.get("wrld_new", cast(World, {"name": "New world"}))
-    assert sensor.options[-3:] == ["New world", "Renamed world", "World one"]
+    assert sensor.options[-4:] == [
+        "New world",
+        "Renamed world",
+        "World one",
+        "wrld_empty",
+    ]
 
 
 def test_location_follows_travel_and_preserves_pending_name() -> None:
