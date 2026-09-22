@@ -24,8 +24,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lunatone binary sensors from the config entry."""
+    coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_scan = config_entry.runtime_data.coordinator_scan
-    dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
 
     assert config_entry.unique_id is not None
 
@@ -35,10 +35,9 @@ async def async_setup_entry(
     entities.extend(
         [
             LunatoneDALIScanStatus(
-                coordinator_scan, config_entry.unique_id, dali_line_broadcast.line
+                coordinator_scan, config_entry.unique_id, int(line_id)
             )
-            for dali_line_broadcast in dali_line_broadcasts
-            if dali_line_broadcast.line is not None
+            for line_id in coordinator_info.data.lines
         ]
     )
 
