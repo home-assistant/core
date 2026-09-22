@@ -87,6 +87,18 @@
           "on": "mdi:home-export-outline"
         }
       },
+      "input_lock": {
+        "default": "mdi:gesture-tap-button",
+        "state": {
+          "on": "mdi:cancel"
+        }
+      },
+      "input_lock_with_channel_name": {
+        "default": "mdi:gesture-tap-button",
+        "state": {
+          "on": "mdi:cancel"
+        }
+      },
       "left_slot": {
         "default": "mdi:scent",
         "state": {

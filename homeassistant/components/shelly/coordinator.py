@@ -62,6 +62,7 @@ from .const import (
     OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
+    RPC_CONFIG_POLLING_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
@@ -79,6 +80,7 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
     get_shelly_model_name,
+    is_config_entity_only_change,
     is_rpc_ble_scanner_supported,
     update_device_fw_info,
 )
@@ -93,6 +95,7 @@ class ShellyEntryData:
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
+    rpc_config_poll: ShellyRpcConfigPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
@@ -645,7 +648,14 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            if event_type in ("component_added", "component_removed", "config_changed"):
+            if event_type == "config_changed":
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_handle_config_changed(),
+                    "rpc config changed",
+                    eager_start=True,
+                )
+            elif event_type in ("component_added", "component_removed"):
                 self.update_sleep_period()
                 LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
@@ -669,6 +679,31 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
                 for event_callback in self._ota_event_listeners:
                     event_callback(event)
+
+    async def _async_handle_config_changed(self) -> None:
+        """Re-read the device config and reload the entry only if needed.
+
+        Entities backed by the device config pick the new value up from the
+        config coordinator, so a config change that only touches the keys they
+        watch does not require reloading the config entry.
+        """
+        old_config = self.device.config
+        config_coordinator = self.config_entry.runtime_data.rpc_config_poll
+
+        if config_coordinator is not None:
+            await config_coordinator.async_refresh()
+            if is_config_entity_only_change(
+                old_config, self.device.config, set(config_coordinator.async_contexts())
+            ):
+                return
+
+        self.update_sleep_period()
+        LOGGER.info(
+            "Config for %s changed, reloading entry in %s seconds",
+            self.name,
+            ENTRY_RELOAD_COOLDOWN,
+        )
+        self._debounced_reload.async_schedule_call()
 
     @override
     async def _async_update_data(self) -> None:
@@ -895,6 +930,42 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.poll()
+        except (DeviceConnectionError, RpcCallError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
+        except InvalidAuthError:
+            await self.async_shutdown_device_and_start_reauth()
+
+
+class ShellyRpcConfigPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
+    """Coordinator fetching the configuration of a Shelly RPC based device.
+
+    Only entities that read their value from the device configuration use this
+    coordinator, so no polling happens unless at least one of them is enabled.
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ShellyConfigEntry, device: RpcDevice
+    ) -> None:
+        """Initialize the RPC config polling coordinator."""
+        super().__init__(hass, entry, device, RPC_CONFIG_POLLING_INTERVAL)
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Fetch the device config."""
+        if not self.device.connected:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_device_disconnected",
+                translation_placeholders={"device": self.name},
+            )
+
+        LOGGER.debug("Polling Shelly RPC Device config - %s", self.name)
+        try:
+            await self.device.update_config()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

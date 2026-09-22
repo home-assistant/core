@@ -597,6 +597,12 @@
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
       },
+      "input_lock": {
+        "name": "Input lock"
+      },
+      "input_lock_with_channel_name": {
+        "name": "{channel_name} input lock"
+      },
       "left_slot": {
         "name": "Left slot"
       },
