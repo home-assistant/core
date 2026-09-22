@@ -146,6 +146,43 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         """Get the current set of To-do items."""
         return [_convert_api_item(item) for item in self.shopping_items]
 
+    async def async_parse_todo_item(
+        self, item_summary: str
+    ) -> MutateShoppingItem | None:
+        """Parse a to-do item into a shopping item."""
+        try:
+            parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                item_summary.strip(), parser=self.parser
+            )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except MealieError as exception:
+            LOGGER.warning(
+                "Unable to parse to-do item %s: %s; creating it as a note item",
+                item_summary,
+                exception,
+            )
+            parsed_ingredient = None
+
+        if (
+            parsed_ingredient
+            and parsed_ingredient.confidence
+            and (parsed_ingredient.confidence.average or 0.0)
+            >= MINIMUM_PARSER_CONFIDENCE
+        ):
+            ingredient = parsed_ingredient.ingredient
+            if ingredient.food:
+                shopping_item = MutateShoppingItem(
+                    is_food=ingredient.food.food_id is not None,
+                    food_id=ingredient.food.food_id
+                    if ingredient.food.food_id is not None
+                    else None,
+                    note=ingredient.food.name if not ingredient.food.food_id else None,
+                    unit_id=ingredient.unit.unit_id if ingredient.unit else None,
+                    quantity=ingredient.quantity or 0.0,
+                )
+            return shopping_item
+        return None
+
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the list."""
@@ -156,37 +193,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         new_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_new:
-            try:
-                parsed_ingredient = await self.coordinator.client.parse_ingredient(
-                    item.summary.strip(), parser=self.parser
-                )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except MealieError as exception:
-                LOGGER.warning(
-                    "Unable to parse to-do item %s: %s; adding it as a note item",
-                    item.summary,
-                    exception,
-                )
-                parsed_ingredient = None
-            if (
-                parsed_ingredient
-                and parsed_ingredient.confidence
-                and (parsed_ingredient.confidence.average or 0.0)
-                >= MINIMUM_PARSER_CONFIDENCE
-            ):
-                ingredient = parsed_ingredient.ingredient
-                if ingredient.food:
-                    new_shopping_item = MutateShoppingItem(
-                        is_food=ingredient.food.food_id is not None,
-                        food_id=ingredient.food.food_id
-                        if ingredient.food.food_id is not None
-                        else None,
-                        note=ingredient.food.name
-                        if not ingredient.food.food_id
-                        else None,
-                        unit_id=ingredient.unit.unit_id if ingredient.unit else None,
-                        quantity=ingredient.quantity or 0.0,
-                    )
+            new_shopping_item = await self.async_parse_todo_item(item.summary)
 
         # If parsing fails or is not performed, create a fallback shopping item
         if not new_shopping_item:
@@ -226,37 +233,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         update_shopping_item: MutateShoppingItem | None = None
 
         if item.summary and self.parse_todo_edit:
-            try:
-                parsed_ingredient = await self.coordinator.client.parse_ingredient(
-                    item.summary.strip(), parser=self.parser
-                )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except MealieError as exception:
-                LOGGER.warning(
-                    "Unable to parse to-do item %s: %s; updating it as a note item",
-                    item.summary,
-                    exception,
-                )
-                parsed_ingredient = None
-            if (
-                parsed_ingredient
-                and parsed_ingredient.confidence
-                and (parsed_ingredient.confidence.average or 0.0)
-                >= MINIMUM_PARSER_CONFIDENCE
-            ):
-                ingredient = parsed_ingredient.ingredient
-                if ingredient.food:
-                    update_shopping_item = MutateShoppingItem(
-                        is_food=ingredient.food.food_id is not None,
-                        food_id=ingredient.food.food_id
-                        if ingredient.food.food_id is not None
-                        else None,
-                        note=ingredient.food.name
-                        if not ingredient.food.food_id
-                        else None,
-                        unit_id=ingredient.unit.unit_id if ingredient.unit else None,
-                        quantity=ingredient.quantity or 0.0,
-                    )
+            update_shopping_item = await self.async_parse_todo_item(item.summary)
 
         # If parsing fails or is not performed, create a fallback shopping item
         if not update_shopping_item:
