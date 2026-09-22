@@ -296,9 +296,7 @@ class ElectroluxBaseLight[T: ApplianceData](ElectroluxBaseEntity[T], LightEntity
         """Execute a list of commands for the appliance."""
         if commands:
             for command in commands:
-                await self.coordinator.client.send_command(
-                    self._appliance_data.appliance.applianceId, command
-                )
+                await self.coordinator.send_command(command)
             await self.coordinator.async_request_refresh()
 
 
