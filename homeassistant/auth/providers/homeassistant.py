@@ -369,7 +369,7 @@ class HassAuthProvider(AuthProvider):
         try:
             async with self._write_lock:
                 self.data.async_remove_auth(credentials.data["username"])
-            await self.data.async_save()
+                await self.data.async_save()
         except InvalidUser:
             # Can happen if somehow we didn't clean up a credential
             pass
