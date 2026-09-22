@@ -25,11 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
@@ -49,7 +49,7 @@ async def test_all_entities(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -126,7 +126,7 @@ async def test_enabled_by_default_partition(
     connection = MockModbusConnection()
     seed(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
+        domain=DOMAIN, unique_id=serial, data=MOCK_ENTRY_DATA, title=model
     )
     entry.add_to_hass(hass)
     with patch(
@@ -170,7 +170,7 @@ async def test_settings_backed_sensor_created_and_state(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -200,7 +200,7 @@ async def test_enum_option_slugs_are_translation_keys(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)

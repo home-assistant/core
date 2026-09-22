@@ -23,12 +23,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HW_VERSION,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
+    MOCK_MODEL,
     MOCK_SERIAL,
     MOCK_SW_VERSION,
-    MOCK_USER_INPUT,
+    MOCK_TCP_INPUT,
     deny_meter_energy,
     seed_hybrid_inverter,
     serve_meter_energy,
@@ -290,7 +292,7 @@ async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     # outliving a sofar-modbus library downgrade. Caught before any
     # Modbus I/O, so no connection needs mocking here.
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
+        domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_ENTRY_DATA
     )
     entry.add_to_hass(hass)
 
@@ -370,7 +372,7 @@ async def test_settings_recover_without_a_reload(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -429,7 +431,7 @@ async def test_device_versions_need_a_reload_to_recover(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -632,7 +634,7 @@ async def test_only_wired_battery_packs_become_devices(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -728,7 +730,7 @@ async def test_battery_pack_appears_once_its_block_answers(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -760,7 +762,7 @@ async def _setup_hybrid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -884,3 +886,29 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "51.5"
+
+
+async def test_migrate_entry_adds_the_connection_type(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test an entry predating the serial option is marked as Modbus TCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data=MOCK_TCP_INPUT,
+        title=MOCK_MODEL,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.minor_version == 2
+    assert entry.data == MOCK_ENTRY_DATA

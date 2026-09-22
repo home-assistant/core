@@ -2,8 +2,8 @@
 
 from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.sofar.const import CONF_UNIT_ID
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.sofar.const import CONF_UNIT_ID, TYPE_TCP
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 MOCK_SERIAL = "SS2ES104N5S445"
 MOCK_MODEL = "4.4 KTLX-G3"
@@ -13,11 +13,13 @@ MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
 MOCK_HW_VERSION = "V100"
 MOCK_SW_VERSION = "V220"
 
-MOCK_USER_INPUT = {
+MOCK_TCP_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 502,
     CONF_UNIT_ID: 1,
 }
+
+MOCK_ENTRY_DATA = {CONF_TYPE: TYPE_TCP, **MOCK_TCP_INPUT}
 
 
 def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
