@@ -100,9 +100,9 @@ async def test_doortag_setup(
     assert hass.states.get(_doortag_entity_connectivity) is not None
 
     # Check opening initial state (no_news)
-    assert hass.states.get(_doortag_entity_opening).state == "unknown"
+    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
     # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "on"
+    assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
 
 @pytest.mark.parametrize(
@@ -193,9 +193,9 @@ async def test_doortag_opening_status_change(
     assert hass.states.get(_doortag_entity_opening) is not None
 
     # Check opening initial state (no_news)
-    assert hass.states.get(_doortag_entity_opening).state == "unknown"
+    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
     # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "on"
+    assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
     # Change mocked status to test early unavailability of image fetch
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
