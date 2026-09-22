@@ -30,7 +30,7 @@ MYSQL_CYCLES = [
 @pytest.mark.parametrize(
     ("cycles", "expected"),
     [
-        (MARIADB_CYCLES, {"supported_lts": ["11.8", "12.3"], "latest_non_lts": "12.2"}),
+        (MARIADB_CYCLES, {"supported_lts": ["11.8", "12.3"], "latest_non_lts": "13.0"}),
         (MYSQL_CYCLES, {"supported_lts": ["8.4", "9.7"], "latest_non_lts": "9.6"}),
     ],
     ids=["mariadb", "mysql"],
