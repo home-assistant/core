@@ -197,7 +197,7 @@ class VRChatUserDataCoordinator:
 
     def _calculate_device_info(self, name: str | None) -> DeviceInfo:
         user_id = self.data["id"]
-        return DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={
                 (
                     DOMAIN,
@@ -207,6 +207,17 @@ class VRChatUserDataCoordinator:
             name=name,
             configuration_url=VRCHAT_USER_PAGE_BASE_URL + user_id,
         )
+        if self.is_not_current_user:
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.account.hass,
+                (
+                    DOMAIN,
+                    f"{self.account.config_entry.unique_id}:"
+                    f"{self.account.config_entry.unique_id}",
+                ),
+                config_entry_id=self.account.config_entry.entry_id,
+            )
+        return device_info
 
     @property
     def device_entry(self) -> dr.DeviceEntry | None:

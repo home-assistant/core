@@ -287,6 +287,11 @@ async def test_setup_websocket_updates_dynamic_friends_and_unload(
             (DOMAIN, f"{CURRENT_USER_ID}:{NEW_FRIEND_USER_ID}"), entry.entry_id
         )
         assert new_friend_device is not None
+        current_user_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{CURRENT_USER_ID}:{CURRENT_USER_ID}"), entry.entry_id
+        )
+        assert current_user_device is not None
+        assert new_friend_device.via_device_id == current_user_device.id
 
         await coordinator.client.handle_event(
             VRChatEvent("friend-delete", {"userId": NEW_FRIEND_USER_ID})
