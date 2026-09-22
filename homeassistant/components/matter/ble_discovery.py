@@ -35,7 +35,12 @@ class MatterBleAdvertisement:
 
     @property
     def unique_id(self) -> str:
-        """Return a stable identity that survives BLE address rotation."""
+        """Return the commissioning identity, which survives BLE address rotation.
+
+        The advertisement carries nothing more specific, so identical products
+        whose 12 bit discriminators collide share one discovery, as they do for
+        commissioning itself.
+        """
         return f"{self.vendor_id:04x}{self.product_id:04x}{self.discriminator:03x}"
 
     @classmethod
