@@ -3,8 +3,10 @@
 from unittest.mock import AsyncMock
 
 from aiovitesy.api import VitesyDevice
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -12,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DEVICE_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"
 
@@ -35,6 +37,7 @@ async def test_sensor_unavailable_when_device_disconnected(
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors go unavailable when the device reports as disconnected."""
     await setup_integration(hass, mock_config_entry)
@@ -42,7 +45,8 @@ async def test_sensor_unavailable_when_device_disconnected(
     assert hass.states.get(AIR_QUALITY_SCORE).state == "49.0458333333333"
 
     mock_devices[DEVICE_ID].connected = False
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(AIR_QUALITY_SCORE).state == STATE_UNAVAILABLE
@@ -53,6 +57,7 @@ async def test_air_quality_score_without_value(
     mock_vitesy_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the score sensor reports unknown when the measurement drops it."""
     await setup_integration(hass, mock_config_entry)
@@ -61,7 +66,8 @@ async def test_air_quality_score_without_value(
         **mock_devices[DEVICE_ID].measurement,
         "score": None,
     }
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(AIR_QUALITY_SCORE).state == STATE_UNKNOWN
