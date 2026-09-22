@@ -18,17 +18,16 @@ from homeassistant.components.hassio import (
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_URL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .addon import get_addon_manager
-from .ble_discovery import MatterBleAdvertisement
+from .ble_discovery import MatterBleAdvertisement, MatterBleDiscovery
 from .const import (
     ADDON_SLUG,
     CONF_ADDON_BLE_PROXY,
@@ -47,9 +46,6 @@ ON_SUPERVISOR_SCHEMA = probatio.Schema(
     {probatio.Optional(CONF_USE_ADDON, default=True): bool}
 )
 BLUETOOTH_CONFIRM_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
-# Matter devices advertise at most every 1.285 s while commissionable; this
-# leaves margin for proxy batching before a discovery is considered stale.
-STALE_ADVERTISEMENT_SECONDS = 60
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
@@ -83,11 +79,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.use_addon = False
-        self._ble_advertisement: MatterBleAdvertisement | None = None
-        self._ble_address: str | None = None
-        self._ble_last_seen = 0.0
-        self._ble_unsub: CALLBACK_TYPE | None = None
-        self._ble_stale_unsub: CALLBACK_TYPE | None = None
+        self._ble: MatterBleDiscovery | None = None
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -272,9 +264,6 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle a commissionable Matter device seen over Bluetooth."""
-        # Imported lazily; bluetooth is only an after dependency of Matter.
-        from homeassistant.components import bluetooth  # noqa: PLC0415
-
         advertisement = MatterBleAdvertisement.from_service_info(discovery_info)
         if advertisement is None:
             return self.async_abort(reason="not_commissionable")
@@ -306,59 +295,32 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise AbortFlow("already_in_progress")
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-        self._ble_advertisement = advertisement
-        self._ble_address = discovery_info.address
-        self._ble_last_seen = bluetooth.MONOTONIC_TIME()
+        self._ble = MatterBleDiscovery(
+            self.hass, advertisement, discovery_info.address, self._async_ble_stale
+        )
         self.context["title_placeholders"] = {
             "name": discovery_info.name
             or f"Matter device {advertisement.discriminator}"
         }
-        self._ble_unsub = bluetooth.async_register_advertisement_callback(
-            self.hass, self._async_ble_seen, discovery_info.address
-        )
-        self._ble_stale_unsub = async_call_later(
-            self.hass, STALE_ADVERTISEMENT_SECONDS, self._async_check_stale
-        )
+        self._ble.async_start()
         return await self.async_step_bluetooth_confirm()
 
     @callback
-    def _async_ble_seen(self, service_info: BluetoothServiceInfoBleak) -> None:
-        """Record when the device last advertised as commissionable."""
-        # Service data is aggregated across packets; only raw shows the latest one.
-        if service_info.raw is None or MatterBleAdvertisement.from_raw(
-            service_info.raw
-        ):
-            self._ble_last_seen = service_info.time
-
-    @callback
-    def _async_check_stale(self, _now: object) -> None:
-        """Drop the discovery once the device stops advertising as commissionable."""
-        from homeassistant.components import bluetooth  # noqa: PLC0415
-
-        assert self._ble_address is not None
-        remaining = STALE_ADVERTISEMENT_SECONDS - (
-            bluetooth.MONOTONIC_TIME() - self._ble_last_seen
-        )
-        if remaining > 0:
-            self._ble_stale_unsub = async_call_later(
-                self.hass, remaining, self._async_check_stale
-            )
-            return
-        self._ble_stale_unsub = None
-        bluetooth.async_clear_address_from_match_history(self.hass, self._ble_address)
+    def _async_ble_stale(self) -> None:
+        """Drop the discovery; the device stopped advertising as commissionable."""
         self.hass.config_entries.flow.async_abort(self.flow_id)
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Commission the discovered device with a pairing code."""
-        assert self._ble_advertisement is not None
+        assert self._ble is not None
         errors: dict[str, str] = {}
         if user_input is not None:
             if not self.hass.config_entries.async_loaded_entries(DOMAIN):
                 return self.async_abort(reason="not_loaded")
             # The device stops advertising once the server connects to it.
-            self._async_stop_ble_tracking()
+            self._ble.async_stop()
             matter_client = get_matter(self.hass).matter_client
             try:
                 await matter_client.commission_with_code(
@@ -379,27 +341,18 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"],
-                "vendor_id": f"0x{self._ble_advertisement.vendor_id:04X}",
-                "product_id": f"0x{self._ble_advertisement.product_id:04X}",
-                "discriminator": str(self._ble_advertisement.discriminator),
+                "vendor_id": f"0x{self._ble.advertisement.vendor_id:04X}",
+                "product_id": f"0x{self._ble.advertisement.product_id:04X}",
+                "discriminator": str(self._ble.advertisement.discriminator),
             },
         )
 
     @callback
     @override
     def async_remove(self) -> None:
-        """Clean up Bluetooth subscriptions when the flow ends."""
-        self._async_stop_ble_tracking()
-
-    @callback
-    def _async_stop_ble_tracking(self) -> None:
-        """Stop watching the device's advertisements."""
-        if self._ble_unsub is not None:
-            self._ble_unsub()
-            self._ble_unsub = None
-        if self._ble_stale_unsub is not None:
-            self._ble_stale_unsub()
-            self._ble_stale_unsub = None
+        """Stop watching the discovered device when the flow ends."""
+        if self._ble is not None:
+            self._ble.async_stop()
 
     @override
     async def async_step_hassio(
