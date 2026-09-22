@@ -149,7 +149,12 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
     async def async_parse_todo_item(
         self, item_summary: str
     ) -> MutateShoppingItem | None:
-        """Parse a to-do item into a shopping item."""
+        """Parse a to-do item into a shopping item.
+
+        The average confidence is a combination of whether there is a food and also if the unit and quantity can be identified.
+        This method will only return a shopping item if the average confidence meets or exceeds the minimum threshold.
+        The returned shopping item can be either a food or a note item, with unit and quantity separated out.
+        """
         try:
             parsed_ingredient = await self.coordinator.client.parse_ingredient(
                 item_summary.strip(), parser=self.parser
