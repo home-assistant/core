@@ -31,6 +31,9 @@
       "binmode": {
         "name": "Binning mode"
       },
+      "camera_sensor_temp": {
+        "name": "Camera sensor temperature"
+      },
       "exposure": {
         "name": "Exposure time"
       },
