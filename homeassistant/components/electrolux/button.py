@@ -81,6 +81,7 @@ ELECTROLUX_CARE_BUTTONS: tuple[
             appliance.get_current_appliance_state()
             in (APPLIANCE_STATE_READY_TO_START, APPLIANCE_STATE_IDLE)
         ),
+        # available_fn=lambda appliance: True,
         command_fn=lambda appliance: appliance.get_start_command(),
     ),
     ElectroluxButtonDescription(
@@ -245,7 +246,7 @@ class ElectroluxBaseButton[T: SupportedAppliance](
         """Handle the button press."""
         self._is_command_executable()
         command = self._get_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
+        await self.coordinator.send_command(command)
         await self.coordinator.async_refresh()
 
     @abstractmethod
