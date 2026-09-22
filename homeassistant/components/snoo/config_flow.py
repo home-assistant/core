@@ -49,7 +49,7 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidSnooAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
-                _LOGGER.exception("Unexpected exception %s")
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 user_uuid = jwt.decode(
