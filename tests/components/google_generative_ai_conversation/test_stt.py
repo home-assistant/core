@@ -1,5 +1,6 @@
 """Tests for the Google Generative AI Conversation STT entity."""
 
+import asyncio
 from collections.abc import AsyncIterable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -189,6 +190,41 @@ async def test_stt_process_audio_stream_api_error(
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_process_audio_stream_timeout(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a stalled STT request times out instead of blocking the pipeline."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+
+    async def _stall(*args: object, **kwargs: object) -> None:
+        await asyncio.Event().wait()
+
+    mock_genai_client.aio.models.generate_content.side_effect = _stall
+
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.stt.STT_TIMEOUT_SECONDS",
+        0.01,
+    ):
+        result = await entity.async_process_audio_stream(metadata, audio_stream)
+
+    assert result.result == stt.SpeechResultState.ERROR
+    assert result.text is None
+    assert "Timed out" in caplog.text
 
 
 @pytest.mark.usefixtures("setup_integration")
