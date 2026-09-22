@@ -234,12 +234,6 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    FieldName.AC_1_O_V: DetailsMapping(
-        unit="V",
-        category=None,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     FieldName.AC_2_O_C: DetailsMapping(
         unit="A",
         category=None,
@@ -276,24 +270,6 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    FieldName.AC_ECO_MODE: DetailsMapping(
-        unit=None,
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.AC_ECO_SWITCH: DetailsMapping(
-        unit=None,
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.AC_I_F: DetailsMapping(
-        unit="Hz",
-        category=None,
-        device_class=SensorDeviceClass.FREQUENCY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     FieldName.AC_1_I_C: DetailsMapping(
         unit="A",
         category=None,
@@ -304,12 +280,6 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         unit="W",
         category=None,
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.AC_1_I_V: DetailsMapping(
-        unit="V",
-        category=None,
-        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FieldName.AC_2_I_C: DetailsMapping(
@@ -348,54 +318,6 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    FieldName.AC_I_P_TOTAL: DetailsMapping(
-        unit="W",
-        category=None,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.AC_O_F: DetailsMapping(
-        unit="Hz",
-        category=None,
-        device_class=SensorDeviceClass.FREQUENCY,
-        state_class=None,
-    ),
-    FieldName.AC_O_P_TOTAL: DetailsMapping(
-        unit="W",
-        category=None,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.AC_O_SWITCH: DetailsMapping(
-        unit=None,
-        category=None,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.AC_POWER_LIFTING_SWITCH: DetailsMapping(
-        unit=None,
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.B_SOC_HIGH: DetailsMapping(
-        unit="%",
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.B_SOC_LOW: DetailsMapping(
-        unit="%",
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.B_SOC_TOTAL: DetailsMapping(
-        unit="%",
-        category=None,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     FieldName.B_TYPE: DetailsMapping(
         unit=None,
         category=None,
@@ -403,30 +325,6 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         state_class=None,
     ),
     FieldName.B_VER_BMS: DetailsMapping(
-        unit=None,
-        category=EntityCategory.DIAGNOSTIC,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.D_CHARGING_MODE: DetailsMapping(
-        unit=None,
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.D_DISPLAY_MODE: DetailsMapping(
-        unit=None,
-        category=EntityCategory.CONFIG,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.D_INVERTER_TYPE: DetailsMapping(
-        unit=None,
-        category=EntityCategory.DIAGNOSTIC,
-        device_class=None,
-        state_class=None,
-    ),
-    FieldName.D_SERIAL: DetailsMapping(
         unit=None,
         category=EntityCategory.DIAGNOSTIC,
         device_class=None,
@@ -456,52 +354,10 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    FieldName.DC_I_P_TOTAL: DetailsMapping(
-        unit="W",
-        category=None,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.DC_I_V: DetailsMapping(
-        unit="V",
-        category=None,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.DC_O_P_TOTAL: DetailsMapping(
-        unit="W",
-        category=None,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.DC_O_SWITCH: DetailsMapping(
-        unit=None,
-        category=None,
-        device_class=None,
-        state_class=None,
-    ),
     FieldName.G_I_F: DetailsMapping(
         unit="Hz",
         category=None,
         device_class=SensorDeviceClass.FREQUENCY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.PV_1_I_C: DetailsMapping(
-        unit="A",
-        category=None,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.PV_1_I_P: DetailsMapping(
-        unit="W",
-        category=None,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.PV_1_I_V: DetailsMapping(
-        unit="V",
-        category=None,
-        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FieldName.PV_2_I_C: DetailsMapping(
@@ -575,11 +431,5 @@ ENTITY_DETAILS_MAPPING: dict[FieldName, DetailsMapping] = {
         category=None,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    FieldName.PV_I_E_TOTAL: DetailsMapping(
-        unit="kWh",
-        category=None,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 }
