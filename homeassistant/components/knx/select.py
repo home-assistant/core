@@ -29,7 +29,6 @@ from .const import (
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONF_VALUE,
-    DOMAIN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
     SelectConf,
@@ -42,8 +41,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_ENTITY
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,7 +204,7 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
         self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize a KNX select."""
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         source = knx_conf.get(SelectConf.OPTIONS_SOURCE)
         # the group address key tells how options are defined
         if SelectConf.GA_ENUM in source:
@@ -223,7 +221,7 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
 
         self._device = RawValue(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             payload_length=payload_length,
             group_address=knx_conf.get_write(SelectConf.OPTIONS_SOURCE, ga_key),
             group_address_state=knx_conf.get_state_and_passive(
@@ -235,6 +233,6 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
         self._attr_options = list(self._option_payloads)
