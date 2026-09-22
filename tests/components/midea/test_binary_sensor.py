@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.devices.x26 import DeviceAttributes as X26Attributes
 import pytest
@@ -39,6 +40,7 @@ def _ac_device() -> DummyDevice:
             ACAttributes.swing_horizontal: True,
             ACAttributes.indoor_humidity: 50,
             ACAttributes.full_dust: True,
+            ACAttributes.water_pump_running: True,
         },
     )
 
@@ -61,10 +63,20 @@ def _x26_device() -> DummyDevice:
     )
 
 
+def _dc_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.DC,
+        attributes={
+            DCAttributes.door_warn: True,
+        },
+    )
+
+
 @pytest.mark.parametrize(
     "device",
     [
         pytest.param(_ac_device(), id="ac"),
+        pytest.param(_dc_device(), id="dc"),
         pytest.param(_e1_device(), id="e1"),
         pytest.param(_x26_device(), id="x26"),
     ],
@@ -115,3 +127,29 @@ async def test_binary_sensor_state_update(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "on"
+
+
+async def test_binary_sensor_unknown_for_non_bool_value(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test binary_sensor is unknown when the device reports a non-bool value."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.full_dust: None,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_full_dust"]
+
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"

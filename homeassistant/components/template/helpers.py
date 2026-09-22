@@ -4,12 +4,13 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CONDITIONS,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
@@ -19,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import template
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -129,29 +131,49 @@ def _get_config_breadcrumbs(config: ConfigType) -> str:
     return breadcrumb
 
 
-async def validate_template_scripts(
+async def validate_actions_and_conditions_config(
     hass: HomeAssistant,
     config: ConfigType,
     script_options: tuple[str, ...] | None = None,
 ) -> bool:
-    """Validate template scripts."""
-    if not script_options:
-        return True
+    """Validate template entity actions and conditions.
+
+    Returns True when all conditions and actions validate without error.
+    When any condition or action fails, return False.
+    """
 
     def _humanize(err: Exception, data: Any) -> str:
-        """Humanize vol.Invalid, stringify other exceptions."""
-        if isinstance(err, vol.Invalid):
+        """Humanize probatio.Invalid, stringify other exceptions."""
+        if isinstance(err, probatio.Invalid):
             return humanize_error(data, err)
         return str(err)
 
     breadcrumb: str | None = None
+    if (condition_config := config.pop(CONF_CONDITIONS, None)) is not None:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, condition_config
+            )
+        except (probatio.Invalid, HomeAssistantError) as err:
+            if not breadcrumb:
+                breadcrumb = _get_config_breadcrumbs(config)
+            _LOGGER.error(
+                "The condition for %s failed to setup: %s",
+                breadcrumb,
+                _humanize(err, condition_config),
+            )
+            return False
+
+    if not script_options:
+        return True
+
     for script_option in script_options:
         if (script_config := config.pop(script_option, None)) is not None:
             try:
                 config[script_option] = await async_validate_actions_config(
                     hass, script_config
                 )
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 if not breadcrumb:
                     breadcrumb = _get_config_breadcrumbs(config)
                 _LOGGER.error(
@@ -205,7 +227,9 @@ async def async_setup_template_platform(
             if trigger_entities := [
                 trigger_entity_cls(hass, discovery_info["coordinator"], entity_config)
                 for entity_config in discovery_info["entities"]
-                if await validate_template_scripts(hass, entity_config, script_options)
+                if await validate_actions_and_conditions_config(
+                    hass, entity_config, script_options
+                )
             ]:
                 async_add_entities(trigger_entities)
         else:
@@ -218,7 +242,9 @@ async def async_setup_template_platform(
     if state_entities := [
         entity_config
         for entity_config in discovery_info["entities"]
-        if await validate_template_scripts(hass, entity_config, script_options)
+        if await validate_actions_and_conditions_config(
+            hass, entity_config, script_options
+        )
     ]:
         async_create_template_tracking_entities(
             state_entity_cls,
@@ -234,7 +260,7 @@ async def async_setup_template_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     state_entity_cls: type[TemplateEntity],
-    config_schema: vol.Schema | vol.All,
+    config_schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
@@ -249,7 +275,9 @@ async def async_setup_template_entry(
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = config_schema(options)
-    if await validate_template_scripts(hass, validated_config, script_options):
+    if await validate_actions_and_conditions_config(
+        hass, validated_config, script_options
+    ):
         async_add_entities(
             [state_entity_cls(hass, validated_config, config_entry.entry_id)]
         )
@@ -260,7 +288,7 @@ def async_setup_template_preview[T: TemplateEntity](
     name: str,
     config: ConfigType,
     state_entity_cls: type[T],
-    schema: vol.Schema | vol.All,
+    schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
 ) -> T:
     """Setup the Template preview."""

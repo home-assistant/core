@@ -1,5 +1,6 @@
 """The tests for the Template device_tracker platform."""
 
+from enum import StrEnum
 from itertools import chain
 from typing import Any
 
@@ -23,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
@@ -836,3 +838,58 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_TRACKER,
+        style,
+        TEST_MINIMUM_REQUIREMENTS,
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(
+        chain(
+            device_tracker.DeviceTrackerEntityCapabilityAttribute,
+            device_tracker.DeviceTrackerEntityStateAttribute,
+            device_tracker.TrackerEntityStateAttribute,
+        )
+    ),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum | str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        1,
+        {
+            **TEST_MINIMUM_REQUIREMENTS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_TRACKER.entity_id}: {attribute}"
+    assert error in caplog.text

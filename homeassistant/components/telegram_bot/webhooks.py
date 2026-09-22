@@ -17,7 +17,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
-from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .bot import ALLOWED_UPDATES, BaseTelegramBot, TelegramBotConfigEntry
 from .const import CONF_TRUSTED_NETWORKS
 from .helpers import get_base_url
 
@@ -107,6 +107,7 @@ class PushBot(BaseTelegramBot):
             try:
                 return await self.bot.set_webhook(
                     self.webhook_url,
+                    allowed_updates=ALLOWED_UPDATES,
                     api_kwargs={"secret_token": self.secret_token},
                     connect_timeout=5,
                 )

@@ -1,7 +1,7 @@
 """Data update coordinator for Sofar devices."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
@@ -13,10 +13,10 @@ from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER, BATTERY_COMPONENTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,15 +48,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._consecutive_failures: dict[str, int] = {}
 
     @cached_property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
         serial = self.device.serial_number
         assert serial is not None
-        return DeviceInfo(
+        identity = self.device.identity
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
+            hw_version=identity.hardware_version or None,
+            sw_version=identity.software_version or None,
         )
 
     @override
@@ -70,12 +73,10 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="no_component_answered",
-                        translation_placeholders={"name": self.name},
                     )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                    translation_placeholders={"name": self.name},
                 ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
@@ -83,7 +84,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             return report
@@ -127,6 +127,8 @@ class SofarRuntimeData:
 
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator
+    inverter_device_id: str
+    wired_packs: set[int] = field(default_factory=set)
 
     @property
     def served_components(self) -> frozenset[str]:
@@ -135,6 +137,14 @@ class SofarRuntimeData:
         return frozenset(device.readings_components) | frozenset(
             device.settings_components
         )
+
+    def pack_is_wired(self, number: int) -> bool:
+        """Whether a pack has answered, so it physically exists."""
+        component_name = BATTERY_COMPONENTS[number]
+        if component_name not in self.served_components:
+            return False
+        component = getattr(self.readings.device, component_name)
+        return bool(getattr(component, f"battery_voltage_{number}", None))
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""

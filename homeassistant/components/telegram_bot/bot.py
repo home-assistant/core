@@ -123,6 +123,20 @@ from .helpers import signal
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
+# Telegram keeps this per bot, server side, and keeps whatever it was told last
+# when the setting is omitted, so a bot narrowed by an earlier consumer of the
+# token silently drops the rest. Ask for what `handle_update` turns into events:
+# a callback query, and the updates `Update.effective_message` is drawn from.
+ALLOWED_UPDATES = [
+    Update.CALLBACK_QUERY,
+    Update.MESSAGE,
+    Update.EDITED_MESSAGE,
+    Update.CHANNEL_POST,
+    Update.EDITED_CHANNEL_POST,
+    Update.BUSINESS_MESSAGE,
+    Update.EDITED_BUSINESS_MESSAGE,
+]
+
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 _RETRY_DELAY = 1  # 1 second delay between retries
@@ -1069,7 +1083,20 @@ class TelegramNotificationService:
                     translation_key="invalid_directory_path",
                     translation_placeholders={"directory_path": directory_path},
                 ) from err
+
+            # A caller supplied destination has to sit inside
+            # allowlist_external_dirs, the boundary load_data already applies to
+            # reads. is_allowed_path resolves the path first, so a symlink inside
+            # an allowed directory that points out of it is rejected too.
+            if not await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, directory_path
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="allowlist_external_dirs_error",
+                )
         else:
+            # The integration's own directory needs no allowlist entry.
             directory_path = self.hass.config.path(DOMAIN)
 
         if file_name:

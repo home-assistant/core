@@ -74,7 +74,7 @@ async def test_gen24_storage_mppt(
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current", 8.2)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage", 402.1)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_energy", 1000000)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_energy", 1000000)
     assert_state(hass, "sensor.gen24_storage_mppt_2_dc_power", 1650)
     assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 0)
     assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 480)
@@ -90,6 +90,54 @@ async def test_gen24_storage_mppt(
 
     solar_net = config_entry.runtime_data
     assert len(solar_net.modbus_inverter_coordinators) == 1
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_verto_plus_five_modules(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test a Verto Plus exposing 3 PV trackers plus storage charge/discharge."""
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(
+            [
+                MpptModuleSpec(
+                    id_str="MPPT 1", current=82, voltage=4021, power=3300, energy=1_000
+                ),
+                MpptModuleSpec(
+                    id_str="MPPT 2", current=41, voltage=4022, power=1650, energy=2_000
+                ),
+                MpptModuleSpec(
+                    id_str="MPPT 3", current=20, voltage=4023, power=800, energy=3_000
+                ),
+                MpptModuleSpec(
+                    id_str="StCha 4", current=0, voltage=0, power=0, energy=4_000
+                ),
+                MpptModuleSpec(
+                    id_str="StDisCha 5",
+                    current=12,
+                    voltage=3990,
+                    power=480,
+                    energy=5_000,
+                ),
+            ],
+            storage_wcha_max=5000,
+        )
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    with patch("homeassistant.components.fronius.PLATFORMS", [Platform.SENSOR]):
+        await setup_fronius_integration(hass, is_logger=False, unique_id="12345678")
+
+    assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 800)
+    assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 0)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current", 1.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage", 399.0)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_power", 480)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_energy", 5000)
+    assert_state(hass, "sensor.gen24_storage_pv_energy_total", 6000)
+    assert_state(hass, "sensor.gen24_storage_battery_charging_energy_total", 4000)
+    assert_state(hass, "sensor.gen24_storage_battery_discharging_energy_total", 5000)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -301,7 +349,7 @@ async def test_not_implemented_values(
 
     assert_state(hass, "sensor.inverter_name_mppt_1_dc_power", 3300)
     assert hass.states.get("sensor.inverter_name_mppt_2_dc_power") is None
-    assert hass.states.get("sensor.inverter_name_mppt_2_dc_energy") is None
+    assert hass.states.get("sensor.inverter_name_mppt_2_energy") is None
     # PV total unknown when a PV module doesn't report energy
     assert hass.states.get("sensor.inverter_name_pv_energy_total") is None
 
@@ -312,7 +360,7 @@ async def test_not_implemented_values(
     freezer.tick(FroniusModbusInverterUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert_state(hass, "sensor.inverter_name_mppt_1_dc_energy", "unknown")
+    assert_state(hass, "sensor.inverter_name_mppt_1_energy", "unknown")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

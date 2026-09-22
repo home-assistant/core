@@ -26,8 +26,8 @@ from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -855,6 +855,30 @@ async def test_webhook_subscription_auth_failure(
         flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
         for flow in flows
     )
+
+
+async def test_webhook_subscription_waits_for_start(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the webhook is only subscribed once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Withings validates the callback URL by calling it, which cannot work
+    # while our own HTTP server is still starting up
+    assert withings.subscribe_notification.call_count == 0
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    await prepare_webhook_setup(hass, freezer)
+
+    assert withings.subscribe_notification.call_count == 6
 
 
 async def test_webhook_subscription_invalid_params(
