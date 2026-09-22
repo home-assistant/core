@@ -65,6 +65,18 @@ def build_ws_address(host: str, port: int) -> str:
     return f"ws://{host}:{port}/ws"
 
 
+def ble_device_title(name: str, address: str) -> str:
+    """Return a title that tells identical products apart.
+
+    Vendors that put the MAC in the advertised name, like Shelly, are kept as
+    is; otherwise the short MAC is appended the same way.
+    """
+    suffix = name.rsplit("-", 1)[-1]
+    if len(suffix) == 12 and all(char in "0123456789abcdefABCDEF" for char in suffix):
+        return name
+    return f"{name or 'Matter'}-{address.replace(':', '')[-6:].upper()}"
+
+
 class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Matter."""
 
@@ -277,30 +289,21 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(advertisement.unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
-        same_address = {
-            flow["flow_id"]
-            for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-                BluetoothServiceInfoBleak,
-                lambda info: bool(info.address == discovery_info.address),
-            )
-        }
-        for flow in self._async_in_progress(
-            match_context={"unique_id": advertisement.unique_id}
+        # Rediscovery of the same address keeps the existing card. A device that
+        # rotated its address gets a new card and the old one goes stale, and
+        # identical products with a colliding discriminator each keep a card.
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            BluetoothServiceInfoBleak,
+            lambda info: bool(info.address == discovery_info.address),
         ):
-            # Keep a card that is already commissioning; only a rotated address
-            # supersedes an idle older card.
-            if flow["flow_id"] in same_address or flow["context"].get(
-                "dismiss_protected"
-            ):
+            if flow["handler"] == DOMAIN and flow["flow_id"] != self.flow_id:
                 raise AbortFlow("already_in_progress")
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         self._ble = MatterBleDiscovery(
             self.hass, advertisement, discovery_info.address, self._async_ble_stale
         )
         self.context["title_placeholders"] = {
-            "name": discovery_info.name
-            or f"Matter device {advertisement.discriminator}"
+            "name": ble_device_title(discovery_info.name, discovery_info.address)
         }
         self._ble.async_start()
         return await self.async_step_bluetooth_confirm()

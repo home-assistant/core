@@ -85,22 +85,33 @@ async def test_discovery_shows_confirm(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {
-        "name": MATTER_BLE_NAME,
+        "name": f"{MATTER_BLE_NAME}-DDEEF0",
         "vendor_id": "0xFFF1",
         "product_id": "0x8000",
         "discriminator": "3840",
     }
     (flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flow["context"]["unique_id"] == UNIQUE_ID
-    assert flow["context"]["title_placeholders"] == {"name": MATTER_BLE_NAME}
+    assert flow["context"]["title_placeholders"] == {
+        "name": f"{MATTER_BLE_NAME}-DDEEF0"
+    }
 
 
+@pytest.mark.parametrize(
+    ("name", "title"),
+    [
+        pytest.param("", "Matter-DDEEF0", id="nameless"),
+        pytest.param(
+            "Shelly1MiniG4-A085E3B31284", "Shelly1MiniG4-A085E3B31284", id="mac_in_name"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_discovery_without_name(hass: HomeAssistant) -> None:
-    """A nameless advertisement is titled by its discriminator."""
-    result = await _async_start_discovery(hass, matter_ble_service_info(name=""))
+async def test_discovery_title(hass: HomeAssistant, name: str, title: str) -> None:
+    """Names without a MAC get the short MAC appended, like Shelly names have."""
+    result = await _async_start_discovery(hass, matter_ble_service_info(name=name))
     assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"]["name"] == "Matter device 3840"
+    assert result["description_placeholders"]["name"] == title
 
 
 async def test_only_ignored_entries_is_not_a_server(hass: HomeAssistant) -> None:
@@ -164,15 +175,31 @@ async def test_ignored_device(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
-async def test_address_rotation_supersedes_flow(hass: HomeAssistant) -> None:
-    """A new address for the same device replaces the older discovery."""
-    await _async_start_discovery(hass)
+async def test_colliding_devices_keep_separate_cards(hass: HomeAssistant) -> None:
+    """Identical products with the same discriminator are told apart by address."""
+    first = await _async_start_discovery(hass)
     second = await _async_start_discovery(
         hass, matter_ble_service_info(address=ROTATED_ADDRESS)
     )
     assert second["type"] is FlowResultType.FORM
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert [flow["flow_id"] for flow in flows] == [second["flow_id"]]
+    assert {flow["flow_id"] for flow in flows} == {first["flow_id"], second["flow_id"]}
+    assert {flow["context"]["title_placeholders"]["name"] for flow in flows} == {
+        f"{MATTER_BLE_NAME}-DDEEF0",
+        f"{MATTER_BLE_NAME}-DDEEF1",
+    }
+
+    # Ignoring one card ignores the product identity, whatever the address.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IGNORE},
+        data={"unique_id": UNIQUE_ID, "title": MATTER_BLE_NAME},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    result = await _async_start_discovery(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("bluetooth_enabled", "integration")
@@ -320,16 +347,15 @@ async def test_commissioning_in_progress_is_never_aborted(
     async_fire_time_changed(hass)
     _get_manager()._address_disappeared(MATTER_BLE_ADDRESS)
     await hass.async_block_till_done()
-    # A rotated address must not replace the card either.
+    # A rotated address gets its own card and does not touch this one.
     rotated = await _async_start_discovery(
         hass, matter_ble_service_info(address=ROTATED_ADDRESS)
     )
-    assert rotated["type"] is FlowResultType.ABORT
-    assert rotated["reason"] == "already_in_progress"
-    assert [
+    assert rotated["type"] is FlowResultType.FORM
+    assert {
         flow["flow_id"]
         for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    ] == [result["flow_id"]]
+    } == {result["flow_id"], rotated["flow_id"]}
 
     commissioning.set()
     result = await configure
