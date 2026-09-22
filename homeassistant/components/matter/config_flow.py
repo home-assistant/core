@@ -298,9 +298,12 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress(
             match_context={"unique_id": advertisement.unique_id}
         ):
-            if flow["flow_id"] in same_address:
+            # Keep a card that is already commissioning; only a rotated address
+            # supersedes an idle older card.
+            if flow["flow_id"] in same_address or flow["context"].get(
+                "dismiss_protected"
+            ):
                 raise AbortFlow("already_in_progress")
-            # The BLE address rotated; this discovery supersedes the older card.
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         self._ble_advertisement = advertisement

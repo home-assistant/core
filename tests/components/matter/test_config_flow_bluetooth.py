@@ -320,7 +320,16 @@ async def test_commissioning_in_progress_is_never_aborted(
     async_fire_time_changed(hass)
     _get_manager()._address_disappeared(MATTER_BLE_ADDRESS)
     await hass.async_block_till_done()
-    assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    # A rotated address must not replace the card either.
+    rotated = await _async_start_discovery(
+        hass, matter_ble_service_info(address=ROTATED_ADDRESS)
+    )
+    assert rotated["type"] is FlowResultType.ABORT
+    assert rotated["reason"] == "already_in_progress"
+    assert [
+        flow["flow_id"]
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    ] == [result["flow_id"]]
 
     commissioning.set()
     result = await configure
