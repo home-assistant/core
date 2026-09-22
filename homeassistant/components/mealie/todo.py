@@ -163,25 +163,24 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             )
             parsed_ingredient = None
 
-        if (
-            parsed_ingredient
-            and parsed_ingredient.confidence
-            and (parsed_ingredient.confidence.average or 0.0)
-            >= MINIMUM_PARSER_CONFIDENCE
-        ):
-            ingredient = parsed_ingredient.ingredient
-            if ingredient.food:
-                shopping_item = MutateShoppingItem(
-                    is_food=ingredient.food.food_id is not None,
-                    food_id=ingredient.food.food_id
-                    if ingredient.food.food_id is not None
-                    else None,
-                    note=ingredient.food.name if not ingredient.food.food_id else None,
-                    unit_id=ingredient.unit.unit_id if ingredient.unit else None,
-                    quantity=ingredient.quantity or 0.0,
-                )
-            return shopping_item
-        return None
+        if not parsed_ingredient or not parsed_ingredient.confidence:
+            return None
+        if (parsed_ingredient.confidence.average or 0.0) < MINIMUM_PARSER_CONFIDENCE:
+            return None
+
+        ingredient = parsed_ingredient.ingredient
+        if not ingredient.food:
+            return None
+
+        return MutateShoppingItem(
+            is_food=ingredient.food.food_id is not None,
+            food_id=ingredient.food.food_id
+            if ingredient.food.food_id is not None
+            else None,
+            note=ingredient.food.name if not ingredient.food.food_id else None,
+            unit_id=ingredient.unit.unit_id if ingredient.unit else None,
+            quantity=ingredient.quantity or 0.0,
+        )
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
