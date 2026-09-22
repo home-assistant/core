@@ -15,7 +15,10 @@
       "upper_bound": 95.0
     },
     "dev_class": "heater_central",
-    "dhw_modes": ["comfort", "eco"],
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "model": "Generic heater",
     "name": "OpenTherm",
@@ -72,7 +75,7 @@
       "setpoint": 25.0,
       "temperature": 24.8,
       "temperature_difference": -0.4,
-      "valve_position": 100.0
+      "valve_position": 100
     },
     "temperature_offset": {
       "lower_bound": -2.0,
@@ -116,7 +119,11 @@
     },
     "dev_class": "gateway",
     "firmware": "3.9.0",
-    "gateway_modes": ["away", "full", "vacation"],
+    "gateway_modes": [
+      "away",
+      "full",
+      "vacation"
+    ],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "mac_address": "D40FB201CBA0",
@@ -137,6 +144,7 @@
       "outdoor_temperature": 29.65
     },
     "vendor": "Plugwise",
+    "wifi_mac_address": "D40FB201CBA0",
     "zigbee_mac_address": "000D6F000D5ACBA0"
   },
   "da575e9e09b947e281fb6e3ebce3b174": {
@@ -217,7 +225,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Living room",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -240,7 +254,11 @@
       "secondary": []
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
@@ -256,7 +274,13 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "passive",
     "sensors": {
@@ -271,10 +295,18 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
-      "secondary": ["1772a4ea304041adb83f357b751341ff"]
+      "primary": [
+        "e2f4322d57924fa090fbbc48b3a140dc"
+      ],
+      "secondary": [
+        "1772a4ea304041adb83f357b751341ff"
+      ]
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   }
 }
