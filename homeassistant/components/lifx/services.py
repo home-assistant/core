@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from aiolifx_themes.themes import ThemeLibrary
+from lifx import ThemeLibrary
 import probatio
 
 from homeassistant.components.light import (
@@ -62,10 +62,30 @@ from .const import (
     SERVICE_SET_HEV_CYCLE_STATE,
     SERVICE_SET_STATE,
 )
-from .util import async_entry_is_legacy
 
 if TYPE_CHECKING:
     from .manager import LIFXManager
+
+LIFX_SET_STATE_SCHEMA: VolDictType = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
+    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
+}
+
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
+    probatio.Required(ATTR_POWER): cv.boolean,
+    ATTR_DURATION: probatio.All(
+        probatio.Coerce(float), probatio.Clamp(min=0, max=86400)
+    ),
+}
+
+
+# The firmware effect palette is carried in a fixed sixteen color field
+EFFECT_PALETTE_MAX = 16
+EFFECT_PALETTE_MIN = 2
+# The Sky effect palette maps onto six named slots rather than the full field
+EFFECT_SKY_PALETTE_MAX = 6
 
 EFFECT_MOVE_DIRECTION_LEFT = "left"
 EFFECT_MOVE_DIRECTION_RIGHT = "right"
@@ -174,9 +194,13 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=25)),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(
+            ThemeLibrary.get_available_themes()
+        ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )
@@ -188,7 +212,7 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(float), probatio.Clamp(min=0.1, max=60)
         ),
         ATTR_DIRECTION: probatio.In(EFFECT_MOVE_DIRECTIONS),
-        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary().themes),
+        probatio.Optional(ATTR_THEME): probatio.In(ThemeLibrary.get_available_themes()),
     }
 )
 
@@ -205,7 +229,11 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
         ATTR_CLOUD_SATURATION_MAX: probatio.All(
             probatio.Coerce(int), probatio.Clamp(min=0, max=255)
         ),
-        ATTR_PALETTE: probatio.All(cv.ensure_list, [HSBK_SCHEMA]),
+        ATTR_PALETTE: probatio.All(
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=1, max=EFFECT_SKY_PALETTE_MAX),
+        ),
     }
 )
 
@@ -213,11 +241,15 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_TRANSITION: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=3600)
+            probatio.Coerce(int), probatio.Clamp(min=0, max=3600)
         ),
-        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(ThemeLibrary().themes),
+        probatio.Exclusive(ATTR_THEME, COLOR_GROUP): probatio.In(
+            ThemeLibrary.get_available_themes()
+        ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list, [HSBK_SCHEMA]
+            cv.ensure_list,
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
     }
 )
@@ -234,36 +266,15 @@ SERVICES_SCHEMA = {
 }
 
 
-LIFX_SET_STATE_SCHEMA: VolDictType = {
-    **LIGHT_TURN_ON_SCHEMA,
-    ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
-    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
-    ATTR_POWER: cv.boolean,
-}
-
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_POWER): cv.boolean,
-    ATTR_DURATION: probatio.All(
-        probatio.Coerce(float), probatio.Clamp(min=0, max=86400)
-    ),
-}
-
-
 def _get_manager(service: ServiceCall) -> LIFXManager:
-    """Return the LIFX manager, raising a user-facing error if unavailable."""
+    """Return the LIFX manager, raising a user-facing error if no entry is loaded."""
     hass = service.hass
-    # The manager is stored before the connection and first refresh are awaited,
-    # so its presence alone does not mean a device is usable.
-    if (manager := hass.data.get(DATA_LIFX_MANAGER)) is None or all(
-        async_entry_is_legacy(entry)
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-    ):
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",
         )
-
-    return manager
+    return hass.data[DATA_LIFX_MANAGER]
 
 
 async def _async_start_effect(service: ServiceCall) -> None:
@@ -273,18 +284,18 @@ async def _async_start_effect(service: ServiceCall) -> None:
         service.hass, TargetSelection(service.data)
     )
     all_referenced = referenced.referenced | referenced.indirectly_referenced
-    if all_referenced:
-        await manager.start_effect(all_referenced, service.service, **service.data)
+    await manager.start_effect(
+        all_referenced,
+        service,
+        # An area or label that holds no usable LIFX light is a sweep that
+        # caught nothing, not the mistake naming one directly is
+        strict=bool(referenced.referenced),
+    )
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the LIFX services."""
-    for service, schema in SERVICES_SCHEMA.items():
-        hass.services.async_register(
-            DOMAIN, service, _async_start_effect, schema=schema
-        )
-
+    """Register the LIFX actions."""
     async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -301,3 +312,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         func="set_hev_cycle_state",
     )
+    for service, schema in SERVICES_SCHEMA.items():
+        hass.services.async_register(
+            DOMAIN, service, _async_start_effect, schema=schema
+        )
