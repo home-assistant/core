@@ -1,5 +1,6 @@
 """Test the recorder keeps retrying a database that is not ready at startup."""
 
+import asyncio
 from functools import partial
 import time
 from unittest.mock import patch
@@ -98,6 +99,40 @@ async def test_extended_retry_wait_is_capped(
         )
 
     assert sleep.call_args[0][0] == DB_SETUP_RETRY_WAIT_MAX
+
+
+async def test_setup_returns_before_the_retrying_finishes(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Setup is released once the retrying starts, not when it ends."""
+    instance = await _make_instance(async_setup_recorder_instance, hass)
+    instance.db_url = "postgresql://u@db/ha"
+    instance.db_max_retries = 1
+    instance.db_retry_wait = 0
+    instance.async_setup_complete = hass.loop.create_future()
+
+    retrying = asyncio.Event()
+
+    def _block_until_released(wait: float) -> bool:
+        hass.loop.call_soon_threadsafe(retrying.set)
+        return False
+
+    with (
+        patch.object(instance, "_close_connection"),
+        patch.object(instance, "_try_setup_recorder_once", return_value=(None, True)),
+        patch.object(
+            instance, "_sleep_unless_stopping", side_effect=_block_until_released
+        ),
+    ):
+        task = hass.async_add_executor_job(
+            partial(instance._setup_recorder, extended_retry=True)
+        )
+        await retrying.wait()
+        # The point of the change: this resolves while the recorder thread is
+        # still inside the retry loop, rather than after it gives up.
+        assert await instance.async_setup_complete is True
+        assert await task is False
 
 
 async def test_gives_up_after_max_db_setup_wait(

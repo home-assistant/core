@@ -171,7 +171,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await _async_setup_integration_platform(hass, instance)
 
-    return await instance.async_db_ready
+    return await instance.async_setup_complete
 
 
 async def _async_setup_integration_platform(

@@ -188,6 +188,9 @@ class Recorder(threading.Thread):
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()
+        # Setup may return: the database is ready, or it was not reachable and
+        # the recorder has fallen back to retrying it on its own thread.
+        self.async_setup_complete: asyncio.Future[bool] = hass.loop.create_future()
         # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
@@ -468,6 +471,8 @@ class Recorder(threading.Thread):
             self.async_db_connected.set_result(False)
         if not self.async_db_ready.done():
             self.async_db_ready.set_result(False)
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(False)
         if startup_failed:
             persistent_notification.async_create(
                 self.hass,
@@ -493,7 +498,19 @@ class Recorder(threading.Thread):
         if self.async_db_ready.done():
             return
         self.async_db_ready.set_result(True)
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(True)
         self.async_start_executor()
+
+    @callback
+    def async_db_retry_started(self) -> None:
+        """Release setup while the database is still being retried.
+
+        Setup waits on async_setup_complete, not async_db_ready, so that a
+        database which is not up yet does not hold up the rest of startup.
+        """
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(True)
 
     @callback
     def _async_set_recorder_ready_migration_done(self) -> None:
@@ -1015,6 +1032,9 @@ class Recorder(threading.Thread):
             self.db_max_retries,
             MAX_DB_SETUP_WAIT,
         )
+        # Let setup return before the retrying starts, so an absent database
+        # delays history and logbook rather than the whole of startup.
+        self.hass.add_job(self.async_db_retry_started)
         return self._setup_recorder_extended(deadline)
 
     def _migrate_data_offline(
