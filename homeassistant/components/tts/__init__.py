@@ -1128,11 +1128,6 @@ class SpeechManager:
         """Generate TTS audio from an engine."""
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
-        if on_audio_interrupt is not None and any(
-            option in options and option not in supported_options
-            for option in _PREFFERED_FORMAT_OPTIONS
-        ):
-            raise HomeAssistantError("Interruptible TTS requires native output options")
 
         # Extract preferred format options.
         #

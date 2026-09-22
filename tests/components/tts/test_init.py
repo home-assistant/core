@@ -2498,19 +2498,44 @@ async def test_interruptible_tts_bypasses_cache(
     convert.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    ("options", "extension", "error"),
-    [
-        ({tts.ATTR_PREFERRED_SAMPLE_RATE: 16000}, "mp3", "native output options"),
-        ({}, "wav", "requested audio format"),
-    ],
-)
+async def test_interruptible_tts_accepts_fixed_native_output(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Strip unsupported output hints from a fixed native-format engine."""
+    mock_tts_entity._attr_supports_audio_interrupt = True
+    mock_tts_entity._supported_options = []
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
+        assert request.options == {}
+        assert request.on_audio_interrupt is not None
+
+        async def audio() -> AsyncGenerator[bytes]:
+            yield b"audio"
+
+        return tts.TTSAudioResponse("wav", audio())
+
+    mock_tts_entity.async_stream_tts_audio = synthesize
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+    options = {
+        tts.ATTR_PREFERRED_FORMAT: "wav",
+        tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+        tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+        tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+    }
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id, options=options)
+    stream.async_set_message("hello")
+
+    assert (
+        b"".join([chunk async for chunk in stream.async_stream_result(Mock())])
+        == b"audio"
+    )
+    assert stream.options == options
+
+
 async def test_interruptible_tts_rejects_incompatible_playback(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    options: dict[str, int],
-    extension: str,
-    error: str,
 ) -> None:
     """Do not send interruptible audio through an incompatible converter."""
     mock_tts_entity._attr_supports_audio_interrupt = True
@@ -2521,11 +2546,11 @@ async def test_interruptible_tts_rejects_incompatible_playback(
         async def audio() -> AsyncGenerator[bytes]:
             yield b"audio"
 
-        return tts.TTSAudioResponse(extension, audio())
+        return tts.TTSAudioResponse("wav", audio())
 
     mock_tts_entity.async_stream_tts_audio = synthesize
     mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
-    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id, options=options)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     stream.async_set_message("hello")
-    with pytest.raises(HomeAssistantError, match=error):
+    with pytest.raises(HomeAssistantError, match="requested audio format"):
         await anext(stream.async_stream_result(Mock()))
