@@ -357,6 +357,7 @@ async def test_a_schedule_written_to_the_service_does_not_switch_the_light_on(
     """The schedule reaches the light service setter as well, and means nothing there."""
     acc = await _setup_light(hass, hk_driver, state=STATE_OFF)
     call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     # HAP hands a write to the characteristic setter and to the service setter
     # alike, so the transition control value arrives here too.
@@ -364,7 +365,24 @@ async def test_a_schedule_written_to_the_service_does_not_switch_the_light_on(
     await _wait_for_light_coalesce(hass)
 
     assert not call_turn_on
+    assert not call_turn_off
     assert hass.states.get("light.demo").state == STATE_OFF
+
+
+async def test_a_schedule_written_to_the_service_does_not_switch_the_light_off(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A schedule is not a request to switch a lit light off either."""
+    acc = await _setup_light(hass, hk_driver, state=STATE_ON)
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    acc._set_chars({CHAR_TRANSITION_CONTROL: TRANSITION_CONTROL_WRITE})
+    await _wait_for_light_coalesce(hass)
+
+    assert not call_turn_on
+    assert not call_turn_off
+    assert hass.states.get("light.demo").state == STATE_ON
 
 
 async def test_the_same_value_is_not_sent_twice(
