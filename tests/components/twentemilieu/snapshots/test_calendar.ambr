@@ -10,6 +10,7 @@
 # name: test_api_events
   list([
     dict({
+      'color': None,
       'description': None,
       'end': dict({
         'date': '2022-01-07',

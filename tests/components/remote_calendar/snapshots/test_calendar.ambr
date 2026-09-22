@@ -2,6 +2,7 @@
 # name: test_calendar_examples[office365_invalid_tzid]
   list([
     dict({
+      'color': None,
       'description': None,
       'end': dict({
         'dateTime': '2024-04-26T15:00:00-06:00',

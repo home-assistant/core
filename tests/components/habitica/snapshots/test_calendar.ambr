@@ -18,6 +18,7 @@
 # name: test_api_events[default date range-calendar.test_user_dailies]
   list([
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-22',
@@ -33,6 +34,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-09-22',
@@ -48,6 +50,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-23',
@@ -63,6 +66,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-23',
@@ -78,6 +82,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-09-23',
@@ -93,6 +98,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
       'end': dict({
         'date': '2024-09-23',
@@ -108,6 +114,7 @@
       'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-24',
@@ -123,6 +130,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-24',
@@ -138,6 +146,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-25',
@@ -153,6 +162,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-25',
@@ -168,6 +178,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-26',
@@ -183,6 +194,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-26',
@@ -198,6 +210,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-09-26',
@@ -213,6 +226,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-27',
@@ -228,6 +242,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-27',
@@ -243,6 +258,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-28',
@@ -258,6 +274,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-28',
@@ -273,6 +290,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-29',
@@ -288,6 +306,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-29',
@@ -303,6 +322,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-09-29',
@@ -318,6 +338,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-30',
@@ -333,6 +354,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-09-30',
@@ -348,6 +370,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-09-30',
@@ -363,6 +386,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-01',
@@ -378,6 +402,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-01',
@@ -393,6 +418,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-02',
@@ -408,6 +434,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-02',
@@ -423,6 +450,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-03',
@@ -438,6 +466,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-03',
@@ -453,6 +482,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-10-03',
@@ -468,6 +498,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-04',
@@ -483,6 +514,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-04',
@@ -498,6 +530,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-05',
@@ -513,6 +546,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-05',
@@ -528,6 +562,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-06',
@@ -543,6 +578,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-06',
@@ -558,6 +594,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-10-06',
@@ -573,6 +610,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-07',
@@ -588,6 +626,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-07',
@@ -603,6 +642,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
     }),
     dict({
+      'color': None,
       'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
       'end': dict({
         'date': '2024-10-07',
@@ -618,6 +658,7 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'color': None,
       'description': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
       'end': dict({
         'date': '2024-10-07',
@@ -633,6 +674,7 @@
       'uid': '369afeed-61e3-4bf7-9747-66e05807134c',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-10-08',
@@ -648,6 +690,7 @@
       'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'date': '2024-10-08',
@@ -667,6 +710,7 @@
 # name: test_api_events[default date range-calendar.test_user_daily_reminders]
   list([
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-21T21:00:00+02:00',
@@ -682,6 +726,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-22T21:00:00+02:00',
@@ -697,6 +742,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-23T21:00:00+02:00',
@@ -712,6 +758,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-24T21:00:00+02:00',
@@ -727,6 +774,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-25T21:00:00+02:00',
@@ -742,6 +790,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-26T21:00:00+02:00',
@@ -757,6 +806,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-27T21:00:00+02:00',
@@ -772,6 +822,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-28T21:00:00+02:00',
@@ -787,6 +838,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-29T21:00:00+02:00',
@@ -802,6 +854,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-09-30T21:00:00+02:00',
@@ -817,6 +870,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-01T21:00:00+02:00',
@@ -832,6 +886,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-02T21:00:00+02:00',
@@ -847,6 +902,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-03T21:00:00+02:00',
@@ -862,6 +918,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-04T21:00:00+02:00',
@@ -877,6 +934,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-05T21:00:00+02:00',
@@ -892,6 +950,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-06T21:00:00+02:00',
@@ -907,6 +966,7 @@
       'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
     }),
     dict({
+      'color': None,
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
         'dateTime': '2024-10-07T21:00:00+02:00',
@@ -926,6 +986,7 @@
 # name: test_api_events[default date range-calendar.test_user_to_do_reminders]
   list([
     dict({
+      'color': None,
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
       'end': dict({
         'dateTime': '2024-09-22T03:00:00+02:00',
@@ -945,6 +1006,7 @@
 # name: test_api_events[default date range-calendar.test_user_to_do_s]
   list([
     dict({
+      'color': None,
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
       'end': dict({
         'date': '2024-09-01',
@@ -960,6 +1022,7 @@
       'uid': '2f6fcabc-f670-4ec3-ba65-817e8deea490',
     }),
     dict({
+      'color': None,
       'description': 'Den Ausflug für das kommende Wochenende organisieren.',
       'end': dict({
         'date': '2024-09-22',
@@ -975,6 +1038,7 @@
       'uid': '86ea2475-d1b5-4020-bdcc-c188c7996afa',
     }),
     dict({
+      'color': None,
       'description': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
       'end': dict({
         'date': '2024-09-28',
