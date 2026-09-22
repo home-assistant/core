@@ -118,7 +118,8 @@ class ElectroluxSwitch[T: HBAppliance](ElectroluxBaseEntity[T], SwitchEntity):
         turn_off_fn = self.entity_description.turn_off_fn
         if turn_off_fn is None:
             raise ServiceValidationError(
-                f"The {self.entity_description.name} cannot be turned off remotely"
+                translation_domain=DOMAIN,
+                translation_key="unsupported_operation",
             )
         self._check_remote_control_enabled()
         await self._async_send_command(turn_off_fn)
@@ -127,7 +128,7 @@ class ElectroluxSwitch[T: HBAppliance](ElectroluxBaseEntity[T], SwitchEntity):
         self, command_fn: Callable[..., dict[str, Any]]
     ) -> None:
         command = command_fn(self._appliance_data)
-        await self.coordinator.client.send_command(self._appliance_id, command)
+        await self.coordinator.send_command(command)
         await self.coordinator.async_refresh()
 
     def _check_remote_control_enabled(self) -> None:

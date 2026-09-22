@@ -8,8 +8,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_appliance_id, merge_dict_recursive, setup_integration
@@ -91,3 +97,68 @@ async def test_commands(
     assert appliances.send_command.mock_calls == [
         call(appliance_id, command) for command in commands
     ]
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_fixture",
+        "entity_id",
+        "appliance_state",
+        "service",
+        "data",
+        "error_reason",
+    ),
+    [
+        # child lock command error tests
+        (
+            "peacock_hob",
+            "switch.peacock_hob_child_lock",
+            {"remoteControl": "DISABLED"},
+            SERVICE_TURN_ON,
+            {},
+            "remote_control_disabled",
+        ),
+        (
+            "peacock_hob",
+            "switch.peacock_hob_child_lock",
+            {"childLock": True},
+            SERVICE_TURN_OFF,
+            {},
+            "unsupported_operation",
+        ),
+    ],
+)
+async def test_command_errors(
+    hass: HomeAssistant,
+    appliances: AsyncMock,
+    appliance_fixture: str,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    appliance_state: dict[str, Any],
+    service: str,
+    data: dict[str, Any],
+    error_reason: str,
+) -> None:
+    """Test switch commands."""
+
+    appliance_id = get_appliance_id(appliance_fixture)
+
+    state = await appliances.get_appliance_state(appliance_id)
+    state.properties["reported"] = merge_dict_recursive(
+        state.properties["reported"], appliance_state
+    )
+
+    appliances.get_appliance_state.side_effect = None
+    appliances.get_appliance_state.return_value = state
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id} | data,
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == error_reason
+    appliances.send_command.assert_not_called()
