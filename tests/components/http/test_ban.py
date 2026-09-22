@@ -465,7 +465,7 @@ async def test_failed_login_attempts_counter(
 async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
-    """Testing a wrong login still gets a 401 if the reverse DNS lookup fails to decode."""
+    """Test a wrong login still gets a 401 if the reverse DNS lookup fails to decode."""
     app = web.Application()
     app[KEY_HASS] = hass
 
