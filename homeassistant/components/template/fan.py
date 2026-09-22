@@ -313,12 +313,24 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
-        self._attr_percentage = percentage
+        # Only take the requested percentage as truth when nothing else will
+        # correct it. When a `percentage` template is configured it is the
+        # source of truth, and setting `_attr_percentage` here regardless
+        # desyncs it from the template-tracker's own cache of that
+        # template's last-rendered result (see TrackTemplateResultInfo):
+        # if the template's next real render happens to equal what it was
+        # BEFORE this call (e.g. the requested change did not actually take
+        # effect), the tracker sees no change from its own point of view and
+        # never fires the callback that would overwrite this optimistic
+        # value, leaving it stuck indefinitely -- including being republished
+        # by unrelated state writes that read the current `_attr_percentage`.
+        if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
+            self._attr_percentage = percentage
 
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.PERCENTAGE: self._attr_percentage},
+                run_variables={FanScriptVariable.PERCENTAGE: percentage},
                 context=self._context,
             )
 
@@ -331,12 +343,15 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        self._attr_preset_mode = preset_mode
+        # See the matching comment in async_set_percentage: only take this
+        # as truth when a preset_mode template will not correct it itself.
+        if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
+            self._attr_preset_mode = preset_mode
 
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.PRESET_MODE: self._attr_preset_mode},
+                run_variables={FanScriptVariable.PRESET_MODE: preset_mode},
                 context=self._context,
             )
 
@@ -349,13 +364,16 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
-        self._attr_oscillating = oscillating
+        # See the matching comment in async_set_percentage: only take this
+        # as truth when an oscillating template will not correct it itself.
+        if CONF_OSCILLATING not in self._templates:
+            self._attr_oscillating = oscillating
         if (
             script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={FanScriptVariable.OSCILLATING: self.oscillating},
+                run_variables={FanScriptVariable.OSCILLATING: oscillating},
                 context=self._context,
             )
 
@@ -366,7 +384,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:
-            self._attr_current_direction = direction
+            # See the matching comment in async_set_percentage: only take
+            # this as truth when a direction template will not correct it.
+            if CONF_DIRECTION not in self._templates:
+                self._attr_current_direction = direction
             if (
                 script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
             ) is not None:
