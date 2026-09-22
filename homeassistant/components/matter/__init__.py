@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor.models import InterfaceMethod
 from matter_server.client import MatterClient
@@ -485,7 +485,13 @@ async def _async_ensure_addon_running(
             translation_key="addon_not_running",
         )
 
-    options = addon_info.options
+    await _async_ensure_addon_ble_proxy(hass, addon_manager, addon_info.options)
+
+
+async def _async_ensure_addon_ble_proxy(
+    hass: HomeAssistant, addon_manager: AddonManager, options: dict[str, Any]
+) -> None:
+    """Turn on the add-on BLE proxy so discovered devices can be commissioned."""
     if (
         "bluetooth" not in hass.config.components
         or options.get(CONF_ADDON_BLE_PROXY)
