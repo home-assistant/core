@@ -501,6 +501,23 @@ async def test_stopping_an_effect_to_set_state_can_fail(
             {"speed": 6, "palette": ThemeLibrary.get("autumn").colors},
             id="morph",
         ),
+        pytest.param(
+            SERVICE_EFFECT_MORPH,
+            {},
+            FirmwareEffect.MORPH,
+            {"speed": 3, "palette": None},
+            id="morph-no-theme",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_MORPH,
+            {ATTR_PALETTE: [(200, 100, 50, 3500), (40, 0.5, 1, 2700)]},
+            FirmwareEffect.MORPH,
+            {
+                "speed": 3,
+                "palette": [HSBK(200, 1.0, 0.5, 3500), HSBK(40, 0.5, 1.0, 2700)],
+            },
+            id="morph-palette",
+        ),
     ],
 )
 async def test_matrix_effects_use_public_firmware_api(

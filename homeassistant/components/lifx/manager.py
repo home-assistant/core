@@ -68,7 +68,6 @@ from .util import (
 EFFECT_FLAME_DEFAULT_SPEED = 3
 
 EFFECT_MORPH_DEFAULT_SPEED = 3
-EFFECT_MORPH_DEFAULT_THEME = "exciting"
 
 EFFECT_MOVE_DEFAULT_SPEED = 3
 EFFECT_MOVE_DEFAULT_DIRECTION = "right"
@@ -228,15 +227,19 @@ class LIFXManager:
         service: ServiceCall,
     ) -> None:
         """Start the firmware-based Morph effect."""
-        theme_name = service.data.get(ATTR_THEME, EFFECT_MORPH_DEFAULT_THEME)
-        palette = service.data.get(ATTR_PALETTE)
-        theme = self.build_theme(theme_name, palette)
+        # With no palette the firmware morphs the colors the light already shows,
+        # as the LIFX app does when no theme is picked
+        colors: list[HSBK] | None = None
+        if (palette := service.data.get(ATTR_PALETTE)) is not None:
+            colors = self.build_theme(palette=palette).colors
+        elif (theme_name := service.data.get(ATTR_THEME)) is not None:
+            colors = self.build_theme(theme_name).colors
         await self._start_matrix_effect(
             devices,
             service,
             FirmwareEffect.MORPH,
             speed=service.data.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
-            palette=theme.colors,
+            palette=colors,
         )
 
     async def _start_effect_move(
