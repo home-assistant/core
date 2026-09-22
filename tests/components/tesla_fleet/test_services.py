@@ -1,5 +1,6 @@
 """Test the Tesla Fleet services."""
 
+from copy import deepcopy
 from datetime import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -448,3 +449,50 @@ async def test_charge_schedule_command_error(
             {CONF_DEVICE_ID: device_id} | service_data,
             blocking=True,
         )
+
+
+async def test_add_charge_schedule_signed_vehicle(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test add_charge_schedule on a vehicle that requires command signing.
+
+    A signed vehicle calls int() on days_of_week, which is why it's sent as
+    Tesla's bitmask rather than a day name; this exercises that code path.
+    """
+    new_product = deepcopy(mock_products.return_value)
+    new_product["response"][0]["command_signing"] = "required"
+    mock_products.return_value = new_product
+
+    # Let the real key generation run so the entry actually finishes setup
+    # as a signed vehicle, rather than mocking it away and silently failing.
+    device_id = await _async_get_device_id(hass, normal_config_entry, VEHICLE_VIN)
+
+    with patch(
+        "tesla_fleet_api.tesla.VehicleSigned.add_charge_schedule",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CHARGE_SCHEDULE,
+            {
+                CONF_DEVICE_ID: device_id,
+                ATTR_DAYS_OF_WEEK: ["monday", "tuesday"],
+                ATTR_ENABLE: True,
+                ATTR_START_TIME: time(7, 0),
+                ATTR_ID: 3,
+            },
+            blocking=True,
+        )
+
+    call.assert_called_once_with(
+        days_of_week=6,
+        enabled=True,
+        lat=32.87336,
+        lon=-117.22743,
+        start_time=420,
+        end_time=None,
+        one_time=None,
+        id=3,
+    )
