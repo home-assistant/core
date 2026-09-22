@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
-from pyoverkiz.enums import EventName, ExecutionState, Protocol
+from pyoverkiz.enums import EventName, ExecutionState, FailureType, Protocol
 from pyoverkiz.exceptions import (
     BadCredentialsError,
     InvalidEventListenerIdError,
@@ -24,6 +24,8 @@ from pyoverkiz.models import (
     DeviceStateChangedEvent,
     ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    Gateway,
+    GatewayEvent,
     Place,
 )
 
@@ -49,6 +51,19 @@ from .const import (
     UPDATE_INTERVAL_RATE_LIMITED_MAX,
 )
 
+# A command can fail because the device refused it (a priority lock, an open
+# door) or because the gateway never reached it. Only the latter says anything
+# about availability; the rest leave a reachable device reachable.
+UNREACHABLE_FAILURE_TYPES = {
+    FailureType.ACTUATORNOANSWER,
+    FailureType.ACTUATORUNKNOWN,
+    FailureType.ADDRESS_UNKNOWN,
+    FailureType.PEER_DOWN,
+    FailureType.TIME_OUT_ON_COMMAND_PROGRESS,
+    FailureType.TIME_OUT_ON_TRANSMIT,
+    FailureType.TIME_OUT_ON_TRANSMITTED_COMMAND,
+}
+
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
@@ -70,6 +85,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         *,
         client: OverkizClient,
         devices: list[Device],
+        gateways: list[Gateway],
         places: Place | None,
     ) -> None:
         """Initialize global data updater."""
@@ -85,6 +101,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, list[dict[str, str]]] = {}
+        # A gateway reports its devices' states from cache while it is
+        # unreachable, so nothing in the device payload reveals the outage.
+        self.unreachable_gateways: set[str] = {
+            gateway.gateway_id for gateway in gateways if gateway.alive is False
+        }
+        # Kept apart from Device.available so recovery only ever clears what
+        # this integration inferred, never what the server reported.
+        self.unreachable_devices: set[str] = set()
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
         self._rate_limited_interval = None
@@ -198,11 +222,29 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._default_update_interval = update_interval
 
 
+@EVENT_HANDLERS.register(EventName.GATEWAY_DOWN)
+async def on_gateway_down(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway down event."""
+    coordinator.unreachable_gateways.add(event.gateway_id)
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_ALIVE)
+async def on_gateway_alive(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway alive event."""
+    coordinator.unreachable_gateways.discard(event.gateway_id)
+
+
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
 async def on_device_available(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
     """Handle device available event."""
+    coordinator.unreachable_devices.discard(event.device_url)
+
     if event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = True
 
@@ -235,6 +277,9 @@ async def on_device_state_changed(
     """Handle device state changed event."""
     if event.device_url not in coordinator.devices:
         return
+
+    # A state coming from the device is proof it is reachable again.
+    coordinator.unreachable_devices.discard(event.device_url)
 
     for state in event.device_states:
         device = coordinator.devices[event.device_url]
@@ -272,8 +317,31 @@ async def on_execution_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionStateChangedEvent
 ) -> None:
     """Handle execution changed event."""
-    if event.exec_id in coordinator.executions and event.new_state in [
+    if event.exec_id not in coordinator.executions or event.new_state not in [
         ExecutionState.COMPLETED,
         ExecutionState.FAILED,
     ]:
-        del coordinator.executions[event.exec_id]
+        return
+
+    executions = coordinator.executions.pop(event.exec_id)
+
+    # The only place an unreachable device is reported. The server keeps
+    # answering for it and DeviceUnavailableEvent never fires, so without this
+    # the entity stays available and every command is silently dropped.
+    unreachable = (
+        event.new_state is ExecutionState.FAILED
+        and event.failure_type_code in UNREACHABLE_FAILURE_TYPES
+    )
+
+    for execution in executions:
+        device_url = execution["device_url"]
+
+        if not unreachable:
+            coordinator.unreachable_devices.discard(device_url)
+        # A one-way protocol cannot acknowledge, so a failure there says
+        # nothing about whether the device is reachable.
+        elif (device := coordinator.devices.get(device_url)) and (
+            device.identifier.protocol is not Protocol.RTS
+        ):
+            LOGGER.debug("Device %s is unreachable: %s", device_url, event.failure_type)
+            coordinator.unreachable_devices.add(device_url)

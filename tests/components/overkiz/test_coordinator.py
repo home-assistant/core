@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import ExecutionState, FailureType, OverkizState
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
@@ -24,8 +25,9 @@ from homeassistant.components.overkiz.const import (
     UPDATE_INTERVAL_RATE_LIMITED_MAX,
 )
 from homeassistant.components.overkiz.executor import OverkizExecutor
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -34,7 +36,11 @@ from .helpers import (
     async_deliver_events,
     device_created_event,
     device_removed_event,
+    device_state_changed_event,
     execution_registered_event,
+    execution_state_changed_event,
+    gateway_alive_event,
+    gateway_down_event,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -73,6 +79,13 @@ POOL_HOUSE = FixtureDevice(
 # swinging gate device is hosted by a secondary box absent from setup.gateways.
 TAHOMA_V2_FIXTURE = "setup/cloud_somfy_tahoma_v2_europe.json"
 MAIN_GATEWAY_ID = "1234-1234-6233"
+
+# A commandable device hosted by the main gateway.
+POOL_PUMP = FixtureDevice(
+    TAHOMA_V2_FIXTURE,
+    "io://1234-1234-6233/16168460",
+    "switch.music_room_pool_pump_on_off",
+)
 SECONDARY_GATEWAY_ID = "1234-1234-8983"
 MAIN_GATEWAY_CHILD_URL = "io://1234-1234-6233/12184029"
 SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
@@ -502,3 +515,218 @@ async def test_child_devices_link_to_their_gateway(
     assert secondary_gateway is not None
     assert secondary_child is not None
     assert secondary_child.via_device_id == secondary_gateway.id
+
+
+async def test_gateway_down_marks_its_entities_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """An unreachable gateway takes its devices' entities down with it.
+
+    The server keeps answering for those devices out of its cache, so nothing
+    in the device payload changes and only the gateway event reveals it.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_alive_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_gateway_down_leaves_other_gateways_alone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Only the devices hosted by the downed gateway go unavailable."""
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event("0000-0000-0000")]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def _async_command_pool_pump(hass: HomeAssistant) -> None:
+    """Turn the pool pump on, registering an execution for its device."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: POOL_PUMP.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "failure_type_code",
+    [
+        FailureType.PEER_DOWN,
+        FailureType.ACTUATORNOANSWER,
+        FailureType.TIME_OUT_ON_TRANSMIT,
+    ],
+)
+async def test_undelivered_command_marks_device_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    failure_type_code: FailureType,
+) -> None:
+    """A command the gateway could not deliver means the device is unreachable.
+
+    This is the only report of it: the server goes on answering for the device
+    and never sends DeviceUnavailableEvent, so without this the entity stays
+    available while every command is silently dropped.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=failure_type_code,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_refused_command_keeps_device_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A device that refuses a command answered it, so it stays available."""
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PRIORITY_LOCK__USER,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_state_from_device_clears_unreachable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A state reported by the device proves it is reachable again.
+
+    Recovery cannot wait for the next command: a device nobody commands again
+    would stay unavailable forever.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                POOL_PUMP.device_url,
+                [{"name": OverkizState.CORE_ON_OFF.value, "type": 3, "value": "on"}],
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_completed_command_clears_unreachable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A command that lands proves the device is reachable again.
+
+    Two commands can be in flight at once, so a later one landing has to undo
+    the conclusion an earlier failure drew.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+    await _async_command_pool_pump(hass)
+    await _async_command_pool_pump(hass)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-2",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
