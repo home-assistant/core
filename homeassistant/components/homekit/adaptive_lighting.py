@@ -14,8 +14,13 @@ import struct
 import time
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.const import STATE_ON
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.storage import Store
 
 if TYPE_CHECKING:
@@ -402,6 +407,7 @@ class AdaptiveLightingController:
         self.applying = False
         self._last_applied: int | None = None
         self._cancel_updates: Any = None
+        self._cancel_state: Any = None
 
         self.char_brightness = service.get_characteristic("Brightness")
         self.char_color_temp = service.get_characteristic("ColorTemperature")
@@ -469,6 +475,11 @@ class AdaptiveLightingController:
             self.hass,
             self._async_update,
             timedelta(milliseconds=transition.update_interval),
+        )
+        if self._cancel_state:
+            self._cancel_state()
+        self._cancel_state = async_track_state_change_event(
+            self.hass, [self.entity_id], self._handle_state_change
         )
         self._schedule(self._async_update())
         if persist:
@@ -538,6 +549,9 @@ class AdaptiveLightingController:
         if self._cancel_updates:
             self._cancel_updates()
             self._cancel_updates = None
+        if self._cancel_state:
+            self._cancel_state()
+            self._cancel_state = None
         self.char_active_count.set_value(0)
         self.char_control.value = ""
         self._schedule(_get_store(self.hass).async_set(self.entity_id, None))
@@ -547,6 +561,31 @@ class AdaptiveLightingController:
         """Called when something other than us writes colour or brightness."""
         if not self.applying:
             self.disable("manual colour change")
+
+    @callback
+    def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
+        """Apply the curve when the light changes, instead of a minute later.
+
+        Apple shifts the colour with the brightness level, so switching the
+        light on and changing its brightness both land on a new point of the
+        curve. Waiting for the next interval leaves the light on the old
+        colour for as long as that interval.
+        """
+        new_state = event.data["new_state"]
+        if new_state is None or new_state.state != STATE_ON:
+            # A bulb keeps its own colour while it is off, so the curve has to
+            # be written again on the way back even if the point has not moved.
+            self._last_applied = None
+            return
+        old_state = event.data["old_state"]
+        if (
+            old_state is not None
+            and old_state.state == STATE_ON
+            and old_state.attributes.get(ATTR_BRIGHTNESS)
+            == new_state.attributes.get(ATTR_BRIGHTNESS)
+        ):
+            return
+        self._schedule(self._async_update())
 
     async def _async_update(self, _now: Any = None) -> None:
         """Apply the point of the curve that belongs to this minute."""
