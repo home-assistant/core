@@ -157,6 +157,84 @@ async def test_add_todo_item_parse_fallback(
     )
 
 
+async def test_add_todo_item_low_confidence_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when parsing has low confidence."""
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=0.0,
+            note="",
+            title="Misc Item",
+            display="Misc Item",
+            unit=None,
+            food=None,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=0.0),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+
+
+async def test_add_todo_item_without_food_fallback(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test falling back when parsing finds no food."""
+    mock_mealie_client.parse_ingredient.return_value = ParsedIngredient(
+        ingredient=Ingredient(
+            quantity=1.0,
+            note="",
+            title="Misc Item",
+            display="1 Misc Item",
+            unit=None,
+            food=None,
+            reference_id="",
+        ),
+        confidence=IngredientConfidence(average=1.0),
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Misc Item"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once_with(
+        MutateShoppingItem(
+            list_id="27edbaab-2ec6-441f-8490-0283ea77585f",
+            position=1,
+            note="Misc Item",
+            quantity=0.0,
+        )
+    )
+
+
 async def test_add_todo_item_parse_error_fallback(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
