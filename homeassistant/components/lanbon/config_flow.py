@@ -11,7 +11,7 @@ from aiolanbon import (
 )
 from aiolanbon.discovery import discovered_from_mdns
 from aiolanbon.models import GatewayInfo
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
@@ -132,11 +132,11 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if result is not None:
                 return result
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self._host or ""): str,
-                vol.Required(CONF_PORT, default=self._port): cv.port,
-                vol.Required(CONF_TOKEN): TextSelector(
+                probatio.Required(CONF_HOST, default=self._host or ""): str,
+                probatio.Required(CONF_PORT, default=self._port): cv.port,
+                probatio.Required(CONF_TOKEN): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
             }
@@ -189,9 +189,9 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self._placeholders(),
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): TextSelector(
+                    probatio.Required(CONF_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     )
                 }
