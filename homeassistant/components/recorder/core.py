@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    CoreState,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -50,12 +51,17 @@ from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
+    DB_SETUP_RETRY_WAIT_MAX,
+    DB_SETUP_RETRY_WAIT_MIN,
+    DB_SETUP_STOP_POLL_INTERVAL,
     DB_WORKER_PREFIX,
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
+    MAX_DB_SETUP_RETRIES,
+    MAX_DB_SETUP_WAIT,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
@@ -708,7 +714,7 @@ class Recorder(threading.Thread):
         self.thread_id = thread_id
         self.recorder_and_worker_thread_ids.add(thread_id)
 
-        setup_result = self._setup_recorder()
+        setup_result = self._setup_recorder(extended_retry=True)
 
         if not setup_result:
             _LOGGER.error("Recorder setup failed, recorder shutting down")
@@ -909,28 +915,111 @@ class Recorder(threading.Thread):
         # happens to rollback and recover
         self._reopen_event_session()
 
-    def _setup_recorder(self) -> bool:
+    def _log_setup_failure(self, err: Exception, *, log_exception: bool) -> None:
+        """Log a retryable setup failure at the caller's chosen volume."""
+        if log_exception:
+            _LOGGER.exception(
+                "Error during connection setup: (retrying in %s seconds)",
+                self.db_retry_wait,
+            )
+        else:
+            _LOGGER.info("Database still unreachable: %s", err)
+
+    def _try_setup_recorder_once(
+        self, *, log_exception: bool
+    ) -> tuple[bool | None, bool]:
+        """Attempt the connection once.
+
+        Returns (result, connect_failed). A None result is worth retrying.
+        """
+        try:
+            self._setup_connection()
+        except UnsupportedDialect:
+            return False, False
+        except Exception as err:  # noqa: BLE001
+            self._log_setup_failure(err, log_exception=log_exception)
+            return None, True
+
+        try:
+            return migration.initialize_database(self.get_session), False
+        except UnsupportedDialect:
+            return False, False
+        except Exception as err:  # noqa: BLE001
+            self._log_setup_failure(err, log_exception=log_exception)
+            return None, False
+
+    def _hass_is_stopping(self) -> bool:
+        """Return True once hass is past running, read safely off the loop.
+
+        hass.is_stopping is a cached_property invalidated only on the event
+        loop, and it excludes not_running. hass.state is a plain attribute.
+        """
+        return self.hass.state not in (CoreState.starting, CoreState.running)
+
+    def _sleep_unless_stopping(self, wait: float) -> bool:
+        """Sleep in slices, returning False as soon as hass is stopping."""
+        remaining = wait
+        while remaining > 0:
+            if self._hass_is_stopping():
+                return False
+            slice_ = min(DB_SETUP_STOP_POLL_INTERVAL, remaining)
+            time.sleep(slice_)
+            remaining -= slice_
+        return not self._hass_is_stopping()
+
+    def _setup_recorder_extended(self, deadline: float) -> bool:
+        """Keep retrying the connection on a backoff, within both bounds."""
+        wait = float(max(self.db_retry_wait, DB_SETUP_RETRY_WAIT_MIN))
+
+        for _ in range(MAX_DB_SETUP_RETRIES):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            self._close_connection()
+            if not self._sleep_unless_stopping(min(wait, remaining)):
+                return False
+            result, _ = self._try_setup_recorder_once(log_exception=False)
+            if result is None:
+                wait = min(wait * 2, DB_SETUP_RETRY_WAIT_MAX)
+                continue
+            if result:
+                _LOGGER.warning("Database is reachable again, recorder starting")
+            return result
+
+        return False
+
+    def _setup_recorder(self, *, extended_retry: bool = False) -> bool:
         """Create a connection to the database."""
+        deadline = time.monotonic() + MAX_DB_SETUP_WAIT
         tries = 1
+        connect_failed = False
 
         while tries <= self.db_max_retries:
-            try:
-                self._setup_connection()
-                return migration.initialize_database(self.get_session)
-            except UnsupportedDialect:
-                break
-            except Exception:
-                _LOGGER.exception(
-                    "Error during connection setup: (retrying in %s seconds)",
-                    self.db_retry_wait,
-                )
+            result, connect_failed = self._try_setup_recorder_once(log_exception=True)
+            if result is not None:
+                return result
             tries += 1
 
             if tries <= self.db_max_retries:
                 self._close_connection()
                 time.sleep(self.db_retry_wait)
 
-        return False
+        # Only startup waits, and only on a database we could not reach: one
+        # that opened and then failed to initialise will not fix itself. A
+        # local sqlite file is a config problem, not a database still booting.
+        if (
+            not extended_retry
+            or not connect_failed
+            or self.db_url.startswith(SQLITE_URL_PREFIX)
+        ):
+            return False
+
+        _LOGGER.warning(
+            "Database not ready after %s attempts, retrying for up to %s seconds",
+            self.db_max_retries,
+            MAX_DB_SETUP_WAIT,
+        )
+        return self._setup_recorder_extended(deadline)
 
     def _migrate_data_offline(
         self, schema_status: migration.SchemaValidationStatus
