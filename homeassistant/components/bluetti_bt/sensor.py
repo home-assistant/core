@@ -5,16 +5,16 @@ from enum import Enum
 import logging
 from typing import override
 
-from bluetti_bt_lib import DeviceField
+from bluetti_bt_lib import FieldName
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import CONF_ADDRESS, CONF_MODEL, EntityCategory
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, DOMAIN, ENTITY_DETAILS_MAPPING, DetailsMapping
 from .coordinator import BluettiBtConfigEntry, PollingCoordinator
 
 
@@ -39,7 +39,8 @@ async def async_setup_entry(
         BluettiSensor(
             entry.runtime_data,
             device_info,
-            field,
+            field_name=field.name,
+            details=ENTITY_DETAILS_MAPPING[FieldName(field.name)],
         )
         for field in sensor_fields
     ]
@@ -54,50 +55,30 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: PollingCoordinator,
         device_info: DeviceInfo,
-        field: DeviceField,
+        field_name: str,
+        details: DetailsMapping,
     ) -> None:
         """Init sensor entity."""
 
         super().__init__(coordinator)
         self.coordinator = coordinator
-        self._attr_unique_id = f"{device_info.get('serial_number')}_{field.name}"
+        self._attr_unique_id = f"{device_info.get('serial_number')}_{field_name}"
         self._attr_device_info = device_info
         self._attr_has_entity_name = True
-        self._attr_translation_key = field.name
+        self._attr_translation_key = field_name
 
-        self._attr_native_unit_of_measurement = field.unit
-        self._attr_entity_category = (
-            EntityCategory(field.category) if field.category is not None else None
-        )
-        self._attr_device_class = (
-            SensorDeviceClass(field.sensor) if field.sensor is not None else None
-        )
-        self._attr_state_class = field.state_type
+        self._attr_native_unit_of_measurement = details.unit
+        self._attr_entity_category = details.category
+        self._attr_device_class = details.device_class
+        self._attr_state_class = details.state_class
 
         self._logger = logging.getLogger(f"{DOMAIN}")
-        self._unavailable_counter = 0
-        self._attr_available = False
 
-    @property
     @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._attr_available
-
-    def _set_available(self):
-        """Set sensor as available."""
-        self._attr_available = True
-        self._unavailable_counter = 0
-        self.async_write_ha_state()
-
-    def _set_unavailable(self):
-        """Set sensor as unavailable."""
-        self._unavailable_counter += 1
-
-        if self._unavailable_counter >= 5:
-            self._attr_available = False
-
-        self.async_write_ha_state()
+    async def async_added_to_hass(self) -> None:
+        """Update the entity from the coordinator's initial refresh."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
     @override
     def _handle_coordinator_update(self) -> None:
@@ -107,7 +88,6 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
             self._logger.warning(
                 "Data from coordinator is Empty",
             )
-            self._set_unavailable()
             return
 
         if not isinstance(self.coordinator.data, dict):
@@ -115,7 +95,6 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
                 "Invalid data from coordinator (sensor.%s)",
                 self._attr_unique_id,
             )
-            self._set_unavailable("Invalid data")
             return
 
         self._logger.debug(
@@ -127,9 +106,8 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
 
         if response_data is None:
             self._logger.debug(
-                "No data for available for (%s)", str(self._attr_translation_key)
+                "No data available for (%s)", str(self._attr_translation_key)
             )
-            self._set_unavailable()
             return
 
         if (
@@ -145,10 +123,7 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
                 response_data,
                 type(response_data),
             )
-            self._set_unavailable()
             return
-
-        self._set_available()
 
         # Different for enum and numeric
         if isinstance(response_data, Enum):
