@@ -341,6 +341,33 @@ async def test_effect_pulse_reads_color_before_merging(
     assert effect.color == HSBK(120.0, 1.0, 128 / 255, 3500)
 
 
+@pytest.mark.parametrize(
+    ("brightness", "expected"),
+    [
+        pytest.param({ATTR_BRIGHTNESS: 0}, 1 / 255, id="brightness"),
+        pytest.param({ATTR_BRIGHTNESS_PCT: 0}, 0.01, id="brightness_pct"),
+    ],
+)
+async def test_effect_pulse_clamps_brightness_above_zero(
+    hass: HomeAssistant,
+    mock_effect_conductor: MagicMock,
+    brightness: dict[str, int],
+    expected: float,
+) -> None:
+    """Test a zero brightness is raised, as it would pulse to black."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
+        blocking=True,
+    )
+
+    effect, _ = mock_effect_conductor.start.await_args.args
+    assert effect.color == HSBK(120.0, 0.5, expected, 3500)
+
+
 async def test_effect_colorloop_uses_public_effect_defaults(
     hass: HomeAssistant, mock_effect_conductor: MagicMock
 ) -> None:
