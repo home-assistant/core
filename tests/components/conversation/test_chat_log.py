@@ -439,7 +439,7 @@ async def test_tool_call(
     mock_tool.parameters = probatio.Schema(
         {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
@@ -704,9 +704,9 @@ async def test_add_delta_content_stream(
 
     async def tool_call(
         hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
-    ) -> str:
+    ) -> llm.ToolResult:
         """Call the tool."""
-        return tool_input.tool_args["param1"]
+        return llm.ToolResult(data=tool_input.tool_args["param1"])
 
     mock_tool.async_call.side_effect = tool_call
     expected_delta = []
@@ -1042,8 +1042,9 @@ async def test_chat_log_subscription(
     assert len(received_events) == events_before_unsubscribe
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_tool_result_content_deprecated_property() -> None:
-    """Test the deprecated tool_result property returns the result data."""
+    """Test reading the deprecated tool_result property is reported."""
     content = ToolResultContent(
         agent_id="mock-agent-id",
         tool_call_id="mock-tool-call-id",
@@ -1051,14 +1052,16 @@ async def test_tool_result_content_deprecated_property() -> None:
         result=llm.ToolResult(data={"answer": 42}),
     )
 
-    assert content.tool_result == {"answer": 42}
+    with pytest.raises(RuntimeError, match="ToolResultContent.tool_result"):
+        _ = content.tool_result
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_add_delta_content_stream_deprecated_tool_result(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
 ) -> None:
-    """Test a delta carrying the deprecated tool_result key is still accepted."""
+    """Test setting the deprecated tool_result key on a delta is reported."""
 
     async def stream():
         """Yield a tool result delta using the deprecated key."""
@@ -1072,12 +1075,11 @@ async def test_add_delta_content_stream_deprecated_tool_result(
     with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(RuntimeError, match="tool result delta"),
     ):
-        results = [
+        _ = [
             content
             async for content in chat_log.async_add_delta_content_stream(
                 "mock-agent-id", stream()
             )
         ]
-
-    assert results[0].result == llm.ToolResult(data={"answer": 42})

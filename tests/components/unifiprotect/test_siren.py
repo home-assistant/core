@@ -1,11 +1,17 @@
 """Tests for the UniFi Protect siren (Public API) entities."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from collections.abc import Callable, Coroutine
+from typing import Any
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from uiprotect.data import ModelType, PublicSirenStatus, Siren, SirenDuration, WSAction
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.data import DeviceState, ModelType, Siren, SirenDuration, WSAction
+from uiprotect.exceptions import (
+    BadRequest,
+    ClientError,
+    NotAuthorized,
+    PublicOnlyModeError,
+)
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.siren import (
@@ -13,7 +19,11 @@ from homeassistant.components.siren import (
     ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
 )
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -26,7 +36,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .utils import (
     MockUFPFixture,
@@ -35,8 +44,6 @@ from .utils import (
     make_public_bootstrap,
 )
 
-from tests.common import async_fire_time_changed
-
 SIREN_ID = "siren-id-1"
 SIREN_MAC = "AA:BB:CC:DD:EE:02"
 SIREN_NAME = "Garage Siren"
@@ -44,20 +51,17 @@ SIREN_NAME = "Garage Siren"
 SIREN_ENTITY_ID = "siren.garage_siren"
 
 
-def _make_siren(*, is_active: bool = False) -> Mock:
+def _make_siren(
+    *, is_active: bool = False, state: DeviceState = DeviceState.CONNECTED
+) -> Mock:
     """Build a mock :class:`Siren`."""
-    status = Mock(spec=PublicSirenStatus)
-    status.is_active = is_active
-    status.activated_at = None
-    status.duration = None
-    status.turn_off_at = None
     siren = Mock(spec=Siren)
     siren.id = SIREN_ID
     siren.mac = SIREN_MAC
     siren.name = SIREN_NAME
     siren.model = ModelType.SIREN
+    siren.state = state
     siren.volume = 50
-    siren.siren_status = status
     siren.is_active = is_active
     siren.play = AsyncMock()
     siren.stop = AsyncMock()
@@ -387,7 +391,7 @@ async def test_siren_state_updates_from_public_ws(
     ufp_with_siren: MockUFPFixture,
     siren: Mock,
 ) -> None:
-    """A public devices WS update for the siren refreshes the entity state."""
+    """Public devices WS updates flip the entity on and back off."""
     await init_entry(hass, ufp_with_siren, [])
 
     state = hass.states.get(SIREN_ENTITY_ID)
@@ -404,6 +408,15 @@ async def test_siren_state_updates_from_public_ws(
     state = hass.states.get(SIREN_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+    # A timed run ending arrives the same way, as an update with the flag off.
+    siren.is_active = False
+    ufp_with_siren.devices_ws_subscription(_make_ws_msg(siren))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_siren_ws_update_no_state_change(
@@ -456,147 +469,44 @@ async def test_siren_availability_follows_websocket_state(
     assert state.state == STATE_OFF
 
 
-async def test_siren_auto_off_after_timed_duration(
+@pytest.mark.parametrize(
+    "state",
+    [DeviceState.DISCONNECTED, DeviceState.CONNECTING, DeviceState.UNKNOWN],
+)
+async def test_siren_unavailable_when_not_connected_at_setup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    state: DeviceState,
+) -> None:
+    """A siren that is not connected at setup starts out unavailable."""
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(_make_siren(state=state))
+
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_siren_unavailable_when_disconnected(
     hass: HomeAssistant,
     ufp_with_siren: MockUFPFixture,
     siren: Mock,
 ) -> None:
-    """State flips to OFF automatically when a timed duration expires.
-
-    The public devices WS never sends an 'off' event for timed runs, so the
-    entity must schedule its own callback via async_call_later.
-    """
+    """A siren that drops off the console is unavailable, and recovers."""
     await init_entry(hass, ufp_with_siren, [])
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
 
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    # Simulate a WS update: siren becomes active for 10 seconds.
-    now = dt_util.utcnow()
-
-    active_status = Mock(spec=PublicSirenStatus)
-    active_status.is_active = True
-    active_status.activated_at = int(now.timestamp() * 1000)
-    active_status.duration = 10000
-    active_status.turn_off_at = (
-        None  # implementation uses activated_at+duration directly
-    )
-
-    siren.is_active = True
-    siren.siren_status = active_status
-
-    mock_msg = _make_ws_msg(siren)
-    assert ufp_with_siren.devices_ws_subscription is not None
-    ufp_with_siren.devices_ws_subscription(mock_msg)
+    siren.state = DeviceState.DISCONNECTED
+    ufp_with_siren.devices_ws_subscription(_make_ws_msg(siren))
     await hass.async_block_till_done()
 
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # Advance HA time past turn_off_at — the scheduled callback should fire.
-    async_fire_time_changed(hass, now + timedelta(seconds=11))
+    siren.state = DeviceState.CONNECTED
+    ufp_with_siren.devices_ws_subscription(_make_ws_msg(siren))
     await hass.async_block_till_done()
 
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-
-async def test_siren_turn_off_cancels_scheduled_timer(
-    hass: HomeAssistant,
-    ufp_with_siren: MockUFPFixture,
-    siren: Mock,
-) -> None:
-    """Manual turn_off cancels the pending auto-off timer.
-
-    When a timed run is active the entity holds a scheduled callback.  A
-    manual turn_off must cancel that callback so the timer never fires and
-    the state stays OFF afterwards.
-    """
-    await init_entry(hass, ufp_with_siren, [])
-
-    # Start a timed run — schedules an auto-off callback 30 s from now.
-    now = dt_util.utcnow()
-    active_status = Mock(spec=PublicSirenStatus)
-    active_status.is_active = True
-    active_status.activated_at = int(now.timestamp() * 1000)
-    active_status.duration = 30000  # 30 s — won't expire on its own
-    active_status.turn_off_at = None
-
-    siren.is_active = True
-    siren.siren_status = active_status
-
-    mock_msg = _make_ws_msg(siren)
-    assert ufp_with_siren.devices_ws_subscription is not None
-    ufp_with_siren.devices_ws_subscription(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
-
-    # Manually turn off — must cancel the scheduled timer.
-    await hass.services.async_call(
-        SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
-        blocking=True,
-    )
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    # Advance time past the original timer — state must stay OFF.
-    async_fire_time_changed(hass, now + timedelta(seconds=35))
-    await hass.async_block_till_done()
-
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-
-async def test_siren_auto_off_when_already_expired_at_update(
-    hass: HomeAssistant,
-    ufp_with_siren: MockUFPFixture,
-    siren: Mock,
-) -> None:
-    """State flips to OFF when a WS update arrives with an already-expired duration.
-
-    On reconnect, the public bootstrap may still report is_active=True with an
-    activated_at+duration that is already in the past.  The entity must treat
-    delay<=0 as immediately expired and set its state to OFF immediately.
-    """
-    await init_entry(hass, ufp_with_siren, [])
-
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    # Build a status whose turn-off time is 5 seconds in the PAST.
-    now = dt_util.utcnow()
-    expired_activated_at = int((now.timestamp() - 15) * 1000)  # 15 s ago
-
-    expired_status = Mock(spec=PublicSirenStatus)
-    expired_status.is_active = True
-    expired_status.activated_at = expired_activated_at
-    expired_status.duration = 10000  # 10 s → expired 5 s ago
-    expired_status.turn_off_at = None
-
-    siren.is_active = True
-    siren.siren_status = expired_status
-
-    mock_msg = _make_ws_msg(siren)
-    assert ufp_with_siren.devices_ws_subscription is not None
-    ufp_with_siren.devices_ws_subscription(mock_msg)
-    await hass.async_block_till_done()
-
-    # Entity stays OFF: delay<=0 overrides is_active=True inline, so the state
-    # machine never sees ON.
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
 
 
 async def test_siren_unavailable_on_delete_event(
@@ -631,67 +541,132 @@ async def test_siren_unavailable_on_delete_event(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_siren_auto_off_timer_scheduled_at_startup(
-    hass: HomeAssistant,
-    ufp_with_siren: MockUFPFixture,
-    siren: Mock,
-) -> None:
-    """Auto-off timer is scheduled for an already-active siren.
-
-    If a timed run is already in progress when HA starts, the entity must
-    schedule its own auto-off callback immediately (not wait for a WS update)
-    so the siren does not remain stuck ON after the run expires.
-    """
-    # Configure the siren as already active with 10 s remaining.
-    now = dt_util.utcnow()
-    active_status = Mock(spec=PublicSirenStatus)
-    active_status.is_active = True
-    active_status.activated_at = int(now.timestamp() * 1000)
-    active_status.duration = 10000
-    active_status.turn_off_at = None
-
-    siren.is_active = True
-    siren.siren_status = active_status
-
-    await init_entry(hass, ufp_with_siren, [])
-
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_ON
-
-    # Advance HA time past the expiry — the startup-scheduled timer must fire.
-    async_fire_time_changed(hass, now + timedelta(seconds=11))
-    await hass.async_block_till_done()
-
-    state = hass.states.get(SIREN_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-
-async def test_siren_added_after_setup_in_hybrid(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    siren: Mock,
-) -> None:
-    """A siren adopted after setup gets its entity in hybrid mode too.
-
-    The private bootstrap has no store for sirens, so the adopt path never
-    sees one; discovery goes through the public add signal in both modes.
-    """
+@pytest.fixture(name="setup_hybrid")
+def setup_hybrid_fixture(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> Callable[[], Coroutine[Any, Any, None]]:
+    """Return a callable setting up the hybrid entry without a siren."""
     ufp.api.has_public_bootstrap = True
     pb = _make_public_bootstrap(None)
     ufp.api.public_bootstrap = pb
     ufp.api.update_public = AsyncMock(return_value=pb)
 
-    await init_entry(hass, ufp, [])
-    assert entity_registry.async_get(SIREN_ENTITY_ID) is None
+    async def _setup() -> None:
+        await init_entry(hass, ufp, [])
 
-    pb.sirens = {siren.id: siren}
+    return _setup
+
+
+def _add_siren_frame(ufp: MockUFPFixture, siren: Mock) -> None:
+    """Deliver a public devices websocket add frame for ``siren``."""
+    ufp.api.public_bootstrap.sirens[siren.id] = siren
     msg = _make_ws_msg(siren)
     msg.action = WSAction.ADD
-    assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(msg)
+
+
+@pytest.mark.parametrize(
+    ("ufp_fixture", "setup_fixture"),
+    [
+        pytest.param("ufp_public_only", "setup_public_only", id="public_only"),
+        pytest.param("ufp", "setup_hybrid", id="hybrid"),
+    ],
+)
+async def test_siren_added_after_setup(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_registry: er.EntityRegistry,
+    ufp_fixture: str,
+    setup_fixture: str,
+    siren: Mock,
+) -> None:
+    """A siren adopted after setup gets its entity in both modes.
+
+    The private bootstrap has no store for sirens, so the adopt path never
+    sees one; discovery goes through the public add signal in both modes.
+    """
+    ufp: MockUFPFixture = request.getfixturevalue(ufp_fixture)
+    setup: Callable[[], Coroutine[Any, Any, None]] = request.getfixturevalue(
+        setup_fixture
+    )
+    await setup()
+    assert entity_registry.async_get(SIREN_ENTITY_ID) is None
+
+    _add_siren_frame(ufp, siren)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(SIREN_ENTITY_ID) is not None
+
+
+async def test_public_only_siren_end_to_end(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    siren: Mock,
+) -> None:
+    """An API-key-only entry with a siren creates a working entity.
+
+    Exercises the real public-only setup path: reading the private bootstrap
+    raises on that client, so the siren platform must not touch it.
+    """
+    ufp_public_only.api.public_bootstrap.sirens = {siren.id: siren}
+
+    await setup_public_only()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Commands go to the public object; there is no private one to fall back to.
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        blocking=True,
+    )
+    siren.play.assert_awaited_once_with(duration=None)
+
+
+async def test_siren_survives_switch_to_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_with_siren: MockUFPFixture,
+) -> None:
+    """An entry switched to API-key-only keeps its siren entity.
+
+    The entity is built from the public object in both modes, so after the
+    switch the existing registry entry is re-adopted instead of being left
+    behind without an entity.
+    """
+    ufp = ufp_with_siren
+    await init_entry(hass, ufp, [])
+    registry_entry = entity_registry.async_get(SIREN_ENTITY_ID)
+    assert registry_entry is not None
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
+
+    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The public-only setup path registers the NVR from the public bootstrap.
+    api = ufp.api
+    api.public_bootstrap.nvr = api.bootstrap.nvr
+
+    # Flip both the stored mode and the client, as reconfiguring does.
+    hass.config_entries.async_update_entry(
+        ufp.entry,
+        data={**ufp.entry.data, CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY},
+    )
+    api.is_public_only = True
+    type(api).bootstrap = PropertyMock(side_effect=BadRequest("public-only"))
+    api.update = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
+    api.update_public = AsyncMock(return_value=api.public_bootstrap)
+
+    with patch(
+        "homeassistant.components.unifiprotect.async_create_api_client",
+        return_value=api,
+    ):
+        await hass.config_entries.async_setup(ufp.entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(SIREN_ENTITY_ID).id == registry_entry.id
+    assert hass.states.get(SIREN_ENTITY_ID).state == STATE_OFF
