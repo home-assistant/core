@@ -550,6 +550,21 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = 
     ),
 )
 
+BLUETOOTH_PRESENCE_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth",
+    translation_key="bluetooth",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
+BLUETOOTH_SESSION_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth_session",
+    translation_key="bluetooth_session",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -577,11 +592,13 @@ async def async_setup_entry(
         if vehicle.ble_address:
             entities.append(
                 TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
-                    vehicle, vehicle.ble_address
+                    vehicle, BLUETOOTH_PRESENCE_DESCRIPTION, vehicle.ble_address
                 )
             )
             entities.append(
-                TeslemetryVehicleBluetoothSessionBinarySensorEntity(vehicle)
+                TeslemetryVehicleBluetoothSessionBinarySensorEntity(
+                    vehicle, BLUETOOTH_SESSION_DESCRIPTION
+                )
             )
 
     entities.extend(
@@ -720,14 +737,17 @@ class TeslemetryVehicleBluetoothBinarySensorEntity(
 ):
     """Base class for Teslemetry vehicle Bluetooth binary sensors."""
 
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    entity_description: TeslemetryBinarySensorEntityDescription
     _attr_should_poll = False
 
-    def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the Bluetooth binary sensor."""
-        self._attr_translation_key = key
-        self._attr_unique_id = f"{data.vin}-{key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{data.vin}-{description.key}"
         self._attr_device_info = data.device
 
 
@@ -736,10 +756,15 @@ class TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
 ):
     """Binary sensor for a vehicle being visible to the Bluetooth stack."""
 
-    def __init__(self, data: TeslemetryVehicleData, address: str) -> None:
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+        address: str,
+    ) -> None:
         """Initialize the Bluetooth presence binary sensor."""
         self._address = address
-        super().__init__(data, "bluetooth")
+        super().__init__(data, description)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -785,18 +810,21 @@ class TeslemetryVehicleBluetoothSessionBinarySensorEntity(
 ):
     """Binary sensor for Home Assistant's own Bluetooth link to a vehicle."""
 
-    _attr_entity_registry_enabled_default = False
     # Links are opened per command and never kept alive, so there is no session
     # until the library reports one.
     _attr_is_on = False
 
-    def __init__(self, data: TeslemetryVehicleData) -> None:
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the Bluetooth session binary sensor."""
         # A vehicle whose key failed to load can never hold a link to report on,
         # but the entity must still exist so its registry entry survives.
         self._ble_api = data.ble_api
         self._attr_available = data.ble_api is not None
-        super().__init__(data, "bluetooth_session")
+        super().__init__(data, description)
 
     @override
     async def async_added_to_hass(self) -> None:

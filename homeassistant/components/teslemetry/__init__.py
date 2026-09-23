@@ -30,7 +30,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import async_ble_device_from_address
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -282,21 +282,6 @@ def _setup_vehicle_repairs(
 
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
-    )
-
-
-def _ble_subentry_for_vin(
-    entry: TeslemetryConfigEntry, vin: str
-) -> ConfigSubentry | None:
-    """Return the Bluetooth subentry the user added for a vehicle, if there is one."""
-    return next(
-        (
-            subentry
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-            and subentry.data.get(CONF_VIN) == vin
-        ),
-        None,
     )
 
 
@@ -609,8 +594,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             stream_vehicle = stream.get_vehicle(vin)
 
             # Pairing always stores an address, so the subentry is the Bluetooth switch.
-            ble_subentry = _ble_subentry_for_vin(entry, vin)
-            ble_address = ble_subentry.data[CONF_ADDRESS] if ble_subentry else None
+            ble_address: str | None = next(
+                (
+                    subentry.data[CONF_ADDRESS]
+                    for subentry in entry.subentries.values()
+                    if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+                    and subentry.data.get(CONF_VIN) == vin
+                ),
+                None,
+            )
             vehicle_api, ble_api = await _async_resolve_vehicle_api(
                 hass,
                 vin,
