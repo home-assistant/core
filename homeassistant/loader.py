@@ -141,8 +141,8 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2026.10.0 because HACS ships with Home Assistant now
     "hacs": BlockedIntegration(
         None,
-        "is now built into Home Assistant as the Community store",
-        replaced_by="store",
+        "is now built into Home Assistant as the Marketplace",
+        replaced_by="marketplace",
     ),
 }
 

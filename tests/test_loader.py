@@ -203,9 +203,9 @@ async def test_custom_integration_version_blocked(
 @pytest.mark.parametrize(
     "blocked_versions",
     [
-        loader.BlockedIntegration(None, "is now built in", replaced_by="store"),
+        loader.BlockedIntegration(None, "is now built in", replaced_by="marketplace"),
         loader.BlockedIntegration(
-            AwesomeVersion("2.0.0"), "is now built in", replaced_by="store"
+            AwesomeVersion("2.0.0"), "is now built in", replaced_by="marketplace"
         ),
     ],
 )
@@ -224,19 +224,19 @@ async def test_custom_integration_replaced_by_built_in(
 
         assert (
             "Custom integration 'test_blocked_version' is now part of Home Assistant"
-            " as 'store' and is no longer loaded"
+            " as 'marketplace' and is no longer loaded"
         ) in caplog.text
         assert "please report it to the author" not in caplog.text
         assert "custom integration test_blocked_version which" not in caplog.text
 
 
-async def test_hacs_replaced_by_store() -> None:
-    """Test the HACS custom integration is blocked in favor of the store."""
+async def test_hacs_replaced_by_marketplace() -> None:
+    """Test the HACS custom integration is blocked in favor of the Marketplace."""
     blocked = loader.BLOCKED_CUSTOM_INTEGRATIONS["hacs"]
     assert blocked.lowest_good_version is None
-    assert blocked.replaced_by == "store"
+    assert blocked.replaced_by == "marketplace"
 
-    assert loader.MIGRATED_CUSTOM_INTEGRATIONS == {"hacs": "store"}
+    assert loader.MIGRATED_CUSTOM_INTEGRATIONS == {"hacs": "marketplace"}
 
 
 @pytest.mark.parametrize(

@@ -9614,18 +9614,18 @@ async def test_migrated_custom_integration_domain(
 
     entry = manager.async_get_entry("0a8bd02d0d58c7debf5daf7941c9afe2")
     assert entry is not None
-    assert entry.domain == "store"
+    assert entry.domain == "marketplace"
     assert entry.data == {"token": "abc123"}
     assert entry.options == {"country": "ALL"}
     assert entry.title == "HACS"
     assert entry.unique_id == "12345"
-    assert manager.async_domains() == ["store"]
+    assert manager.async_domains() == ["marketplace"]
 
-    assert "Migrated config entries of 'hacs' to 'store'" in caplog.text
+    assert "Migrated config entries of 'hacs' to 'marketplace'" in caplog.text
 
     await flush_store(manager._store)
     assert hass_storage[config_entries.STORAGE_KEY]["data"]["entries"][0]["domain"] == (
-        "store"
+        "marketplace"
     )
 
 

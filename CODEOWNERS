@@ -1124,6 +1124,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
+/homeassistant/components/marketplace/ @home-assistant/core
+/tests/components/marketplace/ @home-assistant/core
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
@@ -1813,8 +1815,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
-/homeassistant/components/store/ @home-assistant/core
-/tests/components/store/ @home-assistant/core
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
 /homeassistant/components/stt/ @home-assistant/core

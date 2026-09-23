@@ -760,11 +760,11 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("frontend")
-async def test_store_panel_registered(hass: HomeAssistant) -> None:
-    """Test the Community store panel is registered for the Settings dashboard."""
-    panel = hass.data[DATA_PANELS]["store"]
+async def test_marketplace_panel_registered(hass: HomeAssistant) -> None:
+    """Test the Marketplace panel is registered for the Settings dashboard."""
+    panel = hass.data[DATA_PANELS]["marketplace"]
 
-    assert panel.component_name == "store"
+    assert panel.component_name == "marketplace"
     assert panel.require_admin is True
     assert panel.show_in_sidebar is False
     assert panel.sidebar_title is None
