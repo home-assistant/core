@@ -230,6 +230,113 @@ async def test_monitoring_component(
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
 
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+        # NDB (Netatmo Doorbell) does not support monitoring on/off, so it is not tested here
+    ],
+)
+async def test_monitoring_component_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    netatmo_auth: AsyncMock,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+) -> None:
+    """Test monitoring on/off component failure with action."""
+    fake_post_hits = 0
+    # Repeatedly used variables for the test and initial value from fixture
+    # Use nonexistent ID to prevent matching during initial setup
+    polling_cycles = 11
+    polling_delta = timedelta(seconds=30)
+    # Mock data for payload_modifier to simulate camera status change
+    mock_state = {
+        "module_id": "aa:bb:cc:dd:ee:ff",
+        "timestamp": None,
+        "attributes": {"monitoring": "on", "alim_status": 2},
+    }
+
+    async def fake_camera_post(*args: Any, **kwargs: Any):
+        """Fake camera status during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        callback = partial(
+            payload_modifier,
+            target_id=mock_state["module_id"],
+            new_attributes=dict(mock_state["attributes"]),
+            timestamp=mock_state["timestamp"],
+        )
+        return await fake_post_request(hass, *args, msg_callback=callback, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ) as mock_webhook,
+        patch(
+            "pyatmo.home.Home.async_set_state",
+            side_effect=pyatmo.ApiError("API failure"),
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_camera_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        # Check initial state
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+        # Verify that calling async_turn_off raises HomeAssistantError
+        with pytest.raises(HomeAssistantError, match="API failure"):
+            await hass.services.async_call(
+                "camera",
+                "turn_off",
+                service_data={"entity_id": camera_entity},
+                blocking=True,
+            )
+
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+        # Change mocked status to off to simulate camera status change after the service call
+        mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+        mock_state["module_id"] = camera_id
+        mock_state["attributes"] = {
+            "monitoring": "off",
+        }
+
+        # Trigger some polling cycle to let status change be picked up
+        await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Verify that calling async_turn_on raises HomeAssistantError
+        with pytest.raises(HomeAssistantError, match="API failure"):
+            await hass.services.async_call(
+                "camera",
+                "turn_on",
+                service_data={"entity_id": camera_entity},
+                blocking=True,
+            )
+
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 
