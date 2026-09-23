@@ -14,10 +14,14 @@ from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERV
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_RGBW_COLOR,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -138,6 +142,65 @@ async def test_turn_on_with_rgbw(
     mocked_device_client.async_set_rgbw.assert_called_once()
 
 
+async def test_effect_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test light exposes preset names as effects."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Sunrise (2)", "Party"]
+
+    await async_init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.attributes[ATTR_EFFECT_LIST] == ["Sunrise", "Sunrise (2)", "Party"]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & LightEntityFeature.EFFECT
+
+
+async def test_turn_on_with_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test turn on with effect."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+
+    await async_init_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_EFFECT: "Party"},
+        blocking=True,
+    )
+
+    mocked_device_client.async_set_effect.assert_called_once_with("Party")
+
+
+async def test_effect_state_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
+) -> None:
+    """Test reported effect is reflected in state."""
+    mocked_device_client.info.preset_names = ["Sunrise", "Party"]
+    await async_init_integration(hass, mock_config_entry)
+
+    status = Mock(spec=DeviceStatusData)
+    status.online = True
+    status.on = True
+    status.dimming = 255
+    status.cct = 3000
+    status.rgbw = (255, 255, 255, 255)
+    status.effect = "Party"
+
+    coordinator = mock_config_entry.runtime_data.device_coordinators["device_id"]
+    coordinator.async_set_updated_data(status)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).attributes[ATTR_EFFECT] == "Party"
+
+
 @pytest.mark.parametrize(
     ("color_data", "applied_call", "ignored_call"),
     [
@@ -197,6 +260,7 @@ async def test_light_unavailable(
     status.dimming = 0
     status.cct = 0
     status.rgbw = (0, 0, 0, 0)
+    status.effect = ""
 
     # Trigger coordinator update via callback
     coordinator = mock_config_entry.runtime_data.device_coordinators["device_id"]
