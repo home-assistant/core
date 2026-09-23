@@ -22,7 +22,6 @@ from . import (
     OKOK_C0_SERVICE_INFO,
     OKOK_F0_SERVICE_INFO,
     OKOK_F0_TITLE,
-    conftest,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -113,7 +112,6 @@ async def test_sensors_f0(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test receiving OKOK Scale F0 service info."""
-    conftest.service_info = OKOK_F0_SERVICE_INFO
     entry = MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_SERVICE_INFO.address)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -121,6 +119,6 @@ async def test_sensors_f0(
     assert len(hass.states.async_all("sensor")) == 0
 
     inject_bluetooth_service_info_bleak(hass, OKOK_F0_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

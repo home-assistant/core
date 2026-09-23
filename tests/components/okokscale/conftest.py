@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.okokscale.const import DOMAIN
 
-from . import OKOK_F0_SERVICE_INFO
+from . import OKOK_F0_GATT_DATA, OKOK_F0_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,7 @@ class MockBleakClient:
 
     async def read_gatt_char(self, id, *args, **kwargs) -> bytes:
         """Mock BleakClient.read_gatt_char."""
-        return service_info.service_data[id]
+        return bytearray(OKOK_F0_GATT_DATA[id])
 
 
 @pytest.fixture

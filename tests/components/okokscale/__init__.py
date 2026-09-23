@@ -24,30 +24,24 @@ OKOK_F0_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device(OKOK_F0_ADDRESS, OKOK_F0_ADDRESS),
     rssi=-60,
     manufacturer_data={61695: bytes.fromhex("02045403000000000000000050fb19012345")},
-    service_data={
-        "00002a19-0000-1000-8000-00805f9b34fb": bytes.fromhex("00"),
-        "00002a9c-0000-1000-8000-00805f9b34fb": bytes.fromhex(
-            "0603e50701300000000000360000000400000000"
-        ),
-    },
-    service_uuids=[
-        "00002a19-0000-1000-8000-00805f9b34fb",
-        "00002a9c-0000-1000-8000-00805f9b34fb",
-    ],
+    service_data={},
+    service_uuids=[],
     source="local",
     advertisement=generate_advertisement_data(
         manufacturer_data={
             61695: bytes.fromhex("02045403000000000000000050fb19012345")
         },
-        service_uuids=[
-            "00002a19-0000-1000-8000-00805f9b34fb",
-            "00002a9c-0000-1000-8000-00805f9b34fb",
-        ],
     ),
     time=0,
     connectable=True,
     tx_power=-127,
 )
+OKOK_F0_GATT_DATA: dict[str, bytes] = {
+    "00002a19-0000-1000-8000-00805f9b34fb": bytes([87]),
+    "00002a9c-0000-1000-8000-00805f9b34fb": bytes.fromhex(
+        "0603e5070130000000f401540300000400000000"
+    ),
+}
 
 OKOK_20_ADDRESS = "50:FB:19:67:89:AB"
 OKOK_20_TITLE = "OKOK Scale (89AB)"
