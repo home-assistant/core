@@ -7,15 +7,25 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import (
     BatteryLevelService,
+    BypassService,
     PowerSwitchService,
+    RoutingService,
     SHCBatteryDevice,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
+    SHCMotionDetector2,
+    SHCPresenceSimulationSystem,
+    SHCShutterContact2,
     SHCShutterControl,
+    SHCSmartPlug,
     SHCThermostat,
     ShutterControlService,
     ThermostatService,
+)
+from boschshcpy.services_impl import (
+    PresenceSimulationConfigurationService,
+    ValveTappetService,
 )
 import pytest
 
@@ -51,7 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 # Keep in sync with binary_sensor.py's device_helper buckets — a bucket
 # missing here breaks the mock_session fixture.
-_EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
+_EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     bucket: []
     for bucket in (
         "camera_360",
@@ -64,6 +74,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
         "micromodule_relays",
         "micromodule_shutter_controls",
         "motion_detectors",
+        "motion_detectors2",
         "roomthermostats",
         "shutter_contacts",
         "shutter_contacts2",
@@ -77,22 +88,26 @@ _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
         "wallthermostats",
         "water_leakage_detectors",
     )
+} | {
+    # Not a list bucket — presence_simulation_system is a single optional
+    # device on device_helper, not a device_helper.<x> list of devices.
+    "presence_simulation_system": None,
 }
 
 
 @pytest.fixture
-def device_buckets(request: pytest.FixtureRequest) -> dict[str, list[Any]]:
+def device_buckets(request: pytest.FixtureRequest) -> dict[str, Any]:
     """device_helper buckets for the mock session.
 
     Empty by default; a test overrides specific buckets via
     ``@pytest.mark.parametrize("device_buckets", [{...}], indirect=True)``.
     """
-    overrides: dict[str, list[Any]] = getattr(request, "param", {})
+    overrides: dict[str, Any] = getattr(request, "param", {})
     return {**_EMPTY_DEVICE_BUCKETS, **overrides}
 
 
 @pytest.fixture
-def mock_session(device_buckets: dict[str, list[Any]]) -> Generator[MagicMock]:
+def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
@@ -185,10 +200,33 @@ def micromodule_blinds_device(
     return device
 
 
+def smart_plug_device(
+    device_id: str = "hdm:ZigBee:plug1",
+    name: str = "Smart Plug",
+    routing: RoutingService.State = RoutingService.State.DISABLED,
+) -> SHCSmartPlug:
+    """Build a minimal device double for the smart_plugs bucket."""
+    device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PSM"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
+    device.routing = routing
+    return device
+
+
 def thermostat_device(
     device_id: str = "hdm:ZigBee:thermostat1",
     name: str = "Thermostat",
     child_lock: ThermostatService.State = ThermostatService.State.OFF,
+    position: int = 50,
+    valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
     device = create_autospec(SHCThermostat, instance=True, spec_set=True)
@@ -202,6 +240,8 @@ def thermostat_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.position = position
+    device.valvestate = valvestate
     return device
 
 
@@ -247,4 +287,70 @@ def light_switch_bsm_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.child_lock = child_lock
+    return device
+
+
+def presence_simulation_system_device(
+    device_id: str = "presenceSimulationService",
+    name: str = "Presence Simulation",
+    enabled: bool = False,
+) -> SHCPresenceSimulationSystem:
+    """Build a minimal device double for the presence_simulation_system slot."""
+    device = create_autospec(SHCPresenceSimulationSystem, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PRESENCE_SIMULATION_SERVICE"
+    device.device_services = [
+        create_autospec(
+            PresenceSimulationConfigurationService, instance=True, spec_set=True
+        )
+    ]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.enabled = enabled
+    return device
+
+
+def shutter_contact2_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
+    bypass_infinite: bool = False,
+) -> SHCShutterContact2:
+    """Build a minimal device double for the shutter_contacts2 bucket."""
+    device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.bypass = bypass
+    device.bypass_infinite = bypass_infinite
+    return device
+
+
+def motion_detector2_device(
+    device_id: str = "hdm:ZigBee:motiondetector1",
+    name: str = "Motion Detector",
+    pet_immunity_enabled: bool = False,
+) -> SHCMotionDetector2:
+    """Build a minimal device double for the motion_detectors2 bucket."""
+    device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MD2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.pet_immunity_enabled = pet_immunity_enabled
     return device

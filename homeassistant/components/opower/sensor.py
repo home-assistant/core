@@ -246,7 +246,8 @@ async def async_setup_entry(
             )
             sensors: tuple[OpowerEntityDescription, ...] = COMMON_SENSORS
             if account.meter_type is MeterType.ELEC:
-                sensors += ELEC_ACCOUNT_SENSORS
+                if opower_data.last_bill_electricity_rate is not None:
+                    sensors += ELEC_ACCOUNT_SENSORS
                 if (
                     forecast is not None
                     and forecast.unit_of_measure is UnitOfMeasure.KWH

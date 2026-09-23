@@ -167,8 +167,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         try:
             bills = await self.api.async_get_bills()
         except ApiException as err:
-            _LOGGER.error("Error getting completed bills: %s", err)
-            raise
+            _LOGGER.warning("Error getting completed bills: %s", err)
+            bills = []
 
         forecasts = {f.account.utility_account_id: f for f in forecasts_list}
         last_bill_electricity_rates = _last_bill_electricity_rates(bills)
@@ -629,6 +629,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting daily cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
+        if not daily_cost_reads and start_time is not None:
+            if account.read_resolution is ReadResolution.DAY:
+                # Nothing finer to fall back to, and see the hourly reads below.
+                _LOGGER.debug("No daily cost reads. Skipping update")
+                return []
+            # The hourly reads below are still finer than the statistics they
+            # land on, so only drop the bill reads and carry on with those.
+            _LOGGER.debug("No daily cost reads. Trying the hourly ones")
+            cost_reads = []
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution is ReadResolution.DAY:
             return cost_reads
@@ -647,6 +656,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting hourly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
+        if not hourly_cost_reads and start_time is not None:
+            # A day read starts at local midnight, where that day's first hourly
+            # statistic already is, so keeping the daily reads would replace it
+            # with a coarser one carrying a different running sum. Only a concern
+            # once statistics exist: on the initial import there is nothing to
+            # overwrite and the daily reads are the best available data.
+            _LOGGER.debug("No hourly cost reads. Skipping update")
+            return []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads
