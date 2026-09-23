@@ -279,6 +279,17 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
+    @override
+    async def async_update(self) -> None:
+        """Refresh now, so update_entity returns after the read.
+
+        Skipped while Telnet is healthy. Reads every zone once per targeted
+        entity: unlike the Audyssey query, status reads are fast.
+        """
+        if not self.enabled:
+            return
+        await self.coordinator.async_refresh()
+
     @property
     @override
     def state(self) -> MediaPlayerState | None:

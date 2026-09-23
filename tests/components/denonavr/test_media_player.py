@@ -36,6 +36,7 @@ from homeassistant.components.denonavr.services import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -47,6 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -150,6 +152,24 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     await hass.async_block_till_done()
 
     client.async_get_command.assert_awaited_with("test_command")
+
+
+async def test_update_entity_reads_before_returning(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Test update_entity reads the receiver instead of only scheduling a read."""
+    await setup_denonavr(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
+    reads = client.async_update.await_count
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert client.async_update.await_count > reads
 
 
 @pytest.mark.parametrize(
