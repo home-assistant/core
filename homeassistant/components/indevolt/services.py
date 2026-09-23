@@ -8,9 +8,9 @@ from indevolt_api import (
     PowerExceedsMaxError,
     SocBelowMinimumError,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -18,25 +18,26 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 
-RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
+RT_ACTION_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required("device_id"): vol.All(
+        probatio.Required("device_id"): probatio.All(
             cv.ensure_list,
             [cv.string],
         ),
-        vol.Required("target_soc"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0, max=100),
+        probatio.Required("target_soc"): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=100),
         ),
-        vol.Required("power"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0, max=10800),
+        probatio.Required("power"): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=10800),
         ),
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
 
     async def charge(call: ServiceCall) -> None:

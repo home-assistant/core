@@ -23,6 +23,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Input: "hdmi1",
         cmd.Signal: "none",
         cmd.LightTime: "100",
+        cmd.Version: "0301PJ",
         cmd.Source: JvcProjectorTimeoutError,
         cmd.Hdr: JvcProjectorTimeoutError,
         cmd.HdrProcessing: JvcProjectorTimeoutError,
@@ -35,7 +36,10 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Input: "hdmi1",
         cmd.Signal: "signal",
         cmd.LightTime: "100",
+        cmd.Version: "0301PJ",
         cmd.Source: "4k",
+        cmd.Colorimetry: "bt-709",
+        cmd.LinkRate: "6-gbps-4-lanes",
         cmd.Hdr: "hdr",
         cmd.HdrProcessing: "static",
         cmd.EShift: "on",
@@ -58,6 +62,14 @@ CAPABILITIES = {
     cmd.Source.name: {
         "name": cmd.Source.name,
         "parameter": {"read": {"0": "4k"}},
+    },
+    cmd.Colorimetry.name: {
+        "name": cmd.Colorimetry.name,
+        "parameter": {"read": {"0": "no-data", "2": "bt-709"}},
+    },
+    cmd.LinkRate.name: {
+        "name": cmd.LinkRate.name,
+        "parameter": {"read": {"0": "disable", "4": "6-gbps-4-lanes"}},
     },
     cmd.Hdr.name: {
         "name": cmd.Hdr.name,

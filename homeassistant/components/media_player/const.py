@@ -3,7 +3,11 @@
 from enum import IntFlag, StrEnum
 from typing import Final
 
+import probatio
+
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+
+DOMAIN: Final = "media_player"
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -42,7 +46,6 @@ ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
-DOMAIN: Final = "media_player"
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
@@ -208,3 +211,17 @@ class MediaPlayerEntityFeature(IntFlag):
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
     SEARCH_MEDIA = 4194304
+
+
+class MediaPlayerDeviceClass(StrEnum):
+    """Device class for media players."""
+
+    TV = "tv"
+    SPEAKER = "speaker"
+    RECEIVER = "receiver"
+    PROJECTOR = "projector"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(MediaPlayerDeviceClass)
+)

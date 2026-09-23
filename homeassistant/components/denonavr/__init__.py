@@ -3,7 +3,7 @@
 import logging
 
 from denonavr import DenonAVR
-from denonavr.exceptions import AvrNetworkError, AvrTimoutError
+from denonavr.exceptions import AvrRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     )
     try:
         await connect_denonavr.async_connect_receiver()
-    except (AvrNetworkError, AvrTimoutError) as ex:
+    except AvrRequestError as ex:
         raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 

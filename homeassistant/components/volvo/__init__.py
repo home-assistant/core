@@ -39,7 +39,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Volvo integration."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

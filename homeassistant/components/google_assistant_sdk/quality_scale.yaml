@@ -97,7 +97,7 @@ rules:
     comment: No devices.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: The underlying library uses gRPC, not aiohttp/httpx, for communication.

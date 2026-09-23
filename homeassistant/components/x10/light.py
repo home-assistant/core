@@ -4,7 +4,7 @@ import logging
 from subprocess import STDOUT, CalledProcessError, check_output
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -22,9 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICES): vol.All(
+        probatio.Required(CONF_DEVICES): probatio.All(
             cv.ensure_list,
-            [{vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}],
+            [
+                {
+                    probatio.Required(CONF_ID): cv.string,
+                    probatio.Required(CONF_NAME): cv.string,
+                }
+            ],
         )
     }
 )
