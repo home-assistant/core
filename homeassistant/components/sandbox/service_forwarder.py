@@ -10,7 +10,7 @@ main-side callers expect. The bridge exposes ``remember_context`` /
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
@@ -81,21 +81,21 @@ def _target_from_call(call: ServiceCall) -> dict[str, Any]:
     return target
 
 
-def _rebuild_invalid(data: Mapping[str, Any]) -> vol.Invalid:
-    """Rebuild a single :class:`vol.Invalid` from its serialized payload."""
+def _rebuild_invalid(data: Mapping[str, Any]) -> probatio.Invalid:
+    """Rebuild a single :class:`probatio.Invalid` from its serialized payload."""
     path = data.get("path") or None
-    return vol.Invalid(data.get("msg", ""), path=path)
+    return probatio.Invalid(data.get("msg", ""), path=path)
 
 
 def translate_remote_error(err: ChannelRemoteError) -> Exception:
     """Map a sandbox-side exception class name to a sensible main-side one.
 
     Service-handler errors come back from the sandbox as whatever
-    ``services.async_call`` raised — most often :class:`vol.Invalid`. When
-    the error frame carries structured ``error_data`` (set for voluptuous
-    errors), the original :class:`vol.Invalid` / :class:`vol.MultipleInvalid`
+    ``services.async_call`` raised — most often :class:`probatio.Invalid`. When
+    the error frame carries structured ``error_data`` (set for probatio
+    errors), the original :class:`probatio.Invalid` / :class:`probatio.MultipleInvalid`
     is rebuilt with its ``path`` intact — callers on main (service/flow
-    framework) handle real voluptuous errors correctly. Older/edge frames
+    framework) handle real probatio errors correctly. Older/edge frames
     without ``error_data`` fall back to the class-name mapping. Anything we
     don't have a mapping for surfaces as a plain :class:`HomeAssistantError`
     with the remote message preserved.
@@ -105,7 +105,7 @@ def translate_remote_error(err: ChannelRemoteError) -> Exception:
         if kind == "invalid":
             return _rebuild_invalid(error_data)
         if kind == "multiple":
-            return vol.MultipleInvalid(
+            return probatio.MultipleInvalid(
                 [_rebuild_invalid(child) for child in error_data.get("errors", [])]
             )
     name = err.error_type or ""

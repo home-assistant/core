@@ -2,8 +2,8 @@
 
 import asyncio
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.sandbox.channel import (
     MAX_FRAME_SIZE,
@@ -106,11 +106,11 @@ async def test_remote_error_surfaces_as_exception(channels: tuple) -> None:
 
 
 async def test_vol_invalid_carries_error_data(channels: tuple) -> None:
-    """A handler raising ``vol.Invalid`` ships its path in ``error_data``."""
+    """A handler raising ``probatio.Invalid`` ships its path in ``error_data``."""
     channel_a, channel_b = channels
 
     async def bad(_payload: object) -> None:
-        raise vol.Invalid("expected int", path=["options", "count"])
+        raise probatio.Invalid("expected int", path=["options", "count"])
 
     channel_b.register("test/bad", bad)
     with pytest.raises(ChannelRemoteError) as exc:
@@ -124,14 +124,14 @@ async def test_vol_invalid_carries_error_data(channels: tuple) -> None:
 
 
 async def test_vol_multiple_invalid_round_trips_children(channels: tuple) -> None:
-    """A ``vol.MultipleInvalid`` ships each child error in ``error_data``."""
+    """A ``probatio.MultipleInvalid`` ships each child error in ``error_data``."""
     channel_a, channel_b = channels
 
     async def bad(_payload: object) -> None:
-        raise vol.MultipleInvalid(
+        raise probatio.MultipleInvalid(
             [
-                vol.Invalid("expected int", path=["count"]),
-                vol.Invalid("required key", path=["name"]),
+                probatio.Invalid("expected int", path=["count"]),
+                probatio.Invalid("required key", path=["name"]),
             ]
         )
 

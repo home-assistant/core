@@ -21,8 +21,8 @@ from hass_client.flow_runner import (
     _rehydrate_discovery,
 )
 from hass_client.messages import decode_json, decode_json_dict, encode_json
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -72,12 +72,12 @@ class _DemoFlow(ConfigFlow, domain="phase4_demo"):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required("host"): str}),
+                data_schema=probatio.Schema({probatio.Required("host"): str}),
             )
         if user_input["host"] == "bad":
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required("host"): str}),
+                data_schema=probatio.Schema({probatio.Required("host"): str}),
                 errors={"host": "invalid_host"},
             )
         return self.async_create_entry(
@@ -183,8 +183,8 @@ async def test_flow_init_returns_form(
     assert result.type == "form"
     assert result.step_id == "user"
     # data_schema rides as the same list-of-fields shape
-    # voluptuous_serialize.convert produces, so the proxy on main can
-    # rebuild a usable vol.Schema (or hand the list straight to the
+    # probatio.to_field_list produces, so the proxy on main can
+    # rebuild a usable probatio.Schema (or hand the list straight to the
     # frontend).
     assert decode_json(result.data_schema) == [
         {"name": "host", "type": "string", "required": True}
@@ -224,7 +224,9 @@ async def test_create_entry_marshals_version_and_options(
 
     ha_config_entries.HANDLERS["phase4_versioned"] = _VersionedFlow
     fake_module = ModuleType("homeassistant.components.phase4_versioned")
-    fake_flow_module = ModuleType("homeassistant.components.phase4_versioned.config_flow")
+    fake_flow_module = ModuleType(
+        "homeassistant.components.phase4_versioned.config_flow"
+    )
     runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_versioned"] = fake_module
     runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_versioned.config_flow"] = (
         fake_flow_module
@@ -446,9 +448,9 @@ async def test_flow_init_seeds_reconfigure_entry(
         "homeassistant.components.phase4_reconfigure.config_flow"
     )
     runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_reconfigure"] = fake_module
-    runner.hass.data[ha_loader.DATA_COMPONENTS][
-        "phase4_reconfigure.config_flow"
-    ] = fake_flow_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_reconfigure.config_flow"] = (
+        fake_flow_module
+    )
     runner.hass.config.components.add("phase4_reconfigure")
     try:
         init_msg = pb.FlowInit(handler="phase4_reconfigure")

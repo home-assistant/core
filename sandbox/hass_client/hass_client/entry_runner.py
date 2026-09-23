@@ -189,15 +189,14 @@ class EntryRunner:
         types (``SearchMedia``, ``BrowseMedia``, ``Segment`` dataclasses)
         cross verbatim. A raised exception (``ServiceValidationError`` /
         ``BrowseError`` / ``SearchError`` / ``HomeAssistantError`` /
-        ``vol.Invalid``) propagates as a channel error frame, exactly like
+        ``probatio.Invalid``) propagates as a channel error frame, exactly like
         ``call_service``, so main rebuilds the same error shape.
         """
         entity = _resolve_entity(self.hass, msg.sandbox_entity_id)
         method = getattr(entity, msg.method, None)
         if not callable(method):
             raise HomeAssistantError(
-                f"entity_query: {msg.sandbox_entity_id!r} has no method"
-                f" {msg.method!r}"
+                f"entity_query: {msg.sandbox_entity_id!r} has no method {msg.method!r}"
             )
         value = await method(**decode_json_dict(msg.args))
         result = pb.EntityQueryResult()

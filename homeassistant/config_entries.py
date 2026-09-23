@@ -21,7 +21,16 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, Self, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    NamedTuple,
+    Protocol,
+    Self,
+    TypedDict,
+    cast,
+    override,
+)
 
 from async_interrupt import interrupt
 import probatio

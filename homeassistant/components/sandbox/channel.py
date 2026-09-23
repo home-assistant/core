@@ -70,7 +70,7 @@ import logging
 import struct
 from typing import Any, Protocol
 
-import voluptuous as vol
+import probatio
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,10 +96,10 @@ MAX_FRAME_SIZE = 16 * 1024 * 1024
 _LENGTH_PREFIX = struct.Struct(">I")
 
 
-def _serialize_invalid(err: vol.Invalid) -> dict[str, Any]:
-    """Capture a ``vol.Invalid``'s message + path so the peer can rebuild it.
+def _serialize_invalid(err: probatio.Invalid) -> dict[str, Any]:
+    """Capture a ``probatio.Invalid``'s message + path so the peer can rebuild it.
 
-    Path parts may be ``vol.Marker``s or other non-JSON objects, so each
+    Path parts may be ``probatio.Marker``s or other non-JSON objects, so each
     part is stringified.
     """
     return {
@@ -115,12 +115,12 @@ def error_data_for(err: BaseException) -> dict[str, Any] | None:
     ``MultipleInvalid`` is a subclass of ``Invalid``, so it is checked first.
     Returns ``None`` for anything that is not a voluptuous error.
     """
-    if isinstance(err, vol.MultipleInvalid):
+    if isinstance(err, probatio.MultipleInvalid):
         return {
             "kind": "multiple",
             "errors": [_serialize_invalid(child) for child in err.errors],
         }
-    if isinstance(err, vol.Invalid):
+    if isinstance(err, probatio.Invalid):
         return _serialize_invalid(err)
     return None
 

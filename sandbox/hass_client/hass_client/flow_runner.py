@@ -192,7 +192,6 @@ class FlowRunner:
         )
         return _marshal_result(result, self.hass.config_entries.flow)
 
-
     def _ensure_flow_entry(self, entry_msg: pb.EntrySetup) -> None:
         """Seed the private config_entries with the flow's target entry."""
         config_entries = self.hass.config_entries
@@ -225,8 +224,8 @@ def _marshal_result(
 
     ``data_schema`` is rendered via :func:`serialize_schema` —
     the wire payload carries the same list-of-fields shape
-    :func:`voluptuous_serialize.convert` produces, so the proxy on main
-    can rebuild a usable :class:`vol.Schema`. ``flow.context`` (which
+    :func:`probatio.to_field_list` produces, so the proxy on main
+    can rebuild a usable :class:`probatio.Schema`. ``flow.context`` (which
     carries ``unique_id`` once the integration calls
     :meth:`ConfigFlow.async_set_unique_id`) is pulled out of the live
     flow when the result type doesn't already include it.

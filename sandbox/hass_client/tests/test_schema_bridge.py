@@ -10,8 +10,8 @@ from typing import Any
 
 from hass_client import schema_bridge
 from hass_client.schema_bridge import serialize_schema
+import probatio
 import pytest
-import voluptuous as vol
 
 
 def test_serialize_none_returns_none() -> None:
@@ -21,14 +21,14 @@ def test_serialize_none_returns_none() -> None:
 
 def test_serialize_mapping_schema_renders_fields() -> None:
     """A plain mapping schema serialises to the list-of-fields shape."""
-    rendered = serialize_schema(vol.Schema({vol.Required("name"): str}))
+    rendered = serialize_schema(probatio.Schema({probatio.Required("name"): str}))
     assert isinstance(rendered, list)
     assert rendered[0]["name"] == "name"
 
 
 def test_serialize_non_mapping_schema_returns_none() -> None:
     """A scalar (non-list result) schema degrades to ``None``."""
-    assert serialize_schema(vol.Schema(str)) is None
+    assert serialize_schema(probatio.Schema(str)) is None
 
 
 @pytest.mark.parametrize(
@@ -44,13 +44,13 @@ def test_serialize_failure_degrades_to_none(
     """Any serialisation failure (not just ValueError/TypeError) returns None.
 
     The broad fallback is the point: an exotic custom validator that makes
-    ``voluptuous_serialize`` raise something other than ValueError/TypeError
+    ``probatio.to_field_list`` raise something other than ValueError/TypeError
     must NOT propagate and drop the registration.
     """
 
     def _boom(*_args: Any, **_kwargs: Any) -> Any:
         raise raised
 
-    monkeypatch.setattr(schema_bridge.voluptuous_serialize, "convert", _boom)
-    assert serialize_schema(vol.Schema({vol.Required("x"): str})) is None
+    monkeypatch.setattr(schema_bridge.probatio, "to_field_list", _boom)
+    assert serialize_schema(probatio.Schema({probatio.Required("x"): str})) is None
     assert "did not survive serialisation" in caplog.text

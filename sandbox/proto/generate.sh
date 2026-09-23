@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Regenerate the checked-in protobuf gencode for both mirrors.
 #
-# Core has no build-time protoc and grpcio-tools is NOT a project dependency
-# (installing it into the main venv would bump protobuf past the pinned
-# 6.32.0). So this script bootstraps a throwaway, isolated venv pinned to the
-# runtime's protobuf and generates into both no-cross-import mirrors:
+# Keep the compiler toolchain isolated and reproducible. The generated Python
+# 6.31.1 code is also supported by Core's protobuf 7 runtime. Generate both
+# no-cross-import mirrors with the same compiler:
 #
 #   homeassistant/components/sandbox/_proto/sandbox_pb2.py(+.pyi)
 #   sandbox/hass_client/hass_client/_proto/sandbox_pb2.py(+.pyi)
@@ -25,15 +24,14 @@ PROTO_DIR="sandbox/proto"
 HA_DEST="homeassistant/components/sandbox/_proto"
 CLIENT_DEST="sandbox/hass_client/hass_client/_proto"
 
-# pinned to match homeassistant/package_constraints.txt; grpcio-tools==1.80.0
-# (resolved by uv) emits gencode requiring protobuf >= 6.31.1, satisfied here.
+# Compiler dependencies are independent of Core's runtime constraints.
 PROTOBUF_PIN="protobuf==6.32.0"
 VENV_DIR="$(mktemp -d -t sandbox_protogen_XXXXXX)"
 trap 'rm -rf "${VENV_DIR}"' EXIT
 
 echo "Bootstrapping isolated protogen venv at ${VENV_DIR} ..."
 uv venv "${VENV_DIR}" --python 3.14 >/dev/null
-uv pip install --python "${VENV_DIR}" "${PROTOBUF_PIN}" grpcio-tools mypy-protobuf >/dev/null
+uv pip install --python "${VENV_DIR}" "${PROTOBUF_PIN}" "grpcio-tools==1.80.0" >/dev/null
 
 for DEST in "${HA_DEST}" "${CLIENT_DEST}"; do
   mkdir -p "${DEST}"

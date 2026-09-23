@@ -20,7 +20,7 @@ Responsibilities:
   same-tick calls for the same service into a single multi-entity RPC is a
   possible future optimisation; the first iteration keeps it simple.)
 * Translate sandbox-side exceptions back into the exception types proxy
-  callers would have raised locally (``vol.Invalid`` → ``TypeError``,
+  callers would have raised locally (``probatio.Invalid`` → ``TypeError``,
   unknown service / entity → ``HomeAssistantError``).
 
 Split-out companions (mechanical seams, no logic of their own):
@@ -487,27 +487,21 @@ class SandboxBridge:
         device_registry: dr.DeviceRegistry,
         description: SandboxEntityDescription,
     ) -> None:
-        """Reject a device pre-create that would merge into a foreign entry.
+        """Reject device identifiers or connections claimed outside this group.
 
-        ``async_get_or_create`` matches an existing device by any shared
-        identifier or connection and adds our config entry to it. If that
-        device already belongs to a config entry outside this sandbox group,
-        merging would let a compromised sandbox graft onto (and thereby reach)
-        a foreign integration's device. We refuse — the sandbox may only touch
-        devices that are unowned or already owned by one of *its* entries.
+        Devices are owned by individual config entries. Keep the sandbox's
+        conservative collision policy across all matching entries.
         """
         info = description.device_info or {}
         identifiers: set[tuple[str, str]] = info.get("identifiers") or set()
         connections: set[tuple[str, str]] = info.get("connections") or set()
         if not identifiers and not connections:
             return
-        existing = device_registry.async_get_device(
+        owned_entry_ids = self._owned_entry_ids()
+        matches = device_registry.async_get_devices(
             identifiers=identifiers or None, connections=connections or None
         )
-        if existing is None:
-            return
-        foreign = existing.config_entries - self._owned_entry_ids()
-        if foreign:
+        if any(device.config_entry_id not in owned_entry_ids for device in matches):
             raise HomeAssistantError(
                 f"register_entity: device for "
                 f"{description.sandbox_entity_id!r} already belongs to a config "

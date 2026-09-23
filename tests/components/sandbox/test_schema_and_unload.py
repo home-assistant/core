@@ -2,7 +2,7 @@
 
 Covers four pieces:
 
-* The serialised :class:`vol.Schema` bridge for flow forms and mirrored
+* The serialised :class:`probatio.Schema` bridge for flow forms and mirrored
   services (the proxy reconstructs a usable schema from the wire shape).
 * ``unique_id`` propagation from the sandbox flow's ``context`` to the
   proxy's ``self.context``, so main's duplicate-detection fires.
@@ -16,9 +16,8 @@ import contextlib
 from typing import Any, cast
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components.sandbox import schema_bridge
@@ -126,7 +125,7 @@ async def _install_router(hass: HomeAssistant, manager: FakeSandboxManager) -> N
 
 
 def test_reconstruct_schema_round_trips_primitive_types() -> None:
-    """A primitive serialised schema reconstructs into a usable vol.Schema."""
+    """A primitive serialised schema reconstructs into a usable probatio.Schema."""
     serialized = [
         {"name": "host", "type": "string", "required": True},
         {"name": "port", "type": "integer", "required": False, "default": 8080},
@@ -140,12 +139,12 @@ def test_reconstruct_schema_round_trips_primitive_types() -> None:
     assert valid == {"host": "1.2.3.4", "port": 8080}
 
     # Missing required key is rejected.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({"port": 1234})
 
 
 def test_reconstruct_schema_handles_select_options() -> None:
-    """A serialised ``select`` becomes a ``vol.In`` that gates membership."""
+    """A serialised ``select`` becomes a ``probatio.In`` that gates membership."""
     schema = reconstruct_schema(
         [
             {
@@ -158,7 +157,7 @@ def test_reconstruct_schema_handles_select_options() -> None:
     )
     assert schema is not None
     assert schema({"mode": "fast"}) == {"mode": "fast"}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({"mode": "nope"})
 
 
@@ -169,18 +168,20 @@ def test_reconstruct_schema_round_trips_selectors_and_sections() -> None:
     frontend, so the reconstruction must reproduce the sandbox's original
     list verbatim — otherwise selectors degrade to plain text boxes.
     """
-    original = vol.Schema(
+    original = probatio.Schema(
         {
-            vol.Required("mode"): selector.SelectSelector(
+            probatio.Required("mode"): selector.SelectSelector(
                 selector.SelectSelectorConfig(options=["fast", "slow"])
             ),
-            vol.Optional("count", default=5): selector.NumberSelector(
+            probatio.Optional("count", default=5): selector.NumberSelector(
                 selector.NumberSelectorConfig(min=0, max=10)
             ),
-            vol.Required("advanced"): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required("advanced"): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Optional("retries", default=3): selector.NumberSelector(
+                        probatio.Optional(
+                            "retries", default=3
+                        ): selector.NumberSelector(
                             selector.NumberSelectorConfig(min=1, max=5)
                         ),
                     }
@@ -190,12 +191,12 @@ def test_reconstruct_schema_round_trips_selectors_and_sections() -> None:
         }
     )
 
-    serialized = voluptuous_serialize.convert(
+    serialized = probatio.to_field_list(
         original, custom_serializer=cv.custom_serializer
     )
     reconstructed = reconstruct_schema(serialized)
     assert reconstructed is not None
-    re_serialized = voluptuous_serialize.convert(
+    re_serialized = probatio.to_field_list(
         reconstructed, custom_serializer=cv.custom_serializer
     )
 
@@ -243,7 +244,7 @@ async def test_flow_form_renders_reconstructed_schema(
     schema = result["data_schema"]
     assert schema is not None
     # Schema actually validates: empty input is rejected.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({})
     assert schema({"host": "1.2.3.4"}) == {"host": "1.2.3.4"}
 
@@ -292,7 +293,7 @@ async def test_register_service_with_schema_validates_on_main(
         )
         assert result.installed is True
 
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.services.async_call(
                 "mock_svc", "do_thing", {"wrong": "field"}, blocking=True
             )

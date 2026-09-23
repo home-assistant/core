@@ -3,8 +3,8 @@
 import asyncio
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import _CONTEXT_CACHE_MAX, SandboxBridge
@@ -208,7 +208,9 @@ async def test_register_entity_upsert_refreshes_device(
 
     try:
         await sandbox_channel.call("sandbox/register_entity", _payload("1.0"))
-        device = device_registry.async_get_device(identifiers={("demo", "dev-1")})
+        device = device_registry.async_get_device_by_identifier(
+            ("demo", "dev-1"), entry.entry_id
+        )
         assert device is not None
         assert device.sw_version == "1.0"
 
@@ -218,7 +220,9 @@ async def test_register_entity_upsert_refreshes_device(
         await sandbox_channel.close()
 
     # Same device entry, firmware refreshed, single proxy — no duplicate.
-    device = device_registry.async_get_device(identifiers={("demo", "dev-1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("demo", "dev-1"), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2.0"
     assert len(bridge._entities) == 1
@@ -357,7 +361,7 @@ async def test_proxy_method_concurrent_calls_each_own_rpc(
 async def test_proxy_method_exception_translated(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """``vol.Invalid`` on the sandbox side surfaces as ``TypeError`` on main."""
+    """``probatio.Invalid`` on the sandbox side surfaces as ``TypeError`` on main."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
 
     async def _on_call_service(_payload: dict[str, Any]) -> Any:
@@ -434,7 +438,7 @@ async def test_unknown_service_translated_to_home_assistant_error(
 
 
 def test_translate_remote_error_rebuilds_vol_invalid() -> None:
-    """``error_data`` rebuilds a real ``vol.Invalid`` with its path intact."""
+    """``error_data`` rebuilds a real ``probatio.Invalid`` with its path intact."""
     err = ChannelRemoteError(
         "expected int",
         error_type="Invalid",
@@ -447,14 +451,14 @@ def test_translate_remote_error_rebuilds_vol_invalid() -> None:
 
     result = translate_remote_error(err)
 
-    assert isinstance(result, vol.Invalid)
-    assert not isinstance(result, vol.MultipleInvalid)
+    assert isinstance(result, probatio.Invalid)
+    assert not isinstance(result, probatio.MultipleInvalid)
     assert result.error_message == "expected int"
     assert result.path == ["options", "count"]
 
 
 def test_translate_remote_error_rebuilds_multiple_invalid() -> None:
-    """``error_data`` rebuilds a ``vol.MultipleInvalid`` with its children."""
+    """``error_data`` rebuilds a ``probatio.MultipleInvalid`` with its children."""
     err = ChannelRemoteError(
         "two problems",
         error_type="MultipleInvalid",
@@ -469,7 +473,7 @@ def test_translate_remote_error_rebuilds_multiple_invalid() -> None:
 
     result = translate_remote_error(err)
 
-    assert isinstance(result, vol.MultipleInvalid)
+    assert isinstance(result, probatio.MultipleInvalid)
     assert [(child.error_message, child.path) for child in result.errors] == [
         ("expected int", ["count"]),
         ("required key", ["name"]),
@@ -988,9 +992,11 @@ async def test_register_entity_foreign_device_merge_rejected(
         await sandbox_channel.close()
 
     # The victim's device still belongs only to the victim entry.
-    device = device_registry.async_get_device(identifiers={("victim", "dev-1")})
+    device = device_registry.async_get_device_by_identifier(
+        ("victim", "dev-1"), victim.entry_id
+    )
     assert device is not None
-    assert device.config_entries == {victim.entry_id}
+    assert device.config_entry_id == victim.entry_id
 
 
 async def test_context_cache_bounded_under_id_flood(

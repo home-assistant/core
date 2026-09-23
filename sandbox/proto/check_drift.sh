@@ -2,8 +2,7 @@
 # Drift guard for the checked-in sandbox protobuf gencode.
 #
 # Regenerates the _pb2 mirrors from sandbox.proto (via generate.sh, which
-# bootstraps its own throwaway venv — grpcio-tools is deliberately NOT a
-# project dependency, since it would bump protobuf past the pinned 6.32.0)
+# bootstraps its own throwaway venv with a pinned compiler toolchain)
 # and fails if the result differs from what is checked in.
 #
 # Degrades gracefully: if `uv` (needed to build the isolated protoc venv) is

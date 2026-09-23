@@ -66,7 +66,10 @@ def _register_payload(
 
 
 async def test_register_entity_creates_device_entry(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A sandboxed register_entity with device_info lands in main's device_registry."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -86,23 +89,25 @@ async def test_register_entity_creates_device_entry(
         await main_channel.close()
         await sandbox_channel.close()
 
-    device = dr.async_get(hass).async_get_device(
-        identifiers={("sandboxed_hue", "bulb-001")}
+    device = device_registry.async_get_device_by_identifier(
+        ("sandboxed_hue", "bulb-001"), entry.entry_id
     )
     assert device is not None
     assert device.name == "Kitchen Bulb"
     assert device.manufacturer == "Acme"
     assert device.model == "GlowMax"
     # The DeviceEntry must be linked to the sandboxed config entry.
-    assert entry.entry_id in device.config_entries
+    assert entry.entry_id == device.config_entry_id
     # The main-side entity_registry entry has device_id set to that DeviceEntry.
-    er_entry = er.async_get(hass).async_get(result.entity_id)
+    er_entry = entity_registry.async_get(result.entity_id)
     assert er_entry is not None
     assert er_entry.device_id == device.id
 
 
 async def test_register_entity_wires_proxy_device_entry(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """The proxy entity is linked to the freshly-created DeviceEntry."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -121,8 +126,8 @@ async def test_register_entity_wires_proxy_device_entry(
         await sandbox_channel.close()
 
     proxy = bridge._entities["light.kitchen"]
-    device = dr.async_get(hass).async_get_device(
-        identifiers={("sandboxed_hue", "bulb-002")}
+    device = device_registry.async_get_device_by_identifier(
+        ("sandboxed_hue", "bulb-002"), entry.entry_id
     )
     assert device is not None
     # The framework wired entity.device_entry through async_add_entities.
@@ -131,7 +136,9 @@ async def test_register_entity_wires_proxy_device_entry(
 
 
 async def test_register_entity_without_device_info_creates_no_device(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Backwards compatibility: no device_info in payload → no device registered."""
     bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -146,13 +153,15 @@ async def test_register_entity_without_device_info_creates_no_device(
     proxy = bridge._entities["light.kitchen"]
     assert proxy.description.device_info is None
     # No device created against this entry.
-    assert not any(
-        entry.entry_id in d.config_entries for d in dr.async_get(hass).devices.values()
-    )
+    assert not any(entry.entry_id == d.config_entry_id for d in device_registry.devices)
 
 
 async def test_area_assignment_propagates_to_proxy(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Assigning the DeviceEntry to an area surfaces on the proxy via HA's normal path."""
     _bridge, main_channel, sandbox_channel = await _wire(hass)
@@ -170,18 +179,18 @@ async def test_area_assignment_propagates_to_proxy(
         await main_channel.close()
         await sandbox_channel.close()
 
-    area = ar.async_get(hass).async_get_or_create("Hallway")
-    device = dr.async_get(hass).async_get_device(
-        identifiers={("sandboxed_hue", "bulb-003")}
+    area = area_registry.async_get_or_create("Hallway")
+    device = device_registry.async_get_device_by_identifier(
+        ("sandboxed_hue", "bulb-003"), entry.entry_id
     )
     assert device is not None
-    dr.async_get(hass).async_update_device(device.id, area_id=area.id)
+    device_registry.async_update_device(device.id, area_id=area.id)
     # The proxy's entity_registry entry inherits area through HA's standard
     # device → entity area-resolution path (no sandbox code involvement).
-    refreshed_device = dr.async_get(hass).async_get(device.id)
+    refreshed_device = device_registry.async_get(device.id)
     assert refreshed_device is not None
     assert refreshed_device.area_id == area.id
-    er_entry = er.async_get(hass).async_get(result.entity_id)
+    er_entry = entity_registry.async_get(result.entity_id)
     assert er_entry is not None
     assert er_entry.device_id == device.id
 

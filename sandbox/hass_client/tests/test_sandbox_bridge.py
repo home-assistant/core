@@ -27,8 +27,8 @@ from hass_client.flow_runner import FlowRunner
 from hass_client.messages import decode_json_dict, encode_json
 from hass_client.sandbox_bridge import ChannelSandboxBridge
 from hass_client.testing._jsoncodec import JsonCodec
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import HomeAssistant
@@ -300,7 +300,7 @@ def _make_json_channel_pair() -> tuple[Channel, Channel]:
     """Build a JSON-codec channel pair for off-registry handlers.
 
     Used for handlers whose payload/error types aren't in the proto
-    registry (e.g. ``vol.Invalid`` over an ad-hoc ``test/bad`` route).
+    registry (e.g. ``probatio.Invalid`` over an ad-hoc ``test/bad`` route).
     """
     reader_a = asyncio.StreamReader()
     reader_b = asyncio.StreamReader()
@@ -354,17 +354,17 @@ async def test_channel_bridge_maps_store_rpcs() -> None:
 
 
 async def test_client_channel_serializes_vol_invalid() -> None:
-    """A sandbox handler raising ``vol.Invalid`` ships its path on the wire.
+    """A sandbox handler raising ``probatio.Invalid`` ships its path on the wire.
 
     Mirror of the main-side channel test — confirms the client channel's
     ``error_data_for`` serialization feeds the error frame.
     """
-    # ``vol.Invalid`` and the ad-hoc ``test/bad`` route aren't in the proto
+    # ``probatio.Invalid`` and the ad-hoc ``test/bad`` route aren't in the proto
     # registry, so this pair rides the JSON codec rather than ProtobufCodec.
     main, sandbox = _make_json_channel_pair()
 
     async def _bad(_payload: Any) -> None:
-        raise vol.Invalid("expected int", path=["options", "count"])
+        raise probatio.Invalid("expected int", path=["options", "count"])
 
     sandbox.register("test/bad", _bad)
     main.start()

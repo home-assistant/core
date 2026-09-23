@@ -1,15 +1,15 @@
 """Main-side reconstruction of voluptuous schemas serialised by the sandbox.
 
 The sandbox sends a list-of-fields rendering (the same shape
-:func:`voluptuous_serialize.convert` would produce against
-:func:`cv.custom_serializer`). We rebuild a :class:`vol.Schema` from it
+:func:`probatio.to_field_list` would produce against
+:func:`cv.custom_serializer`). We rebuild a :class:`probatio.Schema` from it
 so:
 
 * :meth:`hass.services.async_register` gets a real schema (good input
   passes, blatantly bad input is rejected before we round-trip to the
   sandbox).
 * The flow-manager view's :func:`_prepare_result_json` can re-render the
-  same list back through :func:`voluptuous_serialize.convert` for the
+  same list back through :func:`probatio.to_field_list` for the
   frontend.
 
 Selectors and expandable sections are rebuilt as the **real**
@@ -24,7 +24,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.helpers import selector
@@ -41,8 +41,8 @@ _SCHEMA_TYPES_BY_NAME: dict[str, type] = {
 
 def reconstruct_schema(
     serialized: list[dict[str, Any]] | None,
-) -> vol.Schema | None:
-    """Build a :class:`vol.Schema` from the wire form.
+) -> probatio.Schema | None:
+    """Build a :class:`probatio.Schema` from the wire form.
 
     Returns ``None`` for an empty list (no fields) or ``None`` input so
     callers can short-circuit straight to ``schema=None``.
@@ -54,7 +54,7 @@ def reconstruct_schema(
         name = entry.get("name")
         if name is None:
             continue
-        marker_cls = vol.Required if entry.get("required") else vol.Optional
+        marker_cls = probatio.Required if entry.get("required") else probatio.Optional
         kwargs: dict[str, Any] = {}
         if "default" in entry:
             kwargs["default"] = entry["default"]
@@ -62,11 +62,11 @@ def reconstruct_schema(
             kwargs["description"] = entry["description"]
         marker = marker_cls(name, **kwargs)
         fields[marker] = _validator_from_entry(entry)
-    return vol.Schema(fields)
+    return probatio.Schema(fields)
 
 
 def _validator_from_entry(entry: dict[str, Any]) -> Any:
-    """Inverse of :func:`voluptuous_serialize.convert` per field.
+    """Inverse of :func:`probatio.to_field_list` per field.
 
     Rebuilds the real object where re-serialising it has to reproduce the
     original (selectors, sections) and falls back to a pass-through for
@@ -77,7 +77,7 @@ def _validator_from_entry(entry: dict[str, Any]) -> Any:
     if "selector" in entry:
         try:
             return selector.selector(entry["selector"])
-        except vol.Invalid:
+        except probatio.Invalid:
             _LOGGER.warning(
                 "Could not rebuild selector from %r; using pass-through",
                 entry["selector"],
@@ -87,7 +87,7 @@ def _validator_from_entry(entry: dict[str, Any]) -> Any:
     if type_name == "expandable":
         # An ``data_entry_flow.section`` — rebuild it with its nested schema
         # so the frontend still renders the collapsible section.
-        nested = reconstruct_schema(entry.get("schema")) or vol.Schema({})
+        nested = reconstruct_schema(entry.get("schema")) or probatio.Schema({})
         collapsed = not entry.get("expanded", True)
         return data_entry_flow.section(nested, {"collapsed": collapsed})
     if type_name in _SCHEMA_TYPES_BY_NAME:
@@ -96,7 +96,7 @@ def _validator_from_entry(entry: dict[str, Any]) -> Any:
         options = entry.get("options") or []
         values = _select_values(options)
         if values:
-            return vol.In(values)
+            return probatio.In(values)
     # Constants, datetime/format, and other shapes we don't reconstruct —
     # the sandbox owns the strict validator; on main, accept any value so
     # the caller's payload reaches the sandbox-side handler.
