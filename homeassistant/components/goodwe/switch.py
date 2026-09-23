@@ -34,9 +34,7 @@ SWITCHES = (
         translation_key="fast_charging",
         entity_category=EntityCategory.CONFIG,
         getter=lambda inv: inv.read_setting("fast_charging"),
-        setter=lambda inv, value: inv.write_setting(
-            "fast_charging", 1 if value else 0
-        ),
+        setter=lambda inv, value: inv.write_setting("fast_charging", 1 if value else 0),
     ),
     # Backup/UPS power supply, available on ET/EH and ES/EM families.
     GoodweSwitchEntityDescription(
@@ -44,9 +42,7 @@ SWITCHES = (
         translation_key="backup_supply",
         entity_category=EntityCategory.CONFIG,
         getter=lambda inv: inv.read_setting("backup_supply"),
-        setter=lambda inv, value: inv.write_setting(
-            "backup_supply", 1 if value else 0
-        ),
+        setter=lambda inv, value: inv.write_setting("backup_supply", 1 if value else 0),
     ),
     # Load control switch, available on ET/EH family only.
     GoodweSwitchEntityDescription(
