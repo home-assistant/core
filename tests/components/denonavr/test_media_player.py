@@ -554,6 +554,33 @@ async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
 
 
 @pytest.mark.usefixtures("client")
+async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_poll(
+    hass: HomeAssistant,
+) -> None:
+    """A second out-of-band failure must reach a peer that recovered since.
+
+    With polling disabled for the entry no later read would hand it over, so
+    the peer would stay available after the receiver failed again.
+    """
+    entry = await setup_denonavr(hass, pref_disable_polling=True)
+    coordinator = entry.runtime_data.coordinator
+    audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+
+    mark_unavailable(coordinator)
+
+    assert audyssey_coordinator.last_update_success is False
+
+    # A read of its own answers while the status coordinator is still down.
+    await audyssey_coordinator.async_refresh()
+
+    assert audyssey_coordinator.last_update_success is True
+
+    mark_unavailable(coordinator)
+
+    assert audyssey_coordinator.last_update_success is False
+
+
+@pytest.mark.usefixtures("client")
 async def test_update_audyssey_restores_availability(hass: HomeAssistant) -> None:
     """A successful call recovers Audyssey entities from a prior failure.
 

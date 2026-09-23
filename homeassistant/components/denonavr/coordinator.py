@@ -186,8 +186,8 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         Not async_add_listener(): that starts the update interval for its
         first listener, which would poll with every entity disabled.
 
-        Runs on every refresh attempt and every out-of-band availability
-        change, so one refresh can run it twice: callbacks must be idempotent.
+        Runs on every refresh attempt and every out-of-band failure, so one
+        refresh can run it twice: callbacks must be idempotent.
         """
         self._internal_listeners.append(update_callback)
 
@@ -269,7 +269,8 @@ def mark_unavailable(coordinator: DenonAvrDataUpdateCoordinator) -> None:
 
     For failures outside the refresh cycle, such as a command of an entity's
     own, so availability reflects them without waiting for the next poll.
+    Notifies even when already unavailable: the other coordinator may have
+    recovered since the last failure.
     """
-    if coordinator.last_update_success:
-        coordinator.last_update_success = False
-        coordinator.async_update_listeners()
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
