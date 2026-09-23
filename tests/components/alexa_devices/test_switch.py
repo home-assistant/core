@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -139,6 +139,32 @@ async def test_switch_dnd_created_by_late_pushed_event(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_ON
+
+
+async def test_switch_dnd_created_for_new_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a DND switch is created for a device added while HA is running."""
+    new_entity_id = "switch.echo_test_2_do_not_disturb"
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(new_entity_id) is None
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+        TEST_DEVICE_2_SN: TEST_DEVICE_2,
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(new_entity_id))
+    assert state.state == STATE_OFF
 
 
 async def test_offline_device(

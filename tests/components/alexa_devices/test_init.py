@@ -43,16 +43,6 @@ def _fail_history_state(client: AsyncMock, error: Exception) -> None:
     client.sync_history_state.side_effect = error
 
 
-def _fail_media_state(client: AsyncMock, error: Exception) -> None:
-    """Make the media state sync fail."""
-    client.sync_media_state.side_effect = error
-
-
-def _fail_dnd_state(client: AsyncMock, error: Exception) -> None:
-    """Make the DND state sync fail."""
-    client.sync_dnd_state.side_effect = error
-
-
 async def test_device_info(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -257,8 +247,6 @@ async def test_http2_stop_processing_called_on_shutdown(
     [
         (_fail_todo_list_items, "sync_todo_list_items"),
         (_fail_history_state, "sync_history_state"),
-        (_fail_media_state, "sync_media_state"),
-        (_fail_dnd_state, "sync_dnd_state"),
     ],
 )
 @pytest.mark.parametrize(
