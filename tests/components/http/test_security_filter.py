@@ -2,12 +2,14 @@
 
 import asyncio
 from http import HTTPStatus
+import time
 
 from aiohttp import web
 import pytest
 import urllib3
 
-from homeassistant.components.http.security_filter import setup_security_filter
+from homeassistant.components.http.security_filter import FILTERS, setup_security_filter
+from homeassistant.components.http.server import MAX_LINE_SIZE
 
 from tests.typing import ClientSessionGenerator
 
@@ -15,6 +17,12 @@ from tests.typing import ClientSessionGenerator
 async def mock_handler(request):
     """Return OK."""
     return web.Response(text="OK")
+
+
+def long_target(prefix: str, unit: str, suffix: str = "") -> str:
+    """Build a request target that fills up the maximum request line size."""
+    room = MAX_LINE_SIZE - len(prefix) - len(suffix)
+    return prefix + unit * (room // len(unit)) + suffix
 
 
 @pytest.mark.parametrize(
@@ -158,3 +166,88 @@ async def test_bad_requests_with_unsafe_bytes(
     if fail_on_query_string:
         message = "Filtered a request with unsafe byte query string:"
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "request_target",
+    [
+        pytest.param(long_target("/?a=<", "script"), id="unclosed_script_tag"),
+        pytest.param(
+            long_target("/?a=" + "<" * 64, "script"), id="many_opening_brackets"
+        ),
+        pytest.param(
+            long_target("/?a=" + "%3C" * 64, "script"), id="many_encoded_brackets"
+        ),
+        pytest.param(
+            long_target("/?a=" + "union" * 8, "all"), id="union_without_select"
+        ),
+        pytest.param(long_target("/?a=union", "select"), id="union_without_paren"),
+        pytest.param(long_target("/?a=", "concat"), id="concat_without_paren"),
+        pytest.param(long_target("/?a=", "<s\n"), id="short_lines"),
+        pytest.param(
+            long_target("/frontend_latest/", "chunk4c9e2d8/"), id="benign_path"
+        ),
+    ],
+)
+def test_long_unfiltered_targets_stay_cheap(request_target: str) -> None:
+    """Test that a long request target that does not match stays cheap to filter.
+
+    The bound is loose on purpose: it should fail when a branch starts
+    backtracking again, not measure the machine it runs on. It goes at the
+    pattern directly because the test server caps the request line well below
+    MAX_LINE_SIZE, which also means the %3C cases arrive still encoded.
+    """
+    start = time.perf_counter()
+    match = FILTERS.search(request_target)
+    duration = time.perf_counter() - start
+
+    assert match is None
+    assert duration < 1
+
+
+@pytest.mark.parametrize(
+    "request_target",
+    [
+        pytest.param(long_target("/?a=<", "script", ">"), id="closed_script_tag"),
+        pytest.param(long_target("/?a=%3C", "script", "%3E"), id="encoded_script_tag"),
+        pytest.param(long_target("/?a=union", "all", "select"), id="union_all_select"),
+        pytest.param(long_target("/?a=", "concat", "("), id="concat_paren"),
+    ],
+)
+def test_long_filtered_targets_still_match(request_target: str) -> None:
+    """Test that a long request target that should be filtered still matches."""
+    assert FILTERS.search(request_target) is not None
+
+
+@pytest.mark.parametrize(
+    "request_path",
+    [
+        "/%3Cscript%3Ealert%3C/script%3E",
+        "/%253Cscript%253E",
+        "/%25253Cscript%25253E",
+        "/%2525253Cscript%2525253E",
+    ],
+)
+async def test_multiple_encoded_script_tags(
+    request_path: str,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that repeatedly encoded script tags are unquoted and then filtered."""
+    app = web.Application()
+    app.router.add_get("/{all:.*}", mock_handler)
+
+    setup_security_filter(app)
+
+    mock_api_client = await aiohttp_client(app)
+
+    http = urllib3.PoolManager()
+    resp = await asyncio.get_running_loop().run_in_executor(
+        None,
+        http.request,
+        "GET",
+        f"http://{mock_api_client.host}:{mock_api_client.port}{request_path}",
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert "Filtered a potential harmful request to:" in caplog.text
