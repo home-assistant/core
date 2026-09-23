@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def store_critical_list(
+async def marketplace_critical_list(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -42,7 +42,7 @@ async def store_critical_list(
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def store_critical_acknowledge(
+async def marketplace_critical_acknowledge(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],

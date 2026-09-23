@@ -8,7 +8,7 @@ from aiogithubapi import GitHubException
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
@@ -260,7 +260,7 @@ async def test_reauth_flow(
 
 async def test_options_flow(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the options flow."""
@@ -288,9 +288,9 @@ async def test_options_flow(
     assert init_integration.data == {CONF_TOKEN: TOKEN}
 
     # The entry is reloaded, so the Marketplace picks the new options up
-    store = init_integration.runtime_data
-    assert store.configuration.appdaemon is False
-    assert store.configuration.country == "NL"
+    marketplace = init_integration.runtime_data
+    assert marketplace.configuration.appdaemon is False
+    assert marketplace.configuration.country == "NL"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -309,11 +309,11 @@ async def test_options_flow_not_set_up(
 
 async def test_options_flow_pending_tasks(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the options flow aborts while the Marketplace still has work queued."""
-    store.queue.add(asyncio.sleep(0))
+    marketplace.queue.add(asyncio.sleep(0))
 
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
 
@@ -321,4 +321,4 @@ async def test_options_flow_pending_tasks(
     assert result["reason"] == "pending_tasks"
 
     # Drain the queue so the entry can be unloaded again
-    await store.queue.execute()
+    await marketplace.queue.execute()

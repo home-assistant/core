@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, overload
 from ..const import DEFAULT_CONCURRENT_BACKOFF_TIME, DEFAULT_CONCURRENT_TASKS
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
 
 def concurrent[**P, T](
@@ -25,14 +25,16 @@ def concurrent[**P, T](
     ) -> Callable[P, Coroutine[Any, Any, T]]:
         @wraps(function)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            store: StoreManager | None = getattr(args[0], "store", None)
+            marketplace: MarketplaceManager | None = getattr(
+                args[0], "marketplace", None
+            )
 
             async with max_concurrent:
                 result = await function(*args, **kwargs)
                 if (
-                    store is None
-                    or store.queue is None
-                    or store.queue.has_pending_tasks
+                    marketplace is None
+                    or marketplace.queue is None
+                    or marketplace.queue.has_pending_tasks
                     or "update" not in function.__name__
                 ):
                     await asyncio.sleep(backoff_time)

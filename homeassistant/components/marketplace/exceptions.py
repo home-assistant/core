@@ -1,31 +1,31 @@
 """Custom exceptions for the Marketplace."""
 
 
-class StoreError(Exception):
+class MarketplaceError(Exception):
     """Super basic."""
 
 
-class RepositoryArchivedError(StoreError):
+class RepositoryArchivedError(MarketplaceError):
     """For repositories that are archived."""
 
 
-class NotModifiedError(StoreError):
+class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 
 
-class ExpectedError(StoreError):
+class ExpectedError(MarketplaceError):
     """For stuff that are expected."""
 
 
-class RepositoryExistsError(StoreError):
+class RepositoryExistsError(MarketplaceError):
     """For repositories that already exist."""
 
 
-class ExecutionInProgressError(StoreError):
+class ExecutionInProgressError(MarketplaceError):
     """Exception to raise if execution is still in progress."""
 
 
-class AppRepositoryError(StoreError):
+class AppRepositoryError(MarketplaceError):
     """Exception to raise when user tries to add an app repository."""
 
     exception_message = (
@@ -38,7 +38,7 @@ class AppRepositoryError(StoreError):
         super().__init__(self.exception_message)
 
 
-class CoreRepositoryError(StoreError):
+class CoreRepositoryError(MarketplaceError):
     """Exception to raise when user tries to add the home-assistant/core repository."""
 
     exception_message = (

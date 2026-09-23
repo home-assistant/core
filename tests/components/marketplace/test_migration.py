@@ -540,7 +540,7 @@ async def test_no_legacy_integration(
 
 
 @pytest.mark.parametrize(
-    ("store_keys", "remaining"),
+    ("storage_keys", "remaining"),
     [
         pytest.param(
             ("marketplace.repositories",),
@@ -565,12 +565,12 @@ async def test_legacy_storage_needs_counterpart(
     mock_config_entry: MockConfigEntry,
     config_dir: Path,
     legacy_integration: Path,
-    store_keys: tuple[str, ...],
+    storage_keys: tuple[str, ...],
     remaining: set[str],
 ) -> None:
     """Test a legacy storage file is only removed once the Marketplace has its own."""
     await hass.async_add_executor_job(
-        _seed_storage, config_dir, *LEGACY_STORAGE_FILES, *store_keys
+        _seed_storage, config_dir, *LEGACY_STORAGE_FILES, *storage_keys
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -580,7 +580,7 @@ async def test_legacy_storage_needs_counterpart(
 
 
 @pytest.mark.usefixtures("stored_repositories")
-async def test_legacy_integration_kept_without_store_storage(
+async def test_legacy_integration_kept_without_marketplace_storage(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     legacy_integration: Path,

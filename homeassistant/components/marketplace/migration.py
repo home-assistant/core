@@ -319,9 +319,9 @@ def _remove_legacy_files(config_path: str) -> list[str]:
     }
     legacy_files[LEGACY_DATA_STORAGE_KEY] = get_storage_key("repositories")
 
-    for legacy_key, store_key in legacy_files.items():
+    for legacy_key, storage_key in legacy_files.items():
         legacy_path = storage_path / legacy_key
-        if not legacy_path.is_file() or not (storage_path / store_key).is_file():
+        if not legacy_path.is_file() or not (storage_path / storage_key).is_file():
             continue
 
         try:

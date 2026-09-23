@@ -10,11 +10,11 @@ from .logger import LOGGER
 from .path import is_safe
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
     from ..repositories.base import Repository
 
 
-DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/store_backup/"
+DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/marketplace_backup/"
 
 
 class Backup:
@@ -22,20 +22,20 @@ class Backup:
 
     def __init__(
         self,
-        store: StoreManager,
+        marketplace: MarketplaceManager,
         local_path: str,
         backup_path: str = DEFAULT_BACKUP_PATH,
         repository: Repository | None = None,
     ) -> None:
         """Initialize."""
-        self.store = store
+        self.marketplace = marketplace
         self.repository = repository
         self.local_path = local_path
         self.backup_path = backup_path
         if repository:
             self.backup_path = (
                 f"{tempfile.gettempdir()}"
-                f"/store_persistent_{repository.data.category}/"
+                f"/marketplace_persistent_{repository.data.category}/"
                 f"{repository.data.name}"
             )
         self.backup_path_full = f"{self.backup_path}{self.local_path.split('/')[-1]}"
@@ -44,7 +44,7 @@ class Backup:
         """Init backup dir."""
         if not os.path.exists(self.local_path):
             return False
-        if not is_safe(self.store, self.local_path):
+        if not is_safe(self.marketplace, self.local_path):
             return False
         if os.path.exists(self.backup_path):
             shutil.rmtree(self.backup_path)

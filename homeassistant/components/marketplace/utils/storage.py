@@ -10,7 +10,7 @@ from homeassistant.util import json as json_util
 from homeassistant.util.hass_dict import HassKey
 
 from ..const import VERSION_STORAGE
-from ..exceptions import StoreError
+from ..exceptions import MarketplaceError
 from .logger import LOGGER
 from .path import resolve_in_directory
 
@@ -34,7 +34,7 @@ LEGACY_DATA_STORAGE_KEY = "hacs.data"
 LEGACY_HACS_REPOSITORY_STORAGE_KEY = "hacs/{repository_id}.hacs"
 
 
-class StoreStorage(Store[dict[str, Any]]):
+class MarketplaceStorage(Store[dict[str, Any]]):
     """A subclass of Store that allows multiple loads in the executor."""
 
     def load(self) -> Any:
@@ -47,13 +47,13 @@ class StoreStorage(Store[dict[str, Any]]):
                 self.path,
                 exception,
             )
-            raise StoreError(exception) from exception
+            raise MarketplaceError(exception) from exception
         if data == {} or data["version"] != self.version:
             return None
         return data["data"]
 
 
-STORAGE_CACHE_KEY: HassKey[dict[str, StoreStorage]] = HassKey(
+STORAGE_CACHE_KEY: HassKey[dict[str, MarketplaceStorage]] = HassKey(
     "marketplace_storage_cache"
 )
 
@@ -63,18 +63,18 @@ def get_storage_key(key: str) -> str:
     return key if "/" in key else f"{STORENAME}.{key}"
 
 
-def _create_storage(hass: HomeAssistant, store_key: str) -> StoreStorage:
+def _create_storage(hass: HomeAssistant, storage_key: str) -> MarketplaceStorage:
     """Create a Store object for a resolved storage key."""
-    return StoreStorage(
+    return MarketplaceStorage(
         hass,
         VERSION_STORAGE,  # type: ignore[arg-type] # the Marketplace keeps its version as a string
-        store_key,
+        storage_key,
         encoder=JSONEncoder,
         atomic_writes=True,
     )
 
 
-def get_storage_for_key(hass: HomeAssistant, key: str) -> StoreStorage:
+def get_storage_for_key(hass: HomeAssistant, key: str) -> MarketplaceStorage:
     """Get (or create and cache) the Store object for the key.
 
     The cache is cleared in async_unload_entry so Store instances do not
@@ -87,7 +87,7 @@ def get_storage_for_key(hass: HomeAssistant, key: str) -> StoreStorage:
 
 
 async def _async_adopt_legacy_data(
-    hass: HomeAssistant, key: str, store: StoreStorage
+    hass: HomeAssistant, key: str, marketplace: MarketplaceStorage
 ) -> Any:
     """Copy the data the custom integration wrote for this key over to our own key.
 
@@ -101,16 +101,16 @@ async def _async_adopt_legacy_data(
         return None
 
     _LOGGER.info("Adopting the data in '%s' as '%s'", legacy_key, get_storage_key(key))
-    await store.async_save(data)
+    await marketplace.async_save(data)
     return data
 
 
 async def async_load_from_storage(hass: HomeAssistant, key: str) -> Any:
     """Load the retained data from store and return de-serialized data."""
-    store = get_storage_for_key(hass, key)
-    if (data := await store.async_load()) is not None:
+    marketplace = get_storage_for_key(hass, key)
+    if (data := await marketplace.async_load()) is not None:
         return data or {}
-    return await _async_adopt_legacy_data(hass, key, store) or {}
+    return await _async_adopt_legacy_data(hass, key, marketplace) or {}
 
 
 async def async_load_legacy_data(hass: HomeAssistant) -> Any:
@@ -146,10 +146,10 @@ async def async_remove_storage(hass: HomeAssistant, key: str) -> None:
     if "/" not in key:
         return
 
-    store = get_storage_for_key(hass, key)
+    marketplace = get_storage_for_key(hass, key)
 
     # The key carries a repository id, so the file it resolves to is checked
     # before anything is unlinked.
-    resolve_in_directory(hass.config.path(STORAGE_DIR), store.path)
+    resolve_in_directory(hass.config.path(STORAGE_DIR), marketplace.path)
 
-    await store.async_remove()
+    await marketplace.async_remove()

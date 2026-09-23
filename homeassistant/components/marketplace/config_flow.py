@@ -23,7 +23,7 @@ from homeassistant.core import callback
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.helpers import aiohttp_client
 
-from .base import StoreConfigEntry
+from .base import MarketplaceConfigEntry
 from .const import CLIENT_ID, CLIENT_NAME, COUNTRY_ALL, DOMAIN
 from .utils.configuration_schema import APPDAEMON, COUNTRY
 from .utils.logger import LOGGER
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-class StoreConfigFlow(ConfigFlow, domain=DOMAIN):
+class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the Marketplace."""
 
     VERSION = 1
@@ -191,12 +191,12 @@ class StoreConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> StoreOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> MarketplaceOptionsFlow:
         """Create the options flow."""
-        return StoreOptionsFlow()
+        return MarketplaceOptionsFlow()
 
 
-class StoreOptionsFlow(OptionsFlow):
+class MarketplaceOptionsFlow(OptionsFlow):
     """Options flow for the Marketplace."""
 
     async def async_step_init(
@@ -212,21 +212,21 @@ class StoreOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        entries: list[StoreConfigEntry] = self.hass.config_entries.async_loaded_entries(
-            DOMAIN
+        entries: list[MarketplaceConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
         if not entries:
             return self.async_abort(reason="not_setup")
 
-        store = entries[0].runtime_data
-        if store.queue.has_pending_tasks:
+        marketplace = entries[0].runtime_data
+        if marketplace.queue.has_pending_tasks:
             return self.async_abort(reason="pending_tasks")
 
         schema = {
-            vol.Optional(COUNTRY, default=store.configuration.country): vol.In(
+            vol.Optional(COUNTRY, default=marketplace.configuration.country): vol.In(
                 [COUNTRY_ALL, *sorted(COUNTRIES)]
             ),
-            vol.Optional(APPDAEMON, default=store.configuration.appdaemon): bool,
+            vol.Optional(APPDAEMON, default=marketplace.configuration.appdaemon): bool,
         }
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(schema))

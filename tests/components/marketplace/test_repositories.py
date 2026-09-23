@@ -16,10 +16,16 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.marketplace.base import RemovedRepository, StoreManager
+from homeassistant.components.marketplace.base import (
+    MarketplaceManager,
+    RemovedRepository,
+)
 from homeassistant.components.marketplace.const import MAX_DOWNLOAD_SIZE
-from homeassistant.components.marketplace.enums import RepositoryCategory, StoreSignal
-from homeassistant.components.marketplace.exceptions import StoreError
+from homeassistant.components.marketplace.enums import (
+    MarketplaceSignal,
+    RepositoryCategory,
+)
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import (
     FileInformation,
     Repository,
@@ -37,7 +43,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from . import CategoryTestData, category_test_data_parametrized, mocked_response
-from .conftest import StoreResponses
+from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 from tests.common import async_mock_service
@@ -103,7 +109,7 @@ def test_manifest_defaults() -> None:
 
 def test_manifest_rejects_none() -> None:
     """Test that a missing hacs.json is not silently accepted."""
-    with pytest.raises(StoreError):
+    with pytest.raises(MarketplaceError):
         RepositoryManifest.from_dict(None)
 
 
@@ -167,25 +173,30 @@ def test_removed_repository(data: dict[str, Any]) -> None:
     ],
 )
 async def test_can_download(
-    store: StoreManager, ha_version: str, required_version: str, expected: bool
+    marketplace: MarketplaceManager,
+    ha_version: str,
+    required_version: str,
+    expected: bool,
 ) -> None:
     """Test whether a repository can be downloaded on this Home Assistant."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.releases = True
     repository.repository_manifest.homeassistant = required_version
-    store.version = AwesomeVersion(ha_version)
+    marketplace.version = AwesomeVersion(ha_version)
 
     assert repository.can_download is expected
 
 
-async def test_can_download_without_requirement(store: StoreManager) -> None:
+async def test_can_download_without_requirement(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test that a repository without a requirement can always be downloaded."""
-    assert Repository(store).can_download
+    assert Repository(marketplace).can_download
 
 
-async def test_display_status(store: StoreManager) -> None:
+async def test_display_status(marketplace: MarketplaceManager) -> None:
     """Test the status the frontend shows for a repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     assert repository.display_status == "default"
 
     repository.data.new = True
@@ -203,7 +214,7 @@ async def test_display_status(store: StoreManager) -> None:
     assert repository.display_status == "pending-upgrade"
 
     # A repository that needs a newer core still shows the pending upgrade
-    store.version = AwesomeVersion("0.0.0")
+    marketplace.version = AwesomeVersion("0.0.0")
     repository.repository_manifest.homeassistant = "1.0.0"
     assert repository.display_status == "pending-upgrade"
 
@@ -211,15 +222,15 @@ async def test_display_status(store: StoreManager) -> None:
     assert repository.display_status == "installed"
 
 
-async def test_pending_update(store: StoreManager) -> None:
+async def test_pending_update(marketplace: MarketplaceManager) -> None:
     """Test when a repository counts as having an update pending."""
-    repository = Repository(store)
-    store.version = AwesomeVersion("0.109.0")
+    repository = Repository(marketplace)
+    marketplace.version = AwesomeVersion("0.109.0")
     repository.repository_manifest.homeassistant = "0.110.0"
     repository.data.releases = True
     assert not repository.pending_update
 
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.installed = True
     repository.data.default_branch = "main"
     repository.data.selected_tag = "main"
@@ -510,9 +521,9 @@ def test_find_target_asset_without_assets(
     assert mock_repository._find_target_asset(assets) is None
 
 
-async def test_download_count_from_release(store: StoreManager) -> None:
+async def test_download_count_from_release(marketplace: MarketplaceManager) -> None:
     """Test that the download count comes from the matching release asset."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.file_name = "main.zip"
     repository.data.releases = True
     repository.releases.objects = [
@@ -540,10 +551,10 @@ async def test_download_count_from_release(store: StoreManager) -> None:
     ],
 )
 async def test_get_repository_manifest(
-    store: StoreManager, version: str, expected: str | None
+    marketplace: MarketplaceManager, version: str, expected: str | None
 ) -> None:
     """Test reading the hacs.json of a specific version."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     manifest = await repository.get_repository_manifest(version=version)
@@ -551,9 +562,11 @@ async def test_get_repository_manifest(
     assert (manifest.name if manifest else None) == expected
 
 
-async def test_get_repository_manifest_swallows_exceptions(store: StoreManager) -> None:
+async def test_get_repository_manifest_swallows_exceptions(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test that a broken hacs.json never propagates out."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     with patch.object(
@@ -578,23 +591,25 @@ async def test_get_repository_manifest_swallows_exceptions(store: StoreManager) 
     ],
 )
 async def test_get_repository_manifest_raw(
-    store: StoreManager, version: str, expected: dict[str, Any] | None
+    marketplace: MarketplaceManager, version: str, expected: dict[str, Any] | None
 ) -> None:
     """Test reading the raw hacs.json of a specific version."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     assert await repository.get_repository_manifest_raw(version=version) == expected
 
 
 async def test_get_repository_manifest_raw_swallows_exceptions(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
 ) -> None:
     """Test that an unreadable hacs.json never propagates out."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
-    with patch.object(store, "async_download_file", side_effect=Exception("boom")):
+    with patch.object(
+        marketplace, "async_download_file", side_effect=Exception("boom")
+    ):
         assert await repository.get_repository_manifest_raw(version="1.0.0") is None
 
     with patch(
@@ -622,10 +637,10 @@ async def test_get_repository_manifest_raw_swallows_exceptions(
     ],
 )
 async def test_get_documentation(
-    store: StoreManager, data: dict[str, Any], snapshot: SnapshotAssertion
+    marketplace: MarketplaceManager, data: dict[str, Any], snapshot: SnapshotAssertion
 ) -> None:
     """Test which version of the documentation is served."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
     for key, value in data.items():
         setattr(repository.data, key, value)
@@ -633,17 +648,21 @@ async def test_get_documentation(
     assert await repository.get_documentation(filename="README.md") == snapshot
 
 
-async def test_get_documentation_without_filename(store: StoreManager) -> None:
+async def test_get_documentation_without_filename(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test that no filename means no documentation."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     assert await repository.get_documentation() is None
 
 
-async def test_get_documentation_without_version(store: StoreManager) -> None:
+async def test_get_documentation_without_version(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test that a repository with nothing to point at has no documentation."""
-    repository = Repository(store)
+    repository = Repository(marketplace)
     repository.data.full_name = REPOSITORY_INTEGRATION
     repository.ref = None
 
@@ -665,14 +684,14 @@ async def test_get_documentation_without_version(store: StoreManager) -> None:
 )
 async def test_register_repository(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
     category: RepositoryCategory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test adding a repository the Marketplace did not know about."""
-    assert store.repositories.get_by_full_name(repository_full_name) is None
+    assert marketplace.repositories.get_by_full_name(repository_full_name) is None
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -684,7 +703,7 @@ async def test_register_repository(
     )
     assert (await client.receive_json())["success"]
 
-    repository = store.repositories.get_by_full_name(repository_full_name)
+    repository = marketplace.repositories.get_by_full_name(repository_full_name)
     assert repository is not None
 
     await client.send_json_auto_id(
@@ -729,7 +748,7 @@ async def test_register_repository(
         ),
         pytest.param(
             "hacs-test-org/integration-invalid",
-            "StoreError",
+            "MarketplaceError",
             "<Integration hacs-test-org/integration-invalid> Repository structure"
             " for main is not compliant",
             id="not-compliant",
@@ -738,7 +757,7 @@ async def test_register_repository(
 )
 async def test_register_repository_failures(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     repository_full_name: str,
     exception: str,
@@ -746,9 +765,9 @@ async def test_register_repository_failures(
 ) -> None:
     """Test the errors reported when a repository can not be added."""
     messages: list[dict[str, Any]] = []
-    async_dispatcher_connect(hass, StoreSignal.ERROR, messages.append)
+    async_dispatcher_connect(hass, MarketplaceSignal.ERROR, messages.append)
 
-    assert store.repositories.get_by_full_name(repository_full_name) is None
+    assert marketplace.repositories.get_by_full_name(repository_full_name) is None
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -763,7 +782,7 @@ async def test_register_repository_failures(
 
     assert response["success"]
     assert response["result"] == {}
-    assert store.repositories.get_by_full_name(repository_full_name) is None
+    assert marketplace.repositories.get_by_full_name(repository_full_name) is None
     assert messages == [
         {"action": "add_repository", "exception": exception, "message": message}
     ]
@@ -771,10 +790,12 @@ async def test_register_repository_failures(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_validate_repository(
-    store: StoreManager, category_test_data: CategoryTestData
+    marketplace: MarketplaceManager, category_test_data: CategoryTestData
 ) -> None:
     """Test validating the structure of a repository of every category."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     await repository.update_repository(force=True)
 
     assert await repository.validate_repository()
@@ -793,10 +814,12 @@ async def test_validate_repository(
     ),
 )
 async def test_validate_repository_without_content(
-    store: StoreManager, category_test_data: CategoryTestData
+    marketplace: MarketplaceManager, category_test_data: CategoryTestData
 ) -> None:
     """Test that a repository without the expected content is refused."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     await repository.update_repository(force=True)
 
     repository.tree = _tree(("README.md", False))
@@ -804,14 +827,16 @@ async def test_validate_repository_without_content(
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(StoreError, match="is not compliant"),
+        pytest.raises(MarketplaceError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
 
-async def test_validate_integration_without_content(store: StoreManager) -> None:
+async def test_validate_integration_without_content(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test an integration repository without a custom_components directory."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
 
     repository.tree = _tree(("README.md", False))
@@ -820,14 +845,14 @@ async def test_validate_integration_without_content(store: StoreManager) -> None
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(StoreError, match="is not compliant"),
+        pytest.raises(MarketplaceError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
 
-async def test_validate_plugin_without_content(store: StoreManager) -> None:
+async def test_validate_plugin_without_content(marketplace: MarketplaceManager) -> None:
     """Test a dashboard plugin repository without a script to serve."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     await repository.update_repository(force=True)
 
     repository.tree = _tree(("README.md", False))
@@ -836,7 +861,7 @@ async def test_validate_plugin_without_content(store: StoreManager) -> None:
 
     with (
         patch.object(repository, "common_validate"),
-        pytest.raises(StoreError, match="is not compliant"),
+        pytest.raises(MarketplaceError, match="is not compliant"),
     ):
         await repository.validate_repository()
 
@@ -848,10 +873,12 @@ async def test_validate_plugin_without_content(store: StoreManager) -> None:
     ),
 )
 async def test_validate_repository_with_content_in_root(
-    store: StoreManager, category_test_data: CategoryTestData
+    marketplace: MarketplaceManager, category_test_data: CategoryTestData
 ) -> None:
     """Test a repository that keeps its content in the repository root."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     await repository.update_repository(force=True)
     repository.repository_manifest.content_in_root = True
 
@@ -864,10 +891,12 @@ async def test_validate_repository_with_content_in_root(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_update_repository_without_a_tree(
-    store: StoreManager, category_test_data: CategoryTestData
+    marketplace: MarketplaceManager, category_test_data: CategoryTestData
 ) -> None:
     """Test that a refresh that finds no files keeps the known tree."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     await repository.update_repository(force=True)
 
     with patch.object(repository, "get_tree", return_value=[]):
@@ -879,17 +908,19 @@ async def test_update_repository_without_a_tree(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_download_repository(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test downloading a repository of every category."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     assert repository is not None
     assert repository.data.installed is False
-    assert store.repositories.list_downloaded == []
+    assert marketplace.repositories.list_downloaded == []
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -899,19 +930,21 @@ async def test_download_repository(
 
     assert repository.data.installed is True
     assert repository.data.installed_version == category_test_data["version_base"]
-    assert store.repositories.list_downloaded == [repository]
+    assert marketplace.repositories.list_downloaded == [repository]
     assert _downloaded_files(config_dir) == snapshot
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_update_repository(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test downloading a specific newer version of a repository."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     assert repository is not None
 
     repository.data.installed = True
@@ -933,13 +966,15 @@ async def test_update_repository(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_remove_repository(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     config_dir: Path,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test removing a downloaded repository of every category."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     assert repository is not None
 
     repository.data.installed = True
@@ -960,21 +995,23 @@ async def test_remove_repository(
     assert (await client.receive_json())["success"]
 
     assert repository.data.installed is False
-    assert store.repositories.list_downloaded == []
+    assert marketplace.repositories.list_downloaded == []
     assert _downloaded_files(config_dir) == []
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_repository_releases(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test listing the releases of a repository."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     assert repository is not None
 
     response_mocker.add(
@@ -1003,10 +1040,12 @@ async def test_repository_releases(
 
 
 async def test_download_zip_release(
-    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
 ) -> None:
     """Test downloading a release that ships a zip archive."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = "1.0.0"
     repository.repository_manifest.zip_release = True
     repository.repository_manifest.filename = "release.zip"
@@ -1031,10 +1070,10 @@ async def test_download_zip_release(
 
 
 async def test_download_zip_release_failure(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a zip release that can not be downloaded."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = "1.0.0"
     repository.repository_manifest.filename = "release.zip"
     repository.content.path.local = repository.localpath
@@ -1051,20 +1090,24 @@ async def test_download_zip_release_failure(
     assert validate.errors == [f"Failed to download {url}"]
 
 
-async def test_download_repository_zip_without_ref(store: StoreManager) -> None:
+async def test_download_repository_zip_without_ref(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test that a repository archive needs something to download."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = ""
 
-    with pytest.raises(StoreError, match="Missing required elements"):
+    with pytest.raises(MarketplaceError, match="Missing required elements"):
         await repository.download_repository_zip()
 
 
 async def test_download_zip_release_escaping_member(
-    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
 ) -> None:
     """Test a zip release that tries to write outside the repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = "1.0.0"
     repository.repository_manifest.zip_release = True
     repository.repository_manifest.filename = "release.zip"
@@ -1083,10 +1126,12 @@ async def test_download_zip_release_escaping_member(
 
 
 async def test_download_zip_release_too_large(
-    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
 ) -> None:
     """Test a zip release that expands to more than the limit."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = "1.0.0"
     repository.repository_manifest.zip_release = True
     repository.repository_manifest.filename = "release.zip"
@@ -1109,10 +1154,12 @@ async def test_download_zip_release_too_large(
 
 
 async def test_download_repository_zip_escaping_member(
-    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
 ) -> None:
     """Test a repository archive that tries to write outside the repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.ref = "1.0.0"
     repository.content.path.local = repository.localpath
     repository.content.path.remote = "custom_components"
@@ -1128,17 +1175,19 @@ async def test_download_repository_zip_escaping_member(
         ),
     )
 
-    with pytest.raises(StoreError, match="is not inside"):
+    with pytest.raises(MarketplaceError, match="is not inside"):
         await repository.download_repository_zip()
 
     assert _downloaded_files(config_dir) == []
 
 
 async def test_download_content_outside_the_repository(
-    store: StoreManager, response_mocker: StoreResponses, config_dir: Path
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
 ) -> None:
     """Test a file name that tries to write outside the repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.content.path.local = repository.localpath
     repository.content.single = True
 
@@ -1154,16 +1203,16 @@ async def test_download_content_outside_the_repository(
 
 
 async def test_install_rejects_escaping_persistent_directory(
-    store: StoreManager, config_dir: Path
+    marketplace: MarketplaceManager, config_dir: Path
 ) -> None:
     """Test a hacs.json pointing its persistent directory out of the repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.content.path.local = repository.localpath
     repository.repository_manifest.persistent_directory = "../.."
 
     with (
         patch.object(repository, "update_repository"),
-        pytest.raises(StoreError, match="is not inside"),
+        pytest.raises(MarketplaceError, match="is not inside"),
     ):
         await repository.async_install_repository()
 
@@ -1171,7 +1220,7 @@ async def test_install_rejects_escaping_persistent_directory(
 
 
 async def test_download_declines_a_declared_size_over_the_limit(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response declaring more than the limit is not read."""
     url = "https://example.com/big"
@@ -1182,18 +1231,18 @@ async def test_download_declines_a_declared_size_over_the_limit(
         ),
     )
 
-    assert await store.async_download_file(url) is None
+    assert await marketplace.async_download_file(url) is None
 
 
 async def test_download_discards_content_over_the_limit(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response larger than the limit is thrown away."""
     url = "https://example.com/big"
     response_mocker.add(url, mocked_response(url, content=b"0123456789"))
 
     with patch("homeassistant.components.marketplace.base.MAX_DOWNLOAD_SIZE", 5):
-        assert await store.async_download_file(url) is None
+        assert await marketplace.async_download_file(url) is None
 
 
 @pytest.mark.parametrize(
@@ -1203,10 +1252,14 @@ async def test_download_discards_content_over_the_limit(
     ),
 )
 async def test_remove_refuses_escaping_file_name(
-    store: StoreManager, config_dir: Path, category_test_data: CategoryTestData
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    category_test_data: CategoryTestData,
 ) -> None:
     """Test that a crafted file name can not delete a file of its own choosing."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     repository.content.path.local = repository.localpath
     repository.data.file_name = "../configuration.yaml"
 
@@ -1219,12 +1272,12 @@ async def test_remove_refuses_escaping_file_name(
 
 async def test_integration_restart_required_issue(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that downloading an integration asks for a restart."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -1238,9 +1291,11 @@ async def test_integration_restart_required_issue(
     )
 
 
-async def test_integration_manifest_missing_key(store: StoreManager) -> None:
+async def test_integration_manifest_missing_key(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test an integration manifest without a domain."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
     with patch.object(
         repository, "async_get_integration_manifest", return_value={"name": "Example"}
@@ -1263,10 +1318,10 @@ async def test_integration_manifest_missing_key(store: StoreManager) -> None:
     ],
 )
 async def test_integration_manifest_invalid_domain(
-    store: StoreManager, domain: Any
+    marketplace: MarketplaceManager, domain: Any
 ) -> None:
     """Test that a manifest can not name a directory of its own choosing."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
 
     with (
         patch.object(
@@ -1274,42 +1329,44 @@ async def test_integration_manifest_invalid_domain(
             "async_get_integration_manifest",
             return_value={"domain": domain, "name": "Example"},
         ),
-        pytest.raises(StoreError, match="is not a valid integration domain"),
+        pytest.raises(MarketplaceError, match="is not a valid integration domain"),
     ):
         await repository.validate_repository()
 
 
 async def test_integration_domain_owned_by_another_repository(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
 ) -> None:
     """Test that a download can not take over the directory of another one."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = "example"
 
-    other = IntegrationRepository(store, "test/other")
+    other = IntegrationRepository(marketplace, "test/other")
     other.data.id = "1337"
     other.data.domain = "example"
     other.data.installed = True
-    store.repositories.register(other)
+    marketplace.repositories.register(other)
 
-    with pytest.raises(StoreError, match="is owned by test/other"):
+    with pytest.raises(MarketplaceError, match="is owned by test/other"):
         await repository.async_pre_install()
 
 
-async def test_integration_manifest_missing_file(store: StoreManager) -> None:
+async def test_integration_manifest_missing_file(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test an integration that has no manifest.json in its tree."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.tree = []
 
-    with pytest.raises(StoreError, match="No manifest.json file found"):
+    with pytest.raises(MarketplaceError, match="No manifest.json file found"):
         await repository.async_get_integration_manifest()
 
 
 async def test_integration_manifest_for_version(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test reading the integration manifest of a specific version."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
 
     url = (
@@ -1323,9 +1380,11 @@ async def test_integration_manifest_for_version(
     }
 
 
-async def test_integration_manifest_for_missing_version(store: StoreManager) -> None:
+async def test_integration_manifest_for_missing_version(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test the integration manifest of a version that was never published."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     await repository.update_repository(force=True)
 
     assert await repository.get_integration_manifest(version="99.99.99") is None
@@ -1333,11 +1392,13 @@ async def test_integration_manifest_for_missing_version(store: StoreManager) -> 
 
 async def test_template_reloads_custom_templates(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that removing a template repository reloads the custom templates."""
-    repository = store.repositories.get_by_full_name("hacs-test-org/template-basic")
+    repository = marketplace.repositories.get_by_full_name(
+        "hacs-test-org/template-basic"
+    )
     repository.data.installed = True
     repository.data.file_name = "example.jinja"
     repository.content.path.local = repository.localpath
@@ -1358,9 +1419,9 @@ async def test_template_reloads_custom_templates(
 
 
 @pytest.fixture
-async def downloaded_plugin(store: StoreManager) -> PluginRepository:
+async def downloaded_plugin(marketplace: MarketplaceManager) -> PluginRepository:
     """Return a downloaded dashboard plugin repository."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
     await repository.async_install()
     return repository
 
@@ -1444,14 +1505,14 @@ async def test_dashboard_url_with_invalid_file_name(
     ],
 )
 async def test_dashboard_resource_restart_issue(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     issue_registry: ir.IssueRegistry,
     created_www_directory: bool,
     expect_issue: bool,
 ) -> None:
     """Test that a resource in a www directory we created asks for a restart."""
-    store.status.created_www_directory = created_www_directory
-    repository = store.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    marketplace.status.created_www_directory = created_www_directory
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
 
     await repository.async_install()
 
@@ -1607,33 +1668,33 @@ async def test_dashboard_resources_ignore_prefix_matches(
 
 async def test_repository_ignored_by_country(mock_repository: Repository) -> None:
     """Test that the configured country filters repositories out."""
-    mock_repository.store.configuration.country = "ALL"
+    mock_repository.marketplace.configuration.country = "ALL"
     assert not mock_repository.ignored_by_country_configuration
 
     mock_repository.repository_manifest.country = ["NO"]
     assert not mock_repository.ignored_by_country_configuration
 
-    mock_repository.store.configuration.country = "SE"
+    mock_repository.marketplace.configuration.country = "SE"
     assert mock_repository.ignored_by_country_configuration
 
-    mock_repository.store.configuration.country = "NO"
+    mock_repository.marketplace.configuration.country = "NO"
     assert not mock_repository.ignored_by_country_configuration
 
 
-async def test_uninstall_without_a_domain(store: StoreManager) -> None:
+async def test_uninstall_without_a_domain(marketplace: MarketplaceManager) -> None:
     """Test that an integration without a domain can not be removed."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.domain = None
 
-    with pytest.raises(StoreError, match="Could not uninstall"):
+    with pytest.raises(MarketplaceError, match="Could not uninstall"):
         await repository.uninstall()
 
 
 async def test_repository_manifest_of_a_removed_version(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test the manifest of a version that has no hacs.json."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/3.0.0/hacs.json"
     response_mocker.add(url, mocked_response(url, status=HTTPStatus.NOT_FOUND))
 
@@ -1641,10 +1702,10 @@ async def test_repository_manifest_of_a_removed_version(
 
 
 async def test_ensure_download_capabilities_rejects_new_core_requirement(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test refusing a version that needs a newer Home Assistant."""
-    repository = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/3.0.0/hacs.json"
     response_mocker.add(
         url,
@@ -1654,6 +1715,7 @@ async def test_ensure_download_capabilities_rejects_new_core_requirement(
     )
 
     with pytest.raises(
-        StoreError, match="This version requires Home Assistant 9999.99.99 or newer"
+        MarketplaceError,
+        match="This version requires Home Assistant 9999.99.99 or newer",
     ):
         await repository.async_download_repository(ref="3.0.0")

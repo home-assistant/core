@@ -8,9 +8,9 @@ import re
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
-from homeassistant.components.marketplace.enums import StoreSignal
+from homeassistant.components.marketplace.enums import MarketplaceSignal
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.update import (
     ATTR_VERSION,
@@ -27,10 +27,10 @@ from homeassistant.setup import async_setup_component
 from . import (
     CategoryTestData,
     category_test_data_parametrized,
-    get_store,
+    get_marketplace,
     mocked_response,
 )
-from .conftest import StoreResponses
+from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
 
 from tests.common import MockConfigEntry
@@ -46,31 +46,41 @@ async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> No
 
 @pytest.fixture
 async def downloaded_repository(
-    hass: HomeAssistant, store: StoreManager, category_test_data: CategoryTestData
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    category_test_data: CategoryTestData,
 ) -> Repository:
     """Return a downloaded repository with its entities loaded."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     repository.data.installed = True
     repository.data.installed_version = category_test_data["version_base"]
 
-    await hass.config_entries.async_reload(store.configuration.config_entry.entry_id)
+    await hass.config_entries.async_reload(
+        marketplace.configuration.config_entry.entry_id
+    )
     await hass.async_block_till_done()
 
-    return get_store(hass).repositories.get_by_full_name(
+    return get_marketplace(hass).repositories.get_by_full_name(
         category_test_data["repository"]
     )
 
 
 @pytest.fixture
 async def integration_update_entity(
-    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    entity_registry: er.EntityRegistry,
 ) -> str:
     """Return the update entity of a downloaded integration repository."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.installed_version = "1.0.0"
 
-    await hass.config_entries.async_reload(store.configuration.config_entry.entry_id)
+    await hass.config_entries.async_reload(
+        marketplace.configuration.config_entry.entry_id
+    )
     await hass.async_block_till_done()
 
     return entity_registry.async_get_entity_id(
@@ -115,15 +125,17 @@ async def test_update_device_info(
 
 
 async def test_update_entity_becomes_unavailable(
-    hass: HomeAssistant, store: StoreManager, integration_update_entity: str
+    hass: HomeAssistant, marketplace: MarketplaceManager, integration_update_entity: str
 ) -> None:
     """Test that removing a repository makes its update entity unavailable."""
     assert hass.states.get(integration_update_entity).state == "off"
 
-    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = False
     repository.data.last_fetched = None
-    get_store(hass).coordinators[repository.data.category].async_update_listeners()
+    get_marketplace(hass).coordinators[
+        repository.data.category
+    ].async_update_listeners()
     await hass.async_block_till_done()
 
     assert hass.states.get(integration_update_entity).state == "unavailable"
@@ -160,13 +172,15 @@ async def test_update_entity_picture_for_other_categories(
 
 
 async def test_update_entity_release_summary(
-    hass: HomeAssistant, store: StoreManager, integration_update_entity: str
+    hass: HomeAssistant, marketplace: MarketplaceManager, integration_update_entity: str
 ) -> None:
     """Test that a repository waiting for a restart says so."""
-    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.pending_restart = True
     repository.data.last_fetched = None
-    get_store(hass).coordinators[repository.data.category].async_update_listeners()
+    get_marketplace(hass).coordinators[
+        repository.data.category
+    ].async_update_listeners()
     await hass.async_block_till_done()
 
     assert hass.states.get(integration_update_entity).attributes["release_summary"] == (
@@ -182,7 +196,7 @@ async def test_update_entity_download_progress(
 
     async_dispatcher_send(
         hass,
-        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": 40},
     )
     await hass.async_block_till_done()
@@ -193,7 +207,7 @@ async def test_update_entity_download_progress(
 
     async_dispatcher_send(
         hass,
-        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": REPOSITORY_INTEGRATION, "progress": False},
     )
     await hass.async_block_till_done()
@@ -209,7 +223,7 @@ async def test_update_entity_ignores_other_repositories(
     """Test that the progress of another download is ignored."""
     async_dispatcher_send(
         hass,
-        StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
         {"repository": "other/repository", "progress": 40},
     )
     await hass.async_block_till_done()
@@ -282,7 +296,7 @@ async def test_install_without_an_update(
 async def test_install_version_without_a_manifest(
     hass: HomeAssistant,
     integration_update_entity: str,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
 ) -> None:
     """Test installing a version that carries no hacs.json."""
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/3.0.0/hacs.json"
@@ -308,7 +322,7 @@ async def test_install_version_without_a_manifest(
 async def test_install_version_requiring_a_newer_core(
     hass: HomeAssistant,
     integration_update_entity: str,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
 ) -> None:
     """Test installing a version that needs a newer Home Assistant."""
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/3.0.0/hacs.json"
@@ -338,7 +352,7 @@ async def test_install_version_requiring_a_newer_core(
 async def test_install_download_failure(
     hass: HomeAssistant,
     integration_update_entity: str,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
 ) -> None:
     """Test a version that can not be downloaded."""
     for variant in ("tags", "heads"):
@@ -375,7 +389,7 @@ async def test_release_notes(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the release notes shown for an available update."""
-    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed_version = "0.9.0"
 
     client = await hass_ws_client(hass)
@@ -395,7 +409,7 @@ async def test_release_notes_while_pending_restart(
     integration_update_entity: str,
 ) -> None:
     """Test that a repository waiting for a restart has no release notes."""
-    get_store(hass).repositories.get_by_id(
+    get_marketplace(hass).repositories.get_by_id(
         REPOSITORY_INTEGRATION_ID
     ).pending_restart = True
 

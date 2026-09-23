@@ -3,12 +3,12 @@
 import pytest
 
 from homeassistant.components.marketplace.base import (
+    MarketplaceConfiguration,
+    MarketplaceManager,
     Repositories,
-    StoreConfiguration,
-    StoreManager,
 )
 from homeassistant.components.marketplace.enums import RepositoryCategory
-from homeassistant.components.marketplace.exceptions import StoreError
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import Repository
 
 from .const import DEFAULT_CATEGORIES
@@ -16,7 +16,7 @@ from .const import DEFAULT_CATEGORIES
 
 def test_configuration_defaults() -> None:
     """Test the configuration defaults and what a dict can set."""
-    configuration = StoreConfiguration()
+    configuration = MarketplaceConfiguration()
     configuration.update_from_dict({"token": "xxxxxxxxxx"})
 
     assert isinstance(configuration.to_json(), dict)
@@ -37,7 +37,7 @@ def test_configuration_defaults() -> None:
 )
 def test_configuration_ignores_option(option: str) -> None:
     """Test the options that are accepted but never stored."""
-    configuration = StoreConfiguration()
+    configuration = MarketplaceConfiguration()
 
     configuration.update_from_dict({option: True})
 
@@ -46,86 +46,86 @@ def test_configuration_ignores_option(option: str) -> None:
 
 def test_configuration_rejects_non_dict() -> None:
     """Test updating from something that is not a dict."""
-    configuration = StoreConfiguration()
+    configuration = MarketplaceConfiguration()
 
-    with pytest.raises(StoreError):
+    with pytest.raises(MarketplaceError):
         configuration.update_from_dict(None)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_repository_lookups(
-    store: StoreManager, mock_repository: Repository
+    marketplace: MarketplaceManager, mock_repository: Repository
 ) -> None:
     """Test looking a repository up by id and by name."""
-    store.repositories = Repositories()
-    assert store.repositories.get_by_id(None) is None
-    assert store.repositories.get_by_full_name(None) is None
+    marketplace.repositories = Repositories()
+    assert marketplace.repositories.get_by_id(None) is None
+    assert marketplace.repositories.get_by_full_name(None) is None
 
     mock_repository.data.id = "1337"
     mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
-    store.repositories.register(mock_repository)
+    marketplace.repositories.register(mock_repository)
 
-    assert store.repositories.get_by_id("1337").data.full_name == "test/test"
-    assert store.repositories.get_by_full_name("test/test").data.id == "1337"
-    assert store.repositories.is_registered(repository_id="1337")
-    assert store.repositories.is_downloaded(repository_id="1337")
+    assert marketplace.repositories.get_by_id("1337").data.full_name == "test/test"
+    assert marketplace.repositories.get_by_full_name("test/test").data.id == "1337"
+    assert marketplace.repositories.is_registered(repository_id="1337")
+    assert marketplace.repositories.is_downloaded(repository_id="1337")
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_category_downloaded(
-    store: StoreManager, mock_repository: Repository
+    marketplace: MarketplaceManager, mock_repository: Repository
 ) -> None:
     """Test only the category of a downloaded repository counts as downloaded."""
-    store.repositories = Repositories()
+    marketplace.repositories = Repositories()
     mock_repository.data.id = "1337"
     mock_repository.data.category = RepositoryCategory.INTEGRATION
     mock_repository.data.installed = True
-    store.repositories.register(mock_repository)
+    marketplace.repositories.register(mock_repository)
 
-    assert store.repositories.category_downloaded(RepositoryCategory.INTEGRATION)
-    assert not store.repositories.category_downloaded(RepositoryCategory.THEME)
+    assert marketplace.repositories.category_downloaded(RepositoryCategory.INTEGRATION)
+    assert not marketplace.repositories.category_downloaded(RepositoryCategory.THEME)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_repository_id_is_set_once(
-    store: StoreManager, mock_repository: Repository
+    marketplace: MarketplaceManager, mock_repository: Repository
 ) -> None:
     """Test a repository id can be set once and then never changes."""
     mock_repository.data.id = "0"
-    store.repositories.register(mock_repository)
+    marketplace.repositories.register(mock_repository)
 
-    store.repositories.set_repository_id(mock_repository, "42")
+    marketplace.repositories.set_repository_id(mock_repository, "42")
 
     with pytest.raises(ValueError):
-        store.repositories.set_repository_id(mock_repository, "30")
+        marketplace.repositories.set_repository_id(mock_repository, "30")
 
     # Setting the same id again is fine
-    store.repositories.set_repository_id(mock_repository, "42")
+    marketplace.repositories.set_repository_id(mock_repository, "42")
 
-    assert store.repositories.get_by_full_name("test/test") is mock_repository
-    assert store.repositories.get_by_id("42") is mock_repository
+    assert marketplace.repositories.get_by_full_name("test/test") is mock_repository
+    assert marketplace.repositories.get_by_id("42") is mock_repository
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_unregister_repository(
-    store: StoreManager, mock_repository: Repository
+    marketplace: MarketplaceManager, mock_repository: Repository
 ) -> None:
     """Test unregistering a repository twice does not raise."""
     mock_repository.data.id = "42"
-    store.repositories.register(mock_repository)
+    marketplace.repositories.register(mock_repository)
 
-    store.repositories.unregister(mock_repository)
-    assert store.repositories.get_by_full_name("test/test") is None
-    assert store.repositories.get_by_id("42") is None
+    marketplace.repositories.unregister(mock_repository)
+    assert marketplace.repositories.get_by_full_name("test/test") is None
+    assert marketplace.repositories.get_by_id("42") is None
 
-    store.repositories.unregister(mock_repository)
+    marketplace.repositories.unregister(mock_repository)
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_active_categories(store: StoreManager) -> None:
+async def test_active_categories(marketplace: MarketplaceManager) -> None:
     """Test which categories are active for the default options."""
-    assert store.common.categories == DEFAULT_CATEGORIES | {
+    assert marketplace.common.categories == DEFAULT_CATEGORIES | {
         RepositoryCategory.APPDAEMON,
         RepositoryCategory.THEME,
     }

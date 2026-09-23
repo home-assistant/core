@@ -10,8 +10,8 @@ from homeassistant.loader import (
 )
 
 from ..const import DOMAIN
-from ..enums import RepositoryCategory, RepositoryFile, StoreSignal
-from ..exceptions import AppRepositoryError, StoreError
+from ..enums import MarketplaceSignal, RepositoryCategory, RepositoryFile
+from ..exceptions import AppRepositoryError, MarketplaceError
 from ..utils.decode import decode_content
 from ..utils.decorator import concurrent
 from ..utils.filters import get_first_directory_in_directory
@@ -20,7 +20,7 @@ from ..utils.logger import LOGGER
 from .base import Repository
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
 VALID_DOMAIN = re.compile(r"^[a-z0-9_]+$")
 
@@ -32,7 +32,7 @@ def _validated_domain(domain: Any) -> str:
     written to, so anything else would let a repository pick its own target.
     """
     if not isinstance(domain, str) or not VALID_DOMAIN.match(domain):
-        raise StoreError(f"'{domain}' is not a valid integration domain")
+        raise MarketplaceError(f"'{domain}' is not a valid integration domain")
 
     return domain
 
@@ -40,9 +40,9 @@ def _validated_domain(domain: Any) -> str:
 class IntegrationRepository(Repository):
     """Integration repository."""
 
-    def __init__(self, store: StoreManager, full_name: str) -> None:
+    def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(store=store)
+        super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.INTEGRATION
@@ -53,7 +53,9 @@ class IntegrationRepository(Repository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.store.core.config_path}/custom_components/{self.data.domain}"
+        return (
+            f"{self.marketplace.core.config_path}/custom_components/{self.data.domain}"
+        )
 
     @override
     async def async_pre_install(self) -> None:
@@ -61,13 +63,13 @@ class IntegrationRepository(Repository):
         if not self.data.domain:
             return
 
-        for repository in self.store.repositories.list_downloaded:
+        for repository in self.marketplace.repositories.list_downloaded:
             if (
                 repository is not self
                 and repository.data.category == RepositoryCategory.INTEGRATION
                 and repository.data.domain == self.data.domain
             ):
-                raise StoreError(
+                raise MarketplaceError(
                     f"The '{self.data.domain}' directory is owned by "
                     f"{repository.data.full_name}"
                 )
@@ -84,7 +86,7 @@ class IntegrationRepository(Repository):
         if self.pending_restart:
             self.logger.debug("%s Creating restart_required issue", self.string)
             async_create_issue(
-                hass=self.store.hass,
+                hass=self.marketplace.hass,
                 domain=DOMAIN,
                 issue_id=f"restart_required_{self.data.id}_{self.ref}",
                 is_fixable=True,
@@ -122,7 +124,7 @@ class IntegrationRepository(Repository):
                     or "repository.yml" in self.treefiles
                 ):
                     raise AppRepositoryError
-                raise StoreError(
+                raise MarketplaceError(
                     f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
                 )
             self.content.path.remote = f"custom_components/{name}"
@@ -152,7 +154,7 @@ class IntegrationRepository(Repository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.store.status.startup:
+                if not self.marketplace.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
@@ -196,8 +198,8 @@ class IntegrationRepository(Repository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.store.async_dispatch(
-                StoreSignal.REPOSITORY,
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",
@@ -209,8 +211,8 @@ class IntegrationRepository(Repository):
     async def reload_custom_components(self) -> None:
         """Reload custom_components (and config flows)in HA."""
         self.logger.info("Reloading custom_component cache")
-        async_clear_custom_components_cache(self.store.hass)
-        await async_get_custom_components(self.store.hass)
+        async_clear_custom_components_cache(self.marketplace.hass)
+        await async_get_custom_components(self.marketplace.hass)
         self.logger.info("Custom_component cache reloaded")
 
     async def async_get_integration_manifest(
@@ -224,7 +226,7 @@ class IntegrationRepository(Repository):
         )
 
         if manifest_path not in (entry.path for entry in self.tree):
-            raise StoreError(
+            raise MarketplaceError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 
@@ -233,8 +235,8 @@ class IntegrationRepository(Repository):
             "%s Getting %s for ref=%s", self.string, manifest_path, target_ref
         )
 
-        response = await self.store.async_github_api_method(
-            method=self.store.githubapi.repos.contents.get,
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.repos.contents.get,
             repository=self.data.full_name,
             path=manifest_path,
             params={"ref": target_ref},
@@ -254,7 +256,7 @@ class IntegrationRepository(Repository):
         )
 
         if manifest_path not in (entry.path for entry in self.tree):
-            raise StoreError(
+            raise MarketplaceError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
 
@@ -262,7 +264,7 @@ class IntegrationRepository(Repository):
             "%s Getting manifest.json for version=%s", self.string, version
         )
         try:
-            result = await self.store.async_download_file(
+            result = await self.marketplace.async_download_file(
                 f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/{manifest_path}",
                 nolog=True,
             )

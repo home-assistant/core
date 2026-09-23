@@ -7,10 +7,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
-from homeassistant.components.marketplace.enums import RepositoryCategory, StoreSignal
-from homeassistant.components.marketplace.exceptions import StoreError
+from homeassistant.components.marketplace.enums import (
+    MarketplaceSignal,
+    RepositoryCategory,
+)
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.utils.storage import async_save_to_storage
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
@@ -31,7 +34,7 @@ CRITICAL_REPOSITORY = {
 # One valid message per registered command, used to check the admin requirement.
 COMMANDS: tuple[dict[str, Any], ...] = (
     {"type": "marketplace/info"},
-    {"type": "marketplace/subscribe", "signal": StoreSignal.REPOSITORY},
+    {"type": "marketplace/subscribe", "signal": MarketplaceSignal.REPOSITORY},
     {"type": "marketplace/critical/list"},
     {"type": "marketplace/critical/acknowledge", "repository": REPOSITORY_INTEGRATION},
     {"type": "marketplace/repositories/list"},
@@ -199,12 +202,12 @@ async def test_subscribe(
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
-        {"type": "marketplace/subscribe", "signal": StoreSignal.REPOSITORY}
+        {"type": "marketplace/subscribe", "signal": MarketplaceSignal.REPOSITORY}
     )
     assert (await client.receive_json())["success"]
 
     async_dispatcher_send(
-        hass, StoreSignal.REPOSITORY, {"action": "update", "id": 1337}
+        hass, MarketplaceSignal.REPOSITORY, {"action": "update", "id": 1337}
     )
 
     response = await client.receive_json()
@@ -234,10 +237,12 @@ async def test_repository_info(
 
 
 async def test_repository_info_clears_new(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that looking at a repository stops it from being new."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.new = True
 
     client = await hass_ws_client(hass)
@@ -254,15 +259,17 @@ async def test_repository_info_clears_new(
 
 async def test_repository_info_survives_a_broken_update(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a repository that can not be refreshed still reports back."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
-    with patch.object(repository, "update_repository", side_effect=StoreError("Nope")):
+    with patch.object(
+        repository, "update_repository", side_effect=MarketplaceError("Nope")
+    ):
         await client.send_json_auto_id(
             {
                 "type": "marketplace/repository/info",
@@ -276,7 +283,9 @@ async def test_repository_info_survives_a_broken_update(
 
 
 async def test_repositories_list(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test listing every known repository."""
     client = await hass_ws_client(hass)
@@ -286,7 +295,7 @@ async def test_repositories_list(
 
     assert response["success"]
     assert {repository["full_name"] for repository in response["result"]} == {
-        repository.data.full_name for repository in store.repositories.list_all
+        repository.data.full_name for repository in marketplace.repositories.list_all
     }
 
 
@@ -309,12 +318,14 @@ async def test_repositories_list_by_category(
 
 
 async def test_repositories_list_skips_other_countries(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that a repository for another country is not listed."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.repository_manifest.country = ["NO"]
-    store.configuration.country = "SE"
+    marketplace.configuration.country = "SE"
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "marketplace/repositories/list"})
@@ -327,10 +338,12 @@ async def test_repositories_list_skips_other_countries(
 
 
 async def test_repositories_removed(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test listing the repositories that were removed from the Marketplace."""
-    removed = store.repositories.removed_repository("removed/repository")
+    removed = marketplace.repositories.removed_repository("removed/repository")
     removed.update_data({"reason": "Gone", "removal_type": "remove"})
 
     client = await hass_ws_client(hass)
@@ -346,11 +359,13 @@ async def test_repositories_removed(
 
 
 async def test_repositories_removed_skips_ignored(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that an ignored repository is not reported as removed."""
-    store.repositories.removed_repository("removed/repository")
-    store.common.ignored_repositories.add("removed/repository")
+    marketplace.repositories.removed_repository("removed/repository")
+    marketplace.common.ignored_repositories.add("removed/repository")
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "marketplace/repositories/removed"})
@@ -363,11 +378,13 @@ async def test_repositories_removed_skips_ignored(
 
 
 async def test_repositories_clear_new_for_categories(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test clearing the new flag of a whole category."""
-    integration = store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
-    plugin = store.repositories.get_by_full_name("hacs-test-org/plugin-basic")
+    integration = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    plugin = marketplace.repositories.get_by_full_name("hacs-test-org/plugin-basic")
     integration.data.new = True
     plugin.data.new = True
 
@@ -382,10 +399,12 @@ async def test_repositories_clear_new_for_categories(
 
 
 async def test_repositories_clear_new_for_one_repository(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test clearing the new flag of a single repository."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.new = True
 
     client = await hass_ws_client(hass)
@@ -401,11 +420,13 @@ async def test_repositories_clear_new_for_one_repository(
 
 
 async def test_repositories_add_existing(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test adding a repository the Marketplace already knows."""
     client = await hass_ws_client(hass)
-    with patch.object(store, "async_dispatch", side_effect=None) as dispatch:
+    with patch.object(marketplace, "async_dispatch", side_effect=None) as dispatch:
         await client.send_json_auto_id(
             {
                 "type": "marketplace/repositories/add",
@@ -468,7 +489,9 @@ async def test_repositories_add_invalid_url(
 
 
 async def test_repositories_remove(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test unregistering a repository from the Marketplace."""
     client = await hass_ws_client(hass)
@@ -481,11 +504,13 @@ async def test_repositories_remove(
     )
     assert (await client.receive_json())["success"]
 
-    assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is None
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is None
 
 
 async def test_repository_ignore(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test ignoring a repository."""
     client = await hass_ws_client(hass)
@@ -498,11 +523,13 @@ async def test_repository_ignore(
     )
     assert (await client.receive_json())["success"]
 
-    assert REPOSITORY_INTEGRATION in store.common.ignored_repositories
+    assert REPOSITORY_INTEGRATION in marketplace.common.ignored_repositories
 
 
 async def test_repository_state(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test setting the state the frontend shows for a repository."""
     client = await hass_ws_client(hass)
@@ -516,14 +543,18 @@ async def test_repository_state(
     )
     assert (await client.receive_json())["success"]
 
-    assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).state == "other"
+    assert (
+        marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).state == "other"
+    )
 
 
 async def test_repository_version(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test pinning a repository to a version."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     with patch.object(repository, "update_repository"):
@@ -541,10 +572,12 @@ async def test_repository_version(
 
 
 async def test_repository_version_default_branch(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that selecting the default branch stops pinning the repository."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.update_repository(force=True)
     assert repository.data.default_branch == "main"
 
@@ -562,7 +595,9 @@ async def test_repository_version_default_branch(
 
 
 async def test_repository_beta(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test opting a repository in to pre-releases."""
     client = await hass_ws_client(hass)
@@ -576,14 +611,16 @@ async def test_repository_beta(
     )
     assert (await client.receive_json())["success"]
 
-    assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.show_beta
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.show_beta
 
 
 async def test_repository_refresh(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test refreshing a single repository."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     with patch.object(
@@ -601,7 +638,9 @@ async def test_repository_refresh(
 
 
 async def test_repository_download(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test downloading a repository."""
     client = await hass_ws_client(hass)
@@ -614,20 +653,22 @@ async def test_repository_download(
     )
     assert (await client.receive_json())["success"]
 
-    assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed
 
 
 async def test_repository_download_failure(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test a download that can not be completed."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     with patch.object(
         repository,
         "async_download_repository",
-        side_effect=StoreError("Could not download"),
+        side_effect=MarketplaceError("Could not download"),
     ):
         await client.send_json_auto_id(
             {
@@ -642,10 +683,12 @@ async def test_repository_download_failure(
 
 
 async def test_repository_remove(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a downloaded repository."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -668,10 +711,12 @@ async def test_repository_remove(
 
 
 async def test_repository_release_notes(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the release notes of the versions newer than the downloaded one."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.update_repository(force=True)
     repository.data.installed_version = "0.9.0"
 
@@ -689,10 +734,12 @@ async def test_repository_release_notes(
 
 
 async def test_repository_release_notes_without_a_download(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that a repository that is not downloaded lists every release."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     await repository.update_repository(force=True)
 
     client = await hass_ws_client(hass)
@@ -709,7 +756,9 @@ async def test_repository_release_notes_without_a_download(
 
 
 async def test_repository_releases(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test listing the releases of a repository."""
     client = await hass_ws_client(hass)
@@ -732,14 +781,16 @@ async def test_repository_releases(
 
 
 async def test_repository_releases_failure(
-    hass: HomeAssistant, store: StoreManager, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test releases that can not be fetched."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
 
     client = await hass_ws_client(hass)
     with patch.object(
-        repository, "async_get_releases", side_effect=StoreError("Rate limited")
+        repository, "async_get_releases", side_effect=MarketplaceError("Rate limited")
     ):
         await client.send_json_auto_id(
             {

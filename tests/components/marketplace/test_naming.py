@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-import homeassistant.components.marketplace as store_integration
+import homeassistant.components.marketplace as marketplace_integration
 
-INTEGRATION_PATH = Path(store_integration.__file__).parent
+INTEGRATION_PATH = Path(marketplace_integration.__file__).parent
 
 # Every mention of HACS left in the integration has to carry one of these.
 ALLOWED_TOKENS: dict[str, str] = {

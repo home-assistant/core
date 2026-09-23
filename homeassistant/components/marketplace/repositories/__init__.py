@@ -13,11 +13,11 @@ from .template import TemplateRepository
 from .theme import ThemeRepository
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
-# The category classes all take (store, full_name), which the base class does not.
+# The category classes all take (marketplace, full_name), which the base class does not.
 REPOSITORY_CLASSES: dict[
-    RepositoryCategory, Callable[[StoreManager, str], Repository]
+    RepositoryCategory, Callable[[MarketplaceManager, str], Repository]
 ] = {
     RepositoryCategory.THEME: ThemeRepository,
     RepositoryCategory.INTEGRATION: IntegrationRepository,

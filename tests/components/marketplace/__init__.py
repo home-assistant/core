@@ -9,7 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from homeassistant.components.marketplace.base import StoreManager, async_get_store
+from homeassistant.components.marketplace.base import (
+    MarketplaceManager,
+    async_get_marketplace,
+)
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.enums import RepositoryCategory
 from homeassistant.components.marketplace.repositories.base import (
@@ -134,23 +137,23 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def get_store(hass: HomeAssistant) -> StoreManager:
+def get_marketplace(hass: HomeAssistant) -> MarketplaceManager:
     """Return the Marketplace object of the loaded config entry."""
-    return async_get_store(hass)
+    return async_get_marketplace(hass)
 
 
 def dummy_repository_base(
-    store: StoreManager, repository: Repository | None = None
+    marketplace: MarketplaceManager, repository: Repository | None = None
 ) -> Repository:
     """Return a repository with just enough data to be usable in tests."""
     if repository is None:
-        repository = Repository(store)
+        repository = Repository(marketplace)
         repository.data.full_name = "test/test"
         repository.data.full_name_lower = "test/test"
 
-    repository.store = store
-    repository.store.hass = store.hass
-    repository.store.core.config_path = store.hass.config.path()
+    repository.marketplace = marketplace
+    repository.marketplace.hass = marketplace.hass
+    repository.marketplace.core.config_path = marketplace.hass.config.path()
     repository.logger = LOGGER
     repository.data.domain = "test"
     repository.data.last_version = "3"

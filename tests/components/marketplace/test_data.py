@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.marketplace.base import Repositories, StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager, Repositories
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.repositories.base import Repository
-from homeassistant.components.marketplace.utils.data import StoreData
+from homeassistant.components.marketplace.utils.data import MarketplaceData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -39,7 +39,7 @@ async def _mocked_repositories(hass: HomeAssistant, key: str) -> Any:
 
 @pytest.mark.usefixtures("init_integration")
 async def test_write_downloaded_repository(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     mock_repository: Repository,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -47,9 +47,9 @@ async def test_write_downloaded_repository(
     mock_repository.data.category = "integration"
     mock_repository.data.installed = True
     mock_repository.data.installed_version = "1"
-    store.repositories.register(mock_repository)
+    marketplace.repositories.register(mock_repository)
 
-    await store.data.async_write()
+    await marketplace.data.async_write()
 
     stored = hass_storage[f"{DOMAIN}.repositories"]["data"]
     assert stored[str(mock_repository.data.id)]["installed"] is True
@@ -58,27 +58,27 @@ async def test_write_downloaded_repository(
 
 @pytest.mark.usefixtures("stored_repositories", "init_integration")
 async def test_write_without_repositories(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test writing with nothing registered empties the stored data."""
     assert hass_storage[f"{DOMAIN}.repositories"]["data"]
 
-    store.system.disabled_reason = None
-    store.repositories = Repositories()
+    marketplace.system.disabled_reason = None
+    marketplace.repositories = Repositories()
 
-    await store.data.async_write()
+    await marketplace.data.async_write()
 
     assert hass_storage[f"{DOMAIN}.repositories"]["data"] == {}
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_restore(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test restoring registers the repositories and their attributes."""
-    data = StoreData(store)
+    data = MarketplaceData(marketplace)
 
     with patch(
         "homeassistant.components.marketplace.utils.data.async_load_from_storage",
@@ -86,21 +86,25 @@ async def test_restore(
     ):
         assert await data.restore()
 
-    integration = store.repositories.get_by_id("1296269")
-    assert integration is store.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    integration = marketplace.repositories.get_by_id("1296269")
+    assert integration is marketplace.repositories.get_by_full_name(
+        REPOSITORY_INTEGRATION
+    )
     assert integration.data.show_beta is True
     assert integration.data.installed is True
 
-    assert store.repositories.get_by_id("1296267").data.installed is False
+    assert marketplace.repositories.get_by_id("1296267").data.installed is False
 
-    assert store.status.new is False
+    assert marketplace.status.new is False
     assert "Loading base repository information" not in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_restore_skips_placeholder_repository(store: StoreManager) -> None:
+async def test_restore_skips_placeholder_repository(
+    marketplace: MarketplaceManager,
+) -> None:
     """Test the placeholder repository id is not restored."""
-    data = StoreData(store)
+    data = MarketplaceData(marketplace)
 
     async def mocked_load(hass: HomeAssistant, key: str) -> Any:
         """Return a stored repository carrying the placeholder id."""
@@ -114,16 +118,16 @@ async def test_restore_skips_placeholder_repository(store: StoreManager) -> None
     ):
         assert await data.restore()
 
-    assert store.repositories.get_by_id("0") is None
+    assert marketplace.repositories.get_by_id("0") is None
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_restore_unreadable_data(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an unreadable repositories file fails the restore."""
-    data = StoreData(store)
+    data = MarketplaceData(marketplace)
 
     with patch(
         "homeassistant.components.marketplace.utils.data.async_load_from_storage",

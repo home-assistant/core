@@ -5,7 +5,7 @@ from typing import Any
 from aiohttp import ClientSession, ClientTimeout
 import voluptuous as vol
 
-from .exceptions import NotModifiedError, StoreError
+from .exceptions import MarketplaceError, NotModifiedError
 from .utils.logger import LOGGER
 from .utils.validate import (
     VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
@@ -50,9 +50,9 @@ class CatalogClient:
         except NotModifiedError:
             raise
         except TimeoutError:
-            raise StoreError("Timeout of 60s reached") from None
+            raise MarketplaceError("Timeout of 60s reached") from None
         except Exception as exception:
-            raise StoreError(
+            raise MarketplaceError(
                 f"Error fetching data from the catalog: {exception}"
             ) from exception
 

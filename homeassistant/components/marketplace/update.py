@@ -8,23 +8,23 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import StoreConfigEntry
+from .base import MarketplaceConfigEntry
 from .const import DOMAIN
 from .entity import RepositoryEntity
-from .enums import RepositoryCategory, StoreSignal
-from .exceptions import StoreError
+from .enums import MarketplaceSignal, RepositoryCategory
+from .exceptions import MarketplaceError
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: StoreConfigEntry,
+    entry: MarketplaceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup update platform."""
-    store = entry.runtime_data
+    marketplace = entry.runtime_data
     async_add_entities(
-        RepositoryUpdateEntity(store=store, repository=repository)
-        for repository in store.repositories.list_downloaded
+        RepositoryUpdateEntity(marketplace=marketplace, repository=repository)
+        for repository in marketplace.repositories.list_downloaded
     )
 
 
@@ -104,7 +104,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
 
         try:
             await self.repository.async_download_repository(ref=to_download)
-        except StoreError as exception:
+        except MarketplaceError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="download_failed",
@@ -123,7 +123,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         if self.latest_version not in self.repository.data.published_tags:
             releases = await self.repository.get_releases(
                 prerelease=self.repository.data.show_beta,
-                returnlimit=self.store.configuration.release_limit,
+                returnlimit=self.marketplace.configuration.release_limit,
             )
             if releases:
                 self.repository.data.releases = True
@@ -168,7 +168,7 @@ class RepositoryUpdateEntity(RepositoryEntity, UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 self._update_download_progress,
             )
         )

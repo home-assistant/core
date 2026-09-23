@@ -20,7 +20,7 @@ class RepositoryCategory(StrEnum):
         return str(self.value)
 
 
-class StoreSignal(StrEnum):
+class MarketplaceSignal(StrEnum):
     """Dispatcher signals the Marketplace sends."""
 
     CONFIG = "marketplace_config"
@@ -47,7 +47,7 @@ class LovelaceMode(StrEnum):
     YAML = "yaml"
 
 
-class StoreStage(StrEnum):
+class MarketplaceStage(StrEnum):
     """Stages the Marketplace moves through during its lifetime."""
 
     SETUP = "setup"

@@ -14,7 +14,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, VERSION_STORAGE
 from homeassistant.components.marketplace.repositories import (
     AppdaemonRepository,
@@ -28,7 +28,7 @@ from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import dummy_repository_base, get_store, setup_integration
+from . import dummy_repository_base, get_marketplace, setup_integration
 from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN
 
 from tests.common import (
@@ -66,7 +66,7 @@ def _fixture_key(url: URL) -> str:
     return key
 
 
-class StoreResponses:
+class MarketplaceResponses:
     """Responses that take precedence over the recorded ones."""
 
     def __init__(self) -> None:
@@ -101,9 +101,9 @@ class StoreResponses:
 @pytest.fixture(autouse=True)
 async def response_mocker(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> StoreResponses:
+) -> MarketplaceResponses:
     """Serve the recorded GitHub and data service responses from disk."""
-    responses = StoreResponses()
+    responses = MarketplaceResponses()
     fixtures = await hass.async_add_executor_job(_load_proxy_fixtures)
 
     async def _serve(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
@@ -223,48 +223,60 @@ async def init_integration(
 
 
 @pytest.fixture
-def store(hass: HomeAssistant, init_integration: MockConfigEntry) -> StoreManager:
+def marketplace(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> MarketplaceManager:
     """Return the Marketplace object of a set up integration."""
-    return get_store(hass)
+    return get_marketplace(hass)
 
 
 @pytest.fixture
-def mock_repository(store: StoreManager) -> Repository:
+def mock_repository(marketplace: MarketplaceManager) -> Repository:
     """Return a bare repository."""
-    return dummy_repository_base(store)
+    return dummy_repository_base(marketplace)
 
 
 @pytest.fixture
-def mock_repository_appdaemon(store: StoreManager) -> Repository:
+def mock_repository_appdaemon(marketplace: MarketplaceManager) -> Repository:
     """Return an AppDaemon repository."""
-    return dummy_repository_base(store, AppdaemonRepository(store, "test/test"))
+    return dummy_repository_base(
+        marketplace, AppdaemonRepository(marketplace, "test/test")
+    )
 
 
 @pytest.fixture
-def mock_repository_integration(store: StoreManager) -> Repository:
+def mock_repository_integration(marketplace: MarketplaceManager) -> Repository:
     """Return an integration repository."""
-    return dummy_repository_base(store, IntegrationRepository(store, "test/test"))
+    return dummy_repository_base(
+        marketplace, IntegrationRepository(marketplace, "test/test")
+    )
 
 
 @pytest.fixture
-def mock_repository_plugin(store: StoreManager) -> Repository:
+def mock_repository_plugin(marketplace: MarketplaceManager) -> Repository:
     """Return a dashboard plugin repository."""
-    return dummy_repository_base(store, PluginRepository(store, "test/test"))
+    return dummy_repository_base(
+        marketplace, PluginRepository(marketplace, "test/test")
+    )
 
 
 @pytest.fixture
-def mock_repository_python_script(store: StoreManager) -> Repository:
+def mock_repository_python_script(marketplace: MarketplaceManager) -> Repository:
     """Return a python script repository."""
-    return dummy_repository_base(store, PythonScriptRepository(store, "test/test"))
+    return dummy_repository_base(
+        marketplace, PythonScriptRepository(marketplace, "test/test")
+    )
 
 
 @pytest.fixture
-def mock_repository_template(store: StoreManager) -> Repository:
+def mock_repository_template(marketplace: MarketplaceManager) -> Repository:
     """Return a template repository."""
-    return dummy_repository_base(store, TemplateRepository(store, "test/test"))
+    return dummy_repository_base(
+        marketplace, TemplateRepository(marketplace, "test/test")
+    )
 
 
 @pytest.fixture
-def mock_repository_theme(store: StoreManager) -> Repository:
+def mock_repository_theme(marketplace: MarketplaceManager) -> Repository:
     """Return a theme repository."""
-    return dummy_repository_base(store, ThemeRepository(store, "test/test"))
+    return dummy_repository_base(marketplace, ThemeRepository(marketplace, "test/test"))

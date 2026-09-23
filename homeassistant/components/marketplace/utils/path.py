@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from ..exceptions import StoreError
+from ..exceptions import MarketplaceError
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
 
 @lru_cache(maxsize=1)
@@ -33,11 +33,11 @@ def _get_safe_paths(
     }
 
 
-def is_safe(store: StoreManager, path: str | Path) -> bool:
+def is_safe(marketplace: MarketplaceManager, path: str | Path) -> bool:
     """Helper to check if path is safe to remove."""
-    configuration = store.configuration
+    configuration = marketplace.configuration
     return Path(path).resolve().as_posix() not in _get_safe_paths(
-        store.core.config_path,
+        marketplace.core.config_path,
         configuration.appdaemon_path,
         configuration.plugin_path,
         configuration.python_script_path,
@@ -56,6 +56,6 @@ def resolve_in_directory(directory: str | Path, path: str | Path) -> Path:
     resolved = Path(directory, path).resolve()
 
     if resolved != resolved_directory and resolved_directory not in resolved.parents:
-        raise StoreError(f"'{path}' is not inside {resolved_directory}")
+        raise MarketplaceError(f"'{path}' is not inside {resolved_directory}")
 
     return resolved

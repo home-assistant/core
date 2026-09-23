@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.marketplace.const import DOMAIN, VERSION_STORAGE
-from homeassistant.components.marketplace.exceptions import StoreError
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.utils.storage import (
     STORAGE_CACHE_KEY,
     async_load_from_storage,
@@ -17,7 +17,7 @@ from homeassistant.components.marketplace.utils.storage import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_store, setup_integration
+from . import get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -88,33 +88,33 @@ def test_synchronous_load(
     expected: dict[str, Any] | None,
 ) -> None:
     """Test the synchronous load used to read a store off the loop."""
-    store = get_storage_for_key(hass, "test")
+    marketplace = get_storage_for_key(hass, "test")
 
     with patch(
         "homeassistant.components.marketplace.utils.storage.json_util.load_json",
         return_value=stored,
     ):
-        assert store.load() == expected
+        assert marketplace.load() == expected
 
 
 def test_synchronous_load_unreadable(hass: HomeAssistant) -> None:
     """Test an unreadable store raises."""
-    store = get_storage_for_key(hass, "test")
+    marketplace = get_storage_for_key(hass, "test")
 
     with (
         patch(
             "homeassistant.components.marketplace.utils.storage.json_util.load_json",
             side_effect=HomeAssistantError("Not valid JSON"),
         ),
-        pytest.raises(StoreError),
+        pytest.raises(MarketplaceError),
     ):
-        store.load()
+        marketplace.load()
 
 
 async def test_remove(hass: HomeAssistant) -> None:
     """Test only the per repository stores can be removed."""
     with patch(
-        "homeassistant.components.marketplace.utils.storage.StoreStorage.async_remove",
+        "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_remove",
         return_value=AsyncMock(),
     ) as async_remove_mock:
         await async_remove_storage(hass, "test")
@@ -128,10 +128,10 @@ async def test_remove_refuses_a_key_outside_the_storage(hass: HomeAssistant) -> 
     """Test that a repository id can not point the removal out of the storage."""
     with (
         patch(
-            "homeassistant.components.marketplace.utils.storage.StoreStorage.async_remove",
+            "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_remove",
             return_value=AsyncMock(),
         ) as async_remove_mock,
-        pytest.raises(StoreError, match="is not inside"),
+        pytest.raises(MarketplaceError, match="is not inside"),
     ):
         await async_remove_storage(hass, "hacs/../../secrets.yaml")
 
@@ -147,7 +147,7 @@ async def test_save_skips_unchanged_content(
     hass_storage["marketplace.test"] = _stored({"test": "test"})
 
     with patch(
-        "homeassistant.components.marketplace.utils.storage.StoreStorage.async_save",
+        "homeassistant.components.marketplace.utils.storage.MarketplaceStorage.async_save",
         return_value=AsyncMock(),
     ) as async_save_mock:
         await async_save_to_storage(hass, "test", {"test": "test"})
@@ -188,14 +188,16 @@ async def test_hacs_data_is_adopted(
     assert hacs_storage["marketplace.common"]["data"] == HACS_COMMON
     assert hacs_storage["marketplace.critical"]["data"] == HACS_CRITICAL
 
-    store = get_store(hass)
-    assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
+    marketplace = get_marketplace(hass)
+    assert {
+        repo.data.full_name for repo in marketplace.repositories.list_downloaded
+    } == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
     }
-    assert store.common.archived_repositories == {"hacs-test-org/archived"}
-    assert store.common.ignored_repositories == {"hacs-test-org/ignored"}
-    assert store.common.renamed_repositories == {
+    assert marketplace.common.archived_repositories == {"hacs-test-org/archived"}
+    assert marketplace.common.ignored_repositories == {"hacs-test-org/ignored"}
+    assert marketplace.common.renamed_repositories == {
         "hacs-test-org/old": "hacs-test-org/new"
     }
 
@@ -235,8 +237,8 @@ async def test_own_data_wins(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert not get_store(hass).repositories.list_downloaded
-    assert not get_store(hass).common.archived_repositories
+    assert not get_marketplace(hass).repositories.list_downloaded
+    assert not get_marketplace(hass).common.archived_repositories
 
 
 @pytest.mark.usefixtures("hass_storage")
@@ -247,9 +249,9 @@ async def test_fresh_install(
     """Test an installation without any stored data at all."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_store(hass)
-    assert store.status.new is True
-    assert not store.repositories.list_downloaded
+    marketplace = get_marketplace(hass)
+    assert marketplace.status.new is True
+    assert not marketplace.repositories.list_downloaded
 
 
 async def test_legacy_hacs_data_fallback(
@@ -275,10 +277,10 @@ async def test_legacy_hacs_data_fallback(
 
     await setup_integration(hass, mock_config_entry)
 
-    store = get_store(hass)
-    assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
-        REPOSITORY_INTEGRATION
-    }
+    marketplace = get_marketplace(hass)
+    assert {
+        repo.data.full_name for repo in marketplace.repositories.list_downloaded
+    } == {REPOSITORY_INTEGRATION}
 
     # The old file is read, never adopted under one of our own keys
     assert "marketplace.data" not in hass_storage

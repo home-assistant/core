@@ -1,6 +1,6 @@
 """Tests for the Marketplace repairs."""
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.repairs import async_create_fix_flow
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ async def test_restart_required_fix_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
 ) -> None:
     """Test restarting Home Assistant from the repair."""
     assert await async_setup_component(hass, "repairs", {})
@@ -49,7 +49,9 @@ async def test_restart_required_fix_flow(
 
 
 async def test_restart_required_fix_flow_for_an_unknown_repository(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, store: StoreManager
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    marketplace: MarketplaceManager,
 ) -> None:
     """Test the repair of a repository the Marketplace no longer knows."""
     assert await async_setup_component(hass, "repairs", {})

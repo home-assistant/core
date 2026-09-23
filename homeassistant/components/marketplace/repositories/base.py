@@ -16,12 +16,12 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from ..const import COUNTRY_ALL, DOMAIN, MAX_DOWNLOAD_SIZE
-from ..enums import RepositoryFile, StoreSignal
+from ..enums import MarketplaceSignal, RepositoryFile
 from ..exceptions import (
+    MarketplaceError,
     NotModifiedError,
     RepositoryArchivedError,
     RepositoryExistsError,
-    StoreError,
 )
 from ..types import DownloadableContent
 from ..utils.backup import Backup
@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from aiogithubapi.models.release import GitHubReleaseAssetModel, GitHubReleaseModel
     from aiogithubapi.models.repository import GitHubRepositoryModel
 
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
 
 # Domains for integration repositories the Marketplace can not derive one from
@@ -139,7 +139,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
     """Reject an archive that expands to more than we are willing to write."""
     size = sum(info.file_size for info in archive.infolist())
     if size > MAX_DOWNLOAD_SIZE:
-        raise StoreError(
+        raise MarketplaceError(
             f"The archive expands to {size} bytes, "
             f"the limit is {MAX_DOWNLOAD_SIZE} bytes"
         )
@@ -255,7 +255,7 @@ class RepositoryManifest:
     def from_dict(manifest: dict[str, Any] | None) -> RepositoryManifest:
         """Set attributes from dicts."""
         if manifest is None:
-            raise StoreError("Missing manifest data")
+            raise MarketplaceError("Missing manifest data")
 
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {
@@ -309,9 +309,9 @@ class RepositoryContent:
 class Repository:
     """A repository the Marketplace knows about."""
 
-    def __init__(self, store: StoreManager) -> None:
+    def __init__(self, marketplace: MarketplaceManager) -> None:
         """Initialize the repository."""
-        self.store = store
+        self.marketplace = marketplace
         self.additional_info = ""
         self.data = RepositoryData()
         self.content = RepositoryContent()
@@ -366,7 +366,7 @@ class Repository:
         """Return True if hidden by country."""
         if self.data.installed:
             return False
-        configuration = self.store.configuration.country.lower()
+        configuration = self.marketplace.configuration.country.lower()
         if configuration == COUNTRY_ALL.lower():
             return False
 
@@ -451,7 +451,7 @@ class Repository:
         if self.repository_manifest.homeassistant is not None:
             if self.data.releases:
                 if not version_left_higher_or_equal_then_right(
-                    self.store.version.string,
+                    self.marketplace.version.string,
                     self.repository_manifest.homeassistant,
                 ):
                     return False
@@ -545,12 +545,12 @@ class Repository:
                 skip_releases=skip_releases,
             )
         except RepositoryExistsError:
-            self.data.full_name = self.store.common.renamed_repositories[
+            self.data.full_name = self.marketplace.common.renamed_repositories[
                 self.data.full_name
             ]
             await self.common_update_data(ignore_issues=ignore_issues, force=force)
 
-        except StoreError:
+        except MarketplaceError:
             if not ignore_issues and not force:
                 return False
 
@@ -603,7 +603,7 @@ class Repository:
                 ),
                 validate,
             )
-        except StoreError:
+        except MarketplaceError:
             validate.errors.append(
                 f"Download of {self.repository_manifest.filename} was not completed"
             )
@@ -615,17 +615,19 @@ class Repository:
     ) -> None:
         """Download ZIP archive from repository release."""
         try:
-            filecontent = await self.store.async_download_file(content["url"])
+            filecontent = await self.marketplace.async_download_file(content["url"])
 
             if filecontent is None:
                 validate.errors.append(f"Failed to download {content['url']}")
                 return
 
-            temp_dir = await self.store.hass.async_add_executor_job(tempfile.mkdtemp)
+            temp_dir = await self.marketplace.hass.async_add_executor_job(
+                tempfile.mkdtemp
+            )
             # A scratch file, deliberately not named after the remote manifest
             temp_file = Path(temp_dir, "archive.zip")
 
-            result = await self.store.async_save_file(str(temp_file), filecontent)
+            result = await self.marketplace.async_save_file(str(temp_file), filecontent)
 
             def _extract_zip_file():
                 with zipfile.ZipFile(temp_file, "r") as zip_file:
@@ -634,7 +636,7 @@ class Repository:
                         resolve_in_directory(self.content.path.local, member)
                     zip_file.extractall(self.content.path.local)
 
-            await self.store.hass.async_add_executor_job(_extract_zip_file)
+            await self.marketplace.hass.async_add_executor_job(_extract_zip_file)
 
             def cleanup_temp_dir():
                 """Cleanup temp_dir."""
@@ -646,7 +648,7 @@ class Repository:
                 self.logger.info(
                     "%s Download of %s completed", self.string, content["name"]
                 )
-                await self.store.hass.async_add_executor_job(cleanup_temp_dir)
+                await self.marketplace.hass.async_add_executor_job(cleanup_temp_dir)
                 return
 
             validate.errors.append(f"[{content['name']}] was not downloaded")
@@ -664,7 +666,7 @@ class Repository:
             self.logger.info("%s Downloading repository archive", self.string)
             try:
                 await self.download_repository_zip()
-            except StoreError:
+            except MarketplaceError:
                 self.logger.exception(
                     "%s Downloading repository archive failed", self.string
                 )
@@ -681,9 +683,9 @@ class Repository:
             contents = self.gather_files_to_download()
 
         if not contents:
-            raise StoreError("No content to download")
+            raise MarketplaceError("No content to download")
 
-        download_queue = QueueManager(hass=self.store.hass)
+        download_queue = QueueManager(hass=self.marketplace.hass)
 
         for content in contents:
             if (
@@ -701,30 +703,30 @@ class Repository:
         ref = f"{self.ref}".replace("tags/", "")
 
         if not ref:
-            raise StoreError("Missing required elements.")
+            raise MarketplaceError("Missing required elements.")
 
-        filecontent = await self.store.async_download_file(
+        filecontent = await self.marketplace.async_download_file(
             github_archive(repository=self.data.full_name, version=ref, variant="tags"),
             keep_url=True,
             nolog=True,
         )
 
         if filecontent is None:
-            filecontent = await self.store.async_download_file(
+            filecontent = await self.marketplace.async_download_file(
                 github_archive(
                     repository=self.data.full_name, version=ref, variant="heads"
                 ),
                 keep_url=True,
             )
         if filecontent is None:
-            raise StoreError(f"[{self}] Failed to download zipball")
+            raise MarketplaceError(f"[{self}] Failed to download zipball")
 
-        temp_dir = await self.store.hass.async_add_executor_job(tempfile.mkdtemp)
+        temp_dir = await self.marketplace.hass.async_add_executor_job(tempfile.mkdtemp)
         # A scratch file, deliberately not named after the remote manifest
         temp_file = Path(temp_dir, "archive.zip")
-        result = await self.store.async_save_file(str(temp_file), filecontent)
+        result = await self.marketplace.async_save_file(str(temp_file), filecontent)
         if not result:
-            raise StoreError("Could not save ZIP file")
+            raise MarketplaceError("Could not save ZIP file")
 
         def _extract_zip_file():
             with zipfile.ZipFile(temp_file, "r") as zip_file:
@@ -746,10 +748,10 @@ class Repository:
                         extractable.append(path)
 
                 if len(extractable) == 0:
-                    raise StoreError("No content to extract")
+                    raise MarketplaceError("No content to extract")
                 zip_file.extractall(self.content.path.local, extractable)
 
-        await self.store.hass.async_add_executor_job(_extract_zip_file)
+        await self.marketplace.hass.async_add_executor_job(_extract_zip_file)
 
         def cleanup_temp_dir():
             """Cleanup temp_dir."""
@@ -757,7 +759,7 @@ class Repository:
                 self.logger.debug("%s Cleaning up %s", self.string, temp_dir)
                 shutil.rmtree(temp_dir)
 
-        await self.store.hass.async_add_executor_job(cleanup_temp_dir)
+        await self.marketplace.hass.async_add_executor_job(cleanup_temp_dir)
         self.logger.info(
             "%s Content was extracted to %s", self.string, self.content.path.local
         )
@@ -767,8 +769,8 @@ class Repository:
     ) -> dict[str, Any] | None:
         """Get the content of the hacs.json file."""
         try:
-            response = await self.store.async_github_api_method(
-                method=self.store.githubapi.repos.contents.get,
+            response = await self.marketplace.async_github_api_method(
+                method=self.marketplace.githubapi.repos.contents.get,
                 raise_exception=False,
                 repository=self.data.full_name,
                 path=RepositoryFile.REPOSITORY_MANIFEST,
@@ -809,26 +811,26 @@ class Repository:
 
     def remove(self) -> None:
         """Run remove tasks."""
-        if self.store.repositories.is_registered(repository_id=str(self.data.id)):
+        if self.marketplace.repositories.is_registered(repository_id=str(self.data.id)):
             self.logger.info("%s Starting removal", self.string)
-            self.store.repositories.unregister(self)
+            self.marketplace.repositories.unregister(self)
 
     async def uninstall(self) -> None:
         """Run uninstall tasks."""
         self.logger.info("%s Removing", self.string)
         if not await self.remove_local_directory():
-            raise StoreError("Could not uninstall")
+            raise MarketplaceError("Could not uninstall")
         self.data.installed = False
         await self._async_post_uninstall()
         await async_remove_storage(
-            self.store.hass,
+            self.marketplace.hass,
             LEGACY_HACS_REPOSITORY_STORAGE_KEY.format(repository_id=self.data.id),
         )
 
         self.data.installed_version = None
         self.data.installed_commit = None
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY,
             {
                 "id": 1337,
                 "action": "uninstall",
@@ -838,7 +840,7 @@ class Repository:
         )
 
         await self.async_remove_entity_device()
-        ir.async_delete_issue(self.store.hass, DOMAIN, f"removed_{self.data.id}")
+        ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
 
     async def remove_local_directory(self) -> bool:
         """Check the local directory."""
@@ -850,11 +852,11 @@ class Repository:
                 local_path = str(resolve_in_directory(local_path, self.data.file_name))
             elif self.data.category == "theme":
                 path = resolve_in_directory(
-                    f"{self.store.core.config_path}/"
-                    f"{self.store.configuration.theme_path}",
+                    f"{self.marketplace.core.config_path}/"
+                    f"{self.marketplace.configuration.theme_path}",
                     f"{self.data.name}.yaml",
                 )
-                await async_remove(self.store.hass, str(path), missing_ok=True)
+                await async_remove(self.marketplace.hass, str(path), missing_ok=True)
             elif self.data.category == "integration":
                 if not self.data.domain:
                     if domain := DOMAIN_OVERRIDES.get(self.data.full_name):
@@ -865,8 +867,8 @@ class Repository:
                         return False
                 local_path = self.content.path.local
 
-            if await async_exists(self.store.hass, local_path):
-                if not is_safe(self.store, local_path):
+            if await async_exists(self.marketplace.hass, local_path):
+                if not is_safe(self.marketplace, local_path):
                     self.logger.error(
                         "%s Path %s is blocked from removal", self.string, local_path
                     )
@@ -874,11 +876,11 @@ class Repository:
                 self.logger.debug("%s Removing %s", self.string, local_path)
 
                 if self.data.category in ["python_script", "template"]:
-                    await async_remove(self.store.hass, local_path)
+                    await async_remove(self.marketplace.hass, local_path)
                 else:
-                    await async_remove_directory(self.store.hass, local_path)
+                    await async_remove_directory(self.marketplace.hass, local_path)
 
-                while await async_exists(self.store.hass, local_path):
+                while await async_exists(self.marketplace.hass, local_path):
                     await sleep(1)
             else:
                 self.logger.debug(
@@ -887,7 +889,7 @@ class Repository:
                     local_path,
                 )
 
-        except (OSError, StoreError) as exception:
+        except (OSError, MarketplaceError) as exception:
             self.logger.debug(
                 "%s Removing %s failed with %s", self.string, local_path, exception
             )
@@ -934,20 +936,20 @@ class Repository:
     async def async_install(self, *, version: str | None = None, **_: Any) -> None:
         """Run install steps."""
         await self._async_pre_install()
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 30},
         )
         self.logger.info("%s Running installation steps", self.string)
         await self.async_install_repository(version=version)
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 90},
         )
         self.logger.info("%s Installation steps completed", self.string)
         await self._async_post_install()
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": False},
         )
 
@@ -966,8 +968,8 @@ class Repository:
         self.logger.info("%s Running post installation steps", self.string)
         await self.async_post_installation()
         self.data.new = False
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY,
             {
                 "id": 1337,
                 "action": "install",
@@ -987,7 +989,7 @@ class Repository:
         )
         await self.update_repository(force=force_update)
         if self.content.path.local is None:
-            raise StoreError("repository.content.path.local is None")
+            raise MarketplaceError("repository.content.path.local is None")
         self.validate.errors.clear()
 
         version_to_install = version or self.version_to_download()
@@ -996,8 +998,8 @@ class Repository:
         else:
             self.ref = f"tags/{version_to_install}"
 
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 40},
         )
 
@@ -1006,19 +1008,22 @@ class Repository:
                 self.content.path.local,
                 self.repository_manifest.persistent_directory,
             )
-            if await async_exists(self.store.hass, persistent_path):
+            if await async_exists(self.marketplace.hass, persistent_path):
                 persistent_directory = Backup(
-                    store=self.store,
+                    marketplace=self.marketplace,
                     local_path=str(persistent_path),
-                    backup_path=tempfile.gettempdir() + "/store_persistent_directory/",
+                    backup_path=tempfile.gettempdir()
+                    + "/marketplace_persistent_directory/",
                 )
-                await self.store.hass.async_add_executor_job(
+                await self.marketplace.hass.async_add_executor_job(
                     persistent_directory.create
                 )
 
         if self.data.installed and not self.content.single:
-            backup = Backup(store=self.store, local_path=self.content.path.local)
-            await self.store.hass.async_add_executor_job(backup.create)
+            backup = Backup(
+                marketplace=self.marketplace, local_path=self.content.path.local
+            )
+            await self.marketplace.hass.async_add_executor_job(backup.create)
 
         LOGGER.debug("%s Local path is set to %s", self.string, self.content.path.local)
         LOGGER.debug(
@@ -1026,8 +1031,8 @@ class Repository:
         )
         LOGGER.debug("%s Version to install: %s", self.string, version_to_install)
 
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 50},
         )
 
@@ -1036,8 +1041,8 @@ class Repository:
         else:
             await self.download_content(version_to_install)
 
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 70},
         )
 
@@ -1050,16 +1055,16 @@ class Repository:
                     backup.restore()
                     backup.cleanup()
 
-                await self.store.hass.async_add_executor_job(_restore_backup)
-            raise StoreError("Could not download, see log for details")
+                await self.marketplace.hass.async_add_executor_job(_restore_backup)
+            raise MarketplaceError("Could not download, see log for details")
 
-        self.store.async_dispatch(
-            StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+        self.marketplace.async_dispatch(
+            MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
             {"repository": self.data.full_name, "progress": 80},
         )
 
         if self.data.installed and not self.content.single:
-            await self.store.hass.async_add_executor_job(backup.cleanup)
+            await self.marketplace.hass.async_add_executor_job(backup.cleanup)
 
         if persistent_directory is not None:
 
@@ -1067,7 +1072,9 @@ class Repository:
                 persistent_directory.restore()
                 persistent_directory.cleanup()
 
-            await self.store.hass.async_add_executor_job(_restore_persistent_directory)
+            await self.marketplace.hass.async_add_executor_job(
+                _restore_persistent_directory
+            )
 
         if self.validate.success:
             self.data.installed = True
@@ -1084,13 +1091,13 @@ class Repository:
     ) -> tuple[GitHubRepositoryModel, str | None]:
         """Return the repository and the etag of the response."""
         try:
-            response = await self.store.githubapi.repos.get(
+            response = await self.marketplace.githubapi.repos.get(
                 self.data.full_name, etag=etag
             )
         except GitHubNotModifiedException as exception:
             raise NotModifiedError(exception) from exception
         except GitHubException as exception:
-            raise StoreError(exception) from exception
+            raise MarketplaceError(exception) from exception
 
         return response.data, response.etag
 
@@ -1100,22 +1107,22 @@ class Repository:
     async def get_tree(self, ref: str | None) -> list[GitHubGitTreeEntryModel] | None:
         """Return the repository tree."""
         try:
-            response = await self.store.async_github_api_method(
-                method=self.store.githubapi.repos.git.get_tree,
+            response = await self.marketplace.async_github_api_method(
+                method=self.marketplace.githubapi.repos.git.get_tree,
                 repository=self.data.full_name,
                 tree_sha=ref,
                 params={"recursive": "true"},
             )
         except GitHubException as exception:
-            raise StoreError(exception) from exception
+            raise MarketplaceError(exception) from exception
         return response.data.tree
 
     async def get_releases(
         self, prerelease: bool = False, returnlimit: int = 5
     ) -> list[GitHubReleaseModel]:
         """Return the repository releases."""
-        response = await self.store.async_github_api_method(
-            method=self.store.githubapi.repos.releases.list,
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.repos.releases.list,
             repository=self.data.full_name,
         )
         releases: list[GitHubReleaseModel] = []
@@ -1144,7 +1151,7 @@ class Repository:
             )
             self.repository_object = repository_object
             if self.data.full_name.lower() != repository_object.full_name.lower():
-                self.store.common.renamed_repositories[self.data.full_name] = (
+                self.marketplace.common.renamed_repositories[self.data.full_name] = (
                     repository_object.full_name
                 )
                 raise RepositoryExistsError  # noqa: TRY301 # handled below
@@ -1154,28 +1161,32 @@ class Repository:
             return None
         except RepositoryExistsError:
             raise RepositoryExistsError from None
-        except StoreError as exception:
-            if not self.store.status.startup:
+        except MarketplaceError as exception:
+            if not self.marketplace.status.startup:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:
                 self.validate.errors.append("Repository does not exist.")
-                raise StoreError(exception) from exception
+                raise MarketplaceError(exception) from exception
 
         # Make sure the repository is not archived.
         if self.data.archived and not ignore_issues:
             self.validate.errors.append("Repository is archived.")
-            if self.data.full_name not in self.store.common.archived_repositories:
-                self.store.common.archived_repositories.add(self.data.full_name)
+            if self.data.full_name not in self.marketplace.common.archived_repositories:
+                self.marketplace.common.archived_repositories.add(self.data.full_name)
             raise RepositoryArchivedError(f"{self} Repository is archived.")
 
         # Make sure the repository is not in the blacklist.
-        if self.store.repositories.is_removed(self.data.full_name):
-            removed = self.store.repositories.removed_repository(self.data.full_name)
+        if self.marketplace.repositories.is_removed(self.data.full_name):
+            removed = self.marketplace.repositories.removed_repository(
+                self.data.full_name
+            )
             if removed.removal_type != "remove" and not ignore_issues:
                 self.validate.errors.append(
                     "Repository has been requested to be removed."
                 )
-                raise StoreError(f"{self} Repository has been requested to be removed.")
+                raise MarketplaceError(
+                    f"{self} Repository has been requested to be removed."
+                )
 
         # Get releases.
         if not skip_releases:  # pylint: disable=too-many-nested-blocks
@@ -1204,7 +1215,7 @@ class Repository:
                     self.releases.objects = filtered_releases
                     self.data.published_tags = [x.tag_name for x in filtered_releases]
 
-            except StoreError:
+            except MarketplaceError:
                 self.data.releases = False
 
         if not self.force_branch:
@@ -1225,11 +1236,11 @@ class Repository:
         try:
             tree = await self.get_tree(self.ref)
             if not tree:
-                raise StoreError("No files in tree")  # noqa: TRY301 # handled below
+                raise MarketplaceError("No files in tree")  # noqa: TRY301 # handled below
             self.tree = tree
             self.tree_ref = self.ref
             self.treefiles = [entry.path for entry in tree]
-        except StoreError as exception:
+        except MarketplaceError as exception:
             if (
                 not retry
                 and self.ref is not None
@@ -1244,10 +1255,10 @@ class Repository:
                     self.ref,
                 )
                 return await self.common_update_data(ignore_issues, force, True)
-            if not self.store.status.startup and not ignore_issues:
+            if not self.marketplace.status.startup and not ignore_issues:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:
-                raise StoreError(exception) from None
+                raise MarketplaceError(exception) from None
 
     def gather_files_to_download(self) -> list[FileInformation]:
         """Return a list of file objects to be downloaded."""
@@ -1320,8 +1331,8 @@ class Repository:
         self, version: str | None = None
     ) -> list[FileInformation] | None:
         """Gather the contents of a release."""
-        release = await self.store.async_github_api_method(
-            method=self.store.githubapi.generic,
+        release = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.generic,
             endpoint=f"/repos/{self.data.full_name}/releases/tags/{version}",
             raise_exception=False,
         )
@@ -1343,7 +1354,9 @@ class Repository:
         try:
             self.logger.debug("%s Downloading %s", self.string, content.name)
 
-            filecontent = await self.store.async_download_file(content.download_url)
+            filecontent = await self.marketplace.async_download_file(
+                content.download_url
+            )
 
             if filecontent is None:
                 self.validate.errors.append(f"[{content.name}] was not downloaded.")
@@ -1371,7 +1384,9 @@ class Repository:
             # Check local directory
             local_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            result = await self.store.async_save_file(str(local_file_path), filecontent)
+            result = await self.marketplace.async_save_file(
+                str(local_file_path), filecontent
+            )
             if result:
                 self.logger.info(
                     "%s Download of %s completed", self.string, content.name
@@ -1379,15 +1394,15 @@ class Repository:
                 return
             self.validate.errors.append(f"[{content.name}] was not downloaded.")
 
-        except (OSError, StoreError) as exception:
+        except (OSError, MarketplaceError) as exception:
             self.validate.errors.append(f"Download was not completed [{exception}]")
 
     async def async_remove_entity_device(self) -> None:
         """Remove the entity device."""
-        if (config_entry := self.store.configuration.config_entry) is None:
+        if (config_entry := self.marketplace.configuration.config_entry) is None:
             return
 
-        device_registry: dr.DeviceRegistry = dr.async_get(hass=self.store.hass)
+        device_registry: dr.DeviceRegistry = dr.async_get(hass=self.marketplace.hass)
         identifier = (DOMAIN, str(self.data.id))
 
         # Looked up through our own config entry, since identifiers are only
@@ -1448,7 +1463,7 @@ class Repository:
         if target_version is None:
             return None
 
-        result = await self.store.async_download_file(
+        result = await self.marketplace.async_download_file(
             f"https://raw.githubusercontent.com/{self.data.full_name}/{target_version}/{filename}",
             nolog=True,
         )
@@ -1479,7 +1494,7 @@ class Repository:
     ) -> dict[str, Any] | None:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
-        result = await self.store.async_download_file(
+        result = await self.marketplace.async_download_file(
             f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/hacs.json",
             nolog=True,
             handle_rate_limit=True,
@@ -1523,7 +1538,7 @@ class Repository:
         target_manifest: RepositoryManifest | None = None
         if ref is None:
             if not self.can_download:
-                raise StoreError(
+                raise MarketplaceError(
                     f"This {self.data.category} is not available for download."
                 )
             return
@@ -1534,7 +1549,7 @@ class Repository:
             target_manifest = await self.get_repository_manifest(version=ref)
 
         if target_manifest is None:
-            raise StoreError(
+            raise MarketplaceError(
                 f"The version {ref} for this {self.data.category} can not be used."
             )
 
@@ -1542,9 +1557,9 @@ class Repository:
         # which cannot be compared with a Home Assistant version.
         if (
             target_manifest.homeassistant is not None
-            and self.store.version < target_manifest.homeassistant
+            and self.marketplace.version < target_manifest.homeassistant
         ):
-            raise StoreError(
+            raise MarketplaceError(
                 f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
             )
 
@@ -1555,8 +1570,8 @@ class Repository:
         await self._ensure_download_capabilities(ref)
         self.logger.info("Starting download, %s", ref)
         if self.display_version_or_commit == "version":
-            self.store.async_dispatch(
-                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": 10},
             )
             if not ref:
@@ -1565,29 +1580,29 @@ class Repository:
                 self.ref = ref
             self.data.selected_tag = ref
             self.force_branch = ref is not None
-            self.store.async_dispatch(
-                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": 20},
             )
 
         try:
             await self.async_install(version=ref)
-        except StoreError as exception:
-            raise StoreError(
+        except MarketplaceError as exception:
+            raise MarketplaceError(
                 f"Downloading {self.data.full_name} with version {ref or self.data.last_version or self.data.last_commit} failed with ({exception})"
             ) from exception
         finally:
             self.data.selected_tag = None
             self.force_branch = False
-            self.store.async_dispatch(
-                StoreSignal.REPOSITORY_DOWNLOAD_PROGRESS,
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY_DOWNLOAD_PROGRESS,
                 {"repository": self.data.full_name, "progress": False},
             )
 
     async def async_get_releases(self, *, first: int = 30) -> list[GitHubReleaseModel]:
         """Get the last x releases of a repository."""
-        response = await self.store.async_github_api_method(
-            method=self.store.githubapi.repos.releases.list,
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.repos.releases.list,
             repository=self.data.full_name,
             kwargs={"per_page": 30},
         )
@@ -1595,8 +1610,8 @@ class Repository:
 
     async def async_set_last_commits(self) -> None:
         """Set the last commit for the repository."""
-        response = await self.store.async_github_api_method(
-            method=self.store.githubapi.generic,
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.generic,
             endpoint=f"/repos/{self.data.full_name}/branches/{self.data.default_branch}",
         )
         if response is not None and response.data:

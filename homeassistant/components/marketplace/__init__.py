@@ -27,18 +27,18 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 
-from .base import StoreConfigEntry, StoreManager
+from .base import MarketplaceConfigEntry, MarketplaceManager
 from .const import CLIENT_NAME, DOMAIN, LEGACY_HACS_SYSTEM_ID
 from .data_client import CatalogClient
-from .enums import DisabledReason, LovelaceMode, StoreStage
-from .exceptions import StoreError
+from .enums import DisabledReason, LovelaceMode, MarketplaceStage
+from .exceptions import MarketplaceError
 from .migration import (
     async_adopt_legacy_install,
     async_migrate_dashboard_resources,
     async_remove_duplicate_entries,
     async_remove_legacy_files,
 )
-from .utils.data import StoreData
+from .utils.data import MarketplaceData
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
@@ -104,12 +104,12 @@ async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
 
 async def _async_initialize_integration(
     hass: HomeAssistant,
-    config_entry: StoreConfigEntry,
+    config_entry: MarketplaceConfigEntry,
 ) -> bool:
     """Initialize the integration."""
-    config_entry.runtime_data = store = StoreManager()
+    config_entry.runtime_data = marketplace = MarketplaceManager()
 
-    store.configuration.update_from_dict(
+    marketplace.configuration.update_from_dict(
         {
             "config_entry": config_entry,
             **config_entry.data,
@@ -117,42 +117,44 @@ async def _async_initialize_integration(
         },
     )
 
-    store.set_stage(None)
+    marketplace.set_stage(None)
 
     LOGGER.info("Starting the Marketplace")
 
     clientsession = async_get_clientsession(hass)
 
-    store.version = AwesomeVersion(HAVERSION)
-    store.hass = hass
-    store.queue = QueueManager(hass=hass)
-    store.data = StoreData(store=store)
-    store.data_client = CatalogClient(
+    marketplace.version = AwesomeVersion(HAVERSION)
+    marketplace.hass = hass
+    marketplace.queue = QueueManager(hass=hass)
+    marketplace.data = MarketplaceData(marketplace=marketplace)
+    marketplace.data_client = CatalogClient(
         session=clientsession,
         client_name=CLIENT_NAME,
     )
-    store.session = clientsession
+    marketplace.session = clientsession
 
-    store.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)
-    store.core.config_path = store.hass.config.path()
-    store.status.created_www_directory = await _async_ensure_www_directory(hass)
+    marketplace.core.lovelace_mode = LovelaceMode(
+        hass.data[LOVELACE_DATA].resource_mode
+    )
+    marketplace.core.config_path = marketplace.hass.config.path()
+    marketplace.status.created_www_directory = await _async_ensure_www_directory(hass)
 
-    store.githubapi = GitHubAPI(
-        token=store.configuration.token,
+    marketplace.githubapi = GitHubAPI(
+        token=marketplace.configuration.token,
         session=clientsession,
         client_name=CLIENT_NAME,
     )
 
     try:
-        if not await store.data.restore():
+        if not await marketplace.data.restore():
             raise ConfigEntryNotReady("Could not restore the stored data")
 
-        store.set_active_categories()
+        marketplace.set_active_categories()
     except GitHubAuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"
         ) from exception
-    except (GitHubException, StoreError) as exception:
+    except (GitHubException, MarketplaceError) as exception:
         raise ConfigEntryNotReady(
             f"Could not set up the Marketplace: {exception}"
         ) from exception
@@ -160,32 +162,32 @@ async def _async_initialize_integration(
     # The restore adopts the legacy storage files, only then can they go
     await async_remove_legacy_files(hass)
 
-    store.set_stage(StoreStage.SETUP)
+    marketplace.set_stage(MarketplaceStage.SETUP)
 
     # Setting up can leave the Marketplace disabled, an invalid token is for the user
     # to fix, anything else is worth another try.
-    if store.system.disabled_reason is DisabledReason.INVALID_TOKEN:
+    if marketplace.system.disabled_reason is DisabledReason.INVALID_TOKEN:
         raise ConfigEntryAuthFailed("The GitHub token is no longer valid")
 
-    if store.system.disabled:
+    if marketplace.system.disabled:
         raise ConfigEntryNotReady(
-            f"The Marketplace is disabled: {store.system.disabled_reason}"
+            f"The Marketplace is disabled: {marketplace.system.disabled_reason}"
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    store.set_stage(StoreStage.WAITING)
+    marketplace.set_stage(MarketplaceStage.WAITING)
     LOGGER.info(
         "Setup complete, waiting for Home Assistant before startup tasks starts"
     )
 
-    async_at_start(hass=hass, at_start_cb=store.startup_tasks)
+    async_at_start(hass=hass, at_start_cb=marketplace.startup_tasks)
 
     return True
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: StoreConfigEntry
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> bool:
     """Set up this integration using UI."""
     # Runs before the update listener is added, trimming the options must not
@@ -198,31 +200,31 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, config_entry: StoreConfigEntry
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> bool:
     """Handle removal of an entry."""
-    store = config_entry.runtime_data
+    marketplace = config_entry.runtime_data
 
-    if store.queue.has_pending_tasks:
+    if marketplace.queue.has_pending_tasks:
         LOGGER.warning("Pending tasks, can not unload, try again later")
         return False
 
     # Clear out pending queue
-    store.queue.clear()
+    marketplace.queue.clear()
 
-    for task in store.recurring_tasks:
+    for task in marketplace.recurring_tasks:
         # Cancel all pending tasks
         task()
 
     # Store data
-    await store.data.async_write(force=True)
+    await marketplace.data.async_write(force=True)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
-    store.set_stage(None)
-    store.disable(DisabledReason.REMOVED)
+    marketplace.set_stage(None)
+    marketplace.disable(DisabledReason.REMOVED)
 
     hass.data.pop(STORAGE_CACHE_KEY, None)
 
@@ -230,7 +232,7 @@ async def async_unload_entry(
 
 
 async def async_reload_entry(
-    hass: HomeAssistant, config_entry: StoreConfigEntry
+    hass: HomeAssistant, config_entry: MarketplaceConfigEntry
 ) -> None:
     """Reload the config entry when its options change."""
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -238,11 +240,11 @@ async def async_reload_entry(
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
-    config_entry: StoreConfigEntry,
+    config_entry: MarketplaceConfigEntry,
     device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    store = config_entry.runtime_data
+    marketplace = config_entry.runtime_data
     repository_id = None
     for identifier in device_entry.identifiers:
         if (
@@ -266,8 +268,8 @@ async def async_remove_config_entry_device(
             translation_key="device_of_the_marketplace",
         )
 
-    if store.repositories.is_downloaded(repository_id) and (
-        repository := store.repositories.get_by_id(repository_id)
+    if marketplace.repositories.is_downloaded(repository_id) and (
+        repository := marketplace.repositories.get_by_id(repository_id)
     ):
         raise HomeAssistantError(
             translation_domain=DOMAIN,

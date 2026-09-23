@@ -7,17 +7,20 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.marketplace.base import StoreManager
-from homeassistant.components.marketplace.exceptions import NotModifiedError, StoreError
+from homeassistant.components.marketplace.base import MarketplaceManager
+from homeassistant.components.marketplace.exceptions import (
+    MarketplaceError,
+    NotModifiedError,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
     CategoryTestData,
     category_test_data_parametrized,
-    get_store,
+    get_marketplace,
     mocked_response,
 )
-from .conftest import StoreResponses
+from .conftest import MarketplaceResponses
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -42,12 +45,12 @@ def _without_description(data: dict[str, Any]) -> dict[str, Any]:
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_get_data(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test reading the repository data of every category."""
-    result = await store.data_client.get_data(
+    result = await marketplace.data_client.get_data(
         category_test_data["category"], validate=True
     )
 
@@ -56,12 +59,14 @@ async def test_get_data(
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_get_repositories(
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test reading the repository list of every category."""
-    result = await store.data_client.get_repositories(category_test_data["category"])
+    result = await marketplace.data_client.get_repositories(
+        category_test_data["category"]
+    )
 
     assert result == snapshot
 
@@ -78,8 +83,8 @@ async def test_get_repositories(
     ],
 )
 async def test_request_exceptions(
-    store: StoreManager,
-    response_mocker: StoreResponses,
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
     exception: Exception,
     message: str,
 ) -> None:
@@ -89,8 +94,8 @@ async def test_request_exceptions(
         url, AiohttpClientMockResponse("get", url, exc=exception), keep=True
     )
 
-    with pytest.raises(StoreError, match=message):
-        await store.data_client.get_repositories("integration")
+    with pytest.raises(MarketplaceError, match=message):
+        await marketplace.data_client.get_repositories("integration")
 
 
 @pytest.mark.parametrize(
@@ -103,20 +108,24 @@ async def test_request_exceptions(
             pytest.raises(NotModifiedError),
             id="304",
         ),
-        pytest.param(HTTPStatus.BAD_REQUEST, pytest.raises(StoreError), id="400"),
-        pytest.param(HTTPStatus.UNAUTHORIZED, pytest.raises(StoreError), id="401"),
-        pytest.param(HTTPStatus.FORBIDDEN, pytest.raises(StoreError), id="403"),
-        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, pytest.raises(StoreError), id="429"),
+        pytest.param(HTTPStatus.BAD_REQUEST, pytest.raises(MarketplaceError), id="400"),
+        pytest.param(
+            HTTPStatus.UNAUTHORIZED, pytest.raises(MarketplaceError), id="401"
+        ),
+        pytest.param(HTTPStatus.FORBIDDEN, pytest.raises(MarketplaceError), id="403"),
+        pytest.param(
+            HTTPStatus.TOO_MANY_REQUESTS, pytest.raises(MarketplaceError), id="429"
+        ),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
-            pytest.raises(StoreError),
+            pytest.raises(MarketplaceError),
             id="500",
         ),
     ],
 )
 async def test_request_status_handling(
-    store: StoreManager,
-    response_mocker: StoreResponses,
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
     status: HTTPStatus,
     expectation: AbstractContextManager[Any],
 ) -> None:
@@ -127,22 +136,22 @@ async def test_request_status_handling(
     )
 
     with expectation:
-        await store.data_client.get_repositories("integration")
+        await marketplace.data_client.get_repositories("integration")
 
 
 async def test_etag_is_sent_back(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that the etag of a response is used for the next request."""
     url = "https://data-v2.hacs.xyz/integration/repositories.json"
-    await store.data_client.get_repositories("integration")
+    await marketplace.data_client.get_repositories("integration")
 
     response_mocker.add(
         url, mocked_response(url, status=HTTPStatus.NOT_MODIFIED), keep=True
     )
 
     with pytest.raises(NotModifiedError):
-        await store.data_client.get_repositories("integration")
+        await marketplace.data_client.get_repositories("integration")
 
 
 @pytest.mark.parametrize(
@@ -181,8 +190,8 @@ async def test_etag_is_sent_back(
     ],
 )
 async def test_invalid_data_is_discarded(
-    store: StoreManager,
-    response_mocker: StoreResponses,
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
     section: str,
     data: dict[str, Any] | list[Any],
 ) -> None:
@@ -190,28 +199,28 @@ async def test_invalid_data_is_discarded(
     url = f"https://data-v2.hacs.xyz/{section}/data.json"
 
     response_mocker.add(url, mocked_response(url, json_content=data))
-    assert await store.data_client.get_data(section, validate=True) in ({}, [])
+    assert await marketplace.data_client.get_data(section, validate=True) in ({}, [])
 
     response_mocker.add(url, mocked_response(url, json_content=data))
-    assert await store.data_client.get_data(section, validate=False) == data
+    assert await marketplace.data_client.get_data(section, validate=False) == data
 
 
 async def test_unknown_section_can_not_be_validated(
-    store: StoreManager, response_mocker: StoreResponses
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a section without a schema is refused."""
     url = "https://data-v2.hacs.xyz/unknown/data.json"
     response_mocker.add(url, mocked_response(url, json_content=[]))
 
     with pytest.raises(ValueError, match="Do not know how to validate unknown"):
-        await store.data_client.get_data("unknown", validate=True)
+        await marketplace.data_client.get_data("unknown", validate=True)
 
 
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_invalid_repository_data_is_not_registered(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
     category_test_data: CategoryTestData,
 ) -> None:
     """Test that a repository with invalid data is skipped during setup."""
@@ -231,7 +240,10 @@ async def test_invalid_repository_data_is_not_registered(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    store = get_store(hass)
-    assert not store.system.disabled
-    assert store.stage == "running"
-    assert store.repositories.get_by_full_name(category_test_data["repository"]) is None
+    marketplace = get_marketplace(hass)
+    assert not marketplace.system.disabled
+    assert marketplace.stage == "running"
+    assert (
+        marketplace.repositories.get_by_full_name(category_test_data["repository"])
+        is None
+    )

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
-from . import CategoryTestData, category_test_data_parametrized, get_store
+from . import CategoryTestData, category_test_data_parametrized, get_marketplace
 from .const import REPOSITORY_INTEGRATION_ID
 
 
@@ -29,30 +29,36 @@ async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> No
     assert await async_setup_component(hass, "python_script", {})
 
 
-async def _reload(hass: HomeAssistant, store: StoreManager) -> StoreManager:
+async def _reload(
+    hass: HomeAssistant, marketplace: MarketplaceManager
+) -> MarketplaceManager:
     """Reload the config entry and return the Marketplace object that replaced it."""
-    await hass.config_entries.async_reload(store.configuration.config_entry.entry_id)
+    await hass.config_entries.async_reload(
+        marketplace.configuration.config_entry.entry_id
+    )
     await hass.async_block_till_done()
-    return get_store(hass)
+    return get_marketplace(hass)
 
 
 @pytest.fixture
 async def switch_entity(
-    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    entity_registry: er.EntityRegistry,
 ) -> str:
     """Return the enabled pre-release switch of a downloaded integration."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.installed_version = "1.0.0"
 
-    await _reload(hass, store)
+    await _reload(hass, marketplace)
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, REPOSITORY_INTEGRATION_ID
     )
     entity_registry.async_update_entity(entity_id, disabled_by=None)
 
-    await _reload(hass, get_store(hass))
+    await _reload(hass, get_marketplace(hass))
 
     return entity_id
 
@@ -60,17 +66,19 @@ async def switch_entity(
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_switch_entity(
     hass: HomeAssistant,
-    store: StoreManager,
+    marketplace: MarketplaceManager,
     entity_registry: er.EntityRegistry,
     category_test_data: CategoryTestData,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the pre-release switch of every repository category."""
-    repository = store.repositories.get_by_full_name(category_test_data["repository"])
+    repository = marketplace.repositories.get_by_full_name(
+        category_test_data["repository"]
+    )
     repository.data.installed = True
     repository.data.installed_version = category_test_data["version_base"]
 
-    await _reload(hass, store)
+    await _reload(hass, marketplace)
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, category_test_data["id"]
@@ -81,13 +89,15 @@ async def test_switch_entity(
 
 
 async def test_switch_is_disabled_by_default(
-    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a repository without pre-releases hides the switch."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
 
-    await _reload(hass, store)
+    await _reload(hass, marketplace)
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, REPOSITORY_INTEGRATION_ID
@@ -101,14 +111,16 @@ async def test_switch_is_disabled_by_default(
 
 
 async def test_switch_is_enabled_for_a_pre_release(
-    hass: HomeAssistant, store: StoreManager, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that a repository already on pre-releases shows the switch."""
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = True
     repository.data.show_beta = True
 
-    await _reload(hass, store)
+    await _reload(hass, marketplace)
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, REPOSITORY_INTEGRATION_ID
@@ -120,7 +132,7 @@ async def test_switch_is_enabled_for_a_pre_release(
 
 async def test_switch_turn_on_and_off(hass: HomeAssistant, switch_entity: str) -> None:
     """Test opting a repository in to and out of pre-releases."""
-    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     assert hass.states.get(switch_entity).state == STATE_OFF
 
     await hass.services.async_call(
@@ -148,7 +160,7 @@ async def test_switch_keeps_the_last_fetched_time(
     hass: HomeAssistant, switch_entity: str
 ) -> None:
     """Test that toggling the switch does not lose the last fetch time."""
-    repository = get_store(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     last_fetched = repository.data.last_fetched
 
     await hass.services.async_call(
@@ -165,11 +177,11 @@ async def test_switch_becomes_unavailable(
     hass: HomeAssistant, switch_entity: str
 ) -> None:
     """Test that removing a repository makes its switch unavailable."""
-    store = get_store(hass)
-    repository = store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    marketplace = get_marketplace(hass)
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
     repository.data.installed = False
     repository.data.last_fetched = None
-    store.coordinators[repository.data.category].async_update_listeners()
+    marketplace.coordinators[repository.data.category].async_update_listeners()
     await hass.async_block_till_done()
 
     assert hass.states.get(switch_entity).state == "unavailable"

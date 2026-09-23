@@ -7,7 +7,7 @@ from aiogithubapi.common.const import BASE_API_URL
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .base import async_get_store
+from .base import async_get_marketplace
 from .const import CATALOG_REPOSITORY, DOMAIN
 
 GITHUB_STATUS = "https://www.githubstatus.com/"
@@ -28,8 +28,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         return {"Disabled": "The Marketplace is not loaded"}
 
-    store = async_get_store(hass)
-    response = await store.githubapi.rate_limit()
+    marketplace = async_get_marketplace(hass)
+    response = await marketplace.githubapi.rate_limit()
 
     data = {
         "GitHub API": system_health.async_check_can_reach_url(
@@ -46,13 +46,13 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             hass, "https://data-v2.hacs.xyz/data.json", CLOUDFLARE_STATUS
         ),
         "GitHub API Calls Remaining": response.data.resources.core.remaining,
-        "Installed Version": store.version,
-        "Stage": store.stage,
-        "Available Repositories": len(store.repositories.list_all),
-        "Downloaded Repositories": len(store.repositories.list_downloaded),
+        "Installed Version": marketplace.version,
+        "Stage": marketplace.stage,
+        "Available Repositories": len(marketplace.repositories.list_all),
+        "Downloaded Repositories": len(marketplace.repositories.list_downloaded),
     }
 
-    if store.system.disabled:
-        data["Disabled"] = store.system.disabled_reason
+    if marketplace.system.disabled:
+        data["Disabled"] = marketplace.system.disabled_reason
 
     return data

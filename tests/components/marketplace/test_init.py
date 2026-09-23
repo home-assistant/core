@@ -12,14 +12,14 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.marketplace import async_remove_config_entry_device
 from homeassistant.components.marketplace.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
 from homeassistant.components.marketplace.enums import DisabledReason
-from homeassistant.components.marketplace.exceptions import StoreError
-from homeassistant.components.marketplace.utils.data import StoreData
+from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.utils.data import MarketplaceData
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import assert_api_usage, get_store, setup_integration
+from . import assert_api_usage, get_marketplace, setup_integration
 from .const import (
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
@@ -40,7 +40,7 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not get_store(hass).system.disabled
+    assert not get_marketplace(hass).system.disabled
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_load_unload_entry(
             id="github_api",
         ),
         pytest.param(
-            StoreError("Something went wrong"),
+            MarketplaceError("Something went wrong"),
             ConfigEntryState.SETUP_RETRY,
             id="marketplace",
         ),
@@ -77,7 +77,7 @@ async def test_setup_failure(
     """Test a failure while setting up leaves the entry for core to handle."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(StoreData, "restore", side_effect=side_effect):
+    with patch.object(MarketplaceData, "restore", side_effect=side_effect):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
@@ -90,7 +90,7 @@ async def test_setup_retries_without_restored_data(
     """Test data that can not be restored is retried instead of disabling."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(StoreData, "restore", return_value=False):
+    with patch.object(MarketplaceData, "restore", return_value=False):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -111,7 +111,7 @@ async def test_setup_retries_without_restored_data(
         ),
     ],
 )
-async def test_setup_with_a_disabled_store(
+async def test_setup_with_a_disabled_marketplace(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     reason: DisabledReason,
@@ -119,14 +119,14 @@ async def test_setup_with_a_disabled_store(
 ) -> None:
     """Test a Marketplace that ends up disabled while setting up fails the setup."""
 
-    async def _disable(self: StoreData) -> bool:
+    async def _disable(self: MarketplaceData) -> bool:
         """Restore the data, but leave the Marketplace disabled."""
-        self.store.disable(reason)
+        self.marketplace.disable(reason)
         return True
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(StoreData, "restore", _disable):
+    with patch.object(MarketplaceData, "restore", _disable):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is state
@@ -140,7 +140,7 @@ async def test_setup_asks_to_reauthenticate_for_an_invalid_token(
     mock_config_entry.add_to_hass(hass)
 
     with patch.object(
-        StoreData,
+        MarketplaceData,
         "restore",
         side_effect=GitHubAuthenticationException("Bad credentials"),
     ):
@@ -161,8 +161,10 @@ async def test_entities_for_downloaded_repositories(
     """Test each downloaded repository gets an update and a switch entity."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_store(hass)
-    assert {repo.data.full_name for repo in store.repositories.list_downloaded} == {
+    marketplace = get_marketplace(hass)
+    assert {
+        repo.data.full_name for repo in marketplace.repositories.list_downloaded
+    } == {
         REPOSITORY_INTEGRATION,
         REPOSITORY_PLUGIN,
     }
@@ -206,9 +208,9 @@ async def test_stored_repository_ids(
     """Test the stored repository ids survive a restore."""
     await setup_integration(hass, mock_config_entry)
 
-    store = get_store(hass)
-    assert store.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
-    assert store.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    marketplace = get_marketplace(hass)
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
 
 
 @pytest.mark.parametrize(
@@ -367,7 +369,7 @@ async def test_www_directory_created(
     await setup_integration(hass, mock_config_entry)
 
     assert (config_dir / "www").is_dir()
-    assert get_store(hass).status.created_www_directory is True
+    assert get_marketplace(hass).status.created_www_directory is True
     assert "dashboard resources are served after a restart" in caplog.text
 
 
@@ -382,5 +384,5 @@ async def test_www_directory_left_alone(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert get_store(hass).status.created_www_directory is False
+    assert get_marketplace(hass).status.created_www_directory is False
     assert "dashboard resources are served after a restart" not in caplog.text

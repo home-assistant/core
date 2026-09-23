@@ -8,37 +8,39 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import StoreUpdateCoordinator
+from .coordinator import MarketplaceUpdateCoordinator
 
 if TYPE_CHECKING:
-    from .base import StoreManager
+    from .base import MarketplaceManager
     from .repositories.base import Repository
 
 
-class StoreEntity(Entity):
+class MarketplaceEntity(Entity):
     """Base entity for the Marketplace."""
 
     repository: Repository
     _attr_should_poll = False
 
-    def __init__(self, store: StoreManager) -> None:
+    def __init__(self, marketplace: MarketplaceManager) -> None:
         """Initialize."""
-        self.store = store
+        self.marketplace = marketplace
 
 
-class RepositoryEntity(BaseCoordinatorEntity[StoreUpdateCoordinator], StoreEntity):
+class RepositoryEntity(
+    BaseCoordinatorEntity[MarketplaceUpdateCoordinator], MarketplaceEntity
+):
     """Base repository entity."""
 
     def __init__(
         self,
-        store: StoreManager,
+        marketplace: MarketplaceManager,
         repository: Repository,
     ) -> None:
         """Initialize."""
         BaseCoordinatorEntity.__init__(
-            self, store.coordinators[repository.data.category]
+            self, marketplace.coordinators[repository.data.category]
         )
-        StoreEntity.__init__(self, store=store)
+        MarketplaceEntity.__init__(self, marketplace=marketplace)
         self.repository = repository
         self._attr_unique_id = str(repository.data.id)
         self._repo_last_fetched = repository.data.last_fetched
@@ -47,7 +49,7 @@ class RepositoryEntity(BaseCoordinatorEntity[StoreUpdateCoordinator], StoreEntit
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.store.repositories.is_downloaded(
+        return self.marketplace.repositories.is_downloaded(
             repository_id=str(self.repository.data.id)
         )
 

@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.enums import DisabledReason
 from homeassistant.core import HomeAssistant
@@ -44,11 +44,11 @@ async def test_system_health(hass: HomeAssistant) -> None:
 
 
 async def test_system_health_when_disabled(
-    hass: HomeAssistant, store: StoreManager
+    hass: HomeAssistant, marketplace: MarketplaceManager
 ) -> None:
     """Test that a disabled Marketplace reports why."""
     assert await async_setup_component(hass, "system_health", {})
-    store.disable(DisabledReason.RATE_LIMIT)
+    marketplace.disable(DisabledReason.RATE_LIMIT)
 
     info = await _resolved_info(hass)
 
@@ -56,7 +56,9 @@ async def test_system_health_when_disabled(
 
 
 async def test_system_health_after_unload(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, store: StoreManager
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    marketplace: MarketplaceManager,
 ) -> None:
     """Test the system health after the Marketplace was unloaded."""
     assert await async_setup_component(hass, "system_health", {})

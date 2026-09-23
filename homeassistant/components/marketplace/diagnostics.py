@@ -7,35 +7,35 @@ from aiogithubapi import GitHubException
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .base import StoreConfigEntry
+from .base import MarketplaceConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: StoreConfigEntry,
+    entry: MarketplaceConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    store = entry.runtime_data
+    marketplace = entry.runtime_data
 
     data: dict[str, Any] = {
         "entry": entry.as_dict(),
         "marketplace": {
-            "stage": store.stage,
-            "version": store.version,
-            "disabled_reason": store.system.disabled_reason,
-            "new": store.status.new,
-            "startup": store.status.startup,
-            "categories": store.common.categories,
-            "renamed_repositories": store.common.renamed_repositories,
-            "archived_repositories": store.common.archived_repositories,
-            "ignored_repositories": store.common.ignored_repositories,
-            "lovelace_mode": store.core.lovelace_mode,
+            "stage": marketplace.stage,
+            "version": marketplace.version,
+            "disabled_reason": marketplace.system.disabled_reason,
+            "new": marketplace.status.new,
+            "startup": marketplace.status.startup,
+            "categories": marketplace.common.categories,
+            "renamed_repositories": marketplace.common.renamed_repositories,
+            "archived_repositories": marketplace.common.archived_repositories,
+            "ignored_repositories": marketplace.common.ignored_repositories,
+            "lovelace_mode": marketplace.core.lovelace_mode,
             "configuration": {},
         },
         "custom_repositories": [
             repo.data.full_name
-            for repo in store.repositories.list_all
-            if not store.repositories.is_default(str(repo.data.id))
+            for repo in marketplace.repositories.list_all
+            if not marketplace.repositories.is_default(str(repo.data.id))
         ],
         "repositories": [],
     }
@@ -49,10 +49,10 @@ async def async_get_config_entry_diagnostics(
         "theme",
     ):
         data["marketplace"]["configuration"][key] = getattr(
-            store.configuration, key, None
+            marketplace.configuration, key, None
         )
 
-    for repository in store.repositories.list_downloaded:
+    for repository in marketplace.repositories.list_downloaded:
         data["repositories"].append(
             {
                 "data": repository.data.to_json(),
@@ -61,10 +61,10 @@ async def async_get_config_entry_diagnostics(
                 "ref": repository.ref,
                 "paths": {
                     "localpath": repository.localpath.replace(
-                        store.core.config_path, "/config"
+                        marketplace.core.config_path, "/config"
                     ),
                     "local": repository.content.path.local.replace(
-                        store.core.config_path, "/config"
+                        marketplace.core.config_path, "/config"
                     ),
                     "remote": repository.content.path.remote,
                 },
@@ -72,7 +72,7 @@ async def async_get_config_entry_diagnostics(
         )
 
     try:
-        rate_limit_response = await store.githubapi.rate_limit()
+        rate_limit_response = await marketplace.githubapi.rate_limit()
         data["rate_limit"] = rate_limit_response.data.as_dict
     except GitHubException as exception:
         data["rate_limit"] = str(exception)

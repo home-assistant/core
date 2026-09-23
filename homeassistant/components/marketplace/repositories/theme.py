@@ -4,22 +4,22 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.exceptions import HomeAssistantError
 
-from ..enums import RepositoryCategory, StoreSignal
-from ..exceptions import StoreError
+from ..enums import MarketplaceSignal, RepositoryCategory
+from ..exceptions import MarketplaceError
 from ..utils.decorator import concurrent
 from ..utils.tree import tree_entry_filename
 from .base import Repository
 
 if TYPE_CHECKING:
-    from ..base import StoreManager
+    from ..base import MarketplaceManager
 
 
 class ThemeRepository(Repository):
     """Theme repository."""
 
-    def __init__(self, store: StoreManager, full_name: str) -> None:
+    def __init__(self, marketplace: MarketplaceManager, full_name: str) -> None:
         """Initialize."""
-        super().__init__(store=store)
+        super().__init__(marketplace=marketplace)
         self.data.full_name = full_name
         self.data.full_name_lower = full_name.lower()
         self.data.category = RepositoryCategory.THEME
@@ -31,7 +31,7 @@ class ThemeRepository(Repository):
     @override
     def localpath(self) -> str:
         """Return localpath."""
-        return f"{self.store.core.config_path}/themes/{self.data.file_name.replace('.yaml', '')}"
+        return f"{self.marketplace.core.config_path}/themes/{self.data.file_name.replace('.yaml', '')}"
 
     @override
     async def async_post_installation(self) -> None:
@@ -51,7 +51,7 @@ class ThemeRepository(Repository):
                 compliant = True
                 break
         if not compliant:
-            raise StoreError(
+            raise MarketplaceError(
                 f"{self.string} Repository structure for {f'{self.ref}'.replace('tags/', '')} is not compliant"
             )
 
@@ -61,7 +61,7 @@ class ThemeRepository(Repository):
         # Handle potential errors
         if self.validate.errors:
             for error in self.validate.errors:
-                if not self.store.status.startup:
+                if not self.marketplace.status.startup:
                     self.logger.error("%s %s", self.string, error)
         return self.validate.success
 
@@ -76,7 +76,9 @@ class ThemeRepository(Repository):
         """Reload frontend themes."""
         self.logger.debug("%s Reloading frontend themes", self.string)
         try:
-            await self.store.hass.services.async_call("frontend", "reload_themes", {})
+            await self.marketplace.hass.services.async_call(
+                "frontend", "reload_themes", {}
+            )
         except HomeAssistantError:
             self.logger.exception("%s Reloading frontend themes failed", self.string)
 
@@ -104,8 +106,8 @@ class ThemeRepository(Repository):
 
         # Signal frontend to refresh
         if self.data.installed:
-            self.store.async_dispatch(
-                StoreSignal.REPOSITORY,
+            self.marketplace.async_dispatch(
+                MarketplaceSignal.REPOSITORY,
                 {
                     "id": 1337,
                     "action": "update",

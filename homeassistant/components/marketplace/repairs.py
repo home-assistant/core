@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 
-from .base import async_get_store
+from .base import async_get_marketplace
 
 
 class RestartRequiredFixFlow(RepairsFlow):
@@ -32,8 +32,8 @@ class RestartRequiredFixFlow(RepairsFlow):
             await self.hass.services.async_call("homeassistant", "restart")
             return self.async_create_entry(title="", data={})
 
-        store = async_get_store(self.hass)
-        integration = store.repositories.get_by_id(self.issue_id.split("_")[2])
+        marketplace = async_get_marketplace(self.hass)
+        integration = marketplace.repositories.get_by_id(self.issue_id.split("_")[2])
 
         return self.async_show_form(
             step_id="confirm_restart",

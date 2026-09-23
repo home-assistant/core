@@ -5,9 +5,9 @@ from pathlib import Path
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import pytest
 
-from homeassistant.components.marketplace.base import StoreManager
+from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.enums import RepositoryFile
-from homeassistant.components.marketplace.exceptions import StoreError
+from homeassistant.components.marketplace.exceptions import MarketplaceError
 from homeassistant.components.marketplace.repositories.base import (
     DOMAIN_OVERRIDES,
     Repository,
@@ -100,24 +100,28 @@ def test_github_archive(version_string: str, variant: str, expected: str) -> Non
     )
 
 
-async def test_is_safe(store: StoreManager) -> None:
+async def test_is_safe(marketplace: MarketplaceManager) -> None:
     """Test that the directories the Marketplace manages are never removable."""
-    config_path = store.core.config_path
-    configuration = store.configuration
+    config_path = marketplace.core.config_path
+    configuration = marketplace.configuration
 
-    assert path.is_safe(store, "/test")
-    assert not path.is_safe(store, f"{config_path}/{configuration.appdaemon_path}")
-    assert not path.is_safe(store, f"{config_path}/{configuration.plugin_path}")
-    assert not path.is_safe(store, f"{config_path}/{configuration.python_script_path}")
-    assert not path.is_safe(store, f"{config_path}/{configuration.theme_path}/")
-    assert not path.is_safe(store, f"{config_path}/custom_components/")
-    assert not path.is_safe(store, f"{config_path}/custom_components")
-    assert not path.is_safe(store, f"{config_path}/custom_templates")
-    assert not path.is_safe(store, config_path)
-    assert not path.is_safe(store, f"{config_path}/.storage")
+    assert path.is_safe(marketplace, "/test")
+    assert not path.is_safe(
+        marketplace, f"{config_path}/{configuration.appdaemon_path}"
+    )
+    assert not path.is_safe(marketplace, f"{config_path}/{configuration.plugin_path}")
+    assert not path.is_safe(
+        marketplace, f"{config_path}/{configuration.python_script_path}"
+    )
+    assert not path.is_safe(marketplace, f"{config_path}/{configuration.theme_path}/")
+    assert not path.is_safe(marketplace, f"{config_path}/custom_components/")
+    assert not path.is_safe(marketplace, f"{config_path}/custom_components")
+    assert not path.is_safe(marketplace, f"{config_path}/custom_templates")
+    assert not path.is_safe(marketplace, config_path)
+    assert not path.is_safe(marketplace, f"{config_path}/.storage")
 
     # A path that walks back out of a managed directory is the same directory
-    assert not path.is_safe(store, f"{config_path}/custom_components/example/..")
+    assert not path.is_safe(marketplace, f"{config_path}/custom_components/example/..")
 
 
 @pytest.mark.parametrize(
@@ -147,7 +151,7 @@ def test_resolve_in_directory(tmp_path: Path, candidate: str) -> None:
 )
 def test_resolve_in_directory_rejects_escapes(tmp_path: Path, candidate: str) -> None:
     """Test that a path leaving the target directory is refused."""
-    with pytest.raises(StoreError, match="is not inside"):
+    with pytest.raises(MarketplaceError, match="is not inside"):
         path.resolve_in_directory(tmp_path, candidate)
 
 

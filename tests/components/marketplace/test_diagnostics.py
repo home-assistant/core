@@ -9,7 +9,7 @@ from syrupy.filters import props
 from homeassistant.core import HomeAssistant
 
 from . import mocked_response
-from .conftest import StoreResponses
+from .conftest import MarketplaceResponses
 from .const import TOKEN
 
 from tests.common import MockConfigEntry
@@ -58,7 +58,7 @@ async def test_diagnostics_without_a_rate_limit(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    response_mocker: StoreResponses,
+    response_mocker: MarketplaceResponses,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the diagnostics when the rate limit can not be read."""

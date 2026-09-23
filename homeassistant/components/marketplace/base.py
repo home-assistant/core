@@ -39,24 +39,24 @@ from .const import (
     MAX_DOWNLOAD_SIZE,
     TV,
 )
-from .coordinator import StoreUpdateCoordinator
+from .coordinator import MarketplaceUpdateCoordinator
 from .data_client import CatalogClient
 from .enums import (
     DisabledReason,
     LovelaceMode,
+    MarketplaceSignal,
+    MarketplaceStage,
     RepositoryCategory,
-    StoreSignal,
-    StoreStage,
 )
 from .exceptions import (
     AppRepositoryError,
     CoreRepositoryError,
     ExecutionInProgressError,
     ExpectedError,
+    MarketplaceError,
     NotModifiedError,
     RepositoryArchivedError,
     RepositoryExistsError,
-    StoreError,
 )
 from .repositories import REPOSITORY_CLASSES
 from .repositories.base import (
@@ -70,7 +70,7 @@ from .utils.storage import async_load_from_storage, async_save_to_storage
 
 if TYPE_CHECKING:
     from .repositories.base import Repository
-    from .utils.data import StoreData
+    from .utils.data import MarketplaceData
 
 
 def _declared_size(headers: Mapping[str, str]) -> int:
@@ -114,7 +114,7 @@ class RemovedRepository:
 
 
 @dataclass
-class StoreConfiguration:
+class MarketplaceConfiguration:
     """Configuration of the Marketplace."""
 
     appdaemon_path: str = "appdaemon/apps/"
@@ -137,7 +137,7 @@ class StoreConfiguration:
     def update_from_dict(self, data: dict[str, Any]) -> None:
         """Set attributes from dicts."""
         if not isinstance(data, dict):
-            raise StoreError("Configuration is not valid.")
+            raise MarketplaceError("Configuration is not valid.")
 
         for key, value in data.items():
             if key in {"experimental", "netdaemon", "release_limit", "debug"}:
@@ -145,7 +145,7 @@ class StoreConfiguration:
             setattr(self, key, value)
 
 
-class StoreCore:
+class MarketplaceCore:
     """Core info the Marketplace needs."""
 
     config_path: str = ""
@@ -153,7 +153,7 @@ class StoreCore:
 
 
 @dataclass
-class StoreCommon:
+class MarketplaceCommon:
     """Common data of the Marketplace."""
 
     categories: set[RepositoryCategory] = field(default_factory=set)
@@ -164,7 +164,7 @@ class StoreCommon:
 
 
 @dataclass
-class StoreStatus:
+class MarketplaceStatus:
     """Status of the Marketplace."""
 
     startup: bool = True
@@ -173,11 +173,11 @@ class StoreStatus:
 
 
 @dataclass
-class StoreSystem:
+class MarketplaceSystem:
     """System info of the Marketplace."""
 
     disabled_reason: DisabledReason | None = None
-    stage: StoreStage = StoreStage.SETUP
+    stage: MarketplaceStage = MarketplaceStage.SETUP
 
     @property
     def disabled(self) -> bool:
@@ -347,30 +347,30 @@ class Repositories:
         return removed
 
 
-class StoreManager:
+class MarketplaceManager:
     """The Marketplace, its state and everything it manages."""
 
-    data: StoreData
+    data: MarketplaceData
     data_client: CatalogClient
     githubapi: GitHubAPI
     hass: HomeAssistant
     queue: QueueManager
     session: ClientSession
-    stage: StoreStage | None = None
+    stage: MarketplaceStage | None = None
     version: AwesomeVersion
 
     def __init__(self) -> None:
         """Initialize."""
-        self.common = StoreCommon()
-        self.configuration = StoreConfiguration()
-        self.coordinators: dict[str, StoreUpdateCoordinator] = {}
-        self.core = StoreCore()
+        self.common = MarketplaceCommon()
+        self.configuration = MarketplaceConfiguration()
+        self.coordinators: dict[str, MarketplaceUpdateCoordinator] = {}
+        self.core = MarketplaceCore()
         self.recurring_tasks: list[Callable[[], None]] = []
         self.repositories = Repositories()
-        self.status = StoreStatus()
-        self.system = StoreSystem()
+        self.status = MarketplaceStatus()
+        self.system = MarketplaceSystem()
 
-    def set_stage(self, stage: StoreStage | None) -> None:
+    def set_stage(self, stage: MarketplaceStage | None) -> None:
         """Set the stage the Marketplace is in."""
         if stage and self.stage == stage:
             return
@@ -378,7 +378,7 @@ class StoreManager:
         self.stage = stage
         if stage is not None:
             LOGGER.info("Stage changed: %s", self.stage)
-            self.async_dispatch(StoreSignal.STAGE, {"stage": self.stage})
+            self.async_dispatch(MarketplaceSignal.STAGE, {"stage": self.stage})
 
     def disable(self, reason: DisabledReason) -> None:
         """Disable the Marketplace."""
@@ -406,7 +406,7 @@ class StoreManager:
         if category not in self.common.categories:
             LOGGER.info("Enable category: %s", category)
             self.common.categories.add(category)
-            self.coordinators[category] = StoreUpdateCoordinator()
+            self.coordinators[category] = MarketplaceUpdateCoordinator()
 
     async def async_save_file(self, file_path: str, content: Any) -> bool:
         """Save a file."""
@@ -461,7 +461,7 @@ class StoreManager:
                 f"{reset.hour}:{reset.minute}:{reset.second}",
             )
             self.disable(DisabledReason.RATE_LIMIT)
-        except StoreError:
+        except MarketplaceError:
             LOGGER.exception("Could not get the GitHub API rate limit")
 
         return 0
@@ -511,7 +511,7 @@ class StoreManager:
             _exception = exception
 
         if raise_exception and _exception is not None:
-            raise StoreError(_exception)
+            raise MarketplaceError(_exception)
         return None
 
     async def async_register_repository(
@@ -566,7 +566,7 @@ class StoreManager:
                 return None
             except GitHubException as exception:
                 self.common.skip.add(repository.data.full_name)
-                raise StoreError(
+                raise MarketplaceError(
                     f"Validation for {repository_full_name} failed with {exception}."
                 ) from exception
 
@@ -578,7 +578,7 @@ class StoreManager:
 
         elif self.hass is not None and check and repository.data.new:
             self.async_dispatch(
-                StoreSignal.REPOSITORY,
+                MarketplaceSignal.REPOSITORY,
                 {
                     "action": "registration",
                     "repository": repository.data.full_name,
@@ -591,7 +591,7 @@ class StoreManager:
 
     async def startup_tasks(self, _: HomeAssistant | None = None) -> None:
         """Tasks that are started after setup."""
-        self.set_stage(StoreStage.STARTUP)
+        self.set_stage(MarketplaceStage.STARTUP)
 
         if critical := await async_load_from_storage(self.hass, "critical"):
             for repo in critical:
@@ -646,19 +646,19 @@ class StoreManager:
         )
 
         self.status.startup = False
-        self.async_dispatch(StoreSignal.STATUS, {})
+        self.async_dispatch(MarketplaceSignal.STATUS, {})
 
         await self.async_handle_removed_repositories()
         await self.async_get_all_category_repositories()
 
-        self.set_stage(StoreStage.RUNNING)
+        self.set_stage(MarketplaceStage.RUNNING)
 
-        self.async_dispatch(StoreSignal.RELOAD, {"force": True})
+        self.async_dispatch(MarketplaceSignal.RELOAD, {"force": True})
 
         await self.async_handle_critical_repositories()
         await self.async_process_queue()
 
-        self.async_dispatch(StoreSignal.STATUS, {})
+        self.async_dispatch(MarketplaceSignal.STATUS, {})
 
     async def async_download_file(
         self,
@@ -691,14 +691,14 @@ class StoreManager:
                 # Make sure that we got a valid result
                 if request.status == 200:
                     if _declared_size(request.headers) > MAX_DOWNLOAD_SIZE:
-                        raise StoreError(  # noqa: TRY301 # handled below
+                        raise MarketplaceError(  # noqa: TRY301 # handled below
                             f"{url} declares more than the "
                             f"{MAX_DOWNLOAD_SIZE} byte limit"
                         )
 
                     content = await request.read()
                     if len(content) > MAX_DOWNLOAD_SIZE:
-                        raise StoreError(  # noqa: TRY301 # handled below
+                        raise MarketplaceError(  # noqa: TRY301 # handled below
                             f"{url} is larger than the {MAX_DOWNLOAD_SIZE} byte limit"
                         )
 
@@ -722,7 +722,7 @@ class StoreManager:
                     await asyncio.sleep(retry_after)
                     continue
 
-                raise StoreError(  # noqa: TRY301 # handled by the retry loop below
+                raise MarketplaceError(  # noqa: TRY301 # handled by the retry loop below
                     f"Got status code {request.status} when trying to download {url}"
                 )
             except TimeoutError:
@@ -764,7 +764,7 @@ class StoreManager:
 
     @callback
     def async_dispatch(
-        self, signal: StoreSignal, data: dict[str, Any] | None = None
+        self, signal: MarketplaceSignal, data: dict[str, Any] | None = None
     ) -> None:
         """Dispatch a signal with data."""
         async_dispatcher_send(self.hass, signal, data)
@@ -817,7 +817,7 @@ class StoreManager:
         except NotModifiedError:
             LOGGER.debug("No updates for %s", category)
             return
-        except StoreError as exception:
+        except MarketplaceError as exception:
             LOGGER.error("Could not update %s - %s", category, exception)
             return
 
@@ -852,7 +852,7 @@ class StoreManager:
                             {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
                         )
 
-        if self.stage == StoreStage.STARTUP:
+        if self.stage == MarketplaceStage.STARTUP:
             for repository in self.repositories.list_all:
                 if (
                     repository.data.category == category
@@ -864,7 +864,7 @@ class StoreManager:
                     )
                     self.repositories.unregister(repository)
 
-        self.async_dispatch(StoreSignal.REPOSITORY, {})
+        self.async_dispatch(MarketplaceSignal.REPOSITORY, {})
         self.coordinators[category].async_update_listeners()
 
     async def async_check_rate_limit(self, _: datetime | None = None) -> None:
@@ -927,7 +927,7 @@ class StoreManager:
             removed_repositories = await self.data_client.get_data(
                 "removed", validate=True
             )
-        except StoreError:
+        except MarketplaceError:
             return
 
         for item in removed_repositories:
@@ -1032,7 +1032,7 @@ class StoreManager:
             critical = await self.data_client.get_data("critical", validate=True)
         except GitHubNotModifiedException, NotModifiedError:
             return
-        except StoreError:
+        except MarketplaceError:
             pass
 
         if not critical:
@@ -1085,11 +1085,11 @@ class StoreManager:
             self.hass.async_create_task(self.hass.async_stop(100))
 
 
-type StoreConfigEntry = ConfigEntry[StoreManager]
+type MarketplaceConfigEntry = ConfigEntry[MarketplaceManager]
 
 
 @callback
-def async_get_store(hass: HomeAssistant) -> StoreManager:
+def async_get_marketplace(hass: HomeAssistant) -> MarketplaceManager:
     """Return the Marketplace of the loaded config entry.
 
     For the code that has no config entry at hand, like the WebSocket API and
@@ -1099,5 +1099,5 @@ def async_get_store(hass: HomeAssistant) -> StoreManager:
     if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
         raise HomeAssistantError("The Marketplace is not loaded")
 
-    entry: StoreConfigEntry = entries[0]
+    entry: MarketplaceConfigEntry = entries[0]
     return entry.runtime_data

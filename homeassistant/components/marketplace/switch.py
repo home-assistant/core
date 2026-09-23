@@ -7,21 +7,21 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import StoreConfigEntry, StoreManager
+from .base import MarketplaceConfigEntry, MarketplaceManager
 from .entity import RepositoryEntity
 from .repositories.base import Repository
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: StoreConfigEntry,
+    entry: MarketplaceConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup switch platform."""
-    store = entry.runtime_data
+    marketplace = entry.runtime_data
     async_add_entities(
-        RepositoryPreReleaseSwitchEntity(store=store, repository=repository)
-        for repository in store.repositories.list_downloaded
+        RepositoryPreReleaseSwitchEntity(marketplace=marketplace, repository=repository)
+        for repository in marketplace.repositories.list_downloaded
     )
 
 
@@ -32,9 +32,9 @@ class RepositoryPreReleaseSwitchEntity(RepositoryEntity, SwitchEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "pre-release"
 
-    def __init__(self, store: StoreManager, repository: Repository) -> None:
+    def __init__(self, marketplace: MarketplaceManager, repository: Repository) -> None:
         """Initialize the repository pre-release switch."""
-        super().__init__(store, repository)
+        super().__init__(marketplace, repository)
         self._attr_entity_registry_enabled_default = self.repository.data.show_beta
 
     @property
@@ -68,5 +68,5 @@ class RepositoryPreReleaseSwitchEntity(RepositoryEntity, SwitchEntity):
         self.repository.data.last_fetched = _last_fetch  # Restore last fetched
 
         # Write the Marketplace data and update the entity state
-        await self.store.data.async_write()
+        await self.marketplace.data.async_write()
         self.async_write_ha_state()
