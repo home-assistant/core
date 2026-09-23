@@ -1154,6 +1154,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
 
             async with asyncio.timeout(1):
                 await first_chunk_sent.wait()
+            assert mock_monotonic.call_count == 0
             interrupt()
             interrupt()
             release_first_chunk.set()
@@ -1161,6 +1162,7 @@ async def test_stream_tts_restarts_playback_on_audio_interrupt(
             async with asyncio.timeout(1):
                 while mock_client.tts_audio_events.count("audio-start") < 2:
                     await asyncio.sleep(0)
+            assert mock_monotonic.call_count == 1
 
             assert mock_client.tts_audio_events[:4] == [
                 "audio-start",

@@ -894,7 +894,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         arrives.
         """
         total_seconds = 0.0
-        start_time = monotonic()
+        start_time: float | None = None
         write_lock = asyncio.Lock()
         interrupt_event = asyncio.Event()
         latest_interrupt_task: asyncio.Task[None] | None = None
@@ -933,7 +933,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     pending_audio = b""
                     timestamp = 0
                     total_seconds = 0.0
-                    start_time = monotonic()
+                    start_time = None
                     await client.write_event(
                         AudioStart(
                             rate=_TTS_SAMPLE_RATE,
@@ -1038,6 +1038,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                             timestamp=timestamp,
                         )
                         await client.write_event(audio_chunk.event())
+                        if start_time is None:
+                            start_time = monotonic()
                         timestamp += audio_chunk.milliseconds
                         total_seconds += audio_chunk.seconds
                     data_chunk_idx += _AUDIO_CHUNK_BYTES
@@ -1052,7 +1054,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             if latest_interrupt_task is not None:
                 latest_interrupt_task.cancel()
                 await asyncio.gather(latest_interrupt_task, return_exceptions=True)
-            send_duration = monotonic() - start_time
+            send_duration = 0.0 if start_time is None else monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(
                 self.hass,
