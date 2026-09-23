@@ -43,6 +43,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bravia TV integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
