@@ -268,7 +268,6 @@ class StoreData:
         repository.data.stargazers_count = repository_data.get(
             "stargazers_count"
         ) or repository_data.get("stars", 0)
-        repository.releases.last_release = repository_data.get("last_release_tag")
         repository.data.releases = repository_data.get("releases", False)
         repository.data.installed = repository_data.get("installed", False)
         repository.data.new = repository_data.get("new", False)

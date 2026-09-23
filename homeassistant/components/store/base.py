@@ -119,12 +119,9 @@ class StoreConfiguration:
 
     appdaemon_path: str = "appdaemon/apps/"
     appdaemon: bool = False
-    config: dict[str, Any] = field(default_factory=dict)
     config_entry: ConfigEntry | None = None
     country: str = COUNTRY_ALL
     debug: bool = False
-    frontend_repo_url: str = ""
-    frontend_repo: str = ""
     plugin_path: str = "www/community/"
     python_script_path: str = "python_scripts/"
     python_script: bool = False
@@ -153,7 +150,7 @@ class StoreCore:
 
     config_path: str = ""
     ha_version: AwesomeVersion
-    lovelace_mode: LovelaceMode = LovelaceMode("yaml")
+    lovelace_mode: LovelaceMode = LovelaceMode.YAML
 
 
 @dataclass
@@ -174,7 +171,6 @@ class StoreStatus:
     startup: bool = True
     new: bool = False
     created_www_directory: bool = False
-    inital_fetch_done: bool = False
 
 
 @dataclass
@@ -182,7 +178,6 @@ class StoreSystem:
     """System info of the store."""
 
     disabled_reason: DisabledReason | None = None
-    running: bool = False
     stage: StoreStage = StoreStage.SETUP
 
     @property
@@ -857,9 +852,6 @@ class StoreManager:
                         repository.repository_manifest.update_data(
                             {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
                         )
-
-        if category == "integration":
-            self.status.inital_fetch_done = True
 
         if self.stage == StoreStage.STARTUP:
             for repository in self.repositories.list_all:

@@ -135,7 +135,6 @@ async def _async_initialize_integration(
         session=clientsession,
         client_name=CLIENT_NAME,
     )
-    store.system.running = True
     store.session = clientsession
 
     store.core.lovelace_mode = LovelaceMode(hass.data[LOVELACE_DATA].resource_mode)

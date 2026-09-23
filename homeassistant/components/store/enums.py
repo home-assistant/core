@@ -44,8 +44,6 @@ class LovelaceMode(StrEnum):
     """Lovelace Modes."""
 
     STORAGE = "storage"
-    AUTO = "auto"
-    AUTO_GEN = "auto-gen"
     YAML = "yaml"
 
 

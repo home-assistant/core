@@ -289,12 +289,7 @@ class RepositoryManifest:
 class RepositoryReleases:
     """RepositoyReleases."""
 
-    last_release: str | None = None
-    last_release_object: GitHubReleaseModel | None = None
-    published_tags: list[str] = []
     objects: list[GitHubReleaseModel] = []
-    releases: bool = False
-    downloads: int | None = None
 
 
 class RepositoryPath:
@@ -308,8 +303,6 @@ class RepositoryContent:
     """RepositoryContent."""
 
     path: RepositoryPath
-    files: list[Any] = []
-    objects: list[Any] = []
     single: bool = False
 
 
