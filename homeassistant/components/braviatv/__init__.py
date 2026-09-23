@@ -9,6 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_USE_SSL
@@ -28,6 +29,12 @@ async def async_setup_entry(
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
     ssl = config_entry.data.get(CONF_USE_SSL, False)
+
+    # Televisions that report an empty CID were stored without a usable unique
+    # ID. Adopt the MAC address the config flow now falls back to, so the entry
+    # is recognised and the television is not offered as a new device.
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(config_entry, unique_id=format_mac(mac))
 
     session = async_create_clientsession(
         hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
