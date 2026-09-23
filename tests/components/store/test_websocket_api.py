@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 CRITICAL_REPOSITORY = {
@@ -155,6 +156,30 @@ async def test_info(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> 
         "startup": False,
         "version": HA_VERSION,
     }
+
+
+async def test_info_follows_the_loaded_entry(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the commands registered at start keep working across a reload."""
+    client = await hass_ws_client(hass)
+
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "store/info"})
+    assert (await client.receive_json())["success"]
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "store/info"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
 
 
 @pytest.mark.usefixtures("init_integration")

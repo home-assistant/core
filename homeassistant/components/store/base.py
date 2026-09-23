@@ -149,7 +149,6 @@ class StoreCore:
     """Core info the store needs."""
 
     config_path: str = ""
-    ha_version: AwesomeVersion
     lovelace_mode: LovelaceMode = LovelaceMode.YAML
 
 

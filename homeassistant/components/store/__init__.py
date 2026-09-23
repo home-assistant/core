@@ -14,7 +14,6 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.lovelace import LOVELACE_DATA
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -73,6 +72,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Community store integration."""
     await async_remove_duplicate_entries(hass)
 
+    # Registered once per start, the handlers look the loaded entry up themselves
+    async_register_websocket_commands(hass)
+
     # The custom integration lived at /hacs, where bookmarks still point
     hass.http.register_redirect("/hacs", "/store")
     hass.http.register_view(LegacyPanelRedirectView)
@@ -106,12 +108,6 @@ async def _async_initialize_integration(
 ) -> bool:
     """Initialize the integration."""
     config_entry.runtime_data = store = StoreManager()
-    store.enable()
-
-    if config_entry.source == SOURCE_IMPORT:
-        # Import is not supported
-        hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
-        return False
 
     store.configuration.update_from_dict(
         {
@@ -141,23 +137,17 @@ async def _async_initialize_integration(
     store.core.config_path = store.hass.config.path()
     store.status.created_www_directory = await _async_ensure_www_directory(hass)
 
-    store.core.ha_version = AwesomeVersion(HAVERSION)
-
     store.githubapi = GitHubAPI(
         token=store.configuration.token,
         session=clientsession,
         client_name=CLIENT_NAME,
     )
 
-    store.enable()
-
     try:
         if not await store.data.restore():
             raise ConfigEntryNotReady("Could not restore the stored data")
 
         store.set_active_categories()
-
-        async_register_websocket_commands(hass)
     except GitHubAuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"

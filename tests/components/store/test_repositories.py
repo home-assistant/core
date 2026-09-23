@@ -171,7 +171,7 @@ async def test_can_download(
     repository = Repository(store)
     repository.data.releases = True
     repository.repository_manifest.homeassistant = required_version
-    store.core.ha_version = AwesomeVersion(ha_version)
+    store.version = AwesomeVersion(ha_version)
 
     assert repository.can_download is expected
 
@@ -201,7 +201,7 @@ async def test_display_status(store: StoreManager) -> None:
     assert repository.display_status == "pending-upgrade"
 
     # A repository that needs a newer core still shows the pending upgrade
-    store.core.ha_version = AwesomeVersion("0.0.0")
+    store.version = AwesomeVersion("0.0.0")
     repository.repository_manifest.homeassistant = "1.0.0"
     assert repository.display_status == "pending-upgrade"
 
@@ -212,7 +212,7 @@ async def test_display_status(store: StoreManager) -> None:
 async def test_pending_update(store: StoreManager) -> None:
     """Test when a repository counts as having an update pending."""
     repository = Repository(store)
-    store.core.ha_version = AwesomeVersion("0.109.0")
+    store.version = AwesomeVersion("0.109.0")
     repository.repository_manifest.homeassistant = "0.110.0"
     repository.data.releases = True
     assert not repository.pending_update

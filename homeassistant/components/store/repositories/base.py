@@ -451,7 +451,7 @@ class Repository:
         if self.repository_manifest.homeassistant is not None:
             if self.data.releases:
                 if not version_left_higher_or_equal_then_right(
-                    self.store.core.ha_version.string,
+                    self.store.version.string,
                     self.repository_manifest.homeassistant,
                 ):
                     return False
@@ -1542,7 +1542,7 @@ class Repository:
         # which cannot be compared with a Home Assistant version.
         if (
             target_manifest.homeassistant is not None
-            and self.store.core.ha_version < target_manifest.homeassistant
+            and self.store.version < target_manifest.homeassistant
         ):
             raise StoreError(
                 f"This version requires Home Assistant {target_manifest.homeassistant} or newer."
