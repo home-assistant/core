@@ -1,5 +1,7 @@
 """Tests for the select platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.select import (
@@ -14,7 +16,10 @@ from homeassistant.components.vesync.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
+from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT, mock_devices_response
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -54,3 +59,31 @@ async def test_humidifier_nightlight_level(
         hass.states.get(ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT).state
         == HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM
     )
+
+
+async def test_purifier_auto_preference(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the purifier auto mode preference select."""
+    mock_devices_response(aioclient_mock, "Air Purifier Vital 200S")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "select.air_purifier_vital_200s_auto_mode_preference"
+    assert hass.states.get(entity_id).state == "default"
+
+    with patch(
+        "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.set_auto_preference",
+        return_value=True,
+    ) as method_mock:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "quiet"},
+            blocking=True,
+        )
+
+    method_mock.assert_called_once_with("quiet")

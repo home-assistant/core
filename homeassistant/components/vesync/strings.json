@@ -38,6 +38,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "dark_room": {
+        "name": "Dark room"
+      },
       "water_lacks": {
         "name": "Low water"
       },
@@ -78,6 +81,14 @@
       }
     },
     "select": {
+      "auto_preference": {
+        "name": "Auto mode preference",
+        "state": {
+          "default": "Default",
+          "efficient": "Efficient",
+          "quiet": "Quiet"
+        }
+      },
       "night_light_level": {
         "name": "Night light level",
         "state": {
@@ -151,6 +162,9 @@
       },
       "drying_mode_power_off": {
         "name": "Enable drying mode while power is off"
+      },
+      "light_detection": {
+        "name": "Light detection"
       }
     }
   },
