@@ -118,11 +118,7 @@ async def test_async_update_serializes_concurrent_status_requests() -> None:
     device_a = devices["33.33.33"]
     device_b = devices["44.44.44"]
 
-    # The module-level `devices` instance persists across tests in this file,
-    # and an earlier test's full config entry setup already exercises these
-    # same mocks via the startup status pass. Reset so the assertions below
-    # only cover this test's own calls (same reasoning as the reset_mock
-    # above for 55.55.55).
+    # Reset: an earlier test's setup already exercised these same mocks.
     device_a.async_status.reset_mock()
     device_b.async_status.reset_mock()
 

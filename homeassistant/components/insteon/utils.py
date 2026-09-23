@@ -109,8 +109,9 @@ def register_new_device_callback(hass: HomeAssistant) -> None:
         )
         await devices.async_save(workdir=hass.config.config_dir)
         device = devices[address]
-        async with STATUS_LOCK:
-            await device.async_status()
+        if not device.is_battery:
+            async with STATUS_LOCK:
+                await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
             groups = get_device_platform_groups(device, platform)
