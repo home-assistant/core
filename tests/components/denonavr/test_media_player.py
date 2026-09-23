@@ -93,7 +93,7 @@ def client_fixture() -> Generator[MagicMock]:
 async def setup_denonavr(
     hass: HomeAssistant,
     serial_number: str | None = TEST_SERIALNUMBER,
-    options: dict | None = None,
+    options: dict[str, bool] | None = None,
     pref_disable_polling: bool = False,
 ) -> MockConfigEntry:
     """Initialize media_player for tests."""
@@ -152,41 +152,23 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     client.async_get_command.assert_awaited_with("test_command")
 
 
-async def test_avr_processing_error_does_not_mark_unavailable(
-    hass: HomeAssistant, client: MagicMock
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            AvrProcessingError("Update not complete", "SetVolume"), id="processing"
+        ),
+        pytest.param(
+            AvrCommandError("Could not set volume", "SetVolume"), id="command"
+        ),
+    ],
+)
+async def test_non_connectivity_error_does_not_mark_unavailable(
+    hass: HomeAssistant, client: MagicMock, exception: Exception
 ) -> None:
-    """An AvrProcessingError is logged but doesn't affect availability.
-
-    Unlike the connectivity-type errors, this means the receiver
-    responded but wasn't fully done updating yet - not a reason to
-    mark it unavailable.
-    """
+    """Not connectivity failures: the receiver answered, or rejected one command."""
     await setup_denonavr(hass)
-    client.async_volume_up.side_effect = AvrProcessingError(
-        "Update not complete", "SetVolume"
-    )
-
-    await hass.services.async_call(
-        media_player.DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-
-    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
-
-
-async def test_avr_command_error_does_not_mark_unavailable(
-    hass: HomeAssistant, client: MagicMock
-) -> None:
-    """An AvrCommandError (rejected command) is logged but doesn't mark unavailable.
-
-    Not a connectivity problem - just this one command being rejected.
-    """
-    await setup_denonavr(hass)
-    client.async_volume_up.side_effect = AvrCommandError(
-        "Could not set volume", "SetVolume"
-    )
+    client.async_volume_up.side_effect = exception
 
     await hass.services.async_call(
         media_player.DOMAIN,
@@ -322,41 +304,29 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     client.async_dynamic_eq_off.assert_called_once()
 
 
-async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
-    """Test that the update_audyssey action fetches."""
-    await setup_denonavr(hass)
+@pytest.mark.parametrize(
+    ("telnet_healthy", "options"),
+    [
+        pytest.param(False, {}, id="http"),
+        pytest.param(True, {CONF_USE_TELNET: True}, id="telnet_healthy"),
+    ],
+)
+async def test_update_audyssey(
+    hass: HomeAssistant,
+    client: MagicMock,
+    telnet_healthy: bool,
+    options: dict[str, bool],
+) -> None:
+    """The update_audyssey action fetches, even with Telnet healthy.
+
+    The Telnet-healthy skip that saves scheduled polls an HTTP round-trip
+    must not swallow this explicit one.
+    """
+    client.telnet_connected = client.telnet_healthy = telnet_healthy
+    await setup_denonavr(hass, options=options)
 
     # Setup fetches this once too, so the assertion is on the one call the
     # service adds rather than on a fixed total.
-    calls_before_service = client.async_update_audyssey.call_count
-
-    # Verify call
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_AUDYSSEY,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert client.async_update_audyssey.call_count == calls_before_service + 1
-
-
-async def test_update_audyssey_forces_fetch_with_healthy_telnet(
-    hass: HomeAssistant, client: MagicMock
-) -> None:
-    """The explicit action must still fetch even if Telnet already looks healthy.
-
-    Otherwise this action would silently do nothing whenever Telnet is
-    on and connected - the same Telnet-healthy skip that lets
-    scheduled polls save an HTTP round-trip would swallow this
-    explicit, on-demand one too.
-    """
-    client.telnet_connected = True
-    client.telnet_healthy = True
-    await setup_denonavr(hass, options={CONF_USE_TELNET: True})
-
     calls_before_service = client.async_update_audyssey.call_count
 
     await hass.services.async_call(
