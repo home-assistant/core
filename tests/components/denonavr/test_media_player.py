@@ -198,6 +198,62 @@ async def test_avr_command_error_does_not_mark_unavailable(
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
+async def test_queued_commands_warn_once_when_the_receiver_drops(
+    hass: HomeAssistant, client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Queued commands each fail, but only the first warns.
+
+    Both were dispatched while the entity was still available, so both run.
+    """
+    await setup_denonavr(hass)
+    release = asyncio.Event()
+
+    async def _fail_once_released() -> None:
+        await release.wait()
+        raise AvrNetworkError("Network error", "SetVolume")
+
+    client.async_volume_up.side_effect = _fail_once_released
+    calls = [
+        hass.async_create_task(
+            hass.services.async_call(
+                media_player.DOMAIN,
+                SERVICE_VOLUME_UP,
+                {ATTR_ENTITY_ID: ENTITY_ID},
+                blocking=True,
+            )
+        )
+        for _ in range(2)
+    ]
+    release.set()
+    await asyncio.gather(*calls)
+
+    assert client.async_volume_up.await_count == 2
+    assert caplog.text.count("Network error connecting") == 1
+
+
+async def test_audyssey_command_failure_warns_with_polling_disabled(
+    hass: HomeAssistant, client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The first failure warns though the command already marked it unavailable.
+
+    With polling disabled the Audyssey failure reaches the status coordinator
+    before the decorator sees the exception.
+    """
+    await setup_denonavr(hass, pref_disable_polling=True)
+    client.async_dynamic_eq_on.side_effect = AvrNetworkError(
+        "Network error", "SetAudyssey"
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: True},
+        blocking=True,
+    )
+
+    assert caplog.text.count("Network error connecting") == 1
+
+
 async def test_dynamic_eq_attribute_updates_from_audyssey_coordinator(
     hass: HomeAssistant, client: MagicMock
 ) -> None:

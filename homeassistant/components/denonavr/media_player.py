@@ -134,48 +134,56 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
         async with self.coordinator.lock:
+            # Read before the call: an Audyssey-scoped command marks the
+            # coordinators unavailable itself before re-raising.
+            was_available = self.available
             try:
                 result = await func(self, *args, **kwargs)
             except AvrTimoutError as err:
-                _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s: %s",
-                    self._receiver.host,
-                    err,
-                )
+                if was_available:
+                    _LOGGER.warning(
+                        "Timeout connecting to Denon AVR receiver at host %s: %s",
+                        self._receiver.host,
+                        err,
+                    )
                 mark_unavailable(self.coordinator)
                 return None
             except AvrNetworkError as err:
-                _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s: %s",
-                    self._receiver.host,
-                    err,
-                )
+                if was_available:
+                    _LOGGER.warning(
+                        "Network error connecting to Denon AVR receiver at host %s: %s",
+                        self._receiver.host,
+                        err,
+                    )
                 mark_unavailable(self.coordinator)
                 return None
             except AvrProcessingError as err:
-                _LOGGER.warning(
-                    "Update of Denon AVR receiver at host %s not complete: %s",
-                    self._receiver.host,
-                    err,
-                )
+                if was_available:
+                    _LOGGER.warning(
+                        "Update of Denon AVR receiver at host %s not complete: %s",
+                        self._receiver.host,
+                        err,
+                    )
                 return None
             except AvrForbiddenError as err:
-                _LOGGER.warning(
-                    (
-                        "Denon AVR receiver at host %s responded with HTTP 403"
-                        " error. Please consider power cycling your receiver: %s"
-                    ),
-                    self._receiver.host,
-                    err,
-                )
+                if was_available:
+                    _LOGGER.warning(
+                        (
+                            "Denon AVR receiver at host %s responded with HTTP 403"
+                            " error. Please consider power cycling your receiver: %s"
+                        ),
+                        self._receiver.host,
+                        err,
+                    )
                 mark_unavailable(self.coordinator)
                 return None
             except (AvrInvalidResponseError, AvrIncompleteResponseError) as err:
-                _LOGGER.warning(
-                    "Denon AVR receiver at host %s returned malformed response: %s",
-                    self._receiver.host,
-                    err,
-                )
+                if was_available:
+                    _LOGGER.warning(
+                        "Denon AVR receiver at host %s returned malformed response: %s",
+                        self._receiver.host,
+                        err,
+                    )
                 mark_unavailable(self.coordinator)
                 return None
             except AvrCommandError as err:
