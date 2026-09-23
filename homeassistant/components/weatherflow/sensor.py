@@ -194,7 +194,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.PRECIPITATION,
-        imperial_suggested_unit=UnitOfPrecipitationDepth.INCHES,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
@@ -225,10 +224,9 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         key="station_pressure",
         translation_key="station_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
-        imperial_suggested_unit=UnitOfPressure.INHG,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
