@@ -60,8 +60,9 @@ async def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 async def _failing_stream(error: Exception) -> AsyncGenerator[bytes]:
-    raise error
-    yield b""  # This is just to make this function an async generator
+    if error is not None:
+        raise error
+    yield b""  # Keep this an async generator
 
 
 async def test_tts_service_success(
