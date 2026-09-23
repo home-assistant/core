@@ -175,6 +175,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._webhook_reachable = False
+                self._webhook_monitoring = False
                 self.device.mark_unreachable()
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -190,6 +191,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._webhook_reachable = True
+                self._webhook_monitoring = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
@@ -297,6 +299,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             aiohttp.ServerDisconnectedError,
             aiohttp.ClientConnectorError,
             NetatmoApiError,
+            TimeoutError,
         ) as err:
             raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
@@ -317,6 +320,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             aiohttp.ServerDisconnectedError,
             aiohttp.ClientConnectorError,
             NetatmoApiError,
+            TimeoutError,
         ) as err:
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
