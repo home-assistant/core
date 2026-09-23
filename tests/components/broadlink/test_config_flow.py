@@ -774,11 +774,14 @@ async def test_flow_reauth_without_stored_name(hass: HomeAssistant) -> None:
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
 
-    with patch(DEVICE_FACTORY, return_value=mock_api):
+    with patch(DEVICE_FACTORY, return_value=mock_api) as mock_gendevice:
         result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
+
+    # The name comes from the entry title, not from the entry data.
+    assert mock_gendevice.call_args.kwargs["name"] == mock_entry.title
 
 
 async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
