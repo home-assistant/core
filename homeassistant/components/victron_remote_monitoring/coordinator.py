@@ -7,7 +7,6 @@ from typing import override
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 from victron_vrm.models.aggregations import ForecastAggregations
-from victron_vrm.utils import dt_now
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
@@ -15,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SITE_ID, DOMAIN, LOGGER
 
@@ -32,19 +32,70 @@ class VRMForecastStore:
     consumption: ForecastAggregations | None
 
 
+@dataclass(kw_only=True)
+class LocalForecastAggregations(ForecastAggregations):
+    """Aggregate VRM forecast records using Home Assistant's local days."""
+
+    time_zone: datetime.tzinfo
+
+    @property
+    def dt_now(self) -> datetime.datetime:
+        """Return the current time in Home Assistant's time zone."""
+        return super().dt_now.astimezone(self.time_zone)
+
+    def _day_range(self, day_offset: int) -> tuple[int, int]:
+        day = self.dt_now.date() + datetime.timedelta(days=day_offset)
+        start = datetime.datetime.combine(day, datetime.time.min, self.time_zone)
+        end = datetime.datetime.combine(
+            day + datetime.timedelta(days=1), datetime.time.min, self.time_zone
+        )
+        return int(start.timestamp()), int(end.timestamp())
+
+    @property
+    def yesterday_range(self) -> tuple[int, int]:
+        """Return the local yesterday range."""
+        return self._day_range(-1)
+
+    @property
+    def today_range(self) -> tuple[int, int]:
+        """Return the local today range."""
+        return self._day_range(0)
+
+    @property
+    def tomorrow_range(self) -> tuple[int, int]:
+        """Return the local tomorrow range."""
+        return self._day_range(1)
+
+
+def _local_aggregations(
+    forecast: ForecastAggregations | None, time_zone: datetime.tzinfo
+) -> LocalForecastAggregations | None:
+    if forecast is None:
+        return None
+    return LocalForecastAggregations(
+        start=forecast.start,
+        end=forecast.end,
+        site_id=forecast.site_id,
+        records=forecast.records,
+        custom_dt_now=forecast.custom_dt_now,
+        time_zone=time_zone,
+    )
+
+
 async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastStore:
     """Get the forecast data."""
+    time_zone = dt_util.DEFAULT_TIME_ZONE
+    now = dt_util.now(time_zone)
+    today = now.date()
     start = int(
-        (
-            dt_now().replace(hour=0, minute=0, second=0, microsecond=0)
-            - datetime.timedelta(days=1)
+        datetime.datetime.combine(
+            today - datetime.timedelta(days=1), datetime.time.min, time_zone
         ).timestamp()
     )
     # Get timestamp of the end of 6th day from now
     end = int(
-        (
-            dt_now().replace(hour=0, minute=0, second=0, microsecond=0)
-            + datetime.timedelta(days=6)
+        datetime.datetime.combine(
+            today + datetime.timedelta(days=6), datetime.time.min, time_zone
         ).timestamp()
     )
     stats = await client.installations.stats(
@@ -56,8 +107,8 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         return_aggregations=True,
     )
     return VRMForecastStore(
-        solar=stats["solar_yield"],
-        consumption=stats["consumption"],
+        solar=_local_aggregations(stats["solar_yield"], time_zone),
+        consumption=_local_aggregations(stats["consumption"], time_zone),
         site_id=site_id,
     )
 
