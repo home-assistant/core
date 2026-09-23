@@ -1089,16 +1089,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             model_args.setdefault("output_config", OutputConfigParam())["format"] = (
                 JSONOutputFormatParam(
                     type="json_schema",
-                    schema={
-                        **probatio.to_openapi(
+                    schema=anthropic.transform_schema(
+                        probatio.to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
                             openapi_version="3.1.0",
-                        ),
-                        "additionalProperties": False,
-                    },
+                        )
+                    ),
                 )
             )
 
