@@ -18,6 +18,7 @@ from homeassistant.components.denonavr.coordinator import (
     DenonAvrDataUpdateCoordinator,
     async_refresh_audyssey,
     async_refresh_status,
+    mark_unavailable,
 )
 from homeassistant.core import HomeAssistant
 
@@ -52,7 +53,7 @@ def _receiver_with_zones() -> tuple[MagicMock, MagicMock]:
 
 @REFRESH_FUNCTIONS
 async def test_refresh_reaches_every_zone(
-    refresh: Callable[..., Awaitable[bool]], update_method: str
+    refresh: Callable[..., Awaitable[None]], update_method: str
 ) -> None:
     """Each zone caches its own state.
 
@@ -69,7 +70,7 @@ async def test_refresh_reaches_every_zone(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_skips_every_zone_when_telnet_healthy(
-    refresh: Callable[..., Awaitable[bool]], update_method: str
+    refresh: Callable[..., Awaitable[None]], update_method: str
 ) -> None:
     """The Telnet-healthy skip applies to every zone at once, checked only once."""
     main, zone2 = _receiver_with_zones()
@@ -84,7 +85,7 @@ async def test_refresh_skips_every_zone_when_telnet_healthy(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_continues_after_one_zones_command_error(
-    refresh: Callable[..., Awaitable[bool]], update_method: str
+    refresh: Callable[..., Awaitable[None]], update_method: str
 ) -> None:
     """A rejected command in one zone doesn't abort the others.
 
@@ -101,7 +102,7 @@ async def test_refresh_continues_after_one_zones_command_error(
 
 @REFRESH_FUNCTIONS
 async def test_refresh_stops_every_zone_on_a_connectivity_error(
-    refresh: Callable[..., Awaitable[bool]], update_method: str
+    refresh: Callable[..., Awaitable[None]], update_method: str
 ) -> None:
     """A connectivity error means the receiver itself is unreachable.
 
@@ -117,21 +118,6 @@ async def test_refresh_stops_every_zone_on_a_connectivity_error(
     getattr(zone2, update_method).assert_not_awaited()
 
 
-@REFRESH_FUNCTIONS
-async def test_refresh_reports_whether_it_read(
-    refresh: Callable[..., Awaitable[bool]], update_method: str
-) -> None:
-    """Availability propagation turns on which coordinator actually read."""
-    main, _ = _receiver_with_zones()
-
-    assert await refresh(main) is True
-
-    main.telnet_connected = True
-    main.telnet_healthy = True
-
-    assert await refresh(main) is False
-
-
 async def test_audyssey_refresh_tolerates_a_receiver_without_audyssey() -> None:
     """A receiver that does not know the query answers it short.
 
@@ -143,7 +129,7 @@ async def test_audyssey_refresh_tolerates_a_receiver_without_audyssey() -> None:
         "Invalid length of response XML", "test"
     )
 
-    assert await async_refresh_audyssey(main) is True
+    await async_refresh_audyssey(main)
 
     zone2.async_update_audyssey.assert_awaited_once()
 
@@ -173,36 +159,73 @@ def _coordinator(
     )
 
 
-async def test_sees_the_receiver_only_after_a_read(hass: HomeAssistant) -> None:
-    """A skipped refresh reports success without asking, so it is no evidence."""
-    refresh_fn = AsyncMock(return_value=False)
-    coordinator = _coordinator(hass, refresh_fn)
-
-    await coordinator.async_refresh()
-
-    assert coordinator.sees_the_receiver is False
-
-    refresh_fn.return_value = True
-    await coordinator.async_refresh()
-
-    assert coordinator.sees_the_receiver is True
-
-
-async def test_polling_disabled_for_the_entry_sees_nothing(
+async def test_a_failure_while_waiting_for_the_lock_forces_the_read(
     hass: HomeAssistant,
+) -> None:
+    """The skip is decided once the lock is held, not before waiting for it.
+
+    A refresh queued behind a failing command would otherwise skip on its stale
+    decision and clear the failure it was handed while waiting.
+    """
+    refresh_fn = AsyncMock()
+    coordinator = _coordinator(hass, refresh_fn)
+    await coordinator.async_refresh()
+
+    async with coordinator.lock:
+        refresh = hass.async_create_task(coordinator.async_refresh())
+        await asyncio.sleep(0)
+        mark_unavailable(coordinator)
+
+    await refresh
+
+    assert refresh_fn.await_args.kwargs["force"] is True
+
+
+@pytest.mark.parametrize(
+    ("peer_available", "force"),
+    [
+        pytest.param(True, False, id="peer_available"),
+        pytest.param(False, True, id="peer_failed"),
+    ],
+)
+async def test_a_failed_peer_forces_the_read(
+    hass: HomeAssistant, peer_available: bool, force: bool
+) -> None:
+    """A skip must not hide the other coordinator's failure either.
+
+    With Telnet healthy this poll would otherwise never ask the receiver the
+    other coordinator just failed to reach, nor confirm that it is back.
+    """
+    refresh_fn = AsyncMock()
+    coordinator = _coordinator(hass, refresh_fn)
+    coordinator.peer = _coordinator(hass, AsyncMock())
+    coordinator.peer.last_update_success = peer_available
+
+    await coordinator.async_refresh()
+
+    assert refresh_fn.await_args.kwargs["force"] is force
+
+
+@pytest.mark.parametrize(
+    ("pref_disable_polling", "polls"),
+    [
+        pytest.param(False, True, id="polling"),
+        pytest.param(True, False, id="polling_disabled"),
+    ],
+)
+async def test_polls_only_with_polling_enabled(
+    hass: HomeAssistant, pref_disable_polling: bool, polls: bool
 ) -> None:
     """An interval alone does not mean the coordinator is still asking.
 
-    _schedule_refresh() returns early on pref_disable_polling, so the read
-    below is the last one and nothing will contradict it.
+    _schedule_refresh() returns early on pref_disable_polling, so the other
+    coordinator has to hand this one its verdict.
     """
     coordinator = _coordinator(
-        hass, AsyncMock(return_value=True), pref_disable_polling=True
+        hass, AsyncMock(), pref_disable_polling=pref_disable_polling
     )
 
-    await coordinator.async_refresh()
-
-    assert coordinator.sees_the_receiver is False
+    assert coordinator.polls is polls
 
 
 async def test_internal_listener_does_not_start_the_poll(

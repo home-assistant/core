@@ -115,16 +115,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         update_interval=update_interval if update_audyssey else None,
         refresh_fn=async_refresh_audyssey,
     )
+    coordinator.peer = audyssey_coordinator
+    audyssey_coordinator.peer = coordinator
 
     @callback
     def _propagate_connectivity_to_audyssey() -> None:
         """Reflect the status coordinator's connectivity into this one.
 
-        Only while this coordinator cannot speak for the receiver itself. One
-        that is reading settles its own state within an interval, and its own
-        read is the better evidence either way.
+        Only while this coordinator has no poll of its own. One that polls
+        reads on its next interval, since this failure forces it to, and its
+        own read is the better evidence either way.
         """
-        if audyssey_coordinator.sees_the_receiver:
+        if audyssey_coordinator.polls:
             return
         if audyssey_coordinator.last_update_success != coordinator.last_update_success:
             audyssey_coordinator.last_update_success = coordinator.last_update_success
@@ -138,16 +140,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
     def _propagate_audyssey_failure_to_general() -> None:
         """Reflect a confirmed Audyssey connectivity failure into the status one.
 
-        Only while the status coordinator cannot speak for the receiver
-        itself: its poll is skipped whenever Telnet is healthy, so it would
-        not find the failure on its own, while a forced Audyssey refresh
-        reaches the receiver even then. Failure only; recovery is that
-        coordinator's own to confirm.
+        Only while the status coordinator has no poll of its own. One that
+        polls reads on its next interval even with Telnet healthy, since this
+        failure forces it to. Failure only; recovery is that coordinator's own
+        to confirm.
         """
-        if (
-            not audyssey_coordinator.last_update_success
-            and not coordinator.sees_the_receiver
-        ):
+        if not audyssey_coordinator.last_update_success and not coordinator.polls:
             mark_unavailable(coordinator)
 
     entry.async_on_unload(

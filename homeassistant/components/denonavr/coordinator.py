@@ -40,17 +40,15 @@ UNAVAILABLE_ON = (
 )
 
 
-async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> bool:
+async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> None:
     """Refresh general receiver status for every configured zone.
 
     Skipped while Telnet is healthy; that state lives on the device, not per
     zone. force=True bypasses the skip. Only connectivity errors abort the
     remaining zones, and they re-raise to fail the whole update.
-
-    Returns whether the receiver was queried at all.
     """
     if not force and receiver.telnet_connected and receiver.telnet_healthy:
-        return False
+        return
     for zone_receiver in receiver.zones.values():
         try:
             await zone_receiver.async_update()
@@ -63,7 +61,6 @@ async def async_refresh_status(receiver: DenonAVR, *, force: bool = False) -> bo
                 receiver.name,
                 err,
             )
-    return True
 
 
 async def async_update_zone_audyssey(zone_receiver: DenonAVR) -> None:
@@ -83,18 +80,16 @@ async def async_update_zone_audyssey(zone_receiver: DenonAVR) -> None:
         )
 
 
-async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> bool:
+async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> None:
     """Refresh Audyssey settings for every configured zone.
 
     async_update_audyssey() only updates the zone it is called on, so Zone2
     and Zone3 need their own fetch. Skipped while Telnet is healthy unless
     force=True: Telnet never pushes on connect, so the initial fetch would
     otherwise leave the data unset.
-
-    Returns whether the receiver was queried at all.
     """
     if not force and receiver.telnet_connected and receiver.telnet_healthy:
-        return False
+        return
     for zone_receiver in receiver.zones.values():
         try:
             await async_update_zone_audyssey(zone_receiver)
@@ -107,7 +102,6 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
                 receiver.name,
                 err,
             )
-    return True
 
 
 class _RefreshFn(Protocol):
@@ -116,7 +110,7 @@ class _RefreshFn(Protocol):
     Raises only UNAVAILABLE_ON; any other DenonAvrError is handled per zone.
     """
 
-    async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> bool: ...
+    async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> None: ...
 
 
 class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -163,24 +157,24 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.lock = lock
         self._refresh_fn = refresh_fn
         self._force_next_refresh = False
-        self._last_refresh_read = False
+        # The other coordinator on the same receiver, set once both exist.
+        self.peer: DenonAvrDataUpdateCoordinator | None = None
         self._force_refresh_lock = asyncio.Lock()
         self._forced_refresh_count = 0
         self._internal_listeners: list[CALLBACK_TYPE] = []
 
     @property
-    def sees_the_receiver(self) -> bool:
-        """Whether this coordinator's own polling can speak for the receiver.
+    def polls(self) -> bool:
+        """Whether this coordinator's own poll settles its availability.
 
-        False without a recurring poll, with polling disabled for the entry,
-        and while its polls are being skipped: none of those can discover a
-        failure or confirm a recovery, so the other coordinator has to hand it
-        the verdict.
+        A poll reads rather than skips while either coordinator is failed, so
+        it finds a failure or confirms a recovery within one interval. Without
+        a recurring poll, or with polling disabled for the entry, the other
+        coordinator has to hand it the verdict.
         """
         return (
             self.update_interval is not None
             and not self.config_entry.pref_disable_polling
-            and self._last_refresh_read
         )
 
     @callback
@@ -250,17 +244,19 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Refresh the receiver via this coordinator's refresh_fn."""
-        # A skip reports success without asking the receiver, so it must not be
-        # what clears a confirmed failure. Costs one read per interval, and only
-        # while unavailable.
-        force = self._force_next_refresh or not self.last_update_success
-        # Only a skip reads nothing, and a skip returns rather than raises.
-        self._last_refresh_read = True
         async with self.lock:
+            # A skip reports success without asking the receiver, so it must not
+            # clear or hide a confirmed failure, this coordinator's or the
+            # other's. Costs one read per interval while either is unavailable.
+            # Decided under the lock: the other coordinator's listeners run
+            # while this one waits for it, and may mark it unavailable.
+            force = (
+                self._force_next_refresh
+                or not self.last_update_success
+                or (self.peer is not None and not self.peer.last_update_success)
+            )
             try:
-                self._last_refresh_read = await self._refresh_fn(
-                    self.receiver, force=force
-                )
+                await self._refresh_fn(self.receiver, force=force)
             except UNAVAILABLE_ON as err:
                 raise UpdateFailed(
                     f"Error communicating with {self.receiver.name}: {err}"

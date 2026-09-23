@@ -94,6 +94,7 @@ async def setup_denonavr(
     hass: HomeAssistant,
     serial_number: str | None = TEST_SERIALNUMBER,
     options: dict | None = None,
+    pref_disable_polling: bool = False,
 ) -> MockConfigEntry:
     """Initialize media_player for tests."""
     entry_data = {
@@ -109,6 +110,7 @@ async def setup_denonavr(
         unique_id=TEST_UNIQUE_ID if serial_number else None,
         data=entry_data,
         options=options or {},
+        pref_disable_polling=pref_disable_polling,
     )
 
     mock_entry.add_to_hass(hass)
@@ -314,13 +316,10 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
 async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """Overlapping forced refreshes fetch once, and neither ends up skipping.
+    """Overlapping forced refreshes fetch once.
 
-    The flag that bypasses the skip lives on the coordinator, and
-    async_refresh() reaches the debouncer lock only after it is set, so a
-    second caller running a refresh of its own would find it already
-    cleared, skip on the healthy Telnet here, and report a read it never
-    made. Joining the one in flight is what keeps its answer honest.
+    Each would otherwise run the slow Audyssey query again behind the lock, or
+    skip on a bypass flag the other had already cleared.
     """
     client.telnet_connected = True
     client.telnet_healthy = True
@@ -343,36 +342,66 @@ async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
     )
 
     assert client.async_update_audyssey.call_count == calls_before + 1
-    assert audyssey_coordinator.sees_the_receiver
 
 
 @pytest.mark.parametrize(
-    ("options", "expected_state"),
+    ("side_effect", "expected_state"),
     [
-        pytest.param({}, STATE_UNKNOWN, id="status_read"),
-        pytest.param({CONF_USE_TELNET: True}, STATE_UNAVAILABLE, id="status_skipped"),
+        pytest.param(None, STATE_UNKNOWN, id="status_answers"),
+        pytest.param(
+            AvrNetworkError("Network error", "test"),
+            STATE_UNAVAILABLE,
+            id="status_unreachable",
+        ),
     ],
 )
-async def test_initial_audyssey_failure_reaches_a_blind_status_coordinator(
+@pytest.mark.parametrize(
+    "telnet_healthy_at_setup",
+    [
+        pytest.param(True, id="telnet_healthy"),
+        # The status poll at setup read, and a coordinator judged by its last
+        # read would keep counting on a poll that now skips.
+        pytest.param(False, id="telnet_recovers_after_setup"),
+    ],
+)
+async def test_initial_audyssey_failure_makes_the_status_poll_read(
     hass: HomeAssistant,
     client: MagicMock,
-    options: dict[str, bool],
+    freezer: FrozenDateTimeFactory,
+    telnet_healthy_at_setup: bool,
+    side_effect: Exception | None,
     expected_state: str,
 ) -> None:
-    """The setup-time Audyssey fetch is forced, so it reads where a poll may not.
+    """A failed Audyssey fetch at setup makes the next status poll read.
 
-    With Telnet healthy the status poll returns without asking the receiver
-    and has to be handed the failure. Polling over HTTP it has just reached
-    the receiver itself, and its own read is the better evidence.
+    With Telnet healthy that poll would otherwise skip, never asking the
+    receiver the Audyssey fetch just failed to reach. Its own read decides.
     """
-    client.telnet_connected = options.get(CONF_USE_TELNET, False)
-    client.telnet_healthy = client.telnet_connected
+    client.telnet_connected = True
+    client.telnet_healthy = telnet_healthy_at_setup
+    client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
+    await setup_denonavr(hass, options={CONF_USE_TELNET: True})
+    client.telnet_healthy = True
+    client.async_update.side_effect = side_effect
+    reads_before = client.async_update.await_count
+
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.async_update.await_count > reads_before
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+async def test_initial_audyssey_failure_reaches_a_status_coordinator_not_polling(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """With polling disabled for the entry, no poll of its own would find it."""
     client.async_update_audyssey.side_effect = AvrNetworkError("Network error", "test")
 
-    entry = await setup_denonavr(hass, options=options)
+    await setup_denonavr(hass, pref_disable_polling=True)
 
-    assert entry.runtime_data.audyssey_coordinator.last_update_success is False
-    assert hass.states.get(ENTITY_ID).state == expected_state
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -471,14 +500,14 @@ async def test_unavailable_coordinator_reads_before_recovering(
         ),
     ],
 )
-async def test_a_coordinator_that_read_keeps_its_own_verdict(
+async def test_a_polling_coordinator_keeps_its_own_verdict(
     hass: HomeAssistant,
     client: MagicMock,
     failing: str,
     reading: str,
     failing_method: str,
 ) -> None:
-    """A poll that reached the receiver outranks the other one's failure.
+    """A coordinator with its own poll is not handed the other one's failure.
 
     Both poll over HTTP here, so neither is guessing, and one endpoint
     refusing is no reason to hide data the receiver just answered for.
@@ -486,7 +515,6 @@ async def test_a_coordinator_that_read_keeps_its_own_verdict(
     entry = await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: True})
     failing_coordinator = getattr(entry.runtime_data, failing)
     reading_coordinator = getattr(entry.runtime_data, reading)
-    await reading_coordinator.async_refresh()
     getattr(client, failing_method).side_effect = AvrNetworkError(
         "Network error", "test"
     )
@@ -497,14 +525,14 @@ async def test_a_coordinator_that_read_keeps_its_own_verdict(
     assert reading_coordinator.last_update_success is True
 
 
-async def test_repeated_failure_still_reaches_a_blind_coordinator(
+async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
-    """A failure that repeats must keep reaching a coordinator that cannot read.
+    """A failure that repeats must keep reaching a coordinator with no poll.
 
     DataUpdateCoordinator stops notifying listeners once a failure repeats, so
     a peer that went available in between would otherwise stay that way with
-    nothing of its own behind it. Audyssey has no recurring poll here.
+    no poll to check again. Audyssey has no recurring poll here.
     """
     entry = await setup_denonavr(hass)
     coordinator = entry.runtime_data.coordinator
