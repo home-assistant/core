@@ -340,8 +340,17 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        self._webhook_connection = None
-        self._webhook_on = None
+        if self._webhook_connection is not None and (
+            self.device.reachable or self._webhook_connection == self.device.reachable
+        ):
+            self._webhook_connection = None
+
+        if (
+            self.device_type != "NDB"
+            and self._webhook_on is not None
+            and (self.device.reachable or self._webhook_on == self.device.monitoring)
+        ):
+            self._webhook_on = None
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
