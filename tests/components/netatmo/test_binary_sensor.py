@@ -100,7 +100,7 @@ async def test_doortag_setup(
     # Check connectivity creation
     assert hass.states.get(_doortag_entity_connectivity) is not None
 
-    # Check opening initial state (no_news)
+    # Check opening initial state from fixture (reachable: False, status: no_news)
     assert hass.states.get(_doortag_entity_opening).state == "unavailable"
     # Check connectivity initial state
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
@@ -193,7 +193,7 @@ async def test_doortag_opening_status_change(
     # Check opening creation
     assert hass.states.get(_doortag_entity_opening) is not None
 
-    # Check opening initial state (no_news)
+    # Check opening initial state from fixture (reachable: False, status: no_news)
     assert hass.states.get(_doortag_entity_opening).state == "unavailable"
     # Check connectivity initial state
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
