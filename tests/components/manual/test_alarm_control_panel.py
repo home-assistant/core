@@ -1668,7 +1668,8 @@ ENTITY_ID = "alarm_control_panel.test"
 
 
 async def _setup_manual_alarm(
-    hass: HomeAssistant, code: str | list[str | int] | dict[str, str]
+    hass: HomeAssistant,
+    code: str | list[str | int] | dict[str | int, str],
 ) -> None:
     """Set up a manual alarm panel with the given code configuration."""
     assert await async_setup_component(
@@ -1775,6 +1776,13 @@ async def test_duplicate_codes_are_rejected(
 ) -> None:
     """Test that duplicate codes are rejected, as their code ID is ambiguous."""
     await _setup_manual_alarm(hass, code_config)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_duplicate_code_ids_are_rejected(hass: HomeAssistant) -> None:
+    """Test that code IDs colliding once normalized do not discard a code."""
+    await _setup_manual_alarm(hass, {1: "1111", "1": "2222"})
 
     assert hass.states.get(ENTITY_ID) is None
 
