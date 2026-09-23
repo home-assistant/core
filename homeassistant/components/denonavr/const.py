@@ -19,7 +19,7 @@ DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
 DEFAULT_USE_TELNET = False
 
-# Shared by both coordinators, at the rate media_player.py polls at.
+# Shared by both coordinators, at the rate media_player.py polled at.
 COORDINATOR_UPDATE_INTERVAL = 10
 
 # Delay action-triggered refreshes so the receiver can settle and coalesce changes.

@@ -323,7 +323,7 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
 
 
 async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
-    """Test that dynamic eq method works."""
+    """Test that the update_audyssey action fetches."""
     await setup_denonavr(hass)
 
     # Setup fetches this once too, so the assertion is on the one call the
@@ -488,8 +488,8 @@ async def test_setup_survives_initial_audyssey_failure(
 ) -> None:
     """The setup-time Audyssey fetch must not keep the entry from loading.
 
-    It is an opt-in extra on a receiver the connection step has already
-    reached, so a failure leaves the Audyssey data unset instead of
+    It runs in every configuration, on a receiver the connection step has
+    already reached, so a failure leaves the Audyssey data unset instead of
     failing or retrying the whole entry.
     """
     client.telnet_connected = options.get(CONF_USE_TELNET, False)
