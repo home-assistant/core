@@ -2,9 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from blockchain.exchangerates import Currency
 import pytest
 
+from homeassistant.components.bitcoin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -47,3 +50,17 @@ async def test_setup_retries_when_no_rates_quoted(
 
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_statistics")
+async def test_setup_without_usd_but_with_chosen_currency(
+    hass: HomeAssistant, mock_exchangerates: MagicMock
+) -> None:
+    """Test setup succeeds when USD is missing but the chosen currency is not."""
+    mock_exchangerates.return_value = {
+        "EUR": Currency(68512.4, 68515.9, 68508.9, "€", 68510.2)
+    }
+    entry = MockConfigEntry(domain=DOMAIN, title="Bitcoin", data={CONF_CURRENCY: "EUR"})
+
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
