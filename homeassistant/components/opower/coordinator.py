@@ -81,7 +81,8 @@ def _last_bill_electricity_rates(bills: list[Bill]) -> dict[str, float]:
             for quantity in segment.service_quantities
             if quantity.unit_of_measure is UnitOfMeasure.KWH
             and quantity.service_quantity_identifier is not None
-            and quantity.service_quantity_identifier.strip().upper() == "NET_USAGE"
+            and "NET_USAGE"
+            in quantity.service_quantity_identifier.strip().upper().split(":")
             and quantity.value is not None
         )
         if usage > 0:
@@ -164,19 +165,20 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting forecasts: %s", err)
             raise
 
-        try:
-            bills = await self.api.async_get_bills()
-        except ApiException as err:
-            _LOGGER.warning("Error getting completed bills: %s", err)
-            bills = []
-
         forecasts = {f.account.utility_account_id: f for f in forecasts_list}
-        last_bill_electricity_rates = _last_bill_electricity_rates(bills)
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
 
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
         last_changed_per_account = await self._insert_statistics(accounts)
+
+        try:
+            bills = await self.api.async_get_bills()
+        except (ApiException, CannotConnect) as err:
+            _LOGGER.warning("Error getting completed bills: %s", err)
+            bills = []
+        last_bill_electricity_rates = _last_bill_electricity_rates(bills)
+
         return {
             account.utility_account_id: OpowerData(
                 account=account,

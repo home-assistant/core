@@ -105,16 +105,22 @@ async def test_get_accounts_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "bills_side_effect",
+    [
+        ApiException(message="completed bills error", url=""),
+        CannotConnect(),
+    ],
+)
 async def test_get_bills_error(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
+    bills_side_effect: Exception,
 ) -> None:
     """Test a completed bills error does not block forecasts or statistics."""
-    mock_opower_api.async_get_bills.side_effect = ApiException(
-        message="completed bills error", url=""
-    )
+    mock_opower_api.async_get_bills.side_effect = bills_side_effect
     mock_opower_api.async_get_cost_reads.return_value = [
         CostRead(
             start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),

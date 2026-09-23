@@ -85,8 +85,8 @@ async def test_last_bill_electricity_rate(
         account,
         usage_charges=45.0,
         quantities=[
-            BillServiceQuantity(UnitOfMeasure.KWH, " NET_USAGE ", 100.0),
-            BillServiceQuantity(UnitOfMeasure.KWH, "DELIVERED", 900.0),
+            BillServiceQuantity(UnitOfMeasure.KWH, " ELEC:NET_USAGE ", 100.0),
+            BillServiceQuantity(UnitOfMeasure.KWH, "ELEC:DELIVERED", 900.0),
         ],
     )
     bill.segments.append(
@@ -95,7 +95,7 @@ async def test_last_bill_electricity_rate(
             current_amount=20.0,
             service_quantities=[
                 BillServiceQuantity(UnitOfMeasure.KWH, "net_usage", 50.0),
-                BillServiceQuantity(UnitOfMeasure.KWH, "GENERATED", 500.0),
+                BillServiceQuantity(UnitOfMeasure.KWH, "ELEC:GENERATED", 500.0),
             ],
         )
     )
