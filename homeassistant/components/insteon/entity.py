@@ -1,5 +1,6 @@
 """Insteon base entity."""
 
+import asyncio
 import functools
 import logging
 from typing import Any, override
@@ -27,6 +28,13 @@ from .const import (
 from .utils import print_aldb_to_log
 
 _LOGGER = logging.getLogger(__name__)
+
+# Insteon's protocol cannot handle concurrent status requests (see the
+# sequential status pass in async_get_device_config in __init__.py). This
+# integration only ever has a single config entry, so one process-wide lock
+# is enough to serialize the status requests homeassistant.update_entity
+# issues concurrently when called against multiple entities at once.
+_STATUS_LOCK = asyncio.Lock()
 
 
 class InsteonEntity(Entity):
@@ -196,4 +204,5 @@ class InsteonEntity(Entity):
         """Request a live status update from the device, skipping battery-powered devices."""
         if self._insteon_device.is_battery:
             return
-        await self._insteon_device.async_status(self.insteon_group)
+        async with _STATUS_LOCK:
+            await self._insteon_device.async_status(self.insteon_group)

@@ -1,5 +1,6 @@
 """Tests for the Insteon entity base class."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -102,3 +103,39 @@ async def test_async_update_skips_battery_powered_device() -> None:
     await entity.async_update()
 
     device.async_status.assert_not_awaited()
+
+
+async def test_async_update_serializes_concurrent_status_requests() -> None:
+    """Test concurrent async_update calls don't overlap status requests.
+
+    homeassistant.update_entity gathers every selected entity's async_update
+    concurrently, but Insteon's protocol requires status requests to run one
+    at a time (see the sequential loop in async_get_device_config). This
+    exercises two different devices directly, mirroring the battery-skip
+    test above, rather than a full platform/service-call setup.
+    """
+    await devices.async_load()
+    device_a = devices["33.33.33"]
+    device_b = devices["44.44.44"]
+
+    active = 0
+    max_active = 0
+
+    async def fake_status(*args, **kwargs):
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0)
+        active -= 1
+
+    device_a.async_status.side_effect = fake_status
+    device_b.async_status.side_effect = fake_status
+
+    entity_a = InsteonEntity(device_a, 1)
+    entity_b = InsteonEntity(device_b, 1)
+
+    await asyncio.gather(entity_a.async_update(), entity_b.async_update())
+
+    assert max_active == 1
+    device_a.async_status.assert_awaited_once()
+    device_b.async_status.assert_awaited_once()
