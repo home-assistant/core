@@ -58,7 +58,6 @@ async def test_oldest_ts_preserved_after_sqlalchemy_recovery(
                 )
 
     with (
-        patch("time.sleep"),
         patch.object(
             event_session,
             "flush",
