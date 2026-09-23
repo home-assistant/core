@@ -35,7 +35,6 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from . import OKOKScaleConfigEntry
 from .device import device_key_to_bluetooth_entity_key
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 SENSOR_DESCRIPTIONS = {
@@ -142,7 +141,7 @@ async def async_setup_entry(
 
 class OKOKScaleBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[str | float | None, SensorUpdate]
+        PassiveBluetoothDataProcessor[float | int | str | None, SensorUpdate]
     ],
     SensorEntity,
 ):
@@ -150,7 +149,7 @@ class OKOKScaleBluetoothSensorEntity(
 
     @property
     @override
-    def native_value(self) -> str | float | None:
+    def native_value(self) -> float | int | str | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 

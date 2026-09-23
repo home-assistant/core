@@ -62,10 +62,7 @@ async def test_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sleepy_device_keeps_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+async def test_sleepy_device_keeps_state(hass: HomeAssistant) -> None:
     """Test the scale keeps its state and goes to assumed_state when idle."""
     start_monotonic = time.monotonic()
     entry = MockConfigEntry(domain=DOMAIN, unique_id=OKOK_F0_SERVICE_INFO.address)
