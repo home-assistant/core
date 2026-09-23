@@ -55,7 +55,6 @@ async def test_disabled_sensors(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     for entity_id in (
-        "sensor.indi_allsky_camera_sensor_temperature",
         "sensor.indi_allsky_exposure_time",
         "sensor.indi_allsky_camera_sensor_temperature",
         "sensor.indi_allsky_sky_quality",
