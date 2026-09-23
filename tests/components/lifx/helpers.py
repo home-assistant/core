@@ -26,6 +26,8 @@ from lifx import (
     MatrixLightState,
     MultiZoneLight,
     MultiZoneLightState,
+    ThreadInfo,
+    ThreadRoutingRole,
     TileInfo,
     WifiInfo,
 )
@@ -469,3 +471,19 @@ def create_reference_ceiling_128_light() -> CeilingLight:
     return _create_reference_ceiling_light(
         model="LIFX Ceiling 13x26", product=201, width=16, zone_count=127
     )
+
+
+def create_reference_thread_light() -> Light:
+    """Create the normalized released-emulator color light on Thread."""
+    device = create_reference_color_light()
+    device.connectivity = Connectivity.THREAD
+    device.state.thread_info = ThreadInfo(
+        rloc=1024,
+        network_name="Private mesh",
+        role=ThreadRoutingRole.ROUTER,
+        next_hop=2048,
+        link_quality_in=3,
+        link_quality_out=3,
+        link_margin_db=40,
+    )
+    return device

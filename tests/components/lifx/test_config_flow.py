@@ -137,13 +137,14 @@ async def test_zeroconf_discovery_creates_version_2_entry(
     with patch(
         "homeassistant.components.lifx.config_flow.Device.connect",
         return_value=mock_light,
-    ):
+    ) as mock_connect:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=replace(_zeroconf_info(), ip_address=address, ip_addresses=[address]),
         )
 
+    mock_connect.assert_awaited_once_with(ip=str(address), serial=SERIAL)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
