@@ -80,6 +80,55 @@ class IndiAllSkySensorEntityDescription(SensorEntityDescription):
 
 PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = (
     IndiAllSkySensorEntityDescription(
+        key="binmode",
+        translation_key="binmode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.exposure.binmode if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="exposure",
+        translation_key="exposure",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.exposure.exposure if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="filename",
+        translation_key="filename",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.exposure.filename if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="gain",
+        translation_key="gain",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.exposure.gain if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="sqm",
+        translation_key="sqm",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.exposure.sqm if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="stars",
+        translation_key="stars",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.exposure.stars if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
+        key="camera_sensor_temp",
+        translation_key="camera_sensor_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.exposure.temp if data.exposure else None,
+    ),
+    IndiAllSkySensorEntityDescription(
         key="dew_heater",
         translation_key="dew_heater",
         icon="mdi:heating-coil",

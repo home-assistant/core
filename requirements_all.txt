@@ -115,7 +115,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.53
+SQLAlchemy==2.0.54
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -270,7 +270,7 @@ aioesphomeapi==46.4.1
 aiofiles==25.1.0
 
 # homeassistant.components.flo
-aioflo==2026.9.3
+aioflo==2026.9.4
 
 # homeassistant.components.yi
 aioftp==0.21.3
@@ -549,7 +549,7 @@ anova-wifi==1.0.1
 anthemav==1.4.2
 
 # homeassistant.components.anthropic
-anthropic==0.108.0
+anthropic==0.125.0
 
 # homeassistant.components.mcp_server
 anyio==4.14.2
@@ -1262,7 +1262,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==7.0.0
+habluetooth==7.1.2
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1921,7 +1921,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.6
+plugwise==1.14.7
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2271,7 +2271,7 @@ pyfreedompro==1.1.0
 pyfreshr==1.2.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.20
+pyfritzhome==0.6.21
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -3426,7 +3426,6 @@ vsure==2.10.0
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
 
-# homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==3.3.0
 

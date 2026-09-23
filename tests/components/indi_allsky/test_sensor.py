@@ -42,9 +42,26 @@ async def test_disabled_sensors(
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    entry = entity_registry.async_get("sensor.indi_allsky_cpu_temperature")
-    assert entry is not None
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    for entity_id in (
+        "sensor.indi_allsky_binning_mode",
+        "sensor.indi_allsky_cpu_temperature",
+        "sensor.indi_allsky_filename",
+        "sensor.indi_allsky_gain",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for entity_id in (
+        "sensor.indi_allsky_camera_sensor_temperature",
+        "sensor.indi_allsky_dew_heater_duty_cycle",
+        "sensor.indi_allsky_exposure_time",
+        "sensor.indi_allsky_sky_quality",
+        "sensor.indi_allsky_stars",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is None
 
 
 async def test_hardware_sensor_updates(
