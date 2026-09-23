@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import IndiAllSkyConfigEntry, IndiAllSkyDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.CAMERA]
+_PLATFORMS: list[Platform] = [Platform.CAMERA, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> bool:
@@ -14,6 +14,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.client.listen(auto_reconnect=True),
+        "indi_allsky_ws_events",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True

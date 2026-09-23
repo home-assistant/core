@@ -1,7 +1,6 @@
 """Test the LIFX sensor platform."""
 
-from datetime import timedelta
-
+from lifx import FirmwareInfo, WifiInfo
 import pytest
 
 from homeassistant.components import lifx
@@ -9,131 +8,63 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_HOST,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from . import (
-    DEFAULT_ENTRY_TITLE,
-    IP_ADDRESS,
-    SERIAL,
-    _mocked_bulb,
-    _mocked_bulb_old_firmware,
-    _patch_config_flow_try_connect,
-    _patch_device,
-    _patch_discovery,
+from . import SERIAL, async_setup_lifx_entry, async_trigger_update
+from .helpers import create_mock_light
+
+
+@pytest.mark.parametrize(
+    ("firmware", "unit"),
+    [
+        pytest.param((2, 77), SIGNAL_STRENGTH_DECIBELS, id="db"),
+        pytest.param((4, 0), SIGNAL_STRENGTH_DECIBELS_MILLIWATT, id="dbm"),
+    ],
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-@pytest.mark.usefixtures("mock_discovery")
 async def test_rssi_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    firmware: tuple[int, int],
+    unit: str,
 ) -> None:
-    """Test LIFX RSSI sensor entity."""
-
-    config_entry = MockConfigEntry(
-        domain=lifx.DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
+    """Test RSSI uses the public WifiInfo value and unit."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        lifx.DOMAIN,
+        f"{SERIAL}_rssi",
+        disabled_by=None,
+        suggested_object_id="my_group_my_bulb_rssi",
     )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
+    device = create_mock_light()
+    device.state.wifi_info = WifiInfo(0.000001, FirmwareInfo(0, *firmware))
 
-    entity_id = "sensor.my_group_my_bulb_rssi"
-    assert not hass.states.get(entity_id)
+    await async_setup_lifx_entry(hass, device)
 
-    entry = entity_registry.entities.get(entity_id)
-    assert entry
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    await async_trigger_update(hass)
 
-    # Test enabling entity, this will trigger a reload of the config entry
-    updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, disabled_by=None
-    )
+    # The signal is only requested while the sensor is enabled
+    assert device.fetch_wifi_info is True
 
-    assert updated_entry != entry
-    assert updated_entry.disabled is False
-    assert updated_entry.unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
-        await hass.async_block_till_done()
-
-    rssi = hass.states.get(entity_id)
-    assert (
-        rssi.attributes[ATTR_UNIT_OF_MEASUREMENT] == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-    assert rssi.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SIGNAL_STRENGTH
-    assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    state = hass.states.get("sensor.my_group_my_bulb_rssi")
+    assert state
+    assert state.state == "-60"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SIGNAL_STRENGTH
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-@pytest.mark.usefixtures("mock_discovery")
-async def test_rssi_sensor_old_firmware(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_rssi_signal_is_not_read_while_the_sensor_is_disabled(
+    hass: HomeAssistant,
 ) -> None:
-    """Test LIFX RSSI sensor entity."""
+    """Test the signal is left out of the poll until the sensor is enabled."""
+    device = create_mock_light()
 
-    config_entry = MockConfigEntry(
-        domain=lifx.DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb_old_firmware()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
+    await async_setup_lifx_entry(hass, device)
 
-    entity_id = "sensor.my_group_my_bulb_rssi"
+    await async_trigger_update(hass)
 
-    entry = entity_registry.entities.get(entity_id)
-    assert entry
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-    # Test enabling entity, this will trigger a reload of the config entry
-    updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, disabled_by=None
-    )
-
-    assert updated_entry != entry
-    assert updated_entry.disabled is False
-    assert updated_entry.unit_of_measurement == SIGNAL_STRENGTH_DECIBELS
-
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
-        await hass.async_block_till_done()
-
-    rssi = hass.states.get(entity_id)
-    assert rssi.attributes[ATTR_UNIT_OF_MEASUREMENT] == SIGNAL_STRENGTH_DECIBELS
-    assert rssi.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SIGNAL_STRENGTH
-    assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert device.fetch_wifi_info is False
