@@ -270,7 +270,7 @@ aioesphomeapi==46.4.1
 aiofiles==25.1.0
 
 # homeassistant.components.flo
-aioflo==2026.9.3
+aioflo==2026.9.4
 
 # homeassistant.components.yi
 aioftp==0.21.3
@@ -1921,7 +1921,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.14.6
+plugwise==1.14.7
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
