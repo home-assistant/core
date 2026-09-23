@@ -1668,7 +1668,7 @@ ENTITY_ID = "alarm_control_panel.test"
 
 
 async def _setup_manual_alarm(
-    hass: HomeAssistant, code: str | list[str] | dict[str, str]
+    hass: HomeAssistant, code: str | list[str | int] | dict[str, str]
 ) -> None:
     """Set up a manual alarm panel with the given code configuration."""
     assert await async_setup_component(
@@ -1747,10 +1747,10 @@ async def test_multiple_codes_from_yaml_numbers(hass: HomeAssistant) -> None:
         pytest.param({}, id="empty_mapping"),
     ],
 )
-async def test_empty_code_requires_no_code(
+async def test_empty_code_accepts_any_code(
     hass: HomeAssistant, code_config: str | list[str] | dict[str, str]
 ) -> None:
-    """Test that an empty code configuration does not require a code."""
+    """Test that an empty code configuration validates no code."""
     await _setup_manual_alarm(hass, code_config)
 
     assert hass.states.get(ENTITY_ID).attributes["code_format"] is None
@@ -1761,6 +1761,22 @@ async def test_empty_code_requires_no_code(
 
     await common.async_alarm_disarm(hass, "something else")
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+
+@pytest.mark.parametrize(
+    "code_config",
+    [
+        pytest.param(["1111", "1111"], id="list"),
+        pytest.param({"dad": "1111", "mom": "1111"}, id="mapping"),
+    ],
+)
+async def test_duplicate_codes_are_rejected(
+    hass: HomeAssistant, code_config: list[str] | dict[str, str]
+) -> None:
+    """Test that duplicate codes are rejected, as their code ID is ambiguous."""
+    await _setup_manual_alarm(hass, code_config)
+
+    assert hass.states.get(ENTITY_ID) is None
 
 
 @pytest.mark.parametrize(

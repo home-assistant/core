@@ -103,7 +103,8 @@ def _codes_validator(value: Any) -> dict[str | None, str]:
 
     A single code has no code ID, codes given as a list are identified by their
     index and codes given as a mapping by their key. Empty codes are dropped, so
-    that an empty configuration value keeps meaning "no code required".
+    that an empty configuration value keeps meaning "no code required", and the
+    remaining codes must be unique so that the reported code ID is unambiguous.
     """
     codes: dict[str | None, str]
     if isinstance(value, dict):
@@ -112,7 +113,11 @@ def _codes_validator(value: Any) -> dict[str | None, str]:
         codes = {str(index): cv.string(code) for index, code in enumerate(value)}
     else:
         codes = {None: cv.string(value)}
-    return {code_id: code for code_id, code in codes.items() if code}
+    codes = {code_id: code for code_id, code in codes.items() if code}
+    # A repeated code would be reported under the code ID it was configured under first
+    if len(set(codes.values())) != len(codes):
+        raise probatio.Invalid("Codes must be unique")
+    return codes
 
 
 def _state_validator(
