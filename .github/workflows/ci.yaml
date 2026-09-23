@@ -42,7 +42,7 @@ env:
   HA_SHORT_VERSION: "2026.10"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
-  # - 10.3 and 10.6 is the version currently phased out until 2027.3
+  # - 10.3 and 10.6 are the versions currently phased out until 2027.3
   # - 10.11.2 is the oldest supported long term version (as of September 2026)
   # - 11.4.9 is used in Alpine 3.23 (used in latest HA base images as of April 2026)
   # - 11.8.8 is used in Alpine 3.24 (used in latest HA base images as of July 2026)
