@@ -133,7 +133,7 @@ class CoreConfig(_message.Message):
     def __init__(self, latitude: _Optional[float] = ..., longitude: _Optional[float] = ..., elevation: _Optional[float] = ..., time_zone: _Optional[str] = ..., unit_system: _Optional[str] = ..., language: _Optional[str] = ..., country: _Optional[str] = ..., currency: _Optional[str] = ..., location_name: _Optional[str] = ...) -> None: ...
 
 class EntrySetup(_message.Message):
-    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version", "integration_source", "core_config")
+    __slots__ = ("entry_id", "domain", "title", "data", "options", "source", "unique_id", "version", "minor_version", "integration_source", "core_config", "subentries", "discovery_keys", "pref_disable_new_entities", "pref_disable_polling")
     ENTRY_ID_FIELD_NUMBER: _ClassVar[int]
     DOMAIN_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
@@ -145,6 +145,10 @@ class EntrySetup(_message.Message):
     MINOR_VERSION_FIELD_NUMBER: _ClassVar[int]
     INTEGRATION_SOURCE_FIELD_NUMBER: _ClassVar[int]
     CORE_CONFIG_FIELD_NUMBER: _ClassVar[int]
+    SUBENTRIES_FIELD_NUMBER: _ClassVar[int]
+    DISCOVERY_KEYS_FIELD_NUMBER: _ClassVar[int]
+    PREF_DISABLE_NEW_ENTITIES_FIELD_NUMBER: _ClassVar[int]
+    PREF_DISABLE_POLLING_FIELD_NUMBER: _ClassVar[int]
     entry_id: str
     domain: str
     title: str
@@ -156,7 +160,25 @@ class EntrySetup(_message.Message):
     minor_version: int
     integration_source: IntegrationSource
     core_config: CoreConfig
-    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ..., core_config: _Optional[_Union[CoreConfig, _Mapping]] = ...) -> None: ...
+    subentries: bytes
+    discovery_keys: bytes
+    pref_disable_new_entities: bool
+    pref_disable_polling: bool
+    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., title: _Optional[str] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., source: _Optional[str] = ..., unique_id: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., integration_source: _Optional[_Union[IntegrationSource, _Mapping]] = ..., core_config: _Optional[_Union[CoreConfig, _Mapping]] = ..., subentries: _Optional[bytes] = ..., discovery_keys: _Optional[bytes] = ..., pref_disable_new_entities: bool = ..., pref_disable_polling: bool = ...) -> None: ...
+
+class EntryUpdate(_message.Message):
+    __slots__ = ("entry_id", "before", "after")
+    ENTRY_ID_FIELD_NUMBER: _ClassVar[int]
+    BEFORE_FIELD_NUMBER: _ClassVar[int]
+    AFTER_FIELD_NUMBER: _ClassVar[int]
+    entry_id: str
+    before: bytes
+    after: bytes
+    def __init__(self, entry_id: _Optional[str] = ..., before: _Optional[bytes] = ..., after: _Optional[bytes] = ...) -> None: ...
+
+class EntryUpdateResult(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class EntrySetupResult(_message.Message):
     __slots__ = ("ok", "reason")
@@ -269,16 +291,18 @@ class Ready(_message.Message):
     def __init__(self) -> None: ...
 
 class FlowInit(_message.Message):
-    __slots__ = ("handler", "context", "data", "entry")
+    __slots__ = ("handler", "context", "data", "entry", "subentry_type")
     HANDLER_FIELD_NUMBER: _ClassVar[int]
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
     DATA_FIELD_NUMBER: _ClassVar[int]
     ENTRY_FIELD_NUMBER: _ClassVar[int]
+    SUBENTRY_TYPE_FIELD_NUMBER: _ClassVar[int]
     handler: str
     context: bytes
     data: bytes
     entry: EntrySetup
-    def __init__(self, handler: _Optional[str] = ..., context: _Optional[bytes] = ..., data: _Optional[bytes] = ..., entry: _Optional[_Union[EntrySetup, _Mapping]] = ...) -> None: ...
+    subentry_type: str
+    def __init__(self, handler: _Optional[str] = ..., context: _Optional[bytes] = ..., data: _Optional[bytes] = ..., entry: _Optional[_Union[EntrySetup, _Mapping]] = ..., subentry_type: _Optional[str] = ...) -> None: ...
 
 class FlowStep(_message.Message):
     __slots__ = ("flow_id", "user_input")
@@ -299,7 +323,7 @@ class FlowAbortResult(_message.Message):
     def __init__(self) -> None: ...
 
 class FlowResult(_message.Message):
-    __slots__ = ("type", "flow_id", "handler", "step_id", "reason", "title", "description", "last_step", "preview", "version", "minor_version", "data", "options", "errors", "description_placeholders", "context", "data_schema", "has_data_schema", "menu_options", "sort")
+    __slots__ = ("type", "flow_id", "handler", "step_id", "reason", "title", "description", "last_step", "preview", "version", "minor_version", "data", "options", "errors", "description_placeholders", "context", "data_schema", "has_data_schema", "menu_options", "sort", "subentries", "unique_id", "translation_domain")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     FLOW_ID_FIELD_NUMBER: _ClassVar[int]
     HANDLER_FIELD_NUMBER: _ClassVar[int]
@@ -320,6 +344,9 @@ class FlowResult(_message.Message):
     HAS_DATA_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     MENU_OPTIONS_FIELD_NUMBER: _ClassVar[int]
     SORT_FIELD_NUMBER: _ClassVar[int]
+    SUBENTRIES_FIELD_NUMBER: _ClassVar[int]
+    UNIQUE_ID_FIELD_NUMBER: _ClassVar[int]
+    TRANSLATION_DOMAIN_FIELD_NUMBER: _ClassVar[int]
     type: str
     flow_id: str
     handler: str
@@ -340,7 +367,10 @@ class FlowResult(_message.Message):
     has_data_schema: bool
     menu_options: bytes
     sort: bool
-    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., errors: _Optional[bytes] = ..., description_placeholders: _Optional[bytes] = ..., context: _Optional[bytes] = ..., data_schema: _Optional[bytes] = ..., has_data_schema: bool = ..., menu_options: _Optional[bytes] = ..., sort: bool = ...) -> None: ...
+    subentries: bytes
+    unique_id: str
+    translation_domain: str
+    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[bytes] = ..., options: _Optional[bytes] = ..., errors: _Optional[bytes] = ..., description_placeholders: _Optional[bytes] = ..., context: _Optional[bytes] = ..., data_schema: _Optional[bytes] = ..., has_data_schema: bool = ..., menu_options: _Optional[bytes] = ..., sort: bool = ..., subentries: _Optional[bytes] = ..., unique_id: _Optional[str] = ..., translation_domain: _Optional[str] = ...) -> None: ...
 
 class EntityInfo(_message.Message):
     __slots__ = ("description", "device_info")
@@ -376,7 +406,7 @@ class InitialState(_message.Message):
     def __init__(self, state: _Optional[str] = ..., capabilities: _Optional[bytes] = ..., attributes: _Optional[bytes] = ...) -> None: ...
 
 class EntityDescription(_message.Message):
-    __slots__ = ("entry_id", "domain", "sandbox_entity_id", "unique_id", "has_entity_name", "info", "initial")
+    __slots__ = ("entry_id", "domain", "sandbox_entity_id", "unique_id", "has_entity_name", "info", "initial", "config_subentry_id")
     ENTRY_ID_FIELD_NUMBER: _ClassVar[int]
     DOMAIN_FIELD_NUMBER: _ClassVar[int]
     SANDBOX_ENTITY_ID_FIELD_NUMBER: _ClassVar[int]
@@ -384,6 +414,7 @@ class EntityDescription(_message.Message):
     HAS_ENTITY_NAME_FIELD_NUMBER: _ClassVar[int]
     INFO_FIELD_NUMBER: _ClassVar[int]
     INITIAL_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_SUBENTRY_ID_FIELD_NUMBER: _ClassVar[int]
     entry_id: str
     domain: str
     sandbox_entity_id: str
@@ -391,7 +422,8 @@ class EntityDescription(_message.Message):
     has_entity_name: bool
     info: EntityInfo
     initial: InitialState
-    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., sandbox_entity_id: _Optional[str] = ..., unique_id: _Optional[str] = ..., has_entity_name: bool = ..., info: _Optional[_Union[EntityInfo, _Mapping]] = ..., initial: _Optional[_Union[InitialState, _Mapping]] = ...) -> None: ...
+    config_subentry_id: str
+    def __init__(self, entry_id: _Optional[str] = ..., domain: _Optional[str] = ..., sandbox_entity_id: _Optional[str] = ..., unique_id: _Optional[str] = ..., has_entity_name: bool = ..., info: _Optional[_Union[EntityInfo, _Mapping]] = ..., initial: _Optional[_Union[InitialState, _Mapping]] = ..., config_subentry_id: _Optional[str] = ...) -> None: ...
 
 class RegisterEntityResult(_message.Message):
     __slots__ = ("entity_id",)

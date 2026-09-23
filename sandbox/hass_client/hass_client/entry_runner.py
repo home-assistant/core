@@ -14,6 +14,7 @@ from types import MappingProxyType
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.util.unit_system import get_unit_system
@@ -21,11 +22,13 @@ from homeassistant.util.unit_system import get_unit_system
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .entry_sync import EntrySync
 from .messages import (
     MSG_CALL_SERVICE,
     MSG_ENTITY_QUERY,
     MSG_ENTRY_SETUP,
     MSG_ENTRY_UNLOAD,
+    decode_json,
     decode_json_dict,
     encode_json,
 )
@@ -43,6 +46,7 @@ class EntryRunner:
         approved: ApprovedDomains | None = None,
         *,
         fetch: FetchPrimitive | None = None,
+        entry_sync: EntrySync | None = None,
     ) -> None:
         """Initialise with the sandbox-private HA instance.
 
@@ -54,6 +58,7 @@ class EntryRunner:
         self.hass = hass
         self.approved = approved if approved is not None else ApprovedDomains()
         self._fetch = fetch
+        self.entry_sync = entry_sync
 
     def register(self, channel: Channel) -> None:
         """Wire the ``sandbox/entry_*`` + ``call_service`` handlers."""
@@ -94,7 +99,9 @@ class EntryRunner:
             return pb.EntrySetupResult(ok=False, reason=f"source fetch failed: {err}")
 
         config_entries = self.hass.config_entries
-        if config_entries.async_get_entry(entry.entry_id) is not None:
+        if (
+            existing := config_entries.async_get_entry(entry.entry_id)
+        ) is not None and existing.state is not ConfigEntryState.NOT_LOADED:
             return pb.EntrySetupResult(ok=False, reason="entry already loaded")
 
         # ConfigEntries doesn't expose a "add without persist" hook; the
@@ -102,17 +109,27 @@ class EntryRunner:
         # straight into the internal map. `async_setup` then finds it via
         # `async_get_known_entry`.
         config_entries._entries[entry.entry_id] = entry  # noqa: SLF001
+        if self.entry_sync is not None:
+            self.entry_sync.track(entry)
         try:
             ok = await config_entries.async_setup(entry.entry_id)
+            if self.entry_sync is not None:
+                await self.entry_sync.flush(entry.entry_id)
         except Exception as err:
             _LOGGER.exception(
                 "sandbox entry_setup raised for %s (%s)", entry.title, entry.domain
             )
-            # Drop the failed entry so a re-sent entry_setup for the same
-            # entry_id isn't rejected with "entry already loaded". Main is the
-            # only retry driver (the sandbox hass is never started, so its own
-            # ConfigEntryNotReady timer never fires) — this just makes the
-            # re-send start clean.
+            if entry.state is ConfigEntryState.LOADED:
+                # A failed writeback must not orphan a live integration.
+                self.approved.add(entry.domain)
+                return pb.EntrySetupResult(
+                    ok=False,
+                    reason="Configuration writeback failed; unload and reload required",
+                )
+            # Main owns retries; stop the child timer before removing its entry.
+            entry.async_cancel_retry_setup()
+            if self.entry_sync is not None:
+                self.entry_sync.forget(entry.entry_id)
             config_entries._entries.pop(entry.entry_id, None)  # noqa: SLF001
             return pb.EntrySetupResult(
                 ok=False, reason=str(err) or err.__class__.__name__
@@ -120,6 +137,9 @@ class EntryRunner:
         if not ok:
             # Same cleanup on a plain failed setup (returns False / SETUP_ERROR
             # / SETUP_RETRY) so the entry_id is free for main's retry.
+            entry.async_cancel_retry_setup()
+            if self.entry_sync is not None:
+                self.entry_sync.forget(entry.entry_id)
             config_entries._entries.pop(entry.entry_id, None)  # noqa: SLF001
             return pb.EntrySetupResult(
                 ok=False, reason=entry.reason or f"async_setup returned {ok!r}"
@@ -139,6 +159,14 @@ class EntryRunner:
         except Exception:
             _LOGGER.exception("sandbox entry_unload raised for %s", entry_id)
             return pb.EntryUnloadResult(ok=False)
+        if not unloaded:
+            return pb.EntryUnloadResult(ok=False)
+        if self.entry_sync is not None:
+            try:
+                await self.entry_sync.flush(entry_id)
+            except HomeAssistantError:
+                _LOGGER.error("Discarding unacknowledged configuration while unloading %s", entry_id)
+            self.entry_sync.forget(entry_id)
         config_entries._entries.pop(entry_id, None)  # noqa: SLF001
         # Drop one approval refcount; another loaded entry of the same
         # domain keeps it approved.
@@ -164,6 +192,8 @@ class EntryRunner:
                 target=target,
                 return_response=True,
             )
+            if self.entry_sync is not None:
+                await self.entry_sync.flush()
             response = pb.CallServiceResult()
             # encode_json's as_dict-aware encoder carries rich response values
             # (e.g. {entity_id: BrowseMedia}) in the same wire shape the
@@ -177,6 +207,8 @@ class EntryRunner:
             blocking=True,
             target=target,
         )
+        if self.entry_sync is not None:
+            await self.entry_sync.flush()
         return pb.CallServiceResult()
 
     async def _handle_entity_query(self, msg: pb.EntityQuery) -> pb.EntityQueryResult:
@@ -252,8 +284,8 @@ def _resolve_entity(hass: HomeAssistant, entity_id: str) -> Entity:
 def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
     """Rebuild a :class:`ConfigEntry` from the typed ``EntrySetup`` message.
 
-    Only fields the integration's setup hooks need are surfaced — the
-    sandbox does not persist entries or track update listeners.
+    Main owns persistence; the local copy preserves subentry identities and
+    preferences so integrations can use the normal configuration APIs.
     """
     return ConfigEntry(
         version=msg.version,
@@ -265,8 +297,15 @@ def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
         source=msg.source,
         unique_id=msg.unique_id if msg.HasField("unique_id") else None,
         entry_id=msg.entry_id,
-        discovery_keys=MappingProxyType({}),
-        subentries_data=None,
+        discovery_keys=MappingProxyType(
+            {
+                key: tuple(DiscoveryKey.from_json_dict(item) for item in items)
+                for key, items in decode_json_dict(msg.discovery_keys).items()
+            }
+        ),
+        subentries_data=decode_json(msg.subentries) or (),
+        pref_disable_new_entities=msg.pref_disable_new_entities,
+        pref_disable_polling=msg.pref_disable_polling,
         state=ConfigEntryState.NOT_LOADED,
     )
 

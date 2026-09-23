@@ -35,7 +35,7 @@ from .messages import (
     core_config_to_proto,
     entry_to_setup_proto,
 )
-from .proxy_flow import SandboxFlowProxy
+from .proxy_flow import SandboxFlowProxy, SandboxSubentryFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
 
 if TYPE_CHECKING:
@@ -83,6 +83,19 @@ class SandboxFlowRouter:
             handler_key=handler_key,
         )
 
+    async def async_create_subentry_flow(
+        self, entry: ConfigEntry, subentry_type: str
+    ) -> SandboxSubentryFlowProxy | None:
+        """Run subentry flows beside the integration's live Python objects."""
+        if entry.sandbox is None:
+            return None
+        return SandboxSubentryFlowProxy(
+            sandbox_group=entry.sandbox,
+            manager=self._manager,
+            handler_key=entry.domain,
+            subentry_type=subentry_type,
+        )
+
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
         """Hand a sandboxed entry to the manager and run its setup remotely.
 
@@ -123,6 +136,11 @@ class SandboxFlowRouter:
                 err,
             )
             raise ConfigEntryError(str(err)) from err
+        if (
+            self._data is not None
+            and (bridge := self._data.bridges.get(group)) is not None
+        ):
+            bridge.entry_sync.track(entry)
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
         except ChannelClosedError as err:

@@ -1,8 +1,18 @@
 # Home Assistant Sandbox
 
-Runs Home Assistant integrations in isolated subprocesses while the main
-instance keeps a single, unified view of devices, entities, services, events,
-and translations — as if everything ran locally.
+Runs Home Assistant integrations in subprocesses while main owns configuration,
+entity/device registries, and persistence.
+
+**Version one targets functional execution.** Child HA starts before config-entry
+setup. Config entries and subentries cross the channel, and configuration changes
+sync in both directions through Core's mutation APIs.
+
+**Out of scope for v1:** security isolation and cross-process access to shared
+Python managers. Workers currently run with Core's host privileges. Bluetooth
+consumers/proxies, MQTT consumers, ZHA, Z-Wave JS, Matter/Thread and integrations
+using ESPHome or deCONZ manager objects need future brokers or explicit
+co-location support. These exclusions concern shared in-memory managers, not an
+integration's own client library or update coordinator.
 
 - **[`ARCHITECTURE.md`](ARCHITECTURE.md)** — the full architecture: routing,
   lifecycle, config-flow forwarding, entity bridge, service/event mirror, store

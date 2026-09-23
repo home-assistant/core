@@ -30,6 +30,7 @@ MIRRORED_FILES=(
   channel.py
   codec_protobuf.py
   messages.py
+  entry_sync.py
   _proto/sandbox_pb2.py
   _proto/sandbox_pb2.pyi
 )

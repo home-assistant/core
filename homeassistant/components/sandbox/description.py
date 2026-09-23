@@ -26,6 +26,7 @@ class SandboxEntityDescription:
     entry_id: str
     domain: str
     sandbox_entity_id: str
+    config_subentry_id: str | None = None
     unique_id: str | None = None
     name: str | None = None
     icon: str | None = None
@@ -56,6 +57,9 @@ class SandboxEntityDescription:
             entry_id=msg.entry_id,
             domain=msg.domain,
             sandbox_entity_id=msg.sandbox_entity_id,
+            config_subentry_id=(
+                msg.config_subentry_id if msg.HasField("config_subentry_id") else None
+            ),
             unique_id=msg.unique_id if msg.HasField("unique_id") else None,
             name=description.name if description.HasField("name") else None,
             icon=description.icon if description.HasField("icon") else None,

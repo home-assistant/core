@@ -14,8 +14,8 @@ Composes the sandbox's per-process services:
 
 The handshake: open the control channel (transport selected by the
 ``--url`` scheme — ``stdio://`` by default, ``unix://<path>`` to dial back
-to the manager's unix socket), send a :data:`MSG_READY` frame as the first
-message, warm-load restore state, register handlers, then idle until
+to the manager's unix socket), register handlers, warm-load restore state,
+start HA, send :data:`MSG_READY`, then idle until
 SIGTERM (or until main asks for a graceful shutdown over the channel — see
 :meth:`SandboxRuntime._handle_shutdown`).
 """
@@ -36,6 +36,7 @@ from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
 from hass_client.entry_runner import EntryRunner, apply_core_config
+from hass_client.entry_sync import EntrySync
 from hass_client.event_mirror import EventMirror
 from hass_client.flow_runner import FlowRunner
 from hass_client.messages import (
@@ -213,10 +214,12 @@ class SandboxRuntime:
             # SETUP_ERROR. Registering first removes that race entirely.
             self._channel.register(MSG_PING, _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
-            self._channel.register(
-                MSG_GET_TRANSLATIONS, self._handle_get_translations
-            )
+            self._channel.register(MSG_GET_TRANSLATIONS, self._handle_get_translations)
             self._channel.register(MSG_CORE_CONFIG, self._handle_core_config)
+            entry_sync = EntrySync(hass, self._channel, lambda entry: True)
+            self._entry_runner.entry_sync = entry_sync
+            self._entity_bridge.entry_sync = entry_sync
+            self._flow_runner.entry_sync = entry_sync
             self._flow_runner.register(self._channel)
             self._entry_runner.register(self._channel)
             self._entity_bridge.register(self._channel)
@@ -230,8 +233,11 @@ class SandboxRuntime:
             # Ready is the LAST frame sent: handlers are up and the restore
             # cache is warm, so every entry_setup the manager now sends lands
             # on a registered, ready handler.
+            await hass.async_start()
             await self._channel.push(MSG_READY)
 
+        if self._channel is None:
+            await hass.async_start()
         self._ready.set()
         try:
             await self._shutdown.wait()
@@ -249,6 +255,8 @@ class SandboxRuntime:
                 # (write-lock contention from unload pushes, backpressure on a
                 # large restore_state). close() would otherwise cancel it and
                 # main would lose the reply.
+                if self._entry_runner.entry_sync is not None:
+                    await self._entry_runner.entry_sync.async_stop()
                 await self._channel.drain_inflight()
                 await self._channel.close()
             if sandbox_token is not None:
@@ -442,12 +450,8 @@ async def _collect_component_strings(
 async def _load_restore_state(hass: Any) -> None:
     """Warm-load this sandbox's ``core.restore_state`` cache.
 
-    Calls :meth:`RestoreStateData.async_load` directly instead of
-    :func:`restore_state.async_load`: the helper also wires up the
-    periodic ``async_setup_dump`` listener via ``start.async_at_start``,
-    which only fires on a fully-started HA. The sandbox's HA never goes
-    through ``async_start``, so we skip that listener and rely on
-    the shutdown handler to force the final dump.
+    Warm-load before starting HA and advertising Ready. Periodic restore-state
+    checkpointing remains deferred; graceful shutdown supplies the final dump.
 
     No store swap is needed: ``RestoreStateData`` builds a vanilla
     ``Store``, and ``Store.async_load`` reads ``current_sandbox`` at call

@@ -38,6 +38,7 @@ from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
+from .entry_sync import EntrySync
 from .messages import (
     MSG_REGISTER_ENTITY,
     MSG_STATE_CHANGED,
@@ -73,6 +74,7 @@ class EntityBridge:
         sandboxed integration registers light entities* clause).
         """
         self.hass = hass
+        self.entry_sync: EntrySync | None = None
         self.approved = approved if approved is not None else ApprovedDomains()
         self._channel: Channel | None = None
         self._registered: set[str] = set()
@@ -204,9 +206,7 @@ class EntityBridge:
                 except asyncio.CancelledError:
                     raise
                 except Exception:
-                    _LOGGER.exception(
-                        "EntityBridge: writer failed for %s", entity_id
-                    )
+                    _LOGGER.exception("EntityBridge: writer failed for %s", entity_id)
                 finally:
                     self._writing = None
 
@@ -301,6 +301,8 @@ class EntityBridge:
             # entity-registry update for the entity clears the skip.
             self._skipped.add(entity_id)
             return
+        if self.entry_sync is not None:
+            await self.entry_sync.flush(payload["entry_id"])
         new_hash = _payload_hash(payload)
         initial_state = None
         initial_attributes = None
@@ -348,6 +350,8 @@ class EntityBridge:
         payload = self._describe(entity_id)
         if payload is None:
             return
+        if self.entry_sync is not None:
+            await self.entry_sync.flush(payload["entry_id"])
         new_hash = _payload_hash(payload)
         if self._last_hash.get(entity_id) == new_hash:
             return
@@ -408,6 +412,7 @@ def _to_entity_description(
         entry_id=payload["entry_id"],
         domain=payload["domain"],
         sandbox_entity_id=payload["sandbox_entity_id"],
+        config_subentry_id=payload.get("config_subentry_id"),
         unique_id=payload.get("unique_id"),
         name=payload.get("name"),
         icon=payload.get("icon"),
@@ -458,6 +463,9 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
         "entry_id": entry_id,
         "domain": domain,
         "sandbox_entity_id": entity.entity_id,
+        "config_subentry_id": entity.registry_entry.config_subentry_id
+        if entity.registry_entry
+        else None,
         "unique_id": entity.unique_id,
         "name": _stringify(entity.name),
         "icon": _stringify(entity.icon),

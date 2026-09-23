@@ -135,7 +135,19 @@ message EntrySetup {
   // Re-applied on every entry_setup (cheap, idempotent) so a reload also
   // refreshes a changed core config.
   CoreConfig core_config = 11;
+  bytes subentries = 12;  // JSON list, including stable subentry IDs
+  bytes discovery_keys = 13;
+  bool pref_disable_new_entities = 14;
+  bool pref_disable_polling = 15;
 }
+
+// Changed fields are compared against before before applying after.
+message EntryUpdate {
+  string entry_id = 1;
+  bytes before = 2;
+  bytes after = 3;
+}
+message EntryUpdateResult {}
 
 message EntrySetupResult {
   bool ok = 1;
@@ -244,6 +256,7 @@ message FlowInit {
   // ConfigFlow._get_reauth_entry() / _get_reconfigure_entry() resolve instead
   // of raising UnknownEntry. Unset for a plain user / discovery flow.
   optional EntrySetup entry = 4;
+  optional string subentry_type = 5;
 }
 
 message FlowStep {
@@ -288,6 +301,9 @@ message FlowResult {
   // crosses as a list of [id, label] pairs so order and labels survive.
   bytes menu_options = 19;
   optional bool sort = 20;  // MENU: frontend sort hint
+  bytes subentries = 21;  // JSON list of new subentries from an initial flow
+  optional string unique_id = 22;
+  optional string translation_domain = 23;
 }
 
 // --- register_entity (sandbox -> main) ------------------------------------
@@ -325,6 +341,7 @@ message EntityDescription {
   bool has_entity_name = 5;
   EntityInfo info = 6;
   InitialState initial = 7;
+  optional string config_subentry_id = 8;
 }
 
 message RegisterEntityResult {

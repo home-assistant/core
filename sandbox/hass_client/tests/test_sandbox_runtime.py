@@ -117,6 +117,8 @@ async def test_handlers_registered_before_ready(
     task = asyncio.create_task(runtime.run())
     try:
         await asyncio.wait_for(ready_seen.wait(), timeout=5.0)
+        assert runtime.hass is not None
+        assert runtime.hass.is_running
         assert len(probe_result) == 1
         # The ping handler answered: no ChannelUnknownType, a real PingResult.
         assert isinstance(probe_result[0], pb.PingResult)

@@ -126,6 +126,7 @@ MSG_READY: Final = "sandbox/ready"
 
 # Main → Sandbox
 MSG_ENTRY_SETUP: Final = "sandbox/entry_setup"
+MSG_ENTRY_UPDATE: Final = "sandbox/entry_update"
 MSG_ENTRY_UNLOAD: Final = "sandbox/entry_unload"
 MSG_CALL_SERVICE: Final = "sandbox/call_service"
 MSG_ENTITY_QUERY: Final = "sandbox/entity_query"
@@ -159,6 +160,7 @@ REGISTRY: dict[str, tuple[type[Message], type[Message] | None]] = {
     MSG_READY: (pb.Ready, None),
     # main → sandbox
     MSG_ENTRY_SETUP: (pb.EntrySetup, pb.EntrySetupResult),
+    MSG_ENTRY_UPDATE: (pb.EntryUpdate, pb.EntryUpdateResult),
     MSG_ENTRY_UNLOAD: (pb.EntryUnload, pb.EntryUnloadResult),
     MSG_CALL_SERVICE: (pb.CallService, pb.CallServiceResult),
     MSG_ENTITY_QUERY: (pb.EntityQuery, pb.EntityQueryResult),
@@ -276,6 +278,7 @@ def make_entity_description(
     entry_id: str,
     domain: str,
     sandbox_entity_id: str,
+    config_subentry_id: str | None = None,
     unique_id: str | None = None,
     name: str | None = None,
     icon: str | None = None,
@@ -304,6 +307,8 @@ def make_entity_description(
     )
     if unique_id is not None:
         msg.unique_id = unique_id
+    if config_subentry_id is not None:
+        msg.config_subentry_id = config_subentry_id
     description = msg.info.description
     if name is not None:
         description.name = name
@@ -344,6 +349,10 @@ def entry_to_setup_proto(entry: Any) -> pb.EntrySetup:
         source=entry.source,
         version=entry.version,
         minor_version=entry.minor_version,
+        subentries=encode_json([item.as_dict() for item in entry.subentries.values()]),
+        discovery_keys=encode_json(entry.as_dict()["discovery_keys"]),
+        pref_disable_new_entities=entry.pref_disable_new_entities,
+        pref_disable_polling=entry.pref_disable_polling,
     )
     if entry.unique_id is not None:
         msg.unique_id = entry.unique_id
@@ -378,6 +387,7 @@ __all__ = [
     "MSG_ENTITY_QUERY",
     "MSG_ENTRY_SETUP",
     "MSG_ENTRY_UNLOAD",
+    "MSG_ENTRY_UPDATE",
     "MSG_FIRE_EVENT",
     "MSG_FLOW_ABORT",
     "MSG_FLOW_INIT",

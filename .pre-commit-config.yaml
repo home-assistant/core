@@ -76,7 +76,7 @@ repos:
         entry: sandbox/proto/check_mirror_drift.sh
         language: script
         pass_filenames: false
-        files: ^(homeassistant/components/sandbox|sandbox/hass_client/hass_client)/((channel|codec_protobuf|messages)\.py|_proto/sandbox_pb2\.(py|pyi))$
+        files: ^(homeassistant/components/sandbox|sandbox/hass_client/hass_client)/((channel|codec_protobuf|messages|entry_sync)\.py|_proto/sandbox_pb2\.(py|pyi))$
       # Run mypy through our wrapper script in order to get the possible
       # pyenv and/or virtualenv activated; it may not have been e.g. if
       # committing from a GUI tool that was not launched from an activated

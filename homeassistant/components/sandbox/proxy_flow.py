@@ -30,11 +30,16 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+)
 from homeassistant.data_entry_flow import FlowResultType
 
 from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
+from .const import DATA_SANDBOX
 from .messages import (
     MSG_FLOW_ABORT,
     MSG_FLOW_INIT,
@@ -92,7 +97,7 @@ def _to_jsonable(value: Any) -> Any:
     return str(value)
 
 
-class SandboxFlowProxy(ConfigFlow):
+class _SandboxFlowProxyMixin:
     """A flow handler that forwards each step to a sandbox runtime."""
 
     # Marker so other code (e.g. tests) can spot a proxy without isinstance
@@ -105,12 +110,14 @@ class SandboxFlowProxy(ConfigFlow):
         sandbox_group: str,
         manager: SandboxManager,
         handler_key: str,
+        subentry_type: str | None = None,
     ) -> None:
         """Initialise the proxy flow."""
         super().__init__()
         self._sandbox_group = sandbox_group
         self._manager = manager
         self._handler_key = handler_key
+        self._remote_subentry_type = subentry_type
         self._sandbox_flow_id: str | None = None
         self._terminated: bool = False
         # Set when the last sandbox result was a MENU: the framework then
@@ -173,6 +180,8 @@ class SandboxFlowProxy(ConfigFlow):
                     handler=self._handler_key,
                     context=encode_json(_to_jsonable(dict(self.context))),
                 )
+                if self._remote_subentry_type is not None:
+                    request.subentry_type = self._remote_subentry_type
                 if user_input is not None:
                     request.data = encode_json(_to_jsonable(user_input))
                 # A reauth / reconfigure / reset flow operates on an existing
@@ -180,9 +189,23 @@ class SandboxFlowProxy(ConfigFlow):
                 # manager can resolve it — otherwise _get_reauth_entry() /
                 # _get_reconfigure_entry() raise UnknownEntry on the private
                 # hass.
-                if (entry_id := self.context.get("entry_id")) is not None and (
+                if (
+                    entry_id := (
+                        self.handler[0]
+                        if self._remote_subentry_type is not None
+                        else self.context.get("entry_id")
+                    )
+                ) is not None and (
                     entry := self.hass.config_entries.async_get_entry(entry_id)
                 ) is not None:
+                    sandbox_data = self.hass.data.get(DATA_SANDBOX)
+                    if (
+                        sandbox_data is not None
+                        and (bridge := sandbox_data.bridges.get(self._sandbox_group))
+                        is not None
+                    ):
+                        await bridge.entry_sync.flush(entry.entry_id)
+                        bridge.entry_sync.track(entry)
                     request.entry.CopyFrom(entry_to_setup_proto(entry))
                 result = await channel.call(MSG_FLOW_INIT, request)
                 self._sandbox_flow_id = (
@@ -245,7 +268,7 @@ class SandboxFlowProxy(ConfigFlow):
         (it raises :class:`AbortFlow` for an in-progress collision,
         which the flow framework turns into an ABORT result).
         """
-        if not result.HasField("context"):
+        if self._remote_subentry_type is not None or not result.HasField("context"):
             return
         remote = decode_json_dict(result.context)
         if "unique_id" not in remote:
@@ -275,6 +298,15 @@ class SandboxFlowProxy(ConfigFlow):
 
         if result_type is FlowResultType.CREATE_ENTRY:
             entry_data = decode_json_dict(result.data)
+            if self._remote_subentry_type is not None:
+                self._terminated = True
+                return self.async_create_entry(
+                    title=result.title,
+                    data=entry_data,
+                    unique_id=result.unique_id
+                    if result.HasField("unique_id")
+                    else None,
+                )
             options = (
                 decode_json_dict(result.options) if result.HasField("options") else None
             )
@@ -291,17 +323,14 @@ class SandboxFlowProxy(ConfigFlow):
             if result.HasField("minor_version"):
                 self.MINOR_VERSION = result.minor_version
             create_result = self.async_create_entry(
-                title=(
-                    result.title
-                    if result.HasField("title") and result.title
-                    else self._handler_key
-                ),
+                title=(result.title if result.HasField("title") else self._handler_key),
                 data=entry_data,
                 description=(
                     result.description if result.HasField("description") else None
                 ),
                 description_placeholders=placeholders,
                 options=options,
+                subentries=decode_json(result.subentries) or (),
             )
             # Tag the FlowResult so the framework's entry constructor in
             # ``ConfigEntriesFlowManager.async_finish_flow`` reads it into
@@ -316,6 +345,9 @@ class SandboxFlowProxy(ConfigFlow):
                 reason=(
                     result.reason if result.HasField("reason") else "sandbox_aborted"
                 ),
+                translation_domain=result.translation_domain
+                if result.HasField("translation_domain")
+                else None,
                 description_placeholders=placeholders,
             )
 
@@ -369,7 +401,6 @@ class SandboxFlowProxy(ConfigFlow):
         )
         return self.async_abort(reason="sandbox_unsupported_result_type")
 
-    @override
     def async_remove(self) -> None:
         """Tell the sandbox to drop its flow when the framework discards us."""
         if self._sandbox_flow_id is None or self._terminated:
@@ -395,6 +426,14 @@ class SandboxFlowProxy(ConfigFlow):
         )
         _BACKGROUND_ABORTS.add(task)
         task.add_done_callback(_BACKGROUND_ABORTS.discard)
+
+
+class SandboxFlowProxy(_SandboxFlowProxyMixin, ConfigFlow):
+    """Forward a config-entry flow to its worker."""
+
+
+class SandboxSubentryFlowProxy(_SandboxFlowProxyMixin, ConfigSubentryFlow):
+    """Forward a subentry flow while main owns the resulting subentry."""
 
 
 def _reconstruct_menu_options(items: list[Any]) -> list[str] | dict[str, str]:

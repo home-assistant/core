@@ -142,6 +142,12 @@ subprocess only when the first flow or entry routes to it:
 python -m hass_client.sandbox --name <group> --url stdio://
 ```
 
+The runtime registers handlers, loads restore state, and awaits `hass.async_start()`
+before advertising Ready. Entries are set up against an already running instance;
+late-start helpers such as `async_at_start` execute normally. Failed setup cancels
+the child's retry timer before its entry is dropped; main retry scheduling remains
+separate work.
+
 **Per-group cost** (measured, empty process): ~0.9 s spawn→Ready and ~117 MB
 RSS — almost all of it importing the `homeassistant` package, including the
 HTTP stack pulled in via `HomeAssistant()`'s `core_config` import (a lazy
@@ -177,9 +183,10 @@ warm-loads `core.restore_state` before any handler registers, so the first
 
 ## 6. Config-flow forwarding
 
-HA Core's `ConfigEntries` grows a single `router` attribute consulted at three
-sites: `async_create_flow` (new flow), `async_setup` (existing entry), and
-`async_unload` (entry teardown).
+HA Core's `ConfigEntries.router` handles config flows, subentry flows, entry setup
+and entry unload. Subentry handlers run in the worker; main assigns IDs when a
+flow creates a subentry. Setup snapshots preserve those IDs and entity/device
+registrations carry the owning subentry.
 
 For a sandboxed handler the router returns a `SandboxFlowProxy` `ConfigFlow`
 that issues `sandbox/flow_init` / `flow_step` / `flow_abort` RPCs and re-issues
@@ -187,6 +194,16 @@ each marshalled `FlowResult` as native `async_show_form` /
 `async_create_entry` / `async_abort`. Inside the sandbox the integration's real
 `ConfigFlow` runs in a `_SandboxFlowManager` that short-circuits CREATE_ENTRY —
 **main is the canonical owner of the `ConfigEntry`**.
+
+`EntrySync` observes public entry/subentry mutations on both sides. It sends
+ordered before/after snapshots; the receiver compares each changed entry field
+and each changed subentry against its current value before applying public Core
+APIs. Unrelated edits merge; conflicting edits fail visibly and require reload.
+Received changes do not echo back. Setup, flow steps, and service calls wait for
+queued configuration updates; new entities wait for their subentry to reach main.
+Acknowledgement means accepted and scheduled for normal Core persistence, not
+an fsync or a transaction across a worker crash. Placement and entry identity
+cannot be changed through this message.
 
 **Main alone decides the group, and the sandbox never controls how its data is
 stored or routed.** The group is computed by main's `classify()` and passed to

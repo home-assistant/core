@@ -72,6 +72,7 @@ from ._proto import sandbox_pb2 as pb
 from .channel import Channel, ChannelClosedError, ChannelRemoteError
 from .const import UNIQUE_ID_SEPARATOR
 from .description import SandboxEntityDescription
+from .entry_sync import EntrySync
 from .messages import (
     MSG_CALL_SERVICE,
     MSG_CORE_CONFIG,
@@ -158,6 +159,7 @@ class SandboxBridge:
         self.hass = hass
         self.group = group
         self.channel = channel
+        self.entry_sync = EntrySync(hass, channel, lambda entry: entry.sandbox == group)
         # Map sandbox-side entity_id → live proxy. Used for state-push
         # routing and unregister calls.
         self._entities: dict[str, Any] = {}
@@ -414,6 +416,11 @@ class SandboxBridge:
                 f"register_entity: entry {description.entry_id!r} not owned by "
                 f"group {self.group!r}"
             )
+        if (
+            description.config_subentry_id is not None
+            and description.config_subentry_id not in entry.subentries
+        ):
+            raise HomeAssistantError("register_entity: unknown config subentry")
         # Namespace the proxy unique_id with the source integration domain so
         # two integrations in one group reusing the same unique_id don't
         # collide on the shared sandbox platform_name. A None unique_id
@@ -449,6 +456,7 @@ class SandboxBridge:
             try:
                 device_registry.async_get_or_create(
                     config_entry_id=description.entry_id,
+                    config_subentry_id=description.config_subentry_id,
                     **description.device_info,
                 )
             except dr.DeviceInfoError as err:
@@ -467,7 +475,9 @@ class SandboxBridge:
             return pb.RegisterEntityResult(entity_id=existing.entity_id or "")
         proxy = await self._async_build_proxy(description)
         platform = self._ensure_platform(entry, description.domain)
-        await platform.async_add_entities([proxy])
+        await platform.async_add_entities(
+            [proxy], config_subentry_id=description.config_subentry_id
+        )
         self._entities[description.sandbox_entity_id] = proxy
         self._owned_domains_cache = None
         return pb.RegisterEntityResult(entity_id=proxy.entity_id or "")
@@ -815,6 +825,7 @@ class SandboxBridge:
     async def async_unload_entry(self, entry: ConfigEntry) -> None:
         """Drop every platform and proxy this bridge added for ``entry``."""
         await self._async_teardown_entry(entry.entry_id)
+        self.entry_sync.forget(entry.entry_id)
 
     async def async_teardown(self) -> None:
         """Release every proxy + platform registration this bridge owns.
@@ -843,6 +854,7 @@ class SandboxBridge:
                 self.hass.services.async_remove(domain, service)
         self._mirrored_services.clear()
         self._unsub_entry_changed()
+        await self.entry_sync.async_stop()
 
     async def _async_teardown_entry(self, entry_id: str) -> None:
         """Remove every platform + proxy this bridge added for one entry.

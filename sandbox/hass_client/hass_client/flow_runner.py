@@ -54,6 +54,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel
 from .entry_runner import _entry_from_proto
+from .entry_sync import EntrySync
 from .messages import (
     MSG_FLOW_ABORT,
     MSG_FLOW_INIT,
@@ -78,6 +79,7 @@ _SCALAR_STRING_FIELDS = (
     "handler",
     "step_id",
     "reason",
+    "translation_domain",
     "title",
     "description",
 )
@@ -113,12 +115,21 @@ class _SandboxFlowManager(ConfigEntriesFlowManager):
         return await super().async_finish_flow(flow, result)
 
 
+class _SandboxSubentryFlowManager(ha_config_entries.ConfigSubentryFlowManager):
+    """Leave new subentry creation to main, which assigns the stable ID."""
+
+    async def async_finish_flow(self, flow: Any, result: Any) -> Any:
+        return result
+
+
 class FlowRunner:
     """Run config flows inside the sandbox process."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialise with a configured HomeAssistant instance."""
         self.hass = hass
+        self.entry_sync: EntrySync | None = None
+        self._subentry_flows: set[str] = set()
 
     @classmethod
     async def create(cls, *, config_dir: str) -> FlowRunner:
@@ -130,6 +141,7 @@ class FlowRunner:
         # Swap in the sandbox-aware flow manager *after* ConfigEntries
         # has built its default one, so we inherit all the wiring.
         hass.config_entries.flow = _SandboxFlowManager(hass, hass.config_entries, {})
+        hass.config_entries.subentries = _SandboxSubentryFlowManager(hass)
         loader.async_setup(hass)
         # The registry subset of bootstrap's async_load_base_functionality —
         # a bare hass never runs bootstrap, and an unloaded EntityRegistry
@@ -150,6 +162,7 @@ class FlowRunner:
             ir.async_load(hass),
             lr.async_load(hass),
         )
+        await hass.config_entries.async_initialize()
         return cls(hass)
 
     def register(self, channel: Channel) -> None:
@@ -166,10 +179,15 @@ class FlowRunner:
         (test-lane) sandbox leaks a thread pool and delay-save timers onto
         the shared loop. In production the process exits anyway.
         """
-        flow_manager = self.hass.config_entries.flow
-        for progress in list(flow_manager.async_progress(include_uninitialized=True)):
-            with contextlib.suppress(UnknownFlow):
-                flow_manager.async_abort(progress["flow_id"])
+        for flow_manager in (
+            self.hass.config_entries.flow,
+            self.hass.config_entries.subentries,
+        ):
+            for progress in list(
+                flow_manager.async_progress(include_uninitialized=True)
+            ):
+                with contextlib.suppress(UnknownFlow):
+                    flow_manager.async_abort(progress["flow_id"])
         await self.hass.async_block_till_done()
         if self.hass.state is not CoreState.stopped:
             await self.hass.async_stop(force=True)
@@ -187,10 +205,22 @@ class FlowRunner:
         # before the flow runs or those lookups raise UnknownEntry.
         if msg.HasField("entry"):
             self._ensure_flow_entry(msg.entry)
-        result = await self.hass.config_entries.flow.async_init(
-            msg.handler, context=context, data=data
-        )
-        return _marshal_result(result, self.hass.config_entries.flow)
+        if msg.HasField("subentry_type"):
+            manager = self.hass.config_entries.subentries
+            result = await manager.async_init(
+                (msg.entry.entry_id, msg.subentry_type), context=context, data=data
+            )
+            if result["type"] not in (
+                FlowResultType.CREATE_ENTRY,
+                FlowResultType.ABORT,
+            ):
+                self._subentry_flows.add(result["flow_id"])
+        else:
+            manager = self.hass.config_entries.flow
+            result = await manager.async_init(msg.handler, context=context, data=data)
+        if self.entry_sync is not None:
+            await self.entry_sync.flush()
+        return _marshal_result(result, manager)
 
     def _ensure_flow_entry(self, entry_msg: pb.EntrySetup) -> None:
         """Seed the private config_entries with the flow's target entry."""
@@ -199,20 +229,35 @@ class FlowRunner:
             return
         entry = _entry_from_proto(entry_msg)
         config_entries._entries[entry.entry_id] = entry  # noqa: SLF001
+        if self.entry_sync is not None:
+            self.entry_sync.track(entry)
 
     async def _handle_flow_step(self, msg: pb.FlowStep) -> pb.FlowResult:
         user_input = (
             decode_json_dict(msg.user_input) if msg.HasField("user_input") else None
         )
-        result = await self.hass.config_entries.flow.async_configure(
-            msg.flow_id, user_input
+        manager = (
+            self.hass.config_entries.subentries
+            if msg.flow_id in self._subentry_flows
+            else self.hass.config_entries.flow
         )
-        return _marshal_result(result, self.hass.config_entries.flow)
+        result = await manager.async_configure(msg.flow_id, user_input)
+        if result["type"] in (FlowResultType.CREATE_ENTRY, FlowResultType.ABORT):
+            self._subentry_flows.discard(msg.flow_id)
+        if self.entry_sync is not None:
+            await self.entry_sync.flush()
+        return _marshal_result(result, manager)
 
     async def _handle_flow_abort(self, msg: pb.FlowAbort) -> pb.FlowAbortResult:
         with contextlib.suppress(UnknownFlow):
             # Idempotent — main may have already given up on the flow.
-            self.hass.config_entries.flow.async_abort(msg.flow_id)
+            manager = (
+                self.hass.config_entries.subentries
+                if msg.flow_id in self._subentry_flows
+                else self.hass.config_entries.flow
+            )
+            manager.async_abort(msg.flow_id)
+        self._subentry_flows.discard(msg.flow_id)
         return pb.FlowAbortResult()
 
 
@@ -232,7 +277,7 @@ def _marshal_result(
 
     FORM / CREATE_ENTRY / ABORT / MENU fields are carried — the main-side proxy
     supports those four and aborts cleanly on anything else, so the
-    external-step / progress extras (``subentries`` / ``url`` / …) are
+    external-step / progress extras (``url`` / …) are
     intentionally dropped.
     """
     out = pb.FlowResult(type=_flow_type_value(result["type"]))
@@ -240,6 +285,10 @@ def _marshal_result(
         value = result.get(key)
         if value is not None:
             setattr(out, key, str(value))
+    if "subentries" in result:
+        out.subentries = encode_json(list(result["subentries"]))
+    if result.get("unique_id") is not None:
+        out.unique_id = result["unique_id"]
     if result.get("version") is not None:
         out.version = int(result["version"])
     if result.get("minor_version") is not None:

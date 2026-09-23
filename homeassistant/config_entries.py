@@ -2341,6 +2341,11 @@ class ConfigEntryRouter(Protocol):
     ) -> ConfigFlow | None:
         """Return a flow handler that will run the flow, or None to fall through."""
 
+    async def async_create_subentry_flow(
+        self, entry: ConfigEntry, subentry_type: str
+    ) -> ConfigSubentryFlow | None:
+        """Return a remote subentry flow, or None for local execution."""
+
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
         """Set up the entry remotely.
 
@@ -4056,6 +4061,11 @@ class ConfigSubentryFlowManager(
 
         entry_id, subentry_type = handler_key
         entry = self._async_get_config_entry(entry_id)
+        if (router := self.hass.config_entries.router) is not None and (
+            remote_flow := await router.async_create_subentry_flow(entry, subentry_type)
+        ) is not None:
+            remote_flow.init_step = context["source"]
+            return remote_flow
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
         subentry_types = handler.async_get_supported_subentry_types(entry)
         if subentry_type not in subentry_types:

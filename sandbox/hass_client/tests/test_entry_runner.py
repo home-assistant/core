@@ -74,8 +74,9 @@ async def _runner_fixture() -> EntryRunner:
             await flow_runner.async_stop()
 
 
+@pytest.mark.parametrize("unload_ok", [True, False])
 async def test_entry_setup_calls_integration_setup_entry(
-    channels: tuple[Channel, Channel], runner: EntryRunner
+    channels: tuple[Channel, Channel], runner: EntryRunner, unload_ok: bool
 ) -> None:
     """``sandbox/entry_setup`` runs the integration's async_setup_entry."""
     main, sandbox = channels
@@ -90,7 +91,7 @@ async def test_entry_setup_calls_integration_setup_entry(
         return True
 
     async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> bool:
-        return True
+        return unload_ok
 
     class _DemoFlow(ConfigFlow, domain="demo_setup"):
         VERSION = 1
@@ -154,6 +155,10 @@ async def test_entry_setup_calls_integration_setup_entry(
     # Int config survives the JSON wire as int, not float.
     assert setup_calls[0].data["port"] == 8123
     assert isinstance(setup_calls[0].data["port"], int)
+    result = await main.call("sandbox/entry_unload", pb.EntryUnload(entry_id=payload.entry_id))
+    assert result.ok is unload_ok
+    assert (runner.hass.config_entries.async_get_entry(payload.entry_id) is None) is unload_ok
+    assert ("demo_setup" in runner.approved) is not unload_ok
 
 
 async def test_entry_setup_reports_failure_reason(
