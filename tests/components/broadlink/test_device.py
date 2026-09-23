@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import broadlink.exceptions as blke
+import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
@@ -144,6 +145,26 @@ async def test_device_setup_update_network_timeout(hass: HomeAssistant) -> None:
     assert mock_setup.api.check_sensors.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
+
+
+async def test_device_request_endpoint_closed(hass: HomeAssistant) -> None:
+    """Test a request on a closed endpoint is raised without a retry."""
+    device = get_device("Office")
+    mock_api = device.get_mock_api()
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+
+    mock_api.check_sensors.side_effect = blke.EndpointClosedError()
+    mock_api.auth.reset_mock()
+    mock_api.check_sensors.reset_mock()
+
+    broadlink_device = hass.data[DOMAIN].devices[mock_setup.entry.entry_id]
+    with pytest.raises(blke.EndpointClosedError):
+        await broadlink_device.async_request(mock_api.check_sensors)
+
+    assert mock_api.check_sensors.call_count == 1
+    assert mock_api.auth.call_count == 0
 
 
 async def test_device_setup_update_authorization_error(hass: HomeAssistant) -> None:

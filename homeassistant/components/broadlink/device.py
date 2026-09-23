@@ -196,16 +196,12 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
     ) -> _R:
         """Send a request to the device.
 
-        The library re-authenticates on its own when the device reports an
-        expired session and repeats the request. If that fails, it raises
-        the error the device gave the request, so the retry here runs the
-        same way it always has and a locked device ends up in the reauth
-        flow through async_auth.
+        Re-authenticate and retry once on an authorization error; a request
+        that fails because the endpoint was closed on unload is not retried.
         """
         try:
             return await function(*args, **kwargs)
         except EndpointClosedError:
-            # We closed the device ourselves (unload); do not re-open it.
             raise
         except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
