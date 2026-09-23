@@ -32,20 +32,12 @@ RANKING_DEMOTION = 1
 
 def warning_type_slug(warning_type: WarningType) -> str:
     """Return the stable slug for a warning type."""
-    try:
-        return WARNING_TYPE_SLUGS[warning_type]
-    except KeyError as err:
-        raise ValueError(
-            f"Unsupported GeoSphere warning type: {warning_type!r}"
-        ) from err
+    return WARNING_TYPE_SLUGS[warning_type]
 
 
 def warning_level_slug(level: WarningLevel) -> str:
     """Return the stable slug for a warning level."""
-    try:
-        return WARNING_LEVEL_SLUGS[level]
-    except KeyError as err:
-        raise ValueError(f"Unsupported GeoSphere warning level: {level!r}") from err
+    return WARNING_LEVEL_SLUGS[level]
 
 
 def _ranking_level(warning: WeatherWarning) -> int:
@@ -86,48 +78,31 @@ def sort_warnings(warnings: Iterable[WeatherWarning]) -> list[WeatherWarning]:
     """Return warnings in deterministic, actionability-ranked order.
 
     This ordering is used for display and for selecting the "featured"
-    warning (see ``select_priority_warning``); it is intentionally not pure
-    severity order. For the true worst-case severity, use
-    ``highest_warning_level`` instead.
+    warning; it is intentionally not pure severity order. For the true
+    worst-case severity, use ``highest_warning_level`` instead.
     """
     return sorted(warnings, key=warning_sort_key)
-
-
-def select_priority_warning(
-    warnings: Iterable[WeatherWarning],
-) -> WeatherWarning | None:
-    """Return the highest-priority warning, or ``None`` for an empty iterable."""
-    sorted_warnings = sort_warnings(warnings)
-    return sorted_warnings[0] if sorted_warnings else None
 
 
 def warning_sensor_attributes(
     warnings: Iterable[WeatherWarning],
 ) -> dict[str, Any]:
-    """Return the five agreed attributes for the selected warning.
+    """Return the agreed attributes for the selected warning.
 
-    The full warning payload is intentionally not exposed on sensor entities.
-    ``level`` is only included when it differs from the true highest warning
-    level across all warnings (see ``highest_warning_level``), since in the
-    common case the selected warning already carries that level.
+    ``warnings`` are expected in descending priority order. The full warning
+    payload is intentionally not exposed on sensor entities.
     """
-    warnings = list(warnings)
-    warning = select_priority_warning(warnings)
+    warning = next(iter(warnings), None)
     if warning is None:
         return {}
 
-    attributes = {
+    return {
         "type": warning_type_slug(warning.warning_type),
+        "level": warning_level_slug(warning.level),
         "start": warning.start.isoformat(),
         "end": warning.end.isoformat(),
         "warning_id": warning.warning_id,
     }
-
-    level_slug = warning_level_slug(warning.level)
-    if level_slug != highest_warning_level(warnings):
-        attributes["level"] = level_slug
-
-    return attributes
 
 
 def highest_warning_level(warnings: Iterable[WeatherWarning]) -> str:

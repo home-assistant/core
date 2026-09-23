@@ -14,7 +14,6 @@ from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.components.geosphere_austria_warnings.warnings import (
     LEVEL_NONE,
     highest_warning_level,
-    select_priority_warning,
     sort_warnings,
     warning_sensor_attributes,
 )
@@ -58,16 +57,15 @@ def test_sort_warnings_is_deterministic(warnings: list[WeatherWarning]) -> None:
     ] == expected
 
 
-def test_select_priority_warning_uses_severity_then_end_time(
+def test_sort_warnings_uses_severity_then_end_time(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test orange warnings outrank yellow and earlier end wins within orange."""
-    selected = select_priority_warning(warnings)
+    selected = sort_warnings(warnings)[0]
 
-    assert selected is not None
     assert selected.level == WarningLevel.ORANGE
     assert selected.warning_type == WarningType.STORM
-    assert selected.end.isoformat() == "2023-03-27T18:00:00+00:00"
+    assert selected.end.isoformat() == "2023-03-27T16:00:00+00:00"
 
 
 def test_highest_warning_level(warnings: list[WeatherWarning]) -> None:
@@ -76,19 +74,22 @@ def test_highest_warning_level(warnings: list[WeatherWarning]) -> None:
     assert highest_warning_level([]) == LEVEL_NONE
 
 
-def test_select_priority_warning_prefers_storm_over_concurrent_heat(
+def test_sort_warnings_prefers_storm_over_concurrent_heat(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test acute orange storm wins over concurrent demoted yellow heat."""
+    at = datetime(2023, 3, 27, 10, 0, tzinfo=UTC)
     concurrent_warnings = [
-        warning
-        for warning in warnings
-        if warning.start.date().isoformat() == "2023-03-27"
+        warning for warning in warnings if warning.start <= at < warning.end
     ]
 
-    selected = select_priority_warning(concurrent_warnings)
+    assert {warning.warning_type for warning in concurrent_warnings} == {
+        WarningType.HEAT,
+        WarningType.STORM,
+    }
 
-    assert selected is not None
+    selected = sort_warnings(concurrent_warnings)[0]
+
     assert selected.course_id == 12
     assert selected.warning_type == WarningType.STORM
 
@@ -121,41 +122,39 @@ def test_highest_warning_level_ignores_type_demotion(
     assert highest_warning_level(heat_and_thunderstorm) == "orange"
 
 
-def test_select_priority_warning_prefers_acute_over_sustained(
+def test_sort_warnings_prefers_acute_over_sustained(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test a concurrent yellow thunderstorm wins over orange all-day heat."""
+    at = datetime(2023, 3, 29, 12, 0, tzinfo=UTC)
     concurrent_warnings = [
         warning
         for warning in warnings
-        if warning.start.date().isoformat() == "2023-03-29"
+        if warning.start <= at < warning.end
         and warning.warning_type in {WarningType.HEAT, WarningType.THUNDERSTORM}
     ]
 
-    selected = select_priority_warning(concurrent_warnings)
+    assert {warning.warning_type for warning in concurrent_warnings} == {
+        WarningType.HEAT,
+        WarningType.THUNDERSTORM,
+    }
 
-    assert selected is not None
+    selected = sort_warnings(concurrent_warnings)[0]
+
     assert selected.course_id == 2
     assert selected.warning_type == WarningType.THUNDERSTORM
 
 
 def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
-    """Test the case of an all-day warning vs. a narrow-window warning.
-
-    An all-day orange heat warning and a yellow thunderstorm warning active
-    only mid-afternoon are equally ranked once heat is demoted below its
-    nominal level; the thunderstorm, ending soonest, must win the tie rather
-    than the heat warning's earlier (midnight) start time. Constructed
-    directly since the fixture doesn't contain a same-level tie case.
-    """
+    """Test that the earliest end time breaks ties between equally ranked warnings."""
     all_day_heat = WeatherWarning(
         warning_id=100,
         change_id=1,
         course_id=1,
         warning_type=WarningType.HEAT,
         level=WarningLevel.ORANGE,
-        start=datetime(2023, 3, 27, 0, 0, tzinfo=UTC),
-        end=datetime(2023, 3, 27, 23, 59, tzinfo=UTC),
+        start=datetime(2023, 3, 26, 22, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 21, 59, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -168,8 +167,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         course_id=1,
         warning_type=WarningType.THUNDERSTORM,
         level=WarningLevel.YELLOW,
-        start=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
-        end=datetime(2023, 3, 27, 15, 0, tzinfo=UTC),
+        start=datetime(2023, 3, 27, 11, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -177,9 +176,8 @@ def test_ranking_tie_between_equal_levels_prefers_soonest_end() -> None:
         update_reason="",
     )
 
-    selected = select_priority_warning([all_day_heat, afternoon_thunderstorm])
+    selected = sort_warnings([all_day_heat, afternoon_thunderstorm])[0]
 
-    assert selected is not None
     assert selected.warning_id == 200
     assert highest_warning_level([all_day_heat, afternoon_thunderstorm]) == "orange"
 
@@ -188,18 +186,18 @@ def test_warning_sensor_attributes_are_flat_and_minimal(
     warnings: list[WeatherWarning],
 ) -> None:
     """Test that sensor attributes expose only the selected warning details."""
-    selected = select_priority_warning(warnings)
-    assert selected is not None
+    sorted_warnings = sort_warnings(warnings)
 
-    assert warning_sensor_attributes([selected]) == {
+    assert warning_sensor_attributes(sorted_warnings) == {
         "type": "storm",
-        "start": "2023-03-27T08:00:00+00:00",
-        "end": "2023-03-27T18:00:00+00:00",
+        "level": "orange",
+        "start": "2023-03-27T06:00:00+00:00",
+        "end": "2023-03-27T16:00:00+00:00",
         "warning_id": 4149,
     }
 
-    attributes = warning_sensor_attributes([selected])
-    assert set(attributes) == {"type", "start", "end", "warning_id"}
+    attributes = warning_sensor_attributes(sorted_warnings)
+    assert set(attributes) == {"type", "level", "start", "end", "warning_id"}
     assert warning_sensor_attributes([]) == {}
 
 
@@ -211,8 +209,8 @@ def test_warning_sensor_attributes_include_diverging_warning_level() -> None:
         course_id=1,
         warning_type=WarningType.HEAT,
         level=WarningLevel.ORANGE,
-        start=datetime(2023, 3, 27, 0, 0, tzinfo=UTC),
-        end=datetime(2023, 3, 27, 23, 59, tzinfo=UTC),
+        start=datetime(2023, 3, 26, 22, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 21, 59, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -225,8 +223,8 @@ def test_warning_sensor_attributes_include_diverging_warning_level() -> None:
         course_id=1,
         warning_type=WarningType.THUNDERSTORM,
         level=WarningLevel.YELLOW,
-        start=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
-        end=datetime(2023, 3, 27, 15, 0, tzinfo=UTC),
+        start=datetime(2023, 3, 27, 11, 0, tzinfo=UTC),
+        end=datetime(2023, 3, 27, 13, 0, tzinfo=UTC),
         text="",
         impacts="",
         recommendations="",
@@ -235,19 +233,18 @@ def test_warning_sensor_attributes_include_diverging_warning_level() -> None:
     )
 
     all_warnings = [all_day_heat, afternoon_thunderstorm]
+    sorted_warnings = sort_warnings(all_warnings)
 
-    selected = select_priority_warning(all_warnings)
-    assert selected is not None
+    selected = sorted_warnings[0]
     assert selected.warning_id == 200  # thunderstorm wins the tie
 
-    assert warning_sensor_attributes(all_warnings) == {
+    assert warning_sensor_attributes(sorted_warnings) == {
         "type": "thunderstorm",
-        "start": "2023-03-27T13:00:00+00:00",
-        "end": "2023-03-27T15:00:00+00:00",
+        "start": "2023-03-27T11:00:00+00:00",
+        "end": "2023-03-27T13:00:00+00:00",
         "warning_id": 200,
         "level": "yellow",
     }
 
-    attributes = warning_sensor_attributes(all_warnings)
+    attributes = warning_sensor_attributes(sorted_warnings)
     assert set(attributes) == {"type", "start", "end", "warning_id", "level"}
-    assert warning_sensor_attributes([]) == {}

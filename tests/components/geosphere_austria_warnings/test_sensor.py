@@ -46,7 +46,7 @@ def warning_details(state: State) -> dict[str, Any]:
     }
 
 
-@pytest.mark.freeze_time("2023-03-27 12:00:00+00:00")
+@pytest.mark.freeze_time("2023-03-27 12:00:00+02:00")
 async def test_sensor_set_and_active_warning(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -68,8 +68,8 @@ async def test_sensor_set_and_active_warning(
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "storm",
-        "start": "2023-03-27T08:00:00+00:00",
-        "end": "2023-03-27T18:00:00+00:00",
+        "start": "2023-03-27T06:00:00+00:00",
+        "end": "2023-03-27T16:00:00+00:00",
         "warning_id": 4149,
     }
 
@@ -80,8 +80,8 @@ async def test_sensor_set_and_active_warning(
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "rain",
-        "start": "2023-03-28T06:00:00+00:00",
-        "end": "2023-03-28T16:00:00+00:00",
+        "start": "2023-03-28T04:00:00+00:00",
+        "end": "2023-03-28T14:00:00+00:00",
         "warning_id": 4150,
     }
 
@@ -97,7 +97,7 @@ async def test_sensor_set_and_active_warning(
     assert device_entry == snapshot
 
 
-@pytest.mark.freeze_time("2023-03-28 00:00:00+00:00")
+@pytest.mark.freeze_time("2023-03-28 00:00:00+02:00")
 async def test_sensors_without_active_warning(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -116,8 +116,8 @@ async def test_sensors_without_active_warning(
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "rain",
-        "start": "2023-03-28T06:00:00+00:00",
-        "end": "2023-03-28T16:00:00+00:00",
+        "start": "2023-03-28T04:00:00+00:00",
+        "end": "2023-03-28T14:00:00+00:00",
         "warning_id": 4150,
     }
 
@@ -125,7 +125,7 @@ async def test_sensors_without_active_warning(
     assert state.state == "5"
 
 
-@pytest.mark.freeze_time("2023-03-27 12:00:00+00:00")
+@pytest.mark.freeze_time("2023-03-27 12:00:00+02:00")
 async def test_entities_unavailable_on_error(
     hass: HomeAssistant,
     mock_client: AsyncMock,
