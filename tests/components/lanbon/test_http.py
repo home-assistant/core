@@ -87,6 +87,35 @@ async def test_http_config_flow_error_and_recovery(
     assert result["data"][CONF_TOKEN] == TOKEN
 
 
+@pytest.mark.parametrize(
+    ("source", "discovery", "user_input"),
+    [
+        pytest.param(SOURCE_USER, None, USER_INPUT, id="user"),
+        pytest.param(SOURCE_ZEROCONF, DISCOVERY, {CONF_TOKEN: TOKEN}, id="zeroconf"),
+    ],
+)
+@pytest.mark.parametrize("gateway_id", ["", None])
+async def test_http_config_flow_requires_authenticated_gateway_id(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    source: str,
+    discovery: ZeroconfServiceInfo | None,
+    user_input: dict[str, str | int],
+    gateway_id: str | None,
+) -> None:
+    """An advertised ID cannot replace a missing ID in the API response."""
+    aioclient_mock.get(f"{BASE}/info", json={**INFO, "gateway_id": gateway_id})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=discovery
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_unique_id"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 @pytest.mark.parametrize("error", [TimeoutError(), ClientConnectionError("offline")])
 async def test_http_connection_error_and_recovery(
     hass: HomeAssistant,

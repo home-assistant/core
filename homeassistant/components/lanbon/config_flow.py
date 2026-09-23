@@ -94,7 +94,7 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return None
 
-        gateway_id = info.gateway_id or self._gateway_id
+        gateway_id = info.gateway_id
         if not gateway_id:
             return self.async_abort(reason="missing_unique_id")
         title = info.model or info.manufacturer or "LANBON"
