@@ -134,7 +134,7 @@ async def test_doortag_opening_status_change(
     # Use nonexistent ID to prevent matching during initial setup
     polling_cycles = 11
     polling_delta = timedelta(seconds=30)
-    # Mock data for payload_modifier to simulate camera status change
+    # Mock data for payload_modifier to simulate doortag status change
     mock_state = {
         "module_id": "aa:bb:cc:dd:ee:ff",
         "timestamp": None,
@@ -238,7 +238,7 @@ async def test_doortag_opening_category(
     """Test doortag opening status changes."""
     fake_post_hits = 0
 
-    # Mock data for payload_modifier to simulate camera status change
+    # Mock data for payload_modifier to simulate doortag status change
     mock_state = {
         "module_id": "12:34:56:00:86:99",
         "timestamp": None,
