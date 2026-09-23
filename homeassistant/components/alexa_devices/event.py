@@ -47,6 +47,7 @@ async def async_setup_entry(
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
@@ -96,6 +97,8 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 "intent": vocal_record.intent,
                 "voice_command": vocal_record.title,
                 "voice_reply": vocal_record.sub_title,
+                "person_first_name": vocal_record.person_first_name,
+                "person_type": vocal_record.person_type,
             },
         )
         self.async_write_ha_state()
