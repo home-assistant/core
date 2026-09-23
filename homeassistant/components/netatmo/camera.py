@@ -68,8 +68,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     _quality = DEFAULT_QUALITY
     _monitoring: bool | None = None
     _attr_name = None
-    _webhook_reachable: bool | None = None
-    _webhook_monitoring: bool | None = None
+    _webhook_connection: bool | None = None
+    _webhook_on: bool | None = None
 
     def __init__(
         self,
@@ -150,8 +150,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_reachable = False
-                self._webhook_monitoring = False
+                self._webhook_connection = False
+                self._webhook_on = False
                 self.device.mark_unreachable()
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -159,22 +159,22 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_monitoring = False
+                self._webhook_on = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
                     "Camera %s has received %s event, marking as available",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_reachable = True
-                self._webhook_monitoring = False
+                self._webhook_connection = True
+                self._webhook_on = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
                     data["camera_id"],
                     event_type,
                 )
-                self._webhook_monitoring = True
+                self._webhook_on = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -215,8 +215,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def available(self) -> bool:
         """Return whether the camera can currently operate."""
-        if self._webhook_reachable is not None:
-            return super().available and self._webhook_reachable
+        if self._webhook_connection is not None:
+            return super().available and self._webhook_connection
         return super().available and self.device.reachable is not False
 
     @property
@@ -224,8 +224,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def is_on(self) -> bool:
         if self.device_type == "NDB":
             return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-        if self._webhook_monitoring is not None:
-            return self._webhook_monitoring
+        if self._webhook_on is not None:
+            return self._webhook_on
         return (
             bool(self.device.monitoring)
             and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
@@ -316,8 +316,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        self._webhook_reachable = None
-        self._webhook_monitoring = None
+        self._webhook_connection = None
+        self._webhook_on = None
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
