@@ -61,7 +61,7 @@ class LegacyPanelRedirectView(HomeAssistantView):
     """Redirect the paths below the panel of the custom integration."""
 
     url = "/hacs/{tail:.*}"
-    name = "hacs:redirect"
+    name = "store:legacy_panel_redirect"
     # Bookmarks are opened before there is a session, like the frontend's own
     # redirects.
     requires_auth = False

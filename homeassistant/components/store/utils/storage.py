@@ -30,6 +30,9 @@ LEGACY_STORAGE_KEYS: dict[str, str] = {
 # and removed once the store has a repositories file of its own.
 LEGACY_DATA_STORAGE_KEY = "hacs.data"
 
+# Older releases kept a file per downloaded repository, removed on uninstall.
+LEGACY_HACS_REPOSITORY_STORAGE_KEY = "hacs/{repository_id}.hacs"
+
 
 class StoreStorage(Store[dict[str, Any]]):
     """A subclass of Store that allows multiple loads in the executor."""

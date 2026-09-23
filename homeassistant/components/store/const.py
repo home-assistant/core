@@ -26,9 +26,9 @@ MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024
 
 LEGACY_HACS_REPOSITORY_ID = "172733314"
 
-# The catalog repositories in the HACS ecosystem the store consumes
-HACS_DEFAULT_REPOSITORY = "hacs/default"
-HACS_INTEGRATION_REPOSITORY = "hacs/integration"
+# The catalog the store consumes, and the repository of the integration it replaces
+CATALOG_REPOSITORY = "hacs/default"
+LEGACY_HACS_INTEGRATION_REPOSITORY = "hacs/integration"
 
 VERSION_STORAGE = "6"
 

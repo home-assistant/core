@@ -36,7 +36,7 @@ class StoreSignal(StrEnum):
 class RepositoryFile(StrEnum):
     """Repository file names."""
 
-    HACS_JSON = "hacs.json"
+    REPOSITORY_MANIFEST = "hacs.json"
     MAINIFEST_JSON = "manifest.json"
 
 

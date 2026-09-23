@@ -10,8 +10,8 @@ from voluptuous.error import Invalid, MultipleInvalid
 
 from homeassistant.components.store.const import DOMAIN
 from homeassistant.components.store.utils.validate import (
-    HACS_MANIFEST_JSON_SCHEMA,
     INTEGRATION_MANIFEST_JSON_SCHEMA,
+    REPOSITORY_MANIFEST_JSON_SCHEMA,
     VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REPO_DATA,
@@ -116,7 +116,7 @@ def test_hacs_manifest_json_schema(
     data: dict[str, Any], expected: dict[str, Any]
 ) -> None:
     """Test validating the hacs.json of a repository."""
-    assert HACS_MANIFEST_JSON_SCHEMA(data) == expected
+    assert REPOSITORY_MANIFEST_JSON_SCHEMA(data) == expected
 
 
 @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ def test_hacs_manifest_json_schema(
 def test_hacs_manifest_json_schema_bad_data(data: dict[str, Any], match: str) -> None:
     """Test rejecting an invalid hacs.json."""
     with pytest.raises(Invalid, match=match):
-        HACS_MANIFEST_JSON_SCHEMA(data)
+        REPOSITORY_MANIFEST_JSON_SCHEMA(data)
 
 
 def test_integration_manifest_json_schema() -> None:

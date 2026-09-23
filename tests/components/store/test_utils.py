@@ -366,6 +366,6 @@ async def test_return_none_on_exception_methods() -> None:
 
 def test_repository_file_enum() -> None:
     """Test that the repository file names render as plain strings."""
-    assert RepositoryFile.HACS_JSON == "hacs.json"
-    assert RepositoryFile.HACS_JSON.value == "hacs.json"
-    assert str(RepositoryFile.HACS_JSON) == "hacs.json"
+    assert RepositoryFile.REPOSITORY_MANIFEST == "hacs.json"
+    assert RepositoryFile.REPOSITORY_MANIFEST.value == "hacs.json"
+    assert str(RepositoryFile.REPOSITORY_MANIFEST) == "hacs.json"

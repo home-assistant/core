@@ -544,33 +544,35 @@ async def test_download_count_from_release(store: StoreManager) -> None:
         pytest.param("99.99.99", None, id="unknown-version"),
     ],
 )
-async def test_get_hacs_json(
+async def test_get_repository_manifest(
     store: StoreManager, version: str, expected: str | None
 ) -> None:
     """Test reading the hacs.json of a specific version."""
     repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
-    manifest = await repository.get_hacs_json(version=version)
+    manifest = await repository.get_repository_manifest(version=version)
 
     assert (manifest.name if manifest else None) == expected
 
 
-async def test_get_hacs_json_swallows_exceptions(store: StoreManager) -> None:
+async def test_get_repository_manifest_swallows_exceptions(store: StoreManager) -> None:
     """Test that a broken hacs.json never propagates out."""
     repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     with patch.object(
-        repository, "get_hacs_json_raw", side_effect=Exception("Test exception")
+        repository,
+        "get_repository_manifest_raw",
+        side_effect=Exception("Test exception"),
     ):
-        assert await repository.get_hacs_json(version="1.0.0") is None
+        assert await repository.get_repository_manifest(version="1.0.0") is None
 
     with patch(
         "homeassistant.components.store.repositories.base.RepositoryManifest.from_dict",
         side_effect=ValueError("Invalid manifest"),
     ):
-        assert await repository.get_hacs_json(version="1.0.0") is None
+        assert await repository.get_repository_manifest(version="1.0.0") is None
 
 
 @pytest.mark.parametrize(
@@ -580,29 +582,31 @@ async def test_get_hacs_json_swallows_exceptions(store: StoreManager) -> None:
         pytest.param("99.99.99", None, id="unknown-version"),
     ],
 )
-async def test_get_hacs_json_raw(
+async def test_get_repository_manifest_raw(
     store: StoreManager, version: str, expected: dict[str, Any] | None
 ) -> None:
     """Test reading the raw hacs.json of a specific version."""
     repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
-    assert await repository.get_hacs_json_raw(version=version) == expected
+    assert await repository.get_repository_manifest_raw(version=version) == expected
 
 
-async def test_get_hacs_json_raw_swallows_exceptions(store: StoreManager) -> None:
+async def test_get_repository_manifest_raw_swallows_exceptions(
+    store: StoreManager,
+) -> None:
     """Test that an unreadable hacs.json never propagates out."""
     repository = Repository(store)
     repository.data.full_name = REPOSITORY_INTEGRATION
 
     with patch.object(store, "async_download_file", side_effect=Exception("boom")):
-        assert await repository.get_hacs_json_raw(version="1.0.0") is None
+        assert await repository.get_repository_manifest_raw(version="1.0.0") is None
 
     with patch(
         "homeassistant.components.store.repositories.base.json_loads_object",
         side_effect=ValueError("Invalid JSON"),
     ):
-        assert await repository.get_hacs_json_raw(version="1.0.0") is None
+        assert await repository.get_repository_manifest_raw(version="1.0.0") is None
 
 
 @pytest.mark.parametrize(
@@ -1628,7 +1632,7 @@ async def test_uninstall_without_a_domain(store: StoreManager) -> None:
         await repository.uninstall()
 
 
-async def test_hacs_json_of_a_removed_version(
+async def test_repository_manifest_of_a_removed_version(
     store: StoreManager, response_mocker: StoreResponses
 ) -> None:
     """Test the manifest of a version that has no hacs.json."""
@@ -1636,7 +1640,7 @@ async def test_hacs_json_of_a_removed_version(
     url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/3.0.0/hacs.json"
     response_mocker.add(url, mocked_response(url, status=HTTPStatus.NOT_FOUND))
 
-    assert await repository.get_hacs_json(version="3.0.0") is None
+    assert await repository.get_repository_manifest(version="3.0.0") is None
 
 
 async def test_ensure_download_capabilities_rejects_new_core_requirement(

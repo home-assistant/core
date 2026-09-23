@@ -35,7 +35,7 @@ async def test_system_health(hass: HomeAssistant) -> None:
         "GitHub API Calls Remaining": 4999,
         "GitHub Content": "ok",
         "GitHub Web": "ok",
-        "HACS Data": "ok",
+        "Catalog Data": "ok",
         "Available Repositories": 5,
         "Downloaded Repositories": 0,
         "Installed Version": info["Installed Version"],

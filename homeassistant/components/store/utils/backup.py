@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ..repositories.base import Repository
 
 
-DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/hacs_backup/"
+DEFAULT_BACKUP_PATH = f"{tempfile.gettempdir()}/store_backup/"
 
 
 class Backup:
@@ -35,7 +35,7 @@ class Backup:
         if repository:
             self.backup_path = (
                 f"{tempfile.gettempdir()}"
-                f"/hacs_persistent_{repository.data.category}/"
+                f"/store_persistent_{repository.data.category}/"
                 f"{repository.data.name}"
             )
         self.backup_path_full = f"{self.backup_path}{self.local_path.split('/')[-1]}"

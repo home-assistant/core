@@ -38,7 +38,7 @@ from ..utils.json import json_loads_object
 from ..utils.logger import LOGGER
 from ..utils.path import is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
-from ..utils.storage import async_remove_storage
+from ..utils.storage import LEGACY_HACS_REPOSITORY_STORAGE_KEY, async_remove_storage
 from ..utils.url import github_archive, github_release_asset
 from ..utils.validate import Validate
 from ..utils.version import (
@@ -122,7 +122,7 @@ REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     ("topics", []),
 )
 
-HACS_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
+REPOSITORY_MANIFEST_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
     # Keys can not be removed from this list until v3
     # If keys are added, the action need to be re-run with force
     ("country", []),
@@ -496,8 +496,8 @@ class Repository:
         await self.common_update_data(ignore_issues=ignore_issues)
 
         # Get the content of hacs.json
-        if RepositoryFile.HACS_JSON in [x.filename for x in self.tree]:
-            if manifest := await self.async_get_hacs_json():
+        if RepositoryFile.REPOSITORY_MANIFEST in [x.filename for x in self.tree]:
+            if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
 
@@ -574,8 +574,8 @@ class Repository:
             await self.async_set_last_commits()
 
         # Get the content of hacs.json
-        if RepositoryFile.HACS_JSON in [x.filename for x in self.tree]:
-            if manifest := await self.async_get_hacs_json():
+        if RepositoryFile.REPOSITORY_MANIFEST in [x.filename for x in self.tree]:
+            if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
 
@@ -762,7 +762,7 @@ class Repository:
             "%s Content was extracted to %s", self.string, self.content.path.local
         )
 
-    async def async_get_hacs_json(
+    async def async_get_repository_manifest(
         self, ref: str | None = None
     ) -> dict[str, Any] | None:
         """Get the content of the hacs.json file."""
@@ -771,7 +771,7 @@ class Repository:
                 method=self.store.githubapi.repos.contents.get,
                 raise_exception=False,
                 repository=self.data.full_name,
-                path=RepositoryFile.HACS_JSON,
+                path=RepositoryFile.REPOSITORY_MANIFEST,
                 params={"ref": ref or self.version_to_download()},
             )
             if response:
@@ -820,7 +820,10 @@ class Repository:
             raise StoreError("Could not uninstall")
         self.data.installed = False
         await self._async_post_uninstall()
-        await async_remove_storage(self.store.hass, f"hacs/{self.data.id}.hacs")
+        await async_remove_storage(
+            self.store.hass,
+            LEGACY_HACS_REPOSITORY_STORAGE_KEY.format(repository_id=self.data.id),
+        )
 
         self.data.installed_version = None
         self.data.installed_commit = None
@@ -1007,7 +1010,7 @@ class Repository:
                 persistent_directory = Backup(
                     store=self.store,
                     local_path=str(persistent_path),
-                    backup_path=tempfile.gettempdir() + "/hacs_persistent_directory/",
+                    backup_path=tempfile.gettempdir() + "/store_persistent_directory/",
                 )
                 await self.store.hass.async_add_executor_job(
                     persistent_directory.create
@@ -1466,16 +1469,16 @@ class Repository:
         )
 
     @return_none_on_exception
-    async def get_hacs_json(
+    async def get_repository_manifest(
         self, *, version: str | None, **kwargs: Any
     ) -> RepositoryManifest | None:
         """Get the hacs.json file of the repository."""
-        if (result := await self.get_hacs_json_raw(version=version)) is None:
+        if (result := await self.get_repository_manifest_raw(version=version)) is None:
             return None
         return RepositoryManifest.from_dict(result)
 
     @return_none_on_exception
-    async def get_hacs_json_raw(
+    async def get_repository_manifest_raw(
         self,
         *,
         version: str | None,
@@ -1535,7 +1538,7 @@ class Repository:
         if not ref:
             target_manifest = self.repository_manifest
         else:
-            target_manifest = await self.get_hacs_json(version=ref)
+            target_manifest = await self.get_repository_manifest(version=ref)
 
         if target_manifest is None:
             raise StoreError(

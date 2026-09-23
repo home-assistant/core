@@ -34,7 +34,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV
+from .const import DOMAIN, LEGACY_HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV
 from .coordinator import StoreUpdateCoordinator
 from .data_client import CatalogClient
 from .enums import (
@@ -55,7 +55,10 @@ from .exceptions import (
     StoreError,
 )
 from .repositories import REPOSITORY_CLASSES
-from .repositories.base import HACS_MANIFEST_KEYS_TO_EXPORT, REPOSITORY_KEYS_TO_EXPORT
+from .repositories.base import (
+    REPOSITORY_KEYS_TO_EXPORT,
+    REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
+)
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
@@ -825,7 +828,7 @@ class StoreManager:
         category_data = {
             repo_id: repo_data
             for repo_id, repo_data in category_data.items()
-            if repo_data["full_name"] != HACS_INTEGRATION_REPOSITORY
+            if repo_data["full_name"] != LEGACY_HACS_INTEGRATION_REPOSITORY
         }
 
         await self.data.register_unknown_repositories(category_data, category)
@@ -849,7 +852,7 @@ class StoreManager:
                     )
                     if (manifest := repo_data.get("manifest")) is not None:
                         repository.repository_manifest.update_data(
-                            {**dict(HACS_MANIFEST_KEYS_TO_EXPORT), **manifest}
+                            {**dict(REPOSITORY_MANIFEST_KEYS_TO_EXPORT), **manifest}
                         )
 
         if category == "integration":

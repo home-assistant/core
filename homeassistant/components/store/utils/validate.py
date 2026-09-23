@@ -45,7 +45,7 @@ def _country_validator(values: Any) -> list[str]:
     return countries
 
 
-HACS_MANIFEST_JSON_SCHEMA = vol.Schema(
+REPOSITORY_MANIFEST_JSON_SCHEMA = vol.Schema(
     {
         vol.Optional("content_in_root"): bool,
         vol.Optional("country"): _country_validator,
@@ -147,7 +147,7 @@ _V2_REPO_SCHEMAS = {
     "theme": V2_COMMON_DATA_JSON_SCHEMA,
 }
 
-# Used when validating repos in the hacs integration, discards extra keys
+# Used when validating repos in the store, discards extra keys
 VALIDATE_FETCHED_V2_REPO_DATA = {
     category: validate_repo_data(schema, vol.REMOVE_EXTRA)
     for category, schema in _V2_REPO_SCHEMAS.items()
@@ -159,7 +159,7 @@ V2_CRITICAL_REPO_DATA_SCHEMA = {
     vol.Required("repository"): str,
 }
 
-# Used when validating critical repos in the hacs integration, discards extra keys
+# Used when validating critical repos in the store, discards extra keys
 VALIDATE_FETCHED_V2_CRITICAL_REPO_SCHEMA = vol.Schema(
     V2_CRITICAL_REPO_DATA_SCHEMA,
     extra=vol.REMOVE_EXTRA,
@@ -186,7 +186,7 @@ V2_REMOVED_REPO_DATA_SCHEMA = {
     vol.Required("repository"): str,
 }
 
-# Used when validating removed repos in the hacs integration, discards extra keys
+# Used when validating removed repos in the store, discards extra keys
 VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA = vol.Schema(
     V2_REMOVED_REPO_DATA_SCHEMA,
     extra=vol.REMOVE_EXTRA,
