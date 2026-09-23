@@ -12,7 +12,6 @@ from arcam.fmj.state import State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -67,9 +66,7 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         self.device_info = DeviceInfo(
             identifiers={self._device_identifier},
             manufacturer="Arcam",
-            model=self.state.model or "Arcam FMJ AVR",
             name=device_name,
-            sw_version=self.state.revision,
         )
         self.zone_unique_id = f"{unique_id}-{zone}"
 
@@ -79,41 +76,12 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         try:
             self.update_in_progress = True
             await self.state.update()
-            self._update_device_registry()
         except ConnectionFailed as err:
             raise UpdateFailed(
                 f"Connection failed during update for zone {self.state.zn}"
             ) from err
         finally:
             self.update_in_progress = False
-
-    @callback
-    def _update_device_registry(self) -> None:
-        """Update the device registry with discovered device information."""
-        model = self.state.model
-        software_version = self.state.revision
-        if model is None and software_version is None:
-            return
-
-        if model is not None:
-            self.device_info["model"] = model
-        if software_version is not None:
-            self.device_info["sw_version"] = software_version
-
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device_by_identifier(
-            self._device_identifier, self.config_entry.entry_id
-        )
-        if device is None:
-            return
-
-        updates: dict[str, str] = {}
-        if model is not None and device.model != model:
-            updates["model"] = model
-        if software_version is not None and device.sw_version != software_version:
-            updates["sw_version"] = software_version
-        if updates:
-            device_registry.async_update_device(device.id, **updates)
 
     @callback
     def _async_notify_packet(self, packet: ResponsePacket | AmxDuetResponse) -> None:
