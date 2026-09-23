@@ -324,6 +324,7 @@ async def on_execution_state_changed(
         return
 
     executions = coordinator.executions.pop(event.exec_id)
+    device_urls = {execution["device_url"] for execution in executions}
 
     # The only place an unreachable device is reported. The server keeps
     # answering for it and DeviceUnavailableEvent never fires, so without this
@@ -333,9 +334,13 @@ async def on_execution_state_changed(
         and event.failure_type_code in UNREACHABLE_FAILURE_TYPES
     )
 
-    for execution in executions:
-        device_url = execution["device_url"]
+    # The action queue merges concurrent action groups into one execution, and
+    # the failure it reports is execution-wide: nothing says which of the
+    # devices went unanswered. Leave every one of them as it was.
+    if unreachable and len(device_urls) > 1:
+        return
 
+    for device_url in device_urls:
         if not unreachable:
             coordinator.unreachable_devices.discard(device_url)
         # A one-way protocol cannot acknowledge, so a failure there says

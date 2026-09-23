@@ -17,6 +17,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import Command
 import pytest
 
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SERVICE_OPEN_COVER
 from homeassistant.components.overkiz.const import (
     DOMAIN,
     UPDATE_INTERVAL,
@@ -85,6 +86,17 @@ POOL_PUMP = FixtureDevice(
     TAHOMA_V2_FIXTURE,
     "io://1234-1234-6233/16168460",
     "switch.music_room_pool_pump_on_off",
+)
+POOL_HOUSE = FixtureDevice(
+    TAHOMA_V2_FIXTURE,
+    "io://1234-1234-6233/16580352",
+    "switch.pool_house",
+)
+# RTS is one-way: the gateway cannot tell a missing device from a deaf one.
+RTS_GATE = FixtureDevice(
+    TAHOMA_V2_FIXTURE,
+    "rts://1234-1234-6233/16730717",
+    "cover.living_room_rts_gate",
 )
 SECONDARY_GATEWAY_ID = "1234-1234-8983"
 MAIN_GATEWAY_CHILD_URL = "io://1234-1234-6233/12184029"
@@ -638,6 +650,80 @@ async def test_refused_command_keeps_device_available(
     )
 
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_undelivered_command_to_rts_device_keeps_it_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """RTS is one-way, so a failure there is not evidence the device is gone."""
+    await setup_overkiz_integration(fixture=RTS_GATE.fixture)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: RTS_GATE.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec-1",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(RTS_GATE.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_undelivered_merged_command_keeps_devices_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """A failure on a merged execution names no device, so none can be blamed."""
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    # The action queue can merge concurrent action groups into one execution.
+    mock_client.execute_action_group.side_effect = None
+    mock_client.execute_action_group.return_value = "merged-exec"
+
+    for device in (POOL_PUMP, POOL_HOUSE):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: device.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="merged-exec",
+                new_state=ExecutionState.FAILED,
+                old_state=ExecutionState.IN_PROGRESS,
+                failure_type_code=FailureType.PEER_DOWN,
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(POOL_HOUSE.entity_id).state != STATE_UNAVAILABLE
 
 
 async def test_state_from_device_clears_unreachable(
