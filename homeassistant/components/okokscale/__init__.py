@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) ->
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
         # directly to the OKOK Scale code
         # Make sure the device we have is one that we can connect with
-        # in case its coming from a passive scanner
+        # in case it's coming from a passive scanner
         if service_info.connectable:
             connectable_device = service_info.device
         elif device := async_ble_device_from_address(
