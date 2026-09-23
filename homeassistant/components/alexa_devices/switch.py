@@ -23,17 +23,25 @@ PARALLEL_UPDATES = 1
 
 
 def _update_dnd_state(
-    coordinator: AmazonDevicesCoordinator, serial_num: str, key: str, state: bool
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+    state: bool,
 ) -> None:
     """Update the local DND state."""
     coordinator.set_dnd_state(serial_num, state)
 
 
 def _update_communication_state(
-    coordinator: AmazonDevicesCoordinator, serial_num: str, key: str, state: bool
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+    state: bool,
 ) -> None:
     """Update the local communication settings state."""
-    coordinator.data[serial_num].communication_settings[key] = "ON" if state else "OFF"
+    coordinator.data[serial_num].communication_settings[entity_description_key] = (
+        "ON" if state else "OFF"
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

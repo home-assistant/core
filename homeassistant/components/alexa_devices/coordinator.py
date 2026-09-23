@@ -280,6 +280,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             )
             if device:
                 device_registry.async_remove_device(device.id)
+            self._dnd_states.pop(serial_num, None)
 
     async def _async_remove_routine_stale(
         self,
