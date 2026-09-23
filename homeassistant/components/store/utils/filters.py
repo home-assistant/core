@@ -2,6 +2,10 @@
 
 from typing import Any
 
+from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
+
+from .tree import tree_entry_filename, tree_entry_is_directory
+
 
 def filter_content_return_one_of_type(
     content: list[Any],
@@ -31,12 +35,14 @@ def filter_content_return_one_of_type(
     return contents
 
 
-def get_first_directory_in_directory(content: list[Any], dirname: str) -> str | None:
+def get_first_directory_in_directory(
+    content: list[GitHubGitTreeEntryModel], dirname: str
+) -> str | None:
     """Return the first directory in dirname or None."""
     directory: str | None = None
-    for path in content:
-        if path.full_path.startswith(dirname) and path.full_path != dirname:
-            if path.is_directory:
-                directory = path.filename
+    for entry in content:
+        if entry.path.startswith(dirname) and entry.path != dirname:
+            if tree_entry_is_directory(entry):
+                directory = tree_entry_filename(entry)
                 break
     return directory

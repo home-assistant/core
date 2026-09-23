@@ -8,27 +8,28 @@ import pytest
 from homeassistant.components.store.base import StoreManager
 from homeassistant.components.store.enums import RepositoryFile
 from homeassistant.components.store.exceptions import StoreError
-from homeassistant.components.store.repositories.base import Repository
+from homeassistant.components.store.repositories.base import (
+    DOMAIN_OVERRIDES,
+    Repository,
+)
 from homeassistant.components.store.utils import filters, path, regex, version
 from homeassistant.components.store.utils.decorator import return_none_on_exception
+from homeassistant.components.store.utils.tree import (
+    tree_entry_directory,
+    tree_entry_filename,
+    tree_entry_is_directory,
+)
 from homeassistant.components.store.utils.url import (
     github_archive,
+    github_raw_file,
     github_release_asset,
 )
-from homeassistant.components.store.utils.workarounds import (
-    DOMAIN_OVERRIDES,
-    LegacyTreeFile,
-)
 
 
-def _tree_file(full_path: str, *, directory: bool = False) -> LegacyTreeFile:
+def _tree_file(full_path: str, *, directory: bool = False) -> GitHubGitTreeEntryModel:
     """Return a tree entry for the given path."""
-    return LegacyTreeFile(
-        GitHubGitTreeEntryModel(
-            {"path": full_path, "type": "tree" if directory else "blob"}
-        ),
-        "test/test",
-        "main",
+    return GitHubGitTreeEntryModel(
+        {"path": full_path, "type": "tree" if directory else "blob"}
     )
 
 
@@ -234,9 +235,9 @@ def test_filter_content_return_one_of_type_objects() -> None:
     ]
 
     files = [
-        entry.filename
+        tree_entry_filename(entry)
         for entry in filters.filter_content_return_one_of_type(
-            tree, "test", "file", "full_path"
+            tree, "test", "file", "path"
         )
     ]
 
@@ -290,18 +291,15 @@ def test_domain_overrides() -> None:
         ),
     ],
 )
-def test_legacy_tree_file(
-    full_path: str, expected_path: str, expected_filename: str
-) -> None:
-    """Test the path and filename a tree entry is split into."""
+def test_tree_entry(full_path: str, expected_path: str, expected_filename: str) -> None:
+    """Test the directory and filename a tree entry is split into."""
     entry = _tree_file(full_path)
 
-    assert entry.path == expected_path
-    assert entry.filename == expected_filename
-    assert entry.full_path == full_path
-    assert not entry.is_directory
+    assert tree_entry_directory(entry) == expected_path
+    assert tree_entry_filename(entry) == expected_filename
+    assert not tree_entry_is_directory(entry)
     assert (
-        entry.download_url
+        github_raw_file(repository="test/test", ref="main", path=full_path)
         == f"https://raw.githubusercontent.com/test/test/main/{full_path}"
     )
 

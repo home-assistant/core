@@ -34,13 +34,17 @@ from ..utils.logger import LOGGER
 from ..utils.path import is_safe, resolve_in_directory
 from ..utils.queue_manager import QueueManager
 from ..utils.storage import LEGACY_HACS_REPOSITORY_STORAGE_KEY, async_remove_storage
-from ..utils.url import github_archive, github_release_asset
+from ..utils.tree import (
+    tree_entry_directory,
+    tree_entry_filename,
+    tree_entry_is_directory,
+)
+from ..utils.url import github_archive, github_raw_file, github_release_asset
 from ..utils.validate import Validate
 from ..utils.version import (
     version_left_higher_or_equal_then_right,
     version_left_higher_then_right,
 )
-from ..utils.workarounds import DOMAIN_OVERRIDES, LegacyTreeFile
 
 if TYPE_CHECKING:
     from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
@@ -49,6 +53,12 @@ if TYPE_CHECKING:
 
     from ..base import StoreManager
 
+
+# Domains for integration repositories the store can not derive one from
+# https://github.com/hacs/integration/issues/2465
+DOMAIN_OVERRIDES: dict[str, str] = {
+    "custom-components/sensor.custom_aftership": "custom_aftership"
+}
 
 TOPIC_FILTER = (
     "add-on",
@@ -322,7 +332,9 @@ class Repository:
         self.validate = Validate()
         self.releases = RepositoryReleases()
         self.pending_restart = False
-        self.tree: list[LegacyTreeFile] = []
+        self.tree: list[GitHubGitTreeEntryModel] = []
+        # The ref the tree was fetched for, its files are downloaded from there
+        self.tree_ref: str | None = None
         self.treefiles: list[str] = []
         self.ref: str | None = None
         self.logger = LOGGER
@@ -491,7 +503,9 @@ class Repository:
         await self.common_update_data(ignore_issues=ignore_issues)
 
         # Get the content of hacs.json
-        if RepositoryFile.REPOSITORY_MANIFEST in [x.filename for x in self.tree]:
+        if RepositoryFile.REPOSITORY_MANIFEST in [
+            tree_entry_filename(entry) for entry in self.tree
+        ]:
             if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
@@ -565,7 +579,9 @@ class Repository:
             await self.async_set_last_commits()
 
         # Get the content of hacs.json
-        if RepositoryFile.REPOSITORY_MANIFEST in [x.filename for x in self.tree]:
+        if RepositoryFile.REPOSITORY_MANIFEST in [
+            tree_entry_filename(entry) for entry in self.tree
+        ]:
             if manifest := await self.async_get_repository_manifest():
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
                 self.data.update_data(self.repository_manifest.to_dict())
@@ -1217,14 +1233,9 @@ class Repository:
             tree = await self.get_tree(self.ref)
             if not tree:
                 raise StoreError("No files in tree")  # noqa: TRY301 # handled below
-            self.tree = [
-                LegacyTreeFile(entry, repository=self.data.full_name, ref=self.ref)
-                for entry in tree
-            ]
-
-            self.treefiles = []
-            for treefile in self.tree:
-                self.treefiles.append(treefile.full_path)
+            self.tree = tree
+            self.tree_ref = self.ref
+            self.treefiles = [entry.path for entry in tree]
         except StoreError as exception:
             if (
                 not retry
@@ -1268,34 +1279,26 @@ class Repository:
 
         if self.content.single:
             files.extend(
-                FileInformation(
-                    treefile.download_url, treefile.full_path, treefile.filename
-                )
-                for treefile in tree
-                if treefile.filename == self.data.file_name
+                self._tree_file_information(entry)
+                for entry in tree
+                if tree_entry_filename(entry) == self.data.file_name
             )
             return files
 
         if category == "plugin":
-            for treefile in tree:
-                if treefile.path in ["", "dist"]:
-                    if remotelocation == "dist" and not treefile.filename.startswith(
-                        "dist"
-                    ):
+            for entry in tree:
+                directory = tree_entry_directory(entry)
+                filename = tree_entry_filename(entry)
+                if directory in ["", "dist"]:
+                    if remotelocation == "dist" and not filename.startswith("dist"):
                         continue
                     if not remotelocation:
-                        if not treefile.filename.endswith(".js"):
+                        if not filename.endswith(".js"):
                             continue
-                        if treefile.path != "":
+                        if directory != "":
                             continue
-                    if not treefile.is_directory:
-                        files.append(
-                            FileInformation(
-                                treefile.download_url,
-                                treefile.full_path,
-                                treefile.filename,
-                            )
-                        )
+                    if not tree_entry_is_directory(entry):
+                        files.append(self._tree_file_information(entry))
             if files:
                 return files
 
@@ -1303,17 +1306,22 @@ class Repository:
             if not self.repository_manifest.filename:
                 if category == "theme":
                     tree = filter_content_return_one_of_type(
-                        self.tree, "", "yaml", "full_path"
+                        self.tree, "", "yaml", "path"
                     )
 
-        for path in tree:
-            if path.is_directory:
+        for entry in tree:
+            if tree_entry_is_directory(entry):
                 continue
-            if path.full_path.startswith(self.content.path.remote):
-                files.append(
-                    FileInformation(path.download_url, path.full_path, path.filename)
-                )
+            if entry.path.startswith(self.content.path.remote):
+                files.append(self._tree_file_information(entry))
         return files
+
+    def _tree_file_information(self, entry: GitHubGitTreeEntryModel) -> FileInformation:
+        """Return the download information of a file in the tree."""
+        url = github_raw_file(
+            repository=self.data.full_name, ref=self.tree_ref, path=entry.path
+        )
+        return FileInformation(url, entry.path, tree_entry_filename(entry))
 
     async def release_contents(
         self, version: str | None = None

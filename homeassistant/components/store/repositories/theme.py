@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError
 from ..enums import RepositoryCategory, StoreSignal
 from ..exceptions import StoreError
 from ..utils.decorator import concurrent
+from ..utils.tree import tree_entry_filename
 from .base import Repository
 
 if TYPE_CHECKING:
@@ -116,8 +117,8 @@ class ThemeRepository(Repository):
     @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
-        for treefile in self.tree:
-            if treefile.full_path.startswith(
-                self.content.path.remote
-            ) and treefile.full_path.endswith(".yaml"):
-                self.data.file_name = treefile.filename
+        for entry in self.tree:
+            if entry.path.startswith(self.content.path.remote) and entry.path.endswith(
+                ".yaml"
+            ):
+                self.data.file_name = tree_entry_filename(entry)

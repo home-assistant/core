@@ -223,7 +223,7 @@ class IntegrationRepository(Repository):
             else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
         )
 
-        if manifest_path not in (x.full_path for x in self.tree):
+        if manifest_path not in (entry.path for entry in self.tree):
             raise StoreError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )
@@ -253,7 +253,7 @@ class IntegrationRepository(Repository):
             else f"{self.content.path.remote}/{RepositoryFile.MAINIFEST_JSON}"
         )
 
-        if manifest_path not in (x.full_path for x in self.tree):
+        if manifest_path not in (entry.path for entry in self.tree):
             raise StoreError(
                 f"No {RepositoryFile.MAINIFEST_JSON} file found '{manifest_path}'"
             )

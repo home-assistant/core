@@ -17,6 +17,11 @@ def github_release_asset(
     return f"https://github.com/{repository}/releases/download/{version}/{filename}"
 
 
+def github_raw_file(*, repository: str, ref: str | None, path: str) -> str:
+    """Generate a download URL for a file in a repository."""
+    return f"https://raw.githubusercontent.com/{repository}/{ref}/{path}"
+
+
 def github_archive(
     *,
     repository: str,

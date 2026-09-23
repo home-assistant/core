@@ -31,7 +31,6 @@ from homeassistant.components.store.repositories.integration import (
 )
 from homeassistant.components.store.repositories.plugin import PluginRepository
 from homeassistant.components.store.utils.validate import Validate
-from homeassistant.components.store.utils.workarounds import LegacyTreeFile
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -52,16 +51,10 @@ async def python_script_integration(hass: HomeAssistant, config_dir: Path) -> No
     assert await async_setup_component(hass, "python_script", {})
 
 
-def _tree(*paths: tuple[str, bool]) -> list[LegacyTreeFile]:
+def _tree(*paths: tuple[str, bool]) -> list[GitHubGitTreeEntryModel]:
     """Return a repository tree of (path, is_directory) pairs."""
     return [
-        LegacyTreeFile(
-            GitHubGitTreeEntryModel(
-                {"path": path, "type": "tree" if directory else "blob"}
-            ),
-            "test/test",
-            "main",
-        )
+        GitHubGitTreeEntryModel({"path": path, "type": "tree" if directory else "blob"})
         for path, directory in paths
     ]
 
