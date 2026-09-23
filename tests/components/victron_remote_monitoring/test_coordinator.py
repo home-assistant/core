@@ -225,3 +225,25 @@ async def test_refreshes_at_local_midnight(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_vrm_client.installations.stats.await_count == 2
+
+
+@pytest.mark.parametrize(
+    ("missing_key", "missing_field", "present_field"),
+    [
+        pytest.param("solar_yield", "solar", "consumption", id="missing-solar"),
+        pytest.param("consumption", "consumption", "solar", id="missing-consumption"),
+    ],
+)
+async def test_missing_forecast_series(
+    mock_vrm_client: MagicMock,
+    missing_key: str,
+    missing_field: str,
+    present_field: str,
+) -> None:
+    """Keep a missing VRM forecast series unavailable."""
+    mock_vrm_client.installations.stats.return_value[missing_key] = None
+
+    store = await get_forecast(mock_vrm_client, 123456)
+
+    assert getattr(store, missing_field) is None
+    assert getattr(store, present_field) is not None
