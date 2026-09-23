@@ -105,6 +105,25 @@ async def test_async_update_skips_battery_powered_device() -> None:
     device.async_status.assert_not_awaited()
 
 
+async def test_async_update_suppresses_attribute_error() -> None:
+    """Test async_update doesn't raise for a device that lacks status support.
+
+    Device 11.11.11 is a mains-powered SwitchLinc whose async_status is
+    mocked to raise AttributeError (see mock_devices.py), modeling a real
+    device type that doesn't support status requests. The startup pass in
+    async_get_device_config suppresses this and treats it as a no-op; a
+    forced refresh via async_update should do the same rather than let the
+    exception surface as a failed update.
+    """
+    await devices.async_load()
+    device = devices["11.11.11"]
+    entity = InsteonEntity(device, 1)
+
+    await entity.async_update()  # should not raise
+
+    device.async_status.assert_awaited_once()
+
+
 async def test_async_update_serializes_concurrent_status_requests() -> None:
     """Test concurrent async_update calls don't overlap status requests.
 

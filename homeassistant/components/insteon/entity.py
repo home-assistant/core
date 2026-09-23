@@ -1,5 +1,6 @@
 """Insteon base entity."""
 
+from contextlib import suppress
 import functools
 import logging
 from typing import Any, override
@@ -196,5 +197,6 @@ class InsteonEntity(Entity):
         """Request a live status update from the device, skipping battery-powered devices."""
         if self._insteon_device.is_battery:
             return
-        async with STATUS_LOCK:
-            await self._insteon_device.async_status(self.insteon_group)
+        with suppress(AttributeError):
+            async with STATUS_LOCK:
+                await self._insteon_device.async_status(self.insteon_group)
