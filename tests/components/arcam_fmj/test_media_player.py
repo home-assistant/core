@@ -4,7 +4,8 @@ from collections.abc import Generator
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
-from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.codecs import DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.state import State
 import pytest
 from syrupy.assertion import SnapshotAssertion
