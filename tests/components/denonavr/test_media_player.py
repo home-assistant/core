@@ -43,6 +43,7 @@ from homeassistant.const import (
     CONF_MODEL,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -158,7 +159,7 @@ async def test_avr_processing_error_does_not_mark_unavailable(
     responded but wasn't fully done updating yet - not a reason to
     mark it unavailable.
     """
-    entry = await setup_denonavr(hass)
+    await setup_denonavr(hass)
     client.async_volume_up.side_effect = AvrProcessingError(
         "Update not complete", "SetVolume"
     )
@@ -170,7 +171,6 @@ async def test_avr_processing_error_does_not_mark_unavailable(
         blocking=True,
     )
 
-    assert entry.runtime_data.coordinator.last_update_success is True
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
@@ -181,7 +181,7 @@ async def test_avr_command_error_does_not_mark_unavailable(
 
     Not a connectivity problem - just this one command being rejected.
     """
-    entry = await setup_denonavr(hass)
+    await setup_denonavr(hass)
     client.async_volume_up.side_effect = AvrCommandError(
         "Could not set volume", "SetVolume"
     )
@@ -193,7 +193,6 @@ async def test_avr_command_error_does_not_mark_unavailable(
         blocking=True,
     )
 
-    assert entry.runtime_data.coordinator.last_update_success is True
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
@@ -298,7 +297,7 @@ async def test_update_audyssey_forces_fetch_with_healthy_telnet(
     """
     client.telnet_connected = True
     client.telnet_healthy = True
-    await setup_denonavr(hass, options={"use_telnet": True})
+    await setup_denonavr(hass, options={CONF_USE_TELNET: True})
 
     calls_before_service = client.async_update_audyssey.call_count
 
@@ -348,17 +347,17 @@ async def test_concurrent_forced_refreshes_share_one_bypassing_fetch(
 
 
 @pytest.mark.parametrize(
-    ("options", "status_available"),
+    ("options", "expected_state"),
     [
-        pytest.param({}, True, id="status_read"),
-        pytest.param({CONF_USE_TELNET: True}, False, id="status_skipped"),
+        pytest.param({}, STATE_UNKNOWN, id="status_read"),
+        pytest.param({CONF_USE_TELNET: True}, STATE_UNAVAILABLE, id="status_skipped"),
     ],
 )
 async def test_initial_audyssey_failure_reaches_a_blind_status_coordinator(
     hass: HomeAssistant,
     client: MagicMock,
     options: dict[str, bool],
-    status_available: bool,
+    expected_state: str,
 ) -> None:
     """The setup-time Audyssey fetch is forced, so it reads where a poll may not.
 
@@ -373,7 +372,7 @@ async def test_initial_audyssey_failure_reaches_a_blind_status_coordinator(
     entry = await setup_denonavr(hass, options=options)
 
     assert entry.runtime_data.audyssey_coordinator.last_update_success is False
-    assert entry.runtime_data.coordinator.last_update_success is status_available
+    assert hass.states.get(ENTITY_ID).state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -420,11 +419,13 @@ async def test_setup_survives_initial_audyssey_failure(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "recovers"),
+    ("side_effect", "expected_state"),
     [
-        pytest.param(None, True, id="receiver_answers"),
+        pytest.param(None, STATE_UNKNOWN, id="receiver_answers"),
         pytest.param(
-            AvrNetworkError("Network error", "test"), False, id="still_unreachable"
+            AvrNetworkError("Network error", "test"),
+            STATE_UNAVAILABLE,
+            id="still_unreachable",
         ),
     ],
 )
@@ -433,7 +434,7 @@ async def test_unavailable_coordinator_reads_before_recovering(
     client: MagicMock,
     freezer: FrozenDateTimeFactory,
     side_effect: Exception | None,
-    recovers: bool,
+    expected_state: str,
 ) -> None:
     """The Telnet-healthy skip must not be what clears a confirmed failure.
 
@@ -443,9 +444,8 @@ async def test_unavailable_coordinator_reads_before_recovering(
     client.telnet_connected = True
     client.telnet_healthy = True
     entry = await setup_denonavr(hass, options={CONF_USE_TELNET: True})
-    coordinator = entry.runtime_data.coordinator
 
-    mark_unavailable(coordinator)
+    mark_unavailable(entry.runtime_data.coordinator)
     client.async_update.side_effect = side_effect
     reads_before = client.async_update.await_count
 
@@ -454,7 +454,7 @@ async def test_unavailable_coordinator_reads_before_recovering(
     await hass.async_block_till_done()
 
     assert client.async_update.await_count > reads_before
-    assert coordinator.last_update_success is recovers
+    assert hass.states.get(ENTITY_ID).state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -525,9 +525,8 @@ async def test_repeated_failure_still_reaches_a_blind_coordinator(
     assert audyssey_coordinator.last_update_success is False
 
 
-async def test_update_audyssey_restores_availability(
-    hass: HomeAssistant, client: MagicMock
-) -> None:
+@pytest.mark.usefixtures("client")
+async def test_update_audyssey_restores_availability(hass: HomeAssistant) -> None:
     """A successful call recovers Audyssey entities from a prior failure.
 
     The fetch is this zone's own rather than the coordinator's, so the
@@ -569,7 +568,7 @@ async def test_update_audyssey_action_survives_a_receiver_without_audyssey(
     )
 
     assert entry.runtime_data.audyssey_coordinator.last_update_success is True
-    assert entry.runtime_data.coordinator.last_update_success is True
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 async def test_update_audyssey_fetches_only_the_targeted_zone(
@@ -613,7 +612,7 @@ async def test_update_audyssey_connectivity_error_marks_media_player_unavailable
     this entity looking available despite just confirming the
     receiver itself is unreachable.
     """
-    entry = await setup_denonavr(hass)
+    await setup_denonavr(hass)
     client.async_update_audyssey.side_effect = AvrNetworkError(
         "Connection refused", "GetAudyssey"
     )
@@ -625,7 +624,7 @@ async def test_update_audyssey_connectivity_error_marks_media_player_unavailable
     )
     await hass.async_block_till_done()
 
-    assert entry.runtime_data.coordinator.last_update_success is False
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_set_dynamic_eq_always_refreshes_audyssey(
@@ -641,7 +640,7 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
         "homeassistant.components.denonavr.coordinator.ACTION_REFRESH_DEBOUNCE_COOLDOWN",
         0,
     ):
-        await setup_denonavr(hass, options={"update_audyssey": False})
+        await setup_denonavr(hass, options={CONF_UPDATE_AUDYSSEY: False})
         calls_before = client.async_update_audyssey.await_count
 
         await hass.services.async_call(
