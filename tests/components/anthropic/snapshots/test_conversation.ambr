@@ -53,7 +53,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -154,7 +154,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1137,7 +1137,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1245,7 +1245,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1356,7 +1356,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1457,7 +1457,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -2449,7 +2449,7 @@
       'native': dict({
         'citation_details': list([
         ]),
-        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
