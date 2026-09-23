@@ -742,7 +742,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Activate flash."""
         if not flash:
             return
-        if int(self._get_property("color_mode")) != 1 or not self.hs_color:
+        if self.color_mode is not ColorMode.RGB or not self.hs_color:
             _LOGGER.error("Flash supported currently only in RGB mode")
             return
 
@@ -920,7 +920,11 @@ class YeelightColorLightSupport(YeelightBaseLight):
     @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
-        color_mode = int(self._get_property("color_mode"))
+        raw_color_mode = self._get_property("color_mode")
+        if raw_color_mode is None:
+            # an ambilight stops reporting its mode while the main light is off
+            return ColorMode.UNKNOWN
+        color_mode = int(raw_color_mode)
         if color_mode == 1:  # RGB
             return ColorMode.RGB
         if color_mode == 2:  # color temperature

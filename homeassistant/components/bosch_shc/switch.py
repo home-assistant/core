@@ -5,9 +5,11 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    BypassService,
     CameraLightService,
     PowerSwitchService,
     PrivacyModeService,
+    SHCShutterContact2,
     SHCSmartPlug,
     ThermostatService,
 )
@@ -89,6 +91,30 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         entity_category=EntityCategory.CONFIG,
         on_key="child_lock",
         on_value=ThermostatService.State.ON,
+        should_poll=False,
+    ),
+    "presencesimulation": SHCSwitchEntityDescription(
+        key="presencesimulation",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
+    ),
+    "bypass": SHCSwitchEntityDescription(
+        key="bypass",
+        translation_key="bypass",
+        device_class=SwitchDeviceClass.SWITCH,
+        on_key="bypass",
+        on_value=BypassService.State.BYPASS_ACTIVE,
+        should_poll=False,
+    ),
+    "pet_immunity_enabled": SHCSwitchEntityDescription(
+        key="pet_immunity_enabled",
+        translation_key="pet_immunity_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="pet_immunity_enabled",
+        on_value=True,
         should_poll=False,
     ),
 }
@@ -207,6 +233,51 @@ async def async_setup_entry(
         )
     )
 
+    presence_simulation_system = session.device_helper.presence_simulation_system
+    if presence_simulation_system is not None:
+        entities.append(
+            SHCSwitch(
+                hass=hass,
+                device=presence_simulation_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=SWITCH_TYPES["presencesimulation"],
+            )
+        )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["bypass"],
+        )
+        for switch in session.device_helper.shutter_contacts2
+    )
+
+    entities.extend(
+        SHCBypassInfiniteSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for switch in session.device_helper.shutter_contacts2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["pet_immunity_enabled"],
+            unique_id_suffix="pet_immunity",
+        )
+        for switch in session.device_helper.motion_detectors2
+    )
+
     async_add_entities(entities)
 
 
@@ -289,3 +360,35 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._device.routing = False
+
+
+class SHCBypassInfiniteSwitch(SHCEntity, SwitchEntity):
+    """Representation of a SHC alarm-bypass "never expires" switch."""
+
+    _attr_translation_key = "bypass_infinite"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+    _device: SHCShutterContact2
+
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
+        """Initialize an SHC bypass-never-expires switch."""
+        super().__init__(hass, device, parent_id, entry_id)
+        self._attr_unique_id = f"{device.serial}_bypass_infinite"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self._device.bypass_infinite
+
+    @override
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        self._device.set_bypass_configuration(infinite=True)
+
+    @override
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        self._device.set_bypass_configuration(infinite=False)
