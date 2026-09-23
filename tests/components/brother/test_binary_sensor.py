@@ -76,12 +76,10 @@ async def test_ink_supply_sensor_keeps_toner_unique_id(
     entity_id = "binary_sensor.dcp_j562dw_low_ink"
     await init_integration(hass, mock_ink_config_entry)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "9876543210_low_toner"
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
 
@@ -105,8 +103,7 @@ async def test_binary_sensor_state_reflects_printer_errors(
     """Test the binary sensor state matches the active printer errors."""
     await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == expected_state
 
 
@@ -120,8 +117,7 @@ async def test_binary_sensor_updates_on_refresh(
     entity_id = "binary_sensor.hl_l2340dw_paper_jam"
     await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     mock_brother_client.async_update.return_value = replace(
@@ -131,8 +127,7 @@ async def test_binary_sensor_updates_on_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     mock_brother_client.async_update.return_value = BROTHER_DATA
@@ -140,8 +135,7 @@ async def test_binary_sensor_updates_on_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 
@@ -155,8 +149,7 @@ async def test_availability(
     entity_id = "binary_sensor.hl_l2340dw_door_open"
     await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     mock_brother_client.async_update.side_effect = ConnectionError
@@ -164,8 +157,7 @@ async def test_availability(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
     mock_brother_client.async_update.side_effect = None
@@ -173,6 +165,5 @@ async def test_availability(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
