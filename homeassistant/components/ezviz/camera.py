@@ -3,7 +3,9 @@
 import logging
 from typing import override
 
+import aiohttp
 from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError
+from pyezvizapi.utils import decrypt_image
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -13,6 +15,7 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_INTEGRATION_DISCO
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -28,6 +31,7 @@ from .const import (
 )
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
+from .vtm import async_setup_vtm, rtsp_available, vtm_stream_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +44,12 @@ async def async_setup_entry(
     """Set up EZVIZ cameras based on a config entry."""
 
     coordinator = entry.runtime_data
+    vtm = async_setup_vtm(hass)
 
     camera_entities = []
 
     for camera, value in coordinator.data.items():
+        vtm.clients[camera] = coordinator.ezviz_client
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)
@@ -64,7 +70,7 @@ async def async_setup_entry(
                 ffmpeg_arguments,
             )
 
-        else:
+        elif rtsp_available(value):
             discovery_flow.async_create_flow(
                 hass,
                 DOMAIN,
@@ -87,6 +93,14 @@ async def async_setup_entry(
             camera_username = DEFAULT_CAMERA_USERNAME
             camera_password = None
             camera_rtsp_stream = ""
+
+        else:
+            # No RTSP on the device: live view goes through the VTM cloud relay,
+            # which needs no camera credentials.
+            ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
+            camera_username = DEFAULT_CAMERA_USERNAME
+            camera_password = None
+            camera_rtsp_stream = None
 
         camera_entities.append(
             EzvizCamera(
@@ -137,7 +151,10 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_arguments
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
-        if camera_password:
+        # Prefer local RTSP; fall back to the VTM cloud relay when the device
+        # has no RTSP server or no RTSP credentials are configured.
+        self._use_vtm = camera_password is None or not rtsp_available(self.data)
+        if camera_password or self._use_vtm:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
@@ -181,15 +198,50 @@ class EzvizCamera(EzvizEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a frame from the camera stream."""
+        if self._use_vtm:
+            return await self._async_vtm_camera_image(width, height)
         if self._rtsp_stream is None:
             return None
         return await ffmpeg.async_get_image(
             self.hass, self._rtsp_stream, width=width, height=height
         )
 
+    async def _async_vtm_camera_image(
+        self, width: int | None, height: int | None
+    ) -> bytes | None:
+        """Return a still image without waking a sleeping device.
+
+        Opening the relay just for a snapshot would wake battery devices on
+        every dashboard refresh, so use a running stream if there is one and
+        the last alarm picture otherwise.
+        """
+        if self.stream is not None and (
+            image := await self.stream.async_get_image(width, height)
+        ):
+            return image
+
+        url = self.data.get("last_alarm_pic")
+        if not isinstance(url, str) or not url:
+            return None
+        try:
+            response = await async_get_clientsession(self.hass).get(url)
+            response.raise_for_status()
+            image = await response.read()
+        except aiohttp.ClientError as err:
+            _LOGGER.debug("%s: cannot fetch last alarm picture: %s", self._serial, err)
+            return None
+        if self.data.get("encrypted") and self._password is not None:
+            try:
+                image = decrypt_image(image, self._password)
+            except PyEzvizError:
+                _LOGGER.debug("%s: cannot decrypt last alarm picture", self._serial)
+        return image
+
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
+        if self._use_vtm:
+            return vtm_stream_url(self.hass, self._serial)
         if self._password is None:
             return None
         local_ip = self.data["local_ip"]
