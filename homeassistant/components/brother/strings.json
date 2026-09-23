@@ -96,14 +96,17 @@
       "jammed": {
         "name": "Paper jam"
       },
+      "low_ink": {
+        "name": "Low ink"
+      },
       "low_paper": {
         "name": "Low paper"
       },
       "low_toner": {
         "name": "Low toner"
       },
-      "marker_supply_missing": {
-        "name": "Supply missing"
+      "no_ink": {
+        "name": "No ink"
       },
       "no_paper": {
         "name": "No paper"

@@ -19,6 +19,7 @@ from .conftest import BROTHER_DATA
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -31,6 +32,23 @@ async def test_binary_sensors(
         await init_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_binary_sensors_ink(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_ink_brother_client: AsyncMock,
+    mock_ink_config_entry: MockConfigEntry,
+) -> None:
+    """Test states of the binary sensors for an inkjet printer."""
+    with patch("homeassistant.components.brother.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await init_integration(hass, mock_ink_config_entry)
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_ink_config_entry.entry_id
+    )
 
 
 async def test_no_binary_sensors_when_printer_errors_unavailable(
@@ -48,6 +66,26 @@ async def test_no_binary_sensors_when_printer_errors_unavailable(
     assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
 
 
+async def test_ink_supply_sensor_keeps_toner_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ink_brother_client: AsyncMock,
+    mock_ink_config_entry: MockConfigEntry,
+) -> None:
+    """Test the ink supply sensor keeps the toner-based unique_id."""
+    entity_id = "binary_sensor.dcp_j562dw_low_ink"
+    await init_integration(hass, mock_ink_config_entry)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "9876543210_low_toner"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "expected_state"),
     [
@@ -119,7 +157,6 @@ async def test_availability(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON
 
     mock_brother_client.async_update.side_effect = ConnectionError
@@ -138,5 +175,4 @@ async def test_availability(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON
