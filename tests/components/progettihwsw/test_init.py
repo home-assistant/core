@@ -26,9 +26,8 @@ async def test_get_states_by_tag_prefix(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.10",
             CONF_PORT: 80,
-            "relay_count": 1,
-            "input_count": 1,
-            "relay_1": "bistable",
+            "relay_count": 0,
+            "input_count": 0,
         },
     )
     entry.add_to_hass(hass)
@@ -46,7 +45,7 @@ async def test_get_states_by_tag_prefix(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        api = hass.data[DOMAIN][entry.entry_id]
+        api = entry.runtime_data
 
         # Test relay states (digital)
         states = await api.get_states_by_tag_prefix("relay")
