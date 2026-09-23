@@ -4,8 +4,8 @@ import socket
 from typing import Any, override
 from urllib.parse import urlparse
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import probatio
 
@@ -49,7 +49,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
             return {"base": "timeout_connect"}
         except ConnectionRefusedError:
             return {"base": "connection_refused"}
-        except ConnectionFailed, OSError:
+        except (ConnectionFailed, OSError):
             return {"base": "cannot_connect"}
         finally:
             await client.stop()
