@@ -57,6 +57,7 @@ async def test_disabled_sensors(
     for entity_id in (
         "sensor.indi_allsky_camera_sensor_temperature",
         "sensor.indi_allsky_exposure_time",
+        "sensor.indi_allsky_camera_sensor_temperature",
         "sensor.indi_allsky_sky_quality",
         "sensor.indi_allsky_stars",
     ):
