@@ -3,7 +3,6 @@
 DOMAIN = "everhome"
 
 # Default values
-DEFAULT_PORT = 80
 DEFAULT_UPDATE_INTERVAL = 5  # seconds
 
 # Device attributes

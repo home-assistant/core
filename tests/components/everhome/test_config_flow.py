@@ -10,7 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info import zeroconf
 
+from tests.common import MockConfigEntry
+
 IP_ADDRESS = "192.168.178.104"
+NEW_IP_ADDRESS = "192.168.178.105"
 DEVICE_ID = "abcdef123456"
 
 ZEROCONF_DISCOVERY = zeroconf.ZeroconfServiceInfo(
@@ -145,3 +148,78 @@ async def test_zeroconf_flow_no_serial(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_everhome_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_IP_ADDRESS},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: NEW_IP_ADDRESS}
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_everhome_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow recovers from a connection error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_everhome_client.async_update.return_value = False
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_IP_ADDRESS},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_everhome_client.async_update.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_IP_ADDRESS},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: NEW_IP_ADDRESS}
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_everhome_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when pointed at a different device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_everhome_client.get_data.return_value.serial = "fedcba654321"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_IP_ADDRESS},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_HOST: IP_ADDRESS}

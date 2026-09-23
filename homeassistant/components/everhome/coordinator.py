@@ -38,7 +38,7 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
         )
-        self.client = EcoTracker(host, session=async_get_clientsession(hass))
+        self.client = EcoTracker(host, port=80, session=async_get_clientsession(hass))
         self.host = host
 
     async def _async_update_data(self) -> EcoTrackerData:

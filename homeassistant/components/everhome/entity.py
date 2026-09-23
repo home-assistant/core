@@ -1,7 +1,5 @@
 """Base class for the everHome integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,6 +20,6 @@ class EcoTrackerEntity(CoordinatorEntity[EcoTrackerDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.data.serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=ATTR_MODEL,
-            sw_version=coordinator.data.firmware_version,
+            sw_version=coordinator.data.firmware_version or None,
             serial_number=coordinator.data.serial,
         )
