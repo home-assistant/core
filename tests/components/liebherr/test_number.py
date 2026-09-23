@@ -1,10 +1,10 @@
 """Test the Liebherr number platform."""
 
+import asyncio
 import copy
-from datetime import timedelta
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
     Device,
     DeviceState,
@@ -26,12 +26,13 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -43,6 +44,18 @@ def platforms() -> list[Platform]:
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_temperature_step(hass: HomeAssistant) -> None:
+    """Test the entities expose their supported temperature steps."""
+    top_zone = hass.states.get("number.test_fridge_top_zone_setpoint")
+    bottom_zone = hass.states.get("number.test_fridge_bottom_zone_setpoint")
+
+    assert top_zone is not None
+    assert bottom_zone is not None
+    assert top_zone.attributes["step"] == 2
+    assert bottom_zone.attributes["step"] == 1
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -108,8 +121,6 @@ async def test_set_temperature(
     """Test setting the temperature."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -123,9 +134,156 @@ async def test_set_temperature(
         target=6,
         unit=TemperatureUnit.CELSIUS,
     )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "6"
 
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_preserves_sse_update_during_command(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test an SSE update received during a command is preserved."""
+    command_started = asyncio.Event()
+    release_command = asyncio.Event()
+
+    async def set_temperature(**kwargs: object) -> None:
+        command_started.set()
+        await release_command.wait()
+
+    mock_liebherr_client.set_temperature.side_effect = set_temperature
+    service_call = hass.async_create_task(
+        hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: 6,
+            },
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+
+    temperature_control = MOCK_DEVICE_STATE.get_temperature_controls()[1]
+    mock_liebherr_client.get_device_state.side_effect = lambda *args, **kwargs: (
+        DeviceState(
+            device=MOCK_DEVICE,
+            controls=[replace(temperature_control, value=7)],
+        )
+    )
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    sse_updated = asyncio.Event()
+    remove_listener = coordinator.async_add_listener(sse_updated.set)
+    push_task = hass.async_create_task(sse_helper.async_push())
+    await sse_updated.wait()
+    remove_listener()
+    release_command.set()
+    await asyncio.gather(service_call, push_task)
+
+    cached_control = coordinator.data.get_temperature_controls()[1]
+    assert cached_control.value == 7
+    assert cached_control.target == 6
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_preserves_sse_disconnect_during_command(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    sse_helper: SSEStreamHelper,
+) -> None:
+    """Test an SSE disconnect during a command keeps the entity unavailable."""
+    command_started = asyncio.Event()
+    release_command = asyncio.Event()
+
+    async def set_temperature(**kwargs: object) -> None:
+        command_started.set()
+        await release_command.wait()
+
+    mock_liebherr_client.set_temperature.side_effect = set_temperature
+    service_call = hass.async_create_task(
+        hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: 6,
+            },
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+
+    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError
+    coordinator = mock_config_entry.runtime_data.coordinators[MOCK_DEVICE.device_id]
+    disconnected = asyncio.Event()
+    remove_listener = coordinator.async_add_listener(disconnected.set)
+    push_task = hass.async_create_task(sse_helper.async_push())
+    await disconnected.wait()
+    remove_listener()
+    release_command.set()
+    await asyncio.gather(service_call, push_task)
+
+    assert not coordinator.last_update_success
+    assert coordinator.data.get_temperature_controls()[1].target == 6
+    state = hass.states.get("number.test_fridge_top_zone_setpoint")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_after_unit_conversion(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+) -> None:
+    """Test setting a temperature converted from the configured unit."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+            ATTR_VALUE: 39,
+        },
+        blocking=True,
+    )
+
+    mock_liebherr_client.set_temperature.assert_called_once_with(
+        device_id="test_device_id",
+        zone_id=1,
+        target=4,
+        unit=TemperatureUnit.CELSIUS,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("value", [4.1, 5])
+async def test_set_temperature_not_in_allowed_steps(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    value: float,
+) -> None:
+    """Test setting a temperature outside the allowed steps."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=rf"Temperature {float(value)} is not supported. Allowed values: 2, 4, 6, 8",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                ATTR_VALUE: value,
+            },
+            blocking=True,
+        )
+
+    mock_liebherr_client.set_temperature.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -156,7 +314,7 @@ async def test_set_temperature_failure(
 async def test_number_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test number entity behavior when temperature control is removed."""
     entity_id = "number.test_fridge_top_zone_setpoint"
@@ -174,10 +332,7 @@ async def test_number_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    # Advance time to trigger coordinator refresh
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     # State should be unavailable
     state = hass.states.get(entity_id)

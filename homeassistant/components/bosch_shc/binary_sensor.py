@@ -37,6 +37,7 @@ async def async_setup_entry(
 
     entities: list[BinarySensorEntity] = [
         ShutterContactSensor(
+            hass=hass,
             device=binary_sensor,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -49,6 +50,7 @@ async def async_setup_entry(
 
     entities.extend(
         BatterySensor(
+            hass=hass,
             device=binary_sensor,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -75,9 +77,11 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     _attr_name = None
     _device: SHCShutterContact
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize an SHC shutter contact sensor."""
-        super().__init__(device, parent_id, entry_id)
+        super().__init__(hass, device, parent_id, entry_id)
         switcher: dict[str | None, BinarySensorDeviceClass] = {
             "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,
             "REGULAR_WINDOW": BinarySensorDeviceClass.WINDOW,
@@ -101,9 +105,11 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _device: SHCBatteryDevice
 
-    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: SHCDevice, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize an SHC battery reporting sensor."""
-        super().__init__(device, parent_id, entry_id)
+        super().__init__(hass, device, parent_id, entry_id)
         self._attr_unique_id = f"{device.serial}_battery"
 
     @property

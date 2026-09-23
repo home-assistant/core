@@ -9,7 +9,7 @@ import math
 from typing import Any, Self, override
 
 from cronsim import CronSim
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -26,13 +26,12 @@ from homeassistant.components.sensor.recorder import (  # pylint: disable=home-a
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -120,7 +119,7 @@ def validate_is_number(value):
             return value
     except ValueError, TypeError:
         pass
-    raise vol.Invalid("Value is not a number")
+    raise probatio.Invalid("Value is not a number")
 
 
 async def async_setup_entry(
@@ -202,7 +201,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
+        {probatio.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 
@@ -284,7 +283,7 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
+        {probatio.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 
@@ -428,8 +427,10 @@ class UtilityMeterSensor(RestoreSensor):
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
-        self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
-        self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._input_device_class = attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        self._attr_native_unit_of_measurement = attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         self._attr_native_value = 0
         self.async_write_ha_state()
 
@@ -523,9 +524,11 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._attr_native_value += adjustment  # type: ignore[operator] # self._attr_native_value will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
+        self._input_device_class = new_state_attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         self._attr_native_unit_of_measurement = new_state_attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         )
         self._last_valid_state = new_state_val
         self.async_write_ha_state()

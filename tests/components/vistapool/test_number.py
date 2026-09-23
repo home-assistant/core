@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -111,6 +111,44 @@ async def test_number_electrolysis_max_fallback(
     state = hass.states.get("number.my_pool_electrolysis_setpoint")
     assert state is not None
     assert state.attributes["max"] == 50.0
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "pool_data"),
+    [
+        pytest.param(
+            "number.my_pool_ph_maximum",
+            {
+                "main": {"hasPH": 1, "version": 1},
+                "modules": {"ph": {"status": {"high_value": "garbage"}}},
+            },
+            id="ph_maximum",
+        ),
+        pytest.param(
+            "number.my_pool_redox_setpoint",
+            {
+                "main": {"hasRX": 1, "version": 1},
+                "modules": {"rx": {"status": {"value": "garbage"}}},
+            },
+            id="redox_setpoint",
+        ),
+    ],
+)
+async def test_number_unknown_when_unparsable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    entity_id: str,
+    pool_data: dict[str, Any],
+) -> None:
+    """Test an unparsable raw setpoint reads as unknown rather than raising."""
+    mock_vistapool_client.fetch_pool_data.return_value = pool_data
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_number_hydrolysis_setpoint_branch(

@@ -176,7 +176,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
-      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xone?token=mock_token&cache=1cae983bd1c4c429',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xone?token=mock_token_0123456789abcdef01234&cache=1cae983bd1c4c429',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: '9WZDNCRFJ3TJ',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.APP: 'app'>,
@@ -233,7 +233,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
-      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=1cae983bd1c4c429',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xonex?token=mock_token_0123456789abcdef01234&cache=1cae983bd1c4c429',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONEX',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: '9WZDNCRFJ3TJ',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.APP: 'app'>,
@@ -398,7 +398,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=8Oaj9Ryq1G1_p3lLnXlsaZgGzAie6Mnu24_PawYuDYIoH77pJ.X5Z.MqQPibUVTcbx57bBxf63xu2Ef8acP3S7Uz80NbHc5nza..4R00GT1V5G760cdfX7Hl0uIHdHCbkzTikdvNE0TedhKgQfQy.2gjOGbd8kXZXzy4VzeJiNPLhLq2QUQbo8q3sVoSPaw73J4BxM7gaNX8V8qLcWtO5sn6vgbTso51OaEIn4zeAiw-',
-      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xone?token=mock_token&cache=cf419ddd9fb966d6',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xone?token=mock_token_0123456789abcdef01234&cache=cf419ddd9fb966d6',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: '9VWGNH0VBZJX',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.APP: 'app'>,
@@ -455,7 +455,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=8Oaj9Ryq1G1_p3lLnXlsaZgGzAie6Mnu24_PawYuDYIoH77pJ.X5Z.MqQPibUVTcbx57bBxf63xu2Ef8acP3S7Uz80NbHc5nza..4R00GT1V5G760cdfX7Hl0uIHdHCbkzTikdvNE0TedhKgQfQy.2gjOGbd8kXZXzy4VzeJiNPLhLq2QUQbo8q3sVoSPaw73J4BxM7gaNX8V8qLcWtO5sn6vgbTso51OaEIn4zeAiw-',
-      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=cf419ddd9fb966d6',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.xonex?token=mock_token_0123456789abcdef01234&cache=cf419ddd9fb966d6',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONEX',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: '9VWGNH0VBZJX',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.APP: 'app'>,

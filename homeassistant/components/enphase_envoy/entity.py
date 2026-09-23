@@ -8,6 +8,7 @@ from pyenphase import EnvoyData
 from pyenphase.exceptions import EnvoyError
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -85,7 +86,11 @@ class EnvoyACBAggregateEntity(EnvoyBaseEntity):
             manufacturer="Enphase",
             model="ACB",
             name=f"ACB {self.envoy_serial_num}",
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
 
@@ -117,6 +122,10 @@ class EnvoyACBBatteryEntity(EnvoyBaseEntity):
             manufacturer="Enphase",
             model="AC Battery",
             name=f"AC Battery {serial_number}",
-            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{self.envoy_serial_num}_acb"),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=serial_number,
         )

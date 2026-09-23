@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 from infrared_protocols.codes.generic.led import (
+    BaseGenericLEDCode,
+    Generic10KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -46,6 +48,7 @@ def event_only() -> Generator[None]:
 @pytest.mark.parametrize(
     "config_entry",
     [
+        LEDIrDeviceType.GENERIC_10_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -360,6 +363,46 @@ async def test_setup(
             "on",
             "light_cyan",
         ),
+        (LEDIrDeviceType.GENERIC_10_KEY, Generic10KeyCode.ON, "on", None),
+        (LEDIrDeviceType.GENERIC_10_KEY, Generic10KeyCode.OFF, "off", None),
+        (LEDIrDeviceType.GENERIC_10_KEY, Generic10KeyCode.CANDLE, "on", "candle"),
+        (LEDIrDeviceType.GENERIC_10_KEY, Generic10KeyCode.LIGHT, "on", "light"),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.BRIGHTNESS_UP,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.BRIGHTNESS_DOWN,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.TIMER_2H,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.TIMER_4H,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.TIMER_6H,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_10_KEY,
+            Generic10KeyCode.TIMER_8H,
+            STATE_UNKNOWN,
+            None,
+        ),
     ],
 )
 @pytest.mark.usefixtures(
@@ -370,10 +413,7 @@ async def test_event(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     device_type: LEDIrDeviceType,
-    command_code: Generic13KeyCode
-    | Generic24KeyCode
-    | Generic40KeyCode
-    | Generic44KeyCode,
+    command_code: BaseGenericLEDCode,
     expected_light_state: str,
     expected_light_effect: str | None,
 ) -> None:

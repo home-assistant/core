@@ -1,5 +1,6 @@
 """Tests for the Duco select platform."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
@@ -16,25 +17,39 @@ from duco_connectivity import (
     NodeType,
     VentilationState,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SELECT_ENTITY = "select.living_ventilation_state"
 _VALVE_SELECT_ENTITY = "select.bedroom_valve_ventilation_state"
 _UNSUPPORTED_SELECT_ENTITY = "select.office_co2_ventilation_state"
+# Node 50 "Kitchen RH" (a non-box satellite node) repurposed as a controllable node.
+_CONTROLLABLE_SELECT_ENTITY = "select.kitchen_rh_ventilation_state"
 
 
 def _build_node_actions(
@@ -91,6 +106,35 @@ def _replace_node_state(node: Node, state: str | VentilationState | None) -> Nod
     return replace(node, ventilation=replace(node.ventilation, state=state))
 
 
+def _assert_select_state(hass: HomeAssistant, expected_state: str) -> None:
+    """Assert the ventilation select state."""
+    state = hass.states.get(_SELECT_ENTITY)
+    assert state is not None
+    assert state.state == expected_state
+
+
+async def _async_select_option(
+    hass: HomeAssistant, option: str, entity_id: str = _SELECT_ENTITY
+) -> None:
+    """Select a ventilation option."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+
+
+async def _async_set_fan_percentage(hass: HomeAssistant) -> None:
+    """Set the ventilation fan percentage."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.living", ATTR_PERCENTAGE: 33},
+        blocking=True,
+    )
+
+
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
@@ -144,12 +188,15 @@ async def test_select_creates_entities_for_controllable_valve_nodes(
     valve_node_type: NodeType,
 ) -> None:
     """Test select discovery includes valve nodes when they advertise control."""
+    # Mutate a non-box node (node 50 "Kitchen RH", index 3); mutating the box
+    # node would make its via_device link resolve to itself.
     mock_nodes = [
+        *mock_sensor_nodes[:3],
         replace(
-            mock_sensor_nodes[0],
-            general=replace(mock_sensor_nodes[0].general, node_type=valve_node_type),
+            mock_sensor_nodes[3],
+            general=replace(mock_sensor_nodes[3].general, node_type=valve_node_type),
         ),
-        *mock_sensor_nodes[1:],
+        *mock_sensor_nodes[4:],
     ]
     mock_duco_client.async_get_nodes.return_value = mock_nodes
     mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
@@ -159,7 +206,7 @@ async def test_select_creates_entities_for_controllable_valve_nodes(
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
-    assert hass.states.get(_SELECT_ENTITY) is not None
+    assert hass.states.get(_CONTROLLABLE_SELECT_ENTITY) is not None
     valve_state = hass.states.get(_VALVE_SELECT_ENTITY)
     assert valve_state is not None
     assert valve_state.attributes[ATTR_OPTIONS] == [
@@ -182,14 +229,28 @@ async def test_select_option_calls_ventilation_state_library_method(
     """Test that selecting an option uses the typed ventilation state helper."""
     mock_duco_client.async_set_ventilation_state = AsyncMock()
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: "CNT2"},
-        blocking=True,
-    )
+    await _async_select_option(hass, "CNT2")
 
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "CNT2")
+    mock_duco_client.async_set_ventilation_state.assert_awaited_once_with(1, "CNT2")
+    mock_duco_client.async_get_node_info.assert_awaited_once_with(1)
+    assert mock_duco_client.async_get_nodes.await_count == 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_targeted_readback_keeps_coordinator_poll_schedule(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a targeted readback does not postpone the full coordinator poll."""
+    freezer.tick(SCAN_INTERVAL / 2)
+    await _async_select_option(hass, "CNT2")
+
+    freezer.tick(SCAN_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_duco_client.async_get_nodes.await_count == 2
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -210,12 +271,7 @@ async def test_select_option_error(
     mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
     with pytest.raises(HomeAssistantError, match=match):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: "CNT2"},
-            blocking=True,
-        )
+        await _async_select_option(hass, "CNT2")
 
 
 async def test_select_extended_manual_options_allow_normalized_readback(
@@ -233,7 +289,6 @@ async def test_select_extended_manual_options_allow_normalized_readback(
     state = hass.states.get(_SELECT_ENTITY)
     assert state is not None
     assert state.attributes[ATTR_OPTIONS] == ["AUTO", "MAN1", "MAN1x2", "MAN1x3"]
-
     box_node = mock_nodes[0]
     mock_duco_client.async_set_ventilation_state = AsyncMock()
     mock_duco_client.async_get_nodes.return_value = [
@@ -241,12 +296,7 @@ async def test_select_extended_manual_options_allow_normalized_readback(
         *mock_nodes[1:],
     ]
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: "MAN1x2"},
-        blocking=True,
-    )
+    await _async_select_option(hass, "MAN1x2")
 
     mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "MAN1x2")
     state = hass.states.get(_SELECT_ENTITY)
@@ -265,7 +315,6 @@ async def test_select_auto_option_allows_cnt1_readback(
         options=["AUTO", "CNT1", "CNT2"]
     )
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
-
     box_node = mock_nodes[0]
     mock_duco_client.async_set_ventilation_state = AsyncMock()
     mock_duco_client.async_get_nodes.return_value = [
@@ -273,12 +322,7 @@ async def test_select_auto_option_allows_cnt1_readback(
         *mock_nodes[1:],
     ]
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: "AUTO"},
-        blocking=True,
-    )
+    await _async_select_option(hass, "AUTO")
 
     mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "AUTO")
     state = hass.states.get(_SELECT_ENTITY)
@@ -286,10 +330,230 @@ async def test_select_auto_option_allows_cnt1_readback(
     assert state.state == "CNT1"
 
 
+@pytest.mark.parametrize(
+    ("failed_entity_id", "expected_state"),
+    [
+        pytest.param(_SELECT_ENTITY, "CNT1", id="same-node"),
+        pytest.param(_VALVE_SELECT_ENTITY, STATE_UNAVAILABLE, id="other-node"),
+    ],
+)
+async def test_targeted_readback_failure_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    failed_entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test a targeted success only clears its own node's failure."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
+        [1, 60], options=["AUTO", "CNT1", "MAN3"]
+    )
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.SELECT]
+    )
+    readback_started = asyncio.Event()
+    release_readback = asyncio.Event()
+    readback_count = 0
+
+    async def get_node_info(node_id: int) -> Node:
+        nonlocal readback_count
+        readback_count += 1
+        if readback_count == 1:
+            readback_started.set()
+            await release_readback.wait()
+            raise DucoError("Readback failed")
+        return _replace_node_state(mock_sensor_nodes[0], "CNT1")
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    failed_task = asyncio.create_task(
+        _async_select_option(hass, "MAN3", failed_entity_id)
+    )
+    await readback_started.wait()
+
+    fan_task = asyncio.create_task(_async_set_fan_percentage(hass))
+    release_readback.set()
+    await asyncio.gather(failed_task, fan_task)
+
+    _assert_select_state(hass, expected_state)
+
+
+async def test_targeted_readback_restores_node_omitted_by_older_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a targeted readback restores a node omitted by an older poll."""
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
+    write_started = asyncio.Event()
+
+    async def get_nodes() -> list[Node]:
+        poll_started.set()
+        await release_poll.wait()
+        return mock_nodes[1:]
+
+    def set_ventilation_state(node_id: int, state: str | VentilationState) -> None:
+        write_started.set()
+
+    mock_duco_client.async_get_nodes.side_effect = get_nodes
+    mock_duco_client.async_set_ventilation_state.side_effect = set_ventilation_state
+    mock_duco_client.async_get_node_info.return_value = _replace_node_state(
+        mock_nodes[0], "MAN3"
+    )
+    mock_duco_client.async_get_node_info.side_effect = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await asyncio.sleep(0)
+    assert not write_started.is_set()
+
+    release_poll.set()
+    await write_task
+
+    _assert_select_state(hass, "MAN3")
+
+
+async def test_targeted_readback_does_not_recover_failed_coordinator_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a node readback does not recover a failed full coordinator poll."""
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
+
+    async def get_nodes() -> list[Node]:
+        poll_started.set()
+        await release_poll.wait()
+        raise DucoConnectionError("Connection failed")
+
+    mock_duco_client.async_get_nodes.side_effect = get_nodes
+    mock_duco_client.async_get_node_info.return_value = _replace_node_state(
+        mock_nodes[0], "MAN3"
+    )
+    mock_duco_client.async_get_node_info.side_effect = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await asyncio.sleep(0)
+    release_poll.set()
+    await write_task
+    await hass.async_block_till_done()
+
+    mock_duco_client.async_set_ventilation_state.assert_awaited_once_with(1, "MAN3")
+    mock_duco_client.async_get_node_info.assert_awaited_once_with(1)
+    _assert_select_state(hass, STATE_UNAVAILABLE)
+
+
+async def test_latest_targeted_readback_wins_when_fan_and_select_overlap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+) -> None:
+    """Test an older fan readback cannot overwrite a newer select readback."""
+    await setup_platform_integration(
+        hass, mock_config_entry, [Platform.FAN, Platform.SELECT]
+    )
+    first_readback_started = asyncio.Event()
+    release_first_readback = asyncio.Event()
+    select_write_started = asyncio.Event()
+    readback_count = 0
+
+    def set_ventilation_state(node_id: int, state: str | VentilationState) -> None:
+        if state == "MAN3":
+            select_write_started.set()
+
+    async def get_node_info(node_id: int) -> Node:
+        nonlocal readback_count
+        readback_count += 1
+        if readback_count == 1:
+            first_readback_started.set()
+            await release_first_readback.wait()
+            return _replace_node_state(mock_nodes[0], "CNT1")
+        return _replace_node_state(mock_nodes[0], "MAN3")
+
+    mock_duco_client.async_set_ventilation_state.side_effect = set_ventilation_state
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    fan_task = asyncio.create_task(_async_set_fan_percentage(hass))
+    await first_readback_started.wait()
+
+    select_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await asyncio.sleep(0)
+    assert not select_write_started.is_set()
+
+    release_first_readback.set()
+    await asyncio.gather(fan_task, select_task)
+
+    _assert_select_state(hass, "MAN3")
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "readback_error",
+    [
+        pytest.param(None, id="success"),
+        pytest.param(
+            DucoError("Readback failed"),
+            id="failure",
+        ),
+    ],
+)
+async def test_newer_coordinator_poll_supersedes_targeted_outcome(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+    readback_error: DucoError | None,
+) -> None:
+    """Test a newer coordinator poll supersedes an older targeted outcome."""
+    readback_started = asyncio.Event()
+    release_readback = asyncio.Event()
+
+    async def get_node_info(node_id: int) -> Node:
+        readback_started.set()
+        await release_readback.wait()
+        if readback_error:
+            raise readback_error
+        return _replace_node_state(mock_nodes[0], "MAN3")
+
+    mock_duco_client.async_get_node_info.side_effect = get_node_info
+    write_task = asyncio.create_task(_async_select_option(hass, "MAN3"))
+    await readback_started.wait()
+
+    mock_duco_client.async_get_nodes.return_value = [
+        _replace_node_state(mock_nodes[0], "CNT2"),
+        *mock_nodes[1:],
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+
+    release_readback.set()
+    await write_task
+    await hass.async_block_till_done()
+
+    _assert_select_state(hass, "CNT2")
+
+
 async def test_select_entity_is_added_when_action_discovery_succeeds_later(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test select entities are added when action discovery becomes available later."""
     mock_duco_client.async_get_node_actions.side_effect = [
@@ -299,13 +563,12 @@ async def test_select_entity_is_added_when_action_discovery_succeeds_later(
         ),
     ]
 
-    config_entry = await setup_platform_integration(
-        hass, mock_config_entry, [Platform.SELECT]
-    )
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
     assert hass.states.get(_SELECT_ENTITY) is None
 
-    await config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(_SELECT_ENTITY)
