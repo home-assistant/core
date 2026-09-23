@@ -118,3 +118,27 @@ async def test_image_fetch_error(
 
     with pytest.raises(HomeAssistantError):
         await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+
+
+async def test_image_fallback_fetching_before_events(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test fetching fallback alias images before any media event arrives."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_image.return_value = (
+        b"\xff\xd8\xff\xe0fallback_keogram"
+    )
+    img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+    assert img.content == b"\xff\xd8\xff\xe0fallback_keogram"
+    mock_indi_allsky_client.fetch_image.assert_called_with("latestkeogram")
+
+    mock_indi_allsky_client.fetch_image.return_value = (
+        b"\xff\xd8\xff\xe0fallback_startrail"
+    )
+    img = await image.async_get_image(hass, "image.indi_allsky_latest_star_trail")
+    assert img.content == b"\xff\xd8\xff\xe0fallback_startrail"
+    mock_indi_allsky_client.fetch_image.assert_called_with("lateststartrail")
