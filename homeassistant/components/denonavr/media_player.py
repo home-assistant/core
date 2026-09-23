@@ -513,8 +513,10 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             mark_unavailable(self._audyssey_coordinator)
             raise
         # Keeps last_update_success and the Audyssey entities in step with
-        # a fetch made outside the coordinator.
-        self._audyssey_coordinator.async_set_updated_data(None)
+        # a fetch made outside the coordinator. Not async_set_updated_data():
+        # that cancels the refresh set_dynamic_eq queued for the other zones.
+        self._audyssey_coordinator.last_update_success = True
+        self._audyssey_coordinator.async_update_listeners()
 
     @async_log_errors
     async def async_set_dynamic_eq(self, dynamic_eq: bool) -> None:

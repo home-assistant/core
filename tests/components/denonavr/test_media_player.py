@@ -765,6 +765,38 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
     assert client.async_update_audyssey.await_count > calls_before
 
 
+async def test_update_audyssey_keeps_a_pending_audyssey_refresh(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """The action's own fetch must not cancel the refresh set_dynamic_eq queued.
+
+    Dynamic EQ is receiver-wide and Telnet never pushes the other zones'
+    copies, so that refresh is what brings them in step. The real cooldown
+    is needed: the action has to land inside it.
+    """
+    await setup_denonavr(hass)
+    calls_before = client.async_update_audyssey.await_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DYNAMIC_EQ,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DYNAMIC_EQ: False},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_AUDYSSEY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # One fetch from the action, one from the refresh it must not cancel.
+    assert client.async_update_audyssey.await_count == calls_before + 2
+
+
 async def test_setup_retry_on_request_error(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
