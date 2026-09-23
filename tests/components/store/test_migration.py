@@ -1,7 +1,10 @@
 """Tests for taking over an existing HACS installation."""
 
 from datetime import UTC, datetime
+import json
+from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -28,6 +31,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
+from . import setup_integration
 from .const import REPOSITORY_INTEGRATION_ID, TOKEN
 
 from tests.common import MockConfigEntry
@@ -430,3 +434,220 @@ async def test_dashboard_resource_migration_in_yaml_mode(
 
     assert _resource_urls(hass) == [LEGACY_RESOURCE_URL]
     assert "dashboard resource(s)" not in caplog.text
+
+
+LEGACY_STORAGE_FILES = ("hacs.hacs", "hacs.repositories", "hacs.critical", "hacs.data")
+REMOVED_LOG = "Removed what the previous installation left behind"
+
+
+def _seed_storage(config_dir: Path, *keys: str) -> None:
+    """Write storage files, only their presence on disk matters."""
+    storage = config_dir / ".storage"
+    storage.mkdir(exist_ok=True)
+    for key in keys:
+        (storage / key).write_text('{"version": 1, "data": {}}', encoding="utf-8")
+
+
+def _seed_integration(config_dir: Path, manifest: str) -> Path:
+    """Write a custom integration to custom_components/hacs."""
+    directory = config_dir / "custom_components" / "hacs"
+    directory.mkdir(parents=True)
+    (directory / "manifest.json").write_text(manifest, encoding="utf-8")
+    return directory
+
+
+def _remaining_storage(config_dir: Path) -> set[str]:
+    """Return the legacy storage files still on disk."""
+    return {
+        key for key in LEGACY_STORAGE_FILES if (config_dir / ".storage" / key).exists()
+    }
+
+
+@pytest.fixture
+def adopted_storage(config_dir: Path) -> None:
+    """Leave the storage of a HACS install next to the adopted store storage."""
+    _seed_storage(
+        config_dir,
+        *LEGACY_STORAGE_FILES,
+        "store.common",
+        "store.repositories",
+        "store.critical",
+    )
+
+
+@pytest.fixture
+def legacy_integration(config_dir: Path) -> Path:
+    """Leave the HACS custom integration in custom_components."""
+    return _seed_integration(config_dir, json.dumps({"domain": LEGACY_HACS_DOMAIN}))
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_legacy_files_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    legacy_integration: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the files of the HACS install are removed once adopted."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not legacy_integration.exists()
+    assert _remaining_storage(config_dir) == set()
+    assert REMOVED_LOG in caplog.text
+    assert str(legacy_integration) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        pytest.param('{"domain": "not_hacs"}', id="foreign_domain"),
+        pytest.param("not json", id="invalid_manifest"),
+    ],
+)
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_foreign_integration_kept(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    manifest: str,
+) -> None:
+    """Test a custom_components/hacs that is not HACS stays where it is."""
+    integration = await hass.async_add_executor_job(
+        _seed_integration, config_dir, manifest
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert integration.is_dir()
+    assert _remaining_storage(config_dir) == set()
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_no_legacy_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+) -> None:
+    """Test a missing custom_components/hacs is no reason to fail."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not (config_dir / "custom_components").exists()
+    assert _remaining_storage(config_dir) == set()
+
+
+@pytest.mark.parametrize(
+    ("store_keys", "remaining"),
+    [
+        pytest.param(
+            ("store.repositories",),
+            {"hacs.hacs", "hacs.critical"},
+            id="only_repositories",
+        ),
+        pytest.param(
+            ("store.repositories", "store.common"),
+            {"hacs.critical"},
+            id="critical_not_adopted",
+        ),
+        pytest.param(
+            ("store.common", "store.critical"),
+            set(LEGACY_STORAGE_FILES),
+            id="repositories_not_adopted",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("stored_repositories")
+async def test_legacy_storage_needs_counterpart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    legacy_integration: Path,
+    store_keys: tuple[str, ...],
+    remaining: set[str],
+) -> None:
+    """Test a legacy storage file is only removed once the store has its own."""
+    await hass.async_add_executor_job(
+        _seed_storage, config_dir, *LEGACY_STORAGE_FILES, *store_keys
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _remaining_storage(config_dir) == remaining
+
+
+@pytest.mark.usefixtures("stored_repositories")
+async def test_legacy_integration_kept_without_store_storage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    legacy_integration: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test nothing is removed before the store has a repositories file."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert legacy_integration.is_dir()
+    assert REMOVED_LOG not in caplog.text
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_legacy_integration_removal_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    legacy_integration: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing removal is logged and the store still sets up."""
+    with patch(
+        "homeassistant.components.store.migration.shutil.rmtree",
+        side_effect=OSError("Permission denied"),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert legacy_integration.is_dir()
+    assert f"Could not remove {legacy_integration}: Permission denied" in caplog.text
+    assert _remaining_storage(config_dir) == set()
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories")
+async def test_legacy_storage_removal_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a storage file that can not be removed is logged and left alone."""
+    with patch(
+        "homeassistant.components.store.migration.Path.unlink",
+        side_effect=OSError("Read-only file system"),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _remaining_storage(config_dir) == set(LEGACY_STORAGE_FILES)
+    assert "Read-only file system" in caplog.text
+    assert REMOVED_LOG not in caplog.text
+
+
+@pytest.mark.usefixtures("adopted_storage", "stored_repositories", "legacy_integration")
+async def test_legacy_files_removal_runs_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a second setup finds nothing left to remove."""
+    await setup_integration(hass, mock_config_entry)
+    assert REMOVED_LOG in caplog.text
+
+    caplog.clear()
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert REMOVED_LOG not in caplog.text

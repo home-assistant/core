@@ -6,6 +6,8 @@ behind are still filed under the `"hacs"` domain. They are adopted here on the
 first setup after the upgrade.
 """
 
+from pathlib import Path
+import shutil
 from urllib.parse import parse_qsl, urlencode
 
 from homeassistant.components import lovelace
@@ -17,6 +19,8 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     DASHBOARD_RESOURCE_BASE,
@@ -26,6 +30,7 @@ from .const import (
     LEGACY_HACS_SYSTEM_ID,
 )
 from .utils.logger import LOGGER
+from .utils.storage import LEGACY_DATA_STORAGE_KEY, LEGACY_STORAGE_KEYS, get_storage_key
 
 LEGACY_HACS_DOMAIN = "hacs"
 
@@ -272,4 +277,69 @@ async def async_migrate_dashboard_resources(hass: HomeAssistant) -> None:
             "Moved %s dashboard resource(s) to %s",
             migrated,
             DASHBOARD_RESOURCE_BASE,
+        )
+
+
+def _is_legacy_integration(directory: Path) -> bool:
+    """Return if the directory holds the custom integration this replaces."""
+    try:
+        manifest = json_loads_object(
+            (directory / "manifest.json").read_text(encoding="utf-8")
+        )
+    except OSError, ValueError:
+        return False
+
+    return manifest.get("domain") == LEGACY_HACS_DOMAIN
+
+
+def _remove_legacy_files(config_path: str) -> list[str]:
+    """Remove what the previous install left on disk, return what was removed.
+
+    Nothing is touched before the store has its own repositories file, the
+    legacy storage files are only gone once their data has been adopted.
+    """
+    storage_path = Path(config_path, STORAGE_DIR)
+    if not (storage_path / get_storage_key("repositories")).is_file():
+        return []
+
+    removed: list[str] = []
+
+    integration_path = Path(config_path, "custom_components", LEGACY_HACS_DOMAIN)
+    if _is_legacy_integration(integration_path):
+        try:
+            shutil.rmtree(integration_path)
+        except OSError as exception:
+            LOGGER.warning("Could not remove %s: %s", integration_path, exception)
+        else:
+            removed.append(str(integration_path))
+
+    legacy_files = {
+        legacy_key: get_storage_key(key)
+        for key, legacy_key in LEGACY_STORAGE_KEYS.items()
+    }
+    legacy_files[LEGACY_DATA_STORAGE_KEY] = get_storage_key("repositories")
+
+    for legacy_key, store_key in legacy_files.items():
+        legacy_path = storage_path / legacy_key
+        if not legacy_path.is_file() or not (storage_path / store_key).is_file():
+            continue
+
+        try:
+            legacy_path.unlink()
+        except OSError as exception:
+            LOGGER.warning("Could not remove %s: %s", legacy_path, exception)
+        else:
+            removed.append(str(legacy_path))
+
+    return removed
+
+
+async def async_remove_legacy_files(hass: HomeAssistant) -> None:
+    """Clean up the files of the previous install once the store adopted them."""
+    if removed := await hass.async_add_executor_job(
+        _remove_legacy_files, hass.config.path()
+    ):
+        LOGGER.info(
+            "Removed what the previous installation left behind: %s",
+            ", ".join(removed),
         )

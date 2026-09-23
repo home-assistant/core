@@ -43,6 +43,7 @@ from .migration import (
     async_adopt_legacy_install,
     async_migrate_dashboard_resources,
     async_remove_duplicate_entries,
+    async_remove_legacy_files,
 )
 from .utils.data import StoreData
 from .utils.file_system import async_exists
@@ -183,6 +184,9 @@ async def _async_initialize_integration(
         raise ConfigEntryNotReady(
             f"Could not set up the Community store: {exception}"
         ) from exception
+
+    # The restore adopts the legacy storage files, only then can they go
+    await async_remove_legacy_files(hass)
 
     store.set_stage(StoreStage.SETUP)
 

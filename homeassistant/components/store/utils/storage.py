@@ -19,15 +19,15 @@ _LOGGER = LOGGER
 STORENAME = "store"
 
 # The keys the custom integration wrote its data under, mapped to the key each
-# one is adopted as on the first load. Those files themselves are never written
-# to or removed: they are what a user rolls back to.
+# one is adopted as on the first load. They are removed once adopted.
 LEGACY_STORAGE_KEYS: dict[str, str] = {
     "common": "hacs.hacs",
     "critical": "hacs.critical",
     "repositories": "hacs.repositories",
 }
 
-# The data file older releases wrote. Read as a last resort, never adopted.
+# The data file older releases wrote. Read as a last resort, never adopted,
+# and removed once the store has a repositories file of its own.
 LEGACY_DATA_STORAGE_KEY = "hacs.data"
 
 
