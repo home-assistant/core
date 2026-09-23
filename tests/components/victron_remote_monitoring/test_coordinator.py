@@ -73,6 +73,7 @@ async def test_forecast_uses_local_midnight(
         site_id=123456,
         records=records,
         custom_dt_now=lambda: now,
+        time_zone=ZoneInfo("Europe/Berlin"),
     )
     mock_vrm_client.installations.stats.return_value = {
         "solar_yield": aggregation,
@@ -160,6 +161,7 @@ async def test_forecast_dst_day_range(
         site_id=123456,
         records=records,
         custom_dt_now=lambda: now,
+        time_zone=ZoneInfo("Europe/Berlin"),
     )
     mock_vrm_client.installations.stats.return_value = {
         "solar_yield": aggregation,
@@ -178,6 +180,9 @@ async def test_forecast_dst_day_range(
         int(tomorrow_start.timestamp()),
     )
     assert store.consumption.today_total == 5
+    assert mock_vrm_client.installations.stats.call_args.kwargs[
+        "time_zone"
+    ] == ZoneInfo("Europe/Berlin")
     assert (store.consumption.today_range[1] - store.consumption.today_range[0]) == (
         day_hours * 3600
     )
@@ -187,6 +192,49 @@ async def test_forecast_dst_day_range(
     )
     assert mock_vrm_client.installations.stats.call_args.kwargs["end"] == int(
         datetime.fromisoformat(query_end_utc).timestamp()
+    )
+
+
+async def test_hourly_forecasts_during_fall_back(
+    hass: HomeAssistant,
+    mock_vrm_client: MagicMock,
+) -> None:
+    """The next hour follows elapsed time during the repeated local hour."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    now = datetime.fromisoformat("2026-10-25T00:30:00+00:00")
+    records = [
+        (int(datetime.fromisoformat(timestamp).timestamp()), value)
+        for timestamp, value in (
+            ("2026-10-25T00:00:00+00:00", 10),
+            ("2026-10-25T01:00:00+00:00", 20),
+            ("2026-10-25T02:00:00+00:00", 30),
+        )
+    ]
+    aggregation = ForecastAggregations(
+        start=records[0][0],
+        end=records[-1][0],
+        site_id=123456,
+        records=records,
+        custom_dt_now=lambda: now,
+        time_zone=ZoneInfo("Europe/Berlin"),
+    )
+    mock_vrm_client.installations.stats.return_value = {
+        "solar_yield": aggregation,
+        "consumption": aggregation,
+    }
+
+    with patch(
+        "homeassistant.components.victron_remote_monitoring.coordinator.dt_util.now",
+        return_value=now.astimezone(ZoneInfo("Europe/Berlin")),
+    ):
+        store = await get_forecast(mock_vrm_client, 123456)
+
+    assert store.solar is not None
+    assert store.solar.current_hour_total == 10
+    assert store.solar.next_hour_total == 20
+    assert store.solar.next_hour_timestamp == (records[1][0], records[2][0])
+    assert store.solar.today_left_range[1] == int(
+        datetime.fromisoformat("2026-10-25T23:00:00+00:00").timestamp()
     )
 
 
