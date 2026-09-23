@@ -109,14 +109,18 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         api.timeout = config.data[CONF_TIMEOUT]
         self.api = api
 
+        # The device is not registered yet, so a failure below must close
+        # the endpoint auth() opened; async_unload will not run for it.
         try:
             self.fw_version = await self._async_get_firmware_version()
 
         except AuthenticationError:
+            await api.aclose()
             await self._async_handle_auth_error()
             return False
 
         except (NetworkTimeoutError, OSError) as err:
+            await api.aclose()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connect_failed",
@@ -127,6 +131,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             ) from err
 
         except BroadlinkException as err:
+            await api.aclose()
             _LOGGER.error(
                 "Failed to authenticate to the device at %s: %s", api.host[0], err
             )
@@ -136,7 +141,11 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            await api.aclose()
+            raise
 
         self.update_manager = update_manager
         # Uses legacy hass.data[DOMAIN] pattern

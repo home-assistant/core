@@ -67,6 +67,10 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
         )
+        # A probe replaced after a failed auth() has an open endpoint.
+        previous = getattr(self, "device", None)
+        if previous is not None and previous is not device:
+            await previous.aclose()
         self.device = device
 
         self.context["title_placeholders"] = {
