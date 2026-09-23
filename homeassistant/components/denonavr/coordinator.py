@@ -1,8 +1,8 @@
 """DataUpdateCoordinators for Denon AVR.
 
-Separate coordinators handle general status and Audyssey data: a
-single coordinator can't have one interval that's both always-on and
-opt-in, which "Update Audyssey settings" requires.
+Separate coordinators handle general status and Audyssey data: the slow
+Audyssey query polls only with "Update Audyssey settings" on, but must
+still be refreshable on demand without joining every status refresh.
 """
 
 import asyncio
@@ -111,7 +111,10 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
 
 
 class _RefreshFn(Protocol):
-    """Callback signature shared by async_refresh_status/async_refresh_audyssey."""
+    """Callback signature shared by async_refresh_status/async_refresh_audyssey.
+
+    Raises only UNAVAILABLE_ON; any other DenonAvrError is handled per zone.
+    """
 
     async def __call__(self, receiver: DenonAVR, *, force: bool = False) -> bool: ...
 
@@ -262,13 +265,6 @@ class DenonAvrDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 raise UpdateFailed(
                     f"Error communicating with {self.receiver.name}: {err}"
                 ) from err
-            except DenonAvrError as err:
-                _LOGGER.debug(
-                    "Error refreshing %s for %s: %s",
-                    self.name,
-                    self.receiver.name,
-                    err,
-                )
 
 
 @callback
