@@ -169,13 +169,13 @@ class MideaSwitch(MideaEntity, SwitchEntity):
         return value
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=False)

@@ -71,7 +71,7 @@ class MideaTime(MideaEntity, TimeEntity):
             return None
 
     @override
-    def set_value(self, value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Set entity value."""
         with midea_api_call():
             self._device.set_attribute(self._hour_attr, value.hour)
