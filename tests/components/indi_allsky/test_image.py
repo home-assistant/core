@@ -79,18 +79,18 @@ async def test_image_events_and_fetching(
         callback(mock_startrail_data)
     await hass.async_block_till_done()
 
-    # Verify keogram image entity state and fetching
     state = hass.states.get("image.indi_allsky_latest_keogram")
     assert state is not None
+    assert state.state == "2026-08-13T22:53:41+00:00"
 
     mock_indi_allsky_client.fetch_image.return_value = b"\xff\xd8\xff\xe0keogram_bytes"
     img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
     assert img.content == b"\xff\xd8\xff\xe0keogram_bytes"
     mock_indi_allsky_client.fetch_image.assert_called_with("keogram_20260813.jpg")
 
-    # Verify startrail image entity state and fetching
     state = hass.states.get("image.indi_allsky_latest_star_trail")
     assert state is not None
+    assert state.state == "2026-08-13T22:53:41+00:00"
 
     mock_indi_allsky_client.fetch_image.return_value = (
         b"\xff\xd8\xff\xe0startrail_bytes"

@@ -7,7 +7,11 @@ from typing import override
 
 from aioindiallsky import IndiAllSkyError, MediaData
 
-from homeassistant.components.image import ImageEntity, ImageEntityDescription
+from homeassistant.components.image import (
+    ImageEntity,
+    ImageEntityDescription,
+    infer_image_type,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -104,5 +108,7 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         except IndiAllSkyError:
             return None
         else:
+            if content_type := infer_image_type(image_bytes):
+                self._attr_content_type = content_type
             self._last_fetched = dt_util.utcnow()
             return image_bytes
