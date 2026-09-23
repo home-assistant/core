@@ -12,6 +12,8 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import (
     NOT_OKOK_SERVICE_INFO,
+    OKOK_11_SERVICE_INFO,
+    OKOK_11_TITLE,
     OKOK_20_SERVICE_INFO,
     OKOK_20_TITLE,
     OKOK_C0_SERVICE_INFO,
@@ -33,6 +35,7 @@ DISCOVERY = (
         (OKOK_F0_SERVICE_INFO, OKOK_F0_TITLE),
         (OKOK_20_SERVICE_INFO, OKOK_20_TITLE),
         (OKOK_C0_SERVICE_INFO, OKOK_C0_TITLE),
+        (OKOK_11_SERVICE_INFO, OKOK_11_TITLE),
     ],
 )
 async def test_async_step_bluetooth_valid_device(

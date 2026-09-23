@@ -17,6 +17,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
 from . import (
+    OKOK_11_SERVICE_INFO,
     OKOK_20_SERVICE_INFO,
     OKOK_C0_SERVICE_INFO,
     OKOK_F0_SERVICE_INFO,
@@ -39,6 +40,7 @@ from tests.components.bluetooth import (
         OKOK_F0_SERVICE_INFO,
         OKOK_20_SERVICE_INFO,
         OKOK_C0_SERVICE_INFO,
+        OKOK_11_SERVICE_INFO,
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -78,3 +78,17 @@ OKOK_C0_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+
+OKOK_11_ADDRESS = "50:FB:19:23:45:67"
+OKOK_11_TITLE = "OKOK Scale (4567)"
+OKOK_11_SERVICE_INFO = BluetoothServiceInfo(
+    name=OKOK_11_ADDRESS,
+    address=OKOK_11_ADDRESS,
+    rssi=-63,
+    manufacturer_data={
+        4554: bytes.fromhex("060117028301310000000000000000007a50fb19234567"),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
