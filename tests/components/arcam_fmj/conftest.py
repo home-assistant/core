@@ -82,8 +82,6 @@ def state_1_fixture(client: Mock) -> State:
     state = Mock(State)
     state.client = client
     state.zn = 1
-    state.model = None
-    state.revision = None
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source.return_value = None
@@ -105,8 +103,6 @@ def state_2_fixture(client: Mock) -> State:
     state = Mock(State)
     state.client = client
     state.zn = 2
-    state.model = None
-    state.revision = None
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source.return_value = None

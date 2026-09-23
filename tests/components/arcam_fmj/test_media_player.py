@@ -66,6 +66,20 @@ async def test_setup(
 
 
 @pytest.mark.usefixtures("player_setup")
+async def test_browse_media_without_presets(
+    mock_config_entry: MockConfigEntry, state_1: State
+) -> None:
+    """Test browsing when the receiver has no preset details."""
+    state_1.get_preset_details.return_value = None
+    player = ArcamFmj(mock_config_entry.runtime_data.coordinators[1])
+
+    media = await player.async_browse_media()
+
+    assert media.media_content_id == "root"
+    assert media.children == []
+
+
+@pytest.mark.usefixtures("player_setup")
 async def test_disconnect(hass: HomeAssistant, client: Mock) -> None:
     """Test a disconnection is detected."""
     data = hass.states.get(MOCK_ENTITY_ID)
