@@ -184,7 +184,7 @@ async def test_turn_on(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
@@ -220,7 +220,7 @@ async def test_turn_off(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,

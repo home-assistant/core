@@ -95,7 +95,7 @@ async def test_turn_on_off_success(
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -184,7 +184,7 @@ async def test_set_preset_mode(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -243,7 +243,7 @@ async def test_set_preset_mode_eco(
             return_value=True,
         ) as method_mock,
         patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock,
     ):
         await hass.services.async_call(
@@ -296,7 +296,7 @@ async def test_pedestal_fan_oscillation(
         ) as horizontal_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -342,7 +342,7 @@ async def test_oscillation_success(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
