@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, STATE_OFF, STA
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import GATEWAY_ID, HOST, INFO, PORT, SNAPSHOT, TOKEN
@@ -114,6 +115,71 @@ async def test_http_config_flow_requires_authenticated_gateway_id(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_unique_id"
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+@pytest.mark.parametrize("events", ["polling", "websocket"])
+async def test_http_disabled_api_blocks_setup_and_recovers(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    events: str,
+) -> None:
+    """Existing entries must respect Open Integration before fetching devices."""
+    aioclient_mock.get(
+        f"{BASE}/info",
+        json={
+            **INFO,
+            "api_enabled": False,
+            "transports": {"http": True, "events": events},
+        },
+    )
+    aioclient_mock.get(f"{BASE}/devices", json=SNAPSHOT)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == "Open Integration is disabled"
+    assert not hass.states.async_all("switch")
+    assert len(aioclient_mock.mock_calls) == 1
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{BASE}/info", json=INFO)
+    aioclient_mock.get(f"{BASE}/devices", json=SNAPSHOT)
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.async_all("switch")
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
+async def test_http_registers_gateway_and_child_mac_connections(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """LOIP Wi-Fi MAC IDs identify both gateway and child network connections."""
+    devices = deepcopy(SNAPSHOT)
+    child = deepcopy(devices["devices"][0])
+    child.update(id="aabbccddeeff", role="child", name="Child")
+    devices["devices"].append(child)
+    aioclient_mock.get(f"{BASE}/info", json=INFO)
+    aioclient_mock.get(f"{BASE}/devices", json=devices)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    gateway = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "dc:da:0c:3b:c7:14"), mock_config_entry.entry_id
+    )
+    child_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"), mock_config_entry.entry_id
+    )
+    assert gateway is not None
+    assert child_device is not None
+    assert child_device.id != gateway.id
+    assert child_device.via_device_id == gateway.id
+    assert len(hass.states.async_all("switch")) == 2
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize("error", [TimeoutError(), ClientConnectionError("offline")])

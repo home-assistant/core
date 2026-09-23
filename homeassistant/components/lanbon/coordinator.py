@@ -108,6 +108,11 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             LanbonError,
         ) as err:
             raise UpdateFailed(type(err).__name__) from err
+        if not info.api_enabled:
+            self.gateway_verified = False
+            self.info = None
+            self._etag = None
+            raise UpdateFailed("Open Integration is disabled")
         self._verify_gateway(info.gateway_id)
         self.info = info
         self._use_ws = bool(info.events_websocket)

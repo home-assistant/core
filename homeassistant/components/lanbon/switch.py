@@ -1,6 +1,7 @@
 """Switch entities from LOIP components with type=switch."""
 
 import json
+import re
 from typing import Any, override
 
 from aiolanbon import LanbonError
@@ -99,6 +100,11 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         )
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier)},
+            connections=(
+                {(dr.CONNECTION_NETWORK_MAC, device.id)}
+                if re.fullmatch(r"[0-9a-f]{12}", device.id)
+                else set()
+            ),
             manufacturer=device.manufacturer or MANUFACTURER,
             model=device.model or None,
             name=device.name or device.model or MANUFACTURER,

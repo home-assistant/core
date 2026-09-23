@@ -1,6 +1,7 @@
 """LANBON LOIP integration setup. I/O goes only through aiolanbon."""
 
 import logging
+import re
 
 from aiolanbon import LanbonClient
 
@@ -23,7 +24,7 @@ type LanbonConfigEntry = ConfigEntry[LanbonCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: LanbonConfigEntry) -> bool:
     """Set up LANBON from a config entry."""
     host = entry.data[CONF_HOST]
-    port = int(entry.data.get(CONF_PORT, 8765))
+    port = entry.data[CONF_PORT]
     token = entry.data[CONF_TOKEN]
     scheme = entry.data.get(CONF_SCHEME, "http")
     session = async_get_clientsession(hass)
@@ -36,6 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LanbonConfigEntry) -> bo
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, info.gateway_id)},
+        connections=(
+            {(dr.CONNECTION_NETWORK_MAC, info.gateway_id)}
+            if re.fullmatch(r"[0-9a-f]{12}", info.gateway_id)
+            else set()
+        ),
         manufacturer=info.manufacturer or MANUFACTURER,
         model=info.model,
         name=info.model or MANUFACTURER,

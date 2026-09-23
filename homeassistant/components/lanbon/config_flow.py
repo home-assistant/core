@@ -1,6 +1,6 @@
 """Config flow: manual + mDNS. Token is typed by the user, never taken from TXT."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiolanbon import (
     LanbonAuthError,
@@ -176,8 +176,10 @@ class LanbonConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask the user to paste the token from the device screen."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            if TYPE_CHECKING:
+                assert self._host is not None
             result = await self._finish(
-                self._host or "",
+                self._host,
                 self._port,
                 user_input[CONF_TOKEN],
                 self._scheme,

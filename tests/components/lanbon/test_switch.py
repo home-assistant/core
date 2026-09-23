@@ -63,21 +63,32 @@ async def test_invalid_switch_state_is_unknown(
     assert LanbonSwitch(coordinator, GATEWAY_ID, "switch:1").is_on is None
 
 
+@pytest.mark.parametrize(
+    ("child_id", "connections"),
+    [
+        ("child-1", set()),
+        ("12345678901z", set()),
+        ("aabbccddeeff", {(dr.CONNECTION_NETWORK_MAC, "aabbccddeeff")}),
+    ],
+)
 async def test_child_metadata_and_gateway_link(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     setup_integration: MockConfigEntry,
+    child_id: str,
+    connections: set[tuple[str, str]],
 ) -> None:
     """A child uses its own metadata and the gateway registry ID."""
     coordinator = setup_integration.runtime_data
     snap = snapshot()
-    child = replace(snap.devices[0], id="child-1", name="Wall Switch", model="L8-2G")
+    child = replace(snap.devices[0], id=child_id, name="Wall Switch", model="L8-2G")
     coordinator.async_set_updated_data(replace(snap, devices=(snap.devices[0], child)))
     gateway = device_registry.async_get_device_by_identifier(
         ("lanbon", GATEWAY_ID), setup_integration.entry_id
     )
     assert gateway is not None
-    info = LanbonSwitch(coordinator, "child-1", "switch:1").device_info
+    info = LanbonSwitch(coordinator, child_id, "switch:1").device_info
+    assert info["connections"] == connections
     assert info["name"] == "Wall Switch"
     assert info["model"] == "L8-2G"
     assert info["via_device_id"] == gateway.id
@@ -119,16 +130,25 @@ async def test_gateway_link_is_scoped_to_config_entry(
     )
 
 
+@pytest.mark.parametrize(
+    ("child_id", "connections"),
+    [
+        ("child-1", set()),
+        ("aabbccddeeff", {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}),
+    ],
+)
 async def test_two_gateways_with_identical_child_ids(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_lanbon_client: AsyncMock,
+    child_id: str,
+    connections: set[tuple[str, str]],
 ) -> None:
     """Identical child/component IDs remain separate and control their own gateway."""
     base = snapshot()
-    child = replace(base.devices[0], id="child-1")
+    child = replace(base.devices[0], id=child_id)
     first_snapshot = replace(base, devices=(child,))
     second_snapshot = replace(first_snapshot, gateway_id="second-gateway")
     second_entry = MockConfigEntry(
@@ -166,6 +186,7 @@ async def test_two_gateways_with_identical_child_ids(
     first_device = device_registry.async_get(first.device_id)
     second_device = device_registry.async_get(second.device_id)
     assert first_device.identifiers != second_device.identifiers
+    assert first_device.connections == second_device.connections == connections
     assert first_device.via_device_id != second_device.via_device_id
     assert first_device.config_entry_id == mock_config_entry.entry_id
     assert second_device.config_entry_id == second_entry.entry_id
@@ -182,13 +203,13 @@ async def test_two_gateways_with_identical_child_ids(
             "switch", "turn_on", {"entity_id": first.entity_id}, blocking=True
         )
         send_first.assert_awaited_once_with(
-            "child-1", "switch:1", "set_on", {"on": True}
+            child_id, "switch:1", "set_on", {"on": True}
         )
         send_second.assert_not_awaited()
         await hass.services.async_call(
             "switch", "turn_off", {"entity_id": second.entity_id}, blocking=True
         )
         send_second.assert_awaited_once_with(
-            "child-1", "switch:1", "set_on", {"on": False}
+            child_id, "switch:1", "set_on", {"on": False}
         )
         assert send_first.await_count == 1
