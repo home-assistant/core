@@ -652,6 +652,9 @@ async def test_camera_reconnect_webhook(
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
 
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
         # Real camera disconnect
         response = {
             "event_type": "disconnection",
@@ -671,11 +674,15 @@ async def test_camera_reconnect_webhook(
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
-            "alim_status": 1,
+            "reachable": False,
+            "monitoring": "off",
         }
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
 
         # Camera reconnect (making it available physically, but with monitoring off as it's not on yet)
         response = {
@@ -696,11 +703,15 @@ async def test_camera_reconnect_webhook(
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
-            "alim_status": 2,
+            "reachable": True,
+            "monitoring": "off",
         }
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
         # Camera on event (meaning: monitoring is also resuming to on)
         response = {
@@ -827,11 +838,14 @@ async def test_doorbell_reconnect_webhook(
         mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
         mock_state["module_id"] = camera_id
         mock_state["attributes"] = {
-            "alim_status": 1,
+            "reachable": False,
         }
 
         # Trigger some polling cycle to let status change be picked up
         await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
 
         # Doorbell reconnect
         response = {
@@ -845,7 +859,7 @@ async def test_doorbell_reconnect_webhook(
         await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
 
@@ -1181,10 +1195,8 @@ async def test_camera_initial_setup_and_images(
         assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Validate image fetch raises exception
-        with pytest.raises(Exception) as excinfo:
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
-
-        assert excinfo.value.args == ("Camera is off",)
 
 
 @pytest.mark.parametrize(
