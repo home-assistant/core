@@ -32,7 +32,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LEGACY_HACS_INTEGRATION_REPOSITORY, MAX_DOWNLOAD_SIZE, TV
+from .const import (
+    COUNTRY_ALL,
+    DOMAIN,
+    LEGACY_HACS_INTEGRATION_REPOSITORY,
+    MAX_DOWNLOAD_SIZE,
+    TV,
+)
 from .coordinator import StoreUpdateCoordinator
 from .data_client import CatalogClient
 from .enums import (
@@ -115,7 +121,7 @@ class StoreConfiguration:
     appdaemon: bool = False
     config: dict[str, Any] = field(default_factory=dict)
     config_entry: ConfigEntry | None = None
-    country: str = "ALL"
+    country: str = COUNTRY_ALL
     debug: bool = False
     frontend_repo_url: str = ""
     frontend_repo: str = ""

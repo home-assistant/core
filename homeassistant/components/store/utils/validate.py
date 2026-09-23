@@ -7,9 +7,10 @@ from typing import Any
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.helpers.config_validation import url as url_validator
 
-from ..const import LOCALE
+from ..const import COUNTRY_ALL
 
 
 @dataclass
@@ -37,9 +38,9 @@ def _country_validator(values: Any) -> list[str]:
         )
 
     for country in countries:
-        if country not in LOCALE:
+        if country != COUNTRY_ALL and country not in COUNTRIES:
             raise vol.Invalid(
-                f"Value '{country}' is not in {LOCALE}.", path=["country"]
+                f"Value '{country}' is not a known country code.", path=["country"]
             )
 
     return countries

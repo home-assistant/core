@@ -78,6 +78,11 @@ def without(data: dict[str, Any], key: str) -> dict[str, Any]:
             id="country-string",
         ),
         pytest.param(
+            {"name": "My awesome thing", "country": "all"},
+            {"name": "My awesome thing", "country": ["ALL"]},
+            id="country-all",
+        ),
+        pytest.param(
             {"name": "My awesome thing", "country": "no"},
             {"name": "My awesome thing", "country": ["NO"]},
             id="country-lowercase",
@@ -129,7 +134,7 @@ def test_hacs_manifest_json_schema(
         ),
         pytest.param(
             {"name": "My awesome thing", "country": "not_valid"},
-            "Value 'NOT_VALID' is not in",
+            "Value 'NOT_VALID' is not a known country code.",
             id="unknown-country",
         ),
         pytest.param(

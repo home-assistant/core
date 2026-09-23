@@ -15,7 +15,7 @@ import attr
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN, MAX_DOWNLOAD_SIZE
+from ..const import COUNTRY_ALL, DOMAIN, MAX_DOWNLOAD_SIZE
 from ..enums import RepositoryFile, StoreSignal
 from ..exceptions import (
     NotModifiedError,
@@ -374,7 +374,7 @@ class Repository:
         if self.data.installed:
             return False
         configuration = self.store.configuration.country.lower()
-        if configuration == "all":
+        if configuration == COUNTRY_ALL.lower():
             return False
 
         manifest = [entry.lower() for entry in self.repository_manifest.country or []]

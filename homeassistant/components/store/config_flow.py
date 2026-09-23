@@ -20,10 +20,11 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.generated.countries import COUNTRIES
 from homeassistant.helpers import aiohttp_client
 
 from .base import StoreConfigEntry
-from .const import CLIENT_ID, CLIENT_NAME, DOMAIN, LOCALE
+from .const import CLIENT_ID, CLIENT_NAME, COUNTRY_ALL, DOMAIN
 from .utils.configuration_schema import APPDAEMON, COUNTRY
 from .utils.logger import LOGGER
 
@@ -222,7 +223,9 @@ class StoreOptionsFlow(OptionsFlow):
             return self.async_abort(reason="pending_tasks")
 
         schema = {
-            vol.Optional(COUNTRY, default=store.configuration.country): vol.In(LOCALE),
+            vol.Optional(COUNTRY, default=store.configuration.country): vol.In(
+                [COUNTRY_ALL, *sorted(COUNTRIES)]
+            ),
             vol.Optional(APPDAEMON, default=store.configuration.appdaemon): bool,
         }
 
