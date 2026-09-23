@@ -37,7 +37,6 @@ class VelbusSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
-    # Instantaneous value of an electricity counter channel (power, W).
     "power": VelbusSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
@@ -45,7 +44,6 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         value_fn=lambda channel: float(channel.get_counter_state()),
         unit_fn=lambda channel: channel.get_unit(),
     ),
-    # Instantaneous value of a gas/water counter channel (flow rate, m³/h or L/h).
     "flow": VelbusSensorEntityDescription(
         key="flow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
@@ -64,7 +62,6 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda channel: channel.get_unit(),
     ),
-    # Accumulating total of an electricity counter channel (energy, kWh).
     "energy": VelbusSensorEntityDescription(
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
@@ -78,7 +75,6 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         unit_fn=lambda channel: channel.get_counter_unit(),
         unique_id_suffix="-counter",
     ),
-    # Accumulating total of a gas counter channel (volume, m³).
     "gas": VelbusSensorEntityDescription(
         key="gas",
         device_class=SensorDeviceClass.GAS,
@@ -92,7 +88,6 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         ),
         unique_id_suffix="-counter",
     ),
-    # Accumulating total of a water counter channel (volume, L).
     "water": VelbusSensorEntityDescription(
         key="water",
         device_class=SensorDeviceClass.WATER,
@@ -119,13 +114,11 @@ async def async_setup_entry(
     entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
         if channel.is_counter_channel():
-            # A counter channel exposes two entities: an instantaneous reading
-            # and an accumulating total. The medium decides which pair to use.
             if channel.is_gas():
                 main_key, total_key = "flow", "gas"
             elif channel.is_water():
                 main_key, total_key = "flow", "water"
-            else:  # electricity, or unit not yet known
+            else:
                 main_key, total_key = "power", "energy"
             entities.append(VelbusSensor(channel, SENSOR_DESCRIPTIONS[main_key]))
             entities.append(
