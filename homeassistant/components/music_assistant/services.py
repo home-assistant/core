@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from music_assistant_models.enums import MediaType, QueueOption
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
@@ -94,18 +94,18 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SEARCH,
         handle_search,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-                vol.Required(ATTR_SEARCH_NAME): cv.string,
-                vol.Optional(ATTR_MEDIA_TYPE): vol.All(
-                    cv.ensure_list, [vol.Coerce(MediaType)]
+                probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+                probatio.Required(ATTR_SEARCH_NAME): cv.string,
+                probatio.Optional(ATTR_MEDIA_TYPE): probatio.All(
+                    cv.ensure_list, [probatio.Coerce(MediaType)]
                 ),
-                vol.Optional(ATTR_SEARCH_ARTIST): cv.string,
-                vol.Optional(ATTR_SEARCH_ALBUM): cv.string,
-                vol.Optional(ATTR_LIMIT, default=5): vol.Coerce(int),
-                vol.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
-                vol.Optional(ATTR_USERNAME): cv.string,
+                probatio.Optional(ATTR_SEARCH_ARTIST): cv.string,
+                probatio.Optional(ATTR_SEARCH_ALBUM): cv.string,
+                probatio.Optional(ATTR_LIMIT, default=5): probatio.Coerce(int),
+                probatio.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
+                probatio.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -114,18 +114,18 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_LIBRARY,
         handle_get_library,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-                vol.Required(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
-                vol.Optional(ATTR_FAVORITE): cv.boolean,
-                vol.Optional(ATTR_SEARCH): cv.string,
-                vol.Optional(ATTR_LIMIT): cv.positive_int,
-                vol.Optional(ATTR_OFFSET): int,
-                vol.Optional(ATTR_ORDER_BY): cv.string,
-                vol.Optional(ATTR_ALBUM_TYPE): list[MediaType],
-                vol.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
-                vol.Optional(ATTR_USERNAME): cv.string,
+                probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+                probatio.Required(ATTR_MEDIA_TYPE): probatio.Coerce(MediaType),
+                probatio.Optional(ATTR_FAVORITE): cv.boolean,
+                probatio.Optional(ATTR_SEARCH): cv.string,
+                probatio.Optional(ATTR_LIMIT): cv.positive_int,
+                probatio.Optional(ATTR_OFFSET): int,
+                probatio.Optional(ATTR_ORDER_BY): cv.string,
+                probatio.Optional(ATTR_ALBUM_TYPE): list[MediaType],
+                probatio.Optional(ATTR_ALBUM_ARTISTS_ONLY): cv.boolean,
+                probatio.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -138,13 +138,13 @@ def register_actions(hass: HomeAssistant) -> None:
         SERVICE_PLAY_MEDIA_ADVANCED,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_MEDIA_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
-            vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Coerce(QueueOption),
-            vol.Optional(ATTR_ARTIST): cv.string,
-            vol.Optional(ATTR_ALBUM): cv.string,
-            vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
-            vol.Optional(ATTR_USERNAME): cv.string,
+            probatio.Required(ATTR_MEDIA_ID): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_MEDIA_TYPE): probatio.Coerce(MediaType),
+            probatio.Optional(ATTR_MEDIA_ENQUEUE): probatio.Coerce(QueueOption),
+            probatio.Optional(ATTR_ARTIST): cv.string,
+            probatio.Optional(ATTR_ALBUM): cv.string,
+            probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",
     )
@@ -153,17 +153,17 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema=vol.All(
+        schema=probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional(ATTR_URL): cv.string,
-                    vol.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
-                    vol.Inclusive(ATTR_TTS_ENTITY_ID, "spoken_announcement"): vol.All(
-                        cv.entity_id, cv.entity_domain(TTS_DOMAIN)
-                    ),
-                    vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
-                    vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
-                    vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
+                    probatio.Optional(ATTR_URL): cv.string,
+                    probatio.Inclusive(ATTR_MESSAGE, "spoken_announcement"): cv.string,
+                    probatio.Inclusive(
+                        ATTR_TTS_ENTITY_ID, "spoken_announcement"
+                    ): probatio.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
+                    probatio.Optional(ATTR_USE_PRE_ANNOUNCE): probatio.Coerce(bool),
+                    probatio.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
+                    probatio.Optional(ATTR_ANNOUNCE_VOLUME): probatio.Coerce(int),
                 }
             ),
             cv.has_at_least_one_key(ATTR_URL, ATTR_MESSAGE),
@@ -177,8 +177,8 @@ def register_actions(hass: HomeAssistant) -> None:
         SERVICE_TRANSFER_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
-            vol.Optional(ATTR_AUTO_PLAY): vol.Coerce(bool),
+            probatio.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
+            probatio.Optional(ATTR_AUTO_PLAY): probatio.Coerce(bool),
         },
         func="_async_handle_transfer_queue",
     )

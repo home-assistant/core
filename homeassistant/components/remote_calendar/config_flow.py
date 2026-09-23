@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from httpx import HTTPError, InvalidURL, TimeoutException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
@@ -17,18 +17,18 @@ from .ics import InvalidIcsException, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CALENDAR_NAME): str,
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_CALENDAR_NAME): str,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 

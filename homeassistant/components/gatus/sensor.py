@@ -60,6 +60,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="status_code",
         translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             endpoint.results[-1].status if endpoint.results else None
         ),
@@ -70,6 +71,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["start", "healthy", "unhealthy", "resolved"],
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             endpoint.events[-1].type.lower() if endpoint.events else None
         ),
@@ -79,6 +81,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         translation_key="certificate_expiration",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             coordinator.last_update_time
             + timedelta(
@@ -93,6 +96,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="dns_rcode",
         translation_key="dns_rcode",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             DNS_RCODE_MAP.get(
                 endpoint.results[-1].dns_rcode,

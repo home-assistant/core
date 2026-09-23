@@ -4,16 +4,18 @@ import asyncio
 import logging
 
 from keba_kecontact.connection import KebaKeContact
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
+from .services import async_setup_services
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "keba"
 PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
 
 CONF_RFID = "rfid"
@@ -26,33 +28,22 @@ CONF_FS_INTERVAL = "refresh_interval"
 MAX_POLLING_INTERVAL = 5  # in seconds
 MAX_FAST_POLLING_COUNT = 4
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_RFID, default="00845500"): cv.string,
-                vol.Optional(CONF_FS, default=False): cv.boolean,
-                vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
-                vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
-                vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
-                vol.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_RFID, default="00845500"): cv.string,
+                probatio.Optional(CONF_FS, default=False): cv.boolean,
+                probatio.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
+                probatio.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
+                probatio.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+                probatio.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-
-_SERVICE_MAP = {
-    "request_data": "async_request_data",
-    "set_energy": "async_set_energy",
-    "set_current": "async_set_current",
-    "authorize": "async_start",
-    "deauthorize": "async_stop",
-    "enable": "async_enable_ev",
-    "disable": "async_disable_ev",
-    "set_failsafe": "async_set_failsafe",
-}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -78,19 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     except ValueError as ex:
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
-    # Register services to hass
-    async def execute_service(call: ServiceCall) -> None:
-        """Execute a service to KEBA charging station.
-
-        This must be a member function as we need access to the keba
-        object here.
-        """
-        function_name = _SERVICE_MAP[call.service]
-        function_call = getattr(keba, function_name)
-        await function_call(call.data)
-
-    for service in _SERVICE_MAP:
-        hass.services.async_register(DOMAIN, service, execute_service)
+    async_setup_services(hass)
 
     # Load components
     for platform in PLATFORMS:

@@ -1,7 +1,7 @@
 """Actions for Duck DNS."""
 
 from aiohttp import ClientError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -13,10 +13,12 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from .const import ATTR_CONFIG_ENTRY, ATTR_TXT, DOMAIN, SERVICE_SET_TXT
 from .helpers import update_duckdns
 
-SERVICE_TXT_SCHEMA = vol.Schema(
+SERVICE_TXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(ATTR_TXT): vol.Any(None, cv.string),
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(ATTR_TXT): probatio.Any(None, cv.string),
     }
 )
 
