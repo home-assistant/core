@@ -360,7 +360,6 @@ async def async_setup_entry(
         new_entities: list[SensorEntity] = []
         sensors_dict = coordinator.data.sensor.sensors or {}
 
-        # Process items in sensors dictionary
         for key in sensors_dict:
             if key in registered_keys:
                 continue
