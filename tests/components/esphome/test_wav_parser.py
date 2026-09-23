@@ -57,6 +57,65 @@ async def test_stream_wav_valid() -> None:
     assert chunks[1] == (audio_data[512:], True)
 
 
+@pytest.mark.parametrize(("channels", "sample_width"), [(1, 2), (2, 2), (1, 4)])
+async def test_stream_wav_converts_native_pcm(channels: int, sample_width: int) -> None:
+    """Test native PCM is converted to the requested output format."""
+    audio_data = bytes(2400 * channels * sample_width)
+    chunks = [
+        chunk
+        async for chunk in stream_wav(
+            _async_generator(
+                _create_wav(
+                    channels=channels,
+                    sample_width=sample_width,
+                    sample_rate=24000,
+                    data=audio_data,
+                )
+            ),
+            expected_channels=1,
+            expected_width=2,
+            expected_sample_rate=16000,
+            samples_per_chunk=512,
+            allow_pcm_conversion=True,
+        )
+    ]
+
+    assert b"".join(chunk for chunk, _ in chunks) == bytes(1600 * 2)
+    assert [is_last for _, is_last in chunks] == [False, False, False, True]
+
+
+async def test_stream_wav_resampler_resets_on_interrupt() -> None:
+    """Test interruption drops converted audio and resets resampler state."""
+    old_audio = struct.pack("<h", 1000) * 2400
+    replacement_audio = struct.pack("<h", 2000) * 2400
+    wav_bytes = _create_wav(sample_rate=24000, data=old_audio + replacement_audio)
+    header_size = len(wav_bytes) - len(old_audio) - len(replacement_audio)
+    release_replacement = asyncio.Event()
+    audio_interrupt = asyncio.Event()
+
+    async def interrupted_stream() -> AsyncIterable[bytes]:
+        yield wav_bytes[:header_size] + old_audio
+        await release_replacement.wait()
+        yield replacement_audio
+
+    chunks = stream_wav(
+        interrupted_stream(),
+        expected_channels=1,
+        expected_width=2,
+        expected_sample_rate=16000,
+        samples_per_chunk=512,
+        audio_interrupt=audio_interrupt,
+        allow_pcm_conversion=True,
+    )
+    assert await anext(chunks) == (struct.pack("<h", 1000) * 512, False)
+
+    audio_interrupt.set()
+    release_replacement.set()
+    remaining = b"".join([chunk async for chunk, _ in chunks])
+
+    assert remaining == struct.pack("<h", 2000) * 1600
+
+
 async def test_stream_wav_discards_buffered_audio_on_interrupt() -> None:
     """Test interruption discards pending and partially buffered audio."""
     old_audio = b"a" * 700

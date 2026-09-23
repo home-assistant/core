@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 import contextlib
 import io
 import logging
-from time import monotonic
+import time
 from typing import Any, Final, override
 import wave
 
@@ -805,14 +805,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 f"Cannot stream audio format to satellite: {tts_result.extension}"
             )
 
-        if tts_result.supports_audio_interrupt:
-            # Playback can be restarted mid-stream to discard buffered audio.
-            await self._async_stream_tts_interruptible(client, tts_result)
-            return
-
         # Track the total duration of TTS audio for response timeout
         total_seconds = 0.0
-        start_time = monotonic()
+        start_time = time.monotonic()
+
         try:
             header_data = b""
             header_complete = False
@@ -876,185 +872,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             await client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
         finally:
-            send_duration = monotonic() - start_time
-            timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
-            self.config_entry.async_create_background_task(
-                self.hass,
-                self._tts_timeout(timeout_seconds, self._run_loop_id),
-                name="wyoming TTS timeout",
-            )
-
-    async def _async_stream_tts_interruptible(
-        self, client: AsyncTcpClient, tts_result: tts.ResultStream
-    ) -> None:
-        """Stream TTS WAV audio that can be interrupted mid-playback.
-
-        Restarts the satellite's audio output when the TTS engine reports an
-        interrupt, discarding any buffered audio before replacement audio
-        arrives.
-        """
-        total_seconds = 0.0
-        start_time: float | None = None
-        write_lock = asyncio.Lock()
-        interrupt_event = asyncio.Event()
-        latest_interrupt_task: asyncio.Task[None] | None = None
-        interrupt_generation = 0
-
-        header_complete = False
-        chunk_converter = AudioChunkConverter(
-            rate=_TTS_SAMPLE_RATE, width=SAMPLE_WIDTH, channels=SAMPLE_CHANNELS
-        )
-        pending_audio = b""
-        sample_rate: int | None = None
-        sample_width: int | None = None
-        sample_channels: int | None = None
-        timestamp = 0
-
-        async def interrupt_playback() -> None:
-            nonlocal chunk_converter, pending_audio
-            nonlocal start_time, timestamp, total_seconds
-            while interrupt_event.is_set():
-                if (
-                    sample_rate is None
-                    or sample_width is None
-                    or sample_channels is None
-                ):
-                    interrupt_event.clear()
-                    continue
-
-                async with write_lock:
-                    interrupt_event.clear()
-                    await client.write_event(AudioStop(timestamp=timestamp).event())
-                    chunk_converter = AudioChunkConverter(
-                        rate=_TTS_SAMPLE_RATE,
-                        width=SAMPLE_WIDTH,
-                        channels=SAMPLE_CHANNELS,
-                    )
-                    pending_audio = b""
-                    timestamp = 0
-                    total_seconds = 0.0
-                    start_time = None
-                    await client.write_event(
-                        AudioStart(
-                            rate=_TTS_SAMPLE_RATE,
-                            width=SAMPLE_WIDTH,
-                            channels=SAMPLE_CHANNELS,
-                            timestamp=timestamp,
-                        ).event()
-                    )
-
-        @callback
-        def on_audio_interrupt() -> None:
-            nonlocal interrupt_generation, latest_interrupt_task
-            interrupt_generation += 1
-            interrupt_event.set()
-            if latest_interrupt_task is None or latest_interrupt_task.done():
-                latest_interrupt_task = self.hass.async_create_task(
-                    interrupt_playback()
-                )
-
-        audio_stream = tts_result.async_stream_result(
-            on_audio_interrupt, accept_native_sample_rate=True
-        )
-        try:
-            header_data = b""
-
-            async for data_chunk in audio_stream:
-                data_chunk_generation = interrupt_generation
-                if not header_complete:
-                    # Accumulate data until we can parse the header and get
-                    # sample rate, etc.
-                    header_data += data_chunk
-                    # Most WAVE headers are 44 bytes in length
-                    if (len(header_data) >= 44) and (
-                        audio_info := _try_parse_wav_header(header_data)
-                    ):
-                        # Overwrite chunk with audio after header
-                        sample_rate, sample_width, sample_channels, data_chunk = (
-                            audio_info
-                        )
-                        async with write_lock:
-                            if data_chunk_generation == interrupt_generation:
-                                await client.write_event(
-                                    AudioStart(
-                                        rate=_TTS_SAMPLE_RATE,
-                                        width=SAMPLE_WIDTH,
-                                        channels=SAMPLE_CHANNELS,
-                                        timestamp=timestamp,
-                                    ).event()
-                                )
-                        header_complete = True
-
-                        if not data_chunk:
-                            # No audio after header
-                            continue
-                    else:
-                        # Header is incomplete
-                        continue
-
-                if data_chunk_generation != interrupt_generation:
-                    continue
-                if latest_interrupt_task is not None:
-                    await latest_interrupt_task
-                    if data_chunk_generation != interrupt_generation:
-                        continue
-
-                # Streaming audio
-                assert sample_rate is not None
-                assert sample_width is not None
-                assert sample_channels is not None
-
-                async with write_lock:
-                    if data_chunk_generation != interrupt_generation:
-                        continue
-                    pending_audio += data_chunk
-                    frame_size = sample_width * sample_channels
-                    complete_size = len(pending_audio) // frame_size * frame_size
-                    if not complete_size:
-                        continue
-                    source_audio = pending_audio[:complete_size]
-                    pending_audio = pending_audio[complete_size:]
-                    converted_audio = chunk_converter.convert(
-                        AudioChunk(
-                            rate=sample_rate,
-                            width=sample_width,
-                            channels=sample_channels,
-                            audio=source_audio,
-                        )
-                    ).audio
-
-                data_chunk_idx = 0
-                while data_chunk_idx < len(converted_audio):
-                    async with write_lock:
-                        if data_chunk_generation != interrupt_generation:
-                            break
-                        audio_chunk = AudioChunk(
-                            rate=_TTS_SAMPLE_RATE,
-                            width=SAMPLE_WIDTH,
-                            channels=SAMPLE_CHANNELS,
-                            audio=converted_audio[
-                                data_chunk_idx : data_chunk_idx + _AUDIO_CHUNK_BYTES
-                            ],
-                            timestamp=timestamp,
-                        )
-                        await client.write_event(audio_chunk.event())
-                        if start_time is None:
-                            start_time = monotonic()
-                        timestamp += audio_chunk.milliseconds
-                        total_seconds += audio_chunk.seconds
-                    data_chunk_idx += _AUDIO_CHUNK_BYTES
-
-            if latest_interrupt_task is not None:
-                await latest_interrupt_task
-            async with write_lock:
-                await client.write_event(AudioStop(timestamp=timestamp).event())
-            _LOGGER.debug("TTS streaming complete")
-        finally:
-            await audio_stream.aclose()
-            if latest_interrupt_task is not None:
-                latest_interrupt_task.cancel()
-                await asyncio.gather(latest_interrupt_task, return_exceptions=True)
-            send_duration = 0.0 if start_time is None else monotonic() - start_time
+            send_duration = time.monotonic() - start_time
             timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(
                 self.hass,

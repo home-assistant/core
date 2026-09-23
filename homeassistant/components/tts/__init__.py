@@ -565,6 +565,13 @@ class ResultStream:
         if self._cached_result is not None:
             return self._cached_result
 
+        # Generating the result claims it exclusively against live playback.
+        if self._stream_claimed:
+            raise HomeAssistantError(
+                "Interruptible TTS streams can only be consumed once"
+            )
+        self._stream_claimed = True
+
         if isinstance(result, str):
             self._cached_result = self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -575,13 +582,6 @@ class ResultStream:
             )
             return self._cached_result
 
-        # A message input stream can only be consumed once, so caching it
-        # claims it exclusively against interruptible playback.
-        if self._stream_claimed:
-            raise HomeAssistantError(
-                "Interruptible TTS streams can only be consumed once"
-            )
-        self._stream_claimed = True
         self._cached_result = self._manager.async_cache_message_stream_in_memory(
             engine=self.engine,
             message_stream=result,
@@ -594,12 +594,12 @@ class ResultStream:
         self,
         on_audio_interrupt: Callable[[], None] | None = None,
         *,
-        accept_native_sample_rate: bool = False,
+        accept_native_pcm_format: bool = False,
     ) -> AsyncGenerator[bytes]:
         """Get the stream of this result.
 
-        Consumers that resample interruptible audio can accept the engine's
-        native sample rate while preserving the other requested output options.
+        Consumers that convert interruptible audio can accept the engine's
+        native PCM format.
         """
         if self._override_media_path is not None:
             # Overridden
@@ -637,9 +637,14 @@ class ResultStream:
             if not isinstance(engine, TextToSpeechEntity):
                 raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
             options = self.options
-            if accept_native_sample_rate:
+            if accept_native_pcm_format:
                 options = dict(options)
-                options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+                for option in (
+                    ATTR_PREFERRED_SAMPLE_RATE,
+                    ATTR_PREFERRED_SAMPLE_CHANNELS,
+                    ATTR_PREFERRED_SAMPLE_BYTES,
+                ):
+                    options.pop(option, None)
             async with aclosing(
                 self._manager.async_generate_tts_audio(
                     engine, result, self.language, options, on_audio_interrupt

@@ -60,6 +60,8 @@ from .conftest import MockESPHomeDeviceType
 from tests.components.tts.common import MockResultStream
 from tests.typing import ClientSessionGenerator
 
+TTS_STREAM_FLUSH_FEATURE = VoiceAssistantFeature(1 << 7)
+
 
 @pytest.fixture
 def mock_wav() -> bytes:
@@ -969,6 +971,7 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
         mock_client=mock_client,
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | TTS_STREAM_FLUSH_FEATURE
         },
     )
     await hass.async_block_till_done()
@@ -984,7 +987,10 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
 
     async def async_stream_result(
         on_audio_interrupt: Callable[[], None],
+        *,
+        accept_native_pcm_format: bool = False,
     ) -> AsyncGenerator[bytes]:
+        assert accept_native_pcm_format
         interrupt.side_effect = on_audio_interrupt
         stream_requested.set()
         await continue_stream.wait()
@@ -1002,9 +1008,12 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
         call.args[0] for call in mock_client.send_voice_assistant_event.call_args_list
     ] == [
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
     ]
+    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+        {"flush": "1"},
+    )
 
     continue_stream.set()
     await task
@@ -1012,6 +1021,49 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
         VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
         {},
     )
+    event_count = mock_client.send_voice_assistant_event.call_count
+    interrupt()
+    assert mock_client.send_voice_assistant_event.call_count == event_count
+
+
+async def test_streaming_tts_falls_back_without_flush_support(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_wav: bytes,
+) -> None:
+    """Use regular streaming when the ESPHome device cannot flush playback."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+    stream = MockResultStream(hass, "wav", b"")
+    stream.supports_audio_interrupt = True
+
+    async def async_stream_result(
+        on_audio_interrupt: Callable[[], None] | None = None,
+        *,
+        accept_native_pcm_format: bool = False,
+    ) -> AsyncGenerator[bytes]:
+        assert on_audio_interrupt is None
+        assert not accept_native_pcm_format
+        yield mock_wav
+
+    stream.async_stream_result = async_stream_result
+    await satellite._stream_tts_audio(stream)
+
+    assert [
+        call.args[0] for call in mock_client.send_voice_assistant_event.call_args_list
+    ] == [
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
+    ]
 
 
 async def test_tts_format_from_media_player(
@@ -2828,6 +2880,7 @@ async def test_interruptible_tts_starts_before_intent_finishes(
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
+            | TTS_STREAM_FLUSH_FEATURE
         },
     )
     await hass.async_block_till_done()

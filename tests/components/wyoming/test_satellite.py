@@ -1,7 +1,7 @@
 """Test Wyoming satellite."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import Callable
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -58,11 +58,11 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def get_test_wav(chunk_copies: int = 1, sample_rate: int = 22050) -> bytes:
+def get_test_wav(chunk_copies: int = 1) -> bytes:
     """Get bytes for test WAV file."""
     with io.BytesIO() as wav_io:
         with wave.open(wav_io, "wb") as wav_file:
-            wav_file.setframerate(sample_rate)
+            wav_file.setframerate(22050)
             wav_file.setsampwidth(2)
             wav_file.setnchannels(1)
 
@@ -115,7 +115,6 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.tts_audio_stop_event = asyncio.Event()
         self.tts_audio_chunk: AudioChunk | None = None
         self.tts_audio_chunks: list[AudioChunk] = []
-        self.tts_audio_events: list[str] = []
 
         self.error_event = asyncio.Event()
         self.error: Error | None = None
@@ -179,15 +178,12 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
             self.synthesize = Synthesize.from_event(event)
             self.synthesize_event.set()
         elif AudioStart.is_type(event.type):
-            self.tts_audio_events.append(event.type)
             self.tts_audio_start_event.set()
         elif AudioChunk.is_type(event.type):
-            self.tts_audio_events.append(event.type)
             self.tts_audio_chunk = AudioChunk.from_event(event)
             self.tts_audio_chunks.append(self.tts_audio_chunk)
             self.tts_audio_chunk_event.set()
         elif AudioStop.is_type(event.type):
-            self.tts_audio_events.append(event.type)
             self.tts_audio_stop_event.set()
         elif Error.is_type(event.type):
             self.error = Error.from_event(event)
@@ -1070,173 +1066,6 @@ async def test_stream_tts_noop_when_client_disconnected(
 
         # Should return immediately without touching the stream object
         await satellite._stream_tts(MagicMock())
-
-
-async def test_stream_tts_restarts_playback_on_audio_interrupt(
-    hass: HomeAssistant,
-) -> None:
-    """Test an interrupted TTS response flushes remote playback."""
-    events = [
-        RunPipeline(
-            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
-        ).event(),
-    ]
-    pipeline_event = asyncio.Event()
-
-    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
-        pipeline_event.set()
-
-    with (
-        patch(
-            "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=SATELLITE_INFO,
-        ),
-        patch(
-            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
-            SatelliteAsyncTcpClient(events),
-        ) as mock_client,
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            wraps=_async_pipeline_from_audio_stream,
-        ) as mock_run_pipeline,
-    ):
-        entry = await setup_config_entry(hass)
-
-        async with asyncio.timeout(1):
-            await pipeline_event.wait()
-            await mock_client.connect_event.wait()
-
-        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
-        satellite: WyomingAssistSatellite = event_callback.__self__
-        stream = MockResultStream(hass, "wav", b"")
-        stream.supports_audio_interrupt = True
-        wav_data = get_test_wav(2048, sample_rate=16000)
-        first_chunk_sent = asyncio.Event()
-        release_first_chunk = asyncio.Event()
-        continue_stream = asyncio.Event()
-
-        original_write_event = mock_client.write_event
-
-        async def write_event(event: Event) -> None:
-            await original_write_event(event)
-            if (
-                AudioChunk.is_type(event.type)
-                and len(mock_client.tts_audio_chunks) == 1
-            ):
-                first_chunk_sent.set()
-                await release_first_chunk.wait()
-
-        interrupt = MagicMock()
-
-        async def async_stream_result(
-            on_audio_interrupt: Callable[[], None],
-            *,
-            accept_native_sample_rate: bool = False,
-        ) -> AsyncGenerator[bytes]:
-            assert accept_native_sample_rate
-            interrupt.side_effect = on_audio_interrupt
-            yield wav_data[:4140]
-            await continue_stream.wait()
-            yield wav_data[4140:]
-
-        stream.async_stream_result = async_stream_result
-        with (
-            patch.object(mock_client, "write_event", side_effect=write_event),
-            patch(
-                "homeassistant.components.wyoming.assist_satellite.monotonic",
-                side_effect=[0, 10, 10],
-            ) as mock_monotonic,
-            patch.object(
-                satellite, "_tts_timeout", new_callable=AsyncMock
-            ) as mock_tts_timeout,
-        ):
-            stream_task = asyncio.create_task(satellite._stream_tts(stream))
-
-            async with asyncio.timeout(1):
-                await first_chunk_sent.wait()
-            assert mock_monotonic.call_count == 0
-            interrupt()
-            interrupt()
-            release_first_chunk.set()
-
-            async with asyncio.timeout(1):
-                while mock_client.tts_audio_events.count("audio-start") < 2:
-                    await asyncio.sleep(0)
-            assert mock_monotonic.call_count == 1
-
-            assert mock_client.tts_audio_events[:4] == [
-                "audio-start",
-                "audio-chunk",
-                "audio-stop",
-                "audio-start",
-            ]
-
-            continue_stream.set()
-            await stream_task
-        assert mock_client.tts_audio_events[-1] == "audio-stop"
-        assert len(mock_client.tts_audio_chunks) == 4
-        assert mock_client.tts_audio_chunks[1].timestamp == 0
-        assert all(chunk.rate == 22050 for chunk in mock_client.tts_audio_chunks)
-        assert all(chunk.width == 2 for chunk in mock_client.tts_audio_chunks)
-        assert all(chunk.channels == 1 for chunk in mock_client.tts_audio_chunks)
-        replacement_chunks = mock_client.tts_audio_chunks[1:]
-        assert sum(len(chunk.audio) for chunk in replacement_chunks) > 4096
-        assert mock_monotonic.call_count == 3
-        assert interrupt.call_count == 2
-        assert mock_tts_timeout.call_args.args[0] == pytest.approx(
-            1 + sum(chunk.seconds for chunk in replacement_chunks)
-        )
-
-        cleanup_stream = MockResultStream(hass, "wav", b"")
-        cleanup_stream.supports_audio_interrupt = True
-        cleanup_wav_data = get_test_wav(512, sample_rate=16000)
-        stream_blocked = asyncio.Event()
-        audio_chunk_sent = asyncio.Event()
-        interrupt_task_started = asyncio.Event()
-        interrupt_task_cancelled = asyncio.Event()
-
-        async def blocked_stream_result(
-            on_audio_interrupt: Callable[[], None],
-            *,
-            accept_native_sample_rate: bool = False,
-        ) -> AsyncGenerator[bytes]:
-            assert accept_native_sample_rate
-            interrupt.side_effect = on_audio_interrupt
-            yield cleanup_wav_data
-            await stream_blocked.wait()
-
-        async def blocked_write_event(event: Event) -> None:
-            if AudioStop.is_type(event.type):
-                interrupt_task_started.set()
-                try:
-                    await asyncio.Event().wait()
-                except asyncio.CancelledError:
-                    interrupt_task_cancelled.set()
-                    raise
-            await original_write_event(event)
-            if AudioChunk.is_type(event.type):
-                audio_chunk_sent.set()
-
-        cleanup_stream.async_stream_result = blocked_stream_result
-        with (
-            patch.object(mock_client, "write_event", side_effect=blocked_write_event),
-            patch.object(satellite, "_tts_timeout", new_callable=AsyncMock),
-        ):
-            cleanup_stream_task = asyncio.create_task(
-                satellite._stream_tts(cleanup_stream)
-            )
-            async with asyncio.timeout(1):
-                await audio_chunk_sent.wait()
-                interrupt()
-                await interrupt_task_started.wait()
-            cleanup_stream_task.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await cleanup_stream_task
-
-        assert interrupt_task_cancelled.is_set()
-        assert mock_client.tts_audio_chunks[-1].rate == 22050
-
-        await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_handle_timer_noop_when_client_disconnected(

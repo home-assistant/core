@@ -2359,10 +2359,10 @@ async def test_interruptible_tts_fallback_without_interrupt_callback(
     assert generated.call_count == 1
 
 
-async def test_interruptible_tts_accepts_native_sample_rate(
+async def test_interruptible_tts_accepts_native_pcm_format(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
-    """Test a consumer can handle the engine's native sample rate."""
+    """Test a consumer can handle the engine's native PCM format."""
     mock_tts_entity._attr_supports_audio_interrupt = True
     mock_tts_entity._supported_options = [tts.ATTR_PREFERRED_FORMAT]
     await mock_config_entry_setup(hass, mock_tts_entity)
@@ -2383,20 +2383,27 @@ async def test_interruptible_tts_accepts_native_sample_rate(
         options={
             tts.ATTR_PREFERRED_FORMAT: "wav",
             tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
         },
     )
     stream.async_set_message("hello")
 
-    result = stream.async_stream_result(Mock(), accept_native_sample_rate=True)
+    result = stream.async_stream_result(Mock(), accept_native_pcm_format=True)
     assert await anext(result) == b"audio"
     await result.aclose()
     assert stream.options[tts.ATTR_PREFERRED_SAMPLE_RATE] == 22050
+    assert stream.options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] == 1
+    assert stream.options[tts.ATTR_PREFERRED_SAMPLE_BYTES] == 2
 
 
+@pytest.mark.parametrize("streaming_input", [False, True])
 async def test_interruptible_tts_rejects_fallback_after_interrupt_claim(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    streaming_input: bool,
 ) -> None:
-    """Cached fallback cannot consume the input stream claimed by live playback."""
+    """Cached fallback cannot consume input claimed by live playback."""
     mock_tts_entity._attr_supports_audio_interrupt = True
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -2412,7 +2419,10 @@ async def test_interruptible_tts_rejects_fallback_after_interrupt_claim(
     mock_tts_entity.async_stream_tts_audio = synthesize
     mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message_stream(message())
+    setter = (
+        stream.async_set_message_stream if streaming_input else stream.async_set_message
+    )
+    setter(message() if streaming_input else "hello")
 
     interrupt_result = stream.async_stream_result(Mock())
     assert await anext(interrupt_result) == b"audio"
@@ -2423,10 +2433,13 @@ async def test_interruptible_tts_rejects_fallback_after_interrupt_claim(
     await interrupt_result.aclose()
 
 
+@pytest.mark.parametrize("streaming_input", [False, True])
 async def test_interruptible_tts_rejects_interrupt_after_fallback_claim(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    streaming_input: bool,
 ) -> None:
-    """Live playback cannot consume the input stream claimed by cached fallback."""
+    """Live playback cannot consume input claimed by cached fallback."""
     mock_tts_entity._attr_supports_audio_interrupt = True
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -2442,7 +2455,10 @@ async def test_interruptible_tts_rejects_interrupt_after_fallback_claim(
     mock_tts_entity.async_stream_tts_audio = synthesize
     mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message_stream(message())
+    setter = (
+        stream.async_set_message_stream if streaming_input else stream.async_set_message
+    )
+    setter(message() if streaming_input else "hello")
 
     assert await get_stream_data(stream) == b"audio"
 

@@ -94,11 +94,12 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
     @property
     def supports_audio_interrupt(self) -> bool:
-        """Return whether playback requires a single-use, native-format interruptible stream.
+        """Return whether playback supports a single-use interruptible WAV stream.
 
         The engine must discard its pending audio before invoking the callback,
         preserve the stream header, and yield only replacement audio afterward.
-        Such streams bypass memory/disk caching and audio conversion.
+        Such streams bypass memory/disk caching and general audio conversion;
+        playback consumers convert native PCM to their output format.
         """
         return self._attr_supports_audio_interrupt
 
