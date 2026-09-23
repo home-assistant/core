@@ -1,16 +1,16 @@
 """Tests for LANBON switch platform."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.lanbon.switch import LanbonSwitch
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import GATEWAY_ID, snapshot
+from .conftest import GATEWAY_ID, gateway_info, snapshot
 
 from tests.common import MockConfigEntry
 
@@ -117,3 +117,78 @@ async def test_gateway_link_is_scoped_to_config_entry(
         "via_device_id"
         not in LanbonSwitch(coordinator, GATEWAY_ID, "switch:1").device_info
     )
+
+
+async def test_two_gateways_with_identical_child_ids(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_lanbon_client: AsyncMock,
+) -> None:
+    """Identical child/component IDs remain separate and control their own gateway."""
+    base = snapshot()
+    child = replace(base.devices[0], id="child-1")
+    first_snapshot = replace(base, devices=(child,))
+    second_snapshot = replace(first_snapshot, gateway_id="second-gateway")
+    second_entry = MockConfigEntry(
+        domain="lanbon",
+        unique_id="second-gateway",
+        data={
+            **mock_config_entry.data,
+            "host": "192.168.0.112",
+            "gateway_id": "second-gateway",
+        },
+    )
+    mock_lanbon_client.get_devices.return_value = first_snapshot
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_lanbon_client.get_devices.return_value = second_snapshot
+    second_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.lanbon.LanbonClient.get_info",
+        return_value=gateway_info(gateway_id="second-gateway"),
+    ):
+        assert await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+    first_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    second_entities = er.async_entries_for_config_entry(
+        entity_registry, second_entry.entry_id
+    )
+    assert len(first_entities) == len(second_entities) == 1
+    first, second = first_entities[0], second_entities[0]
+    assert first.entity_id != second.entity_id
+    assert first.unique_id != second.unique_id
+    assert first.device_id != second.device_id
+    first_device = device_registry.async_get(first.device_id)
+    second_device = device_registry.async_get(second.device_id)
+    assert first_device.identifiers != second_device.identifiers
+    assert first_device.via_device_id != second_device.via_device_id
+    assert first_device.config_entry_id == mock_config_entry.entry_id
+    assert second_device.config_entry_id == second_entry.entry_id
+
+    with (
+        patch.object(
+            mock_config_entry.runtime_data.client, "send_command"
+        ) as send_first,
+        patch.object(second_entry.runtime_data.client, "send_command") as send_second,
+        patch.object(mock_config_entry.runtime_data, "async_request_refresh"),
+        patch.object(second_entry.runtime_data, "async_request_refresh"),
+    ):
+        await hass.services.async_call(
+            "switch", "turn_on", {"entity_id": first.entity_id}, blocking=True
+        )
+        send_first.assert_awaited_once_with(
+            "child-1", "switch:1", "set_on", {"on": True}
+        )
+        send_second.assert_not_awaited()
+        await hass.services.async_call(
+            "switch", "turn_off", {"entity_id": second.entity_id}, blocking=True
+        )
+        send_second.assert_awaited_once_with(
+            "child-1", "switch:1", "set_on", {"on": False}
+        )
+        assert send_first.await_count == 1

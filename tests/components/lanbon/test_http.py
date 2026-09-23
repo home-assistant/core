@@ -193,3 +193,29 @@ async def test_http_setup_failure(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("info_gateway", "request_count"),
+    [("foreign", 1), (GATEWAY_ID, 2)],
+    ids=["info", "devices"],
+)
+async def test_http_foreign_gateway_cannot_set_up(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    info_gateway: str,
+    request_count: int,
+) -> None:
+    """Published-client JSON parsing must not admit another gateway at our address."""
+    info = {**INFO, "gateway_id": info_gateway}
+    devices = {**SNAPSHOT, "gateway_id": "foreign"}
+    aioclient_mock.get(f"{BASE}/info", json=info)
+    aioclient_mock.get(f"{BASE}/devices", json=devices)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.states.async_all("switch")
+    assert len(aioclient_mock.mock_calls) == request_count
+    assert mock_config_entry.unique_id == GATEWAY_ID

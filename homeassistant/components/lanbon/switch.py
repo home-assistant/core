@@ -1,5 +1,6 @@
 """Switch entities from LOIP components with type=switch."""
 
+import json
 from typing import Any, override
 
 from aiolanbon import LanbonError
@@ -67,7 +68,15 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         super().__init__(coordinator)
         self._device_id = device_id
         self._component_id = component_id
-        self._attr_unique_id = f"{device_id}_{component_id}"
+        self._gateway_id = coordinator.config_entry.unique_id
+        self._attr_unique_id = json.dumps(
+            [self._gateway_id, device_id, component_id], separators=(",", ":")
+        )
+        self._device_identifier = (
+            device_id
+            if device_id == self._gateway_id
+            else json.dumps([self._gateway_id, device_id], separators=(",", ":"))
+        )
         self._sync_name()
 
     @property
@@ -82,14 +91,14 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         )
         if device is None:
             return DeviceInfo(
-                identifiers={(DOMAIN, self._device_id)},
+                identifiers={(DOMAIN, self._device_identifier)},
                 manufacturer=MANUFACTURER,
             )
         gateway = dr.async_get(self.coordinator.hass).async_get_device_by_identifier(
             (DOMAIN, gateway_id), self.coordinator.config_entry.entry_id
         )
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
+            identifiers={(DOMAIN, self._device_identifier)},
             manufacturer=device.manufacturer or MANUFACTURER,
             model=device.model or None,
             name=device.name or device.model or MANUFACTURER,
@@ -121,6 +130,7 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         device, component = self._pair()
         return bool(
             super().available
+            and self.coordinator.gateway_verified
             and self.coordinator.last_update_success
             and device
             and device.online
@@ -151,6 +161,8 @@ class LanbonSwitch(CoordinatorEntity[LanbonCoordinator], SwitchEntity):
         await self._set_on(False)
 
     async def _set_on(self, on: bool) -> None:
+        if not self.coordinator.gateway_verified:
+            raise HomeAssistantError("Gateway identity has not been verified")
         try:
             await self.coordinator.client.send_command(
                 self._device_id,

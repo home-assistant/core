@@ -85,6 +85,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             update_interval=_POLL,
         )
         self.client = client
+        self.gateway_verified = False
         self.info: GatewayInfo | None = None
         self._etag: str | None = None
         self._snapshot_events: (
@@ -98,7 +99,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
     async def _async_setup(self) -> None:
         """Read gateway info and whether events WebSocket is advertised."""
         try:
-            self.info = await self.client.get_info()
+            info = await self.client.get_info()
         except LanbonAuthError as err:
             raise ConfigEntryAuthFailed("unauthorized") from err
         except (
@@ -107,7 +108,17 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
             LanbonError,
         ) as err:
             raise UpdateFailed(type(err).__name__) from err
-        self._use_ws = bool(self.info.events_websocket)
+        self._verify_gateway(info.gateway_id)
+        self.info = info
+        self._use_ws = bool(info.events_websocket)
+
+    def _verify_gateway(self, gateway_id: str) -> None:
+        """Reject data belonging to a different configured gateway."""
+        if not gateway_id or gateway_id != self.config_entry.unique_id:
+            self.gateway_verified = False
+            self.info = None
+            self._etag = None
+            raise UpdateFailed("Gateway identity does not match the configured gateway")
 
     @override
     async def _async_update_data(self) -> DeviceSnapshot:
@@ -133,9 +144,11 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         finally:
             self._snapshot_events = None
         if snap is None:
-            if self.data is None:
+            if self.data is None or not self.gateway_verified:
                 raise UpdateFailed("empty snapshot")
             return self.data
+        self._verify_gateway(snap.gateway_id)
+        self.gateway_verified = True
         self._etag = None if events else snap.revision
         for event in events.values():
             if event.type == "state_changed":
@@ -158,7 +171,7 @@ class LanbonCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
 
     def _apply_event(self, event: Event) -> bool:
         """Patch coordinator data from a WS event. False → caller must GET /devices."""
-        if self.data is None:
+        if self.data is None or not self.gateway_verified:
             return False
         if event.type == "state_changed":
             patched = _patch_state_changed(self.data, event)

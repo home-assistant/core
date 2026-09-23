@@ -11,12 +11,15 @@ from aiolanbon import (
     LanbonEventsUnsupportedError,
     SnapshotRefresh,
 )
-from aiolanbon.models import DeviceSnapshot, Event
+from aiolanbon.models import DeviceSnapshot, Event, GatewayInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.lanbon.coordinator import LanbonCoordinator
+from homeassistant.components.lanbon.switch import LanbonSwitch
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import GATEWAY_ID, gateway_info, snapshot
 
@@ -578,3 +581,107 @@ async def test_overlap_keeps_latest_state_and_availability(
     assert coordinator.data.devices[0].online is False
     assert coordinator.data.revision == "5"
     assert coordinator._etag is None
+
+
+@pytest.mark.parametrize(
+    ("info", "devices", "device_requests"),
+    [
+        (
+            gateway_info(
+                gateway_id="other-gateway",
+                transports={"http": True, "events": "websocket"},
+            ),
+            snapshot(),
+            0,
+        ),
+        (
+            gateway_info(transports={"http": True, "events": "websocket"}),
+            replace(snapshot(), gateway_id="other-gateway"),
+            1,
+        ),
+    ],
+    ids=["info", "snapshot"],
+)
+async def test_setup_rejects_wrong_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lanbon_client: MagicMock,
+    info: GatewayInfo,
+    devices: DeviceSnapshot,
+    device_requests: int,
+) -> None:
+    """An address reassigned to another gateway cannot create entities or listen."""
+    mock_lanbon_client.get_devices.return_value = devices
+    with (
+        patch(
+            "homeassistant.components.lanbon.LanbonClient.get_info", return_value=info
+        ),
+        patch("homeassistant.components.lanbon.LanbonClient.listen") as listen,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.states.async_all("switch")
+    listen.assert_not_called()
+    mock_lanbon_client.send_command.assert_not_awaited()
+    assert mock_lanbon_client.get_devices.await_count == device_requests
+
+
+async def test_foreign_snapshot_blocks_control_and_recovers(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_lanbon_client: MagicMock,
+) -> None:
+    """Reject foreign data, disable control/events, then recover on the real gateway."""
+    coordinator = setup_integration.runtime_data
+    original = coordinator.data
+    entity = LanbonSwitch(coordinator, GATEWAY_ID, "switch:1")
+    mock_lanbon_client.get_devices.return_value = replace(
+        snapshot(), gateway_id="other-gateway", revision="foreign"
+    )
+    await coordinator.async_refresh()
+    assert coordinator.data is original
+    assert not coordinator.last_update_success
+    assert not coordinator.gateway_verified
+    assert coordinator._etag is None
+    assert not entity.available
+    assert not coordinator._apply_event(state_event("99"))
+    with pytest.raises(HomeAssistantError, match="identity"):
+        await entity.async_turn_on()
+    mock_lanbon_client.send_command.assert_not_awaited()
+
+    mock_lanbon_client.get_devices.return_value = snapshot()
+    with patch(
+        "homeassistant.components.lanbon.LanbonClient.get_info",
+        return_value=gateway_info(),
+    ) as get_info:
+        await coordinator.async_refresh()
+    get_info.assert_awaited_once()
+    mock_lanbon_client.get_devices.assert_awaited_with(if_none_match=None)
+    assert coordinator.last_update_success
+    assert coordinator.gateway_verified
+    assert entity.available
+    await entity.async_turn_on()
+    mock_lanbon_client.send_command.assert_awaited_once_with(
+        GATEWAY_ID, "switch:1", "set_on", {"on": True}
+    )
+
+
+async def test_partial_recovery_does_not_restore_control(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_lanbon_client: MagicMock,
+) -> None:
+    """A matching info response alone cannot validate the retained old snapshot."""
+    coordinator = setup_integration.runtime_data
+    mock_lanbon_client.get_devices.return_value = replace(
+        snapshot(), gateway_id="foreign"
+    )
+    await coordinator.async_refresh()
+    mock_lanbon_client.get_devices.return_value = None
+    await coordinator.async_refresh()
+    assert not coordinator.last_update_success
+    assert not coordinator.gateway_verified
+    assert not coordinator._apply_event(state_event("99"))
+    mock_lanbon_client.send_command.assert_not_awaited()
