@@ -9,12 +9,7 @@ import tempfile
 from typing import TYPE_CHECKING, Any, override
 import zipfile
 
-from aiogithubapi import (
-    AIOGitHubAPIException,
-    AIOGitHubAPINotModifiedException,
-    GitHubException,
-    GitHubNotModifiedException,
-)
+from aiogithubapi import GitHubException, GitHubNotModifiedException
 import attr
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -50,7 +45,7 @@ from ..utils.workarounds import DOMAIN_OVERRIDES, LegacyTreeFile
 if TYPE_CHECKING:
     from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
     from aiogithubapi.models.release import GitHubReleaseAssetModel, GitHubReleaseModel
-    from aiogithubapi.objects.repository import AIOGitHubAPIRepository
+    from aiogithubapi.models.repository import GitHubRepositoryModel
 
     from ..base import StoreManager
 
@@ -318,7 +313,7 @@ class Repository:
         self.data = RepositoryData()
         self.content = RepositoryContent()
         self.content.path = RepositoryPath()
-        self.repository_object: AIOGitHubAPIRepository | None = None
+        self.repository_object: GitHubRepositoryModel | None = None
         self.updated_info = False
         self.state: str | None = None
         self.force_branch = False
@@ -509,10 +504,10 @@ class Repository:
                 (
                     self.repository_object,
                     etag,
-                ) = await self.async_get_legacy_repository_object(
+                ) = await self.async_get_repository_object(
                     etag=None if self.data.installed else self.data.etag_repository,
                 )
-                self.data.update_data(self.repository_object.attributes)
+                self.data.update_data(self.repository_object.as_dict)
                 self.data.etag_repository = etag
             except NotModifiedError:
                 self.logger.debug(
@@ -521,9 +516,7 @@ class Repository:
                 return
 
         if self.repository_object:
-            self.data.last_updated = self.repository_object.attributes.get(
-                "pushed_at", 0
-            )
+            self.data.last_updated = self.repository_object.pushed_at or 0
             self.data.last_fetched = dt_util.utcnow()
 
     @concurrent(concurrenttasks=10, backoff_time=5)
@@ -566,9 +559,7 @@ class Repository:
 
         # Update last updated
         if self.repository_object:
-            self.data.last_updated = self.repository_object.attributes.get(
-                "pushed_at", 0
-            )
+            self.data.last_updated = self.repository_object.pushed_at or 0
 
             # Update last available commit
             await self.async_set_last_commits()
@@ -1078,20 +1069,21 @@ class Repository:
             else:
                 self.data.installed_version = version_to_install
 
-    async def async_get_legacy_repository_object(
+    async def async_get_repository_object(
         self,
         etag: str | None = None,
-    ) -> tuple[AIOGitHubAPIRepository, Any | None]:
-        """Return a repository object."""
+    ) -> tuple[GitHubRepositoryModel, str | None]:
+        """Return the repository and the etag of the response."""
         try:
-            repository = await self.store.github.get_repo(self.data.full_name, etag)
-            etag_repository = self.store.github.client.last_response.etag
-        except AIOGitHubAPINotModifiedException as exception:
+            response = await self.store.githubapi.repos.get(
+                self.data.full_name, etag=etag
+            )
+        except GitHubNotModifiedException as exception:
             raise NotModifiedError(exception) from exception
-        except (ValueError, AIOGitHubAPIException, Exception) as exception:
+        except GitHubException as exception:
             raise StoreError(exception) from exception
-        else:
-            return repository, etag_repository
+
+        return response.data, response.etag
 
     def update_filenames(self) -> None:
         """Get the filename to target."""
@@ -1136,7 +1128,7 @@ class Repository:
         """Common update data."""
         releases: list[GitHubReleaseModel] = []
         try:
-            repository_object, etag = await self.async_get_legacy_repository_object(
+            repository_object, etag = await self.async_get_repository_object(
                 etag=None
                 if force or self.data.installed
                 else self.data.etag_repository,
@@ -1147,13 +1139,13 @@ class Repository:
                     repository_object.full_name
                 )
                 raise RepositoryExistsError  # noqa: TRY301 # handled below
-            self.data.update_data(repository_object.attributes)
+            self.data.update_data(repository_object.as_dict)
             self.data.etag_repository = etag
         except NotModifiedError:
             return None
         except RepositoryExistsError:
             raise RepositoryExistsError from None
-        except (AIOGitHubAPIException, StoreError) as exception:
+        except StoreError as exception:
             if not self.store.status.startup:
                 self.logger.error("%s %s", self.string, exception)
             if not ignore_issues:

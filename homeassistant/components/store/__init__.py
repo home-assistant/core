@@ -7,13 +7,7 @@ templates, python scripts and AppDaemon apps from GitHub.
 from functools import partial
 import os
 
-from aiogithubapi import (
-    AIOGitHubAPIException,
-    GitHub,
-    GitHubAPI,
-    GitHubAuthenticationException,
-)
-from aiogithubapi.const import ACCEPT_HEADERS
+from aiogithubapi import GitHubAPI, GitHubAuthenticationException, GitHubException
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 from awesomeversion import AwesomeVersion
@@ -150,17 +144,6 @@ async def _async_initialize_integration(
 
     store.core.ha_version = AwesomeVersion(HAVERSION)
 
-    # Legacy GitHub client
-    store.github = GitHub(
-        store.configuration.token,
-        clientsession,
-        headers={
-            "User-Agent": CLIENT_NAME,
-            "Accept": ACCEPT_HEADERS["preview"],
-        },
-    )
-
-    # New GitHub client
     store.githubapi = GitHubAPI(
         token=store.configuration.token,
         session=clientsession,
@@ -180,7 +163,7 @@ async def _async_initialize_integration(
         raise ConfigEntryAuthFailed(
             "The GitHub token is no longer valid"
         ) from exception
-    except (AIOGitHubAPIException, StoreError) as exception:
+    except (GitHubException, StoreError) as exception:
         raise ConfigEntryNotReady(
             f"Could not set up the Community store: {exception}"
         ) from exception

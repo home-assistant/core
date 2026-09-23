@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from aiogithubapi import AIOGitHubAPIException, GitHubAuthenticationException
+from aiogithubapi import GitHubAuthenticationException, GitHubException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -57,7 +57,7 @@ async def test_load_unload_entry(
             id="authentication",
         ),
         pytest.param(
-            AIOGitHubAPIException("GitHub is having a moment"),
+            GitHubException("GitHub is having a moment"),
             ConfigEntryState.SETUP_RETRY,
             id="github_api",
         ),

@@ -11,8 +11,6 @@ import shutil
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 from aiogithubapi import (
-    AIOGitHubAPIException,
-    GitHub,
     GitHubAPI,
     GitHubAuthenticationException,
     GitHubException,
@@ -354,7 +352,6 @@ class StoreManager:
 
     data: StoreData
     data_client: CatalogClient
-    github: GitHub
     githubapi: GitHubAPI
     hass: HomeAssistant
     queue: QueueManager
@@ -567,7 +564,7 @@ class StoreManager:
                 repository.logger.info("%s Registration completed", repository.string)
             except RepositoryExistsError, RepositoryArchivedError:
                 return None
-            except AIOGitHubAPIException as exception:
+            except GitHubException as exception:
                 self.common.skip.add(repository.data.full_name)
                 raise StoreError(
                     f"Validation for {repository_full_name} failed with {exception}."
