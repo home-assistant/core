@@ -3528,6 +3528,8 @@
             'name': 'can',
             'plural_abbreviation': '',
             'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
             'unit_id': '7bf539d4-fc78-48bc-b48e-c35ccccec34a',
             'updated_at': datetime.datetime(2024, 5, 14, 14, 45, 2, 464124),
             'use_abbreviation': False,
@@ -3609,6 +3611,8 @@
             'name': 'US cup',
             'plural_abbreviation': '',
             'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
             'unit_id': '89765d44-8412-4ab5-a6de-594aa8eac44c',
             'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 477535, tzinfo=datetime.timezone.utc),
             'use_abbreviation': False,
@@ -3792,14 +3796,45 @@
           'reference_id': '82f534de-ecef-4470-9d7a-6e24ded4a53a',
           'referenced_recipe': None,
           'title': '',
-          'unit': "{'id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4', 'name': 'millilitre', 'pluralName': None, 'description': '', 'extras': {}, 'fraction': True, 'abbreviation': 'ml', 'pluralAbbreviation': '', 'useAbbreviation': False, 'aliases': [], 'createdAt': '2024-08-25T13:29:25.641593Z', 'updatedAt': '2024-08-25T13:29:25.641610Z'}",
+          'unit': dict({
+            'abbreviation': 'ml',
+            'aliases': list([
+            ]),
+            'created_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641593, tzinfo=datetime.timezone.utc),
+            'description': '',
+            'extras': dict({
+            }),
+            'fraction': True,
+            'name': 'millilitre',
+            'plural_abbreviation': '',
+            'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
+            'unit_id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4',
+            'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641610, tzinfo=datetime.timezone.utc),
+            'use_abbreviation': False,
+          }),
         }),
       ]),
       'instructions': list([
         dict({
           'ingredient_references': list([
+            'a3adfe78-d157-44d8-98be-9c133e45bb4e',
+            'ef023f23-7816-4871-87f6-4d29f9a283f7',
           ]),
           'instruction_id': '2d558dbf-5361-4ef2-9d86-4161f5eb6146',
+          'recipe_notes': list([
+            dict({
+              'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+              'text': 'Use room-temperature ingredients for a smoother batter.',
+              'title': 'Baking tip',
+            }),
+            dict({
+              'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+              'text': 'Let the cake cool completely before adding the glaze.',
+              'title': 'Cooling',
+            }),
+          ]),
           'text': 'Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.',
           'title': None,
         }),
@@ -3807,6 +3842,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': 'dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a',
+          'recipe_notes': list([
+          ]),
           'text': 'Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.',
           'title': None,
         }),
@@ -3814,6 +3851,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '2265bd14-a691-40b1-9fe6-7b5dfeac8401',
+          'recipe_notes': list([
+          ]),
           'text': 'Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.',
           'title': None,
         }),
@@ -3821,6 +3860,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '0aade447-dfac-4aae-8e67-ac250ad13ae2',
+          'recipe_notes': list([
+          ]),
           'text': "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
           'title': None,
         }),
@@ -3828,6 +3869,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '5fdcb703-7103-468d-a65d-a92460b92eb3',
+          'recipe_notes': list([
+          ]),
           'text': 'Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.',
           'title': None,
         }),
@@ -3835,6 +3878,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '81474afc-b44e-49b3-bb67-5d7dab8f832a',
+          'recipe_notes': list([
+          ]),
           'text': 'Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.',
           'title': None,
         }),
@@ -3842,6 +3887,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '8fac8aee-0d3c-4f78-9ff8-56d20472e5f1',
+          'recipe_notes': list([
+          ]),
           'text': 'To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).',
           'title': None,
         }),
@@ -3849,12 +3896,44 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '7162e099-d651-4656-902a-a09a9b40c4e1',
+          'recipe_notes': list([
+          ]),
           'text': 'Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.',
           'title': None,
         }),
       ]),
       'last_made': None,
       'name': 'Original Sacher-Torte (2)',
+      'notes': list([
+        dict({
+          'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+          'text': 'Use room-temperature ingredients for a smoother batter.',
+          'title': 'Baking tip',
+        }),
+        dict({
+          'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+          'text': 'Let the cake cool completely before adding the glaze.',
+          'title': 'Cooling',
+        }),
+        dict({
+          'reference_id': '9c4e2a71-6d38-4f05-b927-1a8e3c6d5024',
+          'text': 'Serve with unsweetened whipped cream.',
+          'title': 'Serving',
+        }),
+      ]),
+      'nutrition': dict({
+        'calories': '400',
+        'carbohydrate_content': None,
+        'cholesterol_content': None,
+        'fat_content': '17',
+        'fiber_content': None,
+        'protein_content': None,
+        'saturated_fat_content': None,
+        'sodium_content': None,
+        'sugar_content': None,
+        'trans_fat_content': None,
+        'unsaturated_fat_content': None,
+      }),
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
       'prep_time': '1 hour 30 minutes',
@@ -4731,14 +4810,45 @@
           'reference_id': '82f534de-ecef-4470-9d7a-6e24ded4a53a',
           'referenced_recipe': None,
           'title': '',
-          'unit': "{'id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4', 'name': 'millilitre', 'pluralName': None, 'description': '', 'extras': {}, 'fraction': True, 'abbreviation': 'ml', 'pluralAbbreviation': '', 'useAbbreviation': False, 'aliases': [], 'createdAt': '2024-08-25T13:29:25.641593Z', 'updatedAt': '2024-08-25T13:29:25.641610Z'}",
+          'unit': dict({
+            'abbreviation': 'ml',
+            'aliases': list([
+            ]),
+            'created_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641593, tzinfo=datetime.timezone.utc),
+            'description': '',
+            'extras': dict({
+            }),
+            'fraction': True,
+            'name': 'millilitre',
+            'plural_abbreviation': '',
+            'plural_name': None,
+            'standard_quantity': None,
+            'standard_unit': None,
+            'unit_id': '34a3e8e3-c405-49fc-9fec-92dd5241a5c4',
+            'updated_at': datetime.datetime(2024, 8, 25, 13, 29, 25, 641610, tzinfo=datetime.timezone.utc),
+            'use_abbreviation': False,
+          }),
         }),
       ]),
       'instructions': list([
         dict({
           'ingredient_references': list([
+            'a3adfe78-d157-44d8-98be-9c133e45bb4e',
+            'ef023f23-7816-4871-87f6-4d29f9a283f7',
           ]),
           'instruction_id': '2d558dbf-5361-4ef2-9d86-4161f5eb6146',
+          'recipe_notes': list([
+            dict({
+              'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+              'text': 'Use room-temperature ingredients for a smoother batter.',
+              'title': 'Baking tip',
+            }),
+            dict({
+              'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+              'text': 'Let the cake cool completely before adding the glaze.',
+              'title': 'Cooling',
+            }),
+          ]),
           'text': 'Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.',
           'title': None,
         }),
@@ -4746,6 +4856,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': 'dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a',
+          'recipe_notes': list([
+          ]),
           'text': 'Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.',
           'title': None,
         }),
@@ -4753,6 +4865,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '2265bd14-a691-40b1-9fe6-7b5dfeac8401',
+          'recipe_notes': list([
+          ]),
           'text': 'Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.',
           'title': None,
         }),
@@ -4760,6 +4874,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '0aade447-dfac-4aae-8e67-ac250ad13ae2',
+          'recipe_notes': list([
+          ]),
           'text': "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
           'title': None,
         }),
@@ -4767,6 +4883,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '5fdcb703-7103-468d-a65d-a92460b92eb3',
+          'recipe_notes': list([
+          ]),
           'text': 'Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.',
           'title': None,
         }),
@@ -4774,6 +4892,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '81474afc-b44e-49b3-bb67-5d7dab8f832a',
+          'recipe_notes': list([
+          ]),
           'text': 'Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.',
           'title': None,
         }),
@@ -4781,6 +4901,8 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '8fac8aee-0d3c-4f78-9ff8-56d20472e5f1',
+          'recipe_notes': list([
+          ]),
           'text': 'To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).',
           'title': None,
         }),
@@ -4788,12 +4910,44 @@
           'ingredient_references': list([
           ]),
           'instruction_id': '7162e099-d651-4656-902a-a09a9b40c4e1',
+          'recipe_notes': list([
+          ]),
           'text': 'Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.',
           'title': None,
         }),
       ]),
       'last_made': None,
       'name': 'Original Sacher-Torte (2)',
+      'notes': list([
+        dict({
+          'reference_id': 'd2b7f3c8-4a6e-4f91-9b25-8c1d7e6a5032',
+          'text': 'Use room-temperature ingredients for a smoother batter.',
+          'title': 'Baking tip',
+        }),
+        dict({
+          'reference_id': 'f6a1c9e4-7b32-4d85-a018-2e9c5b7d6143',
+          'text': 'Let the cake cool completely before adding the glaze.',
+          'title': 'Cooling',
+        }),
+        dict({
+          'reference_id': '9c4e2a71-6d38-4f05-b927-1a8e3c6d5024',
+          'text': 'Serve with unsweetened whipped cream.',
+          'title': 'Serving',
+        }),
+      ]),
+      'nutrition': dict({
+        'calories': '400',
+        'carbohydrate_content': None,
+        'cholesterol_content': None,
+        'fat_content': '17',
+        'fiber_content': None,
+        'protein_content': None,
+        'saturated_fat_content': None,
+        'sodium_content': None,
+        'sugar_content': None,
+        'trans_fat_content': None,
+        'unsaturated_fat_content': None,
+      }),
       'original_url': 'https://www.sacher.com/en/original-sacher-torte/recipe/',
       'perform_time': '1 hour',
       'prep_time': '1 hour 30 minutes',
