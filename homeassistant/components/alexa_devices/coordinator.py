@@ -280,7 +280,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             )
             if device:
                 device_registry.async_remove_device(device.id)
-            self._dnd_states.pop(serial_num, None)
 
     async def _async_remove_routine_stale(
         self,
@@ -436,7 +435,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
         """Handle pushed dnd events."""
-        self._dnd_states.update(dnd_states)
+        self._dnd_states = dict(dnd_states)
         self.async_update_listeners()
 
     def set_dnd_state(self, serial_num: str, state: bool) -> None:

@@ -61,6 +61,34 @@ async def test_coordinator_stale_device(
     assert not hass.states.get(entity_id_1)
 
 
+async def test_coordinator_stale_device_clears_dnd_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a removed device's DND state does not linger after resync."""
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+        TEST_DEVICE_2_SN: TEST_DEVICE_2,
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert TEST_DEVICE_2_SN in coordinator.dnd_states
+
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: TEST_DEVICE_1,
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert TEST_DEVICE_2_SN not in coordinator.dnd_states
+
+
 async def test_coordinator_load_previous_devices_from_registry(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
