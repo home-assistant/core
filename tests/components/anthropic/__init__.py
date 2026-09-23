@@ -54,6 +54,43 @@ from anthropic.types.web_fetch_tool_result_block import (
 
 model_list = [
     ModelInfo(
+        id="claude-opus-5-5",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=True),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=True),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=CapabilitySupport(supported=True),
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=True),
+                    enabled=CapabilitySupport(supported=False),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2026, 9, 21, 16, 24, tzinfo=datetime.UTC),
+        display_name="Claude Opus 5.5",
+        max_input_tokens=1000000,
+        max_tokens=128000,
+        type="model",
+    ),
+    ModelInfo(
         id="claude-fable-5-1",
         capabilities=ModelCapabilities(
             batch=CapabilitySupport(supported=True),
