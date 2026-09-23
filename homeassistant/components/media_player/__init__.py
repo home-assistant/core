@@ -10,6 +10,7 @@ from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
+import re
 import secrets
 from typing import Any, Final, Required, TypedDict, final, override
 from urllib.parse import quote, urlparse
@@ -1484,6 +1485,12 @@ def _image_response_appears_complete(
         return True
 
 
+# Matches the userinfo of any URL in free text, e.g. user:pass in
+# scheme://user:pass@host, so credentials in URLs the request redaction does
+# not know about (such as redirect targets) can be masked.
+_URL_USERINFO_RE = re.compile(r"(?<=://)[^/@\s]+(?=@)")
+
+
 def _redact_credentials(url: str) -> str:
     """Return url with any user/password replaced by placeholders."""
     # An unparsable URL can raise here while handling InvalidUrlClientError
@@ -1500,10 +1507,13 @@ def _redact_credentials(url: str) -> str:
 
 
 def _redact_credentials_in_text(text: str, url: str) -> str:
-    """Redact url's userinfo anywhere it appears in text.
+    """Redact credentials of any URL appearing in text.
 
     aiohttp exceptions can embed the request URL in their message, in either
     raw (percent-encoded) or decoded form, so both variants are replaced.
+    Redirect errors stringify the redirect target instead, whose credentials
+    are unrelated to the request URL, so the userinfo of every URL in the
+    text is masked as well.
     """
     try:
         parts = URL(url)
@@ -1525,7 +1535,7 @@ def _redact_credentials_in_text(text: str, url: str) -> str:
         replacements, key=lambda r: len(r[0]), reverse=True
     ):
         text = text.replace(secret, placeholder)
-    return text
+    return _URL_USERINFO_RE.sub("xxxx:xxxxxxxx", text)
 
 
 async def async_fetch_image(

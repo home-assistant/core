@@ -353,6 +353,18 @@ def test_redact_credentials(url: str, expected: str) -> None:
             "[text redacted: malformed URL]",
             id="malformed_url",
         ),
+        pytest.param(
+            "Invalid redirect URL: http://bob:tr0ub4dor@evil.example/steal",
+            "http://alice:hunter2@origin.example/art.jpg",
+            "Invalid redirect URL: http://xxxx:xxxxxxxx@evil.example/steal",
+            id="unrelated_redirect_credentials",
+        ),
+        pytest.param(
+            "see https://example.com/a@b for details",
+            "http://alice:hunter2@origin.example/art.jpg",
+            "see https://example.com/a@b for details",
+            id="path_at_sign_not_userinfo",
+        ),
     ],
 )
 def test_redact_credentials_in_text(text: str, url: str, expected: str) -> None:
