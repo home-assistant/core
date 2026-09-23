@@ -14,6 +14,7 @@ from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
     ResponseCodeInterpreterToolCall,
+    ResponseCodeInterpreterToolCallParam,
     ResponseCompletedEvent,
     ResponseErrorEvent,
     ResponseFailedEvent,
@@ -40,6 +41,9 @@ from openai.types.responses import (
     ToolChoiceTypesParam,
     ToolParam,
     WebSearchToolParam,
+)
+from openai.types.responses.response_code_interpreter_tool_call_param import (
+    Output as CodeInterpreterOutputParam,
 )
 from openai.types.responses.response_create_params import (
     Reasoning,
@@ -160,6 +164,7 @@ def _convert_content_to_param(
     messages: ResponseInputParam = []
     reasoning_summary: list[str] = []
     web_search_calls: dict[str, ResponseFunctionWebSearchParam] = {}
+    code_interpreter_calls: dict[str, llm.ToolInput] = {}
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
@@ -172,6 +177,24 @@ def _convert_content_to_param(
                     "status", "completed"
                 )
                 messages.append(web_search_call)
+            elif (
+                content.tool_name == "code_interpreter"
+                and content.tool_call_id in code_interpreter_calls
+            ):
+                tool_call = code_interpreter_calls.pop(content.tool_call_id)
+                messages.append(
+                    ResponseCodeInterpreterToolCallParam(
+                        type="code_interpreter_call",
+                        id=tool_call.id,
+                        code=tool_call.tool_args["code"],
+                        container_id=cast(str, content.result.data["container_id"]),
+                        outputs=cast(
+                            list[CodeInterpreterOutputParam] | None,
+                            content.result.data["output"],
+                        ),
+                        status=content.result.data["status"],  # type: ignore[typeddict-item]
+                    )
+                )
             else:
                 messages.append(
                     FunctionCallOutput(
@@ -211,6 +234,10 @@ def _convert_content_to_param(
                             action=tool_call.tool_args["action"],
                             status="completed",
                         )
+                    elif (
+                        tool_call.external and tool_call.tool_name == "code_interpreter"
+                    ):
+                        code_interpreter_calls[tool_call.id] = tool_call
                     else:
                         messages.append(
                             ResponseFunctionToolCallParam(
@@ -311,10 +338,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                         llm.ToolInput(
                             id=event.item.id,
                             tool_name="code_interpreter",
-                            tool_args={
-                                "code": event.item.code,
-                                "container": event.item.container_id,
-                            },
+                            tool_args={"code": event.item.code},
                             external=True,
                         )
                     ]
@@ -325,11 +349,13 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_name": "code_interpreter",
                     "result": llm.ToolResult(
                         data={
+                            "container_id": event.item.container_id,
                             "output": (
                                 [output.to_dict() for output in event.item.outputs]  # type: ignore[misc]
                                 if event.item.outputs is not None
                                 else None
-                            )
+                            ),
+                            "status": event.item.status,
                         },
                         error=event.item.status == "failed",
                     ),
@@ -505,7 +531,7 @@ class OpenAIBaseLLMEntity(Entity):
             model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            user=chat_log.conversation_id,
+            safety_identifier=chat_log.conversation_id,
             prompt_cache_key=self.subentry.subentry_id,
             service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),

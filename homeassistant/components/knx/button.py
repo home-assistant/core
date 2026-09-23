@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PAYLOAD_LENGTH, CONF_VALUE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from .const import CONF_PAYLOAD_LENGTH, CONF_VALUE, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -22,8 +22,8 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.config_store import KnxEntityData
-from .storage.const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
+from .storage.const import CONF_DATA, CONF_GA_SEND
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 
@@ -104,13 +104,13 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
         self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize a KNX button."""
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         button_data = knx_conf.get(CONF_DATA)
         if CONF_PAYLOAD in button_data and CONF_PAYLOAD_LENGTH in button_data:
             self._payload = int(button_data[CONF_PAYLOAD], 16)
             self._device = XknxRawValue(
                 xknx=knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
+                name=config.entity.xknx_name,
                 payload_length=button_data[CONF_PAYLOAD_LENGTH],
                 group_address=knx_conf.get_write(CONF_GA_SEND),
             )
@@ -119,7 +119,7 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
             self._payload = button_data[CONF_VALUE]
             self._device = XknxExposeSensor(
                 xknx=knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
+                name=config.entity.xknx_name,
                 value_type=dpt_string,
                 group_address=knx_conf.get_write(CONF_GA_SEND),
                 respond_to_read=False,
@@ -128,5 +128,5 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )

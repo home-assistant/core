@@ -1,321 +1,130 @@
-"""Tests for the lifx integration."""
+"""Tests for the LIFX integration."""
 
-import asyncio
 from contextlib import contextmanager
+from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
-from aiolifx.aiolifx import Light
+from lifx import Device, DiscoveredDevice
 
-from homeassistant.components.lifx import discovery
-from homeassistant.components.lifx.const import TARGET_ANY
+from homeassistant.components.lifx.const import DOMAIN
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from .helpers import GROUP, IP_ADDRESS, LABEL, SERIAL, create_mock_light
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+__all__ = ["GROUP", "IP_ADDRESS", "LABEL", "SERIAL"]
 
 MODULE = "homeassistant.components.lifx"
 MODULE_CONFIG_FLOW = "homeassistant.components.lifx.config_flow"
-IP_ADDRESS = "127.0.0.1"
-LABEL = "My Bulb"
-GROUP = "My Group"
-SERIAL = "aa:bb:cc:dd:ee:cc"
-MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
-DHCP_FORMATTED_MAC = "aabbccddeecd"
+# Firmware 3.70 and earlier report a MAC address one greater than the serial
+LEGACY_MAC_ADDRESS = "d0:73:d5:dd:ee:cd"
+DHCP_FORMATTED_MAC = "d073d5ddeecd"
 DEFAULT_ENTRY_TITLE = LABEL
+# Comfortably past the coordinator's own update interval
+UPDATE_INTERVAL = timedelta(seconds=15)
 
 
-class MockMessage:
-    """Mock a lifx message."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        """Init message."""
-        self.target_addr = SERIAL
-        self.count = 9
-        for k, v in kwargs.items():
-            if k != "callb":
-                setattr(self, k, v)
-
-
-class MockFailingLifxCommand:
-    """Mock a lifx command that fails."""
-
-    def __init__(self, bulb, **kwargs: Any) -> None:
-        """Init command."""
-        self.bulb = bulb
-        self.calls = []
-
-    def __call__(self, *args, **kwargs):
-        """Call command."""
-        if callb := kwargs.get("callb"):
-            callb(self.bulb, None)
-        self.calls.append([args, kwargs])
-
-    def reset_mock(self):
-        """Reset mock."""
-        self.calls = []
-
-
-class MockLifxCommand:
-    """Mock a lifx command."""
-
-    def __name__(self):
-        """Return name."""
-        return "mock_lifx_command"
-
-    def __init__(self, bulb, **kwargs: Any) -> None:
-        """Init command."""
-        self.bulb = bulb
-        self.calls = []
-        self.msg_kwargs = {
-            k.removeprefix("msg_"): v for k, v in kwargs.items() if k.startswith("msg_")
-        }
-        for k, v in kwargs.items():
-            if k.startswith("msg_") or k == "callb":
-                continue
-            setattr(self.bulb, k, v)
-
-    def __call__(self, *args, **kwargs):
-        """Call command."""
-        if callb := kwargs.get("callb"):
-            callb(self.bulb, MockMessage(**self.msg_kwargs))
-        self.calls.append([args, kwargs])
-
-    def reset_mock(self):
-        """Reset mock."""
-        self.calls = []
-
-
-def _mocked_bulb() -> Light:
-    bulb = Light(asyncio.get_running_loop(), SERIAL, IP_ADDRESS)
-    bulb.host_firmware_version = "3.00"
-    bulb.label = LABEL
-    bulb.group = GROUP
-    bulb.color = [1, 2, 3, 4]
-    bulb.power_level = 0
-    bulb.fire_and_forget = AsyncMock()
-    bulb.set_reboot = Mock()
-    bulb.try_sending = AsyncMock()
-    bulb.set_infrared = MockLifxCommand(bulb)
-    bulb.get_label = MockLifxCommand(bulb)
-    bulb.get_group = MockLifxCommand(bulb)
-    bulb.get_color = MockLifxCommand(bulb)
-    bulb.set_power = MockLifxCommand(bulb)
-    bulb.set_color = MockLifxCommand(bulb)
-    bulb.get_hostfirmware = MockLifxCommand(bulb)
-    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=100)
-    bulb.get_version = MockLifxCommand(bulb)
-    bulb.set_waveform_optional = MockLifxCommand(bulb)
-    bulb.product = 1  # LIFX Original 1000
-    return bulb
-
-
-def _mocked_failing_bulb() -> Light:
-    bulb = _mocked_bulb()
-    bulb.get_color = MockFailingLifxCommand(bulb)
-    bulb.set_power = MockFailingLifxCommand(bulb)
-    bulb.set_color = MockFailingLifxCommand(bulb)
-    bulb.get_hostfirmware = MockFailingLifxCommand(bulb)
-    bulb.get_version = MockFailingLifxCommand(bulb)
-    return bulb
-
-
-def _mocked_white_bulb() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 19  # LIFX White 900 BR30 (High Voltage)
-    return bulb
-
-
-def _mocked_brightness_bulb() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 51  # LIFX Mini White
-    return bulb
-
-
-def _mocked_clean_bulb() -> Light:
-    bulb = _mocked_bulb()
-    bulb.get_hev_cycle = MockLifxCommand(bulb)
-    bulb.set_hev_cycle = MockLifxCommand(bulb)
-    bulb.get_hev_configuration = MockLifxCommand(bulb)
-    bulb.get_last_hev_cycle_result = MockLifxCommand(bulb)
-    bulb.hev_cycle_configuration = {"duration": 7200, "indication": False}
-    bulb.hev_cycle = {
-        "duration": 7200,
-        "remaining": 30,
-        "last_power": False,
-    }
-    bulb.last_hev_cycle_result = 0
-    bulb.product = 90
-    return bulb
-
-
-def _mocked_infrared_bulb() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 29  # LIFX A19 Night Vision
-    bulb.infrared_brightness = 65535
-    bulb.set_infrared = MockLifxCommand(bulb)
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
-    return bulb
-
-
-def _mocked_light_strip() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 31  # LIFX Z
-    bulb.zones_count = 3
-    bulb.color_zones = [MagicMock()] * 3
-    bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
-    bulb.get_color_zones = MockLifxCommand(
-        bulb,
-        msg_seq_num=bulb.seq_next(),
-        msg_count=bulb.zones_count,
-        msg_index=0,
-        msg_color=bulb.color_zones,
+async def async_setup_lifx_entry(
+    hass: HomeAssistant, device: Device
+) -> MockConfigEntry:
+    """Set up a config entry for one typed LIFX device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_ENTRY_TITLE,
+        data={CONF_HOST: IP_ADDRESS},
+        unique_id=SERIAL,
     )
-    bulb.set_color_zones = MockLifxCommand(bulb)
-    bulb.get_multizone_effect = MockLifxCommand(bulb)
-    bulb.set_multizone_effect = MockLifxCommand(bulb)
-    bulb.get_extended_color_zones = MockLifxCommand(bulb)
-    bulb.set_extended_color_zones = MockLifxCommand(bulb)
-    return bulb
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.lifx.Device.connect", return_value=device):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+    return entry
 
 
-def _mocked_tile() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 55  # LIFX Tile
-    bulb.effect = {"effect": "OFF"}
-    bulb.get_tile_effect = MockLifxCommand(bulb)
-    bulb.set_tile_effect = MockLifxCommand(bulb)
-    bulb.get64 = MockLifxCommand(bulb)
-    bulb.get_device_chain = MockLifxCommand(bulb)
-    return bulb
+async def async_setup_lifx_entries(
+    hass: HomeAssistant, devices: list[Device]
+) -> list[MockConfigEntry]:
+    """Set up one config entry per typed LIFX device."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=device.state.label,
+            data={CONF_HOST: device.ip},
+            unique_id=device.serial,
+        )
+        for device in devices
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+
+    devices_by_host = {device.ip: device for device in devices}
+    with patch(
+        "homeassistant.components.lifx.Device.connect",
+        side_effect=lambda **kwargs: devices_by_host[kwargs["ip"]],
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+    return entries
 
 
-def _mocked_ceiling() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 176  # LIFX Ceiling
-    bulb.effect = {"effect": "OFF"}
-    bulb.get_tile_effect = MockLifxCommand(bulb)
-    bulb.set_tile_effect = MockLifxCommand(bulb)
-    bulb.get64 = MockLifxCommand(bulb)
-    bulb.get_device_chain = MockLifxCommand(bulb)
-    return bulb
+async def async_trigger_update(hass: HomeAssistant) -> None:
+    """Advance time so the coordinator polls the device again."""
+    # Advancing the clock also fires the periodic discovery this helper does not want
+    with patch(
+        "homeassistant.components.lifx.discovery.async_discover_devices",
+        AsyncMock(return_value={}),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
 
 
-def _mocked_128zone_ceiling() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 201  # LIFX 26"x13" Ceiling
-    bulb.effect = {"effect": "OFF"}
-    bulb.get_tile_effect = MockLifxCommand(bulb)
-    bulb.set_tile_effect = MockLifxCommand(bulb)
-    bulb.get64 = MockLifxCommand(bulb)
-    bulb.get_device_chain = MockLifxCommand(bulb)
-    return bulb
+@contextmanager
+def _patch_device(device: Device | None = None):
+    """Patch the public connection boundary."""
+    with patch(
+        "homeassistant.components.lifx.Device.connect",
+        AsyncMock(return_value=device or create_mock_light()),
+    ):
+        yield
 
 
-def _mocked_bulb_old_firmware() -> Light:
-    bulb = _mocked_bulb()
-    bulb.host_firmware_version = "2.77"
-    return bulb
+@contextmanager
+def _patch_discovery(device: Device | None = None):
+    """Patch the public broadcast discovery boundary."""
+    discovered = device or create_mock_light()
+
+    async def mock_discover_devices(**kwargs: Any):
+        """Yield deterministic metadata-only discovery results."""
+        yield DiscoveredDevice(serial=discovered.serial, ip=discovered.ip)
+
+    with patch(
+        "homeassistant.components.lifx.discovery.discover_devices",
+        mock_discover_devices,
+    ):
+        yield
 
 
-def _mocked_bulb_new_firmware() -> Light:
-    bulb = _mocked_bulb()
-    bulb.host_firmware_version = "3.90"
-    return bulb
-
-
-def _mocked_relay() -> Light:
-    bulb = _mocked_bulb()
-    bulb.product = 70  # LIFX Switch
-    return bulb
-
-
-def _patch_device(device: Light | None = None, no_device: bool = False):
-    """Patch out discovery."""
-
-    class MockLifxConnecton:
-        """Mock lifx discovery."""
-
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            """Init connection."""
-            if no_device:
-                self.device = _mocked_failing_bulb()
-            else:
-                self.device = device or _mocked_bulb()
-            self.device.mac_addr = TARGET_ANY
-
-        async def async_setup(self):
-            """Mock setup."""
-
-        def async_stop(self):
-            """Mock teardown."""
-
-    @contextmanager
-    def _patcher():
-        with patch("homeassistant.components.lifx.LIFXConnection", MockLifxConnecton):
-            yield
-
-    return _patcher()
-
-
-def _patch_discovery(device: Light | None = None, no_device: bool = False):
-    """Patch out discovery."""
-
-    class MockLifxDiscovery:
-        """Mock lifx discovery."""
-
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            """Init discovery."""
-            if no_device:
-                self.lights = {}
-                return
-            discovered = device or _mocked_bulb()
-            self.lights = {discovered.mac_addr: discovered}
-
-        def start(self):
-            """Mock start."""
-
-        def cleanup(self):
-            """Mock cleanup."""
-
-    @contextmanager
-    def _patcher():
-        with (
-            patch.object(discovery, "DEFAULT_TIMEOUT", 0),
-            patch(
-                "homeassistant.components.lifx.discovery.LifxDiscovery",
-                MockLifxDiscovery,
-            ),
-        ):
-            yield
-
-    return _patcher()
-
-
-def _patch_config_flow_try_connect(
-    device: Light | None = None, no_device: bool = False
-):
-    """Patch out discovery."""
-
-    class MockLifxConnection:
-        """Mock lifx discovery."""
-
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            """Init connection."""
-            if no_device:
-                self.device = _mocked_failing_bulb()
-            else:
-                self.device = device or _mocked_bulb()
-            self.device.mac_addr = TARGET_ANY
-
-        async def async_setup(self):
-            """Mock setup."""
-
-        def async_stop(self):
-            """Mock teardown."""
-
-    @contextmanager
-    def _patcher():
-        with patch(
-            "homeassistant.components.lifx.config_flow.LIFXConnection",
-            MockLifxConnection,
-        ):
-            yield
-
-    return _patcher()
+@contextmanager
+def _patch_config_flow_try_connect(device: Device | None = None):
+    """Patch public config-flow connection functions."""
+    flow_device = device or create_mock_light()
+    with (
+        patch(
+            "homeassistant.components.lifx.config_flow.Device.connect",
+            AsyncMock(return_value=flow_device),
+        ),
+        patch(
+            "homeassistant.components.lifx.config_flow.find_by_ip",
+            AsyncMock(return_value=flow_device),
+        ),
+        patch(
+            "homeassistant.components.lifx.config_flow.find_by_serial",
+            AsyncMock(return_value=flow_device),
+        ),
+    ):
+        yield

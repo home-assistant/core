@@ -1,9 +1,10 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+from dataclasses import dataclass
 import logging
 from typing import override
 
-from aioindiallsky import IndiAllSkyClient, IndiAllSkyError
+from aioindiallsky import ExposureData, IndiAllSkyClient, IndiAllSkyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
@@ -19,7 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
 
-class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[None]):
+@dataclass
+class IndiAllSkyData:
+    """Data model for INDI Allsky coordinator data."""
+
+    exposure: ExposureData | None = None
+
+
+class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     """Class to manage fetching INDI Allsky data from the API."""
 
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
@@ -33,6 +41,13 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
             session=async_get_clientsession(hass),
         )
+        self.latest_exposure: ExposureData | None = None
+
+        unsub = self.client.register_callback(
+            "exposure_complete", self._handle_exposure_complete
+        )
+        entry.async_on_unload(unsub)
+        entry.async_on_unload(self.client.disconnect)
 
         super().__init__(
             hass,
@@ -42,13 +57,22 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=None,
         )
 
+    def _handle_exposure_complete(self, exposure: ExposureData) -> None:
+        """Handle new exposure_complete event from WebSocket stream."""
+        self.latest_exposure = exposure
+        self.async_set_updated_data(IndiAllSkyData(exposure=exposure))
+
     @override
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
             await self.client.fetch_image("latestimage")
+            if not self.client.is_connected:
+                await self.client.connect()
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+
+        return IndiAllSkyData(exposure=self.latest_exposure)
