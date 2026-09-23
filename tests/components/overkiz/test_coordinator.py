@@ -599,12 +599,7 @@ async def test_undelivered_command_marks_device_unavailable(
     setup_overkiz_integration: SetupOverkizIntegration,
     failure_type_code: FailureType,
 ) -> None:
-    """A command the gateway could not deliver means the device is unreachable.
-
-    This is the only report of it: the server goes on answering for the device
-    and never sends DeviceUnavailableEvent, so without this the entity stays
-    available while every command is silently dropped.
-    """
+    """A command the gateway could not deliver means the device is unreachable."""
     await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
     await _async_command_pool_pump(hass)
 
