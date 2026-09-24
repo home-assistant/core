@@ -101,7 +101,7 @@ class MinecraftServer:
         )
 
     async def async_is_online(self) -> bool:
-        """Check if the server is online, supporting both Java and Bedrock Edition servers."""
+        """Check if the server is online."""
         try:
             await self.async_get_data()
         except (
@@ -118,7 +118,7 @@ class MinecraftServer:
         return True
 
     async def async_get_data(self) -> MinecraftServerData:
-        """Get updated data from the server, supporting both Java and Bedrock Edition servers."""
+        """Get updated data from the server."""
         status_response: (
             BedrockStatusResponse | JavaStatusResponse | LegacyStatusResponse
         )
@@ -132,7 +132,8 @@ class MinecraftServer:
             status_response = await self._server.async_status(tries=DATA_UPDATE_RETRIES)
         except OSError as error:
             raise MinecraftServerConnectionError(
-                f"Status request to '{self._address}' failed: {self._get_error_message(error)}"
+                f"Status request to '{self._address}' failed: "
+                f"{self._get_error_message(error)}"
             ) from error
 
         if isinstance(status_response, JavaStatusResponse):

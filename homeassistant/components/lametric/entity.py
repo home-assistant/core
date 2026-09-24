@@ -20,7 +20,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
     def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
         """Initialize the LaMetric entity."""
         super().__init__(coordinator=coordinator)
-        connections = {(CONNECTION_NETWORK_MAC, format_mac(coordinator.data.wifi.mac))}
+        connections = {(CONNECTION_NETWORK_MAC, coordinator.data.wifi.mac)}
         if coordinator.data.bluetooth is not None:
             connections.add(
                 (CONNECTION_BLUETOOTH, format_mac(coordinator.data.bluetooth.address))
@@ -29,6 +29,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
             connections=connections,
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             manufacturer="LaMetric Inc.",
+            model=coordinator.data.model_name,
             model_id=coordinator.data.model,
             name=coordinator.data.name,
             sw_version=coordinator.data.os_version,

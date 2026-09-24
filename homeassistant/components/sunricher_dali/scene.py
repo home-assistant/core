@@ -1,7 +1,7 @@
 """Support for DALI Center Scene entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from PySrDaliGateway import Scene
 
@@ -40,6 +40,7 @@ class DaliCenterScene(DaliCenterEntity, SceneEntity):
             identifiers={(DOMAIN, scene.gw_sn)},
         )
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the DALI scene."""
         await self.hass.async_add_executor_job(self._scene.activate)

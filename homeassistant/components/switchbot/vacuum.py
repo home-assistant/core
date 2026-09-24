@@ -1,6 +1,6 @@
 """Support for switchbot vacuums."""
 
-from typing import Any
+from typing import Any, override
 
 import switchbot
 from switchbot import SwitchbotModel
@@ -100,17 +100,20 @@ class SwitchbotVacuumEntity(SwitchbotEntity, StateVacuumEntity):
         )
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         status_code = self._device.get_work_status()
         return SWITCHBOT_VACUUM_STATE_MAP[self.protocol_version].get(status_code)
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         self._last_run_success = bool(
             await self._device.clean_up(self.protocol_version)
         )
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return to dock."""
         self._last_run_success = bool(

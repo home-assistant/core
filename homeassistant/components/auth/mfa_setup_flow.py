@@ -1,10 +1,9 @@
 """Helpers to setup multi-factor auth module."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
-import voluptuous_serialize
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
@@ -21,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class MfaFlowManager(data_entry_flow.FlowManager):
     """Manage multi factor authentication flows."""
 
+    @override
     async def async_create_flow(  # type: ignore[override]
         self,
         handler_key: str,
@@ -36,6 +36,7 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
 
+    @override
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -59,13 +60,13 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @websocket_api.websocket_command(
-    vol.All(
-        vol.Schema(
+    probatio.All(
+        probatio.Schema(
             {
-                vol.Required("type"): "auth/setup_mfa",
-                vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
-                vol.Exclusive("flow_id", "module_or_flow_id"): str,
-                vol.Optional("user_input"): object,
+                probatio.Required("type"): "auth/setup_mfa",
+                probatio.Exclusive("mfa_module_id", "module_or_flow_id"): str,
+                probatio.Exclusive("flow_id", "module_or_flow_id"): str,
+                probatio.Optional("user_input"): object,
             }
         ),
         cv.has_at_least_one_key("mfa_module_id", "flow_id"),
@@ -110,7 +111,10 @@ def websocket_setup_mfa(
 
 @callback
 @websocket_api.websocket_command(
-    {vol.Required("type"): "auth/depose_mfa", vol.Required("mfa_module_id"): str}
+    {
+        probatio.Required("type"): "auth/depose_mfa",
+        probatio.Required("mfa_module_id"): str,
+    }
 )
 @websocket_api.ws_require_user(allow_system_user=False)
 def websocket_depose_mfa(
@@ -142,15 +146,15 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return dict(result)
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = probatio.to_field_list(schema)
 
     return data

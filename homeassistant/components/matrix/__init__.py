@@ -24,7 +24,7 @@ from nio.responses import (
     WhoamiResponse,
 )
 from PIL import Image
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
@@ -91,14 +91,14 @@ class ConfigCommand(TypedDict, total=False):
     reaction: ReactionCommand  # CONF_REACTION
 
 
-COMMAND_SCHEMA = vol.All(
-    vol.Schema(
+COMMAND_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Exclusive(CONF_WORD, "trigger"): cv.string,
-            vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
-            vol.Exclusive(CONF_REACTION, "trigger"): cv.string,
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS): vol.All(
+            probatio.Exclusive(CONF_WORD, "trigger"): cv.string,
+            probatio.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
+            probatio.Exclusive(CONF_REACTION, "trigger"): cv.string,
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Optional(CONF_ROOMS): probatio.All(
                 cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
             ),
         }
@@ -106,22 +106,22 @@ COMMAND_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOMESERVER): cv.url,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ROOMS, default=[]): vol.All(
+                probatio.Required(CONF_HOMESERVER): cv.url,
+                probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+                probatio.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(CONF_ROOMS, default=[]): probatio.All(
                     cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
-                vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
+                probatio.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -231,7 +231,8 @@ class MatrixBot:
             else:
                 command[CONF_ROOMS] = list(self._listening_rooms.values())
 
-            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD, CONF_EXPRESSION, or CONF_REACTION are set.
+            # COMMAND_SCHEMA guarantees that exactly one of
+            # CONF_WORD, CONF_EXPRESSION, or CONF_REACTION are set.
             if (word_command := command.get(CONF_WORD)) is not None:
                 for room_id in command[CONF_ROOMS]:
                     self._word_commands.setdefault(room_id, {})
@@ -247,7 +248,8 @@ class MatrixBot:
 
     async def _handle_room_message(self, room: MatrixRoom, message: Event) -> None:
         """Handle a message sent to a Matrix room."""
-        # Corresponds to message type 'm.text' and NOT other RoomMessage subtypes, like 'm.notice' and 'm.emote'.
+        # Corresponds to message type 'm.text' and NOT other
+        # RoomMessage subtypes, like 'm.notice' and 'm.emote'.
         if not isinstance(message, (RoomMessageText, ReactionEvent)):
             return
         # Don't respond to our own messages.
@@ -348,11 +350,12 @@ class MatrixBot:
                     resolve_response,
                 )
                 return {}
-        # The config schema guarantees it's a valid room alias or id, so room_id is always set.
+        # The config schema guarantees it's a valid room alias
+        # or id, so room_id is always set.
         return {room_alias_or_id: room_id}
 
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
-        """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
+        """Resolve RoomAliases into RoomIDs for client interactions."""
         resolved_rooms = [
             self.hass.async_create_task(
                 self._resolve_room_alias(room_alias_or_id), eager_start=False
@@ -438,7 +441,8 @@ class MatrixBot:
                 )
             elif isinstance(response, WhoamiResponse):
                 _LOGGER.debug(
-                    "Successfully restored login from access token: user_id '%s', device_id '%s'",
+                    "Successfully restored login from access token:"
+                    " user_id '%s', device_id '%s'",
                     response.user_id,
                     response.device_id,
                 )

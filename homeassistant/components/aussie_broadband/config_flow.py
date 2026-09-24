@@ -1,12 +1,12 @@
 """Config flow for Aussie Broadband integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
 from aussiebb.const import FETCH_TYPES
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -44,6 +44,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,10 +68,10 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -105,9 +106,9 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"username": self._reauth_username},
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

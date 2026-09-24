@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
 from kasa import (
     AuthenticationError,
@@ -14,7 +14,7 @@ from kasa import (
     Module,
     TimeoutError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg, stream
 from homeassistant.config_entries import (
@@ -62,17 +62,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
-STEP_CAMERA_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LIVE_VIEW): bool,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        probatio.Required(CONF_LIVE_VIEW): bool,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD): str,
     }
 )
 
@@ -91,6 +91,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Device] = {}
         self._discovered_device: Device | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -99,6 +100,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.ip, dr.format_mac(discovery_info.macaddress)
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -129,7 +131,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if not updates:
             return None
         updates = {**entry.data, **updates}
-        # If the connection parameters have changed the credentials_hash will be invalid.
+        # If the connection parameters have changed the
+        # credentials_hash will be invalid.
         if new_connection_params:
             updates.pop(CONF_CREDENTIALS_HASH, None)
             _LOGGER.debug(
@@ -144,7 +147,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     def _update_config_if_entry_in_setup_error(
         self, entry: ConfigEntry, host: str, device: Device | None
     ) -> ConfigFlowResult | None:
-        """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
+        """Update device config if discovery finds a device in error state."""
         if entry.state not in (
             ConfigEntryState.SETUP_ERROR,
             ConfigEntryState.SETUP_RETRY,
@@ -196,6 +199,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -214,7 +218,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_device, credentials
                 )
             except AuthenticationError:
-                pass  # Authentication exceptions should continue to the rest of the step
+                pass
             else:
                 self._discovered_device = device
                 return await self.async_step_discovery_confirm()
@@ -313,6 +317,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return bool(camera_module.stream_rtsp_url())
         return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -363,7 +368,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
             description_placeholders=placeholders,
         )
@@ -551,7 +558,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
             formatted_mac: (
-                f"{device.alias or mac_alias(device.mac)} {device.model} ({device.host}) {formatted_mac}"
+                f"{device.alias or mac_alias(device.mac)}"
+                f" {device.model} ({device.host})"
+                f" {formatted_mac}"
             )
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
@@ -561,7 +570,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:

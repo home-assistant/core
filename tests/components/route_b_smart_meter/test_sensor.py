@@ -39,7 +39,11 @@ async def test_route_b_smart_meter_sensor_no_update(
 ) -> None:
     """Test the BRouteUpdateCoordinator when failing."""
 
-    entity_id = "sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase"
+    entity_id = (
+        "sensor.route_b_smart_meter_"
+        "01234567890123456789012345f789_"
+        "instantaneous_current_r_phase"
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

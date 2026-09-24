@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
@@ -102,7 +103,8 @@ class OctoPrintSensorBase(
         self._attr_device_info = coordinator.device_info
 
 
-# Map the strings returned by the OctoPrint API back into values based on the underlying OctoPrint constants.
+# Map the strings returned by the OctoPrint API back into values
+# based on the underlying OctoPrint constants.
 # See octoprint.util.comm.MahcineCom.getStateString():
 # https://github.com/OctoPrint/OctoPrint/blob/7e7d418dac467e308b24c669a03e8b4256f04b45/src/octoprint/util/comm.py#L965
 _API_STATE_VALUE = {
@@ -142,6 +144,7 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Current State", device_id)
 
     @property
+    @override
     def native_value(self):
         """Return sensor state."""
 
@@ -150,10 +153,12 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
         if not printer:
             return None
 
-        # Translate the string from the API into an internal state value, or return None (Unknown) if no match
+        # Translate the string from the API into an internal
+        # state value, or return None (Unknown) if no match
         return _API_STATE_VALUE.get(printer.state.text)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
@@ -172,6 +177,7 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Job Percentage", device_id)
 
     @property
+    @override
     def native_value(self):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
@@ -197,6 +203,7 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
@@ -227,6 +234,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Start Time", device_id)
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
@@ -266,6 +274,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
         self._api_tool = tool
 
     @property
+    @override
     def native_value(self):
         """Return sensor state."""
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
@@ -287,6 +296,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
@@ -306,6 +316,7 @@ class OctoPrintFileNameSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Current File", device_id)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
@@ -313,6 +324,7 @@ class OctoPrintFileNameSensor(OctoPrintSensorBase):
         return job.job.file.name or None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
@@ -337,6 +349,7 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Current File Size", device_id)
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
@@ -344,6 +357,7 @@ class OctoPrintFileSizeSensor(OctoPrintSensorBase):
         return job.job.file.size or None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:

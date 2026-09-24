@@ -2,12 +2,12 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -37,8 +37,9 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str}, extra=vol.ALLOW_EXTRA
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_HOST): str},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -67,6 +68,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Harmony config flow."""
         self.harmony_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -93,6 +95,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -152,6 +155,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -194,20 +198,20 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         remote = self.config_entry.runtime_data
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     ATTR_DELAY_SECS,
                     default=self.config_entry.options.get(
                         ATTR_DELAY_SECS, DEFAULT_DELAY_SECS
                     ),
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     ATTR_ACTIVITY,
                     default=self.config_entry.options.get(
                         ATTR_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
                     ),
-                ): vol.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
+                ): probatio.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

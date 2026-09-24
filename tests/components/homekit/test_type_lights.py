@@ -1398,7 +1398,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     supported_color_modes,
     state_props,
 ) -> None:
-    """Test lights with RGBW/RGBWW that preserves brightness when switching to color temp."""
+    """Test RGBW/RGBWW lights preserve brightness on color temp switch."""
     entity_id = "light.demo"
 
     hass.states.async_set(

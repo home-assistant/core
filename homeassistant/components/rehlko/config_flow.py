@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiokem import AioKem, AuthenticationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -21,6 +21,7 @@ class RehlkoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -38,10 +39,10 @@ class RehlkoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -96,6 +97,6 @@ class RehlkoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             description_placeholders=description_placeholders,
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             errors=errors,
         )

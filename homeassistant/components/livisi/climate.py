@@ -1,6 +1,6 @@
 """Code to handle a Livisi Virtual Climate Control."""
 
-from typing import Any
+from typing import Any, override
 
 from livisi.const import CAPABILITY_CONFIG
 
@@ -84,6 +84,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
         self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         response = await self.aio_livisi.async_vrcc_set_temperature(
@@ -95,6 +96,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             self._attr_available = False
             raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
@@ -139,6 +141,7 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             )
         )
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as LIVISI devices do not support changing the hvac mode."""
 

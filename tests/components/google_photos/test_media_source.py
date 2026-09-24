@@ -54,7 +54,7 @@ async def test_no_config_entries(
 async def test_no_read_scopes(
     hass: HomeAssistant,
 ) -> None:
-    """Test a media source with only write scopes configured so no media source exists."""
+    """Test media source with only write scopes has no media source."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
     assert browse.identifier is None

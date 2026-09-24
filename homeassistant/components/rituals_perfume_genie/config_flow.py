@@ -1,11 +1,11 @@
 """Config flow for Rituals Perfume Genie integration."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
+import probatio
 from pyrituals import Account, AuthenticationException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -13,10 +13,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -26,6 +26,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,9 +101,9 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
                 reauth_entry.data,

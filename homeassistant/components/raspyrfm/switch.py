@@ -1,17 +1,17 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from raspyrfm_client import RaspyRFMClient
 from raspyrfm_client.device_implementations.controlunit.actions import Action
 from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
     ControlUnitModel,
 )
-from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constants import (
-    GatewayModel,
+from raspyrfm_client.device_implementations.gateway.manufacturer import (
+    gateway_constants as _gw,
 )
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -29,6 +29,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+GatewayModel = _gw.GatewayModel
+
 CONF_GATEWAY_MANUFACTURER = "gateway_manufacturer"
 CONF_GATEWAY_MODEL = "gateway_model"
 CONF_CONTROLUNIT_MANUFACTURER = "controlunit_manufacturer"
@@ -39,22 +41,24 @@ DEFAULT_HOST = "127.0.0.1"
 # define configuration parameters
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
-        vol.Optional(CONF_GATEWAY_MODEL): cv.string,
-        vol.Required(CONF_SWITCHES): vol.Schema(
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
+        probatio.Optional(CONF_GATEWAY_MODEL): cv.string,
+        probatio.Required(CONF_SWITCHES): probatio.Schema(
             [
                 {
-                    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-                    vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
-                    vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
-                    vol.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
+                    probatio.Optional(
+                        CONF_NAME, default=DEVICE_DEFAULT_NAME
+                    ): cv.string,
+                    probatio.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
+                    probatio.Required(CONF_CONTROLUNIT_MODEL): cv.string,
+                    probatio.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
                 }
             ]
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -113,6 +117,7 @@ class RaspyRFMSwitch(SwitchEntity):
 
         self._attr_is_on = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
@@ -120,6 +125,7 @@ class RaspyRFMSwitch(SwitchEntity):
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 

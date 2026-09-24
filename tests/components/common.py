@@ -3,18 +3,17 @@
 from collections.abc import Iterable
 import copy
 from enum import StrEnum
+import inspect
 import itertools
 import logging
 from pathlib import Path
+import re
 from typing import Any, TypedDict
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
@@ -29,22 +28,26 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
 )
 from homeassistant.helpers.condition import (
+    Condition,
     ConditionCheckerTypeOptional,
+    EntityConditionBase,
     async_from_config as async_condition_from_config,
     async_validate_condition_config,
 )
 from homeassistant.helpers.trigger import (
+    EntityTriggerBase,
+    Trigger,
     async_initialize_triggers,
     async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
-from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -91,7 +94,12 @@ async def target_entities(
         "Test Label"
     )
 
-    device = dr.DeviceEntry(id="test_device", area_id=area.id, labels={label.label_id})
+    device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="test_device",
+        area_id=area.id,
+        labels={label.label_id},
+    )
     mock_device_registry(hass, {device.id: device})
 
     entity_reg = er.async_get(hass)
@@ -181,7 +189,31 @@ async def target_entities(
 def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     """Parametrize target entities for different target types.
 
-    Meant to be used with target_entities.
+    Meant to be used with target_entities. Each row is a
+    ``(target_config, entity_id, entities_in_target)`` triple.
+
+    Only two representative rows are kept:
+
+    - ``entity`` — a direct ``entity_id`` reference to two standalone entities.
+      This preserves the direct-reference resolution path (state-machine-only,
+      non-registry entities) and a guaranteed multi-entity target, so the
+      all/first/count behavior assertions stay non-vacuous.
+    - ``label-entity`` — a ``label_id`` reference that resolves to three
+      entities: the labeled entity directly and, via label->device expansion,
+      the device-attached entities. This preserves indirect resolution
+      end-to-end plus everything that only fires when excluded entities sit
+      inside the resolved target scope: in-scope cross-domain exclusion (E2),
+      in-scope device_class/feature-filter negatives (E3), and battery's
+      ``primary_entities_only=False`` flag, which only has an observable effect
+      when a categorized entity is reached through device expansion (E1).
+
+    The dropped rows (area, floor, device_id, and the label/area/floor rows
+    that drive the device-attached entity) only varied *how* a target config
+    resolves to an entity set. That resolution is domain-independent machinery
+    covered centrally by ``tests/helpers/test_target.py`` (area->entity,
+    floor->area, area/label/floor->device, direct device incl. child devices,
+    and the ``primary_entities_only`` category asymmetry), so re-exercising it
+    per domain was pure duplication.
     """
     return [
         (
@@ -195,13 +227,275 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
             2,
         ),
         ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.area_{domain}", 3),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.area_{domain}", 3),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.device_{domain}", 3),
-        ({ATTR_DEVICE_ID: "test_device"}, f"{domain}.device_{domain}", 2),
     ]
+
+
+class TargetSupport(StrEnum):
+    """Declared level of user-target support for a registered trigger/condition."""
+
+    # Supports a user target via the shared entity base-class machinery: fully
+    # certified (subclasses the entity base, inherits the target machinery
+    # unmodified, carries the `target: cv.TARGET_FIELDS` slot, and passes
+    # init/entity_filter hygiene).
+    STANDARD = "standard"
+    # Does not support a user target (synthesized or absent); asserted to expose
+    # no `target` schema slot.
+    NONE = "none"
+    # Supports a user target but resolves it with its own machinery; only a
+    # `target: cv.TARGET_FIELDS` slot is asserted, and the machinery/entity-base
+    # checks are skipped (its own dedicated tests cover resolution correctness).
+    CUSTOM = "custom"
+
+
+# Target-resolution machinery a target-supporting trigger/condition class must
+# inherit unchanged from its entity base class. ``entity_filter`` is intentionally
+# absent: it runs inside the resolution choke point on the already-resolved entity
+# set, so an override that narrows the base result is allowed and is checked
+# separately by _entity_filter_hygiene_violation.
+_TRIGGER_TARGET_MACHINERY = frozenset(
+    {
+        "async_validate_complete_config",
+        "async_validate_config",
+        "async_attach_action",
+        "async_attach_runner",
+        "count_matches",
+        "_cancel_invalidated_timers",
+        "_combined_state_still_valid",
+    }
+)
+_CONDITION_TARGET_MACHINERY = frozenset(
+    {
+        "async_validate_complete_config",
+        "async_validate_config",
+        "async_check",
+        "async_unload",
+        "_async_unload",
+        "_async_setup",
+        "_async_check",
+        "_check_any_match_state",
+        "_check_all_match_state",
+        "_async_on_entities_update",
+        "_async_prime_valid_since",
+        "_async_refine_anchors_from_history",
+        "_valid_since_from_history",
+        "_update_valid_since",
+    }
+)
+_TARGET_HELPER_MODULES = frozenset(
+    {"homeassistant.helpers.trigger", "homeassistant.helpers.condition"}
+)
+
+
+def _is_helper_module(module: str) -> bool:
+    """Return True for a trigger/condition helper module or one of its submodules."""
+    return any(
+        module == helper or module.startswith(f"{helper}.")
+        for helper in _TARGET_HELPER_MODULES
+    )
+
+
+def _foreign_names(cls: type) -> set[str]:
+    """Return names defined by MRO classes outside the trigger/condition helpers."""
+    names: set[str] = set()
+    for klass in cls.__mro__:
+        if _is_helper_module(klass.__module__):
+            continue
+        names.update(vars(klass))
+    return names
+
+
+def _target_slot_validator(cls: type) -> object | None:
+    """Return the ``target`` schema validator for a class, or None if it has none.
+
+    A class exposes a user-configurable target iff its ``_schema`` carries a
+    ``target`` marker. Bespoke or synthesized-target classes (e.g. zone.occupancy_*
+    or the legacy ``_`` platforms) have no such marker.
+    """
+    mapping = getattr(getattr(cls, "_schema", None), "schema", None)
+    if not isinstance(mapping, dict):
+        return None
+    for marker, validator in mapping.items():
+        if str(marker) == "target":
+            return validator
+    return None
+
+
+def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | None:
+    """Return an error if an __init__ override rewrites the config or target."""
+    for klass in cls.__mro__:
+        if _is_helper_module(klass.__module__):
+            return None
+        if "__init__" not in vars(klass):
+            continue
+        src = inspect.getsource(klass.__init__)
+        if "super().__init__(hass, config)" not in src:
+            return f"{key}: __init__ must delegate the unmodified config to super()"
+        if re.search(r"self\._target\b\s*=", src):
+            return f"{key}: __init__ must not assign self._target"
+        if f"{config_cls_name}(" in src or "replace(config" in src:
+            return f"{key}: __init__ must not rebuild the config object"
+        # ConditionConfig is @dataclass(slots=True) but NOT frozen (unlike
+        # TriggerConfig), so a mutation would rewrite the user target at runtime
+        # while passing the checks above. The (?!=) excludes the `==` comparison
+        # and the optional subscript excludes reads. Freezing ConditionConfig
+        # upstream would be a stronger, product-side fix.
+        if re.search(r"config\.target\b\s*(?:\[[^\]]*\])?\s*=(?!=)", src):
+            return f"{key}: __init__ must not assign to config.target"
+        continue
+    return None
+
+
+def _entity_filter_hygiene_violation(cls: type, key: str) -> str | None:
+    """Return an error if an entity_filter override does not narrow the base."""
+    for klass in cls.__mro__:
+        if _is_helper_module(klass.__module__):
+            return None
+        if "entity_filter" not in vars(klass):
+            continue
+        src = inspect.getsource(klass.entity_filter)
+        if "super().entity_filter(" not in src:
+            return f"{key}: entity_filter override must narrow the base result"
+        continue
+    return None
+
+
+def _target_supporting_violations(
+    cls: type,
+    key: str,
+    *,
+    entity_base: type,
+    machinery: frozenset[str],
+    config_cls: str,
+) -> list[str]:
+    """Return violations for a class declared to support a user target."""
+    if not issubclass(cls, entity_base):
+        return [
+            f"{key} ({cls.__name__}): declared target-supporting but does not "
+            f"subclass {entity_base.__name__}"
+        ]
+    violations: list[str] = []
+    overridden = _foreign_names(cls) & machinery
+    if overridden:
+        violations.append(
+            f"{key} overrides target machinery {sorted(overridden)}; it no longer "
+            "inherits the shared target resolution"
+        )
+    if _target_slot_validator(cls) is not cv.TARGET_FIELDS:
+        violations.append(
+            f"{key}: schema does not carry the standard `target: cv.TARGET_FIELDS` slot"
+        )
+    violations.extend(
+        violation
+        for violation in (
+            _init_hygiene_violation(cls, key, config_cls),
+            _entity_filter_hygiene_violation(cls, key),
+        )
+        if violation is not None
+    )
+    return violations
+
+
+def _assert_target_support(
+    registry: dict[str, type],
+    declaration: dict[str, TargetSupport],
+    *,
+    entity_base: type,
+    machinery: frozenset[str],
+    config_cls: str,
+    kind: str,
+) -> None:
+    """Certify one registry against its ``key -> TargetSupport`` declaration."""
+    missing = set(registry) - set(declaration)
+    extra = set(declaration) - set(registry)
+    assert not missing, (
+        f"{kind}s registered but not declared: {sorted(missing)} -- add them to the "
+        "target-support declaration"
+    )
+    assert not extra, (
+        f"{kind}s declared but not registered: {sorted(extra)} -- remove them from "
+        "the target-support declaration"
+    )
+
+    violations: list[str] = []
+    for key in sorted(registry):
+        cls = registry[key]
+        support = declaration[key]
+        if support is TargetSupport.STANDARD:
+            violations.extend(
+                _target_supporting_violations(
+                    cls,
+                    key,
+                    entity_base=entity_base,
+                    machinery=machinery,
+                    config_cls=config_cls,
+                )
+            )
+        elif support is TargetSupport.NONE:
+            if _target_slot_validator(cls) is not None:
+                violations.append(
+                    f"{key}: declared TargetSupport.NONE, but its schema exposes a "
+                    "`target` slot"
+                )
+        elif support is TargetSupport.CUSTOM:
+            # Custom-machinery target: only require that a user target slot
+            # exists; the class's own tests cover resolution correctness. The
+            # standard machinery/entity-base checks are intentionally skipped,
+            # and this state must be opted into explicitly -- a class declared
+            # STANDARD that forgot to subclass the entity base still fails above.
+            if _target_slot_validator(cls) is not cv.TARGET_FIELDS:
+                violations.append(
+                    f"{key}: declared TargetSupport.CUSTOM but its schema does not "
+                    "carry a `target: cv.TARGET_FIELDS` slot"
+                )
+        else:
+            violations.append(
+                f"{key}: invalid target-support declaration value {support!r}; use a "
+                "TargetSupport member"
+            )
+    assert not violations, f"{kind} target-support violations:\n" + "\n".join(
+        violations
+    )
+
+
+def assert_triggers_target_support(
+    registry: dict[str, type[Trigger]], declaration: dict[str, TargetSupport]
+) -> None:
+    """Certify a domain's trigger registry against its target-support declaration.
+
+    ``declaration`` maps every registered trigger key to a ``TargetSupport`` member:
+    ``STANDARD`` (inherits the shared target-resolution machinery unmodified, so the
+    collapsed two-row target axis still certifies it), ``NONE`` (exposes no
+    ``target`` schema slot -- bespoke or synthesized target, e.g. zone.occupancy_*),
+    or ``CUSTOM`` (exposes a ``target`` slot but resolves it with its own machinery,
+    e.g. timer.remaining_time_reached). Battery's ``primary_entities_only=False`` is
+    intentionally not pinned here -- its behavior tests with DIAGNOSTIC fixtures
+    already fail loudly on a silent flip.
+    """
+    _assert_target_support(
+        registry,
+        declaration,
+        entity_base=EntityTriggerBase,
+        machinery=_TRIGGER_TARGET_MACHINERY,
+        config_cls="TriggerConfig",
+        kind="trigger",
+    )
+
+
+def assert_conditions_target_support(
+    registry: dict[str, type[Condition]], declaration: dict[str, TargetSupport]
+) -> None:
+    """Certify a domain's condition registry against its target-support declaration.
+
+    See assert_triggers_target_support; the same contract on the condition base.
+    """
+    _assert_target_support(
+        registry,
+        declaration,
+        entity_base=EntityConditionBase,
+        machinery=_CONDITION_TARGET_MACHINERY,
+        config_cls="ConditionConfig",
+        kind="condition",
+    )
 
 
 class StateDescription(TypedDict):
@@ -219,7 +513,10 @@ class BasicTriggerStateDescription(TypedDict):
 
 
 class TriggerStateDescription(BasicTriggerStateDescription):
-    """Test state and expected service call count for both included and excluded entities."""
+    """Test state and expected service call count.
+
+    Covers both included and excluded entities.
+    """
 
     excluded_state: StateDescription  # State for entities not meant to be targeted
     # State for the *other* targeted entities (the ones not under direct test).
@@ -237,16 +534,18 @@ class ConditionStateDescription(TypedDict):
     excluded_state: StateDescription  # State for entities not meant to be targeted
 
     condition_true: bool  # If the condition is expected to evaluate to true
-    condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
+    # If the condition is expected to evaluate to true
+    # for the first targeted entity
+    condition_true_first_entity: bool
 
 
 def _parametrize_condition_states(
     *,
     condition: str,
     condition_options: dict[str, Any] | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
+    target_states: list[str | tuple[str | None, dict] | None],
+    other_states: list[str | tuple[str | None, dict] | None],
+    extra_excluded_states: list[str | tuple[str | None, dict] | None] | None = None,
     required_filter_attributes: dict | None,
     condition_true_if_invalid: bool,
     excluded_entities_from_other_domain: bool,
@@ -268,7 +567,7 @@ def _parametrize_condition_states(
     )
 
     def state_with_attributes(
-        state: str | None | tuple[str | None, dict],
+        state: str | tuple[str | None, dict] | None,
         condition_true: bool,
         condition_true_first_entity: bool,
     ) -> ConditionStateDescription:
@@ -354,9 +653,9 @@ def parametrize_condition_states_any(
     *,
     condition: str,
     condition_options: dict[str, Any] | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
+    target_states: list[str | tuple[str | None, dict] | None],
+    other_states: list[str | tuple[str | None, dict] | None],
+    extra_excluded_states: list[str | tuple[str | None, dict] | None] | None = None,
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
@@ -370,7 +669,7 @@ def parametrize_condition_states_any(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True
@@ -413,9 +712,9 @@ def parametrize_condition_states_all(
     *,
     condition: str,
     condition_options: dict[str, Any] | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
+    target_states: list[str | tuple[str | None, dict] | None],
+    other_states: list[str | tuple[str | None, dict] | None],
+    extra_excluded_states: list[str | tuple[str | None, dict] | None] | None = None,
     required_filter_attributes: dict | None = None,
     excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
@@ -429,7 +728,7 @@ def parametrize_condition_states_all(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True for
@@ -475,10 +774,10 @@ def parametrize_trigger_states(
     *,
     trigger: str,
     trigger_options: dict[str, Any] | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    extra_excluded_states: list[str | None | tuple[str | None, dict]] | None = None,
-    extra_invalid_states: list[str | None | tuple[str | None, dict]] | None = None,
+    target_states: list[str | tuple[str | None, dict] | None],
+    other_states: list[str | tuple[str | None, dict] | None],
+    extra_excluded_states: list[str | tuple[str | None, dict] | None] | None = None,
+    extra_invalid_states: list[str | tuple[str | None, dict] | None] | None = None,
     required_filter_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
@@ -546,7 +845,7 @@ def parametrize_trigger_states(
     trigger_options = trigger_options or {}
 
     def _included_state_desc(
-        state: str | None | tuple[str | None, dict],
+        state: str | tuple[str | None, dict] | None,
     ) -> StateDescription:
         """Build a state for entities meant to match the trigger's target.
 
@@ -561,7 +860,7 @@ def parametrize_trigger_states(
         }
 
     def _excluded_state_desc(
-        state: str | None | tuple[str | None, dict],
+        state: str | tuple[str | None, dict] | None,
     ) -> StateDescription:
         """Build a state for entities outside the trigger's target.
 
@@ -580,10 +879,10 @@ def parametrize_trigger_states(
         }
 
     def state_with_attributes(
-        state: str | None | tuple[str | None, dict],
+        state: str | tuple[str | None, dict] | None,
         count: int,
         *,
-        others_state: str | None | tuple[str | None, dict] | UndefinedType = UNDEFINED,
+        others_state: str | tuple[str | None, dict] | UndefinedType | None = UNDEFINED,
     ) -> TriggerStateDescription:
         """Return TriggerStateDescription dict."""
         included = _included_state_desc(state)
@@ -810,7 +1109,7 @@ def parametrize_trigger_states(
 
 
 def _add_threshold_unit(
-    options: dict[str, Any], threshold_unit: str | None | UndefinedType
+    options: dict[str, Any], threshold_unit: str | UndefinedType | None
 ) -> dict[str, Any]:
     """Add unit to trigger thresholds if threshold_unit is provided."""
     if threshold_unit is UNDEFINED:
@@ -829,14 +1128,14 @@ def parametrize_numerical_attribute_changed_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
     attribute_value_scale: float = 1.0,
     attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical-changed triggers.
+    """Parametrize states for numerical-changed triggers.
 
     Generates state sequences for a trigger that fires whenever an attribute
     crosses or matches a "changed" threshold (modes "any" / "above" / "below").
@@ -871,7 +1170,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -975,14 +1274,14 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
     attribute_value_scale: float = 1.0,
     attribute_required: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical crossed-threshold triggers.
+    """Parametrize states for numerical crossed-threshold triggers.
 
     Generates state sequences for a trigger that fires when an attribute
     crosses a threshold boundary. The trigger is exercised across four
@@ -1019,7 +1318,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             attribute values before they are written to the state. Use
             this when the trigger stores its tracked value on a different
             scale than the threshold — e.g. `media_player` volume is
-            stored as 0.0–1.0 but the threshold is in percent, so pass
+            stored as 0.0-1.0 but the threshold is in percent, so pass
             `attribute_value_scale=0.01`.
         attribute_required: When True, `(state, {attribute: None})` is
             classified as an *excluded* state (filtered out of the all/count
@@ -1057,8 +1356,8 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 50 * s} | unit_attributes),
-                (state, {attribute: 60 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
             ],
             other_states=[
                 other_invalid_attr,
@@ -1087,8 +1386,8 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             ],
             other_states=[
                 other_invalid_attr,
-                (state, {attribute: 50 * s} | unit_attributes),
-                (state, {attribute: 60 * s} | unit_attributes),
+                (state, {attribute: 10 * s} | unit_attributes),
+                (state, {attribute: 90 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
             required_filter_attributes=required_filter_attributes,
@@ -1146,15 +1445,15 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical state-value changed triggers.
+    """Parametrize states for numerical state-value changed triggers.
 
-    Unlike parametrize_numerical_attribute_changed_trigger_states, this is for
-    entities where the tracked numerical value is in state.state (e.g. sensor
-    entities), not in an attribute.
+    Unlike parametrize_numerical_attribute_changed_trigger_states,
+    this is for entities where the tracked numerical value is in
+    state.state (e.g. sensor entities), not in an attribute.
     """
     from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
 
@@ -1227,11 +1526,11 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical state-value crossed threshold triggers.
+    """Parametrize states for numerical state-value crossed threshold triggers.
 
     Unlike parametrize_numerical_attribute_crossed_threshold_trigger_states,
     this is for entities where the tracked numerical value is in state.state
@@ -1257,7 +1556,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
                 },
                 threshold_unit,
             ),
-            target_states=[("50", unit_attributes), ("60", unit_attributes)],
+            target_states=[("10", unit_attributes), ("90", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
                 ("0", unit_attributes),
@@ -1282,8 +1581,8 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
             target_states=[("0", unit_attributes), ("100", unit_attributes)],
             other_states=[
                 ("none", unit_attributes),
-                ("50", unit_attributes),
-                ("60", unit_attributes),
+                ("10", unit_attributes),
+                ("90", unit_attributes),
             ],
             required_filter_attributes=required_filter_attributes,
             trigger_from_none=False,
@@ -1332,7 +1631,7 @@ async def arm_trigger(
     trigger_target: dict,
     calls: list[str],
 ) -> None:
-    """Arm the specified trigger and record fired entity_ids in calls when it triggers."""
+    """Arm the trigger and record fired entity_ids in calls."""
     options = {CONF_OPTIONS: {**trigger_options}} if trigger_options is not None else {}
 
     trigger_config = {
@@ -1408,90 +1707,24 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
     return sorted({s.value for s in enum_class} - excluded_values)
 
 
-async def assert_condition_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Helper to check that a condition is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: condition,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                    CONF_OPTIONS: {"behavior": "any"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup conditions and has been disabled: "
-        f"Condition '{condition}' requires the experimental 'New triggers and "
-        "conditions' feature to be enabled in Home Assistant Labs settings "
-        "(feature flag: 'new_triggers_conditions')"
-    ) in caplog.text
-
-
-async def assert_trigger_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger: str
-) -> None:
-    """Helper to check that a trigger is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
-
-
 async def _validate_condition_options(
     hass: HomeAssistant,
     condition: str,
     options: dict[str, Any] | None,
     *,
     valid: bool,
+    supports_target: bool = True,
 ) -> None:
-    """Assert that a condition accepts or rejects the given options during validation."""
-    config: dict[str, Any] = {
-        CONF_CONDITION: condition,
-        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-    }
+    """Assert that a condition accepts or rejects the given options."""
+    config: dict[str, Any] = {CONF_CONDITION: condition}
+    if supports_target:
+        config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
     if options is not None:
         config[CONF_OPTIONS] = options
     if valid:
         await async_validate_condition_config(hass, config)
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_condition_config(hass, config)
 
 
@@ -1531,6 +1764,7 @@ async def assert_condition_options_supported(
     *,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert which options a condition supports.
 
@@ -1550,9 +1784,15 @@ async def assert_condition_options_supported(
     # Minimal config should always be valid
     # If there are no base options, also test that options can be omitted or be empty
     supports_empty = not bool(base_options)
-    await _validate_condition_options(hass, condition, None, valid=supports_empty)
-    await _validate_condition_options(hass, condition, {}, valid=supports_empty)
-    await _validate_condition_options(hass, condition, base_options, valid=True)
+    await _validate_condition_options(
+        hass, condition, None, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_condition_options(
+        hass, condition, {}, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_condition_options(
+        hass, condition, base_options, valid=True, supports_target=supports_target
+    )
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
         return {**(base_options or {}), **extra}
@@ -1560,18 +1800,30 @@ async def assert_condition_options_supported(
     # Behavior
     for behavior in ("any", "all"):
         await _validate_condition_options(
-            hass, condition, _merge({"behavior": behavior}), valid=supports_behavior
+            hass,
+            condition,
+            _merge({"behavior": behavior}),
+            valid=supports_behavior,
+            supports_target=supports_target,
         )
 
     # Duration
     for for_value in ({"seconds": 5}, "00:00:05", 5):
         await _validate_condition_options(
-            hass, condition, _merge({"for": for_value}), valid=supports_duration
+            hass,
+            condition,
+            _merge({"for": for_value}),
+            valid=supports_duration,
+            supports_target=supports_target,
         )
 
     # Unknown option should always be rejected
     await _validate_condition_options(
-        hass, condition, _merge({"unknown_option": True}), valid=False
+        hass,
+        condition,
+        _merge({"unknown_option": True}),
+        valid=False,
+        supports_target=supports_target,
     )
 
 
@@ -1581,18 +1833,18 @@ async def _validate_trigger_options(
     options: dict[str, Any] | None,
     *,
     valid: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert that a trigger accepts or rejects the given options during validation."""
-    trigger_config: dict[str, Any] = {
-        CONF_PLATFORM: trigger,
-        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-    }
+    trigger_config: dict[str, Any] = {CONF_PLATFORM: trigger}
+    if supports_target:
+        trigger_config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
     if options is not None:
         trigger_config[CONF_OPTIONS] = options
     if valid:
         await async_validate_trigger_config(hass, [trigger_config])
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_trigger_config(hass, [trigger_config])
 
 
@@ -1603,6 +1855,7 @@ async def assert_trigger_options_supported(
     *,
     supports_behavior: bool,
     supports_duration: bool,
+    supports_target: bool = True,
 ) -> None:
     """Assert which options a trigger supports.
 
@@ -1619,28 +1872,46 @@ async def assert_trigger_options_supported(
 
     # Minimal config should always be valid
     supports_empty = not bool(base_options)
-    await _validate_trigger_options(hass, trigger, None, valid=supports_empty)
-    await _validate_trigger_options(hass, trigger, {}, valid=supports_empty)
-    await _validate_trigger_options(hass, trigger, base_options, valid=True)
+    await _validate_trigger_options(
+        hass, trigger, None, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_trigger_options(
+        hass, trigger, {}, valid=supports_empty, supports_target=supports_target
+    )
+    await _validate_trigger_options(
+        hass, trigger, base_options, valid=True, supports_target=supports_target
+    )
 
     def _merge(extra: dict[str, Any]) -> dict[str, Any]:
         return {**(base_options or {}), **extra}
 
     # Behavior
-    for behavior in ("any", "first", "last"):
+    for behavior in ("each", "first", "all"):
         await _validate_trigger_options(
-            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
+            hass,
+            trigger,
+            _merge({"behavior": behavior}),
+            valid=supports_behavior,
+            supports_target=supports_target,
         )
 
     # Duration
     for for_value in ({"seconds": 5}, "00:00:05", 5):
         await _validate_trigger_options(
-            hass, trigger, _merge({"for": for_value}), valid=supports_duration
+            hass,
+            trigger,
+            _merge({"for": for_value}),
+            valid=supports_duration,
+            supports_target=supports_target,
         )
 
     # Unknown option should always be rejected
     await _validate_trigger_options(
-        hass, trigger, _merge({"unknown_option": True}), valid=False
+        hass,
+        trigger,
+        _merge({"unknown_option": True}),
+        valid=False,
+        supports_target=supports_target,
     )
 
 
@@ -1745,7 +2016,7 @@ async def assert_condition_behavior_all(
         assert cond.async_check() == state["condition_true"]
 
 
-async def assert_trigger_behavior_any(
+async def assert_trigger_behavior_each(
     hass: HomeAssistant,
     *,
     target_entities: dict[str, list[str]],
@@ -1756,7 +2027,7 @@ async def assert_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test trigger fires in mode any."""
+    """Test trigger fires in mode each."""
     calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
@@ -1850,7 +2121,7 @@ async def assert_trigger_behavior_first(
         assert len(calls) == 0
 
 
-async def assert_trigger_behavior_last(
+async def assert_trigger_behavior_all(
     hass: HomeAssistant,
     *,
     target_entities: dict[str, list[str]],
@@ -1861,7 +2132,7 @@ async def assert_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test trigger fires in mode last."""
+    """Test trigger fires in mode all."""
     calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
@@ -1876,7 +2147,7 @@ async def assert_trigger_behavior_last(
     await arm_trigger(
         hass,
         trigger,
-        {"behavior": "last"} | trigger_options,
+        {"behavior": "all"} | trigger_options,
         trigger_target_config,
         calls,
     )
@@ -1908,13 +2179,14 @@ def parametrize_numerical_condition_above_below_any(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=any.
+    """Parametrize threshold cases for state-value numerical conditions.
 
-    Generates state sequences for a condition that reads its tracked value
-    directly from `state.state` (e.g. a sensor with a temperature device
+    Uses behavior=any. Generates state sequences for a condition
+    that reads its tracked value directly from `state.state`
+    (e.g. a sensor with a temperature device
     class). The condition is exercised across three threshold types in turn
     — "above", "below", "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2010,14 +2282,14 @@ def parametrize_numerical_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                ("21", unit_attributes),
+                ("20", unit_attributes),
                 ("50", unit_attributes),
-                ("79", unit_attributes),
+                ("80", unit_attributes),
             ],
             other_states=[
                 ("0", unit_attributes),
-                ("20", unit_attributes),
-                ("80", unit_attributes),
+                ("19", unit_attributes),
+                ("81", unit_attributes),
                 ("100", unit_attributes),
             ],
             required_filter_attributes=required_filter_attributes,
@@ -2030,10 +2302,12 @@ def parametrize_numerical_condition_above_below_all(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for state-value numerical conditions under behavior=all.
+    """Parametrize threshold cases for state-value numerical conditions.
+
+    Uses behavior=all.
 
     See `parametrize_numerical_condition_above_below_any` for the structure
     of the generated test cases; the only difference is that this helper
@@ -2126,14 +2400,14 @@ def parametrize_numerical_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                ("21", unit_attributes),
+                ("20", unit_attributes),
                 ("50", unit_attributes),
-                ("79", unit_attributes),
+                ("80", unit_attributes),
             ],
             other_states=[
                 ("0", unit_attributes),
-                ("20", unit_attributes),
-                ("80", unit_attributes),
+                ("19", unit_attributes),
+                ("81", unit_attributes),
                 ("100", unit_attributes),
             ],
             required_filter_attributes=required_filter_attributes,
@@ -2148,15 +2422,16 @@ def parametrize_numerical_attribute_condition_above_below_any(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=any.
+    """Parametrize threshold cases for attribute-based numerical conditions.
 
-    Generates state sequences for a condition that reads its tracked value
-    from a state attribute (e.g. `climate.target_humidity`). The condition
+    Uses behavior=any. Generates state sequences for a condition
+    that reads its tracked value from a state attribute
+    (e.g. `climate.is_target_humidity`). The condition
     is exercised across three threshold types in turn — "above", "below",
     "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2169,7 +2444,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2201,9 +2476,9 @@ def parametrize_numerical_attribute_condition_above_below_any(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
@@ -2272,14 +2547,14 @@ def parametrize_numerical_attribute_condition_above_below_any(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
                 (state, {attribute: 50 * s} | unit_attributes),
-                (state, {attribute: 79 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
             ],
             other_states=[
                 (state, {attribute: 0 * s} | unit_attributes),
-                (state, {attribute: 20 * s} | unit_attributes),
-                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 19 * s} | unit_attributes),
+                (state, {attribute: 81 * s} | unit_attributes),
                 (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
@@ -2295,12 +2570,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | None | UndefinedType = UNDEFINED,
+    threshold_unit: str | UndefinedType | None = UNDEFINED,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below/between threshold cases for attribute-based numerical conditions under behavior=all.
+    """Parametrize threshold cases for attribute-based numerical conditions.
+
+    Uses behavior=all.
 
     See `parametrize_numerical_attribute_condition_above_below_any` for the
     structure of the generated test cases; the only difference is that this
@@ -2314,7 +2591,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2346,9 +2623,9 @@ def parametrize_numerical_attribute_condition_above_below_all(
             attribute values before they are written to the state. Use
             this when the condition stores its tracked value on a
             different scale than the threshold — e.g. `media_player`
-            volume is stored as 0.0–1.0 but the threshold is in percent,
+            volume is stored as 0.0-1.0 but the threshold is in percent,
             so pass `attribute_value_scale=0.01`; light brightness is
-            stored as 0–255 but the threshold is in percent, so pass
+            stored as 0-255 but the threshold is in percent, so pass
             `attribute_value_scale=255/100`.
     """
     condition_options = condition_options or {}
@@ -2417,14 +2694,14 @@ def parametrize_numerical_attribute_condition_above_below_all(
                 threshold_unit,
             ),
             target_states=[
-                (state, {attribute: 21 * s} | unit_attributes),
+                (state, {attribute: 20 * s} | unit_attributes),
                 (state, {attribute: 50 * s} | unit_attributes),
-                (state, {attribute: 79 * s} | unit_attributes),
+                (state, {attribute: 80 * s} | unit_attributes),
             ],
             other_states=[
                 (state, {attribute: 0 * s} | unit_attributes),
-                (state, {attribute: 20 * s} | unit_attributes),
-                (state, {attribute: 80 * s} | unit_attributes),
+                (state, {attribute: 19 * s} | unit_attributes),
+                (state, {attribute: 81 * s} | unit_attributes),
                 (state, {attribute: 100 * s} | unit_attributes),
             ],
             extra_excluded_states=extra_excluded_states,
@@ -2529,7 +2806,7 @@ async def assert_numerical_condition_unit_conversion(
     entities whose unit_of_measurement is invalid (not convertible).
 
     Args:
-        condition: The condition key (e.g. "climate.target_temperature").
+        condition: The condition key (e.g. "climate.is_target_temperature").
         entity_id: The entity being evaluated by the condition.
         pass_states: Entity states that should make the condition pass.
         fail_states: Entity states that should make the condition fail.
@@ -2591,3 +2868,28 @@ async def assert_numerical_condition_unit_conversion(
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
             assert cond.async_check() is False
+
+
+async def assert_availability_follows_source_entity(
+    hass: HomeAssistant,
+    entity_id: str,
+    source_entity_id: str,
+) -> None:
+    """Check that entity becomes unavailable when source entity is unavailable."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    hass.states.async_set(source_entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(source_entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE

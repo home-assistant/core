@@ -1,15 +1,21 @@
 """The Snooz component."""
 
+from dataclasses import replace
 import logging
 
+from pysnooz import parse_snooz_advertisement
 from pysnooz.device import SnoozDevice
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_last_service_info,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .models import SnoozConfigEntry, SnoozConfigurationData
 
 
@@ -21,12 +27,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
     # transitions info logs are verbose. Only enable warnings
     logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
-    if not (ble_device := async_ble_device_from_address(hass, address)):
+    if (service_info := async_last_service_info(hass, address)) is None or (
+        advertisement := parse_snooz_advertisement(service_info)
+    ) is None:
         raise ConfigEntryNotReady(
-            f"Could not find Snooz with address {address}. Try power cycling the device"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
-    device = SnoozDevice(ble_device, token)
+    ble_device = service_info.device
+    device = SnoozDevice(ble_device, replace(advertisement, password=token))
 
     entry.runtime_data = SnoozConfigurationData(ble_device, device, entry.title)
 

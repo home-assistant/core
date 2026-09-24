@@ -60,7 +60,7 @@ SENSORS_ALL_HTTP = [
 def create_device_registry_devices_fixture(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ):
-    """Create device registry devices so the device tracker entities are enabled when added."""
+    """Create device registry devices so device tracker entities are enabled."""
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 

@@ -2,22 +2,23 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import CookieJar
+import probatio
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_NAME,
+    CONF_API_KEY,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -30,22 +31,23 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -54,15 +56,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Exclusive(CONF_API_KEY, "credentials"): cv.string,
+        probatio.Exclusive(CONF_USERNAME, "credentials"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -84,8 +87,9 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     pyload = PyLoadAPI(
         session,
         api_url=URL(user_input[CONF_URL]),
-        username=user_input[CONF_USERNAME],
-        password=user_input[CONF_PASSWORD],
+        username=user_input.get(CONF_USERNAME),
+        password=user_input.get(CONF_PASSWORD),
+        api_key=user_input.get(CONF_API_KEY),
     )
 
     await pyload.get_status()
@@ -99,6 +103,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _hassio_discovery: HassioServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -111,7 +116,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuth, ValueError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -154,7 +159,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, {**reauth_entry.data, **user_input})
             except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuth, ValueError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -169,12 +174,11 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 REAUTH_SCHEMA,
                 {
-                    CONF_USERNAME: user_input[CONF_USERNAME]
+                    CONF_USERNAME: user_input.get(CONF_USERNAME)
                     if user_input is not None
-                    else reauth_entry.data[CONF_USERNAME]
+                    else reauth_entry.data.get(CONF_USERNAME)
                 },
             ),
-            description_placeholders={CONF_NAME: reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 
@@ -190,7 +194,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuth, ValueError:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -211,13 +215,11 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA,
                 suggested_values,
             ),
-            description_placeholders={
-                CONF_NAME: reconfig_entry.data[CONF_USERNAME],
-                **PLACEHOLDER,
-            },
+            description_placeholders=PLACEHOLDER,
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -250,7 +252,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect, ParserError:
             _LOGGER.debug("Cannot connect", exc_info=True)
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except InvalidAuth, ValueError:
             errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")

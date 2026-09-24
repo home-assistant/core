@@ -1,13 +1,14 @@
 """Http views to control the config manager."""
 
+from asyncio import shield
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
-from typing import Any, NoReturn
+from typing import Any, NoReturn, override
 
 from aiohttp import web
 import aiohttp.web_exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
@@ -110,8 +111,18 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
+        # Shield the removal from cancellation on connection drop, otherwise the
+        # entry is dropped from memory but never saved or cleaned up. The task is
+        # created through hass so a strong reference is held for its lifetime,
+        # which keeps it from being garbage collected once the request handler
+        # has gone away.
+        remove_task = hass.async_create_task(
+            hass.config_entries.async_remove(entry_id),
+            f"config entry remove {entry_id}",
+        )
+
         try:
-            result = await hass.config_entries.async_remove(entry_id)
+            result = await shield(remove_task)
         except config_entries.UnknownEntry:
             return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
@@ -144,22 +155,24 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 
 def _prepare_config_flow_result_json(
-    result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+    result: config_entries.ConfigFlowResult,
+    prepare_result_json: Callable[[config_entries.ConfigFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
-    entry: config_entries.ConfigEntry = result["result"]  # type: ignore[typeddict-item]
+    entry: config_entries.ConfigEntry = result["result"]
     # We overwrite the ConfigEntry object with its json representation.
     data["result"] = entry.as_json_fragment
     return data
 
 
 class ConfigManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.ConfigEntriesFlowManager]
+    FlowManagerIndexView[
+        config_entries.ConfigEntriesFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to create config flows."""
 
@@ -172,19 +185,20 @@ class ConfigManagerFlowIndexView(
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
-                vol.Optional("entry_id"): cv.string,
+                probatio.Required("handler"): probatio.Any(str, list),
+                probatio.Optional("entry_id"): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Initialize a POST request for a config entry flow."""
         return await self._post_impl(request, data)
 
+    @override
     async def _post_impl(
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
@@ -197,6 +211,7 @@ class ConfigManagerFlowIndexView(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -206,15 +221,18 @@ class ConfigManagerFlowIndexView(
             context["entry_id"] = entry_id
         return context
 
+    @override
     def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
+        self, result: config_entries.ConfigFlowResult
     ) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.ConfigEntriesFlowManager]
+    FlowManagerResourceView[
+        config_entries.ConfigEntriesFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to interact with the flow manager."""
 
@@ -222,17 +240,20 @@ class ConfigManagerFlowResourceView(
     name = "api:config:config_entries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
+    @override
     def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
+        self, result: config_entries.ConfigFlowResult
     ) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
@@ -254,7 +275,9 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
 
 
 class OptionManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.OptionsFlowManager]
+    FlowManagerIndexView[
+        config_entries.OptionsFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to create option flows."""
 
@@ -262,6 +285,7 @@ class OptionManagerFlowIndexView(
     name = "api:config:config_entries:option:flow"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request.
 
@@ -271,7 +295,9 @@ class OptionManagerFlowIndexView(
 
 
 class OptionManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.OptionsFlowManager]
+    FlowManagerResourceView[
+        config_entries.OptionsFlowManager, config_entries.ConfigFlowResult
+    ]
 ):
     """View to interact with the option flow manager."""
 
@@ -279,18 +305,22 @@ class OptionManagerFlowResourceView(
     name = "api:config:config_entries:options:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
 
 class SubentryManagerFlowIndexView(
-    FlowManagerIndexView[config_entries.ConfigSubentryFlowManager]
+    FlowManagerIndexView[
+        config_entries.ConfigSubentryFlowManager, config_entries.SubentryFlowResult
+    ]
 ):
     """View to create subentry flows."""
 
@@ -299,14 +329,16 @@ class SubentryManagerFlowIndexView(
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
+                probatio.Required("handler"): probatio.All(
+                    probatio.Coerce(tuple), (str, str)
+                ),
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request.
 
@@ -314,6 +346,7 @@ class SubentryManagerFlowIndexView(
         """
         return await super()._post_impl(request, data)
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -325,7 +358,9 @@ class SubentryManagerFlowIndexView(
 
 
 class SubentryManagerFlowResourceView(
-    FlowManagerResourceView[config_entries.ConfigSubentryFlowManager]
+    FlowManagerResourceView[
+        config_entries.ConfigSubentryFlowManager, config_entries.SubentryFlowResult
+    ]
 ):
     """View to interact with the subentry flow manager."""
 
@@ -333,11 +368,13 @@ class SubentryManagerFlowResourceView(
     name = "api:config:config_entries:subentries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -494,9 +531,9 @@ async def config_entry_get_single(
     {
         "type": "config_entries/update",
         "entry_id": str,
-        vol.Optional("title"): str,
-        vol.Optional("pref_disable_new_entities"): bool,
-        vol.Optional("pref_disable_polling"): bool,
+        probatio.Optional("title"): str,
+        probatio.Optional("pref_disable_new_entities"): bool,
+        probatio.Optional("pref_disable_polling"): bool,
     }
 )
 @websocket_api.async_response
@@ -543,8 +580,10 @@ async def config_entry_update(
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        # No Enum support like this in voluptuous, use .value
-        "disabled_by": vol.Any(config_entries.ConfigEntryDisabler.USER.value, None),
+        # No Enum support like this in probatio, use .value
+        "disabled_by": probatio.Any(
+            config_entries.ConfigEntryDisabler.USER.value, None
+        ),
     }
 )
 @websocket_api.async_response
@@ -617,9 +656,9 @@ async def ignore_config_flow(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/get",
-        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
-        vol.Optional("domain"): str,
+        probatio.Required("type"): "config_entries/get",
+        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("domain"): str,
     }
 )
 @websocket_api.async_response
@@ -637,8 +676,8 @@ async def config_entries_get(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/subscribe",
-        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
+        probatio.Required("type"): "config_entries/subscribe",
+        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
     }
 )
 @websocket_api.async_response
@@ -767,7 +806,7 @@ async def config_subentry_list(
         "type": "config_entries/subentries/update",
         "entry_id": str,
         "subentry_id": str,
-        vol.Optional("title"): str,
+        probatio.Optional("title"): str,
     }
 )
 @websocket_api.async_response

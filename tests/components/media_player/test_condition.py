@@ -8,15 +8,17 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
 )
+from homeassistant.components.media_player.condition import CONDITIONS
 from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     other_states,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -26,7 +28,7 @@ from tests.components.common import (
     target_entities,
 )
 
-# Volume is stored as 0.0–1.0 but the threshold is in percent.
+# Volume is stored as 0.0-1.0 but the threshold is in percent.
 _VOLUME_VALUE_SCALE = 0.01
 
 _IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
@@ -96,27 +98,18 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "media_player")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "media_player.is_muted",
-        "media_player.is_off",
-        "media_player.is_on",
-        "media_player.is_not_playing",
-        "media_player.is_paused",
-        "media_player.is_playing",
-        "media_player.is_unmuted",
-        "media_player.is_volume",
-    ],
-)
-async def test_media_player_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the media player conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_muted": TargetSupport.STANDARD,
+    "is_not_playing": TargetSupport.STANDARD,
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_paused": TargetSupport.STANDARD,
+    "is_playing": TargetSupport.STANDARD,
+    "is_unmuted": TargetSupport.STANDARD,
+    "is_volume": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -147,7 +140,11 @@ async def test_media_player_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -230,7 +227,6 @@ async def test_media_player_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),

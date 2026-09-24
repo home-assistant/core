@@ -8,9 +8,9 @@ from indevolt_api import (
     PowerExceedsMaxError,
     SocBelowMinimumError,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -18,25 +18,26 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 
-RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
+RT_ACTION_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required("device_id"): vol.All(
+        probatio.Required("device_id"): probatio.All(
             cv.ensure_list,
             [cv.string],
         ),
-        vol.Required("target_soc"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0, max=100),
+        probatio.Required("target_soc"): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=100),
         ),
-        vol.Required("power"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=1, max=2400),
+        probatio.Required("power"): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=10800),
         ),
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
 
     async def charge(call: ServiceCall) -> None:
@@ -146,7 +147,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results: list[None | BaseException] = await asyncio.gather(
+    results: list[BaseException | None] = await asyncio.gather(
         *(
             coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators
@@ -185,7 +186,10 @@ def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Nev
 
 
 def _raise_soc_below_minimum(target_soc: int, minimum_soc: int) -> Never:
-    """Raise a translated validation error when SOC is below the device's hard minimum."""
+    """Raise a translated validation error.
+
+    Called when SOC is below the device's hard minimum.
+    """
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="soc_below_minimum",

@@ -1,6 +1,6 @@
 """Support for Iperf3 sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -36,7 +36,7 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
@@ -50,6 +50,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
         self._attr_name = f"{description.name} {iperf3_data.host}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -59,6 +60,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             ATTR_VERSION: self._iperf3_data.data[ATTR_VERSION],
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

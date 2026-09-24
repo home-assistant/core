@@ -24,6 +24,43 @@ GVH5075_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+GVH5055_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address="C0:A3:C7:0A:5C:77",
+    rssi=-63,
+    manufacturer_data={
+        23562: b"\x77\x41\x00\x01\x01\xe4\x81\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
+    },
+    service_uuids=["00005550-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
+GVH5184_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH5184_XXXX",
+    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    rssi=-56,
+    manufacturer_data={
+        6966: b" \x01\x00\x01\x01\xe4\x01\x86\x0c\x1c\xff\xff\x86\n\xf0\xff\xff",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\x0c",
+    },
+    service_uuids=["00008451-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
+GVH5198_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    rssi=-56,
+    manufacturer_data={
+        12322: b"\x6c\x01\x00\x01\x01\xa4\xc2\x0f\x0e\x10\xff\xff\xff\xff\x08\xfc\xff\xff\xff\xff"
+    },
+    service_uuids=["00009851-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
 GVH5177_SERVICE_INFO = BluetoothServiceInfo(
     name="GVH5177 2EC8",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
@@ -103,7 +140,10 @@ GV5125_BUTTON_1_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-36,
     manufacturer_data={
         60552: b"\x01\n.\xaf\xd9085Sg\x01\x01",
-        61320: b".\xaf\x00\x00\xfb\x0e\xc9h\xd7\x05l\xaf*\xf3\x1b\xe8w\xf1\xe1\xe8\xe3\xa7\xf8\xc6",
+        61320: (
+            b".\xaf\x00\x00\xfb\x0e\xc9h\xd7\x05l\xaf*\xf3\x1b"
+            b"\xe8w\xf1\xe1\xe8\xe3\xa7\xf8\xc6"
+        ),
     },
     service_data={},
     service_uuids=[],
@@ -116,7 +156,9 @@ GV5121_MOTION_SERVICE_INFO = BluetoothServiceInfo(
     address="C1:37:37:32:0F:45",
     rssi=-36,
     manufacturer_data={
-        61320: b"Y\x94\x00\x00\xf0\xb9\x197\xaeP\xb67,\x86j\xc2\xf3\xd0a\xe7\x17\xc0,\xef"
+        61320: (
+            b"Y\x94\x00\x00\xf0\xb9\x197\xaeP\xb67,\x86j\xc2\xf3\xd0a\xe7\x17\xc0,\xef"
+        )
     },
     service_data={},
     service_uuids=[],
@@ -129,7 +171,10 @@ GV5121_MOTION_SERVICE_INFO_2 = BluetoothServiceInfo(
     address="C1:37:37:32:0F:45",
     rssi=-36,
     manufacturer_data={
-        61320: b"Y\x94\x00\x06\xa3f6e\xc8\xe6\xfdv\x04\xaf\xe7k\xbf\xab\xeb\xbf\xb3\xa3\xd5\x19"
+        61320: (
+            b"Y\x94\x00\x06\xa3f6e\xc8\xe6\xfdv\x04\xaf\xe7k"
+            b"\xbf\xab\xeb\xbf\xb3\xa3\xd5\x19"
+        )
     },
     service_data={},
     service_uuids=[],

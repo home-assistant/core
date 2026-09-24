@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 
 from pymonoprice import Monoprice, get_monoprice
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
@@ -78,8 +78,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -
     def _cleanup(monoprice) -> None:
         """Destroy the Monoprice object.
 
-        Destroying the Monoprice closes the serial connection, do it in an executor so the garbage
-        collection does not block.
+        Destroying the Monoprice closes the serial connection,
+        do it in an executor so the garbage collection
+        does not block.
         """
         del monoprice
 

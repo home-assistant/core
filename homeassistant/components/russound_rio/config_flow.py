@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.connection import (
@@ -10,14 +10,16 @@ from aiorussound.connection import (
     RussoundSerialConnectionHandler,
 )
 from aiorussound.rio import Controller, RussoundRIOClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -26,8 +28,10 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import RussoundConfigEntry
 from .const import (
     CONF_BAUDRATE,
+    CONF_ZONE_SOURCE_EXCLUSION,
     DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DOMAIN,
@@ -36,9 +40,9 @@ from .const import (
     TYPE_TCP,
 )
 
-TRANSPORT_SCHEMA = vol.Schema(
+TRANSPORT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
+        probatio.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
             SelectSelectorConfig(
                 options=[TYPE_TCP, TYPE_SERIAL],
                 translation_key="connection_type",
@@ -47,20 +51,29 @@ TRANSPORT_SCHEMA = vol.Schema(
     }
 )
 
-TCP_SCHEMA = vol.Schema(
+TCP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
-SERIAL_SCHEMA = vol.Schema(
+SERIAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=1),
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=1),
         ),
+    }
+)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(
+            CONF_ZONE_SOURCE_EXCLUSION,
+            default=True,
+        ): bool,
     }
 )
 
@@ -84,10 +97,35 @@ async def _async_validate_connection(
     return controller
 
 
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle Russound RIO options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Russound RIO configuration flow."""
 
     VERSION = 2
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: RussoundConfigEntry) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -115,6 +153,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -162,6 +201,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

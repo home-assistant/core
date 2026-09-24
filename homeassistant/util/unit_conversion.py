@@ -3,20 +3,16 @@
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
+from typing import override
 
 from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -27,6 +23,8 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSpeed,
@@ -74,6 +72,7 @@ _DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
 _WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+_WH_TO_THERM_US = _WH_TO_J / 1.054804e8  # 1 therm (U.S.) = 1.054804e8 J (NIST SP 811)
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -107,6 +106,9 @@ _NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
 _NITROGEN_MONOXIDE_MOLAR_MASS = 30.0061
 _OZONE_MOLAR_MASS = 48.00
 _SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
+
+# Radiation concentration conversion constant
+_PICOCURIES_PER_LITER_TO_BECQUEREL_PER_CUBIC_METER = 37  # 1 pCi/L = 37 Bq/m³
 
 
 class BaseUnitConverter:
@@ -154,7 +156,10 @@ class BaseUnitConverter:
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert one unit of measurement to another which allows None."""
+        """Return a function to convert a unit to another.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
@@ -243,20 +248,20 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "carbon_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
+        UnitOfRatio.PARTS_PER_BILLION: 1e9,
+        UnitOfRatio.PARTS_PER_MILLION: 1e6,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
         ),
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -410,6 +415,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
+        UnitOfEnergy.THERM: _WH_TO_THERM_US * 1e3,
     }
     VALID_UNITS = set(UnitOfEnergy)
 
@@ -491,14 +497,14 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
-        CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
+        UnitOfDensity.GRAMS_PER_CUBIC_METER: 1.0,
     }
     VALID_UNITS = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
     }
 
 
@@ -507,16 +513,16 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "nitrogen_dioxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfRatio.PARTS_PER_BILLION: 1e9,
+        UnitOfRatio.PARTS_PER_MILLION: 1e6,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -525,14 +531,14 @@ class NitrogenMonoxideConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "nitrogen_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfRatio.PARTS_PER_BILLION: 1e9,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -541,16 +547,16 @@ class OzoneConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "ozone"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfRatio.PARTS_PER_BILLION: 1e9,
+        UnitOfRatio.PARTS_PER_MILLION: 1e6,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -596,6 +602,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.ATM: 1 / 101325,
     }
     VALID_UNITS = {
         UnitOfPressure.MILLIPASCAL,
@@ -609,7 +616,21 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
+        UnitOfPressure.ATM,
     }
+
+
+class RadiationConcentrationConverter(BaseUnitConverter):
+    """Utility to convert radiation concentration values."""
+
+    UNIT_CLASS = "radiation_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 1,
+        UnitOfRadiationConcentration.PICOCURIES_PER_LITER: (
+            1 / _PICOCURIES_PER_LITER_TO_BECQUEREL_PER_CUBIC_METER
+        ),
+    }
+    VALID_UNITS = set(UnitOfRadiationConcentration)
 
 
 class ReactiveEnergyConverter(BaseUnitConverter):
@@ -676,6 +697,7 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -690,10 +712,14 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a speed from one unit to another which allows None."""
+        """Return a function to convert speed units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap
@@ -744,14 +770,14 @@ class SulphurDioxideConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "sulphur_dioxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfRatio.PARTS_PER_BILLION: 1e9,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -772,6 +798,7 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -786,10 +813,14 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a temperature from one unit to another which allows None."""
+        """Return a function to convert temperature units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap
@@ -913,15 +944,15 @@ class UnitlessRatioConverter(BaseUnitConverter):
     UNIT_CLASS = "unitless"
     _UNIT_CONVERSION: dict[str | None, float] = {
         None: 1,
-        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
-        CONCENTRATION_PARTS_PER_MILLION: 1000000,
-        PERCENTAGE: 100,
+        UnitOfRatio.PARTS_PER_BILLION: 1000000000,
+        UnitOfRatio.PARTS_PER_MILLION: 1000000,
+        UnitOfRatio.PERCENTAGE: 100,
     }
     VALID_UNITS = {
         None,
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
-        PERCENTAGE,
+        UnitOfRatio.PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
+        UnitOfRatio.PERCENTAGE,
     }
 
 

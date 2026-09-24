@@ -61,7 +61,7 @@ async def test_cover_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
 
     # Open cover
     await hass.services.async_call(
@@ -104,7 +104,7 @@ async def test_cover_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # Simulate update

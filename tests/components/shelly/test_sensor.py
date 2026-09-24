@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock, PropertyMock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_CAMERA, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfVolume,
@@ -728,6 +729,33 @@ async def test_rpc_restored_sleeping_sensor(
     assert state.state == "22.9"
 
 
+async def test_rpc_restored_sensor_when_not_initialized(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test restored mains-powered RPC sensor when device is not initialized."""
+    entry = await init_integration(hass, 2, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1266,7 +1294,7 @@ async def test_rpc_remove_text_virtual_sensor_when_mode_field(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual text sensor will be removed if the mode has been changed to a field."""
+    """Test virtual text sensor removal when mode changes to field."""
     config = deepcopy(mock_rpc_device.config)
     config["text:200"] = {"name": None, "meta": {"ui": {"view": "field"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -1298,7 +1326,7 @@ async def test_rpc_remove_text_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual text sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual text sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -1363,6 +1391,32 @@ async def test_rpc_device_virtual_number_sensor(
     assert state.state == "56.7"
 
 
+async def test_rpc_device_virtual_number_sensor_no_unit(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual number sensor with no unit key in meta.ui."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:203"] = {
+        "name": "Virtual number sensor",
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 0.1, "view": "label"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:203"] = {"value": 34.5}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get("sensor.test_name_virtual_number_sensor"))
+    assert state.state == "34.5"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     hass: HomeAssistant,
@@ -1371,7 +1425,7 @@ async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual number sensor will be removed if the mode has been changed to a field."""
+    """Test virtual number sensor removal when mode changes to field."""
     config = deepcopy(mock_rpc_device.config)
     config["number:200"] = {
         "name": None,
@@ -1408,7 +1462,7 @@ async def test_rpc_remove_number_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual number sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual number sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -1485,7 +1539,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual enum sensor will be removed if the mode has been changed to a dropdown."""
+    """Test virtual enum sensor removal when mode changes to dropdown."""
     config = deepcopy(mock_rpc_device.config)
     config["enum:200"] = {
         "name": None,
@@ -1526,7 +1580,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual enum sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual enum sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -2218,3 +2272,124 @@ async def test_rpc_rgbcct_sensors(
     assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
     assert entry.name is None
     assert entry.translation_key is None  # entity with device class and no channel name
+
+
+async def test_rpc_sensor_driver_missing_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """RPC sensor with missing driver error should be removed."""
+    status = {
+        "temperature:0": {
+            "id": 0,
+            "tC": -275.1499938964844,
+            "errors": ["Sensor driver missing from firmware"],
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config_entry = await init_integration(hass, 2, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None
+
+
+async def test_rpc_sensor_errors_none(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """RPC sensor with errors set to none."""
+    status = {
+        "temperature:0": {
+            "id": 0,
+            "tC": 11.1,
+            "errors": None,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get("sensor.test_name_temperature"))
+    assert state.state == "11.1"
+
+
+async def test_rpc_storage_fs_free_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC storage free space sensor."""
+    status = {"storage:0": {"present": True, "fs_free": 1048576000}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config = {"storage:0": {"id": 0}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_free_storage_space"
+    await init_integration(hass, 4, model=MODEL_CAMERA)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "1.048576"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.GIGABYTES
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-storage:0-storage_fs_free"
+    assert entry.unit_of_measurement == UnitOfInformation.GIGABYTES
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "storage:0", "fs_free", 2097152000
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2.097152"
+
+
+async def test_rpc_storage_fs_free_sensor_removal(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test RPC storage free space sensor removal when storage not present."""
+    status = {"storage:0": {"present": False, "fs_free": 0}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config = {"storage:0": {"id": 0}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    config_entry = await init_integration(hass, 4, model=MODEL_CAMERA, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_free_storage_space",
+        "storage:0-storage_fs_free",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None

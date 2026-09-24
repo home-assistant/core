@@ -189,14 +189,15 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 
 
 class NativeLargeBinary(LargeBinary):
-    """A faster version of LargeBinary for engines that support python bytes natively."""
+    """A faster LargeBinary for engines supporting native bytes."""
 
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
 
 
-# Although all integers are same in SQLite, it does not allow an identity column to be BIGINT
+# Although all integers are same in SQLite, it does not allow an
+# identity column to be BIGINT
 # https://sqlite.org/forum/info/2dfa968a702e1506e885cb06d92157d492108b22bf39459506ab9f7125bca7fd
 ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32

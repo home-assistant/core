@@ -1,7 +1,7 @@
 """Config flow to configure the Tailwind integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from gotailwind import (
     MIN_REQUIRED_FIRMWARE_VERSION,
@@ -11,7 +11,7 @@ from gotailwind import (
     TailwindUnsupportedFirmwareVersionError,
     tailwind_device_id_to_mac_address,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -45,6 +45,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     host: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,12 +72,12 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST)
                     ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                    vol.Required(CONF_TOKEN): TextSelector(
+                    probatio.Required(CONF_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -85,6 +86,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -135,9 +137,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): TextSelector(
+                    probatio.Required(CONF_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -171,13 +173,13 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                         default=reconfigure_entry.data[CONF_HOST],
                     ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                    vol.Required(CONF_TOKEN): TextSelector(
+                    probatio.Required(CONF_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -214,9 +216,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TOKEN): TextSelector(
+                    probatio.Required(CONF_TOKEN): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -225,6 +227,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

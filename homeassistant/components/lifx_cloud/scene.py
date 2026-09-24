@@ -3,29 +3,32 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): "lifx_cloud",
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Required(CONF_PLATFORM): "lifx_cloud",
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -78,10 +81,12 @@ class LifxCloudScene(Scene):
         self._uuid = scene_data["uuid"]
 
     @property
+    @override
     def name(self):
         """Return the name of the scene."""
         return self._name
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
@@ -91,5 +96,9 @@ class LifxCloudScene(Scene):
             async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        except TimeoutError, aiohttp.ClientError:
-            _LOGGER.exception("Error on %s", url)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="activate_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -3,10 +3,10 @@
 from datetime import timedelta
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
+import probatio
 from telnetlib import Telnet  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -28,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = "device"
-ATTR_MODEL = "model"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634
@@ -39,10 +39,12 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DISKS, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -81,6 +83,7 @@ class HddTempSensor(SensorEntity):
         self._details = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:

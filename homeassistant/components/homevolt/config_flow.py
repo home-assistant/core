@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from homevolt import Homevolt, HomevoltAuthenticationError, HomevoltConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -16,15 +16,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
-STEP_CREDENTIALS_DATA_SCHEMA = vol.Schema(
+STEP_CREDENTIALS_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -54,6 +54,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -157,6 +158,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": self._host},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

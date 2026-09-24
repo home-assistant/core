@@ -103,7 +103,8 @@ async def test_button_press_failure(
     # Press the button and expect HomeAssistantError
     with pytest.raises(
         HomeAssistantError,
-        match="Failed to reboot gateway. Try again in a few moments or power cycle the device manually",
+        match="Failed to reboot gateway. Try again in a few moments"
+        " or power cycle the device manually",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -154,7 +155,8 @@ async def test_identify_button_press_failure(
     # Press the button and expect HomeAssistantError
     with pytest.raises(
         HomeAssistantError,
-        match='Failed to communicate with Velux device: <PyVLXException description="Connection failed" />',
+        match="Failed to communicate with Velux device:"
+        ' <PyVLXException description="Connection failed" />',
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pycync import Auth
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
@@ -23,14 +23,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
+STEP_TWO_FACTOR_SCHEMA = probatio.Schema({probatio.Required(CONF_TWO_FACTOR_CODE): str})
 
 
 class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,6 +40,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     cync_auth: Auth = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -88,7 +89,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required and prompts for their Cync credentials."""
+        """Inform the user that reauth is required and prompt for Cync credentials."""
         errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()

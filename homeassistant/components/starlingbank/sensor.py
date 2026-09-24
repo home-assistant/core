@@ -2,10 +2,11 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
+import probatio
 import requests
 from starlingbank import StarlingAccount
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,19 +32,19 @@ DEFAULT_ACCOUNT_NAME = "Starling"
 
 SCAN_INTERVAL = timedelta(seconds=180)
 
-ACCOUNT_SCHEMA = vol.Schema(
+ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES): vol.All(
-            cv.ensure_list, [vol.In(BALANCE_TYPES)]
+        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES): probatio.All(
+            cv.ensure_list, [probatio.In(BALANCE_TYPES)]
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
-        vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
+        probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCOUNTS): vol.Schema([ACCOUNT_SCHEMA])}
+    {probatio.Required(CONF_ACCOUNTS): probatio.Schema([ACCOUNT_SCHEMA])}
 )
 
 
@@ -88,17 +89,20 @@ class StarlingBalanceSensor(SensorEntity):
         self._account_name = account_name
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         balance_data_type = self._balance_data_type.replace("_", " ").capitalize()
         return f"{self._account_name} {balance_data_type}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._starling_account.currency

@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 
 from pytradfri import Gateway, RequestError
-from pytradfri.api.aiocoap_api import APIFactory
+from pytradfri.api.aiocoap_api import APIFactory, APIRequestProtocol
 from pytradfri.command import Command
 from pytradfri.device import Device
 
@@ -56,12 +56,12 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    api = factory.request
+    api: APIRequestProtocol = factory.request
     gateway = Gateway()
 
     try:
         gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
-        devices_commands: Command = await api(
+        devices_commands: list[Command[Device]] = await api(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
         devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
@@ -165,12 +165,11 @@ def remove_stale_devices(
             continue
 
         if device_id is None or device_id not in all_device_ids:
-            # If device_id is None an invalid device entry was found for this config entry.
+            # If device_id is None an invalid device entry
+            # was found for this config entry.
             # If the device_id is not in existing device ids it's a stale device entry.
-            # Remove config entry from this device entry in either case.
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            # Remove the device entry in either case.
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -180,10 +179,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         # Migrate to version 2
@@ -233,24 +228,6 @@ def migrate_config_entry_and_identifiers(
         # Check that device is related to tradfri domain (and is not the gateway itself)
         if not related_device_flag:
             continue
-
-        # Loop through list of config_entry_ids for device
-        config_entry_ids = device.config_entries
-        for config_entry_id in config_entry_ids:
-            # Check that the config entry in list is not the device's primary config entry
-            if config_entry_id == device.primary_config_entry:
-                continue
-
-            # Check that the 'other' config entry is also a tradfri config entry
-            other_entry = hass.config_entries.async_get_entry(config_entry_id)
-
-            if other_entry is None or other_entry.domain != DOMAIN:
-                continue
-
-            # Remove non-primary 'tradfri' config entry from device's config_entry_ids
-            device_reg.async_update_device(
-                device.id, remove_config_entry_id=config_entry_id
-            )
 
         if config_entry.data[CONF_GATEWAY_ID] in device_id:
             continue

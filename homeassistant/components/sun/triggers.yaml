@@ -1,0 +1,145 @@
+.type: &twilight_type
+  required: true
+  default: civil
+  selector:
+    select:
+      translation_key: twilight_type
+      options:
+        - civil
+        - nautical
+        - astronomical
+
+.period: &period_type
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: period
+      options:
+        - any
+        - morning
+        - evening
+
+.for: &trigger_for
+  required: true
+  default: "00:00:00"
+  selector:
+    duration:
+
+.offset: &trigger_offset
+  offset:
+    required: true
+    default:
+      days: 0
+      hours: 0
+      minutes: 0
+      seconds: 0
+    selector:
+      duration:
+        enable_day: true
+  offset_type:
+    required: true
+    default: before
+    selector:
+      select:
+        translation_key: trigger_offset_type
+        options:
+          - before
+          - after
+
+.elevation_threshold_entity: &trigger_elevation_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "°"
+  - domain: number
+    unit_of_measurement: "°"
+  - domain: sensor
+    unit_of_measurement: "°"
+
+.elevation_threshold_number: &trigger_elevation_threshold_number
+  min: -90
+  max: 90
+  mode: box
+  unit_of_measurement: "°"
+
+sunrise:
+  fields:
+    <<: *trigger_offset
+
+sunset:
+  fields:
+    <<: *trigger_offset
+
+solar_noon:
+  fields:
+    <<: *trigger_offset
+
+solar_midnight:
+  fields:
+    <<: *trigger_offset
+
+dawn:
+  fields:
+    type: *twilight_type
+    <<: *trigger_offset
+
+dusk:
+  fields:
+    type: *twilight_type
+    <<: *trigger_offset
+
+golden_hour_started:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+golden_hour_ended:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+blue_hour_started:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+blue_hour_ended:
+  fields:
+    period: *period_type
+    <<: *trigger_offset
+
+midnight_sun_started:
+  fields:
+    <<: *trigger_offset
+
+midnight_sun_ended:
+  fields:
+    <<: *trigger_offset
+
+polar_night_started:
+  fields:
+    <<: *trigger_offset
+
+polar_night_ended:
+  fields:
+    <<: *trigger_offset
+
+elevation_changed:
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *trigger_elevation_threshold_entity
+          mode: changed
+          number: *trigger_elevation_threshold_number
+
+elevation_crossed_threshold:
+  fields:
+    for: *trigger_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *trigger_elevation_threshold_entity
+          mode: crossed
+          number: *trigger_elevation_threshold_number

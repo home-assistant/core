@@ -1,13 +1,16 @@
 """Tests for the Anthropic repairs flow."""
 
 from types import SimpleNamespace
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from anthropic.pagination import AsyncPage
 
 from homeassistant.components.anthropic.const import CONF_CHAT_MODEL, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -16,11 +19,7 @@ from homeassistant.setup import async_setup_component
 from . import model_list
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -29,7 +28,7 @@ def _make_entry(
     *,
     title: str,
     api_key: str,
-    subentries_data: list[dict[str, Any]],
+    subentries_data: list[ConfigSubentryData],
 ) -> MockConfigEntry:
     """Create a config entry with subentries and runtime data."""
     entry = MockConfigEntry(
@@ -64,7 +63,6 @@ def _get_subentry(
 async def _setup_repairs(hass: HomeAssistant) -> None:
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
 
 
 async def test_repair_flow_iterates_subentries(

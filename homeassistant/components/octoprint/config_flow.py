@@ -3,11 +3,11 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
+import probatio
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -35,16 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 def _schema_with_defaults(
     username="", host="", port=80, path="/", ssl=False, verify_ssl=True
 ):
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): str,
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): cv.port,
-            vol.Required(CONF_PATH, default=path): str,
-            vol.Required(CONF_SSL, default=ssl): bool,
-            vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+            probatio.Required(CONF_USERNAME, default=username): str,
+            probatio.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_PORT, default=port): cv.port,
+            probatio.Required(CONF_PATH, default=path): str,
+            probatio.Required(CONF_SSL, default=ssl): bool,
+            probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     )
 
 
@@ -54,7 +54,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     api_key_task: asyncio.Task[None] | None = None
-    discovery_schema: vol.Schema | None = None
+    discovery_schema: probatio.Schema | None = None
     _reauth_data: dict[str, Any] | None = None
     _user_input: dict[str, Any] | None = None
 
@@ -62,6 +62,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,6 +169,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -194,6 +196,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -242,9 +245,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_USERNAME, default=self._reauth_data[CONF_USERNAME]
                         ): str,
                     }

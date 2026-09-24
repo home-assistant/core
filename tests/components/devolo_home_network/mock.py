@@ -83,7 +83,7 @@ class MockDevice(Device):
 
 
 class MockDeviceWrongPassword(MockDevice):
-    """Mock of a devolo Home Network device, that always complains about a wrong password."""
+    """Mock of a devolo Home Network device that complains about a wrong password."""
 
     def __init__(
         self,

@@ -1,7 +1,7 @@
 """Support for ESPHome water heaters."""
 
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aioesphomeapi import (
     EntityInfo,
@@ -16,7 +16,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import callback
 
 from .entity import (
@@ -24,6 +24,7 @@ from .entity import (
     convert_api_error_ha_error,
     esphome_float_state_property,
     esphome_state_property,
+    get_temperature_unit,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
@@ -49,14 +50,15 @@ class EsphomeWaterHeater(
 ):
     """A water heater implementation for ESPHome."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
+        self._attr_temperature_unit = get_temperature_unit(static_info)
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step
@@ -77,29 +79,34 @@ class EsphomeWaterHeater(
 
     @property
     @esphome_float_state_property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
     @property
     @esphome_float_state_property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @property
     @esphome_state_property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation mode."""
         return _WATER_HEATER_MODES.from_esphome(self._state.mode)
 
     @property
     @esphome_state_property
+    @override
     def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
         return bool(self._state.state & WaterHeaterStateFlag.AWAY)
 
     @convert_api_error_ha_error
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._client.water_heater_command(
@@ -109,6 +116,7 @@ class EsphomeWaterHeater(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._client.water_heater_command(
@@ -118,6 +126,7 @@ class EsphomeWaterHeater(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         self._client.water_heater_command(
@@ -127,6 +136,7 @@ class EsphomeWaterHeater(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         self._client.water_heater_command(
@@ -136,6 +146,7 @@ class EsphomeWaterHeater(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         self._client.water_heater_command(
@@ -145,6 +156,7 @@ class EsphomeWaterHeater(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         self._client.water_heater_command(

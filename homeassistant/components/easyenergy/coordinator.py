@@ -1,7 +1,7 @@
 """The Coordinator for easyEnergy."""
 
 from datetime import timedelta
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from easyenergy import (
     EasyEnergy,
@@ -47,6 +47,7 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
 
         self.easyenergy = EasyEnergy(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> EasyEnergyData:
         """Fetch data from easyEnergy."""
         today = dt_util.now().date()
@@ -76,7 +77,10 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
                     )
 
         except EasyEnergyConnectionError as err:
-            raise UpdateFailed("Error communicating with easyEnergy API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
 
         return EasyEnergyData(
             energy_today=energy_today,

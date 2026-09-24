@@ -13,6 +13,7 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
+import probatio
 from sqlalchemy import (
     Label,
     Select,
@@ -28,9 +29,8 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
@@ -64,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -219,6 +220,7 @@ _PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
     MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -366,7 +368,7 @@ def get_display_unit(
 
     state_unit: str | None = statistic_unit
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
         # Guard against invalid state unit in the DB
@@ -380,8 +382,7 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-    allow_none: bool = True,
-) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
+) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return None
@@ -400,11 +401,9 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    if allow_none:
-        return converter.converter_factory_allow_none(
-            from_unit=statistic_unit, to_unit=display_unit
-        )
-    return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
+    return converter.converter_factory_allow_none(
+        from_unit=statistic_unit, to_unit=display_unit
+    )
 
 
 def _get_display_to_statistic_unit_converter_func(
@@ -474,7 +473,7 @@ def validate_statistic_id(value: str) -> str:
     if valid_statistic_id(value):
         return value
 
-    raise vol.Invalid(f"Statistics ID {value} is an invalid statistic ID")
+    raise probatio.Invalid(f"Statistics ID {value} is an invalid statistic ID")
 
 
 @dataclasses.dataclass
@@ -686,15 +685,16 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
-CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
-# Keep track of domains for which a warning about failure to collect custom units has been logged
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = probatio.Schema({str: {probatio.Any(str, None): str}})
+# Keep track of domains for which a warning about failure
+# to collect custom units has been logged
 _warn_custom_units_error: set[str] = set()
 
 
 def _get_custom_equivalent_units(
     hass: HomeAssistant,
 ) -> dict[str, dict[str | None, str]]:
-    """Check whether any integration supplies custom equivalent units for its entities."""
+    """Check whether any integration supplies custom equivalent units."""
     custom_equivalent_units_per_entity: dict[str, dict[str | None, str]] = {}
     for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
         custom_equivalent_units = getattr(
@@ -727,11 +727,12 @@ def _get_custom_equivalent_units(
                 platform_custom_equivalent_units
             )
             custom_equivalent_units_per_entity |= validated_data
-        except vol.Invalid as inv:
+        except probatio.Invalid as inv:
             if domain not in _warn_custom_units_error:
                 _warn_custom_units_error.add(domain)
                 _LOGGER.warning(
-                    "Error processing result of %s for recorder platform domain %s: %s for object: %s",
+                    "Error processing result of %s for recorder"
+                    " platform domain %s: %s for object: %s",
                     INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
                     domain,
                     inv,
@@ -975,8 +976,8 @@ def async_update_statistics_metadata(
     statistic_id: str,
     *,
     new_statistic_id: str | UndefinedType = UNDEFINED,
-    new_unit_class: str | None | UndefinedType = UNDEFINED,
-    new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+    new_unit_class: str | UndefinedType | None = UNDEFINED,
+    new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     on_done: Callable[[], None] | None = None,
     _called_from_ws_api: bool = False,
 ) -> None:
@@ -1024,9 +1025,9 @@ def async_update_statistics_metadata(
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
-    new_statistic_id: str | None | UndefinedType,
-    new_unit_class: str | None | UndefinedType,
-    new_unit_of_measurement: str | None | UndefinedType,
+    new_statistic_id: str | UndefinedType | None,
+    new_unit_class: str | UndefinedType | None,
+    new_unit_of_measurement: str | UndefinedType | None,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager
@@ -1257,7 +1258,8 @@ def reduce_day_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1305,7 +1307,8 @@ def reduce_week_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1362,7 +1365,8 @@ def reduce_month_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1408,7 +1412,8 @@ def reduce_year_ts_factory() -> tuple[
     _lower_bound: float = 0
     _upper_bound: float = 0
 
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    # We have to recreate _local_from_timestamp in the closure
+    # in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
@@ -1965,7 +1970,7 @@ def statistic_during_period(
     unit_class = metadata[1]["unit_class"]
     state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(
         unit_class, unit, state_unit, units
     )
@@ -2054,7 +2059,9 @@ def _augment_result_with_change(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units
             )
@@ -2376,7 +2383,7 @@ def get_latest_short_term_statistics_with_session(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
-    """Return the latest short term statistics for a list of statistic_ids with a session."""
+    """Return latest short term statistics for a list of statistic_ids."""
     # Fetch metadata for the given statistic_ids
     if not metadata:
         metadata = get_instance(hass).statistics_meta_manager.get_many(
@@ -2556,7 +2563,7 @@ def _build_sum_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
     return [
@@ -2608,7 +2615,7 @@ def _build_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     row_mapping: tuple[tuple[str, int], ...],
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
     return [
@@ -2680,9 +2687,11 @@ def _sorted_statistics_to_dict(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
-                unit_class, unit, state_unit, units, allow_none=False
+                unit_class, unit, state_unit, units
             )
         else:
             convert = None
@@ -2797,7 +2806,8 @@ def _async_import_statistics(
             )
         if start.minute != 0 or start.second != 0 or start.microsecond != 0:
             raise HomeAssistantError(
-                "Invalid timestamp: timestamps must be from the top of the hour (minutes and seconds = 0)"
+                "Invalid timestamp: timestamps must be from the"
+                " top of the hour (minutes and seconds = 0)"
             )
 
         statistic["start"] = dt_util.as_utc(start)
@@ -2873,7 +2883,7 @@ def async_add_external_statistics(
 
     if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
         report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
+            "doesn't specify mean_type when calling async_add_external_statistics",
             breaks_in_ha_version="2026.11",
             exclude_integrations={DOMAIN},
         )
@@ -3158,7 +3168,8 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
             with session_scope(session=instance.get_session()) as session:
                 session.connection().execute(
                     text(
-                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
+                        f"update {table} set start = NULL,"  # noqa: S608
+                        " created = NULL, last_reset = NULL;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -3168,7 +3179,10 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
+                            f"UPDATE {table} set start=NULL,"  # noqa: S608
+                            " created=NULL, last_reset=NULL"
+                            " where start is not NULL"
+                            " LIMIT 100000;"
                         )
                     )
                     .rowcount
@@ -3183,8 +3197,11 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
-                            f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
+                            f"UPDATE {table} set start=NULL,"  # noqa: S608
+                            " created=NULL, last_reset=NULL "
+                            "where id in (select id from "
+                            f"{table} where start is not NULL"
+                            " LIMIT 100000)"
                         )
                     )
                     .rowcount

@@ -7,8 +7,8 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, Self, cast, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,7 +37,9 @@ from .const import (  # noqa: F401
     SCAN_INTERVAL,
     VALID_COLOR_MODES,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -82,7 +84,7 @@ def valid_supported_color_modes(
         or (ColorMode.ONOFF in color_modes and len(color_modes) > 1)
         or (ColorMode.WHITE in color_modes and not color_supported(color_modes))
     ):
-        raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
+        raise probatio.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
     return color_modes
 
 
@@ -114,7 +116,9 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     This is the equivalent of entity helper get_supported_features.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        return state.attributes.get(
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+        )
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -122,7 +126,7 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] |
     if not entry.capabilities:
         return None
 
-    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
+    return entry.capabilities.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
 
 
 # Float that represents transition time in seconds to make change.
@@ -169,44 +173,52 @@ COLOR_GROUP = "Color descriptors"
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
-VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
-VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
-VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
-VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
-VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
+VALID_TRANSITION = probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=6553))
+VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255))
+VALID_BRIGHTNESS_PCT = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=0, max=100)
+)
+VALID_BRIGHTNESS_STEP = probatio.All(
+    probatio.Coerce(int), probatio.Clamp(min=-255, max=255)
+)
+VALID_BRIGHTNESS_STEP_PCT = probatio.All(
+    probatio.Coerce(float), probatio.Clamp(min=-100, max=100)
+)
+VALID_FLASH = probatio.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA: VolDictType = {
-    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
+    probatio.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
-    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
-    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
-    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-    vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
-    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple),
-        vol.ExactSequence(
+    probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    probatio.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    probatio.Exclusive(
+        ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS
+    ): VALID_BRIGHTNESS_STEP_PCT,
+    probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
+    probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple),
+        probatio.ExactSequence(
             (
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
+                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
             )
         ),
     ),
-    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
     ),
-    vol.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 4)
+    probatio.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 4)
     ),
-    vol.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 5)
+    probatio.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 5)
     ),
-    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
+    probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Coerce(tuple), probatio.ExactSequence((cv.small_float, cv.small_float))
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): vol.Any(True, VALID_BRIGHTNESS),
+    probatio.Exclusive(ATTR_WHITE, COLOR_GROUP): probatio.Any(True, VALID_BRIGHTNESS),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
@@ -241,7 +253,7 @@ def preprocess_turn_on_alternatives(
 
     if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+            params[ATTR_RGB_COLOR] = tuple(color_util.color_name_to_rgb(color_name))
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
@@ -534,19 +546,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data
+        ),
         async_handle_light_on_service,
     )
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_OFF_SCHEMA), preprocess_data
+        ),
         async_handle_light_off_service,
     )
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        probatio.All(
+            cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data
+        ),
         async_handle_toggle_service,
     )
 
@@ -567,10 +585,10 @@ def _coerce_none(value: str) -> None:
     """Coerce an empty string as None."""
 
     if not isinstance(value, str):
-        raise vol.Invalid("Expected a string")
+        raise probatio.Invalid("Expected a string")
 
     if value:
-        raise vol.Invalid("Not an empty string")
+        raise probatio.Invalid("Not an empty string")
 
 
 @dataclasses.dataclass
@@ -588,23 +606,23 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(
-        vol.Any(
-            vol.ExactSequence(
+    SCHEMA = probatio.Schema(
+        probatio.Any(
+            probatio.ExactSequence(
                 (
                     str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.byte, _coerce_none),
                 )
             ),
-            vol.ExactSequence(
+            probatio.ExactSequence(
                 (
                     str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
-                    vol.Any(VALID_TRANSITION, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.small_float, _coerce_none),
+                    probatio.Any(cv.byte, _coerce_none),
+                    probatio.Any(VALID_TRANSITION, _coerce_none),
                 )
             ),
         )
@@ -660,7 +678,7 @@ class Profiles:
                         profile = Profile.from_csv_row(rec)
                         profiles[profile.name] = profile
 
-                except vol.MultipleInvalid as ex:
+                except probatio.MultipleInvalid as ex:
                     _LOGGER.error(
                         "Error parsing light profile row '%s' from %s: %s",
                         rec,
@@ -741,19 +759,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_SUPPORTED_COLOR_MODES,
-            ATTR_EFFECT_LIST,
-            ATTR_MIN_COLOR_TEMP_KELVIN,
-            ATTR_MAX_COLOR_TEMP_KELVIN,
-            ATTR_BRIGHTNESS,
-            ATTR_COLOR_MODE,
-            ATTR_COLOR_TEMP_KELVIN,
-            ATTR_EFFECT,
-            ATTR_HS_COLOR,
-            ATTR_RGB_COLOR,
-            ATTR_RGBW_COLOR,
-            ATTR_RGBWW_COLOR,
-            ATTR_XY_COLOR,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES,
+            LightEntityCapabilityAttribute.EFFECT_LIST,
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+            LightEntityStateAttribute.BRIGHTNESS,
+            LightEntityStateAttribute.COLOR_MODE,
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+            LightEntityStateAttribute.EFFECT,
+            LightEntityStateAttribute.HS_COLOR,
+            LightEntityStateAttribute.RGB_COLOR,
+            LightEntityStateAttribute.RGBW_COLOR,
+            LightEntityStateAttribute.RGBWW_COLOR,
+            LightEntityStateAttribute.XY_COLOR,
         }
     )
 
@@ -869,6 +887,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_effect
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
@@ -878,12 +897,18 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ColorMode.COLOR_TEMP in supported_color_modes:
             min_color_temp_kelvin = self.min_color_temp_kelvin
             max_color_temp_kelvin = self.max_color_temp_kelvin
-            data[ATTR_MIN_COLOR_TEMP_KELVIN] = min_color_temp_kelvin
-            data[ATTR_MAX_COLOR_TEMP_KELVIN] = max_color_temp_kelvin
+            data[LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN] = (
+                min_color_temp_kelvin
+            )
+            data[LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN] = (
+                max_color_temp_kelvin
+            )
         if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT_LIST] = self.effect_list
+            data[LightEntityCapabilityAttribute.EFFECT_LIST] = self.effect_list
 
-        data[ATTR_SUPPORTED_COLOR_MODES] = sorted(supported_color_modes)
+        data[LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES] = sorted(
+            supported_color_modes
+        )
 
         return data
 
@@ -892,40 +917,83 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> dict[str, tuple[float, ...]]:
         data: dict[str, tuple[float, ...]] = {}
         if color_mode == ColorMode.HS and (hs_color := self.hs_color):
-            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+            data[LightEntityStateAttribute.HS_COLOR] = (
+                round(hs_color[0], 3),
+                round(hs_color[1], 3),
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_hs_to_RGB(
+                *hs_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_hs_to_xy(
+                *hs_color
+            )
         elif color_mode == ColorMode.XY and (xy_color := self.xy_color):
-            data[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            data[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
-            data[ATTR_XY_COLOR] = (round(xy_color[0], 6), round(xy_color[1], 6))
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_xy_to_hs(
+                *xy_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_xy_to_RGB(
+                *xy_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = (
+                round(xy_color[0], 6),
+                round(xy_color[1], 6),
+            )
         elif color_mode == ColorMode.RGB and (rgb_color := self.rgb_color):
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.RGBW and (
             rgbw_color := self._light_internal_rgbw_color
         ):
             rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_RGBW_COLOR] = tuple(int(x) for x in rgbw_color[0:4])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.RGBW_COLOR] = tuple(
+                int(x) for x in rgbw_color[0:4]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.RGBWW and (rgbww_color := self.rgbww_color):
             rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
-            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
-            data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
-            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+            data[LightEntityStateAttribute.HS_COLOR] = color_util.color_RGB_to_hs(
+                *rgb_color
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = tuple(
+                int(x) for x in rgb_color[0:3]
+            )
+            data[LightEntityStateAttribute.RGBWW_COLOR] = tuple(
+                int(x) for x in rgbww_color[0:5]
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_RGB_to_xy(
+                *rgb_color
+            )
         elif color_mode == ColorMode.COLOR_TEMP and (
             color_temp_kelvin := self.color_temp_kelvin
         ):
             hs_color = color_util.color_temperature_to_hs(color_temp_kelvin)
-            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+            data[LightEntityStateAttribute.HS_COLOR] = (
+                round(hs_color[0], 3),
+                round(hs_color[1], 3),
+            )
+            data[LightEntityStateAttribute.RGB_COLOR] = color_util.color_hs_to_RGB(
+                *hs_color
+            )
+            data[LightEntityStateAttribute.XY_COLOR] = color_util.color_hs_to_xy(
+                *hs_color
+            )
         return data
 
     def __validate_color_mode(
@@ -973,7 +1041,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Validate the supported color modes."""
         try:
             valid_supported_color_modes(supported_color_modes)
-        except vol.Error as err:
+        except probatio.Error as err:
             raise HomeAssistantError(
                 f"{self.entity_id} ({type(self)}) sets invalid supported color modes "
                 f"{supported_color_modes}"
@@ -981,6 +1049,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         data: dict[str, Any] = {}
@@ -998,34 +1067,36 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if LightEntityFeature.EFFECT in supported_features:
             if _is_on:
                 effect = self.effect
-            data[ATTR_EFFECT] = effect
+            data[LightEntityStateAttribute.EFFECT] = effect
 
         self.__validate_color_mode(color_mode, supported_color_modes, effect)
 
-        data[ATTR_COLOR_MODE] = color_mode
+        data[LightEntityStateAttribute.COLOR_MODE] = color_mode
 
         if brightness_supported(supported_color_modes):
             if color_mode in COLOR_MODES_BRIGHTNESS:
-                data[ATTR_BRIGHTNESS] = self.brightness
+                data[LightEntityStateAttribute.BRIGHTNESS] = self.brightness
             else:
-                data[ATTR_BRIGHTNESS] = None
+                data[LightEntityStateAttribute.BRIGHTNESS] = None
 
         if color_temp_supported(supported_color_modes):
             if color_mode == ColorMode.COLOR_TEMP:
-                data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
+                data[LightEntityStateAttribute.COLOR_TEMP_KELVIN] = (
+                    self.color_temp_kelvin
+                )
             else:
-                data[ATTR_COLOR_TEMP_KELVIN] = None
+                data[LightEntityStateAttribute.COLOR_TEMP_KELVIN] = None
 
         if color_supported(supported_color_modes) or color_temp_supported(
             supported_color_modes
         ):
-            data[ATTR_HS_COLOR] = None
-            data[ATTR_RGB_COLOR] = None
-            data[ATTR_XY_COLOR] = None
+            data[LightEntityStateAttribute.HS_COLOR] = None
+            data[LightEntityStateAttribute.RGB_COLOR] = None
+            data[LightEntityStateAttribute.XY_COLOR] = None
             if ColorMode.RGBW in supported_color_modes:
-                data[ATTR_RGBW_COLOR] = None
+                data[LightEntityStateAttribute.RGBW_COLOR] = None
             if ColorMode.RGBWW in supported_color_modes:
-                data[ATTR_RGBWW_COLOR] = None
+                data[LightEntityStateAttribute.RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
 
@@ -1047,6 +1118,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_supported_color_modes
 
     @cached_property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

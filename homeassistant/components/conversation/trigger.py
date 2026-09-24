@@ -1,8 +1,11 @@
 """Offer sentence based automation rules."""
 
 from collections.abc import Awaitable, Callable
+import re
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.recognize import RecognizeResult
 from hassil.util import (
     PUNCTUATION_END,
@@ -10,7 +13,7 @@ from hassil.util import (
     PUNCTUATION_START,
     PUNCTUATION_START_WORD,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
@@ -31,34 +34,55 @@ TRIGGER_CALLBACK_TYPE = Callable[
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
+        # Exclude {list_references} which may contain punctuation characters.
+        sentence = _remove_list_references(sentence)
         if (
             PUNCTUATION_START.search(sentence)
             or PUNCTUATION_END.search(sentence)
             or PUNCTUATION_START_WORD.search(sentence)
             or PUNCTUATION_END_WORD.search(sentence)
         ):
-            raise vol.Invalid("sentence should not contain punctuation")
+            raise probatio.Invalid("sentence should not contain punctuation")
 
+    return value
+
+
+def _remove_list_references(sentence: str) -> str:
+    """Remove {list_references} from a sentence for linting."""
+    return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise probatio.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:
     """Validate result has at least one item."""
     if len(value) < 1:
-        raise vol.Invalid("at least one sentence is required")
+        raise probatio.Invalid("at least one sentence is required")
 
     for sentence in value:
         if not sentence:
-            raise vol.Invalid(f"sentence too short: '{sentence}'")
+            raise probatio.Invalid(f"sentence too short: '{sentence}'")
 
     return value
 
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
+        probatio.Required(CONF_PLATFORM): DOMAIN,
+        probatio.Required(CONF_COMMAND): probatio.All(
+            cv.ensure_list,
+            [cv.string],
+            has_one_non_empty_item,
+            has_no_punctuation,
+            is_valid_sentence,
         ),
     }
 )
@@ -127,8 +151,7 @@ async def async_attach_trigger(
             if isinstance(
                 automation_result, ScriptRunResult
             ) and automation_result.conversation_response not in (None, UNDEFINED):
-                # mypy does not understand the type narrowing, unclear why
-                return automation_result.conversation_response  # type: ignore[return-value]
+                return automation_result.conversation_response
 
         # It's important to return None here instead of a string.
         #

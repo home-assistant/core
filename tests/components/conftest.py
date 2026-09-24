@@ -52,8 +52,8 @@ from aiohasupervisor.os import OSClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -82,7 +82,7 @@ from homeassistant.data_entry_flow import (
     FlowResultType,
     section,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
@@ -95,6 +95,7 @@ if TYPE_CHECKING:
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
+    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
     from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
@@ -108,7 +109,7 @@ RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
 def patch_zeroconf_multiple_catcher() -> Generator[None]:
-    """If installed, patch zeroconf wrapper that detects if multiple instances are used."""
+    """Patch zeroconf wrapper that detects multiple instances."""
     with patch(
         "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
         side_effect=lambda zc: None,
@@ -222,6 +223,39 @@ async def mock_rf_entity_fixture(
     from .radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_rf_entity_fixture_helper(hass)
+
+
+# Infrared test fixtures
+@pytest.fixture(name="init_infrared")
+async def init_infrared_fixture(hass: HomeAssistant) -> None:
+    """Set up the Infrared integration for testing."""
+    from .infrared.common import init_infrared_fixture_helper  # noqa: PLC0415
+
+    await init_infrared_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_emitter_entity")
+async def mock_infrared_emitter_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredEmitterEntity:
+    """Return a mock infrared emitter entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_emitter_entity_fixture_helper,
+    )
+
+    return await mock_infrared_emitter_entity_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_infrared_receiver_entity")
+async def mock_infrared_receiver_entity_fixture(
+    hass: HomeAssistant, init_infrared: None
+) -> MockInfraredReceiverEntity:
+    """Return a mock infrared receiver entity."""
+    from .infrared.common import (  # noqa: PLC0415
+        mock_infrared_receiver_entity_fixture_helper,
+    )
+
+    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
@@ -688,6 +722,7 @@ def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     return supervisor_client.supervisor.info
 
@@ -761,6 +796,7 @@ def os_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     supervisor_client.os.info.return_value = OSInfo(
         version="1.0.0",
         version_latest="1.0.0",
+        version_pending=None,
         update_available=False,
         board=None,
         boot=None,
@@ -861,19 +897,20 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.issues.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
-            "homeassistant.components.hassio.jobs.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
             "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
+            "homeassistant.components.hassio.services.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
             "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util."
+            "get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):
@@ -1024,7 +1061,7 @@ async def _check_step_or_section_translations(
     integration: str,
     translation_prefix: str,
     description_placeholders: dict[str, str],
-    data_schema: vol.Schema | None,
+    data_schema: probatio.Schema | None,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required
@@ -1148,6 +1185,8 @@ async def _check_config_flow_result_translations(
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
+        if (abort_domain := result.get("translation_domain")) is not None:
+            integration = abort_domain
         await _validate_translation(
             flow.hass,
             translation_errors,
@@ -1210,6 +1249,8 @@ async def _check_exception_translation(
     request: pytest.FixtureRequest,
     ignore_translations_for_mock_domains: set[str],
 ) -> None:
+    if isinstance(exception, Unauthorized):
+        return
     if exception.translation_key is None:
         if (
             _get_request_quality_scale(request, "exception-translations")
@@ -1454,13 +1495,3 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
-
-
-@pytest.fixture(name="enable_labs_preview_features")
-def enable_labs_preview_features() -> Generator[None]:
-    """Enable labs preview features."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield

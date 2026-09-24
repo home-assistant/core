@@ -1,7 +1,7 @@
 """Support for ISY switches."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -84,23 +84,27 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     """Representation of an ISY switch device."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get whether the ISY device is in the on state."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
         if not await self._node.turn_off():
             raise HomeAssistantError(f"Unable to turn off switch {self._node.address}")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
         if not await self._node.turn_on():
             raise HomeAssistantError(f"Unable to turn on switch {self._node.address}")
 
     @property
+    @override
     def icon(self) -> str | None:
         """Get the icon for groups."""
         if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
@@ -114,10 +118,12 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     _attr_icon = "mdi:script-text-outline"  # Matches isy program icon
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the ISY switch program is on."""
         return bool(self._node.status)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch program."""
         if not await self._actions.run_then():
@@ -125,6 +131,7 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
                 f"Unable to run 'then' clause on program switch {self._actions.address}"
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch program."""
         if not await self._actions.run_else():
@@ -155,7 +162,8 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         self._attr_name = description.name  # Override super
         self._change_handler: EventListener | None = None
 
-    # pylint: disable-next=hass-missing-super-call
+    @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.isy.nodes.status_events.subscribe(
@@ -168,25 +176,30 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
         )
 
     @callback
+    @override
     def async_on_update(self, event: NodeChangedEvent, key: str) -> None:
         """Handle a control event from the ISY Node."""
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return True  # Enable switch is always available
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get whether the ISY device is in the on state."""
         return bool(self._node.enabled)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
         if not await self._node.disable():
             raise HomeAssistantError(f"Unable to disable device {self._node.address}")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
         if not await self._node.enable():

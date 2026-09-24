@@ -26,13 +26,13 @@ async def test_create_doorbell(
         await _create_yale_with_devices(hass, [doorbell_one], brand=Brand.YALE_GLOBAL)
 
         camera_k98gidt45gul_name_camera = hass.states.get(
-            "camera.k98gidt45gul_name_camera"
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
         )
         assert camera_k98gidt45gul_name_camera.state == CameraState.IDLE
 
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
+        url = hass.states.get(
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
+        ).attributes["entity_picture"]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)
@@ -57,9 +57,9 @@ async def test_doorbell_refresh_content_token_recover(
             [doorbell_two],
             brand=Brand.YALE_GLOBAL,
         )
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
+        url = hass.states.get(
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
+        ).attributes["entity_picture"]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)
@@ -84,9 +84,9 @@ async def test_doorbell_refresh_content_token_fail(
             [doorbell_two],
             brand=Brand.YALE_GLOBAL,
         )
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
+        url = hass.states.get(
+            "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
+        ).attributes["entity_picture"]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)

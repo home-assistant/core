@@ -1,9 +1,10 @@
 """Component providing basic support for Foscam IP cameras."""
 
 import asyncio
+from typing import override
 from urllib.parse import quote
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -55,7 +56,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PTZ,
         {
-            vol.Required(ATTR_MOVEMENT): vol.In(
+            probatio.Required(ATTR_MOVEMENT): probatio.In(
                 [
                     DIR_UP,
                     DIR_DOWN,
@@ -67,7 +68,9 @@ async def async_setup_entry(
                     DIR_BOTTOMRIGHT,
                 ]
             ),
-            vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
+            probatio.Optional(
+                ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME
+            ): cv.small_float,
         },
         "async_perform_ptz",
     )
@@ -75,7 +78,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_PTZ_PRESET,
         {
-            vol.Required(ATTR_PRESET_NAME): cv.string,
+            probatio.Required(ATTR_PRESET_NAME): cv.string,
         },
         "async_perform_ptz_preset",
     )
@@ -109,6 +112,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
         # Get motion detection status
@@ -136,6 +140,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
         else:
             self._attr_motion_detection_enabled = response == 1
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -148,6 +153,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
         return response
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         if self._rtsp_port:
@@ -157,6 +163,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
         return None
 
+    @override
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         try:
@@ -183,6 +190,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
                 self.name,
             )
 
+    @override
     def disable_motion_detection(self) -> None:
         """Disable motion detection."""
         try:

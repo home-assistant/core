@@ -6,13 +6,13 @@ import re
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
 from sqlalchemy import select
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, history, statistics
+from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
@@ -796,7 +796,8 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
+    # so that we hit the filter_unique_constraint_integrity_error
+    # safeguard in the statistics
     with patch.object(instance.statistics_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         entity_registry.async_update_entity(
@@ -1515,6 +1516,62 @@ async def test_update_statistics_metadata_error(
                 "max": 10000.0,
                 "mean": 10000.0,
                 "min": 10000.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    ("state", "converted_value"),
+    [
+        pytest.param(0, None, id="zero"),
+        pytest.param(20, 5.0, id="non-zero"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_display_inverse_unit(
+    hass: HomeAssistant,
+    state: int,
+    converted_value: float | None,
+) -> None:
+    """Test fetching statistics with a display unit which is an inverse unit.
+
+    A zero value has no representation in the inverse unit and should be
+    converted to None instead of raising ZeroDivisionError.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    attributes = {
+        "device_class": "energy_distance",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh/100km",
+    }
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"energy_distance": "km/kWh"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": converted_value,
+                "mean": converted_value,
+                "min": converted_value,
                 "start": now.timestamp(),
             }
         ],
@@ -3973,7 +4030,8 @@ async def test_recorder_platforms_with_custom_equivalent_units(
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4049,7 +4107,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
+    """Test custom equivalent units are skipped on exception."""
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
@@ -4074,7 +4132,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4119,8 +4178,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     recorder_platform_two.async_custom_equivalent_units.assert_called_once()
 
     assert (
-        "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error"
-        in caplog.text
+        "Error calling async_custom_equivalent_units for recorder"
+        " platform domain some_domain_one: test error" in caplog.text
     )
 
 
@@ -4137,13 +4196,13 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
         {"invalid": {"dict": {"five": "5"}}},
     ],
 )
-async def test_recorder_platforms_with_custom_equivalent_units_continues_on_invalid_types(
+async def test_recorder_platforms_custom_equivalent_units_on_invalid_types(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     invalid_custom_equivalent_units: Any,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are skipped if they are of invalid type."""
+    """Test custom equivalent units are skipped on invalid types."""
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
@@ -4168,7 +4227,8 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
 
     custom_equivalent_units_recorder_platform_two = {
         "sensor.test_sensor_2": {"custom_unitB": "unitB"},
-        # None is a valid unit, therefore we allow integrations to declare it equivalent to any other unit
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
         "sensor.test_sensor_3": {None: ""},
     }
 
@@ -4215,8 +4275,9 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_inva
     # If the dict is None or empty it will be skipped before validation
     if invalid_custom_equivalent_units:
         assert (
-            "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one"
-            in caplog.text
+            "Error processing result of"
+            " async_custom_equivalent_units for recorder"
+            " platform domain some_domain_one" in caplog.text
         )
 
     # Reset domains for which warnings were shown
@@ -4466,13 +4527,13 @@ async def test_get_statistics_service(
     await async_recorder_block_till_done(hass)
 
     result = await hass.services.async_call(
-        "recorder", "get_statistics", service_args, return_response=True, blocking=True
+        DOMAIN, "get_statistics", service_args, return_response=True, blocking=True
     )
     assert result == expected_result
 
     with pytest.raises(exceptions.Unauthorized):
         result = await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,
@@ -4529,11 +4590,11 @@ async def test_get_statistics_service_missing_mandatory_keys(
     await async_recorder_block_till_done(hass)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
-        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+        probatio.error.MultipleInvalid,
+        match=re.escape(f"required key not provided at '{missing_key}'"),
     ):
         await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,

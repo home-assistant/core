@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -43,14 +43,17 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
     entity_description: StarlinkSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         return await self.entity_description.turn_on_fn(self.coordinator)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         return await self.entity_description.turn_off_fn(self.coordinator)

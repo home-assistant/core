@@ -1,12 +1,13 @@
 """Tests for the Spotify initialization."""
 
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -16,6 +17,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+TOKEN_URL = "https://accounts.spotify.com/api/token"
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -64,7 +68,8 @@ async def test_setup_free_account_is_failing(
 ) -> None:
     """Test the Spotify setup with a free account is failing."""
     mock_spotify.return_value.get_current_user.side_effect = SpotifyForbiddenError(
-        "Check settings on developer.spotify.com/dashboard, the user may not be registered."
+        "Check settings on developer.spotify.com/dashboard,"
+        " the user may not be registered."
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -91,3 +96,28 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_spotify")
+@pytest.mark.parametrize("expires_at", [0], ids=["expired"])
+async def test_revoked_refresh_token_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a revoked refresh token asks the user to reauthenticate.
+
+    Setup maps the failure onto ConfigEntryNotReady, so without starting reauth
+    the entry would keep retrying a token that can never be refreshed again.
+    """
+    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.BAD_REQUEST, json={})
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["handler"] == DOMAIN
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

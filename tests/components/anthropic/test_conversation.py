@@ -1,15 +1,24 @@
 """Tests for the Anthropic integration."""
 
 import datetime
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
 from anthropic.types import (
+    CitationCharLocation,
+    CitationCharLocationParam,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
+    MessageDeltaUsage,
+    PlainTextSource,
+    RawMessageDeltaEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -19,17 +28,20 @@ from anthropic.types import (
     ToolSearchToolResultError,
     ToolSearchToolSearchResultBlock,
     Usage,
+    WebFetchBlock,
+    WebFetchToolResultErrorBlock,
     WebSearchResultBlock,
     WebSearchToolResultError,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
 )
 from freezegun import freeze_time
 from httpx import URL, Request, Response
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
@@ -39,6 +51,8 @@ from homeassistant.components.anthropic.const import (
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -48,9 +62,15 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
 )
-from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.components.anthropic.entity import (
+    CitationDetails,
+    ContentDetails,
+    _convert_content,
+)
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -74,14 +94,17 @@ from . import (
     create_thinking_block,
     create_tool_search_result_block,
     create_tool_use_block,
+    create_web_fetch_result_block,
     create_web_search_result_block,
 )
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_entity(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test entity properties."""
     state = hass.states.get("conversation.claude_conversation")
@@ -108,15 +131,16 @@ async def test_entity(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_device(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
 ) -> None:
     """Test device parameters."""
     subentry = next(iter(mock_config_entry.subentries.values()))
-    device = device_registry.async_get_device({(DOMAIN, subentry.subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device.name == "Claude conversation"
@@ -126,10 +150,8 @@ async def test_device(
     assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_translation_key(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity translation key."""
@@ -138,10 +160,9 @@ async def test_translation_key(
     assert entry.translation_key == "conversation"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_error_handling(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test error handling."""
@@ -155,7 +176,7 @@ async def test_error_handling(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -180,7 +201,7 @@ async def test_template_error(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -207,6 +228,7 @@ async def test_template_variables(
             ),
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(0, ["Okay, let", " me take care of that for you", "."])
@@ -221,7 +243,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
@@ -233,8 +255,9 @@ async def test_template_variables(
     assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_conversation_agent(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
 ) -> None:
     """Test Anthropic Agent."""
     agent = conversation.agent_manager.async_get_agent(
@@ -243,10 +266,73 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+) -> None:
+    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    trace.async_clear_traces()
+
+    async def mock_stream(**kwargs: Any):
+        """Stream a single response carrying distinct cache read and creation usage."""
+        yield RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model=kwargs["model"],
+                usage=Usage(
+                    input_tokens=100,
+                    output_tokens=0,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                ),
+            ),
+        )
+        for event in create_content_block(0, ["ok"]):
+            yield event
+        yield RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=10),
+        )
+        yield RawMessageStopEvent(type="message_stop")
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        side_effect=mock_stream,
+    ):
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    trace_obj = next(iter(trace.async_get_traces()))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        event["data"]["stats"]
+        for event in events
+        if event.get("event_type") == "agent_detail"
+        and event.get("data", {}).get("stats")
+    )
+    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
+    # cache_creation_input_tokens (20); only the read count should surface as cached.
+    assert stats == {
+        "input_tokens": 100,
+        "cached_input_tokens": 80,
+        "output_tokens": 10,
+    }
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component: None,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Ensure system prompt is sent as TextBlockParam with cache_control."""
@@ -274,10 +360,10 @@ async def test_prompt_caching_system_prompt(
     assert "cache_control" not in mock_create_stream.call_args.kwargs
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_prompt_caching_automatic(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component: None,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Ensure model args include cache_control."""
@@ -288,6 +374,7 @@ async def test_prompt_caching_automatic(
             CONF_PROMPT_CACHING: "automatic",
         },
     )
+    await hass.async_block_till_done()
 
     context = Context()
 
@@ -308,30 +395,29 @@ async def test_prompt_caching_automatic(
     assert isinstance(system, str)
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
-        (
-            ['{"param1": "test_value"}'],
-            {"param1": "test_value"},
+        pytest.param(
+            ['{"param1": "test_value"}'], {"param1": "test_value"}, id="complete_json"
         ),
-        (
+        pytest.param(
             ['{"para', 'm1": "test_valu', 'e"}'],
             {"param1": "test_value"},
+            id="chunked_json",
         ),
-        ([""], {}),
+        pytest.param([""], {}, id="empty_arguments"),
     ],
 )
 @freeze_time("2024-06-03 23:00:00")
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
 async def test_function_call(
-    mock_get_tools,
+    mock_get_tools: AsyncMock,
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     tool_call_json_parts: list[str],
-    expected_call_tool_args: dict[str, Any],
+    expected_call_tool_args: dict[str, str],
 ) -> None:
     """Test function call from the assistant."""
     agent_id = "conversation.claude_conversation"
@@ -340,12 +426,12 @@ async def test_function_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -373,7 +459,7 @@ async def test_function_call(
     system_text = " ".join(block["text"] for block in system if "text" in block)
     assert "You are a voice assistant for Home Assistant." in system_text
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -383,6 +469,7 @@ async def test_function_call(
         "content": [
             {
                 "content": '"Test response"',
+                "is_error": False,
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -405,12 +492,11 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
 async def test_function_exception(
-    mock_get_tools,
+    mock_get_tools: AsyncMock,
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test function call with exception."""
@@ -420,12 +506,12 @@ async def test_function_exception(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -448,7 +534,7 @@ async def test_function_exception(
         agent_id=agent_id,
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -457,7 +543,10 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error":"HomeAssistantError","error_text":"Test tool exception"}',
+                "content": (
+                    '{"error":"HomeAssistantError","error_text":"Test tool exception"}'
+                ),
+                "is_error": True,
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -480,14 +569,13 @@ async def test_function_exception(
     )
 
 
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
 async def test_assist_api_tools_conversion(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in (
+    for domain in (
         "calendar",
         "climate",
         "cover",
@@ -502,9 +590,9 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "weather",
     ):
-        assert await async_setup_component(hass, component, {})
-        hass.states.async_set(f"{component}.test", "on")
-        async_expose_entity(hass, "conversation", f"{component}.test", True)
+        assert await async_setup_component(hass, domain, {})
+        hass.states.async_set(f"{domain}.test", "on")
+        async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 
@@ -529,11 +617,11 @@ async def test_assist_api_tools_conversion(
             )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_unknown_hass_api(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    mock_init_component,
 ) -> None:
     """Test when we reference an API that no longer exists."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -554,10 +642,9 @@ async def test_unknown_hass_api(
     assert result == snapshot
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_conversation_id(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test conversation ID is honored."""
@@ -605,10 +692,9 @@ async def test_conversation_id(
     assert result.conversation_id == "koala"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_refusal(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test refusal due to potential policy violation."""
@@ -627,7 +713,7 @@ async def test_refusal(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -635,17 +721,16 @@ async def test_refusal(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_stream_wrong_type(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test error if the response is not a stream."""
     mock_create_stream.return_value = Message(
         type="message",
         id="message_id",
-        model="claude-opus-4-6",
+        model="claude-fable-5",
         role="assistant",
         content=[TextBlock(type="text", text="This is not a stream")],
         usage=Usage(input_tokens=42, output_tokens=42),
@@ -659,16 +744,16 @@ async def test_stream_wrong_type(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == "Expected a stream of messages"
 
 
+@pytest.mark.usefixtures(
+    "mock_config_entry_with_assist", "mock_init_component", "mock_create_stream"
+)
 async def test_double_system_messages(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
 ) -> None:
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
@@ -689,7 +774,7 @@ async def test_double_system_messages(
             agent_id="conversation.claude_conversation",
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -697,10 +782,10 @@ async def test_double_system_messages(
     )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_extended_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -715,6 +800,7 @@ async def test_extended_thinking(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -752,26 +838,32 @@ async def test_extended_thinking(
 @pytest.mark.parametrize(
     "subentry_data",
     [
-        {
-            CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-haiku-4-5",
-            CONF_THINKING_BUDGET: 0,
-        },
-        {
-            CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-opus-4-7",
-            CONF_THINKING_EFFORT: "none",
-        },
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
+                CONF_THINKING_BUDGET: 0,
+            },
+            id="zero_budget",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-opus-4-7",
+                CONF_THINKING_EFFORT: "none",
+            },
+            id="no_effort",
+        ),
     ],
 )
 @freeze_time("2024-05-24 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_disabled_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
-    subentry_data: dict[str, Any],
+    subentry_data: dict[str, str | int],
 ) -> None:
     """Test conversation with thinking effort disabled."""
     hass.config_entries.async_update_subentry(
@@ -779,6 +871,7 @@ async def test_disabled_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data=subentry_data,
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(1, ["Hello, how can I help you today?"])
@@ -799,10 +892,9 @@ async def test_disabled_thinking(
 
 
 @freeze_time("2024-05-24 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_redacted_thinking(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -832,12 +924,12 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_extended_thinking_tool_call(
-    mock_get_tools,
+    mock_get_tools: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -851,6 +943,7 @@ async def test_extended_thinking_tool_call(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     agent_id = "conversation.claude_conversation"
     context = Context()
@@ -858,12 +951,12 @@ async def test_extended_thinking_tool_call(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+    mock_tool.parameters = probatio.Schema(
+        {probatio.Optional("param1", description="Test parameters"): str}
     )
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -912,10 +1005,10 @@ async def test_extended_thinking_tool_call(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -935,6 +1028,7 @@ async def test_web_search(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -996,7 +1090,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                        cited_text=(
+                            "This release iterates on some of"
+                            " the features we introduced in"
+                            " the last couple of releases,"
+                            " but also..."
+                        ),
                         encrypted_index="AAA==",
                         title="Home Assistant Release",
                         url="https://www.example.com/todays-news",
@@ -1010,7 +1109,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                        cited_text=(
+                            "Breaking news from around the"
+                            " world today includes major"
+                            " events in technology, politics,"
+                            " and culture..."
+                        ),
                         encrypted_index="AQE=",
                         title="Breaking News",
                         url="https://www.newssite.com/breaking-news",
@@ -1047,10 +1151,10 @@ async def test_web_search(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_web_search_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1070,6 +1174,7 @@ async def test_web_search_error(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = WebSearchToolResultError(
         type="web_search_tool_result_error",
@@ -1124,10 +1229,10 @@ async def test_web_search_error(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_web_search_dynamic_filtering(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1148,6 +1253,7 @@ async def test_web_search_dynamic_filtering(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -1267,10 +1373,10 @@ async def test_web_search_dynamic_filtering(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_bash_code_execution(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1284,6 +1390,7 @@ async def test_bash_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1347,10 +1454,10 @@ async def test_bash_code_execution(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_bash_code_execution_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1364,6 +1471,7 @@ async def test_bash_code_execution_error(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1423,7 +1531,7 @@ async def test_bash_code_execution_error(
 @pytest.mark.parametrize(
     ("args_parts", "content"),
     [
-        (
+        pytest.param(
             [
                 "",
                 '{"',
@@ -1439,8 +1547,9 @@ async def test_bash_code_execution_error(
             TextEditorCodeExecutionCreateResultBlock(
                 type="text_editor_code_execution_create_result", is_file_update=False
             ),
+            id="create_file",
         ),
-        (
+        pytest.param(
             [
                 "",
                 '{"comman',
@@ -1472,8 +1581,9 @@ async def test_bash_code_execution_error(
                 old_lines=1,
                 old_start=1,
             ),
+            id="replace_text",
         ),
-        (
+        pytest.param(
             [
                 "",
                 '{"command',
@@ -1491,8 +1601,9 @@ async def test_bash_code_execution_error(
                 start_line=1,
                 total_lines=1,
             ),
+            id="view_file",
         ),
-        (
+        pytest.param(
             [
                 "",
                 '{"com',
@@ -1507,16 +1618,22 @@ async def test_bash_code_execution_error(
             TextEditorCodeExecutionToolResultError(
                 type="text_editor_code_execution_tool_result_error",
                 error_code="unavailable",
-                error_message="Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)",
+                error_message=(
+                    "Tool response parsing error for view:"
+                    " Failed to parse tool response as JSON:"
+                    " unexpected character:"
+                    " line 1 column 1 (char 0)"
+                ),
             ),
+            id="tool_error",
         ),
     ],
 )
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_text_editor_code_execution(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
     args_parts: list[str],
@@ -1532,6 +1649,7 @@ async def test_text_editor_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1563,10 +1681,10 @@ async def test_text_editor_code_execution(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_tool_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1582,6 +1700,7 @@ async def test_tool_search(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolSearchResultBlock(
         type="tool_search_tool_search_result",
@@ -1668,9 +1787,9 @@ async def test_tool_search(
     } in tools
     for tool in tools:
         if tool["name"] in (
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "tool_search_tool_bm25",
         ):
             assert "defer_loading" not in tool
@@ -1679,10 +1798,10 @@ async def test_tool_search(
 
 
 @freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
 async def test_tool_search_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -1696,6 +1815,7 @@ async def test_tool_search_error(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolResultError(
         type="tool_search_tool_result_error",
@@ -1750,10 +1870,187 @@ async def test_tool_search_error(
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
+async def test_web_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web fetch."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-haiku-4-5",
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 5,
+        },
+    )
+    await hass.async_block_till_done()
+
+    web_fetch_result = WebFetchBlock(
+        type="web_fetch_result",
+        url="https://www.home-assistant.io/latest-release-notes/",
+        content=DocumentBlock(
+            type="document",
+            citations=None,
+            source=PlainTextSource(
+                type="text",
+                data="Home Assistant new version is out!\nMany new features.\n"
+                "Anthropic integration now supports web fetch tool.\nEnjoy the release!",
+                media_type="text/plain",
+            ),
+            title="Latest Home Assistant Release Notes",
+        ),
+        retrieved_at="2025-10-31T12:00:00.637242Z",
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the latest", " release notes"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "web_fetch",
+                [
+                    '{"url": "https',
+                    "://www.home-",
+                    "assistant.io/latest",
+                    '-release-notes/"}',
+                ],
+            ),
+            *create_web_fetch_result_block(3, "srvtoolu_12345ABC", web_fetch_result),
+            *create_thinking_block(
+                4,
+                ["Great! All clear, let's reply to the user!"],
+            ),
+            *create_content_block(
+                5,
+                ["Here's what's great about the new release:\n"],
+            ),
+            *create_content_block(
+                6,
+                ["1. Many new features\n2. "],
+            ),
+            *create_content_block(
+                7,
+                ["New web fetch tool for Anthropic integration"],
+                citations=[
+                    CitationCharLocation(
+                        type="char_location",
+                        document_index=0,
+                        document_title="Latest Home Assistant Release Notes",
+                        start_char_index=56,
+                        end_char_index=105,
+                        cited_text="Anthropic integration now supports web fetch tool.",
+                    ),
+                ],
+            ),
+            *create_content_block(8, ["\nWhat a release!"]),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's new in Home Assistant? Please check on "
+        "https://www.home-assistant.io/latest-release-notes/",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+@pytest.mark.usefixtures("mock_init_component")
+async def test_web_fetch_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web fetch error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CODE_EXECUTION: True,
+            CONF_CHAT_MODEL: "claude-fable-5",
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 5,
+        },
+    )
+    await hass.async_block_till_done()
+
+    web_fetch_result = WebFetchToolResultErrorBlock(
+        type="web_fetch_tool_result_error",
+        error_code="url_not_allowed",
+    )
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the latest", " release notes"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "web_fetch",
+                [
+                    '{"url": "https',
+                    "://www.home-",
+                    "assistant.io/latest",
+                    '-release-notes/"}',
+                ],
+            ),
+            *create_web_fetch_result_block(3, "srvtoolu_12345ABC", web_fetch_result),
+            *create_content_block(
+                4,
+                ["I am unable to perform the web fetch at this time."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's new in Home Assistant?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
 async def test_container_reused(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test that container is reused."""
@@ -1806,271 +2103,407 @@ async def test_container_reused(
 @pytest.mark.parametrize(
     "content",
     [
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("What shape is a donut?"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="A donut is a torus.",
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("What shape is a donut?"),
-            conversation.chat_log.UserContent("Can you tell me?"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="A donut is a torus.",
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation", content="Hope this helps."
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("What shape is a donut?"),
-            conversation.chat_log.UserContent("Can you tell me?"),
-            conversation.chat_log.UserContent("Please?"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="A donut is a torus.",
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation", content="Hope this helps."
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation", content="You are welcome."
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("Turn off the lights and make me coffee"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="Sure.",
-                tool_calls=[
-                    llm.ToolInput(
-                        id="mock-tool-call-id",
-                        tool_name="HassTurnOff",
-                        tool_args={"domain": "light"},
-                    ),
-                    llm.ToolInput(
-                        id="mock-tool-call-id-2",
-                        tool_name="MakeCoffee",
-                        tool_args={},
-                    ),
-                ],
-            ),
-            conversation.chat_log.UserContent("Thank you"),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="mock-tool-call-id",
-                tool_name="HassTurnOff",
-                tool_result={"success": True, "response": "Lights are off."},
-            ),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="mock-tool-call-id-2",
-                tool_name="MakeCoffee",
-                tool_result={"success": False, "response": "Not enough milk."},
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="Should I add milk to the shopping list?",
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("What's on the news today?"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="To get today's news, I'll perform a web search",
-                thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
-                tool_calls=[
-                    llm.ToolInput(
-                        id="srvtoolu_12345ABC",
-                        tool_name="web_search",
-                        tool_args={"query": "today's news"},
-                        external=True,
-                    ),
-                ],
-            ),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="srvtoolu_12345ABC",
-                tool_name="web_search",
-                tool_result={
-                    "content": [
-                        {
-                            "type": "web_search_result",
-                            "title": "Today's News - Example.com",
-                            "url": "https://www.example.com/todays-news",
-                            "page_age": "2 days ago",
-                            "encrypted_content": "ABCDEFG",
-                        },
-                        {
-                            "type": "web_search_result",
-                            "title": "Breaking News - NewsSite.com",
-                            "url": "https://www.newssite.com/breaking-news",
-                            "page_age": None,
-                            "encrypted_content": "ABCDEFG",
-                        },
-                    ]
-                },
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="Here's what I found on the web about today's news:\n"
-                "1. New Home Assistant release\n"
-                "2. Something incredible happened\n"
-                "Those are the main headlines making news today.",
-                native=ContentDetails(
-                    citation_details=[
-                        CitationDetails(
-                            index=54,
-                            length=26,
-                            citations=[
-                                CitationWebSearchResultLocationParam(
-                                    type="web_search_result_location",
-                                    cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
-                                    encrypted_index="AAA==",
-                                    title="Home Assistant Release",
-                                    url="https://www.example.com/todays-news",
-                                ),
-                            ],
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+            ],
+            id="system_only",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What shape is a donut?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="A donut is a torus.",
+                ),
+            ],
+            id="single_exchange",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What shape is a donut?"),
+                conversation.chat_log.UserContent("Can you tell me?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="A donut is a torus.",
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Hope this helps.",
+                ),
+            ],
+            id="two_consecutive_messages",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What shape is a donut?"),
+                conversation.chat_log.UserContent("Can you tell me?"),
+                conversation.chat_log.UserContent("Please?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="A donut is a torus.",
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Hope this helps.",
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="You are welcome.",
+                ),
+            ],
+            id="three_consecutive_messages",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent(
+                    "Turn off the lights and make me coffee"
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Sure.",
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id",
+                            tool_name="HassTurnOff",
+                            tool_args={"domain": "light"},
                         ),
-                        CitationDetails(
-                            index=84,
-                            length=29,
-                            citations=[
-                                CitationWebSearchResultLocationParam(
-                                    type="web_search_result_location",
-                                    cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
-                                    encrypted_index="AQE=",
-                                    title="Breaking News",
-                                    url="https://www.newssite.com/breaking-news",
-                                ),
-                                CitationWebSearchResultLocationParam(
-                                    type="web_search_result_location",
-                                    cited_text="Well, this happened...",
-                                    encrypted_index="AgI=",
-                                    title="Breaking News",
-                                    url="https://www.newssite.com/breaking-news",
-                                ),
-                            ],
+                        llm.ToolInput(
+                            id="mock-tool-call-id-2",
+                            tool_name="MakeCoffee",
+                            tool_args={},
                         ),
                     ],
                 ),
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent("You are a helpful assistant."),
-            conversation.chat_log.UserContent("What time is it?"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="Let me check the time for you.",
-                tool_calls=[
-                    llm.ToolInput(
-                        id="mock-tool-call-id",
-                        tool_name="GetCurrentTime",
-                        tool_args={},
+                conversation.chat_log.UserContent("Thank you"),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="mock-tool-call-id",
+                    tool_name="HassTurnOff",
+                    result=llm.ToolResult(
+                        data={"success": True, "response": "Lights are off."}
                     ),
-                ],
-            ),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="mock-tool-call-id",
-                tool_name="GetCurrentTime",
-                tool_result={
-                    "speech_slots": {"time": datetime.time(14, 30, 0)},
-                    "message": "Current time retrieved",
-                },
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="It is currently 2:30 PM.",
-            ),
-        ],
-        [
-            conversation.chat_log.SystemContent(
-                "You are a voice assistant for Home Assistant."
-            ),
-            conversation.chat_log.UserContent("Set humidity to 50%"),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                thinking_content="Let me search for a tool to set humidity.",
-                tool_calls=[
-                    llm.ToolInput(
-                        tool_name="tool_search_tool_bm25",
-                        tool_args={"query": "set humidity humidifier"},
-                        id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
-                        external=True,
-                    )
-                ],
-                native=ContentDetails(thinking_signature="EuQBClkIDBE="),
-            ),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
-                tool_name="tool_search",
-                tool_result={
-                    "tool_references": [
-                        {
-                            "tool_name": "HassHumidifierSetpoint",
-                            "type": "tool_reference",
-                        },
-                        {"tool_name": "HassHumidifierMode", "type": "tool_reference"},
-                        {
-                            "tool_name": "HassClimateSetTemperature",
-                            "type": "tool_reference",
-                        },
-                        {"tool_name": "HassFanSetSpeed", "type": "tool_reference"},
-                        {"tool_name": "HassSetVolume", "type": "tool_reference"},
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="mock-tool-call-id-2",
+                    tool_name="MakeCoffee",
+                    result=llm.ToolResult(
+                        data={"success": False, "response": "Not enough milk."}
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Should I add milk to the shopping list?",
+                ),
+            ],
+            id="tool_results",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What's on the news today?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="To get today's news, I'll perform a web search",
+                    thinking_content=(
+                        "The user is asking about today's news,"
+                        " which requires current, real-time"
+                        " information. This is clearly something"
+                        " that requires recent information beyond"
+                        " my knowledge cutoff. I should use the"
+                        " web_search tool to find today's news."
+                    ),
+                    native=ContentDetails(thinking_signature="ErU/V+ayA=="),
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="srvtoolu_12345ABC",
+                            tool_name="web_search",
+                            tool_args={"query": "today's news"},
+                            external=True,
+                        ),
                     ],
-                    "type": "tool_search_tool_search_result",
-                },
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                tool_calls=[
-                    llm.ToolInput(
-                        tool_name="HassHumidifierSetpoint",
-                        tool_args={"name": "Hygrostat", "humidity": 50},
-                        id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
-                        external=False,
-                    )
-                ],
-            ),
-            conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude_conversation",
-                tool_call_id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
-                tool_name="HassHumidifierSetpoint",
-                tool_result={
-                    "speech": {
-                        "plain": {
-                            "speech": "The Hygrostat is set to 50%",
-                            "extra_data": None,
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="srvtoolu_12345ABC",
+                    tool_name="web_search",
+                    result=llm.ToolResult(
+                        data={
+                            "content": [
+                                {
+                                    "type": "web_search_result",
+                                    "title": "Today's News - Example.com",
+                                    "url": "https://www.example.com/todays-news",
+                                    "page_age": "2 days ago",
+                                    "encrypted_content": "ABCDEFG",
+                                },
+                                {
+                                    "type": "web_search_result",
+                                    "title": "Breaking News - NewsSite.com",
+                                    "url": "https://www.newssite.com/breaking-news",
+                                    "page_age": None,
+                                    "encrypted_content": "ABCDEFG",
+                                },
+                            ]
                         }
-                    },
-                    "response_type": "action_done",
-                    "data": {"success": [], "failed": []},
-                },
-            ),
-            conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude_conversation",
-                content="The Hygrostat humidity has been set to **50%**. ✅",
-            ),
-        ],
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Here's what I found on the web about today's news:\n"
+                    "1. New Home Assistant release\n"
+                    "2. Something incredible happened\n"
+                    "Those are the main headlines making news today.",
+                    native=ContentDetails(
+                        citation_details=[
+                            CitationDetails(
+                                index=54,
+                                length=26,
+                                citations=[
+                                    CitationWebSearchResultLocationParam(
+                                        type="web_search_result_location",
+                                        cited_text=(
+                                            "This release iterates on some of"
+                                            " the features we introduced in"
+                                            " the last couple of releases,"
+                                            " but also..."
+                                        ),
+                                        encrypted_index="AAA==",
+                                        title="Home Assistant Release",
+                                        url="https://www.example.com/todays-news",
+                                    ),
+                                ],
+                            ),
+                            CitationDetails(
+                                index=84,
+                                length=29,
+                                citations=[
+                                    CitationWebSearchResultLocationParam(
+                                        type="web_search_result_location",
+                                        cited_text=(
+                                            "Breaking news from around the"
+                                            " world today includes major"
+                                            " events in technology, politics,"
+                                            " and culture..."
+                                        ),
+                                        encrypted_index="AQE=",
+                                        title="Breaking News",
+                                        url="https://www.newssite.com/breaking-news",
+                                    ),
+                                    CitationWebSearchResultLocationParam(
+                                        type="web_search_result_location",
+                                        cited_text="Well, this happened...",
+                                        encrypted_index="AgI=",
+                                        title="Breaking News",
+                                        url="https://www.newssite.com/breaking-news",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            id="web_search_citations",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What's new in Home Assistant?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Sure, let me check that for you!",
+                    thinking_content="I need to use the web_fetch tool to fetch the latest release notes from the Home Assistant website.",
+                    native=ContentDetails(thinking_signature="ErU/V+ayA=="),
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="srvtoolu_12345ABC",
+                            tool_name="web_fetch",
+                            tool_args={
+                                "url": "https://www.home-assistant.io/latest-release-notes/"
+                            },
+                            external=True,
+                        ),
+                    ],
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="srvtoolu_12345ABC",
+                    tool_name="web_fetch",
+                    result=llm.ToolResult(
+                        data={
+                            "type": "web_fetch_result",
+                            "url": "https://www.home-assistant.io/latest-release-notes/",
+                            "content": {
+                                "type": "document",
+                                "source": {
+                                    "type": "text",
+                                    "media_type": "text/plain",
+                                    "data": "Home Assistant new version is out!\nMany new features.\nAnthropic integration now supports web fetch tool.\nEnjoy the release!",
+                                },
+                                "title": "Latest Home Assistant Release Notes",
+                                "citations": {"enabled": True},
+                            },
+                            "retrieved_at": "2026-04-04T10:30:00Z",
+                        }
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Here's what's great about the new release:\n"
+                    "1. Lots of new features\n"
+                    "2. New web fetch tool for Anthropic integration\n"
+                    "Enjoy!",
+                    native=ContentDetails(
+                        citation_details=[
+                            CitationDetails(
+                                index=70,
+                                length=44,
+                                citations=[
+                                    CitationCharLocationParam(
+                                        type="char_location",
+                                        cited_text="Anthropic integration now supports web fetch tool.",
+                                        document_index=0,
+                                        document_title="Latest Home Assistant Release Notes",
+                                        start_char_index=56,
+                                        end_char_index=105,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            id="web_fetch_citations",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent("You are a helpful assistant."),
+                conversation.chat_log.UserContent("What time is it?"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="Let me check the time for you.",
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id",
+                            tool_name="GetCurrentTime",
+                            tool_args={},
+                        ),
+                    ],
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="mock-tool-call-id",
+                    tool_name="GetCurrentTime",
+                    result=llm.ToolResult(
+                        data={
+                            "speech_slots": {"time": datetime.time(14, 30, 0)},
+                            "message": "Current time retrieved",
+                        }
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="It is currently 2:30 PM.",
+                ),
+            ],
+            id="time_in_tool_result",
+        ),
+        pytest.param(
+            [
+                conversation.chat_log.SystemContent(
+                    "You are a voice assistant for Home Assistant."
+                ),
+                conversation.chat_log.UserContent("Set humidity to 50%"),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    thinking_content="Let me search for a tool to set humidity.",
+                    tool_calls=[
+                        llm.ToolInput(
+                            tool_name="tool_search_tool_bm25",
+                            tool_args={"query": "set humidity humidifier"},
+                            id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                            external=True,
+                        )
+                    ],
+                    native=ContentDetails(thinking_signature="EuQBClkIDBE="),
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="srvtoolu_015vXmtZNASLa7n9RsoDfcBC",
+                    tool_name="tool_search",
+                    result=llm.ToolResult(
+                        data={
+                            "tool_references": [
+                                {
+                                    "tool_name": "HassHumidifierSetpoint",
+                                    "type": "tool_reference",
+                                },
+                                {
+                                    "tool_name": "HassHumidifierMode",
+                                    "type": "tool_reference",
+                                },
+                                {
+                                    "tool_name": "HassClimateSetTemperature",
+                                    "type": "tool_reference",
+                                },
+                                {
+                                    "tool_name": "HassFanSetSpeed",
+                                    "type": "tool_reference",
+                                },
+                                {
+                                    "tool_name": "HassSetVolume",
+                                    "type": "tool_reference",
+                                },
+                            ],
+                            "type": "tool_search_tool_search_result",
+                        }
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_calls=[
+                        llm.ToolInput(
+                            tool_name="HassHumidifierSetpoint",
+                            tool_args={"name": "Hygrostat", "humidity": 50},
+                            id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                            external=False,
+                        )
+                    ],
+                ),
+                conversation.chat_log.ToolResultContent(
+                    agent_id="conversation.claude_conversation",
+                    tool_call_id="toolu_01KNRWb3ZFufCa7WXtzCakhc",
+                    tool_name="HassHumidifierSetpoint",
+                    result=llm.ToolResult(
+                        data={
+                            "speech": {
+                                "plain": {
+                                    "speech": "The Hygrostat is set to 50%",
+                                    "extra_data": None,
+                                }
+                            },
+                            "response_type": "action_done",
+                            "data": {"success": [], "failed": []},
+                        }
+                    ),
+                ),
+                conversation.chat_log.AssistantContent(
+                    agent_id="conversation.claude_conversation",
+                    content="The Hygrostat humidity has been set to **50%**. ✅",
+                ),
+            ],
+            id="tool_search_results",
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
 async def test_history_conversion(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
     content: list[conversation.chat_log.Content],
@@ -2093,3 +2526,102 @@ async def test_history_conversion(
         )
 
         assert mock_create_stream.mock_calls[0][2]["messages"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
+async def test_history_conversion_skips_whitespace_content(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test that whitespace-only chat log content is not sent to the API.
+
+    The API rejects text content blocks that contain only whitespace, and a
+    single such entry in a reused chat session would fail every following turn.
+    """
+    conversation_id = "conversation_id"
+    mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.content = [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="\n"
+            ),
+            conversation.chat_log.UserContent(" "),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="Round."
+            ),
+        ]
+
+        await conversation.async_converse(
+            hass,
+            "Are you sure?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert mock_create_stream.mock_calls[0][2]["messages"] == [
+        {"role": "user", "content": "What shape is a donut?"},
+        {"role": "assistant", "content": "Round."},
+        {"role": "user", "content": "Are you sure?"},
+        {"role": "assistant", "content": "Yes, I am sure!"},
+    ]
+
+
+def test_convert_content_whitespace_with_attachments() -> None:
+    """Test conversion of whitespace-only user content carrying attachments.
+
+    Attachments are only appended to the last message afterwards, so an empty
+    user message is only created when the content is the last entry; earlier
+    whitespace-only entries are dropped even if they carry attachments.
+    """
+    attachment = conversation.chat_log.Attachment(
+        media_content_id="media-source://media/doorbell_snapshot.jpg",
+        mime_type="image/jpg",
+        path=Path("doorbell_snapshot.jpg"),
+    )
+
+    # Not the last entry: dropped, surrounding user messages are combined
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+            conversation.chat_log.UserContent("What do you see?"),
+        ]
+    )
+    assert messages == [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Take a look"},
+                {"type": "text", "text": "What do you see?"},
+            ],
+        },
+    ]
+
+    # Last entry preceded by a user message: no text block is added, the
+    # attachments are appended to the preceding message afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": "Take a look"},
+    ]
+
+    # Last entry with no preceding user message: an empty message is created
+    # for the attachments to be appended to afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": []},
+    ]

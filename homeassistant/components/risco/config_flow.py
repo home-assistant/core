@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -27,6 +28,7 @@ from .const import (
     CONF_COMMUNICATION_DELAY,
     CONF_CONCURRENCY,
     CONF_HA_STATES_TO_RISCO,
+    CONF_MORE_OPTIONS,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_ADVANCED_OPTIONS,
     DEFAULT_OPTIONS,
@@ -40,18 +42,18 @@ from .models import RiscoConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-CLOUD_SCHEMA = vol.Schema(
+CLOUD_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PIN): str,
     }
 )
-LOCAL_SCHEMA = vol.Schema(
+LOCAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=1000): int,
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=1000): int,
+        probatio.Required(CONF_PIN): str,
     }
 )
 HA_STATES = [
@@ -119,12 +121,14 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RiscoConfigEntry,
     ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -216,39 +220,45 @@ class RiscoOptionsFlowHandler(OptionsFlow):
         """Initialize."""
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
-    def _options_schema(self) -> vol.Schema:
-        schema = vol.Schema(
+    def _options_schema(self) -> probatio.Schema:
+        self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_CODE_ARM_REQUIRED, default=self._data[CONF_CODE_ARM_REQUIRED]
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_CODE_DISARM_REQUIRED,
                     default=self._data[CONF_CODE_DISARM_REQUIRED],
                 ): bool,
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
+                        {
+                            # Polling interval is user-configurable,
+                            # which is no longer allowed
+                            # pylint: disable-next=home-assistant-config-flow-polling-field
+                            probatio.Required(
+                                CONF_SCAN_INTERVAL,
+                                default=self._data[CONF_SCAN_INTERVAL],
+                            ): int,
+                            probatio.Required(
+                                CONF_CONCURRENCY,
+                                default=self._data[CONF_CONCURRENCY],
+                            ): int,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
             }
         )
-        if self.show_advanced_options:
-            self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
-            schema = schema.extend(
-                {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
-                    vol.Required(
-                        CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
-                    ): int,
-                    vol.Required(
-                        CONF_CONCURRENCY, default=self._data[CONF_CONCURRENCY]
-                    ): int,
-                }
-            )
-        return schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input.update(more_options)
             self._data = {**self._data, **user_input}
             return await self.async_step_risco_to_ha()
 
@@ -263,11 +273,11 @@ class RiscoOptionsFlowHandler(OptionsFlow):
             return await self.async_step_ha_to_risco()
 
         risco_to_ha = self._data[CONF_RISCO_STATES_TO_HA]
-        options = vol.Schema(
+        options = probatio.Schema(
             {
-                vol.Required(risco_state, default=risco_to_ha[risco_state]): vol.In(
-                    HA_STATES
-                )
+                probatio.Required(
+                    risco_state, default=risco_to_ha[risco_state]
+                ): probatio.In(HA_STATES)
                 for risco_state in RISCO_STATES
             }
         )
@@ -298,8 +308,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
             current = self._data[CONF_HA_STATES_TO_RISCO].get(ha_state)
             if current not in values:
                 current = values[0]
-            options[vol.Required(ha_state, default=current)] = vol.In(values)
+            options[probatio.Required(ha_state, default=current)] = probatio.In(values)
 
         return self.async_show_form(
-            step_id="ha_to_risco", data_schema=vol.Schema(options)
+            step_id="ha_to_risco", data_schema=probatio.Schema(options)
         )

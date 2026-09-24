@@ -6,8 +6,8 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -20,8 +20,12 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
+from zha.zigbee.device import (
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
+    Device,
+    DeviceConfiguredEvent,
+)
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -38,30 +42,33 @@ from homeassistant.components.websocket_api import (
     TYPE_RESULT,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.const import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    EZSP_OVERWRITE_EUI64,
+)
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
     BINDINGS,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
     ID,
-    SERVICE_PERMIT,
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
+from homeassistant.const import ATTR_AREA_ID, ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
@@ -261,6 +268,46 @@ async def test_list_devices(zha_client) -> None:
         msg = await zha_client.receive_json()
         device2 = msg["result"]
         assert device == device2
+
+
+async def test_device_info_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test the device info area_id reflects the registry device's effective area.
+
+    ZHA registers all its devices as top-level (never via ``parent_device_id``),
+    so a device's effective area equals its own ``area_id``.
+    """
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+        ieee=IEEE_SWITCH_DEVICE,
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+
+    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] is None
+
+    device_registry.async_update_device(zha_device_proxy.device_id, area_id="12345A")
+
+    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] == "12345A"
 
 
 async def test_get_zha_config(zha_client) -> None:
@@ -746,7 +793,7 @@ async def test_permit_with_install_code_fail(
 ) -> None:
     """Test permit service with install code."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
@@ -1179,10 +1226,12 @@ async def test_websocket_reconfigure(
     zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
 
     async def mock_reinterview(ieee: EUI64) -> None:
-        zha_device_proxy.handle_zha_channel_configure_reporting(
+        zha_device_proxy.handle_zha_cluster_configure_reporting(
             ClusterConfigureReportingEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=258,
+                cluster_name="Window Covering",
                 attributes={
                     "current_position_lift_percentage": {
                         "min": 0,
@@ -1201,30 +1250,21 @@ async def test_websocket_reconfigure(
                         "status": "SUCCESS",
                     },
                 },
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
-                event_type="zha_channel_message",
-                event="zha_channel_configure_reporting",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_bind(
+        zha_device_proxy.handle_zha_cluster_bind(
             ClusterBindEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=1,
+                cluster_name="Window Covering",
                 success=True,
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
-                event_type="zha_channel_message",
-                event="zha_channel_bind",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_cfg_done(
-            ClusterHandlerConfigurationComplete(
-                device_ieee="28:2c:02:bf:ff:ea:05:68",
-                unique_id="28:2c:02:bf:ff:ea:05:68",
-                event_type="zha_channel_message",
-                event="zha_channel_cfg_done",
-            )
+        zha_device_proxy.handle_zha_device_configured(
+            DeviceConfiguredEvent(device_ieee=zha_device_proxy.device.ieee)
         )
 
     with patch.object(

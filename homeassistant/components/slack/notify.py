@@ -3,14 +3,14 @@
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
 from aiohttp.client_exceptions import ClientError
+import probatio
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -20,6 +20,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,41 +35,42 @@ from .const import (
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
     DATA_CLIENT,
+    DOMAIN,
     SLACK_DATA,
 )
 from .utils import upload_file_to_slack
 
 _LOGGER = logging.getLogger(__name__)
 
-FILE_PATH_SCHEMA = vol.Schema({vol.Required(CONF_PATH): cv.isfile})
+FILE_PATH_SCHEMA = probatio.Schema({probatio.Required(CONF_PATH): cv.isfile})
 
-FILE_URL_SCHEMA = vol.Schema(
+FILE_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_URL): cv.url,
-        vol.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
-        vol.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
+        probatio.Required(ATTR_URL): cv.url,
+        probatio.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
+        probatio.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
     }
 )
 
-DATA_FILE_SCHEMA = vol.Schema(
+DATA_FILE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA),
-        vol.Optional(ATTR_THREAD_TS): cv.string,
+        probatio.Required(ATTR_FILE): probatio.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA),
+        probatio.Optional(ATTR_THREAD_TS): cv.string,
     }
 )
 
-DATA_TEXT_ONLY_SCHEMA = vol.Schema(
+DATA_TEXT_ONLY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_USERNAME): cv.string,
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_BLOCKS): list,
-        vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
-        vol.Optional(ATTR_THREAD_TS): cv.string,
+        probatio.Optional(ATTR_USERNAME): cv.string,
+        probatio.Optional(ATTR_ICON): cv.string,
+        probatio.Optional(ATTR_BLOCKS): list,
+        probatio.Optional(ATTR_BLOCKS_TEMPLATE): list,
+        probatio.Optional(ATTR_THREAD_TS): cv.string,
     }
 )
 
-DATA_SCHEMA = vol.All(
-    cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
+DATA_SCHEMA = probatio.All(
+    cv.ensure_list, [probatio.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
 )
 
 
@@ -271,15 +273,19 @@ class SlackNotificationService(BaseNotificationService):
             elif isinstance(result, ClientError):
                 _LOGGER.error("Error while sending message to %s: %r", target, result)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
         data = kwargs.get(ATTR_DATA) or {}
 
         try:
             DATA_SCHEMA(data)
-        except vol.Invalid as err:
-            _LOGGER.error("Invalid message data: %s", err)
-            data = {}
+        except probatio.Invalid as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_message_data",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         title = kwargs.get(ATTR_TITLE)
         targets = _async_sanitize_channel_names(
@@ -349,8 +355,11 @@ class SlackNotificationService(BaseNotificationService):
             channel_name = channel_name.lstrip("#")
 
             # Get channel list
-            # Multiple types is not working. Tested here: https://api.slack.com/methods/conversations.list/test
-            # response = await self._client.conversations_list(types="public_channel,private_channel")
+            # Multiple types is not working. Tested here:
+            # https://api.slack.com/methods/conversations.list/test
+            # response = await self._client.conversations_list(
+            #     types="public_channel,private_channel"
+            # )
             #
             # Workaround for the types parameter not working
             channels = []

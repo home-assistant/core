@@ -12,15 +12,19 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = FAN_DOMAIN
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.FAN,)])
 
 ENTITY_ID = "fan.hood_fan"
 
@@ -70,7 +74,7 @@ async def test_fan_control(
     """Test the fan can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        FAN_DOMAIN,
         service,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
@@ -99,7 +103,7 @@ async def test_fan_set_speed(
     """Test the fan can set percentage."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        FAN_DOMAIN,
         service,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: percentage},
         blocking=True,
@@ -107,6 +111,32 @@ async def test_fan_set_speed(
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", expected_argument
     )
+
+
+async def test_fan_set_percentage_no_op_when_already_at_target(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test that set_percentage is a no-op when already at the target step."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_called_once_with(
+        "DummyAppliance_18", {"ventilationStep": 2}
+    )
+    mock_miele_client.send_action.reset_mock()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_not_called()
 
 
 async def test_fan_turn_on_w_percentage(
@@ -117,7 +147,7 @@ async def test_fan_turn_on_w_percentage(
     """Test the fan can turn on with percentage."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
         blocking=True,
@@ -145,7 +175,7 @@ async def test_api_failure(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            FAN_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
     mock_miele_client.send_action.assert_called_once()
 
@@ -162,7 +192,7 @@ async def test_set_percentage(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
             blocking=True,

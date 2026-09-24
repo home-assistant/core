@@ -3,8 +3,9 @@
 from datetime import timedelta
 from enum import IntEnum
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyephember2.pyephember2 import (
     EphEmber,
     ZoneMode,
@@ -15,7 +16,6 @@ from pyephember2.pyephember2 import (
     zone_name,
     zone_target_temperature,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -43,7 +43,10 @@ SCAN_INTERVAL = timedelta(seconds=120)
 OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+    }
 )
 
 EPH_TO_HA_STATE = {
@@ -119,16 +122,19 @@ class EphEmberThermostat(ClimateEntity):
             )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
         if boiler_state(self._zone) == EPHBoilerStates.ON:
@@ -137,11 +143,13 @@ class EphEmberThermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         mode = zone_mode(self._zone)
         return self.map_mode_eph_hass(mode)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
@@ -150,6 +158,7 @@ class EphEmberThermostat(ClimateEntity):
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -167,6 +176,7 @@ class EphEmberThermostat(ClimateEntity):
         self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
@@ -176,6 +186,7 @@ class EphEmberThermostat(ClimateEntity):
         return 5.0
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._hot_water:
@@ -196,4 +207,6 @@ class EphEmberThermostat(ClimateEntity):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to Home Assistant mode."""
+        if operation_mode is None:
+            return HVACMode.HEAT_COOL
         return EPH_TO_HA_STATE.get(operation_mode.name, HVACMode.HEAT_COOL)

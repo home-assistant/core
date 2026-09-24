@@ -40,7 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BAFConfigEntry) -> bool:
             await device.async_wait_available()
     except DeviceUUIDMismatchError as ex:
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, found {device.dns_sd_uuid}"
+            f"Unexpected device found at {ip_address}; expected"
+            f" {entry.unique_id}, found {device.dns_sd_uuid}"
         ) from ex
     except TimeoutError as ex:
         run_future.cancel()

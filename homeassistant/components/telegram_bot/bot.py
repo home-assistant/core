@@ -39,6 +39,7 @@ from telegram.request import HTTPXRequest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -58,7 +59,6 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
     ATTR_DATA,
-    ATTR_DATE,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -123,7 +123,23 @@ from .helpers import signal
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
+# Telegram keeps this per bot, server side, and keeps whatever it was told last
+# when the setting is omitted, so a bot narrowed by an earlier consumer of the
+# token silently drops the rest. Ask for what `handle_update` turns into events:
+# a callback query, and the updates `Update.effective_message` is drawn from.
+ALLOWED_UPDATES = [
+    Update.CALLBACK_QUERY,
+    Update.MESSAGE,
+    Update.EDITED_MESSAGE,
+    Update.CHANNEL_POST,
+    Update.EDITED_CHANNEL_POST,
+    Update.BUSINESS_MESSAGE,
+    Update.EDITED_BUSINESS_MESSAGE,
+]
+
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
+
+_RETRY_DELAY = 1  # 1 second delay between retries
 
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
@@ -158,7 +174,8 @@ class BaseTelegramBot:
 
         # establish event type: text, command or callback_query
         if update.callback_query:
-            # NOTE: Check for callback query first since effective message will be populated with the message
+            # NOTE: Check for callback query first since
+            # effective message will be populated with the message
             # in .callback_query (python-telegram-bot docs are wrong)
             event_type, event_data = self._get_callback_query_event_data(
                 update.callback_query
@@ -201,8 +218,12 @@ class BaseTelegramBot:
             ATTR_DATE: message.date,
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
+        if message.reply_to_message:
+            event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
+
         if filters.COMMAND.filter(message):
-            # This is a command message - set event type to command and split data into command and args
+            # This is a command message - set event type
+            # to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -224,7 +245,7 @@ class BaseTelegramBot:
             photos = cast(Sequence[PhotoSize], message.effective_attachment)
             return {
                 ATTR_FILE_ID: photos[-1].file_id,
-                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_MIME_TYPE: "image/jpeg",
                 ATTR_FILE_SIZE: photos[-1].file_size,
             }
         return {
@@ -544,7 +565,7 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send media group to a chat ID.
 
-        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        Returns a dict mapping each chat_id to message_ids.
         """
         params = self._get_msg_kwargs(kwargs)
 
@@ -1062,7 +1083,20 @@ class TelegramNotificationService:
                     translation_key="invalid_directory_path",
                     translation_placeholders={"directory_path": directory_path},
                 ) from err
+
+            # A caller supplied destination has to sit inside
+            # allowlist_external_dirs, the boundary load_data already applies to
+            # reads. is_allowed_path resolves the path first, so a symlink inside
+            # an allowed directory that points out of it is rejected too.
+            if not await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, directory_path
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="allowlist_external_dirs_error",
+                )
         else:
+            # The integration's own directory needs no allowlist entry.
             directory_path = self.hass.config.path(DOMAIN)
 
         if file_name:
@@ -1211,9 +1245,8 @@ async def load_data(
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
                 if retry_num < num_retries:
-                    await asyncio.sleep(
-                        1
-                    )  # Add a sleep to allow other async operations to proceed
+                    # Add a sleep to allow other async operations to proceed
+                    await asyncio.sleep(_RETRY_DELAY)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",

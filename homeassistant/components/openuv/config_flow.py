@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -31,20 +31,20 @@ from .const import (
 )
 from .coordinator import OpenUvConfigEntry
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_FROM_WINDOW, description={"suggested_value": DEFAULT_FROM_WINDOW}
-        ): vol.Coerce(float),
-        vol.Optional(
+        ): probatio.Coerce(float),
+        probatio.Optional(
             CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
-        ): vol.Coerce(float),
+        ): probatio.Coerce(float),
     }
 )
 
@@ -78,25 +78,25 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
         self._reauth_data: Mapping[str, Any] = {}
 
     @property
-    def step_user_schema(self) -> vol.Schema:
+    def step_user_schema(self) -> probatio.Schema:
         """Return the config schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): str,
-                vol.Inclusive(
+                probatio.Required(CONF_API_KEY): str,
+                probatio.Inclusive(
                     CONF_LATITUDE, "coords", default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Inclusive(
+                probatio.Inclusive(
                     CONF_LONGITUDE, "coords", default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ELEVATION, default=self.hass.config.elevation
-                ): vol.Coerce(float),
+                ): probatio.Coerce(float),
             }
         )
 
     async def _async_verify(
-        self, data: OpenUvData, error_step_id: str, error_schema: vol.Schema
+        self, data: OpenUvData, error_step_id: str, error_schema: probatio.Schema
     ) -> ConfigFlowResult:
         """Verify the credentials and create/re-auth the entry."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -132,6 +132,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OpenUvConfigEntry,
     ) -> SchemaOptionsFlowHandler:
@@ -168,6 +169,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._async_verify(data, "reauth_confirm", STEP_REAUTH_SCHEMA)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

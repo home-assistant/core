@@ -1,7 +1,7 @@
 """Switch platform for Hyperion."""
 
 import functools
-from typing import Any
+from typing import Any, override
 
 from hyperion import client
 from hyperion.const import (
@@ -68,7 +68,8 @@ def _component_to_unique_id(server_id: str, component: str, instance_num: int) -
         server_id,
         instance_num,
         slugify(
-            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {KEY_COMPONENTID_TO_NAME[component]}"
+            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE}"
+            f" {KEY_COMPONENTID_TO_NAME[component]}"
         ),
     )
 
@@ -163,6 +164,7 @@ class HyperionComponentSwitch(SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         for component in self._client.components or []:
@@ -171,6 +173,7 @@ class HyperionComponentSwitch(SwitchEntity):
         return False
 
     @property
+    @override
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
@@ -186,10 +189,12 @@ class HyperionComponentSwitch(SwitchEntity):
             }
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_send_set_component(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_component(False)
@@ -199,6 +204,7 @@ class HyperionComponentSwitch(SwitchEntity):
         """Update Hyperion components."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
         self.async_on_remove(
@@ -211,6 +217,7 @@ class HyperionComponentSwitch(SwitchEntity):
 
         self._client.add_callbacks(self._client_callbacks)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)

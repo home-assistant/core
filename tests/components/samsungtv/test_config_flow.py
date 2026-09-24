@@ -1,6 +1,7 @@
 """Tests for Samsung TV config flow."""
 
 from copy import deepcopy
+import dataclasses
 from ipaddress import ip_address
 import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
@@ -29,8 +30,11 @@ from homeassistant.components.samsungtv.const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
@@ -282,6 +286,153 @@ async def test_user_encrypted_websocket(
     assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
+@pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket")
+async def test_user_websocket_k_series_encrypted_fallback(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a 2016 K-series set falls back to encrypted pairing (#177252).
+
+    Its REST device info selects the websocket method, but the token handshake
+    times out (RESULT_CANNOT_CONNECT) because it only pairs via the encrypted
+    CloudPINPage flow. The encrypted port is reachable, so the flow probes it
+    successfully before committing to the encrypted pairing step.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UN55KU6290.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+            side_effect=OSError("timed out"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
+            autospec=True,
+        ) as authenticator_mock,
+    ):
+        authenticator_mock.return_value.try_pin.side_effect = [
+            None,
+            "037739871315caef138547b03e348b72",
+        ]
+        authenticator_mock.return_value.get_session_id_and_close.return_value = "1"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "encrypted_pairing"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
+        )
+        assert result3["step_id"] == "encrypted_pairing"
+        assert result3["errors"] == {"base": "invalid_pin"}
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
+    assert result4["data"][CONF_MODEL] == "UN55KU6290"
+    assert result4["data"][CONF_PORT] == ENCRYPTED_WEBSOCKET_PORT
+    assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
+    assert result4["data"][CONF_SESSION_ID] == "1"
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_user_websocket_k_series_stays_on_websocket(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a K-series set that pairs over websocket is not pushed to encrypted.
+
+    Regression guard for #70708 (UE32K5600): the encrypted fallback must only
+    trigger when the websocket pairing genuinely fails to connect.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UN55KU6290.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
+    assert result2["data"][CONF_MODEL] == "UN55KU6290"
+    assert result2["data"][CONF_PORT] == 8002
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_user_websocket_non_k_series_cannot_connect(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a non-K-series set that fails to connect is not pushed to encrypted.
+
+    Regression guard for #70708: only K-series models get the encrypted
+    fallback, so a websocket connection failure on any other model must abort
+    with cannot_connect.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        side_effect=OSError("timed out"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == RESULT_CANNOT_CONNECT
+
+
+@pytest.mark.usefixtures("rest_api", "remote_encrypted_websocket_failing")
+async def test_user_websocket_k_series_encrypted_also_cannot_connect(
+    hass: HomeAssistant, rest_api: Mock
+) -> None:
+    """Test a K-series set that is offline aborts cleanly with cannot_connect.
+
+    Websocket pairing fails to connect, and the encrypted port is probed and
+    also unreachable (e.g. the TV is off), so the flow must abort with
+    cannot_connect instead of raising out of the encrypted pairing step.
+    """
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UN55KU6290.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
+        side_effect=OSError("timed out"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == RESULT_CANNOT_CONNECT
+
+
 @pytest.mark.usefixtures("rest_api_failing")
 async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow by user with authentication."""
@@ -495,7 +646,7 @@ async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
 async def test_ssdp_legacy_not_remote_control_receiver_udn(
     hass: HomeAssistant, data: SsdpServiceInfo
 ) -> None:
-    """Test we abort if the st is not usable for legacy discovery since it will have a different UDN."""
+    """Test we abort if it is not usable for legacy discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
     )
@@ -505,7 +656,7 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
 
 @pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery when friendly name doesn't start with [TV]."""
+    """Test discovery flow when friendly name has no [TV] prefix."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
     ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME] = ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME][
         4:
@@ -1037,6 +1188,20 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
+async def test_zeroconf_ignores_soundbar_by_name(hass: HomeAssistant) -> None:
+    """Test zeroconf flow aborts early when the service name contains 'Soundbar'."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=dataclasses.replace(
+            MOCK_ZEROCONF_DATA, name="Q-Series Soundbar._airplay._tcp.local."
+        ),
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == RESULT_NOT_SUPPORTED
+
+
 @pytest.mark.usefixtures("remote_websocket", "remote_encrypted_websocket_failing")
 async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
@@ -1481,7 +1646,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
 async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the wrong st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location and wrong st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1513,10 +1678,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
 @pytest.mark.usefixtures(
     "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
 )
-async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_updated_from_ssdp(
+async def test_update_missing_mac_unique_id_ssdp_location_rendering_st_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the correct st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location, correct st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1549,10 +1714,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
 @pytest.mark.usefixtures(
     "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
 )
-async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st_updated_from_ssdp(
+async def test_update_missing_mac_unique_id_ssdp_location_tv_agent_st_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the correct st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location, correct st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1778,7 +1943,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
 async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_control_st(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
+    """Test missing ssdp_location and unique id with rendering st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},

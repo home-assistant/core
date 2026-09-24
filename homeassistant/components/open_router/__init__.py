@@ -1,5 +1,7 @@
 """The OpenRouter integration."""
 
+from typing import Any, cast
+
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,10 +22,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
     client = AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=entry.data[CONF_API_KEY],
-        http_client=get_async_client(hass),
+        # Legacy HTTPX clients are supported at runtime only.
+        http_client=cast(Any, get_async_client(hass)),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
@@ -62,21 +66,20 @@ async def async_migrate_entry(
     """Migrate config entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 2):
-        return False
-
-    if entry.version == 1 and entry.minor_version < 2:
+    if entry.version == 1 and entry.minor_version < 3:
         for subentry in entry.subentries.values():
-            if CONF_WEB_SEARCH in subentry.data:
-                continue
+            current_value = subentry.data.get(CONF_WEB_SEARCH)
 
-            updated_data = {**subentry.data, CONF_WEB_SEARCH: False}
+            updated_data = {
+                **subentry.data,
+                CONF_WEB_SEARCH: "plugin" if current_value is True else "off",
+            }
 
             hass.config_entries.async_update_subentry(
                 entry, subentry, data=updated_data
             )
 
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.info(
         "Migration to version %s.%s successful", entry.version, entry.minor_version

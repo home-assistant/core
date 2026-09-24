@@ -1,9 +1,9 @@
 """Config flow for Modem Caller ID integration."""
 
-from typing import Any
+from typing import Any, override
 
 from phone_modem import PhoneModem
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -12,7 +12,7 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
-DATA_SCHEMA = vol.Schema({"name": str, "device": str})
+DATA_SCHEMA = probatio.Schema({"name": str, "device": str})
 
 
 def _generate_unique_id(port: usb.USBDevice | usb.SerialDevice) -> str:
@@ -29,10 +29,16 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self._device: str | None = None
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         dev_path = discovery_info.device
-        unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
+        unique_id = (
+            f"{discovery_info.vid}:{discovery_info.pid}"
+            f"_{discovery_info.serial_number}"
+            f"_{discovery_info.manufacturer}"
+            f"_{discovery_info.description}"
+        )
         if (
             await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)
             is None
@@ -53,6 +59,7 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,7 +98,9 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
                     data={CONF_DEVICE: dev_path},
                 )
         user_input = user_input or {}
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_DEVICE): probatio.In(list(port_map))}
+        )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def validate_device_errors(

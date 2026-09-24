@@ -1,13 +1,13 @@
 """Config flow for Medcom BlE integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from bluetooth_data_tools import human_readable_name
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
 from medcom_ble.const import INSPECTOR_SERVICE_UUID
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -47,6 +47,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await inspector.update_device(ble_device)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -67,7 +68,8 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        # We always will have self._discovery_info be a BluetoothServiceInfo at this point
+        # We always will have self._discovery_info be a
+        # BluetoothServiceInfo at this point
         # and this helps mypy not complain
         assert self._discovery_info is not None
 
@@ -80,6 +82,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_check_connection()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,16 +117,17 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(titles),
+                    probatio.Required(CONF_ADDRESS): probatio.In(titles),
                 },
             ),
         )
 
     async def async_step_check_connection(self) -> ConfigFlowResult:
-        """Check we can connect to the device before considering the configuration is successful."""
-        # We always will have self._discovery_info be a BluetoothServiceInfo at this point
+        """Check device connection before confirming configuration."""
+        # We always will have self._discovery_info be a
+        # BluetoothServiceInfo at this point
         # and this helps mypy not complain
         assert self._discovery_info is not None
 

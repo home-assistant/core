@@ -29,9 +29,9 @@ VALID_USER_INPUT = {
         ("  USER@EXAMPLE.COM  ", "user@example.com"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_paj_gps_api: AsyncMock,
     raw_email: str,
     expected_email: str,
@@ -81,9 +81,9 @@ async def test_duplicate_email_aborts(
         (ConnectionError("timeout"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_invalid_credentials_shows_form_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_paj_gps_api: AsyncMock,
     side_effect: Exception,
     expected_error: str,

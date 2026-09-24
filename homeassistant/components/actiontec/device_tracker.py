@@ -1,10 +1,10 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
+import probatio
 import telnetlib  # pylint: disable=deprecated-module
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -23,9 +23,9 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
     }
 )
 
@@ -50,11 +50,13 @@ class ActiontecDeviceScanner(DeviceScanner):
         data = self.get_actiontec_data()
         self.success_init = data is not None
 
+    @override
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client.mac_address for client in self.last_results]
 
+    @override
     def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:

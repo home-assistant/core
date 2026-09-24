@@ -1,8 +1,8 @@
 """The tests for Select device triggers."""
 
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -141,7 +141,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -162,7 +163,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -184,7 +186,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from-to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -263,7 +266,8 @@ async def test_if_fires_on_state_change_legacy(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -302,7 +306,7 @@ async def test_get_trigger_capabilities(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -336,7 +340,7 @@ async def test_get_trigger_capabilities(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -378,7 +382,7 @@ async def test_get_trigger_capabilities_unknown(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -422,7 +426,7 @@ async def test_get_trigger_capabilities_legacy(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -456,7 +460,7 @@ async def test_get_trigger_capabilities_legacy(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

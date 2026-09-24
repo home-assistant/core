@@ -1,7 +1,7 @@
 """Switch platform for Hass.io addons."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonState
@@ -49,6 +49,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
     """Switch for Hass.io add-ons."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the add-on is on."""
         return (
@@ -57,6 +58,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
         )
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
         if not self.available:
@@ -65,6 +67,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         supervisor_client = get_supervisor_client(self.hass)
@@ -75,6 +78,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
 
         await self.coordinator.force_addon_info_data_refresh(self._addon_slug)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         supervisor_client = get_supervisor_client(self.hass)

@@ -1,8 +1,11 @@
 """Base class for Portainer entities."""
 
+from typing import TYPE_CHECKING, override
+
 from yarl import URL
 
 from homeassistant.const import CONF_URL
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -17,6 +20,7 @@ from .coordinator import (
     PortainerStackData,
     PortainerVolumeData,
 )
+from .util import sanitize_container_name
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -59,9 +63,13 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             name=device_info.endpoint.name,
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{device_info.id}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_id in self.coordinator.data
@@ -88,8 +96,9 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         # The first one, should always be unique, it's fine if users have aliases
         # According to Docker's API docs, the first name is unique
         names = self._device_info.container.names
-        assert names, "Container names list unexpectedly empty"
-        self.device_name = names[0].replace("/", " ").strip()
+        if TYPE_CHECKING:
+            assert names is not None
+        self.device_name = sanitize_container_name(names[0])
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -106,18 +115,26 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             name=self.device_name,
             # If the container belongs to a stack, nest it under the stack
             # else it's the endpoint
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
-                if device_info.stack
-                else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{device_info.stack.id}"
+                    if device_info.stack
+                    else f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.device_name}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -164,14 +181,19 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
             ),
             model="Stack",
             name=self.device_name,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}"),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.stack_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.stack_id}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the stack is available."""
         return (
@@ -189,7 +211,10 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
 class PortainerDockerSystemDiskSpaceEndpointEntity(
     PortainerDockerDiskSpaceCoordinatorEntity
 ):
-    """Base class for endpoint entities backed by the docker system disk space coordinator."""
+    """Base class for endpoint entities.
+
+    Backed by the docker system disk space coordinator.
+    """
 
     def __init__(
         self,
@@ -213,9 +238,14 @@ class PortainerDockerSystemDiskSpaceEndpointEntity(
             model="Endpoint",
             name=device_info.endpoint.name,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.endpoint.id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{device_info.endpoint.id}"
+            f"_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -256,14 +286,20 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
             ),
             model="Volume",
             name=self.volume_name,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}"),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.endpoint_id}_volume"
+            f"_{self.volume_name}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the volume is available."""
         return (

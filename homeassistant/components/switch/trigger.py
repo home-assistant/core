@@ -8,7 +8,10 @@ from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trig
 
 from .const import DOMAIN
 
-SWITCH_DOMAIN_SPECS = {DOMAIN: DomainSpec(), INPUT_BOOLEAN_DOMAIN: DomainSpec()}
+SWITCH_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(),
+    INPUT_BOOLEAN_DOMAIN: DomainSpec(),
+}
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "turned_on": make_entity_target_state_trigger(SWITCH_DOMAIN_SPECS, STATE_ON),

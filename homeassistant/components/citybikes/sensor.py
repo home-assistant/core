@@ -8,7 +8,7 @@ import sys
 import aiohttp
 from citybikes import __version__ as CITYBIKES_CLIENT_VERSION
 from citybikes.asyncio import Client as CitybikesClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_CLOSE,
+    EntityStateAttribute,
     UnitOfLength,
     __version__,
 )
@@ -45,8 +46,6 @@ HA_USER_AGENT = (
 )
 
 ATTR_UID = "uid"
-ATTR_LATITUDE = "latitude"
-ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_FREE_EBIKES = "free_ebikes"
 ATTR_TIMESTAMP = "timestamp"
@@ -73,17 +72,17 @@ CITYBIKES_ATTRIBUTION = (
 
 CITYBIKES_NETWORKS = "citybikes_networks"
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_NAME, default=""): cv.string,
-            vol.Optional(CONF_NETWORK): cv.string,
-            vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-            vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-            vol.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
-            vol.Optional(CONF_STATIONS_LIST, "station_filter"): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Optional(CONF_NAME, default=""): cv.string,
+            probatio.Optional(CONF_NETWORK): cv.string,
+            probatio.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+            probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
+            probatio.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
+            probatio.Optional(CONF_STATIONS_LIST, "station_filter"): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         }
     ),
@@ -235,8 +234,8 @@ class CityBikesStation(SensorEntity):
         self._attr_native_value = station.free_bikes
         self._attr_extra_state_attributes = {
             ATTR_UID: station.extra.get(ATTR_UID),
-            ATTR_LATITUDE: station.latitude,
-            ATTR_LONGITUDE: station.longitude,
+            EntityStateAttribute.LATITUDE: station.latitude,
+            EntityStateAttribute.LONGITUDE: station.longitude,
             ATTR_EMPTY_SLOTS: station.empty_slots,
             ATTR_FREE_EBIKES: station.extra.get(EXTRA_EBIKES),
             ATTR_TIMESTAMP: station.timestamp,

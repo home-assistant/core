@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, select
+from homeassistant.components import select
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.select import MQTT_SELECT_ATTRIBUTES_BLOCKED
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -57,7 +58,7 @@ from tests.common import async_fire_mqtt_message, mock_restore_cache
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         select.DOMAIN: {
             "name": "test",
             "command_topic": "test-topic",
@@ -70,7 +71,7 @@ DEFAULT_CONFIG = {
 def _test_run_select_setup_params(topic: str) -> Generator[tuple[ConfigType, str]]:
     yield (
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "state_topic": topic,
                     "command_topic": "test/select_cmd",
@@ -127,7 +128,7 @@ async def test_run_select_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "state_topic": "test/select_stat",
                     "command_topic": "test/select_cmd",
@@ -171,7 +172,7 @@ async def test_value_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "command_topic": "test/select_cmd",
                     "name": "Test Select",
@@ -201,7 +202,9 @@ async def test_run_select_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("test/select_cmd", "beer", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/select_cmd", "beer", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
@@ -211,7 +214,7 @@ async def test_run_select_service_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "command_topic": "test/select_cmd",
                     "name": "Test Select",
@@ -225,7 +228,7 @@ async def test_run_select_service_optimistic(
 async def test_run_select_service_optimistic_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in optimistic mode and with a command_template."""
+    """Test set_value in optimistic mode with a command_template."""
     fake_state = State("select.test_select", "milk")
     mock_restore_cache(hass, (fake_state,))
 
@@ -243,7 +246,7 @@ async def test_run_select_service_optimistic_with_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "test/select_cmd", '{"option": "beer"}', 0, False
+        "test/select_cmd", '{"option": "beer"}', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
@@ -254,7 +257,7 @@ async def test_run_select_service_optimistic_with_command_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "command_topic": "test/select/set",
                     "state_topic": "test/select",
@@ -284,7 +287,9 @@ async def test_run_select_service(
         {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "milk", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, "milk", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
@@ -293,7 +298,7 @@ async def test_run_select_service(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "command_topic": "test/select/set",
                     "state_topic": "test/select",
@@ -308,7 +313,7 @@ async def test_run_select_service(
 async def test_run_select_service_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in non optimistic mode and with a command_template."""
+    """Test set_value service with a command_template."""
     cmd_topic = "test/select/set"
     state_topic = "test/select"
 
@@ -325,7 +330,7 @@ async def test_run_select_service_with_command_template(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        cmd_topic, '{"option": "milk"}', 0, False
+        cmd_topic, '{"option": "milk"}', 0, False, message_expiry_interval=None
     )
 
 
@@ -437,7 +442,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -469,7 +474,7 @@ async def test_discovery_removal_select(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered select."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][select.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, select.DOMAIN, data)
 
 
@@ -499,7 +504,10 @@ async def test_discovery_update_unchanged_select(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered select."""
-    data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    data1 = (
+        '{ "name": "Beer", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
     with patch(
         "homeassistant.components.mqtt.select.MqttSelect.discovery_update"
     ) as discovery_update:
@@ -514,7 +522,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    data2 = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
 
     await help_test_discovery_broken(hass, mqtt_mock_entry, select.DOMAIN, data1, data2)
 
@@ -595,7 +606,7 @@ def _test_options_attributes_options_config(
     for option in request:
         yield (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     select.DOMAIN: {
                         "command_topic": "test/select/set",
                         "state_topic": "test/select",
@@ -626,7 +637,7 @@ async def test_options_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 select.DOMAIN: {
                     "state_topic": "test/select_stat",
                     "command_topic": "test/select_cmd",
@@ -680,7 +691,7 @@ async def test_publishing_with_custom_encoding(
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][domain]["options"] = ["milk", "beer"]
+    config[DOMAIN][domain]["options"] = ["milk", "beer"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -721,7 +732,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][select.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][select.DOMAIN])
     config["options"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
@@ -765,7 +776,10 @@ async def test_persistent_state_after_reconfig(
 ) -> None:
     """Test of the state is persistent after reconfiguring the select options."""
     await mqtt_mock_entry()
-    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    discovery_data = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    )
     await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
 
     # assign an initial state
@@ -775,7 +789,10 @@ async def test_persistent_state_after_reconfig(
     assert state.attributes["options"] == ["milk", "beer"]
 
     # remove "milk" option
-    discovery_data = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["beer"]}'
+    discovery_data = (
+        '{ "name": "Milk", "state_topic": "test-topic",'
+        ' "command_topic": "test-topic", "options": ["beer"]}'
+    )
     await help_test_discovery_setup(hass, SELECT_DOMAIN, discovery_data, "milk")
 
     # assert the state persistent
@@ -844,6 +861,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

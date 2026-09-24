@@ -2,7 +2,7 @@
 
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "alexa_devices"
 CONF_LOGIN_DATA = "login_data"
@@ -26,9 +26,6 @@ COUNTRY_DOMAINS = {
     "us": DEFAULT_DOMAIN,
     "za": "co.za",
 }
-
-CATEGORY_SENSORS = "sensors"
-CATEGORY_NOTIFICATIONS = "notifications"
 
 # Map service translation keys to Alexa API
 INFO_SKILLS_MAPPING = {

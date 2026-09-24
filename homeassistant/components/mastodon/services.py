@@ -14,12 +14,14 @@ from mastodon.Mastodon import (
     MastodonNotFoundError,
     MastodonUnauthorizedError,
     MediaAttachment,
+    ScheduledStatus,
+    Status,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import camera, image
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -38,6 +40,8 @@ from .const import (
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DELETE_AVATAR,
+    ATTR_DELETE_HEADER,
     ATTR_DISCOVERABLE,
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
@@ -46,13 +50,14 @@ from .const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
-    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VALUE,
     ATTR_VISIBILITY,
@@ -83,66 +88,78 @@ class QuoteApprovalPolicy(StrEnum):
 
 
 SERVICE_GET_ACCOUNT = "get_account"
-SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_GET_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_MUTE_ACCOUNT = "mute_account"
-SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_MUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Optional(ATTR_DURATION): probatio.All(
             cv.time_period,
-            vol.Range(
+            probatio.Range(
                 min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
             ),
         ),
-        vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
+        probatio.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
 )
 SERVICE_UNMUTE_ACCOUNT = "unmute_account"
-SERVICE_UNMUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_UNMUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_POST = "post"
-SERVICE_POST_SCHEMA = vol.Schema(
+SERVICE_POST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_STATUS): str,
-        vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
-        vol.Optional(ATTR_QUOTE_APPROVAL_POLICY): vol.In(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_STATUS): str,
+        probatio.Optional(ATTR_VISIBILITY): probatio.In(
+            [x.lower() for x in StatusVisibility]
+        ),
+        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.In(
             [x.lower() for x in QuoteApprovalPolicy]
         ),
-        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
-        vol.Optional(ATTR_CONTENT_WARNING): str,
-        vol.Optional(ATTR_LANGUAGE): str,
-        vol.Optional(ATTR_MEDIA): str,
-        vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
-        vol.Optional(ATTR_MEDIA_WARNING): bool,
+        probatio.Optional(ATTR_IDEMPOTENCY_KEY): str,
+        probatio.Optional(ATTR_CONTENT_WARNING): str,
+        probatio.Optional(ATTR_LANGUAGE): str,
+        probatio.Optional(ATTR_MEDIA): str,
+        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
+        probatio.Optional(ATTR_MEDIA_WARNING): bool,
+        probatio.Optional(ATTR_IN_REPLY_TO): str,
+        probatio.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
 SERVICE_UPDATE_PROFILE = "update_profile"
-SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
+SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_DISPLAY_NAME): str,
-        vol.Optional(ATTR_NOTE): str,
-        vol.Optional(ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional(ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional(ATTR_LOCKED): bool,
-        vol.Optional(ATTR_BOT): bool,
-        vol.Optional(ATTR_DISCOVERABLE): bool,
-        vol.Optional(ATTR_FIELDS): vol.All(
-            cv.ensure_list, vol.Length(max=4), [dict[str, str]]
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_DISPLAY_NAME): str,
+        probatio.Optional(ATTR_NOTE): str,
+        probatio.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector(
+            {"accept": ["image/*"]}
         ),
-        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [str]),
+        probatio.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
+        probatio.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector(
+            {"accept": ["image/*"]}
+        ),
+        probatio.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
+        probatio.Optional(ATTR_LOCKED): bool,
+        probatio.Optional(ATTR_BOT): bool,
+        probatio.Optional(ATTR_DISCOVERABLE): bool,
+        probatio.Optional(ATTR_FIELDS): probatio.All(
+            cv.ensure_list, probatio.Length(max=4), [dict[str, str]]
+        ),
+        probatio.Optional(ATTR_ATTRIBUTION_DOMAINS): probatio.All(
+            cv.ensure_list, [str]
+        ),
     }
 )
 
@@ -170,14 +187,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+        DOMAIN,
+        SERVICE_POST,
+        _async_post,
+        schema=SERVICE_POST_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_UPDATE_PROFILE,
         _async_update_profile,
         schema=SERVICE_UPDATE_PROFILE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 
@@ -310,6 +331,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     media_path: str | None = call.data.get(ATTR_MEDIA)
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
 
     if idempotency_key and len(idempotency_key) < 4:
         raise ServiceValidationError(
@@ -317,7 +340,7 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             translation_key="idempotency_key_too_short",
         )
 
-    await call.hass.async_add_executor_job(
+    response = await call.hass.async_add_executor_job(
         partial(
             _post,
             hass=call.hass,
@@ -331,13 +354,18 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             media_path=media_path,
             media_description=media_description,
             sensitive=media_warning,
+            in_reply_to_id=in_reply_to,
+            quoted_status_id=quoted_status,
         )
     )
-
+    if call.return_response:
+        return response
     return None
 
 
-def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
+def _post(
+    hass: HomeAssistant, client: Mastodon, **kwargs: Any
+) -> Status | ScheduledStatus:
     """Post to Mastodon."""
 
     media_data: MediaAttachment | None = None
@@ -374,15 +402,18 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
     if media_data:
         media_ids = media_data.id
     try:
-        client.status_post(media_ids=media_ids, **kwargs)
+        response: Status | ScheduledStatus = client.status_post(
+            media_ids=media_ids, **kwargs
+        )
     except MastodonAPIError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+    return response
 
 
-async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
     """Update profile information."""
     params = dict(call.data.copy())
 
@@ -405,9 +436,21 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             for field in fields
             if field[ATTR_NAME].strip()
         ]
+    delete_avatar = params.pop("delete_avatar", False)
+    delete_header = params.pop("delete_header", False)
     try:
-        return await call.hass.async_add_executor_job(
-            lambda: client.account_update_credentials(**params)
+
+        def _update_profile() -> Any:
+            if delete_avatar:
+                client.account_delete_avatar()
+            if delete_header:
+                client.account_delete_header()
+            if call.return_response or params:
+                return client.account_update_credentials(**params)
+            return None
+
+        response: Account | None = await call.hass.async_add_executor_job(
+            _update_profile
         )
     except MastodonUnauthorizedError as error:
         entry.async_start_reauth(call.hass)
@@ -421,6 +464,9 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="unable_to_update_profile",
         ) from err
+    if call.return_response:
+        return response
+    return None
 
 
 async def _resolve_media(

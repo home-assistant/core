@@ -2,9 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -21,16 +21,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_URL = "http://localhost:8080"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_URL, default=DEFAULT_URL): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
@@ -57,6 +57,7 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

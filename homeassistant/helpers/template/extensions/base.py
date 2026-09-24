@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, override
 
 from jinja2 import pass_context
 from jinja2.ext import Extension
@@ -77,7 +77,8 @@ class BaseTemplateExtension(Extension):
                 if template_func.requires_hass and self.environment.hass is None:
                     continue
 
-                # Register unsupported stub for functions not allowed in limited environments
+                # Register unsupported stub for functions not
+                # allowed in limited environments
                 if self.environment.limited and not template_func.limited_ok:
                     unsupported_func = self._create_unsupported_function(
                         template_func.name
@@ -107,7 +108,7 @@ class BaseTemplateExtension(Extension):
 
     @staticmethod
     def _create_unsupported_function(name: str) -> Callable[[], NoReturn]:
-        """Create a function that raises an error for unsupported functions in limited templates."""
+        """Create a function that raises for unsupported limited template functions."""
 
         def unsupported(*args: Any, **kwargs: Any) -> NoReturn:
             raise TemplateError(
@@ -134,6 +135,7 @@ class BaseTemplateExtension(Extension):
             )
         return self.environment.hass
 
+    @override
     def parse(self, parser: Parser) -> Node | list[Node]:
         """Required by Jinja2 Extension base class."""
         return []

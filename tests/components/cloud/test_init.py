@@ -4,8 +4,16 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from hass_nabucasa import (
+    AutoLoginController,
+    LoginEvent,
+    LoginFailedEvent,
+    LoginFailedReason,
+    LogoutEvent,
+)
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cloud import (
     CloudConnectionState,
     CloudNotAvailable,
@@ -17,17 +25,23 @@ from homeassistant.components.cloud import (
 )
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
+    DATA_PENDING_AUTO_LOGIN,
     DOMAIN,
+    EVENT_CLOUD_EVENT,
     MODE_DEV,
     PREF_CLOUDHOOKS,
 )
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
+
+REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
 
 async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
@@ -35,7 +49,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
-            "cloud",
+            DOMAIN,
             {
                 "http": {},
                 "cloud": {
@@ -69,6 +83,29 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
         cl.service_discovery._action_overrides["lorem_ipsum"]
         == "https://lorem.ipsum/test-url"
     )
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_disabling_remote_without_backend(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test disabling remote before the remote backend is initialized.
+
+    Preferences are reset when a new user logs in, which disables remote while
+    hass_nabucasa has no backend to disconnect from.
+    """
+    prefs = hass.data[DATA_CLOUD].client.prefs
+
+    with patch("hass_nabucasa.remote.RemoteUI.connect"):
+        await prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+
+    await prefs.async_update(remote_enabled=False)
+    await hass.async_block_till_done()
+
+    assert not prefs.remote_enabled
+    assert "RemoteNotConnected" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
@@ -138,7 +175,7 @@ async def test_setup_existing_cloud_user(
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
-            "cloud",
+            DOMAIN,
             {
                 "http": {},
                 "cloud": {
@@ -248,7 +285,7 @@ async def test_async_get_or_create_cloudhook(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test async_get_or_create_cloudhook."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
@@ -297,7 +334,7 @@ async def test_async_get_or_create_cloudhook(
         await async_get_or_create_cloudhook(hass, webhook_id)
 
 
-async def test_cloud_logout(
+async def test_setup_removes_stale_config_entry(
     hass: HomeAssistant,
     cloud: MagicMock,
 ) -> None:
@@ -310,6 +347,136 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_logout_removes_config_entry(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the config entry is removed on logout and recreated on login."""
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
+
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, REMOTE_UI_UNIQUE_ID
+    )
+
+
+@pytest.fixture(name="pending_auto_login")
+async def pending_auto_login_fixture(
+    hass: HomeAssistant, cloud: MagicMock
+) -> AutoLoginController:
+    """Set up cloud with a registration waiting for its confirmation."""
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    controller = cloud.register_and_auto_login.return_value
+    controller.email = "hello@bla.com"
+    hass.data[DATA_PENDING_AUTO_LOGIN] = controller
+    return controller
+
+
+def _track_cloud_events(hass: HomeAssistant) -> list[dict[str, Any]]:
+    """Collect the payloads pushed on the cloud event signal."""
+    events: list[dict[str, Any]] = []
+
+    @callback
+    def collect(event: dict[str, Any]) -> None:
+        events.append(event)
+
+    async_dispatcher_connect(hass, EVENT_CLOUD_EVENT, collect)
+    return events
+
+
+@pytest.mark.usefixtures("pending_auto_login")
+async def test_login_event_clears_pending_auto_login(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test a successful login forgets the registration and tells the frontend."""
+    events = _track_cloud_events(hass)
+
+    await cloud.events.publish(LoginEvent(auto=True))
+
+    assert hass.data[DATA_PENDING_AUTO_LOGIN] is None
+    assert events == [{"type": "login"}]
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
+
+
+@pytest.mark.usefixtures("pending_auto_login")
+async def test_logout_event_clears_pending_auto_login(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test a logout forgets the registration without pushing an event."""
+    events = _track_cloud_events(hass)
+
+    await cloud.events.publish(LogoutEvent())
+
+    assert hass.data[DATA_PENDING_AUTO_LOGIN] is None
+    assert events == []
+
+
+async def test_auto_login_failed_event_keeps_controller(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    pending_auto_login: AutoLoginController,
+) -> None:
+    """Test giving up pushes the reason and leaves the controller in place."""
+    events = _track_cloud_events(hass)
+
+    pending_auto_login.failed_reason = LoginFailedReason.CLOUD_ERROR
+    pending_auto_login.active = False
+    await cloud.events.publish(
+        LoginFailedEvent(auto=True, reason=LoginFailedReason.CLOUD_ERROR)
+    )
+
+    assert hass.data[DATA_PENDING_AUTO_LOGIN] is pending_auto_login
+    assert events == [
+        {
+            "type": "auto_login_failed",
+            "translation_key": "auto_login_failed_cloud_error",
+        }
+    ]
+
+
+@pytest.mark.usefixtures("pending_auto_login")
+async def test_interactive_login_failed_event_ignored(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test a failed interactive login is left to the caller that asked for it."""
+    events = _track_cloud_events(hass)
+
+    await cloud.events.publish(
+        LoginFailedEvent(reason=LoginFailedReason.UNEXPECTED_ERROR)
+    )
+
+    assert events == []
 
 
 async def test_async_listen_cloudhook_change(
@@ -318,7 +485,7 @@ async def test_async_listen_cloudhook_change(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test async_listen_cloudhook_change."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
@@ -409,7 +576,7 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """Test async_listen_cloudhook_change works when cloud is set up after listener registration."""
+    """Test cloudhook change listener with late cloud setup."""
     webhook_id = "mock-webhook-id"
     cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
 
@@ -430,7 +597,7 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
     assert len(changes) == 0
 
     # Now set up cloud
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 

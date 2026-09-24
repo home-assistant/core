@@ -30,7 +30,8 @@ def toloclient_fixture() -> Mock:
 def coordinator_toloclient() -> Mock:
     """Patch ToloClient in async_setup_entry.
 
-    Throw exception to abort entry setup and prevent socket IO. Only testing config flow.
+    Throw exception to abort entry setup and prevent socket IO.
+    Only testing config flow.
     """
     with patch(
         "homeassistant.components.tolo.coordinator.ToloClient", side_effect=Exception
@@ -59,9 +60,14 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
     toloclient().get_status.side_effect = ToloCommunicationError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -191,7 +197,7 @@ async def test_reconfigure_duplicate_ip(
     coordinator_toloclient: Mock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test a reconfigure flow where the user is trying to have to entries with the same IP."""
+    """Test a reconfigure flow where the user tries to duplicate an IP."""
     config_entry2 = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.6"}, unique_id="second_entry"
     )

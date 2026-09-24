@@ -1,5 +1,7 @@
 """UptimeRobot binary_sensor platform."""
 
+from typing import override
+
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.binary_sensor import (
@@ -10,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STATUS_UP
+from .const import STATUSES_ON
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 from .utils import new_device_listener
@@ -36,7 +38,6 @@ async def async_setup_entry(
                     key=str(monitor.id),
                     device_class=BinarySensorDeviceClass.CONNECTIVITY,
                 ),
-                monitor=monitor,
             )
             for monitor in new_monitors
         ]
@@ -50,6 +51,7 @@ class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     """Representation of a UptimeRobot binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self._monitor.status == STATUS_UP)
+        return bool(self._monitor.status in STATUSES_ON)

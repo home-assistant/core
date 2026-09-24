@@ -1,7 +1,7 @@
 """Kuler Sky light platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import pykulersky
 
@@ -60,6 +60,7 @@ class KulerskyLight(LightEntity):
             name=name,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         try:
@@ -70,10 +71,12 @@ class KulerskyLight(LightEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self.brightness is not None and self.brightness > 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         default_rgbw = (255,) * 4 if self.rgbw_color is None else self.rgbw_color
@@ -92,6 +95,7 @@ class KulerskyLight(LightEntity):
 
         await self._light.set_color(*rgbw_scaled)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.set_color(0, 0, 0, 0)

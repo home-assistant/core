@@ -22,7 +22,7 @@ def pick_series_cet(
     res: OMIEResults[SpotData] | None,
     series_name: str,
 ) -> dict[dt.datetime, float]:
-    """Pick the values for this series from the market data, keyed by a datetime in CET."""
+    """Pick values for this series from market data, keyed by CET."""
     if res is None:
         return {}
 

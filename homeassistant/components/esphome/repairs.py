@@ -2,10 +2,9 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 
 from .manager import async_replace_device
@@ -43,7 +42,7 @@ class DeviceConflictRepair(ESPHomeRepair):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return self.async_show_menu(
             step_id="init",
@@ -52,12 +51,12 @@ class DeviceConflictRepair(ESPHomeRepair):
 
     async def async_step_migrate(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the migrate step of a fix flow."""
         if user_input is None:
             return self.async_show_form(
                 step_id="migrate",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         entry_id = self.entry_id
         await async_replace_device(self.hass, entry_id, self.stored_mac, self.mac)
@@ -66,12 +65,12 @@ class DeviceConflictRepair(ESPHomeRepair):
 
     async def async_step_manual(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the manual step of a fix flow."""
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         self.hass.config_entries.async_schedule_reload(self.entry_id)
         return self.async_create_entry(data={})

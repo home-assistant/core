@@ -114,7 +114,7 @@ async def test_successful_discovery_and_auth(hass: HomeAssistant) -> None:
 
 
 async def test_unsuccessful_discovery_user_form_and_auth(hass: HomeAssistant) -> None:
-    """Test unsuccessful discover, user adding the host via the form and then successful auth."""
+    """Test unsuccessful discover then user form entry with auth."""
 
     with (
         patch(

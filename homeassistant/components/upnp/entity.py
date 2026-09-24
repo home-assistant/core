@@ -1,6 +1,7 @@
 """Entity for UPnP/IGD."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -36,7 +37,10 @@ class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device = coordinator.device
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.device.original_udn}_{entity_description.unique_id or entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.device.original_udn}"
+            f"_{entity_description.unique_id or entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             connections=coordinator.device_entry.connections,
             name=coordinator.device_entry.name,
@@ -46,6 +50,7 @@ class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (

@@ -1,12 +1,12 @@
 """Support for Yamaha Receivers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
 import rxv
 from rxv import RXV
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -72,16 +72,16 @@ SUPPORT_YAMAHA = (
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_SOURCE_IGNORE, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
+        probatio.Optional(CONF_ZONE_IGNORE, default=[]): probatio.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
-        vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+        probatio.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
     }
 )
 
@@ -186,19 +186,22 @@ async def async_setup_platform(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_SCENE,
-        {vol.Required(ATTR_SCENE): cv.string},
+        {probatio.Required(ATTR_SCENE): cv.string},
         "set_scene",
     )
     # Register Service 'enable_output'
     platform.async_register_entity_service(
         SERVICE_ENABLE_OUTPUT,
-        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
+        {
+            probatio.Required(ATTR_ENABLED): cv.boolean,
+            probatio.Required(ATTR_PORT): cv.string,
+        },
         "enable_output",
     )
     # Register Service 'menu_cursor'
     platform.async_register_entity_service(
         SERVICE_MENU_CURSOR,
-        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
+        {probatio.Required(ATTR_CURSOR): probatio.In(CURSOR_TYPE_MAP)},
         YamahaDeviceZone.menu_cursor.__name__,
     )
 
@@ -288,6 +291,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         name = self._name
@@ -303,6 +307,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return f"{self.zctrl.ctrl_url}:{self._zone}"
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         supported_features = SUPPORT_YAMAHA
@@ -322,41 +327,50 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 supported_features |= feature
         return supported_features
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self.zctrl.on = False
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         zone_vol = 100 - (volume * 100)
         negative_zone_vol = -zone_vol
         self.zctrl.volume = negative_zone_vol
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.zctrl.mute = mute
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self.zctrl.on = True
         self._attr_volume_level = (self.zctrl.volume / 100) + 1
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._call_playback_function(self.zctrl.play, "play")
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._call_playback_function(self.zctrl.pause, "pause")
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._call_playback_function(self.zctrl.stop, "stop")
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         self._call_playback_function(self.zctrl.previous, "previous track")
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._call_playback_function(self.zctrl.next, "next track")
@@ -367,10 +381,12 @@ class YamahaDeviceZone(MediaPlayerEntity):
         except rxv.exceptions.ResponseException:
             _LOGGER.warning("Failed to execute %s on %s", function_text, self._name)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self.zctrl.input = self._reverse_mapping.get(source, source)
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -407,14 +423,17 @@ class YamahaDeviceZone(MediaPlayerEntity):
         """Set the current scene."""
         try:
             self.zctrl.scene = scene
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError:
             _LOGGER.warning("Scene '%s' does not exist!", scene)
 
+    @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self.zctrl.surround_program = sound_mode
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
@@ -422,6 +441,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
         if self._play_status is not None:
@@ -429,6 +449,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
@@ -437,6 +458,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:

@@ -1,12 +1,12 @@
-"""Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+"""Support for TMB Barcelona public transport."""
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from requests import HTTPError
 from tmb import IBus
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,19 +31,21 @@ ATTR_LINE = "line"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-LINE_STOP_SCHEMA = vol.Schema(
+LINE_STOP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BUS_STOP): cv.string,
-        vol.Required(CONF_LINE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_BUS_STOP): cv.string,
+        probatio.Required(CONF_LINE): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_APP_KEY): cv.string,
-        vol.Required(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
+        probatio.Required(CONF_APP_ID): cv.string,
+        probatio.Required(CONF_APP_KEY): cv.string,
+        probatio.Required(CONF_BUS_STOPS): probatio.All(
+            cv.ensure_list, [LINE_STOP_SCHEMA]
+        ),
     }
 )
 
@@ -87,26 +89,31 @@ class TMBSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
+    @override
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
         return f"{self._stop}_{self._line}"
 
     @property
+    @override
     def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the last update."""
         return {

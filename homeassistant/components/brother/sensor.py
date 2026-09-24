@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from brother import BrotherSensors
 
@@ -44,7 +45,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="status",
         translation_key="status",
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
     ),
     BrotherSensorEntityDescription(
@@ -230,7 +230,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="black_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_toner_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -238,7 +237,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="cyan_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_toner_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -246,7 +244,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="magenta_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_toner_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -254,7 +251,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="yellow_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_toner_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -262,7 +258,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="black_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_ink_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -270,7 +265,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="cyan_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_ink_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -278,7 +272,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="magenta_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_ink_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -286,7 +279,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         translation_key="yellow_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_ink_remaining,
     ),
     BrotherSensorEntityDescription(
@@ -346,6 +338,7 @@ class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value(self.coordinator.data)

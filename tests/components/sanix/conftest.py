@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 @pytest.fixture
 def mock_sanix():
-    """Build a fixture for the Sanix API that connects successfully and returns measurements."""
+    """Build a fixture for the Sanix API that connects successfully."""
     fixture = load_json_object_fixture("get_measurements.json", DOMAIN)
     with (
         patch(

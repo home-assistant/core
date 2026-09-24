@@ -1,15 +1,15 @@
 """Config flow for Sensoterra integration."""
 
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import timedelta
+from typing import Any, override
 
 from jwt import DecodeError, decode
+import probatio
 from sensoterra.customerapi import (
     CustomerApi,
     InvalidAuth as StInvalidAuth,
     Timeout as StTimeout,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
@@ -18,15 +18,16 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, TOKEN_EXPIRATION_DAYS
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(
+        probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="email")
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -36,6 +37,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensoterra."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -46,7 +48,7 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
             api = CustomerApi(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             # We need a unique tag per HA instance
             uuid = self.hass.data["core.uuid"]
-            expiration = datetime.now() + timedelta(TOKEN_EXPIRATION_DAYS)
+            expiration = dt_util.utcnow() + timedelta(TOKEN_EXPIRATION_DAYS)
 
             try:
                 token: str = await api.get_token(

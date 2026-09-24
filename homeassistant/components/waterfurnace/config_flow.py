@@ -2,9 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,10 +14,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -28,6 +28,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

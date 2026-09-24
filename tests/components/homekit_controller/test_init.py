@@ -102,20 +102,19 @@ async def test_device_remove_devices(
         hass, get_next_aid(), create_alive_service
     )
     config_entry = helper.config_entry
-    entry_id = config_entry.entry_id
 
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_device_entry.id, entry_id)
+    response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -244,7 +243,10 @@ async def test_ble_device_only_checks_is_available(
 
 @pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
 async def test_ble_device_populates_connections(
-    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    get_next_aid: Callable[[], int],
+    controller,
 ) -> None:
     """Test a BLE device populates connections in the device registry."""
     aid = get_next_aid()
@@ -261,10 +263,9 @@ async def test_ble_device_populates_connections(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    dev_reg = dr.async_get(hass)
     assert (
-        dev_reg.async_get_device(
-            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        device_registry.async_get_device_by_connection(
+            ("bluetooth", "AA:BB:CC:DD:EE:FF"), config_entry.entry_id
         )
         is not None
     )
@@ -278,7 +279,7 @@ async def test_snapshots(
     snapshot: SnapshotAssertion,
     example: str,
 ) -> None:
-    """Detect regressions in enumerating a homekit accessory database and building entities."""
+    """Detect regressions in enumerating accessory DB and building entities."""
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 

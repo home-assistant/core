@@ -138,7 +138,7 @@ async def test_sensor_created_after_websocket_update_when_initial_fetch_fails(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test websocket updates refine placeholder sensors after a transient startup error."""
+    """Test websocket updates refine placeholders after a transient startup error."""
     mock_client.get_door_lock_rule = AsyncMock(
         side_effect=ApiConnectionError("Connection failed")
     )

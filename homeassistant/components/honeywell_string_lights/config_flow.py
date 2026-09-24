@@ -1,9 +1,10 @@
 """Config flow for the Honeywell String Lights integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rf_protocols import RadioFrequencyCommand
-import voluptuous as vol
+from rf_protocols.codes.honeywell.string_lights import CODES
 
 from homeassistant.components.radio_frequency import async_get_transmitters
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -11,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import CONF_TRANSMITTER, DOMAIN
-from .light import COMMANDS
 
 
 class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -19,12 +19,13 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         sample_command: RadioFrequencyCommand = await self.hass.async_add_executor_job(
-            COMMANDS.load_command, "turn_on"
+            CODES.load_command, "turn_on"
         )
         try:
             transmitters = async_get_transmitters(
@@ -34,7 +35,13 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_transmitters")
 
         if not transmitters:
-            return self.async_abort(reason="no_compatible_transmitters")
+            return self.async_abort(
+                reason="no_compatible_transmitters",
+                description_placeholders={
+                    "frequency": f"{sample_command.frequency / 1_000_000} MHz",
+                    "modulation": sample_command.modulation.name,
+                },
+            )
 
         if user_input is not None:
             registry = er.async_get(self.hass)
@@ -49,9 +56,9 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TRANSMITTER): selector.EntitySelector(
+                    probatio.Required(CONF_TRANSMITTER): selector.EntitySelector(
                         selector.EntitySelectorConfig(include_entities=transmitters),
                     ),
                 }

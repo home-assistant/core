@@ -1,9 +1,9 @@
 """Support for Genius Hub switch/outlet devices."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,8 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import ATTR_DURATION, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .const import ATTR_DURATION
 from .entity import GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
@@ -19,9 +20,9 @@ GH_ON_OFF_ZONE = "on / off"
 SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
 
 SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_DURATION): vol.All(
+    probatio.Optional(ATTR_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+        probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
     ),
 }
 
@@ -55,11 +56,13 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     """Representation of a Genius Hub switch."""
 
     @property
+    @override
     def device_class(self) -> SwitchDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return SwitchDeviceClass.OUTLET
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the current state of the on/off zone.
 
@@ -70,6 +73,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
             and self._zone.data["setpoint"]
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the zone to Timer mode.
 
@@ -77,6 +81,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
         """
         await self._zone.set_mode("timer")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
         await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))

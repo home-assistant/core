@@ -3,13 +3,14 @@
 import asyncio
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 
+import probatio
 import pytest
+import requests
 from requests_mock import Mocker
-import voluptuous as vol
 
 from homeassistant.components.downloader.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -83,17 +84,17 @@ async def test_download_headers_passed_through(
 @pytest.mark.parametrize(
     ("headers", "expected_result"),
     [
-        (1, pytest.raises(vol.error.Invalid)),  # Not a dictionary
+        (1, pytest.raises(probatio.error.Invalid)),  # Not a dictionary
         ({"Accept": "application/json"}, does_not_raise()),
         ({123: 456.789}, does_not_raise()),  # Convert numbers to strings
         (
             {"Accept": ["application/json"]},
-            pytest.raises(vol.error.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
         ),  # Value is not a string
-        ({1: None}, pytest.raises(vol.error.MultipleInvalid)),  # Value is None
+        ({1: None}, pytest.raises(probatio.error.MultipleInvalid)),  # Value is None
         (
             {None: "application/json"},
-            pytest.raises(vol.error.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
         ),  # Key is None
     ],
 )
@@ -127,3 +128,36 @@ async def test_download_headers_schema(
 
     with expected_result:
         await call_service()
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        pytest.param(
+            requests.exceptions.ConnectionError,
+            HomeAssistantError,
+            id="connection_error",
+        ),
+        pytest.param(
+            ValueError,
+            ServiceValidationError,
+            id="value_error",
+        ),
+    ],
+)
+async def test_download_exceptions(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    download_url: str,
+    download_failed: asyncio.Event,
+    exception: type[Exception],
+    expected_error: type[Exception],
+) -> None:
+    """Test that exceptions during download propagate to the caller."""
+    requests_mock.get(download_url, exc=exception)
+    with pytest.raises(expected_error):
+        await hass.services.async_call(
+            DOMAIN, "download_file", {"url": download_url}, blocking=True
+        )
+    await download_failed.wait()

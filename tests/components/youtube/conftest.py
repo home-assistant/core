@@ -31,7 +31,10 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
 ]
 TITLE = "Google for Developers"
-TOKEN = "homeassistant.components.youtube.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+TOKEN = (
+    "homeassistant.components.youtube.api"
+    ".config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+)
 
 
 @pytest.fixture(name="scopes")

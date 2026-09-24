@@ -7,7 +7,7 @@ import pytest
 from solarlog_cli.solarlog_models import EnergyData, InverterData, SolarlogData
 
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT
 
 from .const import HOST
 
@@ -24,6 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: HOST,
             CONF_HAS_PWD: True,
             CONF_PASSWORD: "pwd",
+            CONF_TIMEOUT: 30,
         },
         minor_version=3,
         entry_id="ce5f5431554d101905d31797e1232da8",
@@ -32,7 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_solarlog_connector():
-    """Build a fixture for the SolarLog API that connects successfully and returns one device."""
+    """Build a fixture for the SolarLog API that connects successfully."""
 
     mock_solarlog_api = AsyncMock()
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get

@@ -27,11 +27,7 @@ from homeassistant.components.libre_hardware_monitor.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import init_integration
@@ -55,7 +51,7 @@ async def test_sensors_are_created(
 @pytest.mark.parametrize(
     "error", [LibreHardwareMonitorConnectionError, LibreHardwareMonitorNoDevicesError]
 )
-async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry(
+async def test_sensors_go_unavailable_on_error_and_recover(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -222,7 +218,7 @@ async def test_orphaned_devices_are_removed_if_not_present_after_update(
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices in HA that are not found in LHM's data after sensor update are removed."""
+    """Test devices not found in LHM data after update are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
@@ -240,7 +236,7 @@ async def test_orphaned_devices_are_removed_if_not_present_during_startup(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices in HA that are not found in LHM's data during integration startup are removed."""
+    """Test devices not found in LHM data during startup are removed."""
     orphaned_device = await _mock_orphaned_device(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
@@ -346,53 +342,3 @@ async def test_integration_dynamically_adds_new_devices(
     assert "sensor.gaming_pc_generic_memory_test_sensor" in [
         entry.entity_id for entry in entity_entries
     ]
-
-
-async def test_non_deprecated_version_does_not_raise_issue(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that a non-deprecated Libre Hardware Monitor version does not raise an issue."""
-    await init_integration(hass, mock_config_entry)
-
-    assert (
-        DOMAIN,
-        f"deprecated_api_{mock_config_entry.entry_id}",
-    ) not in issue_registry.issues
-
-
-async def test_deprecated_version_raises_issue_and_is_removed_after_update(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test that a deprecated Libre Hardware Monitor version raises an issue that is removed after updating."""
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        is_deprecated_version=True,
-    )
-
-    await init_integration(hass, mock_config_entry)
-
-    assert (
-        DOMAIN,
-        f"deprecated_api_{mock_config_entry.entry_id}",
-    ) in issue_registry.issues
-
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        is_deprecated_version=False,
-    )
-
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert (
-        DOMAIN,
-        f"deprecated_api_{mock_config_entry.entry_id}",
-    ) not in issue_registry.issues

@@ -2,9 +2,9 @@
 
 import math
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.util import color as color_util
 
@@ -288,7 +288,7 @@ def test_color_rgb_to_hex() -> None:
     assert color_util.color_rgb_to_hex(255, 255, 255) == "ffffff"
     assert color_util.color_rgb_to_hex(0, 0, 0) == "000000"
     assert color_util.color_rgb_to_hex(51, 153, 255) == "3399ff"
-    assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == "ff4400"
+    assert color_util.color_rgb_to_hex(255, 68, 0) == "ff4400"
 
 
 def test_match_max_scale() -> None:
@@ -369,11 +369,11 @@ def test_color_below_6600_should_have_more_red_than_blue_or_green() -> None:
     assert rgb[0] > rgb[2]
 
 
-def test_get_color_in_voluptuous() -> None:
+def test_get_color_in_probatio() -> None:
     """Test using the get method in color validation."""
-    schema = vol.Schema(color_util.color_name_to_rgb)
+    schema = probatio.Schema(color_util.color_name_to_rgb)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("not a color")
 
     assert schema("red") == (255, 0, 0)
@@ -389,7 +389,8 @@ def test_color_rgb_to_rgbww() -> None:
         255,
         255,
     )
-    # Light with mid point at ~5500K (less warm white) -> output compensated by adding less blue
+    # Light with mid point at ~5500K (less warm white)
+    # -> output compensated by adding less blue
     assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 10000) == (
         255,
         255,
@@ -397,7 +398,8 @@ def test_color_rgb_to_rgbww() -> None:
         0,
         0,
     )
-    # Light with mid point at ~1MK (unrealistically cold white) -> output compensated by adding red
+    # Light with mid point at ~1MK (unrealistically cold white)
+    # -> output compensated by adding red
     assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 1000000) == (
         0,
         118,

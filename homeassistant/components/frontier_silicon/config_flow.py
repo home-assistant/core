@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, InvalidPinError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
@@ -22,16 +22,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
-STEP_DEVICE_CONFIG_DATA_SCHEMA = vol.Schema(
+STEP_DEVICE_CONFIG_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_PIN,
             default=DEFAULT_PIN,
         ): str,
@@ -52,6 +52,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _webfsapi_url: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +71,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 return await self._async_step_device_config_if_needed()
 
         data_schema = self.add_suggested_values_to_schema(
@@ -79,6 +81,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -129,7 +132,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_device_config_if_needed(self) -> ConfigFlowResult:
         """Most users will not have changed the default PIN on their radio.
 
-        We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
+        We try to use this default PIN, and only if this fails
+        ask for it via `async_step_device_config`
         """
 
         try:
@@ -155,7 +159,10 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
+        """Allow the user to confirm adding the device.
+
+        Used when the default PIN could successfully be used.
+        """
 
         if user_input is not None:
             return await self._async_create_entry()

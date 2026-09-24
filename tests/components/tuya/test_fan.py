@@ -11,6 +11,7 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -31,6 +32,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -89,6 +91,27 @@ async def test_platform_setup_and_discovery(
             SERVICE_TURN_ON,
             {"preset_mode": "sleep"},
             [{"code": "switch", "value": True}, {"code": "mode", "value": "sleep"}],
+        ),
+        (
+            "fs_g0ewlb1vmwqljzji",
+            "fan.ceiling_fan_with_light",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 50},
+            [{"code": "fan_speed", "value": "3"}],
+        ),
+        (
+            "fs_g0ewlb1vmwqljzji",
+            "fan.ceiling_fan_with_light",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            [{"code": "switch", "value": False}],
+        ),
+        (
+            "ks_j9fa8ahzac8uvlfl",
+            "fan.tower_fan_ca_407g_smart",
+            SERVICE_SET_PERCENTAGE,
+            {"percentage": 0},
+            [{"code": "switch", "value": False}],
         ),
     ],
 )

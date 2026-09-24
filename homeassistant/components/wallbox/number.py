@@ -5,7 +5,7 @@ The number component allows control of charging current.
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant
@@ -107,23 +107,30 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum available value."""
         return self.entity_description.max_value_fn(self.coordinator)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum available value."""
         return self.entity_description.min_value_fn(self.coordinator)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value of the entity."""
         return cast(float | None, self._coordinator.data[self.entity_description.key])
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
         await self.entity_description.set_value_fn(self.coordinator)(value)

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.exceptions import HomeAssistantError
 
 if TYPE_CHECKING:
-    from .pipeline import PipelineStage
+    from .models import PipelineStage
 
 
 class PipelineError(HomeAssistantError):
@@ -44,7 +44,10 @@ class SpeechToTextError(PipelineError):
 
 
 class DuplicateWakeUpDetectedError(WakeWordDetectionError):
-    """Error when multiple voice assistants wake up at the same time (same wake word)."""
+    """Error when multiple voice assistants wake up at the same time.
+
+    Happens when multiple assistants detect the same wake word.
+    """
 
     def __init__(self, wake_up_phrase: str) -> None:
         """Set error message."""

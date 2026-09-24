@@ -60,7 +60,11 @@ async def set_time_zone(hass: HomeAssistant):
 
 def get_events_url(entity: str, start: str, end: str) -> str:
     """Create a url to get events during the specified time range."""
-    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
+    return (
+        f"/api/calendars/{entity}"
+        f"?start={urllib.parse.quote(start)}"
+        f"&end={urllib.parse.quote(end)}"
+    )
 
 
 def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str, Any]:
@@ -74,6 +78,7 @@ def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str,
         "uid": None,
         "recurrence_id": None,
         "rrule": None,
+        "status": None,
     }
 
 
@@ -138,7 +143,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     hass: HomeAssistant,
     api: AsyncMock,
 ) -> None:
-    """Test that a task without an explicit due date is considered to be in an on state."""
+    """Test that a task without an explicit due date is in an on state."""
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"
@@ -166,7 +171,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     api: AsyncMock,
     due: Due,
 ) -> None:
-    """Test that a task with a due date in the future has on state and correct end_time."""
+    """Test that a task with a future due date has on state and correct end_time."""
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"
@@ -217,6 +222,39 @@ async def test_calendar_custom_project_unique_id(
 
 
 @pytest.mark.parametrize(
+    ("due", "expected_start", "expected_end"),
+    [
+        (
+            make_api_due(date="2023-03-30", string="Mar 30"),
+            {"date": "2023-03-30"},
+            {"date": "2023-03-31"},
+        ),
+        (
+            make_api_due(date="2023-03-30T18:00:00", string="Mar 30 6:00 PM"),
+            {"dateTime": "2023-03-30T18:00:00-06:00"},
+            {"dateTime": "2023-03-30T18:30:00-06:00"},
+        ),
+    ],
+    ids=("all_day", "timed"),
+)
+async def test_event_duration(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    expected_start: dict[str, str],
+    expected_end: dict[str, str],
+) -> None:
+    """Test date-only tasks last one day and timed tasks last 30 minutes."""
+    client = await hass_client()
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-30T00:00:00.000Z", "2023-04-01T00:00:00.000Z"
+        )
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == [get_events_response(expected_start, expected_end)]
+
+
+@pytest.mark.parametrize(
     ("due", "start", "end", "expected_response"),
     [
         (
@@ -251,12 +289,26 @@ async def test_calendar_custom_project_unique_id(
         ),
         (
             make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-31T06:00:00.000Z",
+            "2023-04-01T06:00:00.000Z",
+            [],
+        ),
+        (
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-29T06:00:00.000Z",
             "2023-03-30T06:00:00.000Z",
             [],
         ),
     ],
-    ids=("included", "exact", "overlap_start", "overlap_end", "after", "before"),
+    ids=(
+        "included",
+        "exact",
+        "overlap_start",
+        "overlap_end",
+        "after",
+        "end_boundary",
+        "before",
+    ),
 )
 async def test_all_day_event(
     hass: HomeAssistant,
@@ -293,7 +345,7 @@ async def test_create_task_service_call_raises(
 ) -> None:
     """Test adding an item to an invalid project raises an error."""
 
-    with pytest.raises(ServiceValidationError, match="project_invalid"):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NEW_TASK,
@@ -305,6 +357,7 @@ async def test_create_task_service_call_raises(
             },
             blocking=True,
         )
+    assert exc.value.translation_key == "project_invalid"
 
 
 async def test_create_task_service_call_with_section(
@@ -368,14 +421,14 @@ async def test_task_due_datetime(
     has_task_response = [
         get_events_response(
             {"dateTime": "2023-03-30T18:00:00-06:00"},
-            {"dateTime": "2023-03-31T18:00:00-06:00"},
+            {"dateTime": "2023-03-30T18:30:00-06:00"},
         )
     ]
 
     # Completely includes the start/end of the task
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-03-30T08:00:00.000Z", "2023-03-31T08:00:00.000Z"
+            "calendar.name", "2023-03-30T23:00:00.000Z", "2023-03-31T01:00:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -384,7 +437,7 @@ async def test_task_due_datetime(
     # Overlap with the start of the event
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-03-29T20:00:00.000Z", "2023-03-31T02:00:00.000Z"
+            "calendar.name", "2023-03-30T23:30:00.000Z", "2023-03-31T00:15:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -393,7 +446,7 @@ async def test_task_due_datetime(
     # Overlap with the end of the event
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-03-31T20:00:00.000Z", "2023-04-01T02:00:00.000Z"
+            "calendar.name", "2023-03-31T00:15:00.000Z", "2023-03-31T01:00:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -402,7 +455,7 @@ async def test_task_due_datetime(
     # Task is active, but range does not include start/end
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-03-31T10:00:00.000Z", "2023-03-31T11:00:00.000Z"
+            "calendar.name", "2023-03-31T00:10:00.000Z", "2023-03-31T00:20:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -411,7 +464,16 @@ async def test_task_due_datetime(
     # Query is before the task starts (no results)
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-03-28T00:00:00.000Z", "2023-03-29T00:00:00.000Z"
+            "calendar.name", "2023-03-30T22:00:00.000Z", "2023-03-30T23:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []
+
+    # Query starts exactly when the task ends (no results)
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-31T00:30:00.000Z", "2023-03-31T01:00:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -420,7 +482,7 @@ async def test_task_due_datetime(
     # Query is after the task ends (no results)
     response = await client.get(
         get_events_url(
-            "calendar.name", "2023-04-01T07:00:00.000Z", "2023-04-02T07:00:00.000Z"
+            "calendar.name", "2023-03-31T01:00:00.000Z", "2023-03-31T02:00:00.000Z"
         ),
     )
     assert response.status == HTTPStatus.OK
@@ -529,6 +591,6 @@ async def test_config_entry(
     assert await response.json() == [
         get_events_response(
             {"dateTime": "2023-03-30T18:00:00-06:00"},
-            {"dateTime": "2023-03-31T18:00:00-06:00"},
+            {"dateTime": "2023-03-30T18:30:00-06:00"},
         )
     ]

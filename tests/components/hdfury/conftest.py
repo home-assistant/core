@@ -77,7 +77,10 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "AUDOUT": "bitstream 48kHz",
                 "EARCRX": "eARC/ARC not active",
                 "SINK0": "LG TV SSCR2: 4K120 444 FRL6 VRR DSC ALLM DV HDR10 HLG",
-                "EDIDA0": "MAT Atmos, DD Atmos, DD, DTS:X+IMAX, DTSHD, DTS, LPCM 2.0 192kHz 24b",
+                "EDIDA0": (
+                    "MAT Atmos, DD Atmos, DD, DTS:X+IMAX,"
+                    " DTSHD, DTS, LPCM 2.0 192kHz 24b"
+                ),
                 "SINK1": "Signify FCD: 4K60 444 DV HDR10+ HLG",
                 "EDIDA1": "DD, DTS, LPCM 2.0 48kHz 24b",
                 "SINK2": "Bose CineMate: 4K60 420 ",

@@ -1,4 +1,4 @@
-"""Constants for the Squeezebox component."""
+"""Constants for the Squeezebox integration."""
 
 CONF_HTTPS = "https"
 DOMAIN = "squeezebox"
@@ -51,7 +51,6 @@ ATTR_DAYS_OF_WEEK = "dow"
 ATTR_ENABLED = "enabled"
 ATTR_REPEAT = "repeat"
 ATTR_SCHEDULED_TODAY = "scheduled_today"
-ATTR_TIME = "time"
 ATTR_VOLUME = "volume"
 ATTR_URL = "url"
 UPDATE_PLUGINS_RELEASE_SUMMARY = "update_plugins_release_summary"

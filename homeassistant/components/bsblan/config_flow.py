@@ -1,10 +1,10 @@
 """Config flow for BSB-LAN integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -13,26 +13,34 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DEFAULT_HEATING_CIRCUITS,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
         self.host: str = ""
         self.port: int = DEFAULT_PORT
         self.mac: str | None = None
-        self.circuits: list[int] = [1]
+        self.circuits: list[int] = list(DEFAULT_HEATING_CIRCUITS)
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
         self._auth_required = True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,6 +56,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_create(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -94,7 +103,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # No auth needed, so we can proceed to a confirmation step without fields
+                # No auth needed, so we can proceed to a
+                # confirmation step without fields
                 self._auth_required = False
 
         # Proceed to get credentials
@@ -106,15 +116,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle getting credentials for discovered device."""
         if user_input is None:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Optional(CONF_PASSKEY): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PASSKEY): str,
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(CONF_PASSWORD): str,
                 }
             )
             if not self._auth_required:
-                data_schema = vol.Schema({})
+                data_schema = probatio.Schema({})
 
             return self.async_show_form(
                 step_id="discovery_confirm",
@@ -144,11 +154,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_discovery:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Optional(CONF_PASSKEY): str,
-                            vol.Optional(CONF_USERNAME): str,
-                            vol.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(CONF_USERNAME): str,
+                            probatio.Optional(CONF_PASSWORD): str,
                         }
                     ),
                     errors={"base": "invalid_auth"},
@@ -159,11 +169,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_discovery:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Optional(CONF_PASSKEY): str,
-                            vol.Optional(CONF_USERNAME): str,
-                            vol.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(CONF_USERNAME): str,
+                            probatio.Optional(CONF_PASSWORD): str,
                         }
                     ),
                     errors={"base": "cannot_connect"},
@@ -260,49 +270,49 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         return errors
 
     @callback
-    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> probatio.Schema:
         """Build schema for credentials-only forms (reauth)."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSKEY,
-                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                    default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME,
-                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                    default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSWORD,
-                    default=vol.UNDEFINED,
+                    default=probatio.UNDEFINED,
                 ): str,
             }
         )
 
     @callback
-    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> probatio.Schema:
         """Build schema for full connection forms (user and reconfigure)."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_HOST,
-                    default=defaults.get(CONF_HOST, vol.UNDEFINED),
+                    default=defaults.get(CONF_HOST, probatio.UNDEFINED),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PORT,
                     default=defaults.get(CONF_PORT, DEFAULT_PORT),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSKEY,
-                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                    default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME,
-                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                    default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSWORD,
-                    default=vol.UNDEFINED,
+                    default=probatio.UNDEFINED,
                 ): str,
             }
         )
@@ -359,7 +369,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # Skip unique_id configuration check during reauth to prevent "already_configured" abort
+        # Skip unique_id configuration check during reauth
+        # to prevent "already_configured" abort
         if not is_reauth:
             # Always allow updating host/port for both user and discovery flows
             # This ensures connectivity is maintained when devices change IP addresses
@@ -384,6 +395,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await bsblan.initialize()
             self.circuits = await bsblan.get_available_circuits()
+            if not self.circuits:
+                LOGGER.debug(
+                    "Circuit discovery returned no heating circuits for %s, "
+                    "defaulting to single circuit",
+                    self.host,
+                )
+                self.circuits = list(DEFAULT_HEATING_CIRCUITS)
         except (
             BSBLANError,
             TimeoutError,
@@ -392,4 +410,4 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 "Circuit discovery not available for %s, defaulting to single circuit",
                 self.host,
             )
-            self.circuits = [1]
+            self.circuits = list(DEFAULT_HEATING_CIRCUITS)

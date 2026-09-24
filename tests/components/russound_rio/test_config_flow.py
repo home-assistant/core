@@ -3,7 +3,14 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from homeassistant.components.russound_rio.const import DOMAIN, TYPE_SERIAL, TYPE_TCP
+import pytest
+
+from homeassistant.components.russound_rio.const import (
+    CONF_ZONE_SOURCE_EXCLUSION,
+    DOMAIN,
+    TYPE_SERIAL,
+    TYPE_TCP,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -108,10 +115,10 @@ async def test_tcp_flow_cannot_connect_then_recovers(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_tcp_flow_duplicate_aborts(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate TCP flow aborts."""
@@ -138,10 +145,9 @@ async def test_tcp_flow_duplicate_aborts(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow(
-    hass: HomeAssistant,
-    mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_russound_client: AsyncMock
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -167,10 +173,9 @@ async def test_zeroconf_flow(
     assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_errors(
-    hass: HomeAssistant,
-    mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_russound_client: AsyncMock
 ) -> None:
     """Test zeroconf flow errors."""
     mock_russound_client.connect.side_effect = TimeoutError
@@ -205,10 +210,10 @@ async def test_zeroconf_flow_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf duplicate."""
@@ -224,10 +229,10 @@ async def test_zeroconf_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate_different_ip(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf duplicate with IP update."""
@@ -268,10 +273,9 @@ async def test_zeroconf_duplicate_different_ip(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_after_zeroconf_started(
-    hass: HomeAssistant,
-    mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_russound_client: AsyncMock
 ) -> None:
     """Test user flow after zeroconf started."""
     await hass.config_entries.flow.async_init(
@@ -315,10 +319,10 @@ async def _start_reconfigure_flow(
     return result
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_tcp_flow(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test TCP reconfigure flow."""
@@ -343,10 +347,10 @@ async def test_reconfigure_tcp_flow(
     assert entry.data == MOCK_RECONFIGURATION_TCP_ENTRY_DATA
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unique_id_mismatch(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure reconfigure flow aborts when the device changes."""
@@ -442,10 +446,10 @@ async def test_serial_flow_cannot_connect_then_recovers(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_serial_flow_duplicate_aborts(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate serial flow aborts."""
@@ -474,10 +478,10 @@ async def test_serial_flow_duplicate_aborts(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_serial_flow(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test serial reconfigure flow."""
@@ -503,10 +507,10 @@ async def test_reconfigure_serial_flow(
     assert entry.data == MOCK_RECONFIGURATION_SERIAL_ENTRY_DATA
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_serial_unique_id_mismatch(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure serial reconfigure aborts when device changes."""
@@ -528,3 +532,41 @@ async def test_reconfigure_serial_unique_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test the options flow and automatic reload."""
+    mock_config_entry.runtime_data = mock_russound_client
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_setup_entry.call_count == 1
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_SOURCE_EXCLUSION: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"]
+        == mock_config_entry.options
+        == {
+            CONF_ZONE_SOURCE_EXCLUSION: True,
+        }
+    )
+    assert mock_russound_client.disconnect.await_count == 1
+    assert mock_setup_entry.call_count == 2

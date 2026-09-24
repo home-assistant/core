@@ -4,10 +4,10 @@ from collections import OrderedDict
 from collections.abc import Callable
 import logging
 import math
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 from uuid import UUID
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -82,30 +82,33 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
         below = config.get(CONF_BELOW)
         if above is None and below is None:
             _LOGGER.error(
-                "For bayesian numeric state for entity: %s at least one of 'above' or 'below' must be specified",
+                "For bayesian numeric state for entity: %s"
+                " at least one of 'above' or 'below'"
+                " must be specified",
                 config[CONF_ENTITY_ID],
             )
-            raise vol.Invalid("above_or_below")
+            raise probatio.Invalid("above_or_below")
         if above is not None and below is not None:
             if above > below:
                 _LOGGER.error(
-                    "For bayesian numeric state 'above' (%s) must be less than 'below' (%s)",
+                    "For bayesian numeric state 'above' (%s)"
+                    " must be less than 'below' (%s)",
                     above,
                     below,
                 )
-                raise vol.Invalid("above_below")
+                raise probatio.Invalid("above_below")
     return config
 
 
-NUMERIC_STATE_SCHEMA = vol.All(
-    vol.Schema(
+NUMERIC_STATE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
             CONF_PLATFORM: CONF_NUMERIC_STATE,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
+            probatio.Optional(CONF_BELOW): probatio.Coerce(float),
+            probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+            probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
         },
         required=True,
     ),
@@ -142,56 +145,59 @@ def no_overlapping(configs: list[dict]) -> list[dict]:
         for i, tup in enumerate(intervals):
             if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
                 _LOGGER.error(
-                    "Ranges for bayesian numeric state entities must not overlap, but %s has overlapping ranges, above:%s, below:%s overlaps with above:%s, below:%s",
+                    "Ranges for bayesian numeric state entities"
+                    " must not overlap, but %s has overlapping"
+                    " ranges, above:%s, below:%s overlaps"
+                    " with above:%s, below:%s",
                     ent_id,
                     tup.above,
                     tup.below,
                     intervals[i + 1].above,
                     intervals[i + 1].below,
                 )
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "overlapping_ranges",
                 )
     return configs
 
 
-STATE_SCHEMA = vol.Schema(
+STATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_STATE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TO_STATE): cv.string,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Required(CONF_TO_STATE): cv.string,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
-TEMPLATE_SCHEMA = vol.Schema(
+TEMPLATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_TEMPLATE,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Required(CONF_OBSERVATIONS): vol.Schema(
-            vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): cv.string,
+        probatio.Required(CONF_OBSERVATIONS): probatio.Schema(
+            probatio.All(
                 cv.ensure_list,
-                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                [probatio.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 no_overlapping,
             )
         ),
-        vol.Required(CONF_PRIOR): vol.Coerce(float),
-        vol.Optional(
+        probatio.Required(CONF_PRIOR): probatio.Coerce(float),
+        probatio.Optional(
             CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD
-        ): vol.Coerce(float),
+        ): probatio.Coerce(float),
     }
 )
 
@@ -225,7 +231,8 @@ async def async_setup_platform(
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
-    # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
+    # Should deprecate in some future version (2022.10 at time
+    # of writing) & make prob_given_false required in schemas.
     broken_observations: list[dict[str, Any]] = []
     for observation in observations:
         if CONF_P_GIVEN_F not in observation:
@@ -311,7 +318,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
-        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
+        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
         self._observations = [
             Observation(
@@ -347,6 +354,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added.
 
@@ -354,7 +362,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         Other methods in this class are designed to avoid directly modifying instance
         attributes, by instead focusing on returning relevant data back to this method.
 
-        The goal of this method is to ensure that `self.current_observations` and `self.probability`
+        The goal of this method is to ensure that
+        `self.current_observations` and `self.probability`
         are set on a best-effort basis when this entity is register with hass.
 
         In addition, this method must register the state listener defined within, which
@@ -411,7 +420,8 @@ class BayesianBinarySensor(BinarySensorEntity):
             for observation in self.observations_by_template[template]:
                 observation.observed = observed
 
-                # in some cases a template may update because of the absence of an entity
+                # in some cases a template may update because
+                # of the absence of an entity
                 if entity_id is not None:
                     observation.entity_id = entity_id
 
@@ -570,7 +580,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     def _process_numeric_state(
         self, entity_observation: Observation, multi: bool = False
     ) -> bool | None:
-        """Return True if numeric condition is met, return False if not, return None otherwise."""
+        """Return True if numeric condition is met, False if not, None otherwise."""
         entity_id = entity_observation.entity_id
         # if we are dealing with numeric_state observations entity_id cannot be None
         if TYPE_CHECKING:
@@ -629,13 +639,15 @@ class BayesianBinarySensor(BinarySensorEntity):
             return result
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
 
         return {
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
-            # An entity can be in more than one observation so set then list to deduplicate
+            # An entity can be in more than one observation
+            # so set then list to deduplicate
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
                     observation.entity_id

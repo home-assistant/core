@@ -1,6 +1,6 @@
 """Support for Fibaro locks."""
 
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -34,16 +34,19 @@ class FibaroLock(FibaroEntity, LockEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.action("secure")
         self._attr_is_locked = True
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.action("unsecure")  # codespell:ignore unsecure
         self._attr_is_locked = False
 
+    @override
     def update(self) -> None:
         """Update device state."""
         super().update()

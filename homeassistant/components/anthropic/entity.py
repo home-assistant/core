@@ -4,7 +4,6 @@ import base64
 from collections import deque
 from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -17,8 +16,6 @@ from anthropic.types import (
     Base64PDFSourceParam,
     BashCodeExecutionToolResultBlock,
     CitationsDelta,
-    CitationsWebSearchResultLocation,
-    CitationWebSearchResultLocationParam,
     CodeExecutionTool20250825Param,
     CodeExecutionToolResultBlock,
     CodeExecutionToolResultBlockContent,
@@ -66,10 +63,12 @@ from anthropic.types import (
     ToolParam,
     ToolSearchToolBm25_20251119Param,
     ToolSearchToolResultBlock,
-    ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
+    WebFetchTool20250910Param,
+    WebFetchTool20260209Param,
+    WebFetchToolResultBlock,
     WebSearchTool20250305Param,
     WebSearchTool20260209Param,
     WebSearchToolResultBlock,
@@ -97,8 +96,13 @@ from anthropic.types.tool_search_tool_result_block_param import (
     Content as ToolSearchToolResultBlockParamContentParam,
 )
 from anthropic.types.tool_use_block import Caller
-import voluptuous as vol
-from voluptuous_openapi import convert
+from anthropic.types.web_fetch_tool_result_block import (
+    Content as WebFetchToolResultBlockContent,
+)
+from anthropic.types.web_fetch_tool_result_block_param import (
+    Content as WebFetchToolResultBlockParamContentParam,
+)
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -107,7 +111,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
@@ -118,6 +122,8 @@ from .const import (
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -142,7 +148,9 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = probatio.to_openapi(
+        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
+    )
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
@@ -208,17 +216,9 @@ class ContentDetails:
         """Add a citation to the current detail."""
         if not self.citation_details:
             self.citation_details.append(CitationDetails())
-        citation_param: TextCitationParam | None = None
-        if isinstance(citation, CitationsWebSearchResultLocation):
-            citation_param = CitationWebSearchResultLocationParam(
-                type="web_search_result_location",
-                title=citation.title,
-                url=citation.url,
-                cited_text=citation.cited_text,
-                encrypted_index=citation.encrypted_index,
-            )
-        if citation_param:
-            self.citation_details[-1].citations.append(citation_param)
+        self.citation_details[-1].citations.append(
+            cast(TextCitationParam, citation.to_dict())
+        )
 
     def delete_empty(self) -> None:
         """Delete empty citation details."""
@@ -233,8 +233,9 @@ def _convert_content(  # noqa: C901
     """Transform HA chat_log content into Anthropic API format."""
     messages: list[MessageParam] = []
     container_id: str | None = None
+    contents = list(chat_content)
 
-    for content in chat_content:
+    for index, content in enumerate(contents):
         if isinstance(content, conversation.ToolResultContent):
             external_tool = True
             if content.tool_name == "web_search":
@@ -243,11 +244,11 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         WebSearchToolResultBlockParamContentParam,
-                        content.tool_result["content"]
-                        if "content" in content.tool_result
+                        content.result.data["content"]
+                        if "content" in content.result.data
                         else {
                             "type": "web_search_tool_result_error",
-                            "error_code": content.tool_result.get(
+                            "error_code": content.result.data.get(
                                 "error_code", "unavailable"
                             ),
                         },
@@ -259,7 +260,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         CodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "bash_code_execution":
@@ -268,7 +269,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         BashCodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "text_editor_code_execution":
@@ -277,7 +278,7 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         TextEditorCodeExecutionToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
                     ),
                 }
             elif content.tool_name == "tool_search":
@@ -286,14 +287,24 @@ def _convert_content(  # noqa: C901
                     "tool_use_id": content.tool_call_id,
                     "content": cast(
                         ToolSearchToolResultBlockParamContentParam,
-                        content.tool_result,
+                        content.result.data,
+                    ),
+                }
+            elif content.tool_name == "web_fetch":
+                tool_result_block = {
+                    "type": "web_fetch_tool_result",
+                    "tool_use_id": content.tool_call_id,
+                    "content": cast(
+                        WebFetchToolResultBlockParamContentParam,
+                        content.result.data,
                     ),
                 }
             else:
                 tool_result_block = {
                     "type": "tool_result",
                     "tool_use_id": content.tool_call_id,
-                    "content": json_dumps(content.tool_result),
+                    "content": json_dumps(content.result.data),
+                    "is_error": content.result.error,
                 }
                 external_tool = False
             if not messages or messages[-1]["role"] != (
@@ -313,14 +324,26 @@ def _convert_content(  # noqa: C901
             else:
                 messages[-1]["content"].append(tool_result_block)  # type: ignore[attr-defined]
         elif isinstance(content, conversation.UserContent):
+            has_text = bool(content.content.strip())
+            # Attachments are only appended to the last message afterwards, so
+            # an empty message is only useful for attachments if it is last
+            has_attachments = bool(content.attachments) and index == len(contents) - 1
+            if not has_text and not has_attachments:
+                # The API rejects whitespace-only text blocks and empty
+                # messages, so drop content that carries neither text nor
+                # usable attachments
+                continue
             # Combine consequent user messages
             if not messages or messages[-1]["role"] != "user":
                 messages.append(
                     MessageParam(
                         role="user",
-                        content=content.content,
+                        content=content.content if has_text else [],
                     )
                 )
+            elif not has_text:
+                # Attachments are appended to the last user message later
+                continue
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
                     TextBlockParam(type="text", text=messages[-1]["content"]),
@@ -362,11 +385,11 @@ def _convert_content(  # noqa: C901
                     )
                 if (
                     content.native.container is not None
-                    and content.native.container.expires_at > datetime.now(UTC)
+                    and content.native.container.expires_at > dt_util.utcnow()
                 ):
                     container_id = content.native.container.id
 
-            if content.content:
+            if content.content and content.content.strip():
                 current_index = 0
                 for detail in (
                     content.native.citation_details
@@ -415,6 +438,7 @@ def _convert_content(  # noqa: C901
                             id=tool_call.id,
                             name=cast(
                                 Literal[
+                                    "web_fetch",
                                     "web_search",
                                     "code_execution",
                                     "bash_code_execution",
@@ -428,6 +452,7 @@ def _convert_content(  # noqa: C901
                         if tool_call.external
                         and tool_call.tool_name
                         in [
+                            "web_fetch",
                             "web_search",
                             "code_execution",
                             "bash_code_execution",
@@ -444,7 +469,11 @@ def _convert_content(  # noqa: C901
                     ]
                 )
 
-            if (
+            if not messages[-1]["content"]:
+                # Drop assistant messages that ended up without any content
+                # (e.g. whitespace-only text): the API rejects empty messages
+                messages.pop()
+            elif (
                 isinstance(messages[-1]["content"], list)
                 and len(messages[-1]["content"]) == 1
                 and messages[-1]["content"][0]["type"] == "text"
@@ -452,7 +481,8 @@ def _convert_content(  # noqa: C901
                 # If there is only one text block, simplify the content to a string
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
+            # Note: We don't pass SystemContent here as it's
+            # passed to the API as the prompt
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unexpected_chat_log_content",
@@ -467,7 +497,8 @@ class AnthropicDeltaStream:
 
     A typical stream of responses might look something like the following:
     - RawMessageStartEvent with no content
-    - RawContentBlockStartEvent with an empty ThinkingBlock (if extended thinking is enabled)
+    - RawContentBlockStartEvent with an empty ThinkingBlock
+      (if extended thinking is enabled)
     - RawContentBlockDeltaEvent with a ThinkingDelta
     - RawContentBlockDeltaEvent with a ThinkingDelta
     - RawContentBlockDeltaEvent with a ThinkingDelta
@@ -607,6 +638,7 @@ class AnthropicDeltaStream:
         if isinstance(
             content_block,
             (
+                WebFetchToolResultBlock,
                 WebSearchToolResultBlock,
                 CodeExecutionToolResultBlock,
                 BashCodeExecutionToolResultBlock,
@@ -646,7 +678,8 @@ class AnthropicDeltaStream:
 
     def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
         """Handle TextBlock."""
-        if (  # Do not start a new assistant content just for citations, concatenate consecutive blocks with citations instead.
+        if (  # Do not start a new assistant content just for
+            # citations, concatenate consecutive blocks instead.
             self._first_block
             or (
                 not self._content_details.has_citations()
@@ -721,13 +754,15 @@ class AnthropicDeltaStream:
         self,
         tool_use_id: str,
         tool_name: Literal[
+            "web_fetch_tool_result",
             "web_search_tool_result",
             "code_execution_tool_result",
             "bash_code_execution_tool_result",
             "text_editor_code_execution_tool_result",
             "tool_search_tool_result",
         ],
-        content: WebSearchToolResultBlockContent
+        content: WebFetchToolResultBlockContent
+        | WebSearchToolResultBlockContent
         | CodeExecutionToolResultBlockContent
         | BashCodeExecutionToolResultBlockContent
         | TextEditorCodeExecutionToolResultBlockContent
@@ -745,11 +780,15 @@ class AnthropicDeltaStream:
                 "role": "tool_result",
                 "tool_call_id": tool_use_id,
                 "tool_name": tool_name.removesuffix("_tool_result"),
-                "tool_result": {
-                    "content": cast(JsonArrayType, [x.to_dict() for x in content])
-                }
-                if isinstance(content, list)
-                else cast(JsonObjectType, content.to_dict()),
+                "result": llm.ToolResult(
+                    data={
+                        "content": cast(JsonArrayType, [x.to_dict() for x in content])
+                    }
+                    if isinstance(content, list)
+                    else cast(JsonObjectType, content.to_dict()),
+                    error=not isinstance(content, list)
+                    and content.type.endswith("_tool_result_error"),
+                ),
             }
         )
         self._first_block = True
@@ -853,7 +892,7 @@ class AnthropicDeltaStream:
         cached_input_tokens = 0
         if input_usage:
             input_tokens = input_usage.input_tokens
-            cached_input_tokens = input_usage.cache_creation_input_tokens or 0
+            cached_input_tokens = input_usage.cache_read_input_tokens or 0
         output_tokens = response_usage.output_tokens
         return {
             "stats": {
@@ -893,17 +932,18 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> tuple[MessageCreateParamsStreaming, str | None]:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
         preloaded_tools = [
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent__HassTurnOn",
+            "intent__HassTurnOff",
+            "homeassistant__GetLiveContext",
             "code_execution",
             "web_search",
+            "web_fetch",
         ]
 
         system = chat_log.content[0]
@@ -969,7 +1009,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     effort=options[CONF_THINKING_EFFORT]
                 )
 
-        tools: list[ToolUnionParam] = []
+        tools: list[
+            ToolParam
+            | CodeExecutionTool20250825Param
+            | WebSearchTool20250305Param
+            | WebSearchTool20260209Param
+            | WebFetchTool20250910Param
+            | WebFetchTool20260209Param
+            | ToolSearchToolBm25_20251119Param
+        ] = []
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -977,11 +1025,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             ]
 
         if options[CONF_CODE_EXECUTION]:
-            # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
+            # The `web_search_20260209` and `web_fetch_20260209` tools
+            # automatically enable `code_execution_20260120` tool
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options[CONF_WEB_SEARCH]
+                or (not options[CONF_WEB_SEARCH] and not options[CONF_WEB_FETCH])
             ):
                 tools.append(
                     CodeExecutionTool20250825Param(
@@ -1019,6 +1068,28 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 }
             tools.append(web_search)
 
+        if options[CONF_WEB_FETCH]:
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options[CONF_CODE_EXECUTION]
+            ):
+                tools.append(
+                    WebFetchTool20250910Param(
+                        name="web_fetch",
+                        type="web_fetch_20250910",
+                        max_uses=options[CONF_WEB_FETCH_MAX_USES],
+                    )
+                )
+            else:
+                tools.append(
+                    WebFetchTool20260209Param(
+                        name="web_fetch",
+                        type="web_fetch_20260209",
+                        max_uses=options[CONF_WEB_FETCH_MAX_USES],
+                    )
+                )
+
         # Handle attachments by adding them to the last user message
         last_content = chat_log.content[-1]
         if last_content.role == "user" and last_content.attachments:
@@ -1051,11 +1122,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ] = JSONOutputFormatParam(
                     type="json_schema",
                     schema={
-                        **convert(
+                        **probatio.to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
+                            openapi_version="3.1.0",
                         ),
                         "additionalProperties": False,
                     },
@@ -1099,11 +1171,12 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ToolParam(
                         name=structure_name,
                         description="Use this tool to reply to the user",
-                        input_schema=convert(
+                        input_schema=probatio.to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
+                            openapi_version="3.1.0",
                         ),
                     )
                 )
@@ -1129,7 +1202,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
@@ -1159,7 +1232,8 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
                 cast(list[MessageParam], model_args["messages"]).extend(new_messages)
             except anthropic.AuthenticationError as err:
-                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
+                # Trigger coordinator to confirm the auth failure
+                # and trigger the reauth flow.
                 await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

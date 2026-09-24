@@ -1,10 +1,10 @@
 """The config_flow for APsystems local API integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import APsystemsEZ1M
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -13,10 +13,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_PORT, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
     }
 )
 
@@ -26,6 +26,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -146,6 +147,7 @@ class MTASensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return the state of the sensor."""
         arrivals = self.coordinator.data.arrivals

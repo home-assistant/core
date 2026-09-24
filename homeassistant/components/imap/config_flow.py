@@ -2,10 +2,10 @@
 
 from collections.abc import Mapping
 import ssl
-from typing import Any
+from typing import Any, override
 
 from aioimaplib import AioImapException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -65,38 +65,42 @@ EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SERVER): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_CHARSET, default="utf-8"): str,
-        vol.Optional(CONF_FOLDER, default="INBOX"): str,
-        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_SERVER): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_CHARSET, default="utf-8"): str,
+        probatio.Optional(CONF_FOLDER, default="INBOX"): str,
+        probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for new entries is to not include text and headers
-        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
-        vol.Optional(
+        probatio.Optional(
+            CONF_EVENT_MESSAGE_DATA, default=[]
+        ): EVENT_MESSAGE_DATA_SELECTOR,
+        probatio.Optional(
             CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
         ): CIPHER_SELECTOR,
-        vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FOLDER, default="INBOX"): str,
-        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        probatio.Optional(CONF_FOLDER, default="INBOX"): str,
+        probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
         # The default for older entries is to include text and headers
-        vol.Optional(
+        probatio.Optional(
             CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
         ): EVENT_MESSAGE_DATA_SELECTOR,
-        vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
-        vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
+        probatio.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
+        probatio.Optional(
+            CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE
+        ): probatio.All(
             cv.positive_int,
-            vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
+            probatio.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
         ),
-        vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
     }
 )
 
@@ -119,9 +123,11 @@ async def validate_input(
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
     except ssl.SSLError:
-        # The aioimaplib library 1.0.1 does not raise an ssl.SSLError correctly, but is logged
-        # See https://github.com/bamthomas/aioimaplib/issues/91
-        # This handler is added to be able to supply a better error message
+        # The aioimaplib library 1.0.1 does not raise an
+        # ssl.SSLError correctly, but is logged.
+        # See
+        # https://github.com/bamthomas/aioimaplib/issues/91
+        # This handler supplies a better error message.
         errors["base"] = "ssl_error"
     except TimeoutError, AioImapException, ConnectionRefusedError:
         errors["base"] = "cannot_connect"
@@ -140,6 +146,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -188,9 +195,9 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: reauth_entry.title,
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -198,6 +205,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ImapConfigEntry,
     ) -> ImapOptionsFlow:
@@ -229,6 +237,11 @@ class ImapOptionsFlow(OptionsFlow):
             except AbortFlow as err:
                 errors = {"base": err.reason}
             else:
+                if (
+                    CONF_CUSTOM_EVENT_DATA_TEMPLATE not in user_input
+                    and CONF_CUSTOM_EVENT_DATA_TEMPLATE in entry_data
+                ):
+                    entry_data.pop(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
                 entry_data.update(user_input)
                 errors = await validate_input(self.hass, entry_data)
                 if not errors:

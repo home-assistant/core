@@ -1,29 +1,28 @@
 """Class to hold all thermostat accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -101,8 +100,8 @@ class HumidifierDehumidifier(HomeAccessory):
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
         self._reload_on_change_attrs.extend(
             (
-                ATTR_MAX_HUMIDITY,
-                ATTR_MIN_HUMIDITY,
+                HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+                HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
             )
         )
 
@@ -111,7 +110,7 @@ class HumidifierDehumidifier(HomeAccessory):
         state = states.get(self.entity_id)
         assert state
         device_class = state.attributes.get(
-            ATTR_DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
+            EntityStateAttribute.DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
         )
         self._hk_device_class = HC_HASS_TO_HOMEKIT_DEVICE_CLASS[device_class]
 
@@ -179,6 +178,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
     @callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -267,8 +267,9 @@ class HumidifierDehumidifier(HomeAccessory):
 
             if (humidity < min_humidity) or (humidity > max_humidity):
                 humidity = min(max_humidity, max(min_humidity, humidity))
-                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
-                # cannot not set to a value below/above the min/max.
+                # Update the HomeKit value to the clamped humidity,
+                # so the user will get visual feedback that they
+                # cannot set to a value below/above the min/max.
                 self.char_target_humidity.set_value(humidity)
 
             self.async_call_service(
@@ -285,14 +286,27 @@ class HumidifierDehumidifier(HomeAccessory):
         """Return min and max humidity range."""
         attributes = state.attributes
         min_humidity = max(
-            int(round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY))), 0
+            round(
+                attributes.get(
+                    HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+                    DEFAULT_MIN_HUMIDITY,
+                )
+            ),
+            0,
         )
         max_humidity = min(
-            int(round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY))), 100
+            round(
+                attributes.get(
+                    HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+                    DEFAULT_MAX_HUMIDITY,
+                )
+            ),
+            100,
         )
         return min_humidity, max_humidity
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update state without rechecking the device features."""
         is_active = new_state.state == STATE_ON
@@ -312,9 +326,11 @@ class HumidifierDehumidifier(HomeAccessory):
         self.char_current_humidifier_dehumidifier.set_value(current_state)
 
         # Update target humidity
-        target_humidity = attributes.get(ATTR_HUMIDITY)
+        target_humidity = attributes.get(HumidifierEntityStateAttribute.HUMIDITY)
         if isinstance(target_humidity, (int, float)):
             self.char_target_humidity.set_value(target_humidity)
-        current_humidity = attributes.get(ATTR_CURRENT_HUMIDITY)
+        current_humidity = attributes.get(
+            HumidifierEntityStateAttribute.CURRENT_HUMIDITY
+        )
         if isinstance(current_humidity, (int, float)):
             self.char_current_humidity.set_value(current_humidity)

@@ -1,11 +1,11 @@
 """Config flow for Hikvision integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyhik.hikvision import HikCamera
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -29,6 +29,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -76,13 +77,13 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_SSL, default=False): bool,
                 }
             ),
             errors=errors,

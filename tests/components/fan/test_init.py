@@ -115,7 +115,7 @@ async def test_preset_mode_validation(
     )
     setup_test_component_platform(hass, "fan", [test_fan])
 
-    assert await async_setup_component(hass, "fan", {"fan": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"fan": {"platform": "test"}})
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")

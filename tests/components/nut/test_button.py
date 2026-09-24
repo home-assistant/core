@@ -39,7 +39,7 @@ async def test_buttons_ups(
         list_commands_return_value=list_commands_return_value,
     )
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_1")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_1")
     assert not button
 
 
@@ -75,7 +75,7 @@ async def test_buttons_pdu_dynamic_outlets(
         list_commands_return_value=list_commands_return_value,
     )
 
-    entity_id = "button.ups1_power_cycle_outlet_a1"
+    entity_id = "button.device_location_ups1_power_cycle_outlet_a1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{unique_id_base}outlet.1.load.cycle"
@@ -95,8 +95,40 @@ async def test_buttons_pdu_dynamic_outlets(
     button = hass.states.get(entity_id)
     assert button.state != STATE_UNKNOWN
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_25")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_25")
     assert not button
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_a25")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_a25")
     assert not button
+
+
+async def test_buttons_outlets_without_outlet_count(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cycle buttons are created when outlet.count is missing.
+
+    Outlets are discovered from ``outlet.<n>.*`` status keys for devices that
+    expose switchable outlets without reporting ``outlet.count``.
+    """
+
+    config_entry = await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.1.status": "on",
+            "outlet.1.switchable": "yes",
+            "outlet.1.desc": "PowerShare Outlet 1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.cycle": None,
+        },
+    )
+
+    entity_id = "button.ups1_power_cycle_outlet_powershare_outlet_1"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.cycle"
+
+    button = hass.states.get(entity_id)
+    assert button

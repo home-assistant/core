@@ -1,7 +1,7 @@
 """Config flow to configure DSMR Reader."""
 
 from collections.abc import Awaitable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,10 @@ async def _async_has_devices(_: HomeAssistant) -> bool:
 
 
 class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
-    """Handle DSMR Reader config flow. The MQTT step is inherited from the parent class."""
+    """Handle DSMR Reader config flow.
+
+    The MQTT step is inherited from the parent class.
+    """
 
     VERSION = 1
 
@@ -24,6 +27,7 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
         """Set up the config flow."""
         super().__init__(DOMAIN, "DSMR Reader", _async_has_devices)
 
+    @override
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

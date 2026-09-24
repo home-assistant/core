@@ -110,7 +110,7 @@ def test_with_include_domain_case4() -> None:
 
 
 def test_with_include_domain_exclude_glob_case4() -> None:
-    """Test case 4 - include and exclude specified, with included domain but excluded by glob."""
+    """Test case 4 - include and exclude, with included domain but excluded glob."""
     incl_dom = {"light", "sensor"}
     incl_ent = {"binary_sensor.working"}
     incl_glob = {}
@@ -175,7 +175,7 @@ def test_with_include_domain_glob_filtering_case4() -> None:
 
 
 def test_with_include_domain_glob_filtering_case4a_include_strong() -> None:
-    """Test case 4 - include and exclude specified, both have domains and globs, and a specifically included entity."""
+    """Test case 4 - include and exclude, domains, globs, and a specific entity."""
     incl_dom = {"light"}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -198,7 +198,7 @@ def test_with_include_domain_glob_filtering_case4a_include_strong() -> None:
 
 
 def test_with_include_glob_filtering_case4a_include_strong() -> None:
-    """Test case 4 - include and exclude specified, both have globs, and a specifically included entity."""
+    """Test case 4 - include and exclude, globs, and a specific entity."""
     incl_dom = {}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -260,7 +260,7 @@ def test_exclude_glob_case5() -> None:
 
 
 def test_exclude_glob_case5_include_strong() -> None:
-    """Test case 5 - include and exclude specified, with excluded glob, and a specifically included entity."""
+    """Test case 5 - include and exclude, excluded glob, specific entity."""
     incl_dom = {}
     incl_glob = {}
     incl_ent = {"binary_sensor.working"}

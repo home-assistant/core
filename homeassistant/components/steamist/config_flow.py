@@ -1,11 +1,11 @@
 """Config flow for Steamist integration."""
 
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 from aiosteamist import Steamist
 from discovery30303 import Device30303, normalize_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
@@ -38,6 +38,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Device30303] = {}
         self._discovered_device: Device30303 | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -50,6 +51,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -91,6 +93,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_steamist_device")
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -154,9 +157,12 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -185,6 +191,8 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
         )

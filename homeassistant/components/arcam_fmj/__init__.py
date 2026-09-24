@@ -10,6 +10,7 @@ from arcam.fmj.client import Client
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
@@ -28,6 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     for zone in (1, 2):
         coordinator = ArcamFmjCoordinator(hass, entry, client, zone)
         coordinators[zone] = coordinator
+
+    # Register the zone 1 device before forwarding platforms so the other zones'
+    # entities can link to it via via_device_id.
+    device_registry = dr.async_get(hass)
+    zone1_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **coordinators[1].device_info,
+    )
+    for zone, coordinator in coordinators.items():
+        if zone != 1:
+            coordinator.device_info["via_device_id"] = zone1_device.id
 
     entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 

@@ -1,10 +1,10 @@
 """Config flow for Keenetic NDMS2."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -52,12 +52,14 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: KeeneticConfigEntry,
     ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -95,17 +97,17 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         host_schema: VolDictType = (
-            {vol.Required(CONF_HOST): str} if not self._host else {}
+            {probatio.Required(CONF_HOST): str} if not self._host else {}
         )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     **host_schema,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_TELNET_PORT): int,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_TELNET_PORT): int,
                 }
             ),
             errors=errors,
@@ -120,6 +122,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -194,23 +197,23 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
+        options = probatio.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
-                vol.Required(
+                # pylint: disable-next=home-assistant-config-flow-polling-field
+                probatio.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
                     ),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_INTERFACES,
                     default=[
                         item
@@ -220,15 +223,15 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
                         if item in self._interface_options
                     ],
                 ): cv.multi_select(self._interface_options),
-                vol.Optional(
+                probatio.Optional(
                     CONF_TRY_HOTSPOT,
                     default=self.config_entry.options.get(CONF_TRY_HOTSPOT, True),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_INCLUDE_ARP,
                     default=self.config_entry.options.get(CONF_INCLUDE_ARP, True),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_INCLUDE_ASSOCIATED,
                     default=self.config_entry.options.get(
                         CONF_INCLUDE_ASSOCIATED, True

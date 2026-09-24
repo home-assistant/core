@@ -1,6 +1,6 @@
 """Tests for the Leviton Decora Wi-Fi config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,10 +14,9 @@ from .const import TEST_USER_ID, TEST_USERNAME, USER_INPUT
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_decora_wifi: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_decora_wifi: MagicMock
 ) -> None:
     """Test a successful user-initiated config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -43,15 +42,15 @@ async def test_user_flow_success(
         (True, ValueError("Cannot connect"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error_and_recovery(
     hass: HomeAssistant,
     mock_decora_wifi: MagicMock,
-    mock_setup_entry: AsyncMock,
     login_return_value: bool | None,
     login_side_effect: Exception | None,
     expected_error: str,
 ) -> None:
-    """Test user flow shows the correct error and that the user can retry successfully."""
+    """Test user flow shows the correct error and the user can retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -93,10 +92,9 @@ async def test_user_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_success(
-    hass: HomeAssistant,
-    mock_decora_wifi: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_decora_wifi: MagicMock
 ) -> None:
     """Test a successful YAML import flow."""
     result = await hass.config_entries.flow.async_init(

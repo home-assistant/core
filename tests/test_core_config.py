@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
+from probatio import Invalid, MultipleInvalid
 import pytest
-from voluptuous import Invalid, MultipleInvalid
 from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (
@@ -211,8 +211,17 @@ def testvalidate_stun_or_turn_url() -> None:
 
 def test_customize_glob_is_ordered() -> None:
     """Test that customize_glob preserves order."""
-    conf = CORE_CONFIG_SCHEMA({"customize_glob": OrderedDict()})
-    assert isinstance(conf["customize_glob"], OrderedDict)
+    customize_glob = OrderedDict(
+        [
+            ("cover.*", {"friendly_name": "Cover"}),
+            ("light.*", {"friendly_name": "Light"}),
+            ("sensor.*", {"friendly_name": "Sensor"}),
+        ]
+    )
+    conf = CORE_CONFIG_SCHEMA({"customize_glob": customize_glob})
+    # The schema returns a plain dict, which preserves insertion order.
+    assert isinstance(conf["customize_glob"], dict)
+    assert list(conf["customize_glob"]) == ["cover.*", "light.*", "sensor.*"]
 
 
 async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State | None:
@@ -928,6 +937,9 @@ async def test_config_as_dict() -> None:
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "logging": {
+            "log_file_disabled_reason": None,
+        },
         "safe_mode": False,
         "debug": False,
         "radius": 100,

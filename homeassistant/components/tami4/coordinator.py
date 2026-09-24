@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
+from typing import override
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 from Tami4EdgeAPI.water_quality import WaterQuality
@@ -54,6 +55,7 @@ class Tami4EdgeCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> FlattenedWaterQuality:
         """Fetch data from the API endpoint."""
         try:

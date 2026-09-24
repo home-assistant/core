@@ -1,10 +1,10 @@
 """Sensor for Supervisord process status."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import xmlrpc.client
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -24,7 +24,7 @@ ATTR_GROUP = "group"
 DEFAULT_URL = "http://localhost:9001/RPC2"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url}
+    {probatio.Optional(CONF_URL, default=DEFAULT_URL): cv.url}
 )
 
 
@@ -60,21 +60,25 @@ class SupervisorProcessSensor(SensorEntity):
         self._available = True
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._info.get("name")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._info.get("statename")
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

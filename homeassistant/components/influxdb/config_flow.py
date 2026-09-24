@@ -3,9 +3,9 @@
 import logging
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.components.file_upload import process_uploaded_file
@@ -49,9 +49,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-INFLUXDB_V1_SCHEMA = vol.Schema(
+INFLUXDB_V1_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_URL, default=f"http://{DEFAULT_HOST}:{DEFAULT_PORT}"
         ): TextSelector(
             TextSelectorConfig(
@@ -59,55 +59,55 @@ INFLUXDB_V1_SCHEMA = vol.Schema(
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=False): bool,
-        vol.Required(CONF_DB_NAME): TextSelector(
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_DB_NAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
             ),
         ),
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Optional(CONF_SSL_CA_CERT): FileSelector(
+        probatio.Optional(CONF_SSL_CA_CERT): FileSelector(
             FileSelectorConfig(accept=".pem,.crt,.cer,.der")
         ),
     }
 )
 
-INFLUXDB_V2_SCHEMA = vol.Schema(
+INFLUXDB_V2_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default="https://"): TextSelector(
+        probatio.Required(CONF_URL, default="https://"): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=False): bool,
-        vol.Required(CONF_ORG): TextSelector(
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_ORG): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
             ),
         ),
-        vol.Required(CONF_BUCKET): TextSelector(
+        probatio.Required(CONF_BUCKET): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
             ),
         ),
-        vol.Required(CONF_TOKEN): TextSelector(
+        probatio.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             ),
         ),
-        vol.Optional(CONF_SSL_CA_CERT): FileSelector(
+        probatio.Optional(CONF_SSL_CA_CERT): FileSelector(
             FileSelectorConfig(accept=".pem,.crt,.cer,.der")
         ),
     }
@@ -164,6 +164,7 @@ async def _save_uploaded_cert_file(hass: HomeAssistant, uploaded_file_id: str) -
 class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for InfluxDB."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -290,7 +291,9 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                     scheme="https" if entry.data.get(CONF_SSL) else "http",
                     host=entry.data.get(CONF_HOST, ""),
                     port=entry.data.get(CONF_PORT),
-                    path=entry.data.get(CONF_PATH, ""),
+                    path=""
+                    if entry.data.get(CONF_PATH) is None
+                    else entry.data[CONF_PATH],
                 )
             )
 

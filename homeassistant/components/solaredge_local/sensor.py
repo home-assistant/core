@@ -5,11 +5,11 @@ import dataclasses
 from datetime import timedelta
 import logging
 import statistics
-from typing import Any
+from typing import Any, override
 
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -194,8 +194,8 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
+        probatio.Required(CONF_IP_ADDRESS): cv.string,
+        probatio.Optional(CONF_NAME, default="SolarEdge"): cv.string,
     }
 )
 
@@ -288,6 +288,7 @@ class SolarEdgeSensor(SensorEntity):
         self._attr_name = f"{platform_name} ({description.name})"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:

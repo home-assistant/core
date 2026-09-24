@@ -6,6 +6,7 @@ from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
+    SatelMonitoringStartError,
     SatelPanelBusyError,
 )
 
@@ -41,29 +42,28 @@ class SatelClient:
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
 
-        # Make sure we initialize the Satel controller with the configured entries to monitor
+        # Make sure we initialize the Satel controller
+        # with the configured entries to monitor
         partitions = [
             subentry.data[CONF_PARTITION_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_PARTITION
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION)
         ]
 
         zones = [
             subentry.data[CONF_ZONE_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_ZONE
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE)
         ]
 
         outputs = [
             subentry.data[CONF_OUTPUT_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_OUTPUT
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_OUTPUT)
         ]
 
         switchable_outputs = [
             subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+            for subentry in entry.get_subentries_of_type(
+                SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+            )
         ]
 
         monitored_outputs = outputs + switchable_outputs
@@ -108,7 +108,13 @@ class SatelClient:
             output_changed_callback=outputs_update_callback,
         )
 
-        await self.controller.start(enable_monitoring=True)
+        try:
+            await self.controller.start(enable_monitoring=True)
+        except SatelMonitoringStartError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="monitoring_start_failed",
+            ) from ex
 
     async def async_close(self) -> None:
         """Close the connection."""

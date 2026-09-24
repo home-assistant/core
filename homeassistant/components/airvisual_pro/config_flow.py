@@ -2,31 +2,31 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyairvisual.node import (
     InvalidAuthenticationError,
     NodeConnectionError,
     NodeProError,
     NodeSamba,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 
 from .const import DOMAIN, LOGGER
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -111,6 +111,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data_updates=user_input
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

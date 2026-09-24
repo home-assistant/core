@@ -12,8 +12,6 @@ AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
 
-CONF_TOKEN = "token"
-
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
@@ -49,6 +47,8 @@ ATTR_MEDIA_ID = "media_id"
 ATTR_ARTIST = "artist"
 ATTR_ALBUM = "album"
 ATTR_URL = "url"
+ATTR_MESSAGE = "message"
+ATTR_TTS_ENTITY_ID = "tts_entity_id"
 ATTR_USE_PRE_ANNOUNCE = "use_pre_announce"
 ATTR_ANNOUNCE_VOLUME = "announce_volume"
 ATTR_PRE_ANNOUNCE_URL = "pre_announce_url"
@@ -76,6 +76,7 @@ ATTR_EXPLICIT = "explicit"
 ATTR_BITRATE = "bit_rate"
 ATTR_DISCART_IMAGE = "discart_image"
 ATTR_FANART_IMAGE = "fanart_image"
+ATTR_USERNAME = "username"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 

@@ -95,6 +95,7 @@ components: &components
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
   - homeassistant/components/labs/**
+  - homeassistant/components/llm/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**
@@ -117,9 +118,13 @@ components: &components
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
   - homeassistant/components/tag/**
+  # telegram_bot is used by telegram
+  - homeassistant/components/telegram_bot/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**
+  # twilio is used by twilio_call and twilio_sms
+  - homeassistant/components/twilio/**
   - homeassistant/components/usb/**
   - homeassistant/components/webhook/**
   - homeassistant/components/websocket_api/**

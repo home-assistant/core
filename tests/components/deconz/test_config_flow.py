@@ -142,7 +142,7 @@ async def test_flow_manual_configuration_decision(
 async def test_flow_manual_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that config flow works with manual configuration after no discovered bridges."""
+    """Test config flow works with manual config after no discovered bridges."""
     logging.getLogger("homeassistant.components.deconz").setLevel(logging.DEBUG)
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,

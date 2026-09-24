@@ -26,6 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.redact import partial_redact
 
 from .const import (
     CONF_CITY,
@@ -63,7 +64,7 @@ def async_get_cloud_api_update_interval(
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
-        api_key,
+        partial_redact(api_key),
         num_consumers,
         minutes_between_api_calls,
     )
@@ -75,7 +76,7 @@ def async_get_cloud_api_update_interval(
 def async_get_cloud_coordinators_by_api_key(
     hass: HomeAssistant, api_key: str
 ) -> list[AirVisualDataUpdateCoordinator]:
-    """Get all AirVisualDataUpdateCoordinator objects related to a particular API key."""
+    """Get all coordinators related to a particular API key."""
     return [
         entry.runtime_data
         for entry in hass.config_entries.async_entries(DOMAIN)

@@ -1,11 +1,11 @@
 """Config flow for Hanna Instruments integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from hanna_cloud import AuthenticationError, HannaCloudClient
+import probatio
 from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -19,10 +19,11 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hanna Instruments."""
 
     VERSION = 1
-    data_schema = vol.Schema(
-        {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+    data_schema = probatio.Schema(
+        {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
     )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

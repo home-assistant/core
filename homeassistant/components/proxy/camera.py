@@ -4,9 +4,10 @@ import asyncio
 from datetime import timedelta
 import io
 import logging
+from typing import override
 
 from PIL import Image
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -45,20 +46,22 @@ DEFAULT_QUALITY = 75
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
-        vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
-        vol.Optional(CONF_IMAGE_QUALITY): int,
-        vol.Optional(CONF_IMAGE_REFRESH_RATE): float,
-        vol.Optional(CONF_MAX_IMAGE_WIDTH): int,
-        vol.Optional(CONF_MAX_IMAGE_HEIGHT): int,
-        vol.Optional(CONF_MAX_STREAM_WIDTH): int,
-        vol.Optional(CONF_MAX_STREAM_HEIGHT): int,
-        vol.Optional(CONF_IMAGE_LEFT): int,
-        vol.Optional(CONF_IMAGE_TOP): int,
-        vol.Optional(CONF_STREAM_QUALITY): int,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        probatio.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
+        probatio.Optional(CONF_MODE, default=MODE_RESIZE): probatio.In(
+            [MODE_RESIZE, MODE_CROP]
+        ),
+        probatio.Optional(CONF_IMAGE_QUALITY): int,
+        probatio.Optional(CONF_IMAGE_REFRESH_RATE): float,
+        probatio.Optional(CONF_MAX_IMAGE_WIDTH): int,
+        probatio.Optional(CONF_MAX_IMAGE_HEIGHT): int,
+        probatio.Optional(CONF_MAX_STREAM_WIDTH): int,
+        probatio.Optional(CONF_MAX_STREAM_HEIGHT): int,
+        probatio.Optional(CONF_IMAGE_LEFT): int,
+        probatio.Optional(CONF_IMAGE_TOP): int,
+        probatio.Optional(CONF_STREAM_QUALITY): int,
     }
 )
 
@@ -239,6 +242,7 @@ class ProxyCamera(Camera):
         self._last_image = None
         self._mode = config.get(CONF_MODE)
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -247,6 +251,7 @@ class ProxyCamera(Camera):
             self.async_camera_image(), self.hass.loop
         ).result()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -276,6 +281,7 @@ class ProxyCamera(Camera):
             self._last_image = image_bytes
         return image_bytes
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         if not self._stream_opts:
@@ -288,6 +294,7 @@ class ProxyCamera(Camera):
         )
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name

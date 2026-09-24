@@ -1,12 +1,12 @@
 """Config flow for LG ThinQ."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
+import probatio
 from thinqconnect import ThinQApi, ThinQAPIErrorCodes, ThinQAPIException
 from thinqconnect.country import Country
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
@@ -72,6 +72,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -94,10 +95,10 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                    vol.Required(
+                    probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+                    probatio.Required(
                         CONF_COUNTRY, default=self._get_default_country_code()
                     ): CountrySelector(
                         CountrySelectorConfig(countries=SUPPORTED_COUNTRIES)

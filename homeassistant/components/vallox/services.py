@@ -3,12 +3,13 @@
 from enum import StrEnum, auto
 import logging
 
+import probatio
 from vallox_websocket_api import Profile, ValloxApiException
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
+from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE, PROFILE_DURATION_INDEFINITE
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,19 +28,19 @@ class ValloxService(StrEnum):
     SET_PROFILE = auto()
 
 
-SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE_FAN_SPEED): vol.All(
-            vol.Coerce(int), vol.Clamp(min=0, max=100)
+        probatio.Required(ATTR_PROFILE_FAN_SPEED): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         )
     }
 )
 
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
-        vol.Optional(ATTR_DURATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        probatio.Required(ATTR_PROFILE): probatio.In(I18N_KEY_TO_VALLOX_PROFILE),
+        probatio.Optional(ATTR_DURATION): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
         ),
     }
 )
@@ -65,7 +66,14 @@ async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> N
     try:
         await coordinator.client.set_fan_speed(profile, fan_speed)
     except ValloxApiException as err:
-        _LOGGER.error("Error setting fan speed for %s profile: %s", profile.name, err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_set_fan_speed_for_profile",
+            translation_placeholders={
+                "profile": profile.name.lower(),
+                "fan_speed": str(fan_speed),
+            },
+        ) from err
     else:
         await coordinator.async_request_refresh()
 
@@ -97,12 +105,17 @@ async def _async_set_profile(call: ServiceCall) -> None:
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
     except ValloxApiException as err:
-        _LOGGER.error(
-            "Error setting profile %s for duration %s: %s",
-            profile_key,
-            duration,
-            err,
-        )
+        placeholders = {"profile": profile_key}
+        if duration is not None and duration != PROFILE_DURATION_INDEFINITE:
+            placeholders["duration"] = str(duration)
+            translation_key = "failed_to_set_profile_for_duration"
+        else:
+            translation_key = "failed_to_set_profile"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        ) from err
     else:
         await coordinator.async_request_refresh()
 

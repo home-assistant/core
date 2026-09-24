@@ -22,8 +22,7 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
 from openai.types.shared_params.response_format_json_schema import JSONSchema
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -63,14 +62,14 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
 
 
 def _format_structured_output(
-    name: str, schema: vol.Schema, llm_api: llm.APIInstance | None
+    name: str, schema: probatio.Schema, llm_api: llm.APIInstance | None
 ) -> JSONSchema:
     """Format the schema to be compatible with OpenRouter API."""
     result: JSONSchema = {
         "name": name,
         "strict": True,
     }
-    result_schema = convert(
+    result_schema = probatio.to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
@@ -88,9 +87,13 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf"}
+    schema = probatio.to_openapi(tool.parameters, custom_serializer=custom_serializer)
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
     )
     if tool.description:
         tool_spec["description"] = tool.description
@@ -106,7 +109,9 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json_dumps(content.tool_result),
+            content=json_dumps(
+                {"data": content.result.data, "error": content.result.error}
+            ),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -225,15 +230,72 @@ class OpenRouterEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
 
         model = self.model
-        if self.subentry.data.get(CONF_WEB_SEARCH):
-            model = f"{model}:online"
 
         extra_body: dict[str, Any] = {"require_parameters": True}
+
+        tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
+        if chat_log.llm_api:
+            tools.extend(
+                [
+                    _format_tool(tool, chat_log.llm_api.custom_serializer)
+                    for tool in chat_log.llm_api.tools
+                ]
+            )
+
+        match self.subentry.data.get(CONF_WEB_SEARCH):
+            case "plugin":
+                model += ":online"
+                LOGGER.debug("Using plugin web search mode: %s", model)
+            case "tool":
+                tools.append(
+                    {"type": "openrouter:web_search", "parameters": {"engine": "auto"}}
+                )
+                LOGGER.debug("Using auto tool web search mode: %s", model)
+            case "tool_native":
+                tools.append(
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "native"},
+                    }
+                )
+                LOGGER.debug("Using native tool web search mode: %s", model)
+            case "tool_exa":
+                tools.append(
+                    {"type": "openrouter:web_search", "parameters": {"engine": "exa"}}
+                )
+                LOGGER.debug("Using Exa tool web search mode: %s", model)
+            case "tool_firecrawl":
+                tools.append(
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "firecrawl"},
+                    }
+                )
+                LOGGER.debug("Using Firecrawl tool web search mode: %s", model)
+            case "tool_parallel":
+                tools.append(
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "parallel"},
+                    }
+                )
+                LOGGER.debug("Using Parallel tool web search mode: %s", model)
+            case "tool_perplexity":
+                tools.append(
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {"engine": "perplexity"},
+                    }
+                )
+                LOGGER.debug("Using Perplexity tool web search mode: %s", model)
+
+        if tools:
+            extra_body["tools"] = tools
 
         model_args = {
             "model": model,
@@ -244,16 +306,6 @@ class OpenRouterEntity(Entity):
             },
             "extra_body": extra_body,
         }
-
-        tools: list[ChatCompletionFunctionToolParam] | None = None
-        if chat_log.llm_api:
-            tools = [
-                _format_tool(tool, chat_log.llm_api.custom_serializer)
-                for tool in chat_log.llm_api.tools
-            ]
-
-        if tools:
-            model_args["tools"] = tools
 
         model_args["messages"] = [
             m

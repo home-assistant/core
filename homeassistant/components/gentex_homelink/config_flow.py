@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
 import jwt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
@@ -30,10 +30,12 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.flow_impl = SRPAuthImplementation(self.hass, DOMAIN)
 
     @property
+    @override
     def logger(self):
         """Get the logger."""
         return _LOGGER
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,8 +70,11 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
         )
@@ -87,12 +92,16 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(CONF_EMAIL): str,
+                        probatio.Required(CONF_PASSWORD): str,
+                    }
                 ),
             )
         return await self.async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(self.external_data[CONF_UNIQUE_ID])

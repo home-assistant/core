@@ -5,9 +5,9 @@ from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from enum import Enum
 from typing import Any
 
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.helpers import selector
 from homeassistant.util import yaml as yaml_util
@@ -40,8 +40,32 @@ def test_valid_base_schema(schema) -> None:
 )
 def test_invalid_base_schema(schema) -> None:
     """Test base schema validation."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector(schema)
+
+
+def test_allowed_context_keys_not_shared_between_instances() -> None:
+    """Test allowed_context_keys is isolated between selector instances."""
+
+    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
+        """Test selector config class."""
+
+    class TestSelector(selector.Selector):
+        """Test selector used to verify instance isolation."""
+
+        CONFIG_SCHEMA = selector.make_selector_config_schema({})
+
+        selector_type = "test"
+
+        def __call__(self, data: Any) -> Any:
+            """Validate the passed selection."""
+            return data
+
+    test_selector = TestSelector(TestSelectorConfig())
+    other_selector = TestSelector(TestSelectorConfig())
+    test_selector.allowed_context_keys["some_key"] = set()
+    assert test_selector.allowed_context_keys
+    assert not other_selector.allowed_context_keys
 
 
 def _test_selector(
@@ -69,14 +93,14 @@ def _test_selector(
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
     # Use selector in schema and validate
-    vol_schema = vol.Schema({"selection": selector_instance})
+    validation_schema = probatio.Schema({"selection": selector_instance})
     for selection in valid_selections:
-        assert vol_schema({"selection": selection}) == {
+        assert validation_schema({"selection": selection}) == {
             "selection": converter(selection)
         }
     for selection in invalid_selections:
-        with pytest.raises(vol.Invalid):
-            vol_schema({"selection": selection})
+        with pytest.raises(probatio.Invalid):
+            validation_schema({"selection": selection})
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
@@ -176,7 +200,7 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
 )
 def test_device_selector_schema_error(schema) -> None:
     """Test device selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"device": schema})
 
 
@@ -300,6 +324,38 @@ def test_device_selector_schema_error(schema) -> None:
         (
             {
                 "filter": [
+                    {
+                        "device": {
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        }
+                    }
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "domain": "binary_sensor",
+                        "device": {
+                            "integration": "zha",
+                            "manufacturer": "mock-manuf",
+                            "model": "mock-model",
+                            "model_id": "mock-model_id",
+                        },
+                    },
+                    {
+                        "device": {
+                            "integration": "matter",
+                            "manufacturer": "other-mock-manuf",
+                            "model": "other-mock-model",
+                            "model_id": "other-mock-model_id",
+                        },
+                    },
                     {"unit_of_measurement": "baguette"},
                 ]
             },
@@ -341,6 +397,10 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        # Device properties must be grouped under the device key
+        {"filter": [{"manufacturer": "mock-manuf"}]},
+        {"filter": [{"model": "mock-model"}]},
+        {"filter": [{"model_id": "mock-model_id"}]},
         # reorder can only be used when multiple is true
         {"reorder": True},
         {"reorder": True, "multiple": False},
@@ -348,7 +408,7 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
 )
 def test_entity_selector_schema_error(schema) -> None:
     """Test entity selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"entity": schema})
 
 
@@ -429,7 +489,7 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections) -> N
 )
 def test_area_selector_schema_error(schema) -> None:
     """Test area selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"area": schema})
 
 
@@ -513,7 +573,7 @@ def test_number_selector_schema_default_mode() -> None:
 )
 def test_number_selector_schema_error(schema) -> None:
     """Test number selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"number": schema})
 
 
@@ -650,11 +710,11 @@ def test_numeric_threshold_selector_schema(
 
 def test_numeric_threshold_selector_invalid_config() -> None:
     """Test numeric threshold selector rejects an invalid or missing mode in config."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"numeric_threshold": {"mode": "invalid_mode"}})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"numeric_threshold": {}})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"numeric_threshold": None})
 
 
@@ -738,10 +798,10 @@ def test_numeric_threshold_selector_active_choice_extraction(
     value_in: Any, value_out: Any
 ) -> None:
     """Test that active_choice is stripped and only the active field is kept."""
-    vol_schema = vol.Schema(
+    validation_schema = probatio.Schema(
         {"selection": selector.selector({"numeric_threshold": {"mode": "changed"}})}
     )
-    assert vol_schema({"selection": value_in}) == {"selection": value_out}
+    assert validation_schema({"selection": value_in}) == {"selection": value_out}
 
 
 @pytest.mark.parametrize(
@@ -888,7 +948,7 @@ def test_choose_selector_schema(schema, valid_selections, invalid_selections) ->
         # Invalid schemas
         (
             {},  # Missing required 'choices' key
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -902,7 +962,7 @@ def test_choose_selector_schema(schema, valid_selections, invalid_selections) ->
                     "text": {}  # Missing required 'selector' key in choice
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -910,13 +970,13 @@ def test_choose_selector_schema(schema, valid_selections, invalid_selections) ->
                     "invalid": {"selector": {"not_exist": {}}}  # Invalid selector type
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
                 "choices": "not a dict"  # choices should be a dict
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -933,7 +993,7 @@ def test_choose_selector_schema(schema, valid_selections, invalid_selections) ->
                     }  # Nested choose is not allowed
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -978,12 +1038,34 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
     assert choose_selector.serialize() == snapshot
 
     # Test with Selector object instances
-    choose_selector_objects = selector.ChooseSelector(
+    nested_choose = selector.ChooseSelector(
         {
             "choices": {
                 "text_choice": {"selector": selector.TextSelector({"multiline": True})},
                 "number_choice": {
                     "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+            }
+        }
+    )
+    nested_obj = selector.ObjectSelector(
+        {
+            "fields": {
+                "choose": {
+                    "required": True,
+                    "selector": nested_choose,
+                },
+            }
+        }
+    )
+    choose_selector_objects = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {
+                    "selector": selector.TextSelector({"multiline": True}),
+                },
+                "number_choice": {
+                    "selector": selector.NumberSelector({"min": 0, "max": 100}),
                 },
                 "object_choice": {
                     "selector": selector.ObjectSelector(
@@ -997,36 +1079,7 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                                     "selector": selector.NumberSelector({}),
                                 },
                                 "object": {
-                                    "selector": selector.ObjectSelector(
-                                        {
-                                            "fields": {
-                                                "choose": {
-                                                    "required": True,
-                                                    "selector": selector.ChooseSelector(
-                                                        {
-                                                            "choices": {
-                                                                "text_choice": {
-                                                                    "selector": selector.TextSelector(
-                                                                        {
-                                                                            "multiline": True
-                                                                        }
-                                                                    )
-                                                                },
-                                                                "number_choice": {
-                                                                    "selector": selector.NumberSelector(
-                                                                        {
-                                                                            "min": 0,
-                                                                            "max": 100,
-                                                                        }
-                                                                    )
-                                                                },
-                                                            }
-                                                        }
-                                                    ),
-                                                },
-                                            }
-                                        }
-                                    ),
+                                    "selector": nested_obj,
                                 },
                             },
                             "multiple": False,
@@ -1235,18 +1288,18 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
     [
         (
             {"mode": "trigger"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
         (
             {"mode": "condition"},
             ("all", "any"),
-            ("first", "last", "invalid", None),
+            ("first", "each", "last", "invalid", None),
         ),
         (
             {"mode": "trigger", "translation_key": "trigger_behavior"},
-            ("first", "last", "any"),
-            ("all", "invalid", None),
+            ("first", "all", "each"),
+            ("last", "any", "invalid", None),
         ),
     ],
 )
@@ -1266,7 +1319,7 @@ def test_automation_behavior_selector_schema(
 )
 def test_automation_behavior_selector_schema_error(schema) -> None:
     """Test automation behavior selector config schema errors."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"automation_behavior": schema})
 
 
@@ -1342,7 +1395,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
 
 
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
-    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+    """Test ObjectSelector serializer with Selector in ObjectSelectorField."""
 
     selector_type = "object"
     schema = {
@@ -1366,6 +1419,12 @@ def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    selector_instance(
+        [
+            {"name": "Test 1", "percentage": 50},
+            {"name": "Test 2", "percentage": 70},
+        ]
+    )
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
@@ -1503,9 +1562,9 @@ def test_nested_object_selectors(snapshot: SnapshotAssertion) -> None:
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
-        ({"multiple": "False"}, pytest.raises(vol.Invalid)),
+        ({"multiple": "False"}, pytest.raises(probatio.Invalid)),
     ],
 )
 def test_object_selector_validate_schema(
@@ -1628,8 +1687,107 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections) ->
 )
 def test_select_selector_schema_error(schema) -> None:
     """Test select selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"select": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"domain": "sensor"},
+            ("battery", "humidity", "temperature"),
+            ("cat", 0, None, ["temperature"]),
+        ),
+        (
+            {"domain": "binary_sensor"},
+            ("door", "smoke", "gas"),
+            ("cat", 0, None, ["gas"]),
+        ),
+        (
+            {"domain": "switch"},
+            ("outlet", "switch"),
+            ("cat", 0, None, ["outlet"]),
+        ),
+        (
+            {"domain": "sensor", "multiple": True},
+            (["temperature"], ["temperature", "humidity"], []),
+            ("battery", "beer", 0, None, "temperature", ["dog"]),
+        ),
+    ],
+)
+def test_device_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test device class selector."""
+    _test_selector("device_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        (None, does_not_raise()),
+        ({}, does_not_raise()),
+        ({"multiple": False}, does_not_raise()),
+        ({"multiple": True}, does_not_raise()),
+        ({"state_classes": "total"}, does_not_raise()),
+        ({"state_classes": ["total"]}, does_not_raise()),
+        ({"state_classes": ["total", "measurement"]}, does_not_raise()),
+        ({"state_classes": ["cat"]}, pytest.raises(probatio.Invalid)),
+        ({"state_classes": ["total", "beer"]}, pytest.raises(probatio.Invalid)),
+        ({"state_classes": ["cat", "total"]}, pytest.raises(probatio.Invalid)),
+    ],
+)
+def test_state_class_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test state class selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"state_class": schema})
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {},
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            None,
+            ("measurement", "total", "total_increasing", "measurement_angle"),
+            ("cat", 0, None, ["measurement"]),
+        ),
+        (
+            {"multiple": True},
+            (["measurement"], ["total", "total_increasing", "measurement_angle"]),
+            ("measurement", 0, None, ["cat"]),
+        ),
+        (
+            {
+                "state_classes": ["measurement", "total", "total_increasing"],
+                "multiple": True,
+            },
+            (["measurement"], ["total", "total_increasing"]),
+            ("measurement", 0, None, ["cat"], ["measurement_angle"]),
+        ),
+        (
+            {
+                "state_classes": ["measurement", "total", "total_increasing"],
+            },
+            ("measurement", "total", "total_increasing"),
+            (["measurement"], 0, None, "dog", "measurement_angle"),
+        ),
+    ],
+)
+def test_state_class_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test state class selector."""
+    _test_selector("state_class", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -1777,25 +1935,58 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
                 },
             ),
         ),
+        (
+            {
+                "accept": ["image/*"],
+                "image_upload": True,
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (
+                None,
+                "abc",
+                {},
+                {
+                    # We do not allow entity_id when accept is set
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
+    _test_selector("media", schema, valid_selections, invalid_selections)
 
-    def drop_metadata(data):
-        """Drop metadata key from the input."""
-        if isinstance(data, list):
-            return [drop_metadata(item) for item in data]
-        data.pop("metadata", None)
-        return data
 
-    _test_selector(
-        "media",
-        schema,
-        valid_selections,
-        invalid_selections,
-        drop_metadata,
-    )
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # image_upload can only be used when accept is not empty
+        {"image_upload": True},
+        {"image_upload": True, "accept": []},
+    ],
+)
+def test_media_selector_schema_error(
+    schema: dict[str, bool | list[str]],
+) -> None:
+    """Test media selector with invalid config."""
+    with pytest.raises(
+        probatio.Invalid, match="image_upload can only be used when accept is not empty"
+    ):
+        selector.validate_selector({"media": schema})
 
 
 @pytest.mark.parametrize(
@@ -1809,6 +2000,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                         "entity_id": "sensor.abc",
                         "media_content_id": "abc",
                         "media_content_type": "def",
+                        "metadata": {},
                     },
                     {
                         "entity_id": "sensor.def",
@@ -1821,6 +2013,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     "entity_id": "sensor.abc",
                     "media_content_id": "abc",
                     "media_content_type": "def",
+                    "metadata": {},
                 },
             ),
             (
@@ -1850,6 +2043,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
                     {
                         "media_content_id": "ghi",
                         "media_content_type": "jkl",
+                        "metadata": {},
                     },
                 ],
             ),
@@ -1872,19 +2066,18 @@ def test_media_selector_schema_multiple(
 ) -> None:
     """Test media selector with multiple selections."""
 
-    def drop_metadata(data, root=True):
+    def ensure_list(data):
         if isinstance(data, list):
-            return [drop_metadata(item, False) for item in data]
-        data.pop("metadata", None)
+            return data
         # Multiple=true wraps single values in list.
-        return [data] if root and schema.get("multiple") else data
+        return [data] if schema.get("multiple") else data
 
     _test_selector(
         "media",
         schema,
         valid_selections,
         invalid_selections,
-        drop_metadata,
+        ensure_list,
     )
 
 
@@ -2105,7 +2298,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 )
 def test_constant_selector_schema_error(schema) -> None:
     """Test constant selector."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector.validate_selector({"constant": schema})
 
 

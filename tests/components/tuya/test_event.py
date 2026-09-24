@@ -25,6 +25,7 @@ def platform_autouse():
 
 
 @pytest.mark.freeze_time("2023-11-01 13:14:15+01:00")
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

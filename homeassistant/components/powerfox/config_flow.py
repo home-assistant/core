@@ -1,10 +1,10 @@
 """Config flow for Powerfox integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from powerfox import Powerfox, PowerfoxAuthenticationError, PowerfoxConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -16,16 +16,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -33,6 +33,7 @@ STEP_REAUTH_SCHEMA = vol.Schema(
 class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Powerfox."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

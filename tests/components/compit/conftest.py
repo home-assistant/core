@@ -49,6 +49,7 @@ def mock_connector():
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
     mock_device_1.state.params = [
+        MagicMock(code="__wym_cwu", value="off"),  # Force domestic hot water mode
         MagicMock(code="__tr_pracy_pc", value="eco"),
         MagicMock(
             code="__trybpracy", value="de_icing"
@@ -89,7 +90,11 @@ def mock_connector():
         return all_devices.get(device_id)
 
     def get_current_value(device_id: int, parameter_code: CompitParameter):
-        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
+        # Not every device supports every parameter; fall back instead of
+        # raising when this device has no mapping for it.
+        code = PARAMS.get(parameter_code, {}).get(
+            all_devices[device_id].definition.code, parameter_code.value
+        )
         param = next(
             (p for p in all_devices[device_id].state.params if p.code == code),
             None,

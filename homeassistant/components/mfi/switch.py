@@ -1,11 +1,11 @@
 """Support for Ubiquiti mFi switches."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -33,12 +33,12 @@ SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Swit
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -88,16 +88,19 @@ class MfiSwitch(SwitchEntity):
         self._target_state: bool | None = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
         return self._port.ident
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._port.label
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the device is on."""
         return self._port.output
@@ -109,11 +112,13 @@ class MfiSwitch(SwitchEntity):
             self._port.data["output"] = float(self._target_state)
             self._target_state = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.control(True)
         self._target_state = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.control(False)

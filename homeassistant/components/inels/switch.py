@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from inelsmqtt.devices import Device
 from inelsmqtt.utils.common import Bit, Relay, SimpleRelay
@@ -107,7 +107,10 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         )
 
     def _check_alerts(self, current_state: Bit | SimpleRelay | Relay) -> None:
-        """Check if there are active alerts and raise ServiceValidationError if found."""
+        """Check for active alerts.
+
+        Raises ServiceValidationError if any are found.
+        """
         if self.entity_description.alerts and any(
             getattr(current_state, alert_key, None)
             for alert_key in self.entity_description.alerts
@@ -115,11 +118,13 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
             raise ServiceValidationError("Cannot operate switch with active alerts")
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if switch is on."""
         current_state = self.entity_description.get_state_fn(self._device, self._index)
         return current_state.is_on
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         current_state = self.entity_description.get_state_fn(self._device, self._index)
@@ -127,6 +132,7 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         current_state.is_on = False
         await self._device.set_ha_value(self._device.state)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         current_state = self.entity_description.get_state_fn(self._device, self._index)

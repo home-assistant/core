@@ -42,11 +42,9 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_creating_route(
-    hass: HomeAssistant,
-    mock_nsapi: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_nsapi: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test creating a route after setting up the main config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -125,11 +123,9 @@ async def test_flow_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_fetching_stations_failed(
-    hass: HomeAssistant,
-    mock_nsapi: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_nsapi: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test creating a route after setting up the main config entry."""
     mock_config_entry.add_to_hass(hass)

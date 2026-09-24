@@ -1,7 +1,7 @@
 """Support for LiteJet scenes."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
@@ -55,10 +55,12 @@ class LiteJetScene(Scene):
             model=system.model_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_connected_changed)
@@ -68,10 +70,12 @@ class LiteJetScene(Scene):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         try:

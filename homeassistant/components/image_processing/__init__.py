@@ -2,11 +2,10 @@
 
 import asyncio
 from datetime import timedelta
-from enum import StrEnum
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, TypedDict, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
@@ -24,23 +23,15 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    DOMAIN,
+    ImageProcessingDeviceClass,
+    ImageProcessingEntityStateAttribute,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
-
-
-class ImageProcessingDeviceClass(StrEnum):
-    """Device class for image processing entities."""
-
-    # Automatic license plate recognition
-    ALPR = "alpr"
-
-    # Face
-    FACE = "face"
-
-    # OCR
-    OCR = "ocr"
 
 
 SERVICE_SCAN = "scan"
@@ -60,18 +51,18 @@ CONF_CONFIDENCE = "confidence"
 DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
-SOURCE_SCHEMA = vol.Schema(
+SOURCE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_domain("camera"),
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-        vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=100)
+        probatio.Optional(CONF_SOURCE): probatio.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0, max=100)
         ),
     }
 )
@@ -153,6 +144,7 @@ class ImageProcessingEntity(Entity):
         return None
 
     @property
+    @override
     def device_class(self) -> ImageProcessingDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -203,6 +195,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         self.total_faces = 0
 
     @property
+    @override
     def state(self) -> str | int | None:
         """Return the state of the entity."""
         confidence: float = 0
@@ -228,9 +221,13 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
+        return {
+            ImageProcessingEntityStateAttribute.FACES: self.faces,
+            ImageProcessingEntityStateAttribute.TOTAL_FACES: self.total_faces,
+        }
 
     def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""

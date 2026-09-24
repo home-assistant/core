@@ -160,10 +160,12 @@ class States(Base):  # type: ignore[valid-type,misc]
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.States("
-            f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
+            f"id={self.state_id}, domain='{self.domain}', "
+            f"entity_id='{self.entity_id}', "
             f"state='{self.state}', event_id='{self.event_id}', "
-            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}"
+            f"last_updated="
+            f"'{self.last_updated.isoformat(sep=' ', timespec='seconds')}'"
+            f", old_state_id={self.old_state_id}"
             f")>"
         )
 
@@ -285,9 +287,11 @@ class RecorderRuns(Base):  # type: ignore[valid-type,misc]
         )
         return (
             f"<recorder.RecorderRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f"id={self.run_id}, start="
+            f"'{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f"end={end}, closed_incorrect={self.closed_incorrect}, "
-            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
+            f"created="
+            f"'{self.created.isoformat(sep=' ', timespec='seconds')}'"
             f")>"
         )
 

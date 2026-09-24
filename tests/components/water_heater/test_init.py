@@ -3,8 +3,8 @@
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     DOMAIN,
@@ -40,7 +40,7 @@ async def test_set_temp_schema_no_req(
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(domain, service, data)
     await hass.async_block_till_done()
 
@@ -85,13 +85,13 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     water_heater.hass = hass
 
     # Test with turn_on method defined
-    setattr(water_heater, "turn_on", MagicMock())
+    water_heater.turn_on = MagicMock()
     await water_heater.async_turn_on()
 
     assert water_heater.turn_on.call_count == 1
 
     # Test with async_turn_on method defined
-    setattr(water_heater, "async_turn_on", AsyncMock())
+    water_heater.async_turn_on = AsyncMock()
     await water_heater.async_turn_on()
 
     assert water_heater.async_turn_on.call_count == 1
@@ -103,13 +103,13 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     water_heater.hass = hass
 
     # Test with turn_off method defined
-    setattr(water_heater, "turn_off", MagicMock())
+    water_heater.turn_off = MagicMock()
     await water_heater.async_turn_off()
 
     assert water_heater.turn_off.call_count == 1
 
     # Test with async_turn_off method defined
-    setattr(water_heater, "async_turn_off", AsyncMock())
+    water_heater.async_turn_off = AsyncMock()
     await water_heater.async_turn_off()
 
     assert water_heater.async_turn_off.call_count == 1

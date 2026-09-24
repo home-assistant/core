@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import setup
+from homeassistant import config_entries, setup
 from homeassistant.components import binary_sensor, template
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -21,20 +21,28 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    RESTORE_STATE_SAVED_ATTRIBUTES,
+    RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import (
@@ -63,7 +71,6 @@ TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_BINARY_SENSOR = TemplatePlatformSetup(
     binary_sensor.DOMAIN,
-    "sensors",
     "test_binary_sensor",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -232,19 +239,6 @@ async def test_setup_config_entry(
 async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "extra_config"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
-)
-@pytest.mark.usefixtures("setup_binary_sensor")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("binary_sensor")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -607,6 +601,143 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
 
 
 @pytest.mark.parametrize(
+    ("advanced_input", "expected_advanced_options", "expected_state"),
+    [
+        (
+            {"delay_on": {"seconds": 5}},
+            {"delay_on": {"seconds": 5.0}},
+            STATE_UNKNOWN,
+        ),
+        (
+            {"delay_off": {"minutes": 1}},
+            {"delay_off": {"minutes": 1.0}},
+            STATE_ON,
+        ),
+        (
+            {"delay_on": {"seconds": 5}, "delay_off": {"minutes": 1}},
+            {"delay_on": {"seconds": 5.0}, "delay_off": {"minutes": 1.0}},
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_config_flow_binary_sensor_delay_options(
+    hass: HomeAssistant,
+    advanced_input: dict[str, Any],
+    expected_advanced_options: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test delay options in the binary sensor config flow."""
+    result = await hass.config_entries.flow.async_init(
+        template.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry",
+        wraps=template.async_setup_entry,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "My template",
+                "state": "{{ true }}",
+                "additional_options": advanced_input,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "additional_options": expected_advanced_options,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(template.DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "additional_options": expected_advanced_options,
+    }
+    state = hass.states.get("binary_sensor.my_template")
+    assert state.state == expected_state
+
+
+async def test_config_flow_preview_binary_sensor_delay(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview with a delayed binary sensor."""
+    client = await hass_ws_client(hass)
+
+    hass.states.async_set("binary_sensor.available", "on")
+    hass.states.async_set("binary_sensor.one", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        template.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My template",
+                "state": "{{ is_state('binary_sensor.one', 'on') }}",
+                "additional_options": {
+                    "availability": "{{ True }}",
+                    "delay_on": {"seconds": 1},
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    hass.states.async_set("binary_sensor.one", "on")
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
+
+
+@pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
     [
         (
@@ -820,64 +951,116 @@ async def test_template_icon_validation_error(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
-)
-@pytest.mark.parametrize(
-    "style",
-    [ConfigurationStyle.MODERN],
-)
-@pytest.mark.parametrize(
-    ("extra_config", "source_state", "restored_state", "initial_state"),
+    ("restored_state", "expected_state"),
     [
-        ({}, STATE_OFF, STATE_ON, STATE_OFF),
-        ({}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({}, STATE_OFF, STATE_UNAVAILABLE, STATE_OFF),
-        ({}, STATE_OFF, STATE_UNKNOWN, STATE_OFF),
-        ({"delay_off": 5}, STATE_OFF, STATE_ON, STATE_ON),
-        ({"delay_off": 5}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({"delay_off": 5}, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_off": 5}, STATE_OFF, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, STATE_OFF, STATE_ON, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_UNAVAILABLE, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_UNKNOWN, STATE_OFF),
-        ({}, STATE_ON, STATE_ON, STATE_ON),
-        ({}, STATE_ON, STATE_OFF, STATE_ON),
-        ({}, STATE_ON, STATE_UNAVAILABLE, STATE_ON),
-        ({}, STATE_ON, STATE_UNKNOWN, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_ON, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_OFF, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_UNKNOWN, STATE_ON),
-        ({"delay_on": 5}, STATE_ON, STATE_ON, STATE_ON),
-        ({"delay_on": 5}, STATE_ON, STATE_OFF, STATE_OFF),
-        ({"delay_on": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_on": 5}, STATE_ON, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({}, None, STATE_ON, STATE_UNKNOWN),
-        ({}, None, STATE_OFF, STATE_UNKNOWN),
-        ({}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({}, None, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_ON, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_OFF, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_ON, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_OFF, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
     ],
 )
-async def test_restore_state(
+async def test_modern_restore_state_attributes(
     hass: HomeAssistant,
-    count: int,
-    style: ConfigurationStyle,
-    state_template: str,
-    extra_config: ConfigType,
-    source_state: str | None,
     restored_state: str,
-    initial_state: str,
+    expected_state: str,
+) -> None:
+    """Test restoring template binary sensor attributes."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    restored_attributes = {
+        "plus_one": 55,
+    }
+    setup_mock_template_entity_restore_state(
+        hass, TEST_BINARY_SENSOR, restored_state, saved_attributes=restored_attributes
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        {
+            "state": "{{ states('sensor.test_state') }}",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
+            },
+        },
+        "is_state('sensor.test_attribute', '2')",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_BINARY_SENSOR,
+        restored_state,
+        {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
+    )
+    assert "plus_two" not in state.attributes
+
+    next_state = STATE_ON if expected_state == STATE_OFF else STATE_OFF
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_BINARY_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
+
+
+@pytest.mark.parametrize("extra_config", [{}, {"delay_on": 5}, {"delay_off": 5}])
+@pytest.mark.parametrize(
+    ("restored_state", "expected_state"),
+    [
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+async def test_modern_restore_state(
+    hass: HomeAssistant,
+    restored_state: str,
+    expected_state: str,
+    extra_config: ConfigType,
 ) -> None:
     """Test restoring template binary sensor."""
+
+    fake_state = State(TEST_BINARY_SENSOR.entity_id, restored_state, {})
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        1,
+        extra_config,
+        "{{ None }}",
+    )
+
+    state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("source_state", "expected_state"),
+    [
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
+        (STATE_UNAVAILABLE, STATE_OFF),
+        (STATE_UNKNOWN, STATE_OFF),
+    ],
+)
+async def test_modern_does_not_restore_state(
+    hass: HomeAssistant,
+    source_state: str,
+    restored_state: str,
+    expected_state: str,
+) -> None:
+    """Test template binary sensor does not restore state."""
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, source_state)
 
@@ -885,11 +1068,16 @@ async def test_restore_state(
     mock_restore_cache(hass, (fake_state,))
 
     await setup_entity(
-        hass, TEST_BINARY_SENSOR, style, count, extra_config, state_template
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        1,
+        {},
+        "{{ states('sensor.test_state') }}",
     )
 
     state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
-    assert state.state == initial_state
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -1186,7 +1374,7 @@ async def test_trigger_with_negative_time_periods(
 async def test_trigger_template_delay_with_multiple_triggers(
     hass: HomeAssistant, delay_state: str, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test trigger based binary sensor with multiple triggers occurring during the delay."""
+    """Test trigger based binary sensor with multiple triggers during delay."""
     for _ in range(10):
         # State should still be unknown
         state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
@@ -1488,7 +1676,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("binary_sensor.my_template")
+    template_entity = entity_registry.async_get("binary_sensor.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -1504,3 +1692,45 @@ async def test_flow_preview(
         {"name": "My template", "state": "{{ 'on' }}"},
     )
     assert state["state"] == "on"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_BINARY_SENSOR, style, {"state": "{{ True }}"}, caplog
+    )
+
+
+@pytest.mark.parametrize("attribute", ["device_class"])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'disarmed' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_BINARY_SENSOR.entity_id}: {attribute}"
+    assert error in caplog.text

@@ -4,8 +4,8 @@ from enum import Enum
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     DOMAIN,
@@ -58,7 +58,7 @@ async def test_set_temp_schema_no_req(
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(domain, service, data)
     await hass.async_block_till_done()
 
@@ -231,7 +231,11 @@ async def test_temperature_features_is_valid(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the 'Target temperature' parameter but the entity does not support it",
+        match=(
+            "Set temperature action was used with the"
+            " 'Target temperature' parameter but the"
+            " entity does not support it"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -245,7 +249,11 @@ async def test_temperature_features_is_valid(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it",
+        match=(
+            "Set temperature action was used with the"
+            " 'Lower/Upper target temperature' parameter"
+            " but the entity does not support it"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -380,7 +388,10 @@ async def test_mode_validation(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off",
+        match=(
+            "Horizontal swing mode invalid is not valid."
+            " Valid horizontal swing modes are: on, off"
+        ),
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -392,8 +403,8 @@ async def test_mode_validation(
             blocking=True,
         )
     assert (
-        str(exc.value)
-        == "Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off"
+        str(exc.value) == "Horizontal swing mode invalid is not valid."
+        " Valid horizontal swing modes are: on, off"
     )
     assert exc.value.translation_key == "not_valid_horizontal_swing_mode"
 
@@ -703,7 +714,10 @@ async def test_target_temp_high_higher_than_low(
 
     with pytest.raises(
         ServiceValidationError,
-        match="'Lower target temperature' cannot be higher than 'Upper target temperature'",
+        match=(
+            "'Lower target temperature' cannot be higher"
+            " than 'Upper target temperature'"
+        ),
     ) as exc:
         await hass.services.async_call(
             DOMAIN,

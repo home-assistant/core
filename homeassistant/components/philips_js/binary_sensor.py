@@ -1,6 +1,7 @@
 """Philips TV binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from haphilipsjs import PhilipsTV
 
@@ -62,7 +63,11 @@ def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
 
 
 class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEntity):
-    """A Philips TV binary sensor class, which allows multiple entities given by a BinarySensorEntityDescription."""
+    """A Philips TV binary sensor class.
+
+    Allows multiple entities given by a
+    BinarySensorEntityDescription.
+    """
 
     entity_description: PhilipsTVBinarySensorEntityDescription
 
@@ -84,8 +89,13 @@ class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEnti
         super().__init__(coordinator)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator and set is_on true if one specified value is available within given entry of list."""
+        """Handle updated data from the coordinator.
+
+        Set is_on true if one specified value is available within
+        given entry of list.
+        """
         self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api,
             "RecordingType",

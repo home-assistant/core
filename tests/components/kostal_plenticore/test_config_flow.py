@@ -343,7 +343,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured error."""
     MockConfigEntry(
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={"host": "1.1.1.1", "password": "foobar"},
         unique_id="112233445566",
     ).add_to_hass(hass)
@@ -541,7 +541,7 @@ async def test_reconfigure_already_configured(
     """Test we handle already configured error."""
     mock_config_entry.add_to_hass(hass)
     MockConfigEntry(
-        domain="kostal_plenticore",
+        domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PASSWORD: "foobar"},
         unique_id="112233445566",
     ).add_to_hass(hass)

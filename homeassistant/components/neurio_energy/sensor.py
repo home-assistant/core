@@ -2,10 +2,11 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import neurio
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -41,9 +42,9 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_API_SECRET): cv.string,
-        vol.Required(CONF_SENSOR_ID): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_API_SECRET): cv.string,
+        probatio.Required(CONF_SENSOR_ID): cv.string,
     }
 )
 
@@ -198,16 +199,19 @@ class NeurioEnergy(SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

@@ -57,14 +57,14 @@ async def test_binary_sensors(
         hass, entity_registry, snapshot, mock_config_entry_with_subentries.entry_id
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_zones_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_zones_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device-zone")
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_outputs_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_outputs_1"), mock_config_entry_with_subentries.entry_id
     )
     assert device_entry == snapshot(name="device-output")
 
@@ -124,7 +124,8 @@ async def test_binary_sensor_callback(
     assert hass.states.get("binary_sensor.zone").state == STATE_OFF
     assert hass.states.get("binary_sensor.output").state == STATE_OFF
 
-    # The client library should always report all entries, but test that we set the status correctly if it doesn't
+    # The client library should always report all entries, but test
+    # that we set the status correctly if it doesn't
     output_update_method({2: 1})
     zone_update_method({2: 1})
     assert hass.states.get("binary_sensor.zone").state == STATE_UNKNOWN

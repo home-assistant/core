@@ -3,7 +3,7 @@
 import datetime
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.manual.alarm_control_panel import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.manual.alarm_control_panel import (  # pylint: disable=home-assistant-component-root-import
     ManualAlarm,
 )
 from homeassistant.config_entries import ConfigEntry

@@ -4,10 +4,10 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 import motionmount
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
@@ -25,11 +25,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # A MotionMount can be in four states:
-# 1. Old CE and old Pro FW -> It doesn't supply any kind of mac
-# 2. Old CE but new Pro FW -> It supplies its mac using DNS-SD, but a read of the mac fails
-# 3. New CE but old Pro FW -> It doesn't supply the mac using DNS-SD but we can read it (returning the EMPTY_MAC)
-# 4. New CE and new Pro FW -> Both DNS-SD and a read gives us the mac
-# If we can't get the mac, we use DEFAULT_DISCOVERY_UNIQUE_ID as an ID, so we can always configure a single MotionMount. Most households will only have a single MotionMount
+# 1. Old CE and old Pro FW ->
+#    It doesn't supply any kind of mac
+# 2. Old CE but new Pro FW ->
+#    It supplies its mac using DNS-SD,
+#    but a read of the mac fails
+# 3. New CE but old Pro FW ->
+#    It doesn't supply the mac using DNS-SD
+#    but we can read it (returning the EMPTY_MAC)
+# 4. New CE and new Pro FW ->
+#    Both DNS-SD and a read gives us the mac
+# If we can't get the mac, we use
+# DEFAULT_DISCOVERY_UNIQUE_ID as an ID, so we can
+# always configure a single MotionMount. Most
+# households will only have a single MotionMount
 class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Vogel's MotionMount config flow."""
 
@@ -41,6 +50,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         self.backoff_task: asyncio.Task | None = None
         self.backoff_time: int = 0
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +92,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         # No pin is needed
         return self._create_or_update_entry()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -189,9 +200,11 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PIN): vol.All(int, vol.Range(min=1, max=9999)),
+                    probatio.Required(CONF_PIN): probatio.All(
+                        int, probatio.Range(min=1, max=9999)
+                    ),
                 }
             ),
             errors=errors,
@@ -268,10 +281,10 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=23): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=23): int,
                 }
             ),
             errors=errors or {},

@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from rflink.protocol import ProtocolBase
 
@@ -48,7 +49,7 @@ class RflinkDevice(Entity):
         nogroup_aliases=None,
         fire_event=False,
         signal_repetitions=DEFAULT_SIGNAL_REPETITIONS,
-    ):
+    ) -> None:
         """Initialize the device."""
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
@@ -97,6 +98,7 @@ class RflinkDevice(Entity):
         return self._state
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Assume device state until first device event sets state."""
         return self._state is None
@@ -107,6 +109,7 @@ class RflinkDevice(Entity):
         self._attr_available = availability
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
@@ -287,12 +290,14 @@ class RflinkCommand(RflinkDevice):
 class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_ON
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()

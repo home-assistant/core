@@ -231,7 +231,10 @@ async def test_setup_with_adbkey(hass: HomeAssistant) -> None:
     ],
 )
 async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
-    """Test that sources (i.e., apps) are handled correctly for Android and Fire TV devices."""
+    """Test that sources (i.e., apps) are handled correctly.
+
+    Covers Android and Fire TV devices.
+    """
     conf_apps = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
@@ -300,7 +303,10 @@ async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
 async def test_exclude_sources(
     hass: HomeAssistant, config: dict[str, Any], expected_sources: list[str]
 ) -> None:
-    """Test that sources (i.e., apps) are handled correctly when the `exclude_unnamed_apps` config parameter is provided."""
+    """Test sources (i.e., apps) handling.
+
+    When the `exclude_unnamed_apps` config parameter is provided.
+    """
     conf_apps = {
         "com.app.test1": "TEST 1",
         "com.app.test3": None,
@@ -352,7 +358,10 @@ async def test_exclude_sources(
 async def _test_select_source(
     hass: HomeAssistant, config, conf_apps, source, expected_arg, method_patch
 ) -> None:
-    """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
+    """Test methods for launching and stopping apps.
+
+    Verifies they are called correctly when selecting a source.
+    """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(config_entry, options={CONF_APPS: conf_apps})
@@ -406,7 +415,10 @@ async def test_select_source_androidtv(
 
 
 async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) -> None:
-    """Test that when an app name is overridden via the `apps` configuration parameter, the app is launched correctly."""
+    """Test app name overridden via `apps` config parameter.
+
+    Verifies the app is launched correctly.
+    """
     # Evidence that the default YouTube app ID will be overridden
     conf_apps = {
         "com.youtube.test": "YouTube",
@@ -461,7 +473,7 @@ async def test_select_source_firetv(
 async def test_setup_fail(
     hass: HomeAssistant, config: dict[str, Any], connect: bool
 ) -> None:
-    """Test that the entity is not created when the ADB connection is not established."""
+    """Test entity is not created when ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
@@ -497,21 +509,55 @@ async def test_adb_command(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(command)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == response
+            assert service_response == {entity_id: {"adb_response": response}}
+
+
+async def test_adb_command_empty_response(hass: HomeAssistant) -> None:
+    """Test sending a command via the `androidtv.adb_command` service that returns an empty response."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    command = "test command"
+    response = "  "
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
+        ) as patch_shell:
+            service_response = await hass.services.async_call(
+                DOMAIN,
+                "adb_command",
+                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                blocking=True,
+                return_response=True,
+            )
+
+            patch_shell.assert_called_with(command)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
-    """Test sending a command via the `androidtv.adb_command` service that raises a UnicodeDecodeError exception."""
+    """Test adb_command service raising UnicodeDecodeError."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     command = "test command"
@@ -528,16 +574,18 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
             side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
         ):
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_key(hass: HomeAssistant) -> None:
@@ -557,21 +605,23 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(f"input keyevent {KEYS[command]}")
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
-    """Test sending the "GET_PROPERTIES" command via the `androidtv.adb_command` service."""
+    """Test GET_PROPERTIES command via adb_command service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     command = "GET_PROPERTIES"
@@ -588,17 +638,19 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
             "androidtv.androidtv.androidtv_async.AndroidTVAsync.get_properties_dict",
             return_value=response,
         ) as patch_get_props:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
                 "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_get_props.assert_called()
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == str(response)
+            assert service_response == {entity_id: {"adb_response": str(response)}}
 
 
 async def test_learn_sendevent(hass: HomeAssistant) -> None:
@@ -632,7 +684,7 @@ async def test_learn_sendevent(hass: HomeAssistant) -> None:
 
 
 async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
-    """Test that the state does not get updated when a `LockNotAcquiredException` is raised."""
+    """Test state not updated on `LockNotAcquiredException`."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
 
@@ -793,7 +845,8 @@ async def test_get_image_http(
 ) -> None:
     """Test taking a screen capture.
 
-    This is based on `test_get_image_http` in tests/components/media_player/test_init.py.
+    This is based on `test_get_image_http` in
+    tests/components/media_player/test_init.py.
     """
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1101,7 +1154,8 @@ async def test_exception(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         caplog.clear()
         caplog.set_level(logging.ERROR)
 
-        # When an unforeseen exception occurs, we close the ADB connection and raise the exception
+        # When an unforeseen exception occurs, we close
+        # the ADB connection and raise the exception
         with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION:
             await async_update_entity(hass, entity_id)
 

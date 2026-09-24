@@ -441,10 +441,10 @@ async def test_user_custom_url_unknown_exception(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the flow when the account is already configured."""
@@ -459,11 +459,11 @@ async def test_already_configured(
     assert result["reason"] == "already_configured_account"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_async_step_integration_discovery_duplicate(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
     mock_test_rtsp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_camera_config_entry: MockConfigEntry,
 ) -> None:

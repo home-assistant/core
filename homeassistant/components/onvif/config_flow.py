@@ -3,11 +3,11 @@
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
-import voluptuous as vol
+import probatio
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
@@ -35,7 +35,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -43,6 +43,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_ENABLE_WEBHOOKS,
     CONF_HARDWARE,
+    CONF_MORE_OPTIONS,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
@@ -110,6 +111,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OnvifOptionsFlowHandler:
@@ -122,6 +124,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -133,7 +136,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+            data_schema=probatio.Schema(
+                {probatio.Required("auto", default=True): bool}
+            ),
         )
 
     async def async_step_reauth(
@@ -164,16 +169,17 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=username): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -182,14 +188,16 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.macaddress
         registry = dr.async_get(self.hass)
         if not (
-            device := registry.async_get_device(
+            devices := registry.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        for entry_id in device.config_entries:
+        for device in devices:
             if (
-                not (entry := hass.config_entries.async_get_entry(entry_id))
+                not (
+                    entry := hass.config_entries.async_get_entry(device.config_entry_id)
+                )
                 or entry.domain != DOMAIN
                 or entry.state is ConfigEntryState.LOADED
             ):
@@ -197,7 +205,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+                hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(
@@ -245,7 +255,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="device",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
+                data_schema=probatio.Schema(
+                    {probatio.Optional(CONF_HOST): probatio.In(devices)}
+                ),
             )
 
         return await self.async_step_configure()
@@ -272,13 +284,21 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="configure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
-                    vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
-                    vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,
-                    vol.Optional(CONF_USERNAME, default=conf(CONF_USERNAME, "")): str,
-                    vol.Optional(CONF_PASSWORD, default=conf(CONF_PASSWORD, "")): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
+                    probatio.Required(CONF_NAME, default=conf(CONF_NAME)): str,
+                    probatio.Required(CONF_HOST, default=conf(CONF_HOST)): str,
+                    probatio.Required(
+                        CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    probatio.Optional(
+                        CONF_USERNAME, default=conf(CONF_USERNAME, "")
+                    ): str,
+                    probatio.Optional(
+                        CONF_PASSWORD, default=conf(CONF_PASSWORD, "")
+                    ): str,
                 }
             ),
             errors=errors,
@@ -407,53 +427,51 @@ class OnvifOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the ONVIF devices options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
-            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input[CONF_ENABLE_WEBHOOKS]
+            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = more_options.get(
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
-            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
-                CONF_ENABLE_WEBHOOKS,
-                self.config_entry.options.get(
-                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
-                ),
-            )
             return self.async_create_entry(title="", data=self.options)
 
-        advanced_options = {}
-        if self.show_advanced_options:
-            advanced_options[
-                vol.Optional(
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=self.config_entry.options.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                    ),
-                )
-            ] = bool
         return self.async_show_form(
             step_id="onvif_devices",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EXTRA_ARGUMENTS,
                         default=self.config_entry.options.get(
                             CONF_EXTRA_ARGUMENTS, DEFAULT_ARGUMENTS
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RTSP_TRANSPORT,
                         default=self.config_entry.options.get(
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
-                    ): vol.In(RTSP_TRANSPORTS),
-                    vol.Optional(
+                    ): probatio.In(RTSP_TRANSPORTS),
+                    probatio.Optional(
                         CONF_ENABLE_WEBHOOKS,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                         ),
                     ): bool,
-                    **advanced_options,
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
+                            {
+                                probatio.Optional(
+                                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                                    default=self.config_entry.options.get(
+                                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                                    ),
+                                ): bool,
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
                 }
             ),
         )

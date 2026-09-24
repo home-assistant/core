@@ -67,7 +67,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component, for example light.
+     - Process the configuration and set up a platform based component,
+       for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.
@@ -197,7 +198,18 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         key = config_entry.entry_id
 
         if (platform := self._platforms.pop(key, None)) is None:
-            raise ValueError("Config entry was never loaded!")
+            self.logger.warning(
+                (
+                    "Ignored unload request for config entry %s (%s) in %s.%s; "
+                    "no platform is loaded, it was never set up "
+                    "or has already been unloaded"
+                ),
+                config_entry.title,
+                key,
+                config_entry.domain,
+                self.domain,
+            )
+            return True
 
         await platform.async_reset()
         return True
@@ -224,6 +236,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
+        admin_only: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service."""
@@ -231,6 +244,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             self.hass,
             self.domain,
             name,
+            admin_only=admin_only,
             entities=self._entities,
             func=func,
             job_type=HassJobType.Coroutinefunction,

@@ -1,6 +1,6 @@
 """Helper for Netatmo integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
 from pyatmo.modules.device_types import DeviceType as NetatmoDeviceType
@@ -25,4 +25,4 @@ class NetatmoArea:
     lon_sw: float
     mode: str
     show_on_map: bool
-    uuid: UUID = uuid4()
+    uuid: UUID = field(default_factory=uuid4)

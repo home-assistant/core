@@ -14,7 +14,7 @@ from .conftest import make_mock_module, make_mock_zone
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "climate.zone_1"
+ENTITY_ID = "climate.zone_1_zone_1"
 
 
 async def test_climate_zone_available(
@@ -78,8 +78,12 @@ async def test_zones_with_same_id_across_modules_get_distinct_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_a = device_registry.async_get_device(identifiers={(DOMAIN, "module-aaa-1")})
-    device_b = device_registry.async_get_device(identifiers={(DOMAIN, "module-bbb-1")})
+    device_a = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "module-aaa-1"), mock_config_entry.entry_id
+    )
+    device_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "module-bbb-1"), mock_config_entry.entry_id
+    )
 
     assert device_a is not None
     assert device_b is not None
@@ -101,7 +105,7 @@ async def test_migrate_device_identifiers(
     mock_config_entry.add_to_hass(hass)
 
     # Create the module device as it would have existed in a previous run.
-    device_registry.async_get_or_create(
+    module_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "deadbeef")},
     )
@@ -110,16 +114,23 @@ async def test_migrate_device_identifiers(
     old_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
-        via_device=(DOMAIN, "deadbeef"),
+        via_device_id=module_device.id,
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Old identifier should no longer exist.
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "1"), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     # New identifier should exist and point to the same device entry.
-    migrated = device_registry.async_get_device(identifiers={(DOMAIN, "deadbeef-1")})
+    migrated = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deadbeef-1"), mock_config_entry.entry_id
+    )
     assert migrated is not None
     assert migrated.id == old_device.id

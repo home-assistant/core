@@ -1,11 +1,11 @@
 """Config flow for Jewish calendar integration."""
 
 import logging
-from typing import Any, get_args
+from typing import Any, get_args, override
 import zoneinfo
 
 from hdate.translator import Language
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -28,27 +28,68 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DAILY_EVENTS,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    CONF_LEARNING_SCHEDULE,
+    CONF_YEARLY_EVENTS,
+    DEFAULT_CALENDAR_EVENTS,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DOMAIN,
+    DailyCalendarEventType,
+    LearningScheduleEventType,
+    YearlyCalendarEventType,
 )
 from .entity import JewishCalendarConfigEntry
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
-        vol.Optional(
+        probatio.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
+        probatio.Optional(
             CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
         ): int,
+        probatio.Optional(
+            CONF_DAILY_EVENTS,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_DAILY_EVENTS],
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(DailyCalendarEventType),
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_DAILY_EVENTS,
+            )
+        ),
+        probatio.Optional(
+            CONF_LEARNING_SCHEDULE,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_LEARNING_SCHEDULE],
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(LearningScheduleEventType),
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_LEARNING_SCHEDULE,
+            )
+        ),
+        probatio.Optional(
+            CONF_YEARLY_EVENTS,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_YEARLY_EVENTS],
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(YearlyCalendarEventType),
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_YEARLY_EVENTS,
+            )
+        ),
     }
 )
 
@@ -56,7 +97,7 @@ OPTIONS_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
+async def _get_data_schema(hass: HomeAssistant) -> probatio.Schema:
     default_location = {
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
@@ -64,17 +105,23 @@ async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
     get_timezones: list[str] = list(
         await hass.async_add_executor_job(zoneinfo.available_timezones)
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
-            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+            probatio.Required(
+                CONF_DIASPORA, default=DEFAULT_DIASPORA
+            ): BooleanSelector(),
+            probatio.Required(
+                CONF_LANGUAGE, default=DEFAULT_LANGUAGE
+            ): LanguageSelector(
                 LanguageSelectorConfig(languages=list(get_args(Language)))
             ),
-            vol.Optional(CONF_LOCATION, default=default_location): LocationSelector(),
-            vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
-            vol.Optional(CONF_TIME_ZONE, default=hass.config.time_zone): SelectSelector(
-                SelectSelectorConfig(options=get_timezones, sort=True)
-            ),
+            probatio.Optional(
+                CONF_LOCATION, default=default_location
+            ): LocationSelector(),
+            probatio.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
+            probatio.Optional(
+                CONF_TIME_ZONE, default=hass.config.time_zone
+            ): SelectSelector(SelectSelectorConfig(options=get_timezones, sort=True)),
         }
     )
 
@@ -86,12 +133,14 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: JewishCalendarConfigEntry,
     ) -> JewishCalendarOptionsFlowHandler:
         """Get the options flow for this handler."""
         return JewishCalendarOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

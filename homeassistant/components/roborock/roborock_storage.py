@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.cache import Cache, CacheData
 
@@ -55,6 +55,7 @@ class StoreImpl(Store[dict[str, Any]]):
             private=True,
         )
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -82,6 +83,7 @@ class CacheStore(Cache):
         self._cache_store = StoreImpl(hass, entry_id)
         self._cache_data: CacheData | None = None
 
+    @override
     async def get(self) -> CacheData:
         """Retrieve cached metadata."""
         if self._cache_data is None:
@@ -92,6 +94,7 @@ class CacheStore(Cache):
 
         return self._cache_data
 
+    @override
     async def set(self, value: CacheData) -> None:
         """Save cached metadata."""
         self._cache_data = value

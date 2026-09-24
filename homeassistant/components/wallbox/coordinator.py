@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import requests
 from wallbox import Wallbox
@@ -101,7 +101,7 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
 def check_token_validity(jwt_token_ttl: int, jwt_token_drift: int) -> bool:
     """Check if the jwtToken is still valid in order to reuse if possible."""
     return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > datetime.timestamp(
-        datetime.now()
+        datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     )
 
 
@@ -236,8 +236,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from wallbox_connection_error
 
     @_require_authentication
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component. Set update interval to be UPDATE_INTERVAL * #wallbox chargers configured, this is necessary due to rate limitations."""
+        """Get new sensor data for Wallbox component."""
 
         self.update_interval = timedelta(
             seconds=UPDATE_INTERVAL
@@ -388,6 +389,31 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
+        await self.async_request_refresh()
+
+    def _resume_schedule(self) -> None:
+        """Resume schedule and EcoSmart mode after a manual stop."""
+        try:
+            self._wallbox.resumeSchedule(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InsufficientRights(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
+                ) from wallbox_connection_error
+            if wallbox_connection_error.response.status_code == 429:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="too_many_requests"
+                ) from wallbox_connection_error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_failed"
+            ) from wallbox_connection_error
+
+    @_require_authentication
+    async def async_resume_schedule(self) -> None:
+        """Resume schedule and EcoSmart mode after a manual stop."""
+        await self.hass.async_add_executor_job(self._resume_schedule)
         await self.async_request_refresh()
 
     def _set_eco_smart(self, option: str) -> None:

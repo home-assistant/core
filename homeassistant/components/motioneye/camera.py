@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from jinja2 import Template
@@ -21,7 +21,7 @@ from motioneye_client.const import (
     KEY_TEXT_OVERLAY_RIGHT,
     KEY_TEXT_OVERLAY_TIMESTAMP,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -29,6 +29,7 @@ from homeassistant.components.mjpeg import (
     MjpegCamera,
 )
 from homeassistant.const import (
+    CONF_ACTION,
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -43,7 +44,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
 from .const import (
-    CONF_ACTION,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -58,7 +58,7 @@ from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
 
-SCHEMA_TEXT_OVERLAY = vol.In(
+SCHEMA_TEXT_OVERLAY = probatio.In(
     [
         KEY_TEXT_OVERLAY_DISABLED,
         KEY_TEXT_OVERLAY_TIMESTAMP,
@@ -66,14 +66,14 @@ SCHEMA_TEXT_OVERLAY = vol.In(
         KEY_TEXT_OVERLAY_CAMERA_NAME,
     ]
 )
-SCHEMA_SERVICE_SET_TEXT = vol.Schema(
-    vol.All(
+SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
+    probatio.All(
         cv.make_entity_service_schema(
             {
-                vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+                probatio.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
+                probatio.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
+                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
             },
         ),
         cv.has_at_least_one_key(
@@ -123,7 +123,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_ACTION,
-        {vol.Required(CONF_ACTION): cv.string},
+        {probatio.Required(CONF_ACTION): cv.string},
         "async_request_action",
     )
     platform.async_register_entity_service(
@@ -219,7 +219,11 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
             self._authentication == HTTP_BASIC_AUTHENTICATION
             and self._username is not None
         ):
-            self._auth = aiohttp.BasicAuth(self._username, password=self._password)
+            self._auth_headers = {
+                "Authorization": aiohttp.encode_basic_auth(
+                    self._username, self._password
+                )
+            }
 
     def _is_acceptable_streaming_camera(self) -> bool:
         """Determine if a camera is streaming/usable."""
@@ -228,11 +232,13 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         ) and MotionEyeClient.is_camera_streaming(self._camera)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._is_acceptable_streaming_camera()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
@@ -244,6 +250,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled

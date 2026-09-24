@@ -2,7 +2,9 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
+import probatio
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
     SENSOR_CURRENT_RMOT,
@@ -26,7 +28,6 @@ from pycomfoconnect import (
     SENSOR_TEMPERATURE_OUTDOOR,
     SENSOR_TEMPERATURE_SUPPLY,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -263,8 +264,8 @@ SENSOR_TYPES = (
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
+        probatio.Optional(CONF_RESOURCES, default=[]): probatio.All(
+            cv.ensure_list, [probatio.In([desc.key for desc in SENSOR_TYPES])]
         )
     }
 )
@@ -305,6 +306,7 @@ class ComfoConnectSensor(SensorEntity):
         self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug(

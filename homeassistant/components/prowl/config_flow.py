@@ -1,10 +1,10 @@
 """The config flow for the Prowl component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import prowlpy
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -20,6 +20,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -42,10 +43,12 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_API_KEY): str,
-                        vol.Required(CONF_NAME): str,
+                        probatio.Required(CONF_API_KEY): str,
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
+                        probatio.Required(CONF_NAME): str,
                     },
                 ),
                 user_input or {CONF_NAME: "Prowl"},

@@ -2,12 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from b2sdk.v2 import exception
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -22,7 +23,6 @@ from .const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
-    CONF_PREFIX,
     DOMAIN,
 )
 
@@ -31,14 +31,14 @@ _LOGGER = logging.getLogger(__name__)
 # Constants
 REQUIRED_CAPABILITIES = {"writeFiles", "listFiles", "deleteFiles", "readFiles"}
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_KEY_ID): cv.string,
-        vol.Required(CONF_APPLICATION_KEY): TextSelector(
+        probatio.Required(CONF_KEY_ID): cv.string,
+        probatio.Required(CONF_APPLICATION_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_BUCKET): cv.string,
-        vol.Optional(CONF_PREFIX, default=""): cv.string,
+        probatio.Required(CONF_BUCKET): cv.string,
+        probatio.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 
@@ -59,6 +59,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -134,7 +135,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not REQUIRED_CAPABILITIES.issubset(current_caps):
                     missing_caps = REQUIRED_CAPABILITIES - current_caps
                     _LOGGER.warning(
-                        "Missing required Backblaze B2 capabilities for Key ID '%s': %s",
+                        "Missing required Backblaze B2 capabilities"
+                        " for Key ID '%s': %s",
                         user_input[CONF_KEY_ID],
                         ", ".join(sorted(missing_caps)),
                     )
@@ -190,13 +192,15 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         except exception.MissingAccountData:
             # This generally indicates an issue with how InMemoryAccountInfo is used
             _LOGGER.error(
-                "Missing account data during Backblaze B2 authorization for Key ID '%s'",
+                "Missing account data during Backblaze B2"
+                " authorization for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "invalid_credentials"
         except Exception:
             _LOGGER.exception(
-                "An unexpected error occurred during Backblaze B2 configuration for Key ID '%s'",
+                "An unexpected error occurred during Backblaze B2"
+                " configuration for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "unknown"
@@ -246,10 +250,10 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_KEY_ID): cv.string,
-                    vol.Required(CONF_APPLICATION_KEY): TextSelector(
+                    probatio.Required(CONF_KEY_ID): cv.string,
+                    probatio.Required(CONF_APPLICATION_KEY): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

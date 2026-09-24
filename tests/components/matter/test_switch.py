@@ -1,5 +1,6 @@
 """Test Matter switches."""
 
+import asyncio
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -97,7 +98,7 @@ async def test_turn_off(
 
 @pytest.mark.parametrize("node_fixture", ["mock_switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
-    """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
+    """Test switch entity discovered from any (non-light) OnOff device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
     # by another platform (e.g. light, lock etc.).
@@ -122,7 +123,7 @@ async def test_numeric_switch(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test numeric switch entity is discovered and working using an Eve Thermo fixture ."""
+    """Test numeric switch entity using an Eve Thermo fixture."""
     state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state
     assert state.state == "off"
@@ -176,7 +177,7 @@ async def test_matter_exception_on_command(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError by using a switch fixture."""
+    """Test MatterError converts to HomeAssistantError for switch."""
     state = hass.states.get("switch.mock_onoffpluginunit")
     assert state
     matter_client.send_device_command.side_effect = MatterError("Boom")
@@ -231,6 +232,120 @@ async def test_evse_sensor(
             maximumChargeCurrent=0,
         ),
         timed_request_timeout_ms=3000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["ikea_klippbok_water_leak"])
+async def test_boolean_state_configuration_alarm_enabled_switches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Boolean State Configuration alarm enabled switches."""
+
+    visual_entity_id = "switch.klippbok_water_leak_sensor_visual_alarm_enabled"
+    audible_entity_id = "switch.klippbok_water_leak_sensor_audible_alarm_enabled"
+    visual_entry = entity_registry.async_get(visual_entity_id)
+    audible_entry = entity_registry.async_get(audible_entity_id)
+    assert visual_entry
+    assert audible_entry
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_entry == snapshot(name=f"{visual_entity_id}-entry")
+    assert visual_state == snapshot(name=f"{visual_entity_id}-state")
+    assert audible_entry == snapshot(name=f"{audible_entity_id}-entry")
+    assert audible_state == snapshot(name=f"{audible_entity_id}-state")
+    assert visual_state.state == "on"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=2,
+        ),
+    )
+
+    set_node_attribute(matter_node, 1, 128, 5, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_state.state == "off"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=3,
+        ),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["ikea_klippbok_water_leak"])
+async def test_boolean_state_configuration_alarm_enabled_switches_are_serialized(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test alarm switch changes to the shared bitmap are serialized."""
+    visual_entity_id = "switch.klippbok_water_leak_sensor_visual_alarm_enabled"
+    audible_entity_id = "switch.klippbok_water_leak_sensor_audible_alarm_enabled"
+    command_started = asyncio.Event()
+    allow_commands = asyncio.Event()
+
+    async def send_device_command(*args: object, **kwargs: object) -> None:
+        command_started.set()
+        await allow_commands.wait()
+
+    matter_client.send_device_command.side_effect = send_device_command
+    task = hass.async_create_task(
+        hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": [visual_entity_id, audible_entity_id]},
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+    await asyncio.sleep(0)
+
+    assert matter_client.send_device_command.call_count == 1
+
+    allow_commands.set()
+    await task
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[-1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=0,
+        ),
     )
 
 

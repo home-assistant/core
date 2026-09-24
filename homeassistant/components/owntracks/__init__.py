@@ -1,5 +1,5 @@
 """Support for OwnTracks."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections import defaultdict
 import json
@@ -7,25 +7,22 @@ import logging
 import re
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import cloud, mqtt, webhook
+from homeassistant.components.device_tracker import TrackerEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.location import get_state_coordinates
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
+from homeassistant.util import slugify
 from homeassistant.util.json import json_loads
 
 from .config_flow import CONF_SECRET
@@ -45,27 +42,28 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
-CONFIG_SCHEMA = vol.All(
+CONFIG_SCHEMA = probatio.All(
     cv.removed(CONF_WEBHOOK_ID),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(DOMAIN, default={}): {
-                vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-                vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-                vol.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
-                vol.Optional(
+            probatio.Optional(DOMAIN, default={}): {
+                probatio.Optional(CONF_MAX_GPS_ACCURACY): probatio.Coerce(float),
+                probatio.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+                probatio.Optional(CONF_EVENTS_ONLY, default=False): cv.boolean,
+                probatio.Optional(
                     CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
                 ): mqtt.valid_subscribe_topic,
-                vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
+                probatio.Optional(CONF_WAYPOINT_WHITELIST): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_SECRET): vol.Any(
-                    vol.Schema({vol.Optional(cv.string): cv.string}), cv.string
+                probatio.Optional(CONF_SECRET): probatio.Any(
+                    probatio.Schema({probatio.Optional(cv.string): cv.string}),
+                    cv.string,
                 ),
-                vol.Optional(CONF_REGION_MAPPING, default={}): dict,
+                probatio.Optional(CONF_REGION_MAPPING, default={}): dict,
             }
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
 )
 
@@ -193,13 +191,13 @@ async def handle_webhook(
     response = [
         {
             "_type": "location",
-            "lat": person.attributes["latitude"],
-            "lon": person.attributes["longitude"],
+            "lat": coordinates.latitude,
+            "lon": coordinates.longitude,
             "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
             "tst": int(person.last_updated.timestamp()),
         }
         for person in hass.states.async_all("person")
-        if "latitude" in person.attributes and "longitude" in person.attributes
+        if (coordinates := get_state_coordinates(person)) is not None
     ]
 
     if message["_type"] == "encrypted" and context.secret:
@@ -296,13 +294,11 @@ class OwnTracksContext:
         device_tracker_state = hass.states.get(f"device_tracker.{dev_id}")
 
         if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get(ATTR_GPS_ACCURACY)
-            lat = device_tracker_state.attributes.get(ATTR_LATITUDE)
-            lon = device_tracker_state.attributes.get(ATTR_LONGITUDE)
-
-            if lat is not None and lon is not None:
-                kwargs["gps"] = (lat, lon)
-                kwargs["gps_accuracy"] = acc
+            if (coordinates := get_state_coordinates(device_tracker_state)) is not None:
+                kwargs["gps"] = (coordinates.latitude, coordinates.longitude)
+                kwargs["gps_accuracy"] = device_tracker_state.attributes.get(
+                    TrackerEntityStateAttribute.GPS_ACCURACY
+                )
             else:
                 kwargs["gps"] = None
                 kwargs["gps_accuracy"] = None
@@ -311,6 +307,6 @@ class OwnTracksContext:
         # kwargs location is the beacon's configured lat/lon
         kwargs.pop("battery", None)
         for beacon in self.mobile_beacons_active[dev_id]:
-            kwargs["dev_id"] = f"{BEACON_DEV_ID}_{beacon}"
+            kwargs["dev_id"] = slugify(f"{BEACON_DEV_ID}_{beacon}")
             kwargs["host_name"] = beacon
             self.async_see(**kwargs)

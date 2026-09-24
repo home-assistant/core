@@ -1,14 +1,14 @@
 """Config flow for ElevenLabs text-to-speech integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -20,7 +20,6 @@ from homeassistant.helpers.selector import (
 from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
-    CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STT_AUTO_LANGUAGE,
@@ -39,7 +38,7 @@ from .const import (
     STT_MODELS,
 )
 
-USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+USER_STEP_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +72,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -104,6 +104,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:
@@ -154,12 +155,12 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             data_schema=schema,
         )
 
-    def elevenlabs_config_option_schema(self) -> vol.Schema:
+    def elevenlabs_config_option_schema(self) -> probatio.Schema:
         """Elevenlabs options schema."""
         return self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -169,7 +170,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_VOICE,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -179,7 +180,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_STT_MODEL,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -189,13 +190,13 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_STT_AUTO_LANGUAGE,
                         default=self.config_entry.options.get(
                             CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
                         ),
                     ): bool,
-                    vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
+                    probatio.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
             self.config_entry.options,
@@ -220,36 +221,36 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             data_schema=self.elevenlabs_config_options_voice_schema(),
         )
 
-    def elevenlabs_config_options_voice_schema(self) -> vol.Schema:
+    def elevenlabs_config_options_voice_schema(self) -> probatio.Schema:
         """Elevenlabs options voice schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_STABILITY,
                     default=self.config_entry.options.get(
                         CONF_STABILITY, DEFAULT_STABILITY
                     ),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_SIMILARITY,
                     default=self.config_entry.options.get(
                         CONF_SIMILARITY, DEFAULT_SIMILARITY
                     ),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_STYLE,
                     default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_SPEAKER_BOOST,
                     default=self.config_entry.options.get(
                         CONF_USE_SPEAKER_BOOST, DEFAULT_USE_SPEAKER_BOOST

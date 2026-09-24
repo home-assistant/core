@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound, DevicePasswordProtected
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,10 +20,10 @@ from .coordinator import DevoloHomeNetworkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_IP_ADDRESS): str, probatio.Optional(CONF_PASSWORD): str}
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Optional(CONF_PASSWORD): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
@@ -40,9 +40,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     await device.async_connect(session_instance=async_client)
 
-    # Try a password protected, non-writing device API call that raises, if the password is wrong.
-    # If only the plcnet API is available, we can continue without trying a password as the plcnet
-    # API does not require a password.
+    # Try a password protected, non-writing device API
+    # call that raises, if the password is wrong.
+    # If only the plcnet API is available, we can continue
+    # without trying a password as the plcnet API does not
+    # require a password.
     if device.device:
         await device.device.async_uptime()
 
@@ -62,6 +64,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     host: str
     _reauth_entry: DevoloHomeNetworkConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,6 +92,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -115,7 +119,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         title = self.context["title_placeholders"][CONF_NAME]
         errors: dict = {}
-        data_schema: vol.Schema | None = None
+        data_schema: probatio.Schema | None = None
 
         if user_input is not None:
             data = {

@@ -14,7 +14,7 @@
   "firmwareVersion": "1.8.0",
   "zwavePlusVersion": 1,
   "name": "matrix_office",
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/usr/src/app/store/config/zdb5100.json",
     "isEmbedded": false,

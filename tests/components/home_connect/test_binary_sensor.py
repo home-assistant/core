@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.BINARY_SENSOR]
 
@@ -50,11 +50,13 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -70,7 +72,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -87,7 +91,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
@@ -131,7 +137,9 @@ async def test_connected_devices(
     assert config_entry.state is ConfigEntryState.LOADED
     client.get_status = get_status_original_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert entity_registry.async_get_entity_id(
         Platform.BINARY_SENSOR,
@@ -173,7 +181,7 @@ async def test_binary_sensors_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if binary sensor entities availability are based on the appliance connection state."""
+    """Test binary sensor availability based on appliance connection."""
     entity_ids = [
         "binary_sensor.washer_remote_control",
     ]

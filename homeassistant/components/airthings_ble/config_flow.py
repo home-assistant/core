@@ -2,7 +2,7 @@
 
 import dataclasses
 import logging
-from typing import Any
+from typing import Any, override
 
 from airthings_ble import (
     AirthingsBluetoothDeviceData,
@@ -11,7 +11,7 @@ from airthings_ble import (
 )
 from bleak import BleakError
 from habluetooth import BluetoothServiceInfoBleak
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -96,6 +96,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             raise
         return device
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -143,6 +144,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -219,9 +221,9 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(titles),
+                    probatio.Required(CONF_ADDRESS): probatio.In(titles),
                 },
             ),
         )

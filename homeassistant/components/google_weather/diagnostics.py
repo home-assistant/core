@@ -34,9 +34,11 @@ async def async_get_config_entry_diagnostics(
             "daily_forecast_data": subentry_rt.coordinator_daily_forecast.data.to_dict()
             if subentry_rt.coordinator_daily_forecast.data
             else None,
-            "hourly_forecast_data": subentry_rt.coordinator_hourly_forecast.data.to_dict()
-            if subentry_rt.coordinator_hourly_forecast.data
-            else None,
+            "hourly_forecast_data": (
+                subentry_rt.coordinator_hourly_forecast.data.to_dict()
+                if subentry_rt.coordinator_hourly_forecast.data
+                else None
+            ),
         }
 
     return async_redact_data(diag_data, TO_REDACT)

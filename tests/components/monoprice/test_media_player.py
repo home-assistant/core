@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Any
 from unittest.mock import patch
 
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,

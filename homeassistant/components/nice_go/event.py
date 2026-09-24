@@ -1,7 +1,7 @@
 """Nice G.O. event platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant
@@ -11,6 +11,7 @@ from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -37,6 +38,7 @@ class NiceGOEventEntity(NiceGOEntity, EventEntity):
     _attr_translation_key = "barrier_obstructed"
     _attr_event_types = [EVENT_BARRIER_OBSTRUCTED]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen for events."""
         await super().async_added_to_hass()

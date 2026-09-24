@@ -2,8 +2,9 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import (
     Picnic2FAError,
@@ -11,7 +12,6 @@ from python_picnic_api2.session import (
     PicnicAuthError,
 )
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -33,19 +33,19 @@ _LOGGER = logging.getLogger(__name__)
 CONF_2FA_CODE = "two_fa_code"
 CONF_2FA_CHANNEL = "two_fa_channel"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): probatio.In(
             COUNTRY_CODES
         ),
     }
 )
 
-STEP_2FA_CHANNEL_SCHEMA = vol.Schema(
+STEP_2FA_CHANNEL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_2FA_CHANNEL, default=TWO_FA_CHANNELS[0]): SelectSelector(
+        probatio.Required(CONF_2FA_CHANNEL, default=TWO_FA_CHANNELS[0]): SelectSelector(
             SelectSelectorConfig(
                 options=TWO_FA_CHANNELS,
                 mode=SelectSelectorMode.LIST,
@@ -55,9 +55,9 @@ STEP_2FA_CHANNEL_SCHEMA = vol.Schema(
     }
 )
 
-STEP_2FA_SCHEMA = vol.Schema(
+STEP_2FA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_2FA_CODE): str,
+        probatio.Required(CONF_2FA_CODE): str,
     }
 )
 
@@ -78,6 +78,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform the re-auth step upon an API authentication error."""
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -191,14 +192,16 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ACCESS_TOKEN: auth_token,
             CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
         }
-        existing_entry = await self.async_set_unique_id(user_data["user_id"])
+        existing_entry = await self.async_set_unique_id(user_data.user_id)
 
-        # Abort if we're adding a new config and the unique id is already in use, else create the entry
+        # Abort if we're adding a new config and the unique id
+        # is already in use, else create the entry
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="Picnic", data=data)
 
-        # In case of re-auth, only continue if an exiting account exists with the same unique id
+        # In case of re-auth, only continue if an exiting
+        # account exists with the same unique id
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)

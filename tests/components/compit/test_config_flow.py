@@ -57,7 +57,7 @@ async def test_async_step_user_failed_auth(
     mock_compit_api: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test user step with invalid authentication then success after error is cleared."""
+    """Test user step with invalid auth then success."""
     mock_compit_api.side_effect = [exception, True]
 
     result = await hass.config_entries.flow.async_init(
@@ -129,7 +129,7 @@ async def test_async_step_reauth_confirm_failed_auth(
     mock_compit_api: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test reauth confirm step with invalid authentication then success after error is cleared."""
+    """Test reauth confirm step with invalid auth then success."""
     mock_compit_api.side_effect = [exception, True]
 
     mock_config_entry.add_to_hass(hass)

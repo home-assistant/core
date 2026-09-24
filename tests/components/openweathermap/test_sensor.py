@@ -31,7 +31,7 @@ async def test_sensor_states(
     owm_client_mock: MagicMock,
     mode: str,
 ) -> None:
-    """Test sensor states are correctly collected from library with different modes and mocked function responses."""
+    """Test sensor states are collected from library correctly."""
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

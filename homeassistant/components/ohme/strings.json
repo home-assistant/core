@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -107,6 +105,9 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      },
+      "solar_boost": {
+        "name": "Solar boost"
       }
     },
     "time": {

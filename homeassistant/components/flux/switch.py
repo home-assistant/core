@@ -5,9 +5,9 @@ The idea was taken from https://github.com/KpaBap/hue-flux/
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -62,32 +62,32 @@ MODE_MIRED = "mired"
 MODE_RGB = "rgb"
 DEFAULT_MODE = MODE_XY
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): "flux",
-        vol.Required(CONF_LIGHTS): cv.entity_ids,
-        vol.Optional(CONF_NAME, default="Flux"): cv.string,
-        vol.Optional(CONF_START_TIME): cv.time,
-        vol.Optional(CONF_STOP_TIME): cv.time,
-        vol.Optional(CONF_START_CT, default=4000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Required(CONF_PLATFORM): "flux",
+        probatio.Required(CONF_LIGHTS): cv.entity_ids,
+        probatio.Optional(CONF_NAME, default="Flux"): cv.string,
+        probatio.Optional(CONF_START_TIME): cv.time,
+        probatio.Optional(CONF_STOP_TIME): cv.time,
+        probatio.Optional(CONF_START_CT, default=4000): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_SUNSET_CT, default=3000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Optional(CONF_SUNSET_CT, default=3000): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_STOP_CT, default=1900): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Optional(CONF_STOP_CT, default=1900): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
+        probatio.Optional(CONF_BRIGHTNESS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=255)
         ),
-        vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.Any(
+        probatio.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
+        probatio.Optional(CONF_MODE, default=DEFAULT_MODE): probatio.Any(
             MODE_XY, MODE_MIRED, MODE_RGB
         ),
-        vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-        vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
-        vol.Optional(ATTR_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_INTERVAL, default=30): cv.positive_int,
+        probatio.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        probatio.Optional(ATTR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -216,27 +216,32 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.unsub_tracker = None
 
     @property
+    @override
     def name(self):
         """Return the name of the device if any."""
         return self._name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
             await self.async_turn_on()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self.unsub_tracker:
             self.unsub_tracker()
         return await super().async_will_remove_from_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on flux."""
         if self.is_on:
@@ -253,6 +258,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off flux."""
         if self.is_on:

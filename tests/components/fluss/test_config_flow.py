@@ -16,10 +16,11 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+NEW_API_KEY = "new_api_key"
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_api_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_api_client: AsyncMock) -> None:
     """Test full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -46,10 +47,10 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_user_errors(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -83,11 +84,9 @@ async def test_step_user_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_entry(
-    hass: HomeAssistant,
-    mock_api_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_api_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test error cases for user step with recovery."""
     mock_config_entry.add_to_hass(hass)
@@ -106,3 +105,98 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the API key on the existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_duplicate(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth aborts when the new key is already used by another entry."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Fluss+ Devices",
+        data={CONF_API_KEY: NEW_API_KEY},
+    )
+    other_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_API_KEY] == "test_api_key"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (FlussApiClientAuthenticationError, "invalid_auth"),
+        (FlussApiClientCommunicationError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication error cases with recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_api_client.async_get_devices.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_api_client.async_get_devices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY

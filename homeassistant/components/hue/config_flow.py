@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -10,8 +10,8 @@ from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupn
 from aiohue.errors import AiohueException
 from aiohue.util import normalize_bridge_id
 from aiohue.v2 import HueBridgeV2
+import probatio
 import slugify as unicode_slug
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST
@@ -51,6 +51,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HueConfigEntry,
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
@@ -64,6 +65,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,8 +81,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host,
                 websession=aiohttp_client.async_get_clientsession(
-                    # NOTE: we disable SSL verification for now due to the fact that the (BSB003)
-                    # Hue bridge uses a certificate from a on-bridge root authority.
+                    # NOTE: we disable SSL verification for now
+                    # due to the fact that the (BSB003) Hue bridge
+                    # uses a certificate from a on-bridge root
+                    # authority.
                     # We need to specifically handle this case in a follow-up update.
                     self.hass,
                     verify_ssl=False,
@@ -140,9 +144,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("id"): vol.In(
+                    probatio.Required("id"): probatio.In(
                         {
                             **{bridge.id: bridge.host for bridge in bridges},
                             HUE_MANUAL_BRIDGE_ID: "Manually add a Hue Bridge",
@@ -159,7 +163,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
@@ -223,6 +227,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -259,6 +264,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -328,14 +334,15 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             # also update the bridge device
             dev_reg = dr.async_get(self.hass)
-            if bridge_device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, old_bridge_id)}
+            if bridge_device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, old_bridge_id), conf_entry.entry_id
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,
                     # overwrite identifiers with new bridge id
                     new_identifiers={(DOMAIN, bridge.id)},
-                    # overwrite mac addresses with empty set to drop the old (incorrect) addresses
+                    # overwrite mac addresses with empty set to drop
+                    # the old (incorrect) addresses
                     # this will be auto corrected once the integration is loaded
                     new_connections=set(),
                 )
@@ -355,15 +362,15 @@ class HueV1OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALLOW_UNREACHABLE,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
@@ -403,9 +410,9 @@ class HueV2OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_IGNORE_AVAILABILITY,
                         default=cur_ids,
                     ): cv.multi_select(dev_ids),

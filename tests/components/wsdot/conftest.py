@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 @pytest.fixture
 def mock_travel_time() -> Generator[AsyncMock]:
-    """WsdotTravelTimes.get_travel_time is mocked to return a TravelTime data based on test fixture payload."""
+    """Mock get_travel_time to return TravelTime from fixture."""
     with (
         patch(
             "homeassistant.components.wsdot.wsdot_api.WsdotTravelTimes", autospec=True

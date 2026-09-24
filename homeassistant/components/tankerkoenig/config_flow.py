@@ -1,7 +1,7 @@
 """Config flow for Tankerkoenig."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiotankerkoenig import (
     GasType,
@@ -10,7 +10,7 @@ from aiotankerkoenig import (
     Tankerkoenig,
     TankerkoenigInvalidKeyError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -68,12 +68,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: TankerkoenigConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -119,8 +121,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="select_station",
                 description_placeholders={"stations_count": str(len(self._stations))},
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_STATIONS): cv.multi_select(self._stations)}
+                data_schema=probatio.Schema(
+                    {probatio.Required(CONF_STATIONS): cv.multi_select(self._stations)}
                 ),
             )
 
@@ -165,15 +167,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
+                    probatio.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, "")
                     ): cv.string,
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): cv.string,
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                         default=user_input.get(
                             CONF_LOCATION,
@@ -183,7 +187,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                             },
                         ),
                     ): LocationSelector(),
-                    vol.Required(
+                    probatio.Required(
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): NumberSelector(
                         NumberSelectorConfig(
@@ -207,9 +211,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): cv.string,
                 }
@@ -273,13 +277,13 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options[CONF_SHOW_ON_MAP],
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_STATIONS, default=self.config_entry.data[CONF_STATIONS]
                     ): cv.multi_select(self._stations),
                 }

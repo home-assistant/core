@@ -1,8 +1,9 @@
 """Adds config flow for Trafikverket Camera integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pytrafikverket import (
     CameraInfoModel,
     InvalidAuthentication,
@@ -10,7 +11,6 @@ from pytrafikverket import (
     TrafikverketCamera,
     UnknownError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -84,9 +84,9 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(CONF_API_KEY): TextSelector(),
                 }
             ),
             errors=errors,
@@ -120,10 +120,10 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
-                    vol.Required(CONF_LOCATION): TextSelector(),
+                    probatio.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
             {**reconfigure_entry.data, **(user_input or {})},
@@ -135,6 +135,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -161,10 +162,10 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(),
-                    vol.Required(CONF_LOCATION): TextSelector(),
+                    probatio.Required(CONF_API_KEY): TextSelector(),
+                    probatio.Required(CONF_LOCATION): TextSelector(),
                 }
             ),
             errors=errors,
@@ -201,16 +202,20 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         camera_choices = [
             SelectOptionDict(
                 value=f"{camera_info.camera_id}",
-                label=f"{camera_info.camera_id} - {camera_info.camera_name} - {camera_info.location}",
+                label=(
+                    f"{camera_info.camera_id}"
+                    f" - {camera_info.camera_name}"
+                    f" - {camera_info.location}"
+                ),
             )
             for camera_info in self.cameras
         ]
 
         return self.async_show_form(
             step_id="multiple_cameras",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ID): SelectSelector(
+                    probatio.Required(CONF_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=camera_choices, mode=SelectSelectorMode.LIST
                         )

@@ -3,10 +3,10 @@
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -28,10 +28,10 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -75,11 +75,13 @@ class WorldTidesInfoSensor(SensorEntity):
         self.data = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr = {}
@@ -97,6 +99,7 @@ class WorldTidesInfoSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         if self.data:

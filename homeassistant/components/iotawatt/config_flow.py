@@ -1,10 +1,10 @@
 """Config flow for iotawatt integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from iotawattpy.iotawatt import Iotawatt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -49,6 +49,7 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -56,9 +57,11 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                probatio.Required(
+                    CONF_HOST, default=user_input.get(CONF_HOST, "")
+                ): str,
             }
         )
         if not user_input:
@@ -80,12 +83,12 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): str,
             }

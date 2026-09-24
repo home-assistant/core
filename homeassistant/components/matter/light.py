@@ -1,7 +1,7 @@
 """Matter light."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
@@ -38,14 +38,17 @@ from .util import (
     renormalize,
 )
 
+_CC_COLOR_MODE = clusters.ColorControl.Enums.ColorModeEnum
+
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
+    _CC_COLOR_MODE.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    _CC_COLOR_MODE.kCurrentXAndCurrentY: ColorMode.XY,
+    _CC_COLOR_MODE.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # Maximum Mireds value per the Matter spec is 65279
-# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin,
+# so this corresponds to a minimum color temperature of ~15.3K
 # Which is shown in UI as 15 Kelvin due to rounding.
 # But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
 # and causes Invoke error, so cap values over maximum when sending
@@ -79,6 +82,19 @@ TRANSITION_BLOCKLIST = (
     (5127, 4232, "ver_0.1", "v1.00.51"),
     (5245, 1412, "1.0", "1.0.21"),
 )
+
+
+def _level_range(level_control: clusters.LevelControl) -> tuple[int, int]:
+    """Return the level range of the device.
+
+    Brightness scaling divides by the width of the range, so a device that
+    reports a range without width gets the default range instead.
+    """
+    min_level = level_control.minLevel or 1
+    max_level = level_control.maxLevel or 254
+    if max_level <= min_level:
+        return (1, 254)
+    return (min_level, max_level)
 
 
 async def async_setup_entry(
@@ -174,13 +190,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(
-            renormalize(
-                brightness,
-                (0, 255),
-                (level_control.minLevel or 1, level_control.maxLevel or 254),
-            )
-        )
+        level = round(renormalize(brightness, (0, 255), _level_range(level_control)))
 
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevelWithOnOff(
@@ -236,14 +246,16 @@ class MatterLight(MatterEntity, LightEntity):
 
         return hs_color
 
-    def _get_color_temperature(self) -> int:
+    def _get_color_temperature(self) -> int | None:
         """Get color temperature from matter."""
 
         color_temp = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.ColorTemperatureMireds
         )
 
-        assert color_temp is not None
+        if color_temp is None:
+            LOGGER.debug("Got no color temperature for %s", self.entity_id)
+            return None
 
         LOGGER.debug(
             "Got color temperature %s for %s",
@@ -258,8 +270,10 @@ class MatterLight(MatterEntity, LightEntity):
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
 
-        # We should not get here if brightness is not supported.
-        assert level_control is not None
+        if level_control is None:
+            # we should not get here if brightness is not supported
+            LOGGER.debug("Got no level control cluster for %s", self.entity_id)
+            return None
 
         LOGGER.debug(
             "Got brightness %s for %s",
@@ -273,9 +287,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return round(
             renormalize(
-                level_control.currentLevel,
-                (level_control.minLevel or 1, level_control.maxLevel or 254),
-                (0, 255),
+                level_control.currentLevel, _level_range(level_control), (0, 255)
             )
         )
 
@@ -286,9 +298,15 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.ColorMode
         )
 
-        assert color_mode is not None
-
-        ha_color_mode = COLOR_MODE_MAP[color_mode]
+        if (ha_color_mode := COLOR_MODE_MAP.get(color_mode)) is None:
+            # ColorMode is nullable and a device is free to report a value
+            # outside of the enum, neither of which we can map to a color
+            LOGGER.debug(
+                "Got unexpected color mode (%s) for %s",
+                color_mode,
+                self.entity_id,
+            )
+            return ColorMode.UNKNOWN
 
         LOGGER.debug(
             "Got color mode (%s) for %s",
@@ -298,6 +316,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return ha_color_mode
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
 
@@ -328,6 +347,7 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.OnOff.Commands.On(),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.send_device_command(
@@ -335,6 +355,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         if self._attr_supported_color_modes is None:
@@ -361,24 +382,16 @@ class MatterLight(MatterEntity, LightEntity):
 
                 assert capabilities is not None
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
-                ):
+                color_caps = clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap
+                if capabilities & color_caps.kHueSaturation:
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
-                ):
+                if capabilities & color_caps.kXy:
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
-                ):
+                if capabilities & color_caps.kColorTemperature:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
                     min_mireds = self.get_matter_attribute_value(
@@ -399,7 +412,8 @@ class MatterLight(MatterEntity, LightEntity):
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
             self._check_transition_blocklist()
-            # flag support for transition as soon as we support setting brightness and/or color
+            # flag support for transition as soon as we support
+            # setting brightness and/or color
             if (
                 supported_color_modes != {ColorMode.ONOFF}
                 and not self._transitions_disabled
@@ -420,12 +434,14 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if (
-            self._supports_color_temperature
-            and (color_temperature := self._get_color_temperature()) > 0
-        ):
-            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
-                color_temperature
+        if self._supports_color_temperature:
+            # a device without a usable value has no color temperature to
+            # report, rather than the one it gave us last time
+            color_temperature = self._get_color_temperature()
+            self._attr_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(color_temperature)
+                if color_temperature
+                else None
             )
 
         if self._supports_color:
@@ -461,7 +477,14 @@ class MatterLight(MatterEntity, LightEntity):
             self._transitions_disabled = True
             LOGGER.warning(
                 "Detected a device that has been reported to have firmware issues "
-                "with light transitions. Transitions will be disabled for this light"
+                "with light transitions. Transitions will be disabled for this "
+                "light: %s %s (vendor_id: %s, product_id: %s, hw: %s, sw: %s)",
+                device_info.vendorName,
+                device_info.productName,
+                device_info.vendorID,
+                device_info.productID,
+                device_info.hardwareVersionString,
+                device_info.softwareVersionString,
             )
 
 
@@ -537,7 +560,8 @@ DISCOVERY_SCHEMAS = [
             clusters.ColorControl.Attributes.CurrentSaturation,
         ),
     ),
-    # Additional schema to match (color temperature) lights with incorrect/missing device type
+    # Additional schema to match (color temperature) lights
+    # with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=MatterLightEntityDescription(

@@ -39,7 +39,7 @@
 # name: test_all_entities[button.slide_bedroom_calibrate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'slide bedroom Calibrate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'slide bedroom Calibrate',
     }),
     'context': <ANY>,
     'entity_id': 'button.slide_bedroom_calibrate',

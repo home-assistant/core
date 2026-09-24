@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
@@ -37,9 +37,9 @@ ATTR_VAL_LOW = "valuation_range_low"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ZPID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_ZPID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -80,16 +80,19 @@ class ZestimateDataSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def unique_id(self):
         """Return the ZPID."""
         return self.params["zpid"]
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return f"{self._name} {self.address}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         try:
@@ -98,6 +101,7 @@ class ZestimateDataSensor(SensorEntity):
             return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}

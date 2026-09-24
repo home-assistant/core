@@ -3,8 +3,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -25,7 +25,6 @@
       'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -40,8 +39,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -62,7 +61,6 @@
       'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -77,8 +75,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -99,7 +97,6 @@
       'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -114,8 +111,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -136,7 +133,6 @@
       'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -151,8 +147,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -173,7 +169,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Cooking',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -188,8 +183,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -210,7 +205,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Standby',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -225,8 +219,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -247,7 +241,6 @@
       'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -262,7 +255,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'supported_color_modes': list([
+        <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
           <ColorMode.BRIGHTNESS: 'brightness'>,
         ]),
       }),
@@ -300,26 +293,28 @@
 # name: test_light_state[Dimmable Light][light.dimmable_light]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Light',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 204,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Light',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmable_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_light_state[Dimmer Switch][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -340,7 +335,6 @@
       'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -355,7 +349,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'supported_color_modes': list([
+        <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
           <ColorMode.BRIGHTNESS: 'brightness'>,
         ]),
       }),
@@ -393,13 +387,13 @@
 # name: test_light_state[Dimmer Switch][light.dimmer_switch]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Dimmer Switch',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Switch',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_switch',
@@ -413,8 +407,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -435,7 +429,6 @@
       'model_id': None,
       'name': 'Humidifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -450,8 +443,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -472,7 +465,6 @@
       'model_id': None,
       'name': 'Humidifier 6000s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -487,8 +479,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -509,7 +501,6 @@
       'model_id': None,
       'name': 'Humidifier 600S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -524,8 +515,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -546,7 +537,6 @@
       'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -561,8 +551,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -583,7 +573,6 @@
       'model_id': None,
       'name': 'SmartTowerFan',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -598,8 +587,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -620,7 +609,6 @@
       'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -635,9 +623,9 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'max_color_temp_kelvin': 6500,
-        'min_color_temp_kelvin': 2700,
-        'supported_color_modes': list([
+        <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+        <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
+        <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
           <ColorMode.COLOR_TEMP: 'color_temp'>,
         ]),
       }),
@@ -675,26 +663,26 @@
 # name: test_light_state[Temperature Light][light.temperature_light]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 3816,
-      'friendly_name': 'Temperature Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3816,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         26.914,
         38.308,
       ),
-      'max_color_temp_kelvin': 6500,
-      'min_color_temp_kelvin': 2700,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         201,
         157,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.432,
         0.368,
       ),
@@ -711,8 +699,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -733,7 +721,6 @@
       'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -741,6 +728,42 @@
   ])
 # ---
 # name: test_light_state[Wall Switch][entities]
+  list([
+  ])
+# ---
+# name: test_light_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_light_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

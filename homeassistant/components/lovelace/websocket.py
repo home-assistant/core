@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -43,7 +43,8 @@ def _handle_errors[_R](
     ) -> None:
         url_path = msg.get(CONF_URL_PATH)
 
-        # When url_path is None, prefer "lovelace" dashboard if it exists (for YAML mode)
+        # When url_path is None, prefer "lovelace" dashboard
+        # if it exists (for YAML mode)
         # Otherwise fall back to dashboards[None] (storage mode default)
         if url_path is None:
             config = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[
@@ -129,8 +130,8 @@ async def websocket_lovelace_info(
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config",
-        vol.Optional("force", default=False): bool,
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        probatio.Optional("force", default=False): bool,
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response
@@ -149,8 +150,8 @@ async def websocket_lovelace_config(
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/save",
-        "config": vol.Any(str, dict),
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        "config": probatio.Any(str, dict),
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response
@@ -169,7 +170,7 @@ async def websocket_lovelace_save_config(
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/delete",
-        vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
+        probatio.Optional(CONF_URL_PATH): probatio.Any(None, cv.string),
     }
 )
 @websocket_api.async_response

@@ -2,9 +2,10 @@
 
 from http import HTTPStatus
 import logging
+from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -20,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME, default="admin"): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME, default="admin"): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -52,11 +53,13 @@ class XiaomiDeviceScanner(DeviceScanner):
         self.mac2name = None
         self.success_init = self.token is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return self.last_results
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
@@ -165,11 +168,10 @@ def _get_token(host, username, password):
             return result["token"]
         except KeyError:
             error_message = (
-                "Xiaomi token cannot be refreshed, response from "
-                "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
+                "Xiaomi token cannot be refreshed, response from url: [%s] was: [%s]"
             )
-            _LOGGER.exception(error_message, url, data, result)
+            _LOGGER.exception(error_message, url, result)
             return None
 
-    _LOGGER.error("Invalid response: [%s] at url: [%s] with data [%s]", res, url, data)
+    _LOGGER.error("Invalid response: [%s] at url: [%s]", res, url)
     return None

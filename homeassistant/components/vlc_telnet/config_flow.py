@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
@@ -19,23 +19,23 @@ from .const import DEFAULT_PORT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     """Return user form schema."""
     user_input = user_input or {}
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Optional(
                 CONF_HOST, default=user_input.get(CONF_HOST, "localhost")
             ): str,
-            vol.Optional(
+            probatio.Optional(
                 CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
             ): int,
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
 
 async def vlc_connect(vlc: Client) -> None:
@@ -70,6 +70,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     hassio_discovery: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,6 +139,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

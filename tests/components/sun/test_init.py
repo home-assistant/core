@@ -10,8 +10,9 @@ import pytest
 
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -245,3 +246,31 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(entity.ENTITY_ID) is None
+
+
+async def test_cleanup_deprecated_solar_rising(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the deprecated solar_rising entity is removed on setup."""
+    config_entry = MockConfigEntry(domain=sun.DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        sun.DOMAIN,
+        unique_id=f"{config_entry.entry_id}-solar_rising",
+        config_entry=config_entry,
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, sun.DOMAIN, f"{config_entry.entry_id}-solar_rising"
+    )
+
+    now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, sun.DOMAIN, f"{config_entry.entry_id}-solar_rising"
+    )

@@ -1,7 +1,7 @@
 """Config flow for MusicAssistant integration."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlencode
 
 from music_assistant_client import MusicAssistantClient
@@ -13,7 +13,7 @@ from music_assistant_client.exceptions import (
 )
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -31,20 +31,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
-    DOMAIN,
-    HASSIO_DISCOVERY_SCHEMA_VERSION,
-    LOGGER,
-)
+from .const import AUTH_SCHEMA_VERSION, DOMAIN, HASSIO_DISCOVERY_SCHEMA_VERSION, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
 
 
-STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
-STEP_AUTH_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
+STEP_AUTH_TOKEN_SCHEMA = probatio.Schema({probatio.Required(CONF_TOKEN): str})
 
 
 def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage:
@@ -91,6 +85,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -137,6 +132,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -145,9 +141,11 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Music Assistant app.
         """
         # Build URL from app discovery info
-        # The app exposes the API on port 8095, but also hosts an internal-only
-        # webserver (default at port 8094) for the Home Assistant integration to connect to.
-        # The info where the internal API is exposed is passed via discovery_info
+        # The app exposes the API on port 8095, but also
+        # hosts an internal-only webserver (default at port
+        # 8094) for the HA integration to connect to.
+        # The info where the internal API is exposed is
+        # passed via discovery_info
         host = discovery_info.config["host"]
         port = discovery_info.config["port"]
         self.url = f"http://{host}:{port}"
@@ -205,6 +203,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -224,6 +223,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.url = server_info.base_url
         self.server_info = server_info
+
+        if TYPE_CHECKING:
+            assert self.url is not None
 
         await self.async_set_unique_id(server_info.server_id)
         self._abort_if_unique_id_configured(updates={CONF_URL: self.url})
@@ -288,7 +290,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         state = _encode_jwt(
             self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
         )
-        # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+        # Music Assistant server will redirect to:
+        # {redirect_uri}?state={state}&code={token}
         params = urlencode(
             {
                 "return_url": f"{redirect_uri}?state={state}",
@@ -381,7 +384,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_manual",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
             description_placeholders={"url": self.url},
             errors=errors,
         )

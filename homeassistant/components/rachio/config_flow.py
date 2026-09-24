@@ -2,11 +2,11 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -33,7 +33,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str}, extra=vol.ALLOW_EXTRA)
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_API_KEY): str}, extra=probatio.ALLOW_EXTRA
+)
 
 
 async def validate_input(hass: HomeAssistant, data):
@@ -69,6 +71,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -97,6 +100,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -108,6 +112,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -125,9 +130,9 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_MANUAL_RUN_MINS,
                     default=self.config_entry.options.get(
                         CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS

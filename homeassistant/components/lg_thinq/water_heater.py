@@ -1,7 +1,7 @@
 """Support for waterheater entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -40,7 +40,6 @@ DEVICE_OP_MODE_TO_HA = {
     "auto": STATE_ECO,
     "heat_pump": STATE_HEAT_PUMP,
     "turbo": STATE_PERFORMANCE,
-    "vacation": STATE_OFF,
 }
 HA_STATE_TO_DEVICE_OP_MODE = {v: k for k, v in DEVICE_OP_MODE_TO_HA.items()}
 
@@ -96,9 +95,8 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             self._attr_operation_list = [
                 DEVICE_OP_MODE_TO_HA.get(mode, mode) for mode in modes
             ]
-        else:
-            self._attr_operation_list = [STATE_HEAT_PUMP]
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -135,6 +133,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             self.data.is_on,
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         _LOGGER.debug(
@@ -157,6 +156,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
                 )
             )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = HA_STATE_TO_DEVICE_OP_MODE.get(operation_mode, operation_mode)
@@ -183,7 +183,10 @@ class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
         """Initialize a water_heater entity."""
         super().__init__(coordinator, entity_description, property_id)
         self._attr_supported_features |= WaterHeaterEntityFeature.ON_OFF
+        # For SYSTEM_BOILER, we only support heat pump mode and off mode.
+        self._attr_operation_list = [STATE_HEAT_PUMP, STATE_OFF]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         _LOGGER.debug(
@@ -191,9 +194,24 @@ class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
         )
         await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         _LOGGER.debug(
             "[%s:%s] async_turn_off", self.coordinator.device_name, self.property_id
         )
         await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))
+
+    @override
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new operation mode."""
+        _LOGGER.debug(
+            "[%s:%s] async_set_operation_mode: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            operation_mode,
+        )
+        if operation_mode == STATE_OFF:
+            await self.async_turn_off()
+        else:
+            await self.async_turn_on()

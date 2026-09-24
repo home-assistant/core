@@ -1,6 +1,7 @@
 """Entity representing a Sonos battery level."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
@@ -104,16 +105,19 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-battery"
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.speaker.battery_info.get("Level")
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available and self.speaker.power_source is not None
@@ -137,11 +141,13 @@ class SonosPowerSourceEntity(SonosEntity, SensorEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-power_source"
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if not (power_source := self.speaker.power_source):
@@ -156,6 +162,7 @@ class SonosPowerSourceEntity(SonosEntity, SensorEntity):
         return value
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this entity is available."""
         return self.speaker.available and self.speaker.power_source is not None
@@ -176,6 +183,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
         self._attr_unique_id = f"{self.soco.uid}-audio-format"
         self._attr_native_value = audio_format
 
+    @override
     def poll_state(self) -> None:
         """Poll the state if TV source is active and state has settled."""
         if self.speaker.media.source_name != SOURCE_TV and self.state == "No input":
@@ -187,6 +195,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
         """Poll the device for the current state."""
         self._attr_native_value = self.soco.soundbar_audio_input_format
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Provide a stub for required ABC method."""
 
@@ -195,6 +204,7 @@ class SonosFavoritesEntity(SensorEntity):
     """Representation of a Sonos favorites info entity."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
     _attr_name = "Sonos favorites"
     _attr_translation_key = "favorites"
     _attr_native_unit_of_measurement = "items"
@@ -205,6 +215,7 @@ class SonosFavoritesEntity(SensorEntity):
         self.favorites = favorites
         self._attr_unique_id = f"{favorites.household_id}-favorites"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await self._async_update_state()

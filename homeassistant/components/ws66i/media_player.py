@@ -1,5 +1,7 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
 
+from typing import override
+
 from pyws66i import WS66i, ZoneStatus
 
 from homeassistant.components.media_player import (
@@ -83,6 +85,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._set_attrs_from_status()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # This will be called for each of the entities after the coordinator
@@ -109,6 +112,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._set_attrs_from_status()
         self.async_write_ha_state()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
         idx = self._ws66i_data.sources.name_id[source]
@@ -118,6 +122,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._status.source = idx
         self._async_update_attrs_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.hass.async_add_executor_job(
@@ -126,6 +131,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._status.power = True
         self._async_update_attrs_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.hass.async_add_executor_job(
@@ -134,6 +140,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._status.power = False
         self._async_update_attrs_write_ha_state()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self.hass.async_add_executor_job(
@@ -142,6 +149,7 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._status.mute = bool(mute)
         self._async_update_attrs_write_ha_state()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self._set_volume, int(volume * MAX_VOL))

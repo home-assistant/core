@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from aiohttp import web
@@ -132,6 +132,7 @@ class AmcrestCam(Camera):
         finally:
             self._snapshot_task = None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -156,6 +157,7 @@ class AmcrestCam(Camera):
         except CannotSnapshot:
             return None
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -204,11 +206,13 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this camera."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
@@ -223,6 +227,7 @@ class AmcrestCam(Camera):
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
@@ -230,30 +235,36 @@ class AmcrestCam(Camera):
     # Camera property overrides
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._is_recording
 
     @property
+    @override
     def brand(self) -> str | None:
         """Return the camera brand."""
         return self._brand
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     @property
+    @override
     def model(self) -> str | None:
         """Return the camera model."""
         return self._model
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return self._rtsp_url
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if on."""
         return self.is_streaming
@@ -265,6 +276,7 @@ class AmcrestCam(Camera):
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals."""
         self._unsub_dispatcher.append(
@@ -275,6 +287,7 @@ class AmcrestCam(Camera):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect from signals."""
         for unsub_dispatcher in self._unsub_dispatcher:
@@ -330,18 +343,22 @@ class AmcrestCam(Camera):
 
     # Other Camera method overrides
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self._async_enable_video(False)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         await self._async_enable_video(True)
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self._async_enable_motion_detection(True)
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self._async_enable_motion_detection(False)
@@ -461,7 +478,8 @@ class AmcrestCam(Camera):
 
     async def _async_set_recording(self, enable: bool) -> None:
         rec_mode = {"Automatic": 0, "Manual": 1}
-        # The property has a str type, but setter has int type, which causes mypy confusion
+        # The property has a str type, but setter has int type,
+        # which causes mypy confusion
         await self._api.async_set_record_mode(
             rec_mode["Manual" if enable else "Automatic"]
         )
@@ -479,7 +497,8 @@ class AmcrestCam(Camera):
         return await self._api.async_is_motion_detector_on()
 
     async def _async_set_motion_detection(self, enable: bool) -> None:
-        # The property has a str type, but setter has bool type, which causes mypy confusion
+        # The property has a str type, but setter has bool type,
+        # which causes mypy confusion
         await self._api.async_set_motion_detection(enable)
 
     async def _async_enable_motion_detection(self, enable: bool) -> None:

@@ -2,19 +2,18 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -80,6 +79,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
         self._com_ports_list: list[str] | None = None
         self._default_com_port: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -126,13 +126,13 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If no user input, must be first pass through the config.  Show  initial form.
         config_options = {
-            vol.Required(CONF_PORT, default=self._default_com_port): vol.In(
+            probatio.Required(CONF_PORT, default=self._default_com_port): probatio.In(
                 self._com_ports_list
             ),
-            vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
+            probatio.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): probatio.In(
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
             ),
         }
-        schema = vol.Schema(config_options)
+        schema = probatio.Schema(config_options)
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

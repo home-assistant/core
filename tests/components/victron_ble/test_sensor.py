@@ -32,6 +32,10 @@ from .fixtures import (
     VICTRON_DC_DC_CONVERTER_UNKNOWN_OFF_REASON_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_TOKEN,
+    VICTRON_INVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_TOKEN,
+    VICTRON_ORION_XS_SERVICE_INFO,
+    VICTRON_ORION_XS_TOKEN,
     VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
     VICTRON_SMART_BATTERY_PROTECT_TOKEN,
     VICTRON_SMART_LITHIUM_SERVICE_INFO,
@@ -56,13 +60,25 @@ from tests.components.bluetooth import (
 # These are real encrypted payloads using VICTRON_SOLAR_CHARGER_TOKEN.
 SOLAR_CHARGER_ERROR_PAYLOADS = {
     # ChargerError.NO_ERROR -> state "no_error"
-    "no_error": "100242a0016207adceb37b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "no_error": (
+        "100242a0016207adceb37b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.INTERNAL_SUPPLY_A -> mapped to state "internal_supply"
-    "internal_supply": "100242a0016207adce787b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "internal_supply": (
+        "100242a0016207adce787b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.VOLTAGE_HIGH -> state "voltage_high"
-    "voltage_high": "100242a0016207adceb17b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "voltage_high": (
+        "100242a0016207adceb17b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.NETWORK_A -> mapped to state "network"
-    "network": "100242a0016207adcef77b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "network": (
+        "100242a0016207adcef77b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
 }
 
 
@@ -98,6 +114,8 @@ def test_sensor_descriptions_are_json_serializable() -> None:
         (VICTRON_BATTERY_SENSE_SERVICE_INFO, VICTRON_BATTERY_SENSE_TOKEN),
         (VICTRON_DC_DC_CONVERTER_SERVICE_INFO, VICTRON_DC_DC_CONVERTER_TOKEN),
         (VICTRON_DC_ENERGY_METER_SERVICE_INFO, VICTRON_DC_ENERGY_METER_TOKEN),
+        (VICTRON_INVERTER_SERVICE_INFO, VICTRON_INVERTER_TOKEN),
+        (VICTRON_ORION_XS_SERVICE_INFO, VICTRON_ORION_XS_TOKEN),
         (
             VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
             VICTRON_SMART_BATTERY_PROTECT_TOKEN,
@@ -112,6 +130,8 @@ def test_sensor_descriptions_are_json_serializable() -> None:
         "battery_sense",
         "dc_dc_converter",
         "dc_energy_meter",
+        "inverter",
+        "orion_xs",
         "smart_battery_protect",
         "smart_lithium",
         "solar_charger",

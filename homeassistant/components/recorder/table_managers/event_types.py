@@ -56,7 +56,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        return self.get_many((event_type,), session)[event_type]
+        return self.get_many((event_type,), session, from_recorder)[event_type]
 
     def get_many(
         self,
@@ -121,7 +121,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         self._pending[event_type] = db_event_type
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the event_type_ids of the new EventTypes into the LRU.
+        """Call after commit to load new EventTypes into the LRU.
 
         This call is not thread-safe and must be called from the
         recorder thread.

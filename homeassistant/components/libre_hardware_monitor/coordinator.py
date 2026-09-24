@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
@@ -15,11 +16,11 @@ from librehardwaremonitor_api.model import (
     LibreHardwareMonitorData,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -66,8 +67,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             for device in device_entries
             if device.identifiers and device.name
         }
-        self._is_deprecated_version: bool | None = None
 
+    @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()
@@ -81,11 +82,14 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 
-        # Check whether user has upgraded LHM from a deprecated version while the integration is running
-        if self._is_deprecated_version and not lhm_data.is_deprecated_version:
-            # Clear deprecation issue
-            ir.async_delete_issue(self.hass, DOMAIN, f"deprecated_api_{self._entry_id}")
-        self._is_deprecated_version = lhm_data.is_deprecated_version
+        if lhm_data.is_deprecated_version:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                # if user downgrades while HA is running, reload integration to surface ConfigEntryError
+                self.hass.config_entries.async_schedule_reload(self._entry_id)
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="deprecated_version",
+            )
 
         await self._async_handle_changes_in_devices(
             dict(lhm_data.main_device_ids_and_names)
@@ -93,6 +97,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         return lhm_data
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -100,7 +105,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         scheduled: bool = False,
         raise_on_entry_error: bool = False,
     ) -> None:
-        # we don't expect the computer to be online 24/7 so we don't want to log a connection loss as an error
+        # we don't expect the computer to be online 24/7 so
+        # we don't want to log a connection loss as an error
         await super()._async_refresh(
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
@@ -108,7 +114,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
     async def _async_handle_changes_in_devices(
         self, detected_devices: dict[DeviceId, DeviceName]
     ) -> None:
-        """Handle device changes by deleting devices from / adding devices to Home Assistant."""
+        """Handle device changes in the device registry."""
         previous_device_ids = set(self._previous_devices.keys())
         detected_device_ids = set(detected_devices.keys())
 
@@ -125,15 +131,12 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             )
             device_registry = dr.async_get(self.hass)
             for device_id in orphaned_devices:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{self._entry_id}_{device_id}")}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self._entry_id}_{device_id}"), self._entry_id
                 ):
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]
                     )
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self._entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         self._previous_devices = detected_devices

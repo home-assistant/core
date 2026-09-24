@@ -1,10 +1,10 @@
 """Config flow for the Redgtech integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Flow for Redgtech integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -52,10 +53,10 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_EMAIL): str,
-                        vol.Required(CONF_PASSWORD): str,
+                        probatio.Required(CONF_EMAIL): str,
+                        probatio.Required(CONF_PASSWORD): str,
                     }
                 ),
                 user_input,

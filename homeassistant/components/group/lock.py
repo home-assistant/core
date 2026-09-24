@@ -1,9 +1,9 @@
 """Platform allowing several locks to be grouped into one lock."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -39,9 +39,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(LOCK_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(LOCK_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -121,6 +121,7 @@ class LockGroup(GroupEntity, LockEntity):
         self._attr_unique_id = unique_id
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the lock group state."""
         states = [
@@ -142,7 +143,8 @@ class LockGroup(GroupEntity, LockEntity):
             self._attr_is_unlocking = None
             self._attr_is_locked = None
         else:
-            # Set attributes based on member states and let the lock entity sort out the correct state
+            # Set attributes based on member states and let the
+            # lock entity sort out the correct state
             self._attr_is_jammed = LockState.JAMMED in states
             self._attr_is_locking = LockState.LOCKING in states
             self._attr_is_opening = LockState.OPENING in states

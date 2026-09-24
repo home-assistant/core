@@ -1,5 +1,7 @@
 """Demo notification entity."""
 
+from typing import override
+
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     NotifyEntity,
@@ -41,6 +43,7 @@ class DemoNotifyEntity(NotifyEntity):
             name=device_name,
         )
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a user."""
         event_notification = {"message": message}

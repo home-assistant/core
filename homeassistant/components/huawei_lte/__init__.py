@@ -17,8 +17,8 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
+import probatio
 from requests.exceptions import Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,7 +89,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+SERVICE_SCHEMA = probatio.Schema({probatio.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -264,7 +264,7 @@ class Router:
             ResponseErrorNotSupportedException,
         ):
             pass  # Ok, normal, nothing to do
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.warning("Logout error", exc_info=True)
 
     def cleanup(self, *_: Any) -> None:
@@ -417,7 +417,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     def _update_router(*_: Any) -> None:
         """Update router data.
 
-        Separate passthrough function because lambdas don't work with track_time_interval.
+        Separate passthrough function because lambdas don't work
+        with track_time_interval.
         """
         router.update()
 

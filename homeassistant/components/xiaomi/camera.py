@@ -2,9 +2,10 @@
 
 from ftplib import FTP, error_perm
 import logging
+from typing import override
 
 from haffmpeg.camera import CameraMjpeg
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -43,14 +44,14 @@ MODEL_XIAOFANG = "xiaofang"
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.template,
-        vol.Required(CONF_MODEL): vol.Any(MODEL_YI, MODEL_XIAOFANG),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.template,
+        probatio.Required(CONF_MODEL): probatio.Any(MODEL_YI, MODEL_XIAOFANG),
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
     }
 )
 
@@ -85,16 +86,19 @@ class XiaomiCamera(Camera):
         self.passwd = config[CONF_PASSWORD]
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name
 
     @property
+    @override
     def brand(self):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
     @property
+    @override
     def model(self):
         """Return the camera model."""
         return self._model
@@ -148,6 +152,7 @@ class XiaomiCamera(Camera):
 
         return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -155,6 +160,7 @@ class XiaomiCamera(Camera):
 
         try:
             host = self.host.async_render(parse_result=False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TemplateError as exc:
             _LOGGER.error("Error parsing template %s: %s", self.host, exc)
             return self._last_image
@@ -172,6 +178,7 @@ class XiaomiCamera(Camera):
 
         return self._last_image
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
 

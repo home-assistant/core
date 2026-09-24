@@ -1,9 +1,9 @@
 """Config flow to configure the Venstar integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from venstarcolortouch import VenstarColorTouch
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import DOMAIN, LOGGER, VENSTAR_TIMEOUT
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
@@ -51,6 +51,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -65,20 +66,20 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PIN): str,
-                    vol.Optional(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PIN): str,
+                    probatio.Optional(CONF_SSL, default=False): bool,
                 }
             ),
             errors=errors,

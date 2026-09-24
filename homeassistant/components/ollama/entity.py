@@ -6,11 +6,11 @@ import logging
 from typing import Any
 
 import ollama
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -20,13 +20,13 @@ from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
+    KEEP_ALIVE_FOREVER,
 )
 from .models import MessageHistory, MessageRole
 
@@ -42,7 +42,11 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": convert(tool.parameters, custom_serializer=custom_serializer),
+        "parameters": probatio.to_openapi(
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
+        ),
     }
     if tool.description:
         tool_spec["description"] = tool.description
@@ -92,7 +96,12 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json_dumps(chat_content.tool_result),
+            content=json_dumps(
+                {
+                    "data": chat_content.result.data,
+                    "error": chat_content.result.error,
+                }
+            ),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
@@ -141,9 +150,11 @@ async def _transform_stream(
 
     response: message=Message(role="assistant", content="Paris")
     response: message=Message(role="assistant", content=".")
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
     response: message=Message(role="assistant", tool_calls=[...])
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
 
     This generator conforms to the chatlog delta stream expectations in that it
     yields deltas, then the role only once the response is done.
@@ -199,7 +210,7 @@ class OllamaBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
@@ -222,13 +233,14 @@ class OllamaBaseLLMEntity(Entity):
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = convert(
+            output_format = probatio.to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer
                     if chat_log.llm_api
                     else llm.selector_serializer
                 ),
+                openapi_version="3.1.0",
             )
 
         # Get response
@@ -241,8 +253,21 @@ class OllamaBaseLLMEntity(Entity):
                     messages=list(message_history.messages),
                     tools=tools,
                     stream=True,
-                    # keep_alive requires specifying unit. In this case, seconds
-                    keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    # keep_alive: -1 is a special sentinel meaning "keep loaded
+                    # forever" and must be passed as the integer -1, not as a
+                    # duration string ("-1s" would be treated as an invalid
+                    # negative duration by the Ollama server).  All other values
+                    # are expressed as a duration string with a seconds suffix.
+                    keep_alive=(
+                        keep_alive_seconds
+                        if (
+                            keep_alive_seconds := int(
+                                settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                            )
+                        )
+                        == KEEP_ALIVE_FOREVER
+                        else f"{keep_alive_seconds}s"
+                    ),
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                     think=settings.get(CONF_THINK),
                     format=output_format,

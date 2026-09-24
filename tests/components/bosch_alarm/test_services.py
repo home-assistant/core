@@ -5,8 +5,8 @@ from collections.abc import AsyncGenerator
 import datetime as dt
 from unittest.mock import AsyncMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.bosch_alarm.const import (
     ATTR_DATETIME,
@@ -57,7 +57,7 @@ async def test_set_date_time_service_fails_bad_entity(
     area: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the service calls fail if the service call is done for an incorrect entity."""
+    """Test that the service calls fail if done for an incorrect entity."""
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -79,11 +79,11 @@ async def test_set_date_time_service_fails_bad_params(
     area: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the service calls fail if the service call is done with incorrect params."""
+    """Test that the service calls fail if done with incorrect params."""
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(
-        vol.MultipleInvalid,
-        match=r"Invalid datetime specified:  for dictionary value @ data\['datetime'\]",
+        probatio.MultipleInvalid,
+        match=r"Invalid datetime specified:  at 'datetime'",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -105,8 +105,8 @@ async def test_set_date_time_service_fails_bad_year_before(
     """Test that the service calls fail if the panel fails the service call."""
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(
-        vol.MultipleInvalid,
-        match=r"datetime must be before 2038 for dictionary value @ data\['datetime'\]",
+        probatio.MultipleInvalid,
+        match=r"datetime must be before 2038 at 'datetime'",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -129,8 +129,8 @@ async def test_set_date_time_service_fails_bad_year_after(
     await setup_integration(hass, mock_config_entry)
     mock_panel.set_panel_date.side_effect = ValueError()
     with pytest.raises(
-        vol.MultipleInvalid,
-        match=r"datetime must be after 2009 for dictionary value @ data\['datetime'\]",
+        probatio.MultipleInvalid,
+        match=r"datetime must be after 2009 at 'datetime'",
     ):
         await hass.services.async_call(
             DOMAIN,

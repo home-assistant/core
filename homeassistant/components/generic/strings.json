@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "already_exists": "A camera with these URL settings already exists.",
       "invalid_still_image": "URL did not return a valid still image",
@@ -40,8 +37,8 @@
               "rtsp_transport": "RTSP transport protocol",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
             },
-            "description": "Advanced settings are only needed for special cases. Leave them unchanged unless you know what you are doing.",
-            "name": "Advanced settings"
+            "description": "These options are only needed for special cases.",
+            "name": "More options"
           }
         }
       },

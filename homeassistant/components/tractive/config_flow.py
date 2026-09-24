@@ -3,11 +3,11 @@
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import aiotractive
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -18,8 +18,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 
@@ -52,6 +52,7 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

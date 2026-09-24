@@ -1,17 +1,22 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .router import get_api, get_hosts_list_if_supported
+from .router import (
+    async_forget_registration,
+    get_api,
+    get_hosts_list_if_supported,
+    is_invalid_token_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -32,10 +38,10 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT): int,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
                     }
                 ),
                 errors={},
@@ -45,7 +51,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
-        # pylint: disable-next=hass-unique-id-ip-based
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()
 
@@ -84,6 +90,12 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         except AuthorizationError as error:
             _LOGGER.error(error)
             errors["base"] = "register_failed"
+            if is_invalid_token_error(error):
+                # The stored application token was rejected by the
+                # Freebox. Clear it so resubmitting this form performs a
+                # fresh pairing instead of retrying with the same
+                # rejected token forever.
+                await async_forget_registration(self.hass, self._data[CONF_HOST])
 
         except HttpRequestError:
             _LOGGER.error(
@@ -100,6 +112,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="link", errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

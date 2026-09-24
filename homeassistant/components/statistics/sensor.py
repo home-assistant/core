@@ -8,9 +8,9 @@ import logging
 import math
 import statistics
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
@@ -24,14 +24,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -45,6 +44,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -525,13 +525,13 @@ ICON = "mdi:calculator"
 
 
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
+    """Validate characteristic is valid for source sensor type."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
     ):
-        raise vol.ValueInvalid(
+        raise probatio.ValueInvalid(
             f"The configured characteristic '{characteristic}' is not supported "
             "for the configured source sensor"
         )
@@ -545,7 +545,7 @@ def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
         config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None
         and config.get(CONF_MAX_AGE) is None
     ):
-        raise vol.RequiredFieldInvalid(
+        raise probatio.RequiredFieldInvalid(
             "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
         )
     return config
@@ -555,30 +555,33 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that if keep_last_sample is set, max_age must also be set."""
 
     if config.get(CONF_KEEP_LAST_SAMPLE) is True and config.get(CONF_MAX_AGE) is None:
-        raise vol.RequiredFieldInvalid(
-            "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True"
+        raise probatio.RequiredFieldInvalid(
+            "The sensor configuration must provide 'max_age'"
+            " if 'keep_last_sample' is True"
         )
     return config
 
 
 _PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_STATE_CHARACTERISTIC): cv.string,
-        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_STATE_CHARACTERISTIC): cv.string,
+        probatio.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
-        vol.Optional(CONF_MAX_AGE): cv.time_period,
-        vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=99)
+        probatio.Optional(CONF_MAX_AGE): cv.time_period,
+        probatio.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
+        probatio.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): probatio.Coerce(
+            int
+        ),
+        probatio.Optional(CONF_PERCENTILE, default=50): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=99)
         ),
     }
 )
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     valid_state_characteristic_configuration,
     valid_boundary_configuration,
@@ -599,7 +602,6 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
-                hass=hass,
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
@@ -622,7 +624,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Statistics sensor entry."""
     sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
-    if sampling_size:
+    if sampling_size is not None:
         sampling_size = int(sampling_size)
 
     max_age = None
@@ -632,7 +634,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             StatisticsSensor(
-                hass=hass,
                 source_entity_id=entry.options[CONF_ENTITY_ID],
                 name=entry.options[CONF_NAME],
                 unique_id=entry.entry_id,
@@ -642,6 +643,7 @@ async def async_setup_entry(
                 samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
                 precision=int(entry.options[CONF_PRECISION]),
                 percentile=int(entry.options[CONF_PERCENTILE]),
+                device=async_entity_id_to_device(hass, entry.options[CONF_ENTITY_ID]),
             )
         ],
         True,
@@ -656,7 +658,6 @@ class StatisticsSensor(SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         source_entity_id: str,
         name: str,
@@ -667,16 +668,13 @@ class StatisticsSensor(SensorEntity):
         samples_keep_last: bool,
         precision: int,
         percentile: int,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_name: str = name
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
-        if source_entity_id:  # Guard against empty source_entity_id in preview mode
-            self.device_entry = async_entity_id_to_device(
-                hass,
-                source_entity_id,
-            )
+        self.device_entry = device
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
@@ -782,6 +780,7 @@ class StatisticsSensor(SensorEntity):
             )
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self._async_stats_sensor_startup()
@@ -839,7 +838,9 @@ class StatisticsSensor(SensorEntity):
         state characteristics.
         """
 
-        base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        base_unit: str | None = new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         unit: str | None = None
         stat_type = self._state_characteristic
         if self.is_binary and stat_type in STATS_BINARY_PERCENTAGE:
@@ -878,7 +879,7 @@ class StatisticsSensor(SensorEntity):
         if stat_type in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if stat_type in STATS_NUMERIC_RETAIN_UNIT:
-            device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class = new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class is None:
                 return None
             if (
@@ -932,7 +933,8 @@ class StatisticsSensor(SensorEntity):
 
         while self.ages and (now_timestamp - self.ages[0]) > max_age:
             if self.samples_keep_last and len(self.ages) == 1:
-                # Under normal circumstance this will not be executed, as a purge will not
+                # Under normal circumstance this will not be
+                # executed, as a purge will not
                 # be scheduled for the last value if samples_keep_last is enabled.
                 # If this happens to be called outside normal scheduling logic or a
                 # source sensor update, this ensures the last value is preserved.
@@ -1096,7 +1098,8 @@ class StatisticsSensor(SensorEntity):
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
 
-        One of the _stat_*() functions is represented by self._state_characteristic_fn().
+        One of the _stat_*() functions is represented by
+        self._state_characteristic_fn().
         """
 
         value = self._state_characteristic_fn(self.states, self.ages, self._percentile)

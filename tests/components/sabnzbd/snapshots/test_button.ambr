@@ -39,7 +39,7 @@
 # name: test_button_setup[button.sabnzbd_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sabnzbd Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.sabnzbd_pause',
@@ -89,7 +89,7 @@
 # name: test_button_setup[button.sabnzbd_resume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sabnzbd Resume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Resume',
     }),
     'context': <ANY>,
     'entity_id': 'button.sabnzbd_resume',

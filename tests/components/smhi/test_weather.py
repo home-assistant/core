@@ -222,7 +222,7 @@ async def test_properties_unknown_symbol(
 
     mock_client.async_get_daily_forecast.return_value = testdata
 
-    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
+    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -421,7 +421,10 @@ async def test_forecast_services(
     assert msg["type"] == "event"
     forecast1 = msg["event"]["forecast"]
 
-    assert len(forecast1) == 59
+    assert len(forecast1) == 60
+    # The hourly forecast covers the current hour, the first entry the API
+    # returned, rather than starting an hour later
+    assert forecast1[0]["datetime"] == "2026-04-02T11:00:00+00:00"
     assert forecast1[0] == snapshot
     assert forecast1[6] == snapshot
 

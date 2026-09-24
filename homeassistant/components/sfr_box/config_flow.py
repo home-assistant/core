@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -22,15 +22,17 @@ from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
     }
 )
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(
+            CONF_USERNAME, default=DEFAULT_USERNAME
+        ): selector.TextSelector(),
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -47,6 +49,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize SFR Box flow."""
         self._config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

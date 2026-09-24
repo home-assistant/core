@@ -5,7 +5,7 @@ import datetime
 from letpot.models import (
     AuthenticationInfo,
     LetPotDeviceErrors,
-    LetPotDeviceStatus,
+    LetPotGardenStatus,
     LightMode,
     TemperatureUnit,
 )
@@ -31,7 +31,7 @@ AUTHENTICATION = AuthenticationInfo(
     email="email@example.com",
 )
 
-MAX_STATUS = LetPotDeviceStatus(
+MAX_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
     light_brightness=750,
     light_mode=LightMode.VEGETABLE,
@@ -51,7 +51,7 @@ MAX_STATUS = LetPotDeviceStatus(
     water_level=100,
 )
 
-SE_STATUS = LetPotDeviceStatus(
+SE_STATUS = LetPotGardenStatus(
     errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
     light_brightness=500,
     light_mode=LightMode.VEGETABLE,

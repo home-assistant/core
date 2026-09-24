@@ -3,10 +3,10 @@
 from collections.abc import Mapping
 import logging
 from ssl import SSLError
-from typing import Any
+from typing import Any, override
 
 from deluge_client.client import DelugeRPCClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Deluge."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,17 +51,19 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = error
         user_input = user_input or {}
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): cv.string,
-                vol.Required(
+                probatio.Required(
+                    CONF_HOST, default=user_input.get(CONF_HOST)
+                ): cv.string,
+                probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                 ): cv.string,
-                vol.Required(CONF_PASSWORD, default=""): cv.string,
-                vol.Optional(
+                probatio.Required(CONF_PASSWORD, default=""): cv.string,
+                probatio.Optional(
                     CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_RPC_PORT)
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEB_PORT,
                     default=user_input.get(CONF_WEB_PORT, DEFAULT_WEB_PORT),
                 ): int,

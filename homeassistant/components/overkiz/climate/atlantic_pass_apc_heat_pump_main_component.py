@@ -1,7 +1,7 @@
 """Support for Atlantic Pass APC Heat Pump Main Component."""
 
 from asyncio import sleep
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -27,10 +27,13 @@ HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Heat Pump Main Component.
 
-    This component can only turn off the heating pump and select the working mode: heating or cooling.
-    To set new temperatures, they must be selected individually per Zones (ie: AtlanticPassAPCHeatingAndCoolingZone).
-    Once the Device is switched on into heating or cooling mode, the Heat Pump will be activated and will use
-    the default temperature configuration for each available zone.
+    This component can only turn off the heating pump and select
+    the working mode: heating or cooling. To set new
+    temperatures, they must be selected individually per Zones
+    (ie: AtlanticPassAPCHeatingAndCoolingZone). Once the Device
+    is switched on into heating or cooling mode, the Heat Pump
+    will be activated and will use the default temperature
+    configuration for each available zone.
     """
 
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
@@ -41,14 +44,17 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     _attr_translation_key = DOMAIN
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac current mode: stop, cooling, heating."""
         return OVERKIZ_TO_HVAC_MODES[
             cast(
-                str, self.executor.select_state(OverkizState.IO_PASS_APC_OPERATING_MODE)
+                str,
+                self.device.states.get_value(OverkizState.IO_PASS_APC_OPERATING_MODE),
             )
         ]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode: stop, cooling, heating."""
         # They are mainly managed by the Zone Control device
@@ -58,5 +64,6 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
             HVAC_MODES_TO_OVERKIZ[hvac_mode],
         )
 
-        # Wait for 2 seconds to ensure the HVAC mode change is properly applied and system stabilizes.
+        # Wait for 2 seconds to ensure the HVAC mode change is
+        # properly applied and system stabilizes.
         await sleep(2)

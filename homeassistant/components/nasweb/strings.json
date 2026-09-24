@@ -65,7 +65,7 @@
     "config_entry_error_no_status_update": {
       "message": "Did not receive any status updates within the expected time window. Make sure the Home Assistant internal URL is reachable from the NASweb device. If the issue persists contact support at {support_email}"
     },
-    "serial_mismatch": {
+    "config_entry_error_serial_mismatch": {
       "message": "Connected to different NASweb device (serial number mismatch)."
     }
   }

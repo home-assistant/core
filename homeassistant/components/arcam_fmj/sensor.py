@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace, IntOrTypeEnum
 from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
@@ -21,6 +22,9 @@ from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Read-only, coordinator-driven entities; no per-entity I/O to bound.
+PARALLEL_UPDATES = 0
 
 
 def _enum_options(value: type[IntOrTypeEnum]) -> list[str]:
@@ -167,6 +171,7 @@ class ArcamFmjSensorEntity(ArcamFmjEntity, SensorEntity):
     entity_description: ArcamFmjSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.state)

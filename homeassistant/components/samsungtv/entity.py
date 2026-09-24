@@ -1,8 +1,6 @@
 """Base SamsungTV Entity."""
 
-from typing import Any
-
-from wakeonlan import send_magic_packet
+from typing import Any, override
 
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -12,7 +10,7 @@ from homeassistant.const import (
     CONF_MODEL,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
@@ -21,8 +19,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_MANUFACTURER, DOMAIN, LOGGER
 from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
-
-DEPRECATED_IMPLICIT_WAKE_ON_LAN = "deprecated_implicit_wake_on_lan_{}"
 
 
 class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity):
@@ -37,7 +33,8 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         config_entry = coordinator.config_entry
         self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._host: str | None = config_entry.data.get(CONF_HOST)
-        # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
+        # Fallback for legacy models that doesn't have a API
+        # to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
@@ -52,6 +49,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         self._turn_on_action = PluggableAction(self.async_write_ha_state)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the device."""
         if not super().available or self._bridge.auth_failed:
@@ -63,6 +61,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             or self._bridge.power_off_in_progress
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
@@ -74,13 +73,6 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
                 )
             )
 
-    def _wake_on_lan(self) -> None:
-        """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)  # type: ignore[arg-type]
-        # If the ip address changed since we last saw the device
-        # broadcast a packet as well
-        send_magic_packet(self._mac)  # type: ignore[arg-type]
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._bridge.async_power_off()
@@ -91,28 +83,13 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         if self._turn_on_action:
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
-        elif self._mac:
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                DEPRECATED_IMPLICIT_WAKE_ON_LAN.format(self._mac),
-                is_fixable=False,
-                breaks_in_ha_version="2026.8.0",
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_implicit_wake_on_lan",
-                translation_placeholders={
-                    "mac_address": self._mac,
-                    "wol_documentation_url": "https://www.home-assistant.io/integrations/wake_on_lan/",
-                },
-            )
-            await self.hass.async_add_executor_job(self._wake_on_lan)
-        else:
-            LOGGER.error(
-                "Unable to turn on %s, as it does not have an automation configured",
-                self.entity_id,
-            )
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="service_unsupported",
-                translation_placeholders={"entity": self.entity_id},
-            )
+            return
+        LOGGER.error(
+            "Unable to turn on %s, as it does not have an automation configured",
+            self.entity_id,
+        )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_unsupported",
+            translation_placeholders={"entity": self.entity_id},
+        )

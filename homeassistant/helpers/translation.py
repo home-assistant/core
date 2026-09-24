@@ -242,13 +242,15 @@ class _TranslationCache:
             )
 
             loaded_english_components = loaded.setdefault(LOCALE_EN, set())
-            # Since we just loaded english anyway we can avoid loading
-            # again if they switch back to english.
-            if loaded_english_components.isdisjoint(components):
+            # English is the fallback for missing keys, so cache it for every
+            # not-yet-cached component, not only when the whole batch is new.
+            if english_to_cache := components - loaded_english_components:
                 self._build_category_cache(
-                    LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+                    LOCALE_EN,
+                    english_to_cache,
+                    translation_by_language_strings[LOCALE_EN],
                 )
-                loaded_english_components.update(components)
+                loaded_english_components.update(english_to_cache)
 
         loaded[language].update(components)
 
@@ -281,7 +283,8 @@ class _TranslationCache:
             if updated_placeholders != cached_placeholders:
                 _LOGGER.error(
                     (
-                        "Validation of translation placeholders for localized (%s) string "
+                        "Validation of translation placeholders"
+                        " for localized (%s) string "
                         "%s failed: (%s != %s)"
                     ),
                     language,
@@ -464,7 +467,7 @@ def async_translate_state(
     translation_key: str | None,
     device_class: str | None,
 ) -> str:
-    """Translate provided state using cached translations for currently selected language."""
+    """Translate provided state using cached translations."""
     if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
         return state
     language = hass.config.language
@@ -500,7 +503,7 @@ def async_translate_state_attr(
     device_class: str | None,
     attribute_name: str,
 ) -> str:
-    """Translate provided state attribute value using cached translations for currently selected language."""
+    """Translate state attribute value using cached translations."""
     language = hass.config.language
     if platform is not None and translation_key is not None:
         localize_key = (

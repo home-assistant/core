@@ -70,7 +70,7 @@ class FloorExtension(BaseTemplateExtension):
         return [floor.floor_id for floor in floor_registry.async_list_floors()]
 
     def floor_id(self, lookup_value: Any) -> str | None:
-        """Get the floor ID from a floor or area name, alias, device id, or entity id."""
+        """Get the floor ID from a floor/area name, alias, device/entity id."""
         floor_registry = fr.async_get(self.hass)
         lookup_str = str(lookup_value)
 

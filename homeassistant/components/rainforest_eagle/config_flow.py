@@ -1,9 +1,9 @@
 """Config flow for Rainforest Eagle integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
@@ -21,15 +21,17 @@ from .data import CannotConnect, InvalidAuth, async_get_type
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+def create_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     """Create user schema with passed in defaults if available."""
     if user_input is None:
         user_input = {}
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-            vol.Required(CONF_CLOUD_ID, default=user_input.get(CONF_CLOUD_ID)): str,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
+            probatio.Required(
+                CONF_CLOUD_ID, default=user_input.get(CONF_CLOUD_ID)
+            ): str,
+            probatio.Required(
                 CONF_INSTALL_CODE, default=user_input.get(CONF_INSTALL_CODE)
             ): str,
         }
@@ -41,6 +43,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -74,22 +77,28 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             elif eagle_type == TYPE_EAGLE_100:
                 user_input[CONF_TYPE] = eagle_type
 
-                # For EAGLE-100, there is no hardware address to select, so set it to None and move on
+                # For EAGLE-100, there is no hardware address
+                # to select, so set it to None and move on
                 user_input[CONF_HARDWARE_ADDRESS] = None
             elif eagle_type == TYPE_EAGLE_200:
                 user_input[CONF_TYPE] = eagle_type
 
-                # For EAGLE-200, a connected meter's hardware address is required to create the entry
+                # For EAGLE-200, a connected meter's hardware
+                # address is required to create the entry
                 if not hardware_address:
-                    # hardware_address will be None if there are no meters at all or if none are currently Connected
+                    # hardware_address will be None if there are
+                    # no meters at all or if none are
+                    # currently Connected
                     errors["base"] = "no_meters_connected"
                 else:
                     user_input[CONF_HARDWARE_ADDRESS] = hardware_address
             else:
-                # This is a device that isn't supported, yet, but was detected by async_get_type
+                # This is a device that isn't supported, yet,
+                # but was detected by async_get_type
                 errors["base"] = "unsupported_device_type"
 
-            # All information gathering is done, so if there are no errors at this point, create the entry
+            # All information gathering is done, so if there
+            # are no errors at this point, create the entry
             if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_CLOUD_ID], data=user_input

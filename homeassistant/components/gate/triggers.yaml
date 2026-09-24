@@ -1,7 +1,7 @@
 .trigger_common_fields: &trigger_common_fields
   behavior:
     required: true
-    default: any
+    default: each
     selector:
       automation_behavior:
         mode: trigger

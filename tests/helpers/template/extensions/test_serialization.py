@@ -119,7 +119,10 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     assert render(hass, "{{ pack(value, '>I') }}", variables) == b"\xde\xad\xbe\xef"
 
     # test with None value
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    # "Template warning: 'pack' unable to pack object with
+    # type '%s' and format_string '%s' see
+    # https://docs.python.org/3/library/struct.html
+    # for more information"
     assert render(hass, "{{ pack(value, '>I') }}", {"value": None}) is None
     assert (
         "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
@@ -128,7 +131,10 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     )
 
     # test with invalid filter
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    # "Template warning: 'pack' unable to pack object with
+    # type '%s' and format_string '%s' see
+    # https://docs.python.org/3/library/struct.html
+    # for more information"
     assert render(hass, "{{ pack(value, 'invalid filter') }}", variables) is None
     assert (
         "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"

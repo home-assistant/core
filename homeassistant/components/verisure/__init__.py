@@ -9,10 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_LOCK_DEFAULT_CODE, LOGGER
+from .const import CONF_GIID, CONF_LOCK_DEFAULT_CODE, DOMAIN, LOGGER
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 PLATFORMS = [
@@ -38,7 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
 
     entry.runtime_data = coordinator
 
-    # Migrate lock default code from config entry to lock entity
+    # Register the alarm (VBox) device so children can link to it via via_device_id
+    # regardless of platform setup order.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_GIID])},
+        manufacturer="Verisure",
+        model="VBox",
+        name="Verisure Alarm",
+        configuration_url="https://mypages.verisure.com",
+    )
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -61,11 +70,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) ->
     if not unload_ok:
         return False
 
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
+    """Erase session cookie when the config entry is deleted."""
     cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}")
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.unlink, cookie_file)
-
-    return True
 
 
 def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:

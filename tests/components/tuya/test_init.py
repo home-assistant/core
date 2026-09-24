@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
@@ -15,6 +16,7 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
 )
 from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -108,16 +110,16 @@ async def test_registry_cleanup_multiple_entries(
     assert entity_registry.async_get(second_entity_id)
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_device_registry(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Validate device registry snapshots for all devices, including unsupported ones."""
+    """Validate device registry snapshots for all devices."""
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
@@ -133,31 +135,20 @@ async def test_device_registry(
             name=list(device_registry_entry.identifiers)[0][1]
         )
 
-        # Ensure model is suffixed with "(unsupported)" when no entities are generated
-        assert (" (unsupported)" in device_registry_entry.model) == (
-            not er.async_entries_for_device(
-                entity_registry,
-                device_registry_entry.id,
-                include_disabled_entities=True,
-            )
-        )
-
 
 @pytest.mark.parametrize(
     ("mock_device_code", "platforms", "manufacturer", "model", "model_id", "quirks"),
     [
-        # Ensure model is suffixed with "(unsupported)" when no entities
-        # are generated
+        # Device information is registered even when no entities are generated
         (
             "mal_gyitctrjj1kefxp2",
             [],
             "Tuya",
-            "Multifunction alarm (unsupported)",
+            "Multifunction alarm",
             "gyitctrjj1kefxp2",
             {},
         ),
-        # Ensure model is not suffixed with "(unsupported)" when entities
-        # are generated
+        # Creating entities does not alter the registered device information
         (
             "mal_gyitctrjj1kefxp2",
             [Platform.ALARM_CONTROL_PANEL],
@@ -167,8 +158,7 @@ async def test_device_registry(
             {},
         ),
         # With a quirk that has manufacturer, model and model_id are
-        # taken from quirk (and not suffixed with "(unsupported)" even if
-        # no entities are generated)
+        # taken from quirk
         (
             "mal_gyitctrjj1kefxp2",
             [],
@@ -205,7 +195,7 @@ async def test_device_registry(
             "mal_gyitctrjj1kefxp2",
             [],
             "Tuya",
-            "Multifunction alarm (unsupported)",
+            "Multifunction alarm",
             "gyitctrjj1kefxp2",
             {
                 "gyitctrjj1kefxp2": MagicMock(
@@ -335,7 +325,9 @@ async def test_dynamic_remove_device(
     )
     assert len(all_entries) == 1
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, main_device.id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, main_device.id), mock_config_entry.entry_id
+        )
         in all_entries
     )
 
@@ -352,6 +344,10 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
         details = await async_load_json_object_fixture(
             hass, f"{device_code}.json", DOMAIN
         )
+        expected_code = f"{details['category']}_{details['product_id']}"
+        assert device_code == expected_code, (
+            f"Device code {device_code} does not match expected {expected_code}"
+        )
         for key in EXCLUDE_KEYS:
             assert key not in details, (
                 f"Please remove data[`'{key}']` from {device_code}.json"
@@ -364,3 +360,18 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
                         f"Please mark `data['status']['{key}']` as `**REDACTED**`"
                         f" in {device_code}.json"
                     )
+
+
+async def test_network_error_retries_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a network error during setup results in a setup retry."""
+    manager = create_manager()
+    manager.update_device_cache.side_effect = requests.exceptions.ConnectionError(
+        "Failed to resolve 'apigw.tuyaeu.com'"
+    )
+
+    await initialize_entry(hass, manager, mock_config_entry, [])
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

@@ -2,8 +2,8 @@
 # name: test_setup_config_entry
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My template',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
         'auto',

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from goodwe import Inverter, InverterError, RequestFailedException
 
@@ -49,6 +49,7 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.inverter: Inverter = inverter
         self._last_data: dict[str, Any] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the inverter."""
         try:

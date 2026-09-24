@@ -5,9 +5,11 @@ from http import HTTPStatus
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
+import warnings
 
 from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
+import jwt.warnings
 import pytest
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +19,6 @@ from homeassistant.components.html5.const import (
     ATTR_ACTIONS,
     ATTR_BADGE,
     ATTR_DIR,
-    ATTR_ICON,
     ATTR_IMAGE,
     ATTR_LANG,
     ATTR_RENOTIFY,
@@ -30,7 +31,8 @@ from homeassistant.components.html5.const import (
     ATTR_VIBRATE,
     SERVICE_DISMISS,
 )
-from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_DISMISS, DEFAULT_TTL
+from homeassistant.components.html5.http import ATTR_ACTION
+from homeassistant.components.html5.notify import ATTR_DISMISS, DEFAULT_TTL
 from homeassistant.components.html5.services import SERVICE_DISMISS_MESSAGE
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -43,6 +45,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -155,7 +158,10 @@ async def test_dismissing_message(mock_wp: AsyncMock, hass: HomeAssistant) -> No
     await service.async_dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"tag": "test", "dismiss": true, "data": {"jwt": "JWT"}, "timestamp": 1234567890000}',
+        data=(
+            '{"tag": "test", "dismiss": true,'
+            ' "data": {"jwt": "JWT"}, "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -181,7 +187,15 @@ async def test_sending_message(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -208,7 +222,15 @@ async def test_fcm_key_include(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello", target=["chrome"])
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -237,7 +259,15 @@ async def test_fcm_send_with_unknown_priority(
     await service.async_send_message("Hello", target=["chrome"], priority="undefined")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -263,7 +293,15 @@ async def test_fcm_no_targets(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -289,7 +327,15 @@ async def test_fcm_additional_data(mock_wp: AsyncMock, hass: HomeAssistant) -> N
     await service.async_send_message("Hello", data={"mykey": "myvalue"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -302,6 +348,7 @@ async def test_registering_new_device_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML view works."""
     await async_setup_component(hass, "http", {})
@@ -314,8 +361,7 @@ async def test_registering_new_device_view(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
 
     assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
@@ -327,6 +373,7 @@ async def test_registering_new_device_view_with_name(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML view works with name attribute."""
     await async_setup_component(hass, "http", {})
@@ -342,8 +389,7 @@ async def test_registering_new_device_view_with_name(
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME["name"] = "test device"
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
 
     assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
@@ -355,6 +401,7 @@ async def test_registering_new_device_expiration_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML view works."""
     await async_setup_component(hass, "http", {})
@@ -367,8 +414,7 @@ async def test_registering_new_device_expiration_view(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.OK
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
@@ -379,6 +425,7 @@ async def test_registering_new_device_fails_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test subs. are not altered when registering a new device fails."""
     await async_setup_component(hass, "http", {})
@@ -390,11 +437,9 @@ async def test_registering_new_device_fails_view(
     assert config_entry.state is ConfigEntryState.LOADED
 
     client = await hass_client()
-    with patch(
-        "homeassistant.components.html5.notify.save_json",
-        side_effect=HomeAssistantError(),
-    ):
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+    mock_save.side_effect = (HomeAssistantError(),)
+
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -404,6 +449,7 @@ async def test_registering_existing_device_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test subscription is updated when registering existing device."""
     await async_setup_component(hass, "http", {})
@@ -416,9 +462,8 @@ async def test_registering_existing_device_view(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+    await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.OK
     mock_save.assert_called_with(
@@ -431,6 +476,7 @@ async def test_registering_existing_device_view_with_name(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test subscription is updated when reg'ing existing device with name."""
     await async_setup_component(hass, "http", {})
@@ -446,9 +492,8 @@ async def test_registering_existing_device_view_with_name(
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME["name"] = "test device"
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+    await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.OK
 
@@ -462,6 +507,7 @@ async def test_registering_existing_device_fails_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test sub. is not updated when registering existing device fails."""
     await async_setup_component(hass, "http", {})
@@ -474,10 +520,9 @@ async def test_registering_existing_device_fails_view(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
-        mock_save.side_effect = HomeAssistantError
-        resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
+    await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
+    mock_save.side_effect = HomeAssistantError
+    resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -487,6 +532,7 @@ async def test_registering_new_device_validation(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test various errors when registering a new device."""
     await async_setup_component(hass, "http", {})
@@ -508,11 +554,11 @@ async def test_registering_new_device_validation(
     resp = await client.post(REGISTER_URL, data=json.dumps({"browser": "chrome"}))
     assert resp.status == HTTPStatus.BAD_REQUEST
 
-    with patch("homeassistant.components.html5.notify.save_json", return_value=False):
-        resp = await client.post(
-            REGISTER_URL,
-            data=json.dumps({"browser": "chrome", "subscription": "sub info"}),
-        )
+    mock_save.return_value = False
+    resp = await client.post(
+        REGISTER_URL,
+        data=json.dumps({"browser": "chrome", "subscription": "sub info"}),
+    )
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
@@ -521,6 +567,7 @@ async def test_unregistering_device_view(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML unregister view works."""
     load_config.return_value = {
@@ -537,11 +584,10 @@ async def test_unregistering_device_view(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        resp = await client.delete(
-            REGISTER_URL,
-            data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
-        )
+    resp = await client.delete(
+        REGISTER_URL,
+        data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
+    )
 
     assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
@@ -555,6 +601,7 @@ async def test_unregister_device_view_handle_unknown_subscription(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML unregister view handles unknown subscriptions."""
     await async_setup_component(hass, "http", {})
@@ -567,11 +614,10 @@ async def test_unregister_device_view_handle_unknown_subscription(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.save_json") as mock_save:
-        resp = await client.delete(
-            REGISTER_URL,
-            data=json.dumps({"subscription": SUBSCRIPTION_3["subscription"]}),
-        )
+    resp = await client.delete(
+        REGISTER_URL,
+        data=json.dumps({"subscription": SUBSCRIPTION_3["subscription"]}),
+    )
 
     assert resp.status == HTTPStatus.OK, resp.response
     assert len(mock_save.mock_calls) == 0
@@ -582,6 +628,7 @@ async def test_unregistering_device_view_handles_save_error(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the HTML unregister view handles save errors."""
     load_config.return_value = {
@@ -598,14 +645,12 @@ async def test_unregistering_device_view_handles_save_error(
 
     client = await hass_client()
 
-    with patch(
-        "homeassistant.components.html5.notify.save_json",
-        side_effect=HomeAssistantError(),
-    ):
-        resp = await client.delete(
-            REGISTER_URL,
-            data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
-        )
+    mock_save.side_effect = HomeAssistantError()
+
+    resp = await client.delete(
+        REGISTER_URL,
+        data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
+    )
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR, resp.response
 
@@ -665,7 +710,15 @@ async def test_callback_view_with_jwt(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -709,7 +762,15 @@ async def test_send_fcm_without_targets(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -724,6 +785,7 @@ async def test_send_fcm_expired(
     config_entry: MockConfigEntry,
     load_config: MagicMock,
     mock_wp: AsyncMock,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the FCM target is removed when expired."""
     load_config.return_value = {"device": SUBSCRIPTION_5}
@@ -735,15 +797,13 @@ async def test_send_fcm_expired(
 
     assert config_entry.state is ConfigEntryState.LOADED
     mock_wp.send_async.return_value.status = 410
-    with (
-        patch("homeassistant.components.html5.notify.save_json") as mock_save,
-    ):
-        await hass.services.async_call(
-            "notify",
-            "html5",
-            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
-            blocking=True,
-        )
+
+    await hass.services.async_call(
+        "notify",
+        "html5",
+        {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+        blocking=True,
+    )
     # "device" should be removed when expired.
     mock_save.assert_called_once_with(hass.config.path(html5.REGISTRATIONS_FILE), {})
 
@@ -756,6 +816,7 @@ async def test_send_fcm_expired_save_fails(
     load_config: MagicMock,
     caplog: pytest.LogCaptureFixture,
     mock_wp: AsyncMock,
+    mock_save: MagicMock,
 ) -> None:
     """Test that the FCM target remains after expiry if save_json fails."""
     load_config.return_value = {"device": SUBSCRIPTION_5}
@@ -767,18 +828,13 @@ async def test_send_fcm_expired_save_fails(
 
     assert config_entry.state is ConfigEntryState.LOADED
     mock_wp.send_async.return_value.status = 410
-    with (
-        patch(
-            "homeassistant.components.html5.notify.save_json",
-            side_effect=HomeAssistantError(),
-        ),
-    ):
-        await hass.services.async_call(
-            "notify",
-            "html5",
-            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
-            blocking=True,
-        )
+    mock_save.side_effect = HomeAssistantError
+    await hass.services.async_call(
+        "notify",
+        "html5",
+        {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+        blocking=True,
+    )
     # "device" should still exist if save fails.
     assert "Error saving registration" in caplog.text
 
@@ -913,6 +969,7 @@ async def test_send_message_save_fails(
     webpush_async: AsyncMock,
     load_config: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    mock_save: MagicMock,
 ) -> None:
     """Test sending a message with channel expired but saving registration fails."""
     load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
@@ -926,13 +983,8 @@ async def test_send_message_save_fails(
     webpush_async.side_effect = (
         WebPushException("", response=Mock(status=HTTPStatus.GONE)),
     )
-    with (
-        patch(
-            "homeassistant.components.html5.notify.save_json",
-            side_effect=HomeAssistantError,
-        ),
-        pytest.raises(HomeAssistantError) as e,
-    ):
+    mock_save.side_effect = HomeAssistantError
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
@@ -1230,3 +1282,11 @@ async def test_html5_dismiss_message(
         "data": {"jwt": "JWT"},
         **expected_payload,
     }
+
+
+def test_add_jwt_no_insecure_key_warning() -> None:
+    """Test that add_jwt does not emit InsecureKeyLengthWarning for short keys."""
+    short_key = "c2hvcnRfa2V5X2hlcmU="
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", jwt.warnings.InsecureKeyLengthWarning)
+        html5.add_jwt(1234567890, "device", "tag", short_key)

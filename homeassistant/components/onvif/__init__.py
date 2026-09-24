@@ -1,6 +1,5 @@
 """The ONVIF integration."""
 
-import asyncio
 from contextlib import AsyncExitStack, suppress
 from http import HTTPStatus
 import logging
@@ -39,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
         await async_populate_options(hass, entry)
 
     device = ONVIFDevice(hass, entry)
+    camera_address = f"{device.host}:{device.port}"
 
     async with AsyncExitStack() as stack:
         # Register cleanup callback for device
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
                 await async_populate_snapshot_auth(hass, device, entry)
         except (TimeoutError, aiohttp.ClientError) as err:
             raise ConfigEntryNotReady(
-                f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
+                f"Could not connect to camera {camera_address}: {err}"
             ) from err
         except Fault as err:
             if is_auth_error(err):
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
             ) from err
         except ONVIFError as err:
             raise ConfigEntryNotReady(
-                f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
+                f"Could not setup camera {camera_address}: {stringify_onvif_error(err)}"
             ) from err
         except TransportError as err:
             stringified_onvif_error = stringify_onvif_error(err)
@@ -76,13 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
                     f"Auth Failed: {stringified_onvif_error}"
                 ) from err
             raise ConfigEntryNotReady(
-                f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
-            ) from err
-        except asyncio.CancelledError as err:
-            # After https://github.com/agronholm/anyio/issues/374 is resolved
-            # this may be able to be removed
-            raise ConfigEntryNotReady(
-                f"Setup was unexpectedly canceled: {err}"
+                f"Could not setup camera {camera_address}: {stringified_onvif_error}"
             ) from err
 
         if not device.available:
@@ -194,7 +188,9 @@ def _async_migrate_camera_entities_unique_ids(
                 index = int(entity.unique_id[len(old_uid_start) :])
             except ValueError:
                 LOGGER.error(
-                    "Failed to migrate unique id for '%s' as the ONVIF profile index could not be parsed from unique id '%s'",
+                    "Failed to migrate unique id for '%s' as the"
+                    " ONVIF profile index could not be parsed"
+                    " from unique id '%s'",
                     entity.entity_id,
                     entity.unique_id,
                 )
@@ -203,7 +199,9 @@ def _async_migrate_camera_entities_unique_ids(
             token = device.profiles[index].token
         except IndexError:
             LOGGER.error(
-                "Failed to migrate unique id for '%s' as the ONVIF profile index '%d' parsed from unique id '%s' could not be found",
+                "Failed to migrate unique id for '%s' as the"
+                " ONVIF profile index '%d' parsed from"
+                " unique id '%s' could not be found",
                 entity.entity_id,
                 index,
                 entity.unique_id,

@@ -1,10 +1,10 @@
 """Config flow for Azure Data Explorer integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -25,15 +25,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADX_CLUSTER_INGEST_URI): str,
-        vol.Required(CONF_ADX_DATABASE_NAME): str,
-        vol.Required(CONF_ADX_TABLE_NAME): str,
-        vol.Required(CONF_APP_REG_ID): str,
-        vol.Required(CONF_APP_REG_SECRET): str,
-        vol.Required(CONF_AUTHORITY_ID): str,
-        vol.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
+        probatio.Required(CONF_ADX_CLUSTER_INGEST_URI): str,
+        probatio.Required(CONF_ADX_DATABASE_NAME): str,
+        probatio.Required(CONF_ADX_TABLE_NAME): str,
+        probatio.Required(CONF_APP_REG_ID): str,
+        probatio.Required(CONF_APP_REG_SECRET): str,
+        probatio.Required(CONF_AUTHORITY_ID): str,
+        probatio.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
     }
 )
 
@@ -61,6 +61,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,9 +73,14 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await self.validate_input(user_input)
             if not errors:
+                cluster = user_input[CONF_ADX_CLUSTER_INGEST_URI].replace(
+                    "https://", ""
+                )
+                db = user_input[CONF_ADX_DATABASE_NAME]
+                table = user_input[CONF_ADX_TABLE_NAME]
                 return self.async_create_entry(
                     data=user_input,
-                    title=f"{user_input[CONF_ADX_CLUSTER_INGEST_URI].replace('https://', '')} / {user_input[CONF_ADX_DATABASE_NAME]} ({user_input[CONF_ADX_TABLE_NAME]})",
+                    title=f"{cluster} / {db} ({table})",
                     options=DEFAULT_OPTIONS,
                 )
 

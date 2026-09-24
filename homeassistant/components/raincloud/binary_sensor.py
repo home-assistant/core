@@ -1,8 +1,9 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -23,9 +24,9 @@ BINARY_SENSORS = ["is_watering", "status"]
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)]
-        )
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)
+        ): probatio.All(cv.ensure_list, [probatio.In(BINARY_SENSORS)])
     }
 )
 
@@ -70,6 +71,7 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorEntity):
             self._attr_is_on = state
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon of this device."""
         if self._sensor_type == "is_watering":

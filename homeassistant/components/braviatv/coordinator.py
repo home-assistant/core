@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, Final
+from typing import Any, Concatenate, Final, override
 
 from pybravia import (
     BraviaAuthError,
@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_NICKNAME,
@@ -151,6 +152,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
+    @override
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
         try:
@@ -239,11 +241,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
-            self.media_position = int(
-                (current_datetime - start_datetime).total_seconds()
-            )
-            self.media_position_updated_at = datetime.now()
+            if start_datetime.tzinfo is None:
+                start_datetime = start_datetime.replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                )
+            now = dt_util.utcnow()
+            self.media_position = int((now - start_datetime).total_seconds())
+            self.media_position_updated_at = now
         else:
             self.media_position = None
             self.media_position_updated_at = None

@@ -1,6 +1,6 @@
 """Support for Meteoclimatic sensor."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -155,6 +155,7 @@ class MeteoclimaticSensor(
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return (

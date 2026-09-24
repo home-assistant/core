@@ -1023,8 +1023,9 @@ async def test_media_previous_track(hass: HomeAssistant, remote_legacy: Mock) ->
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
-    """Test turn on."""
+async def test_turn_on_without_turnon_with_mac(hass: HomeAssistant) -> None:
+    """Test turn on is not supported even when a MAC address is configured."""
+    await async_setup_component(hass, "homeassistant", {})
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRYDATA_WEBSOCKET,
@@ -1033,14 +1034,10 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.samsungtv.entity.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
-        await hass.async_block_till_done()
-    assert mock_send_magic_packet.called
 
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:
@@ -1100,43 +1097,35 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
         assert remote.control.call_count == 0
 
 
-async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("content_id"),
+    [
+        "https://example.com",
+        "-4",
+    ],
+)
+async def test_play_media_content_invalid_id(
+    hass: HomeAssistant, content_id: str
+) -> None:
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
-        url = "https://example.com"
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                ATTR_MEDIA_CONTENT_ID: url,
-            },
-            True,
-        )
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                MP_DOMAIN,
+                SERVICE_PLAY_MEDIA,
+                {
+                    ATTR_ENTITY_ID: ENTITY_ID,
+                    ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                    ATTR_MEDIA_CONTENT_ID: content_id,
+                },
+                True,
+            )
         # control not called
         assert remote.control.call_count == 0
-
-
-async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
-    """Test for play_media with invalid channel as non positive integer."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
-        await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-        remote.reset_mock()
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                ATTR_MEDIA_CONTENT_ID: "-4",
-            },
-            True,
-        )
-        # control not called
-        assert remote.control.call_count == 0
+        assert err.value.translation_domain == DOMAIN
+        assert err.value.translation_key == "media_id_invalid"
 
 
 async def test_select_source(hass: HomeAssistant, remote_legacy: Mock) -> None:
@@ -1332,7 +1321,7 @@ async def test_upnp_not_available(
     assert "Upnp services are not available" in caplog.text
 
 
-@pytest.mark.usefixtures("remote_websocket", "rest_api", "upnp_factory")
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_upnp_missing_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

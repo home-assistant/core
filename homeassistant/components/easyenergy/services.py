@@ -5,9 +5,17 @@ from enum import StrEnum
 from functools import partial
 from typing import Final
 
-from easyenergy import Electricity, Gas, PriceInterval, VatOption
+from easyenergy import (
+    EasyEnergyError,
+    Electricity,
+    ElectricityGranularity,
+    ElectricityPriceType,
+    Gas,
+    PriceInterval,
+    VatOption,
+)
 from easyenergy.const import MARKET_TIMEZONE
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -16,7 +24,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
@@ -27,34 +35,66 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_GRANULARITY: Final = "granularity"
+ATTR_PRICE_TYPE: Final = "price_type"
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
 ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
-BASE_SERVICE_SCHEMA: Final = {
-    vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-        {
-            "integration": DOMAIN,
-        }
-    ),
-    vol.Optional(ATTR_START): str,
-    vol.Optional(ATTR_END): str,
-}
-SERVICE_SCHEMA: Final = vol.Schema(
-    {
-        **BASE_SERVICE_SCHEMA,
-        vol.Required(ATTR_INCL_VAT): bool,
-    }
-)
-RETURN_SERVICE_SCHEMA: Final = vol.Schema(BASE_SERVICE_SCHEMA)
 
 
-class PriceType(StrEnum):
+class ServicePriceType(StrEnum):
     """Type of price."""
 
     ENERGY_USAGE = "energy_usage"
     ENERGY_RETURN = "energy_return"
     GAS = "gas"
+
+
+GRANULARITY_OPTIONS: Final = tuple(
+    granularity.value for granularity in ElectricityGranularity
+)
+PRICE_TYPE_OPTIONS: Final = tuple(
+    electricity_price_type.value for electricity_price_type in ElectricityPriceType
+)
+
+BASE_SERVICE_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
+    }
+)
+GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
+            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+        ): probatio.In(PRICE_TYPE_OPTIONS),
+    }
+)
+ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
+            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+        ): probatio.In(GRANULARITY_OPTIONS),
+        probatio.Optional(
+            ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
+        ): probatio.In(PRICE_TYPE_OPTIONS),
+    }
+)
+ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
+    {
+        probatio.Optional(
+            ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
+        ): probatio.In(GRANULARITY_OPTIONS),
+    }
+)
 
 
 def __get_date(
@@ -113,6 +153,19 @@ def __serialize_prices(prices: list[dict[str, float | datetime]]) -> ServiceResp
     }
 
 
+def __select_prices(
+    data: Electricity | Gas, use_invoice: bool
+) -> list[dict[str, float | datetime]]:
+    """Select market or invoice prices from price data."""
+    if not use_invoice:
+        return data.timestamp_prices
+
+    return [
+        {"timestamp": interval.starts_at, "price": interval.invoice_price}
+        for interval in data.intervals
+    ]
+
+
 def __get_coordinator(call: ServiceCall) -> EasyEnergyDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry: EasyEnergyConfigEntry = service.async_get_config_entry(
@@ -124,7 +177,7 @@ def __get_coordinator(call: ServiceCall) -> EasyEnergyDataUpdateCoordinator:
 async def __get_prices(
     call: ServiceCall,
     *,
-    price_type: PriceType,
+    service_price_type: ServicePriceType,
 ) -> ServiceResponse:
     """Get prices from easyEnergy."""
     coordinator = __get_coordinator(call)
@@ -137,23 +190,41 @@ async def __get_prices(
         vat = VatOption.EXCLUDE
 
     data: Electricity | Gas
+    prices: list[dict[str, float | datetime]]
 
-    if price_type == PriceType.GAS:
-        data = await coordinator.easyenergy.gas_prices(
-            start_date=start_date,
-            end_date=end_date,
-            vat=vat,
+    if service_price_type == ServicePriceType.GAS:
+        try:
+            data = await coordinator.easyenergy.gas_prices(
+                start_date=start_date,
+                end_date=end_date,
+                vat=vat,
+            )
+        except EasyEnergyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_prices_error",
+            ) from err
+        prices = __select_prices(
+            data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
         )
-        prices = data.timestamp_prices
     else:
-        data = await coordinator.easyenergy.energy_prices(
-            start_date=start_date,
-            end_date=end_date,
-            vat=vat,
-        )
+        try:
+            data = await coordinator.easyenergy.energy_prices(
+                start_date=start_date,
+                end_date=end_date,
+                granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
+                vat=vat,
+            )
+        except EasyEnergyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_prices_error",
+            ) from err
 
-        if price_type == PriceType.ENERGY_USAGE:
-            prices = data.timestamp_prices
+        if service_price_type == ServicePriceType.ENERGY_USAGE:
+            prices = __select_prices(
+                data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
+            )
         else:
             prices = data.timestamp_return_prices
 
@@ -181,21 +252,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.GAS),
-        schema=SERVICE_SCHEMA,
+        partial(__get_prices, service_price_type=ServicePriceType.GAS),
+        schema=GAS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_USAGE_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY_USAGE),
-        schema=SERVICE_SCHEMA,
+        partial(__get_prices, service_price_type=ServicePriceType.ENERGY_USAGE),
+        schema=ENERGY_USAGE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_RETURN_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY_RETURN),
-        schema=RETURN_SERVICE_SCHEMA,
+        partial(__get_prices, service_price_type=ServicePriceType.ENERGY_RETURN),
+        schema=ENERGY_RETURN_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

@@ -19,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -133,9 +132,6 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if (version := entry.version) == 1 and (minor_version := entry.minor_version) == 1:
         _LOGGER.debug(
@@ -169,14 +165,11 @@ async def _get_onedrive_client(
     hass: HomeAssistant, entry: OneDriveConfigEntry
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
+
+    # Refresh up front, so a failure surfaces here instead of from inside the client
+    await session.async_ensure_token_valid()
 
     async def get_access_token() -> str:
         await session.async_ensure_token_valid()

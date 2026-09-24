@@ -3,8 +3,9 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
@@ -17,6 +18,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -25,6 +28,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -43,7 +47,6 @@ from .config import MQTT_RO_SCHEMA
 from .const import (
     CONF_EXPIRE_AFTER,
     CONF_LAST_RESET_VALUE_TEMPLATE,
-    CONF_OPTIONS,
     CONF_STATE_TOPIC,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     PAYLOAD_NONE,
@@ -59,8 +62,8 @@ PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
-        sensor.ATTR_LAST_RESET,
-        sensor.ATTR_STATE_CLASS,
+        SensorEntityStateAttribute.LAST_RESET,
+        SensorEntityCapabilityAttribute.STATE_CLASS,
     }
 )
 
@@ -73,15 +76,15 @@ URL_DOCS_SUPPORTED_SENSOR_UOM = (
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIONS): cv.ensure_list,
-        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
-        vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        probatio.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        probatio.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIONS): cv.ensure_list,
+        probatio.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
+        probatio.Optional(CONF_STATE_CLASS): probatio.Any(STATE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -92,7 +95,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
             f"together with state class `{state_class}`"
         )
@@ -107,15 +110,15 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
         if not options:
-            raise vol.Invalid("An empty options list is not allowed")
+            raise probatio.Invalid("An empty options list is not allowed")
         if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Specifying `{CONF_OPTIONS}` is not allowed together with "
                 f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
             )
 
         if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"The option `{CONF_OPTIONS}` must be used "
                 f"together with device class `{SensorDeviceClass.ENUM}`, "
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
@@ -127,7 +130,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT))
         not in STATE_CLASS_UNITS[state_class]
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The unit of measurement '{unit_of_measurement}' is not valid "
             f"together with state class '{state_class}'"
         )
@@ -146,7 +149,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         device_class in DEVICE_CLASS_UNITS
         and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
     ):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"The unit of measurement `{unit_of_measurement}` is not valid "
             f"together with device class `{device_class}`",
         )
@@ -154,13 +157,13 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     return config
 
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     validate_sensor_state_and_device_class_config,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     validate_sensor_state_and_device_class_config,
 )
 
@@ -199,6 +202,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         None
     )
 
+    @override
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
         last_state: State | None
@@ -236,6 +240,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 remain_seconds,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove expire triggers."""
         if self._expiration_trigger:
@@ -243,13 +248,15 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._expiration_trigger()
             self._expiration_trigger = None
             self._expired = False
-        await MqttEntity.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -370,6 +377,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._update_last_reset(msg)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -378,6 +386,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             {"_attr_native_value", "_attr_last_reset", "_expired"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -390,6 +399,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185

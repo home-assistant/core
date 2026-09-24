@@ -1,5 +1,6 @@
 """Tests for the init module."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
@@ -56,7 +57,9 @@ async def test_dynamic_entities(
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
-    assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
+    assert hass.states.get(
+        "number.mock_aquarium_mock_heater_night_temperature_offset"
+    ).state == str(
         eheimdigital_hub_mock.return_value.devices[
             "00:00:00:00:00:02"
         ].night_temperature_offset
@@ -91,17 +94,13 @@ async def test_remove_device(
     hass_client = await hass_ws_client(hass)
 
     # Do not allow to delete a connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert not response["success"]
 
     eheimdigital_hub_mock.return_value.devices = {}
 
     # Allow to delete a not connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert response["success"]
 
 
@@ -114,4 +113,62 @@ async def test_entry_setup_error(
 
     eheimdigital_hub_mock.return_value.connect.side_effect = EheimDigitalClientError()
     await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_child_device_via_device(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that child devices are linked to the main device."""
+    await init_integration(hass, mock_config_entry)
+
+    for device_address in eheimdigital_hub_mock.return_value.devices:
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device_address,
+            eheimdigital_hub_mock.return_value.devices[device_address].device_type,
+        )
+    await hass.async_block_till_done()
+
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), mock_config_entry.entry_id
+    )
+    assert main_device is not None
+    assert main_device.via_device_id is None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:02"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == main_device.id
+
+
+async def test_entry_setup_retries_on_incomplete_main_device(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    filter_mock: MagicMock,
+) -> None:
+    """Test setup is retried while the main device is still missing data."""
+    # A filter announces itself before its data packet arrives, and the device
+    # entry cannot be built until it has, so setting up has to wait for it.
+    filter_mock.filter_data = None
+    eheimdigital_hub_mock.return_value.main = filter_mock
+
+    def _announce_main_device(*args: Any, **kwargs: Any) -> None:
+        """Report the main device the way the library does on connect."""
+        eheimdigital_hub_mock.call_args.kwargs["main_device_added_event"].set()
+
+    eheimdigital_hub_mock.return_value.connect.side_effect = _announce_main_device
+
+    # The real events are needed here, since the point is that one of them is
+    # never set while the data is still missing.
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eheimdigital.coordinator.MAIN_DEVICE_TIMEOUT", 0
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

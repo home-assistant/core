@@ -1,20 +1,14 @@
 """Support for KNX time entities."""
 
 from datetime import time as dt_time
-from typing import Any
+from typing import override
 
 from xknx.devices import TimeDevice as XknxTimeDevice
 from xknx.dpt.dpt_10 import KNXTime as XknxTime
 
 from homeassistant import config_entries
 from homeassistant.components.time import TimeEntity
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -27,14 +21,17 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DOMAIN,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
-from .storage.const import CONF_ENTITY, CONF_GA_TIME
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import KnxEntityData, TimeKnxConfig
 
 
 async def async_setup_entry(
@@ -60,7 +57,9 @@ async def async_setup_entry(
             KnxYamlTime(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.TIME):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.TIME, TimeKnxConfig
+    ):
         entities.extend(
             KnxUiTime(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -74,23 +73,24 @@ class _KNXTime(TimeEntity, RestoreEntity):
 
     _device: XknxTimeDevice
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
         if (
-            not self._device.remote_value.readable
-            and (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
+            last_state := await self.async_get_last_state()
+        ) is not None and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._device.remote_value.value = XknxTime.from_time(
                 dt_time.fromisoformat(last_state.state)
             )
 
     @property
+    @override
     def native_value(self) -> dt_time | None:
         """Return the latest value."""
         return self._device.value
 
+    @override
     async def async_set_value(self, value: dt_time) -> None:
         """Change the value."""
         await self._device.set(value)
@@ -114,9 +114,8 @@ class KnxYamlTime(_KNXTime, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
+            entity_config=config,
         )
 
 
@@ -126,21 +125,24 @@ class KnxUiTime(_KNXTime, KnxUiEntity):
     _device: XknxTimeDevice
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[TimeKnxConfig],
     ) -> None:
         """Initialize KNX time."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config.knx
         self._device = XknxTimeDevice(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             localtime=False,
-            group_address=knx_conf.get_write(CONF_GA_TIME),
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_TIME),
-            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            group_address=knx_conf.ga_time.write,
+            group_address_state=knx_conf.ga_time.state_and_passive(),
+            respond_to_read=knx_conf.respond_to_read,
+            sync_state=knx_conf.sync_state,
         )

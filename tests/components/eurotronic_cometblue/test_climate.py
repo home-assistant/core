@@ -112,7 +112,8 @@ async def test_climate_preset_away_active(
     mock_gatt_characteristics[cometblue_const.CHARACTERISTIC_HOLIDAY_1] = bytearray(
         [128, 1, 1, 26, 10, 2, 1, 26, 34]
     )
-    # Current target temperature must match holiday temperature for away preset to be active
+    # Current target temperature must match holiday temperature
+    # for away preset to be active
     mock_gatt_characteristics[cometblue_const.CHARACTERISTIC_TEMPERATURE] = bytearray(
         [47, 34, 34, 42, 0, 4, 10]
     )

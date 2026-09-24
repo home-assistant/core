@@ -2,11 +2,15 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import labs, websocket_api
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.components.hassio import HassioNotReadyError
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -37,18 +41,19 @@ __all__ = [
 
 CONF_SNAPSHOTS_URL = "snapshots_url"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_SNAPSHOTS_URL): vol.Any(str, None),
+                probatio.Optional(CONF_SNAPSHOTS_URL): probatio.Any(str, None),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
+_DATA_SNAPSHOTS_URL: HassKey[str | None] = HassKey(f"{DOMAIN}_snapshots_url")
 
 LABS_SNAPSHOT_FEATURE = "snapshots"
 
@@ -57,18 +62,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the analytics integration."""
     analytics_config = config.get(DOMAIN, {})
 
+    snapshots_url: str | None = None
     if CONF_SNAPSHOTS_URL in analytics_config:
         await labs.async_update_preview_feature(
             hass, DOMAIN, LABS_SNAPSHOT_FEATURE, enabled=True
         )
         snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
-    else:
-        snapshots_url = None
 
+    hass.data[_DATA_SNAPSHOTS_URL] = snapshots_url
+
+    discovery_flow.async_create_flow(
+        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+    )
+
+    websocket_api.async_register_command(hass, websocket_analytics)
+    websocket_api.async_register_command(hass, websocket_analytics_preferences)
+
+    hass.http.register_view(AnalyticsDevicesView)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Analytics from a config entry."""
+    snapshots_url = hass.data[_DATA_SNAPSHOTS_URL]
     analytics = Analytics(hass, snapshots_url)
 
-    # Load stored data
-    await analytics.load()
+    try:
+        await analytics.load()
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="supervisor_not_ready",
+        ) from err
 
     started = False
 
@@ -80,8 +106,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if started:
             await analytics.async_schedule()
 
-    async def start_schedule(_event: Event) -> None:
-        """Start the send schedule after the started event."""
+    async def start_schedule(hass: HomeAssistant) -> None:
+        """Start the send schedule once Home Assistant has started."""
         nonlocal started
         started = True
         await analytics.async_schedule()
@@ -89,12 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     labs.async_subscribe_preview_feature(
         hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
     )
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
-
-    websocket_api.async_register_command(hass, websocket_analytics)
-    websocket_api.async_register_command(hass, websocket_analytics_preferences)
-
-    hass.http.register_view(AnalyticsDevicesView)
+    async_at_started(hass, start_schedule)
 
     hass.data[DATA_COMPONENT] = analytics
     return True
@@ -102,14 +123,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "analytics"})
+@websocket_api.websocket_command({probatio.Required("type"): "analytics"})
 def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Return analytics preferences."""
-    analytics = hass.data[DATA_COMPONENT]
+    if (analytics := hass.data.get(DATA_COMPONENT)) is None:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Not loaded")
+        return
     connection.send_result(
         msg["id"],
         {ATTR_PREFERENCES: analytics.preferences, ATTR_ONBOARDED: analytics.onboarded},
@@ -119,8 +142,8 @@ def websocket_analytics(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "analytics/preferences",
-        vol.Required("preferences", default={}): PREFERENCE_SCHEMA,
+        probatio.Required("type"): "analytics/preferences",
+        probatio.Required("preferences", default={}): PREFERENCE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -130,8 +153,10 @@ async def websocket_analytics_preferences(
     msg: dict[str, Any],
 ) -> None:
     """Update analytics preferences."""
+    if (analytics := hass.data.get(DATA_COMPONENT)) is None:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Not loaded")
+        return
     preferences = msg[ATTR_PREFERENCES]
-    analytics = hass.data[DATA_COMPONENT]
 
     await analytics.save_preferences(preferences)
     await analytics.async_schedule()

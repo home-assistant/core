@@ -1,5 +1,4 @@
 """Support for Mailgun."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import hashlib
 import hmac
@@ -7,7 +6,7 @@ import json
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,17 +25,17 @@ DEFAULT_SANDBOX = False
 
 MESSAGE_RECEIVED = f"{DOMAIN}_message_received"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
+                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -45,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = config[DOMAIN]
+    hass.data[DATA_CONFIG] = config[DOMAIN]
     return True
 
 
@@ -76,7 +75,7 @@ async def handle_webhook(
 
 async def verify_webhook(hass, token=None, timestamp=None, signature=None):
     """Verify webhook was signed by Mailgun."""
-    if DOMAIN not in hass.data:
+    if DATA_CONFIG not in hass.data:
         _LOGGER.warning("Cannot validate Mailgun webhook, missing API Key")
         return True
 
@@ -84,7 +83,7 @@ async def verify_webhook(hass, token=None, timestamp=None, signature=None):
         return False
 
     hmac_digest = hmac.new(
-        key=bytes(hass.data[DOMAIN][CONF_API_KEY], "utf-8"),
+        key=bytes(hass.data[DATA_CONFIG][CONF_API_KEY], "utf-8"),
         msg=bytes(f"{timestamp}{token}", "utf-8"),
         digestmod=hashlib.sha256,
     ).hexdigest()

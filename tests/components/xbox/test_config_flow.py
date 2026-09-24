@@ -50,7 +50,7 @@ async def test_full_flow(
     """Check full flow."""
 
     result = await hass.config_entries.flow.async_init(
-        "xbox", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -134,7 +134,7 @@ async def test_discovery(
     """Check DHCP/SSDP discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        "xbox", context={"source": source}, data=service_info
+        DOMAIN, context={"source": source}, data=service_info
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -617,7 +617,7 @@ async def test_unique_id_and_friends_migration(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "2533274838782903")},
     )
-    assert device_friend.config_entries_subentries[config_entry.entry_id] == {None}
+    assert device_friend.config_subentry_id is None
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -640,9 +640,7 @@ async def test_unique_id_and_friends_migration(
     assert device_own.identifiers == {(DOMAIN, "271958441785640")}
 
     assert (device_friend := device_registry.async_get(device_friend.id))
-    assert device_friend.config_entries_subentries[config_entry.entry_id] == {
-        subentries[0].subentry_id
-    }
+    assert device_friend.config_subentry_id == subentries[0].subentry_id
 
 
 @pytest.mark.parametrize(
@@ -698,7 +696,7 @@ async def test_migration_exceptions(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("xbox_live_client", "authentication_manager")
@@ -733,7 +731,7 @@ async def test_migration_implementation_unavailable(hass: HomeAssistant) -> None
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures(
@@ -790,14 +788,11 @@ async def test_flow_reauth(
             "user_id": "AAAAAAAAAAAAAAAAAAAAA",
         },
     )
-    with patch(
-        "homeassistant.components.xbox.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

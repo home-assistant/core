@@ -1,5 +1,6 @@
 """Tests for the EARN-E P1 Meter config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
@@ -7,11 +8,20 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
+from .conftest import (
+    DHCP_DISCOVERY,
+    DOMAIN,
+    MOCK_HOST,
+    MOCK_HOSTNAME,
+    MOCK_MAC,
+    MOCK_NEW_HOST,
+    MOCK_SERIAL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -26,9 +36,8 @@ def _mock_device(
     return EarnEP1Device(host=host, serial=serial)
 
 
-async def test_user_flow_discovery_succeeds(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_discovery_succeeds(hass: HomeAssistant) -> None:
     """Test user flow when auto-discovery finds a device with serial."""
     with patch(DISCOVER_PATH, return_value=[_mock_device()]):
         result = await hass.config_entries.flow.async_init(
@@ -47,9 +56,8 @@ async def test_user_flow_discovery_succeeds(
     assert result["result"].unique_id == MOCK_SERIAL
 
 
-async def test_user_flow_discovery_no_serial_validates(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_discovery_no_serial_validates(hass: HomeAssistant) -> None:
     """Test discovery without serial triggers validation on confirm."""
     with patch(DISCOVER_PATH, return_value=[_mock_device(serial=None)]):
         result = await hass.config_entries.flow.async_init(
@@ -68,8 +76,9 @@ async def test_user_flow_discovery_no_serial_validates(
     assert result["data"][CONF_SERIAL] == MOCK_SERIAL
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_discovery_no_serial_validate_fails(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """Test discovery without serial aborts when validation also fails."""
     with patch(DISCOVER_PATH, return_value=[_mock_device(serial=None)]):
@@ -86,9 +95,8 @@ async def test_user_flow_discovery_no_serial_validate_fails(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_user_flow_discovery_no_serial_oserror(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_discovery_no_serial_oserror(hass: HomeAssistant) -> None:
     """Test discovery without serial aborts on OSError during validation."""
     with patch(DISCOVER_PATH, return_value=[_mock_device(serial=None)]):
         result = await hass.config_entries.flow.async_init(
@@ -104,8 +112,9 @@ async def test_user_flow_discovery_no_serial_oserror(
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_discovery_no_serial_unexpected_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
     """Test discovery without serial aborts on unexpected error during validation."""
     with patch(DISCOVER_PATH, return_value=[_mock_device(serial=None)]):
@@ -122,10 +131,14 @@ async def test_user_flow_discovery_no_serial_unexpected_error(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_discovery_timeout_shows_manual_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
 ) -> None:
-    """Test user flow falls back to manual form when discovery times out, then recovers."""
+    """Test user flow falls back to manual form when discovery times out.
+
+    Then recovers.
+    """
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -144,9 +157,8 @@ async def test_user_flow_discovery_timeout_shows_manual_form(
     assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
 
 
-async def test_manual_entry_validation_timeout_then_retry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_manual_entry_validation_timeout_then_retry(hass: HomeAssistant) -> None:
     """Test manual entry: validation timeout shows error, retry succeeds."""
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
@@ -176,13 +188,11 @@ async def test_manual_entry_validation_timeout_then_retry(
         (RuntimeError("boom"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_manual_entry_validation_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    side_effect: Exception,
-    error: str,
+    hass: HomeAssistant, side_effect: Exception, error: str
 ) -> None:
-    """Test manual entry: errors during validation show correct error, retry succeeds."""
+    """Test manual entry errors show correct error, retry succeeds."""
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -204,10 +214,9 @@ async def test_manual_entry_validation_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_manual_entry_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test manual entry aborts when device is already configured."""
     with patch(DISCOVER_PATH, return_value=[]):
@@ -224,10 +233,9 @@ async def test_manual_entry_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_confirm_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test discovery confirm aborts when device is already configured."""
     with patch(DISCOVER_PATH, return_value=[_mock_device()]):
@@ -268,9 +276,8 @@ async def test_discover_uses_shared_listener(
     mock_listener.discover.assert_called_once()
 
 
-async def test_discover_without_shared_listener(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discover_without_shared_listener(hass: HomeAssistant) -> None:
     """Test _async_discover uses library discover when no shared listener."""
     with patch(DISCOVER_PATH, return_value=[_mock_device()]):
         result = await hass.config_entries.flow.async_init(
@@ -281,9 +288,8 @@ async def test_discover_without_shared_listener(
     assert result["step_id"] == "discovery_confirm"
 
 
-async def test_discover_without_shared_listener_oserror(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discover_without_shared_listener_oserror(hass: HomeAssistant) -> None:
     """Test _async_discover falls back to manual form on OSError, then succeeds."""
     with patch(DISCOVER_PATH, side_effect=OSError("Address in use")):
         result = await hass.config_entries.flow.async_init(
@@ -331,9 +337,8 @@ async def test_validate_uses_shared_listener(
     mock_listener.validate.assert_called_once()
 
 
-async def test_validate_without_shared_listener(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_validate_without_shared_listener(hass: HomeAssistant) -> None:
     """Test _async_validate_host uses library validate when no shared listener."""
     with patch(DISCOVER_PATH, return_value=[]):
         result = await hass.config_entries.flow.async_init(
@@ -348,3 +353,125 @@ async def test_validate_without_shared_listener(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery_new_device(hass: HomeAssistant) -> None:
+    """Test DHCP discovers a new device and creates a config entry."""
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_SERIAL: MOCK_SERIAL,
+        CONF_MAC: MOCK_MAC,
+    }
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery_updates_ip_by_serial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP updates IP and merges MAC for entry matched by serial."""
+    dhcp_info = DhcpServiceInfo(
+        ip=MOCK_NEW_HOST,
+        hostname=MOCK_HOSTNAME,
+        macaddress=MOCK_MAC,
+    )
+
+    with patch(VALIDATE_PATH, return_value=_mock_device(host=MOCK_NEW_HOST)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp_info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_NEW_HOST
+    assert mock_config_entry.data[CONF_MAC] == MOCK_MAC
+    assert mock_config_entry.title == f"EARN-E P1 ({MOCK_NEW_HOST})"
+
+
+@pytest.mark.parametrize(
+    ("validate_mock", "reason"),
+    [
+        ({"return_value": None}, "cannot_connect"),
+        ({"side_effect": OSError("no socket")}, "cannot_connect"),
+        ({"side_effect": RuntimeError("boom")}, "unknown"),
+    ],
+    ids=["timeout", "oserror", "unexpected_error"],
+)
+async def test_dhcp_discovery_validate_failures(
+    hass: HomeAssistant, validate_mock: dict[str, Any], reason: str
+) -> None:
+    """Test DHCP validation failures abort with the expected reason."""
+    with patch(VALIDATE_PATH, **validate_mock):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.parametrize("mock_config_entry", [{CONF_MAC: MOCK_MAC}], indirect=True)
+async def test_dhcp_discovery_updates_ip_by_mac(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP fast path: MAC-known entry updates IP without calling validate."""
+    dhcp_info = DhcpServiceInfo(
+        ip=MOCK_NEW_HOST,
+        hostname=MOCK_HOSTNAME,
+        macaddress=MOCK_MAC,
+    )
+
+    with patch(VALIDATE_PATH) as mock_validate:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp_info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_NEW_HOST
+    assert mock_config_entry.data[CONF_MAC] == MOCK_MAC
+    assert mock_config_entry.title == f"EARN-E P1 ({MOCK_NEW_HOST})"
+    mock_validate.assert_not_called()
+
+
+async def test_dhcp_discovery_aborts_for_ignored_entry(hass: HomeAssistant) -> None:
+    """Test DHCP discovery does not re-offer a device the user ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=MOCK_SERIAL,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

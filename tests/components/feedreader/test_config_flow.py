@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_mock_entry
-from .const import FEED_TITLE, URL, VALID_CONFIG_DEFAULT
+from .const import FEED_TITLE, URL, USER_AGENT, VALID_CONFIG_DEFAULT
 
 
 @pytest.fixture(name="feedparser")
@@ -53,6 +53,9 @@ async def test_user(hass: HomeAssistant, feedparser, setup_entry) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_URL: URL}
     )
+    # check user-agent
+    assert feedparser.call_args.args[3] == USER_AGENT
+    # check flow result
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL

@@ -1,14 +1,15 @@
 """Config flow to configure the Kitchen Sink component."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
     async_get_emitters,
+    async_get_receivers,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -22,7 +23,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
 
 CONF_BOOLEAN = "bool"
 CONF_INT = "int"
@@ -35,6 +36,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -43,6 +45,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -87,18 +90,18 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=self.config_entry.options | user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("section_1"): data_entry_flow.section(
-                    vol.Schema(
+                probatio.Required("section_1"): data_entry_flow.section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_BOOLEAN,
                                 default=self.config_entry.options.get(
                                     CONF_BOOLEAN, False
                                 ),
                             ): bool,
-                            vol.Optional(CONF_INT): cv.positive_int,
+                            probatio.Optional(CONF_INT): cv.positive_int,
                         }
                     ),
                     {"collapsed": False},
@@ -132,10 +135,10 @@ class SubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="add_sensor",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("state"): int,
+                    probatio.Required("name"): str,
+                    probatio.Required("state"): int,
                 }
             ),
         )
@@ -161,10 +164,10 @@ class SubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="reconfigure_sensor",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("state"): int,
+                    probatio.Required("name"): str,
+                    probatio.Required("state"): int,
                 }
             ),
         )
@@ -178,25 +181,38 @@ class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add an infrared fan."""
 
-        entities = async_get_emitters(self.hass)
-        if not entities:
-            return self.async_abort(reason="no_emitters")
-
         if user_input is not None:
             title = user_input.pop("name")
             return self.async_create_entry(data=user_input, title=title)
 
+        emitter_entities = async_get_emitters(self.hass)
+        receiver_entities = async_get_receivers(self.hass)
+
+        if not emitter_entities and not receiver_entities:
+            return self.async_abort(reason="no_infrared_entities")
+
+        schema_dict: dict[probatio.Marker, Any] = {
+            probatio.Required("name"): str,
+        }
+
+        if emitter_entities:
+            schema_dict[probatio.Optional(CONF_INFRARED_ENTITY_ID)] = EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN,
+                    include_entities=emitter_entities,
+                )
+            )
+
+        if receiver_entities:
+            schema_dict[probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID)] = (
+                EntitySelector(
+                    EntitySelectorConfig(
+                        domain=INFRARED_DOMAIN,
+                        include_entities=receiver_entities,
+                    )
+                )
+            )
+
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("name"): str,
-                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=entities,
-                        )
-                    ),
-                }
-            ),
+            step_id="user", data_schema=probatio.Schema(schema_dict)
         )

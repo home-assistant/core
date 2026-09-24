@@ -1,10 +1,10 @@
 """Config flow for the VegeHub integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from vegehub import VegeHub
-import voluptuous as vol
 
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
@@ -33,6 +33,7 @@ class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
     _hostname: str
     webhook_id: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,14 +56,15 @@ class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
         # Show the form to allow the user to manually enter the IP address
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_IP_ADDRESS): str,
+                    probatio.Required(CONF_IP_ADDRESS): str,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:

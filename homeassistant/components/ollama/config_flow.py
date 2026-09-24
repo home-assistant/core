@@ -4,11 +4,11 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import sys
-from typing import Any
+from typing import Any, override
 
 import httpx
 import ollama
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -18,7 +18,14 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LLM_HASS_API,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PROMPT,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
@@ -40,9 +47,7 @@ from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
-    CONF_PROMPT,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
@@ -60,20 +65,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     },
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -113,7 +118,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                     str(err),
                 )
                 errors["base"] = "unknown"
-        except TimeoutError, httpx.ConnectError:
+        except TimeoutError, ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -121,6 +126,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,7 +144,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             url = cv.url(url)
-        except vol.Invalid:
+        except probatio.Invalid:
             errors["base"] = "invalid_url"
             return self.async_show_form(
                 step_id="user",
@@ -223,6 +229,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -259,7 +266,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle model selection and configuration step."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is None:
@@ -271,7 +278,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except TimeoutError, httpx.ConnectError, httpx.HTTPError:
+            except TimeoutError, httpx.HTTPError, ConnectionError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
@@ -293,7 +300,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
             return self.async_show_form(
                 step_id="set_options",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     ollama_config_option_schema(
                         self.hass,
                         self._is_new,
@@ -396,7 +403,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
 
 
 def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> list[str]:
-    """Accepts a list of LLM API IDs and filters this against those currently available."""
+    """Filter a list of LLM API IDs against those available."""
 
     valid_llm_apis = [api.id for api in llm.async_get_apis(hass)]
 
@@ -418,7 +425,9 @@ def ollama_config_option_schema(
             default_name = DEFAULT_CONVERSATION_NAME
 
         schema: dict = {
-            vol.Required(CONF_NAME, default=default_name): str,
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
+            probatio.Required(CONF_NAME, default=default_name): str,
         }
     else:
         schema = {}
@@ -429,7 +438,7 @@ def ollama_config_option_schema(
 
     schema.update(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_MODEL,
                 description={"suggested_value": options.get(CONF_MODEL, DEFAULT_MODEL)},
             ): SelectSelector(
@@ -440,7 +449,7 @@ def ollama_config_option_schema(
     if subentry_type == "conversation":
         schema.update(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PROMPT,
                     description={
                         "suggested_value": options.get(
@@ -448,7 +457,7 @@ def ollama_config_option_schema(
                         )
                     },
                 ): TemplateSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_LLM_HASS_API,
                     description={"suggested_value": selected_llm_apis},
                 ): SelectSelector(
@@ -467,7 +476,7 @@ def ollama_config_option_schema(
         )
     schema.update(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_NUM_CTX,
                 description={
                     "suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)
@@ -479,7 +488,7 @@ def ollama_config_option_schema(
                     mode=NumberSelectorMode.BOX,
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_HISTORY,
                 description={
                     "suggested_value": options.get(
@@ -491,7 +500,7 @@ def ollama_config_option_schema(
                     min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_KEEP_ALIVE,
                 description={
                     "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
@@ -501,7 +510,7 @@ def ollama_config_option_schema(
                     min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_THINK,
                 description={
                     "suggested_value": options.get("think", DEFAULT_THINK),

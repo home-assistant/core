@@ -1,6 +1,6 @@
 """The notify_events component."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -9,8 +9,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_TOKEN): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_TOKEN): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

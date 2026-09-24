@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opower import (
     Account,
@@ -88,12 +88,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         def _dummy_listener() -> None:
             pass
 
-        # Force the coordinator to periodically update by registering at least one listener.
-        # Needed when the _async_update_data below returns {} for utilities that don't provide
-        # forecast, which results to no sensors added, no registered listeners, and thus
-        # _async_update_data not periodically getting called which is needed for _insert_statistics.
+        # Force the coordinator to periodically update by
+        # registering at least one listener.
+        # Needed when the _async_update_data below returns {}
+        # for utilities that don't provide forecast, which results
+        # to no sensors added, no registered listeners, and thus
+        # _async_update_data not periodically getting called which
+        # is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[str, OpowerData]:
@@ -108,7 +112,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
-            raise UpdateFailed(f"Error during login: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         try:
             accounts = await self.api.async_get_accounts()
@@ -189,12 +197,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
             consumption_unit_class = (
                 EnergyConverter.UNIT_CLASS
-                if account.meter_type == MeterType.ELEC
+                if account.meter_type is MeterType.ELEC
                 else VolumeConverter.UNIT_CLASS
             )
             consumption_unit = (
                 UnitOfEnergy.KILO_WATT_HOUR
-                if account.meter_type == MeterType.ELEC
+                if account.meter_type is MeterType.ELEC
                 else UnitOfVolume.CENTUM_CUBIC_FEET
             )
             consumption_metadata = StatisticMetaData(
@@ -244,7 +252,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     },
                 )
                 if migrated:
-                    # Skip update to avoid working on old data since the migration is done
+                    # Skip update to avoid working on old data since
+                    # the migration is done
                     # asynchronously. Update the statistics in the next refresh in 12h.
                     _LOGGER.debug(
                         "Statistics migration completed. Skipping update for now"
@@ -323,8 +332,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
                 cost_state = max(0, cost_read.provided_cost)
                 compensation_state = max(0, -cost_read.provided_cost)
-                consumption_state = max(0, cost_read.consumption)
-                return_state = max(0, -cost_read.consumption)
+                # Prefer the meter's own import and export registers when the
+                # utility publishes them. Splitting the net consumption on its
+                # sign undercounts both directions on a net-metered site,
+                # because an interval that is net-export can still contain real
+                # import (and vice versa).
+                if cost_read.imported is not None and cost_read.exported is not None:
+                    consumption_state = cost_read.imported
+                    return_state = cost_read.exported
+                else:
+                    consumption_state = max(0, cost_read.consumption)
+                    return_state = max(0, -cost_read.consumption)
 
                 cost_sum += cost_state
                 compensation_sum += compensation_state
@@ -393,7 +411,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             utility_account_id: The account ID (for issue_id).
             migration_map: Map from source statistic ID to target statistic ID
                            (e.g., {cost_id: compensation_id}).
-            metadata_map: Map of all statistic IDs (source and target) to their metadata.
+            metadata_map: Map of all statistic IDs (source and target)
+                         to their metadata.
 
         """
         if not migration_map:
@@ -547,7 +566,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting monthly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
-        if account.read_resolution == ReadResolution.BILLING:
+        if account.read_resolution is ReadResolution.BILLING:
             return cost_reads
 
         if start_time is None:
@@ -566,8 +585,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting daily cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
+        if not daily_cost_reads and start_time is not None:
+            if account.read_resolution is ReadResolution.DAY:
+                # Nothing finer to fall back to, and see the hourly reads below.
+                _LOGGER.debug("No daily cost reads. Skipping update")
+                return []
+            # The hourly reads below are still finer than the statistics they
+            # land on, so only drop the bill reads and carry on with those.
+            _LOGGER.debug("No daily cost reads. Trying the hourly ones")
+            cost_reads = []
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
-        if account.read_resolution == ReadResolution.DAY:
+        if account.read_resolution is ReadResolution.DAY:
             return cost_reads
 
         if start_time is None:
@@ -584,6 +612,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting hourly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
+        if not hourly_cost_reads and start_time is not None:
+            # A day read starts at local midnight, where that day's first hourly
+            # statistic already is, so keeping the daily reads would replace it
+            # with a coarser one carrying a different running sum. Only a concern
+            # once statistics exist: on the initial import there is nothing to
+            # overwrite and the daily reads are the best available data.
+            _LOGGER.debug("No hourly cost reads. Skipping update")
+            return []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads

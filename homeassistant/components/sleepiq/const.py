@@ -1,5 +1,7 @@
 """Define constants for the SleepIQ component."""
 
+from homeassistant.const import PRESSURE
+
 DATA_SLEEPIQ = "data_sleepiq"
 DOMAIN = "sleepiq"
 
@@ -11,7 +13,6 @@ FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
-PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"

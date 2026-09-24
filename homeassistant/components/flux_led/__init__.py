@@ -190,7 +190,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> b
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
         if not mac_matches_by_one(mac, entry.unique_id):
-            # The device is offline and another flux_led device is now using the ip address
+            # The device is offline and another flux_led device
+            # is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
                 f" {mac}"

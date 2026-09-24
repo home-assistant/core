@@ -170,7 +170,8 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state.state == STATE_UNAVAILABLE
 
-    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour += 2kWh
+    # 1 hour after last update, power sensor is back to normal
+    # at 2 KiloWatts and stays for 1 hour += 2kWh
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(
@@ -891,7 +892,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     integration_config_entry = MockConfigEntry(
         data={},
@@ -900,7 +901,7 @@ async def test_device_id(
             "method": "trapezoidal",
             "name": "integration",
             "round": 1.0,
-            "source": "sensor.test_source",
+            "source": "sensor.mock_title",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -912,9 +913,53 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    integration_entity = entity_registry.async_get("sensor.integration")
+    integration_entity = entity_registry.async_get("sensor.mock_title_integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Riemann sum integral."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "integration",
+                "name": "integration",
+                "source": "sensor.test_source",
+                "method": "right",
+                "unique_id": "integration_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    integration_entity = entity_registry.async_get("sensor.integration")
+    assert integration_entity is not None
+    assert integration_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 def _integral_sensor_config(max_sub_interval: dict[str, int] | None) -> dict[str, Any]:
@@ -979,7 +1024,7 @@ async def test_on_valid_source_expect_update_on_time(
 async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether time based integration updates the integral on a valid zero source."""
+    """Test time based integration updates integral on valid zero source."""
     start_time = dt_util.utcnow()
 
     with freeze_time(start_time) as freezer:
@@ -1012,7 +1057,7 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
 async def test_on_unvailable_source_expect_no_update_on_time(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether time based integration handles unavailability of the source properly."""
+    """Test time based integration handles source unavailability."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
@@ -1072,7 +1117,7 @@ async def test_on_statechanges_source_expect_no_update_on_time(
 async def test_on_no_max_sub_interval_expect_no_timebased_updates(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether integratal is not updated by time when max_sub_interval is not configured."""
+    """Test integral not updated by time without max_sub_interval."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
