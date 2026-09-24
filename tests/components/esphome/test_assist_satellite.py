@@ -987,10 +987,7 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
 
     async def async_stream_result(
         on_audio_interrupt: Callable[[], None],
-        *,
-        accept_native_pcm_format: bool = False,
     ) -> AsyncGenerator[bytes]:
-        assert accept_native_pcm_format
         interrupt.side_effect = on_audio_interrupt
         stream_requested.set()
         await continue_stream.wait()
@@ -1048,11 +1045,8 @@ async def test_streaming_tts_falls_back_without_flush_support(
 
     async def async_stream_result(
         on_audio_interrupt: Callable[[], None] | None = None,
-        *,
-        accept_native_pcm_format: bool = False,
     ) -> AsyncGenerator[bytes]:
         assert on_audio_interrupt is None
-        assert not accept_native_pcm_format
         yield mock_wav
 
     stream.async_stream_result = async_stream_result

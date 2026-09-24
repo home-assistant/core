@@ -593,14 +593,8 @@ class ResultStream:
     async def async_stream_result(
         self,
         on_audio_interrupt: Callable[[], None] | None = None,
-        *,
-        accept_native_pcm_format: bool = False,
     ) -> AsyncGenerator[bytes]:
-        """Get the stream of this result.
-
-        Consumers that convert interruptible audio can accept the engine's
-        native PCM format.
-        """
+        """Get the stream of this result."""
         if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
@@ -636,18 +630,13 @@ class ResultStream:
             engine = get_engine_instance(self.hass, self.engine)
             if not isinstance(engine, TextToSpeechEntity):
                 raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
-            options = self.options
-            if accept_native_pcm_format:
-                options = dict(options)
-                for option in (
-                    ATTR_PREFERRED_SAMPLE_RATE,
-                    ATTR_PREFERRED_SAMPLE_CHANNELS,
-                    ATTR_PREFERRED_SAMPLE_BYTES,
-                ):
-                    options.pop(option, None)
             async with aclosing(
                 self._manager.async_generate_tts_audio(
-                    engine, result, self.language, options, on_audio_interrupt
+                    engine,
+                    result,
+                    self.language,
+                    self.options,
+                    on_audio_interrupt,
                 )
             ) as audio:
                 async for chunk in audio:

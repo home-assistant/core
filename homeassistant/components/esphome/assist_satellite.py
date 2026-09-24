@@ -785,9 +785,7 @@ class EsphomeAssistSatellite(
                     start_time = None
                     audio_duration_sent = 0.0
 
-                audio_stream = tts_result.async_stream_result(
-                    on_audio_interrupt, accept_native_pcm_format=True
-                )
+                audio_stream = tts_result.async_stream_result(on_audio_interrupt)
             else:
                 audio_interrupt = None
                 audio_stream = tts_result.async_stream_result()
@@ -800,7 +798,6 @@ class EsphomeAssistSatellite(
                 expected_sample_rate=sample_rate,
                 samples_per_chunk=samples_per_chunk,
                 audio_interrupt=audio_interrupt,
-                allow_pcm_conversion=supports_audio_interrupt,
             ):
                 if not self._is_running:
                     break  # type: ignore[unreachable]

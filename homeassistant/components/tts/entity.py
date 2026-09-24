@@ -98,8 +98,8 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
         The engine must discard its pending audio before invoking the callback,
         preserve the stream header, and yield only replacement audio afterward.
-        Such streams bypass memory/disk caching and general audio conversion;
-        playback consumers convert native PCM to their output format.
+        It must support the consumer's requested output options because these
+        streams bypass memory/disk caching and audio conversion.
         """
         return self._attr_supports_audio_interrupt
 

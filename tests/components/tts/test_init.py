@@ -2359,16 +2359,26 @@ async def test_interruptible_tts_fallback_without_interrupt_callback(
     assert generated.call_count == 1
 
 
-async def test_interruptible_tts_accepts_native_pcm_format(
+async def test_interruptible_tts_receives_requested_pcm_format(
     hass: HomeAssistant, mock_tts_entity: MockTTSEntity
 ) -> None:
-    """Test a consumer can handle the engine's native PCM format."""
+    """Test an interruptible engine receives the consumer's PCM format."""
     mock_tts_entity._attr_supports_audio_interrupt = True
-    mock_tts_entity._supported_options = [tts.ATTR_PREFERRED_FORMAT]
+    mock_tts_entity._supported_options = [
+        tts.ATTR_PREFERRED_FORMAT,
+        tts.ATTR_PREFERRED_SAMPLE_RATE,
+        tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
+        tts.ATTR_PREFERRED_SAMPLE_BYTES,
+    ]
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     async def synthesize(request: tts.TTSAudioRequest) -> tts.TTSAudioResponse:
-        assert request.options == {tts.ATTR_PREFERRED_FORMAT: "wav"}
+        assert request.options == {
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        }
 
         async def audio() -> AsyncGenerator[bytes]:
             yield b"audio"
@@ -2382,17 +2392,17 @@ async def test_interruptible_tts_accepts_native_pcm_format(
         mock_tts_entity.entity_id,
         options={
             tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
             tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
         },
     )
     stream.async_set_message("hello")
 
-    result = stream.async_stream_result(Mock(), accept_native_pcm_format=True)
+    result = stream.async_stream_result(Mock())
     assert await anext(result) == b"audio"
     await result.aclose()
-    assert stream.options[tts.ATTR_PREFERRED_SAMPLE_RATE] == 22050
+    assert stream.options[tts.ATTR_PREFERRED_SAMPLE_RATE] == 16000
     assert stream.options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] == 1
     assert stream.options[tts.ATTR_PREFERRED_SAMPLE_BYTES] == 2
 
