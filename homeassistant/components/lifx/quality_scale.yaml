@@ -69,11 +69,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      The integration has no user-actionable issues to raise. An unreachable
-      device is reported through entity availability instead.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
