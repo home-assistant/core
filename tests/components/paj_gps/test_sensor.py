@@ -13,7 +13,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.paj_gps.const import DOMAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -162,6 +162,7 @@ async def test_voltage_none_when_missing(
 
 async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_paj_gps_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -187,10 +188,14 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
         TrackPoint(iddevice=2, speed=40),
     ]
 
+    failing_device_ids = {2}
+
     async def _get_last_sensor_data(device_id: int) -> SensorData:
         if device_id == 1:
             return SensorData(did=1, volt=12400)
-        raise PajGpsApiError("boom")
+        if device_id in failing_device_ids:
+            raise PajGpsApiError("boom")
+        return SensorData(did=device_id, volt=12500)
 
     mock_paj_gps_api.get_last_sensor_data.side_effect = _get_last_sensor_data
 
@@ -202,4 +207,30 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
 
     state_2 = hass.states.get("sensor.device_2_voltage")
     assert state_2 is not None
-    assert state_2.state == STATE_UNKNOWN
+    assert state_2.state == STATE_UNAVAILABLE
+    assert (
+        caplog.messages.count("Failed to fetch voltage sensor data for device 2: boom")
+        == 1
+    )
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        caplog.messages.count("Failed to fetch voltage sensor data for device 2: boom")
+        == 1
+    )
+
+    failing_device_ids.clear()
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert caplog.messages.count("Voltage sensor data recovered for device 2") == 1
+    state_2 = hass.states.get("sensor.device_2_voltage")
+    assert state_2 is not None
+    assert state_2.state == "12.5"
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert caplog.messages.count("Voltage sensor data recovered for device 2") == 1

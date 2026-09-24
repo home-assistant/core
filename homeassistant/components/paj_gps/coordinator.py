@@ -60,6 +60,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
         self._email: str = config_entry.data[CONF_EMAIL]
         self._user_id: int | None = None
+        self._voltage_data_failures: set[int] = set()
         self.api = PajGpsApi(
             email=self._email,
             password=config_entry.data[CONF_PASSWORD],
@@ -128,14 +129,21 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
             for device_id, result in zip(voltage_device_ids, results, strict=False):
                 if isinstance(result, PajGpsApiError):
-                    _LOGGER.debug(
-                        "Failed to fetch voltage sensor data for device %s: %s",
-                        device_id,
-                        result,
-                    )
+                    if device_id not in self._voltage_data_failures:
+                        _LOGGER.info(
+                            "Failed to fetch voltage sensor data for device %s: %s",
+                            device_id,
+                            result,
+                        )
+                        self._voltage_data_failures.add(device_id)
                     continue
                 if isinstance(result, BaseException):
                     raise result
+                if device_id in self._voltage_data_failures:
+                    _LOGGER.info(
+                        "Voltage sensor data recovered for device %s", device_id
+                    )
+                    self._voltage_data_failures.remove(device_id)
                 sensor_data[device_id] = result
 
         return PajGpsData(devices=devices, positions=positions, sensor_data=sensor_data)
