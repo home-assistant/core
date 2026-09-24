@@ -78,6 +78,7 @@ async def test_brightness_change(
     await hass.async_block_till_done()
 
     with (
+        expectation,
         patch(
             "pyvesync.devices.vesyncbulb.VeSyncBulbESL100.set_brightness",
             return_value=api_response,
@@ -85,7 +86,6 @@ async def test_brightness_change(
         patch(
             "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as mark_mock,
-        expectation,
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
