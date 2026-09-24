@@ -17,6 +17,5 @@
         'text': 'Sa-So',
       }),
     ]),
-    'whole_day': True,
   })
 # ---

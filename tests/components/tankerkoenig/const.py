@@ -53,7 +53,7 @@ STATION = Station(
         OpeningTime(start="08:00:00", end="20:00:00", text="Sa-So"),
     ],
     overrides=[],
-    whole_day=True,
+    whole_day=False,
     is_open=True,
     e5=1.719,
     e10=1.659,

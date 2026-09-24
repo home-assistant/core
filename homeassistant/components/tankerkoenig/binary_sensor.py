@@ -21,6 +21,10 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+# Tankerkoenig marks a station that never closes with `wholeDay` and sends no opening
+# times for it. Publishing that as an opening time keeps a single attribute for both.
+WHOLE_DAY_OPENING_TIME = {"text": "Mo-So", "start": "00:00:00", "end": "24:00:00"}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -55,7 +59,9 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
         attrs: dict[str, Any] = {}
-        if station.opening_times:
+        if station.whole_day:
+            attrs["opening_times"] = [dict(WHOLE_DAY_OPENING_TIME)]
+        elif station.opening_times:
             attrs["opening_times"] = [
                 {
                     "start": opening_time.start,
@@ -64,8 +70,6 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
                 }
                 for opening_time in station.opening_times
             ]
-        if station.whole_day is not None:
-            attrs["whole_day"] = station.whole_day
 
         if coordinator.show_on_map:
             attrs[EntityStateAttribute.LATITUDE] = station.lat

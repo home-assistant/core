@@ -63,9 +63,6 @@
           },
           "opening_times": {
             "name": "Opening times"
-          },
-          "whole_day": {
-            "name": "Open 24 hours"
           }
         }
       }

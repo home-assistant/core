@@ -1,10 +1,15 @@
 """Tests for the Tankerkoening integration."""
 
+from dataclasses import replace
+from unittest.mock import AsyncMock
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+
+from .const import STATION
 
 from tests.common import MockConfigEntry
 
@@ -21,3 +26,24 @@ async def test_binary_sensor(
     assert state
     assert state.state == STATE_ON
     assert state.attributes == snapshot
+
+
+async def test_binary_sensor_whole_day(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+) -> None:
+    """Test a station open around the clock reports it as its opening time."""
+    tankerkoenig.station_details.return_value = replace(
+        STATION, whole_day=True, opening_times=[]
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.station_somewhere_street_1_status")
+    assert state
+    assert state.attributes["opening_times"] == [
+        {"text": "Mo-So", "start": "00:00:00", "end": "24:00:00"}
+    ]
+    assert "whole_day" not in state.attributes
