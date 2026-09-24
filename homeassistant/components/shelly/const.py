@@ -12,6 +12,8 @@ from aioshelly.const import (
     MODEL_BUTTON1_V2,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
+    MODEL_DIMMER_10V_G3,
+    MODEL_DIMMER_10V_G4,
     MODEL_DUO,
     MODEL_DW,
     MODEL_DW_2,
@@ -19,6 +21,9 @@ from aioshelly.const import (
     MODEL_HT,
     MODEL_MOTION,
     MODEL_MOTION_2,
+    MODEL_PLUS_10V,
+    MODEL_PLUS_10V_DIMMER,
+    MODEL_PRO_DIMMER_10V_PM,
     MODEL_RGBW2,
     MODEL_VALVE,
     MODEL_VINTAGE_V2,
@@ -36,7 +41,16 @@ PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to 
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
+CONF_LIGHT_AS_FAN: Final = "light_as_fan"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
+
+MODELS_SUPPORTING_FAN: Final = {
+    MODEL_DIMMER_10V_G3,
+    MODEL_DIMMER_10V_G4,
+    MODEL_PLUS_10V,
+    MODEL_PLUS_10V_DIMMER,
+    MODEL_PRO_DIMMER_10V_PM,
+}
 
 # max BLOCK light transition time in milliseconds (min=0)
 BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000

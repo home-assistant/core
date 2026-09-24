@@ -1,6 +1,6 @@
 """Light for Shelly."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Final, cast, override
 
 from aioshelly.block_device import Block
@@ -53,6 +53,7 @@ from .utils import (
     get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_rpc_light_as_fan,
     percentage_to_brightness,
 )
 
@@ -598,8 +599,17 @@ def _async_setup_rpc_entry(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
+    lights = LIGHTS
+    if is_rpc_light_as_fan(config_entry):
+        lights = {
+            **LIGHTS,
+            "light": replace(
+                LIGHTS["light"], removal_condition=lambda _config, _status, _key: True
+            ),
+        }
+
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, LIGHTS, RpcShellyLight
+        hass, config_entry, async_add_entities, lights, RpcShellyLight
     )
 
     async_remove_orphaned_entities(

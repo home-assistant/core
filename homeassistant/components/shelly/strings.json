@@ -826,10 +826,12 @@
     "step": {
       "init": {
         "data": {
-          "ble_scanner_mode": "Bluetooth scanner mode"
+          "ble_scanner_mode": "Bluetooth scanner mode",
+          "light_as_fan": "Use as fan"
         },
         "data_description": {
-          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
+          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning.",
+          "light_as_fan": "Represent the 0–10 V output as a fan with speed control. Changing this replaces the light or fan entity; update dashboards and automations that use it."
         },
         "description": "Auto is recommended for most setups; the Shelly listens passively and only briefly switches to active when needed, saving battery on your Bluetooth devices."
       }

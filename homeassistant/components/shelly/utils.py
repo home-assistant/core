@@ -56,6 +56,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    CONF_LIGHT_AS_FAN,
     DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
@@ -65,6 +66,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    MODELS_SUPPORTING_FAN,
     PUSH_UPDATE_ISSUE_ID,
     ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
@@ -481,6 +483,13 @@ def is_block_channel_type_light(settings: dict[str, Any], block: Block) -> bool:
 
     app_type = settings["relays"][int(block.channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
+
+
+def is_rpc_light_as_fan(entry: ConfigEntry) -> bool:
+    """Return whether a supported 0-10 V dimmer should be exposed as a fan."""
+    return entry.data[CONF_MODEL] in MODELS_SUPPORTING_FAN and entry.options.get(
+        CONF_LIGHT_AS_FAN, False
+    )
 
 
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:

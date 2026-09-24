@@ -63,6 +63,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -78,10 +79,12 @@ from .ble_provisioning import (
 from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
+    CONF_LIGHT_AS_FAN,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
     DOMAIN,
     LOGGER,
+    MODELS_SUPPORTING_FAN,
     PROVISIONING_TIMEOUT,
     BLEScannerMode,
 )
@@ -1406,21 +1409,28 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options_schema: dict[probatio.Marker, Any] = {
+            probatio.Required(
+                CONF_BLE_SCANNER_MODE,
+                default=self.config_entry.options.get(
+                    CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
+                ),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=BLE_SCANNER_OPTIONS,
+                    translation_key=CONF_BLE_SCANNER_MODE,
+                ),
+            ),
+        }
+        if self.config_entry.data[CONF_MODEL] in MODELS_SUPPORTING_FAN:
+            options_schema[
+                probatio.Required(
+                    CONF_LIGHT_AS_FAN,
+                    default=self.config_entry.options.get(CONF_LIGHT_AS_FAN, False),
+                )
+            ] = BooleanSelector()
+
         return self.async_show_form(
             step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_BLE_SCANNER_MODE,
-                        default=self.config_entry.options.get(
-                            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=BLE_SCANNER_OPTIONS,
-                            translation_key=CONF_BLE_SCANNER_MODE,
-                        ),
-                    ),
-                }
-            ),
+            data_schema=probatio.Schema(options_schema),
         )
