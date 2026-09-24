@@ -94,6 +94,9 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
                     )
                 elif isinstance(result, BaseException):
                     raise result
+            errors = [r for r in results if isinstance(r, VeSyncError)]
+            if devices and len(errors) == len(devices):
+                raise errors[0]
 
             if self.should_update_energy():
                 self.update_time = time.time()
