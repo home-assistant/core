@@ -25,6 +25,7 @@ pylint-per-file-ignores==3.2.1
 pipdeptree==4.2.2
 pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1
+pytest-codspeed==5.0.3
 pytest-cov==7.1.0
 pytest-freezer==0.4.9
 pytest-github-actions-annotate-failures==0.4.2
@@ -38,7 +39,7 @@ pytest==9.0.3
 requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
-syrupy==6.0.0
+syrupy==6.1.1
 tqdm==4.67.1
 types-aiofiles==25.1.0.20260518
 types-atomicwrites==1.4.5.1
