@@ -66,6 +66,7 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         self.device_info = DeviceInfo(
             identifiers={self._device_identifier},
             manufacturer="Arcam",
+            model="Arcam FMJ AVR",
             name=device_name,
         )
         self.zone_unique_id = f"{unique_id}-{zone}"
