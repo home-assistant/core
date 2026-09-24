@@ -87,3 +87,18 @@ async def test_purifier_auto_preference(
         )
 
     method_mock.assert_called_once_with("quiet")
+
+
+async def test_no_auto_preference_without_support(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a purifier that reports no auto preference gets no select."""
+    mock_devices_response(aioclient_mock, "Air Purifier 200s")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("fan.air_purifier_200s") is not None
+    assert hass.states.get("select.air_purifier_200s_auto_mode_preference") is None
