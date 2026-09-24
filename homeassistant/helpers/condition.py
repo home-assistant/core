@@ -3,14 +3,12 @@
 import abc
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import inspect
 import logging
-import re
 import sys
 from typing import (
     TYPE_CHECKING,
@@ -28,7 +26,7 @@ from typing import (
     override,
 )
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ABOVE,
@@ -49,6 +47,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
+    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
@@ -151,10 +150,6 @@ _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "trigger": None,
 }
 
-INPUT_ENTITY_ID = re.compile(
-    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
-)
-
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
@@ -167,33 +162,33 @@ CONDITIONS: HassKey[dict[str, str]] = HassKey("conditions")
 
 # Basic schemas to sanity check the condition descriptions,
 # full validation is done by hassfest.conditions
-_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-_CONDITION_DESCRIPTION_SCHEMA = vol.Schema(
+_CONDITION_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
+        probatio.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        probatio.Optional("fields"): probatio.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def starts_with_dot(key: str) -> str:
     """Check if key starts with dot."""
     if not key.startswith("."):
-        raise vol.Invalid("Key does not start with .")
+        raise probatio.Invalid("Key does not start with .")
     return key
 
 
-_CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
+_CONDITIONS_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _CONDITION_DESCRIPTION_SCHEMA),
+        probatio.Remove(probatio.All(str, starts_with_dot)): object,
+        cv.underscore_slug: probatio.Any(None, _CONDITION_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -270,16 +265,16 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_BASE_SCHEMA = vol.Schema(
+_CONDITION_BASE_SCHEMA = probatio.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): str,
+        probatio.Required(CONF_CONDITION): str,
     }
 )
 _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_OPTIONS): object,
-        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_OPTIONS): object,
+        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
@@ -441,14 +436,14 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
@@ -542,7 +537,7 @@ class EntityConditionBase(Condition):
     _excluded_states: Final[frozenset[str]] = frozenset(
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
-    _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    _schema: probatio.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -947,8 +942,8 @@ def make_entity_state_condition(
 
 NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required("threshold"): NumericThresholdSelector(
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required("threshold"): NumericThresholdSelector(
                 NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
             ),
         },
@@ -960,7 +955,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
-    _valid_unit: str | None | UndefinedType = UNDEFINED
+    _valid_unit: str | UndefinedType | None = UNDEFINED
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -1051,7 +1046,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:
@@ -1070,12 +1065,12 @@ def make_entity_numerical_condition(
 
 def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Factory for numerical condition schema with unit option."""
     return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required("threshold"): NumericThresholdSelector(
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(
                         mode=NumericThresholdMode.IS,
                         unit_of_measurement=list(unit_converter.VALID_UNITS),
@@ -1233,25 +1228,42 @@ def condition_trace_update_result(**kwargs: Any) -> None:
     node.update_result(**kwargs)
 
 
-@contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
+class trace_condition:
     """Trace condition evaluation."""
-    should_pop = True
-    trace_element = trace_stack_top(trace_stack_cv)
-    if trace_element and trace_element.reuse_by_child:
-        should_pop = False
-        trace_element.reuse_by_child = False
-    else:
-        trace_element = condition_trace_append(variables, trace_path_get())
-        trace_stack_push(trace_stack_cv, trace_element)
-    try:
-        yield trace_element
-    except Exception as ex:
-        trace_element.set_error(ex)
-        raise
-    finally:
-        if should_pop:
-            trace_stack_pop(trace_stack_cv)
+
+    __slots__ = ("_should_pop", "_trace_element", "_variables")
+
+    _should_pop: bool
+    _trace_element: TraceElement
+
+    def __init__(self, variables: TemplateVarsType) -> None:
+        """Store the variables for the trace element."""
+        self._variables = variables
+
+    def __enter__(self) -> TraceElement:
+        """Start tracing the condition evaluation."""
+        should_pop = True
+        trace_element = trace_stack_top(trace_stack_cv)
+        if trace_element and trace_element.reuse_by_child:
+            should_pop = False
+            trace_element.reuse_by_child = False
+        else:
+            trace_element = condition_trace_append(self._variables, trace_path_get())
+            trace_stack_push(trace_stack_cv, trace_element)
+        self._should_pop = should_pop
+        self._trace_element = trace_element
+        return trace_element
+
+    def __exit__(
+        self, exc_type: object, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
+        """Finish tracing the condition evaluation."""
+        try:
+            if exc_val is not None and isinstance(exc_val, Exception):
+                self._trace_element.set_error(exc_val)
+        finally:
+            if self._should_pop:
+                trace_stack_pop(trace_stack_cv)
 
 
 @overload
@@ -1710,11 +1722,12 @@ def state(
         req_state = [req_state]
 
     is_state = False
+    state_value: Any = None
     for req_state_value in req_state:
         state_value = req_state_value
         if (
             isinstance(req_state_value, str)
-            and INPUT_ENTITY_ID.match(req_state_value) is not None
+            and cv.INPUT_ENTITY_ID.match(req_state_value) is not None
         ):
             if not (state_entity := hass.states.get(req_state_value)):
                 raise ConditionErrorMessage(
@@ -1733,7 +1746,7 @@ def state(
         for_period = cv.positive_time_period(render_complex(for_period, variables))
     except TemplateError as ex:
         raise ConditionErrorMessage("state", f"template error: {ex}") from ex
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
 
     duration = dt_util.utcnow() - cast(timedelta, for_period)
@@ -2001,7 +2014,7 @@ async def async_validate_condition_config(
             platform_domain, condition_key
         )
         if not (condition_class := condition_descriptors.get(relative_condition_key)):
-            raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
+            raise probatio.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
 
     config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
@@ -2132,6 +2145,20 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
                     referenced.add(value)
             continue
 
+        if condition == "zone":
+            options = config.get(CONF_OPTIONS, {})
+            referenced.update(options.get(CONF_ENTITY_ID, []))
+            referenced.update(options.get(CONF_ZONE, []))
+
+        elif condition in (
+            "zone.in_zone",
+            "zone.not_in_zone",
+            "zone.occupancy_is_detected",
+            "zone.occupancy_is_not_detected",
+        ):
+            if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
+                referenced.add(zone_entity_id)
+
         entity_ids = config.get(CONF_ENTITY_ID)
 
         if isinstance(entity_ids, str):
@@ -2230,7 +2257,7 @@ def _load_conditions_file(integration: Integration) -> dict[str, Any]:
             "Unable to find conditions.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid) as ex:
+    except (HomeAssistantError, probatio.Invalid) as ex:
         _LOGGER.warning(
             "Unable to parse conditions.yaml for the %s integration: %s",
             integration.domain,

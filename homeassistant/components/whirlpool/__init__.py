@@ -21,6 +21,8 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
 ]
@@ -56,11 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
         )
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
-    if not await appliances_manager.fetch_appliances():
+    if not await appliances_manager.connect():
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="appliances_fetch_failed"
+            translation_domain=DOMAIN, translation_key="cannot_connect"
         )
-    await appliances_manager.connect()
 
     entry.runtime_data = appliances_manager
 

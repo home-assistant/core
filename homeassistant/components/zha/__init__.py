@@ -4,11 +4,12 @@ import contextlib
 import logging
 from zoneinfo import ZoneInfo
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
+from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
@@ -60,24 +61,25 @@ from .repairs.wrong_silabs_firmware import (
     AlreadyRunningEZSP,
     warn_on_wrong_silabs_firmware,
 )
+from .services import async_setup_services
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = probatio.Schema({probatio.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
-    vol.Optional(CONF_BAUDRATE): cv.positive_int,
-    vol.Optional(CONF_DATABASE): cv.string,
-    vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
+    probatio.Optional(CONF_BAUDRATE): cv.positive_int,
+    probatio.Optional(CONF_DATABASE): cv.string,
+    probatio.Optional(CONF_DEVICE_CONFIG, default={}): probatio.Schema(
         {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
     ),
-    vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
-    vol.Optional(CONF_ZIGPY): dict,
-    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
-    vol.Optional(CONF_USB_PATH): cv.string,
-    vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
+    probatio.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
+    probatio.Optional(CONF_ZIGPY): dict,
+    probatio.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    probatio.Optional(CONF_USB_PATH): cv.string,
+    probatio.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
 }
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            vol.All(
+        DOMAIN: probatio.Schema(
+            probatio.All(
                 cv.deprecated(CONF_USB_PATH),
                 cv.deprecated(CONF_BAUDRATE),
                 cv.deprecated(CONF_RADIO_TYPE),
@@ -85,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = (
@@ -120,6 +122,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_ZHA] = ha_zha_data
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+
+    async_setup_services(hass)
 
     return True
 
@@ -158,15 +162,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
-    # Load and cache device trigger information early
+    # Load and cache device trigger information early. Quirks were registered by
+    # `Gateway.async_from_config` above, so pass the resolver to quirk devices
+    # and surface quirk-defined triggers (e.g. remote button presses).
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.create_zigpy_app(connect=False) as app:
+    async with radio_mgr.create_zigpy_app(
+        connect=False, device_resolver=DEVICE_REGISTRY.resolve
+    ) as app:
         for dev in app.devices.values():
-            dev_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, str(dev.ieee))},
-                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            dev_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, str(dev.ieee)), config_entry.entry_id
             )
 
             if dev_entry is None:
@@ -222,6 +229,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
+
+    # Ensure the gateway is torn down if setup fails after this point
+    config_entry.async_on_unload(ha_zha_data.gateway_proxy.shutdown)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
@@ -281,11 +291,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
-
-    if ha_zha_data.gateway_proxy is not None:
-        await ha_zha_data.gateway_proxy.shutdown()
-        ha_zha_data.gateway_proxy = None
-
+    ha_zha_data.gateway_proxy = None
     ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata
@@ -295,8 +301,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     with contextlib.suppress(KeyError):
         for platform in PLATFORMS:
             del ha_zha_data.platforms[platform]
-
-    websocket_api.async_unload_api(hass)
 
     return True
 

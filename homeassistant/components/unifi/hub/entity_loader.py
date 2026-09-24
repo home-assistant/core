@@ -51,6 +51,9 @@ class UnifiEntityLoader:
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
+                hub, hub.api.object_oriented_network_configs
+            ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
                 hub, hub.api.traffic_rules
             ),
@@ -168,12 +171,10 @@ class UnifiEntityLoader:
     ) -> None:
         """Remove a stale client's tracker entity and its device."""
         entity_registry.async_remove(entity_id)
-        if device := device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+        if device := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), self.hub.config.entry.entry_id
         ):
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=self.hub.config.entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
     @callback
     def register_platform(

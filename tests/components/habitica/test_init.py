@@ -148,8 +148,8 @@ async def test_remove_party_and_reload(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is not None
     )
@@ -168,8 +168,8 @@ async def test_remove_party_and_reload(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            {(DOMAIN, f"{config_entry.unique_id}_{group_id}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry.unique_id}_{group_id}"), config_entry.entry_id
         )
         is None
     )
@@ -179,3 +179,40 @@ async def test_remove_party_and_reload(
         hass.states.get("notify.test_user_private_message_test_partymember_displayname")
         is None
     )
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    config_entry_with_subentry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the via_device links between user, party and party member devices."""
+    group_id = "1e87097c-4c03-4f8c-a475-67cc7da7f409"
+    member_id = "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"
+
+    config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+
+    unique_id = config_entry_with_subentry.unique_id
+    entry_id = config_entry_with_subentry.entry_id
+
+    user_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, unique_id), entry_id
+    )
+    assert user_device is not None
+    assert user_device.via_device_id is None
+
+    party_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{unique_id}_{group_id}"), entry_id
+    )
+    assert party_device is not None
+    assert party_device.via_device_id == user_device.id
+
+    member_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, member_id), entry_id
+    )
+    assert member_device is not None
+    assert member_device.via_device_id == party_device.id

@@ -287,9 +287,7 @@ async def async_setup_entry(
                 if entity_entry.config_entry_id != entry.entry_id:
                     continue
                 entity_registry.async_remove(entity_entry.entity_id)
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
 
         # Prune sensor tracking for accounts that are no longer present
         if created_sensors:

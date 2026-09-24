@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusError
 from pystiebeleltron.lwz import OperatingMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -60,8 +60,8 @@ async def test_climate_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify entity is correctly assigned to device
-    device_entry = device_registry.async_get_device(
-        identifiers={("stiebel_eltron", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("stiebel_eltron", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -145,7 +145,7 @@ async def test_climate_entity_set_hvac_mode_handles_api_exception(
     """Test setting HVAC mode handles API exception."""
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_operation.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_hvac_mode(hass, HVACMode.AUTO, CLIMATE_ENTITY_ID)
 
@@ -158,7 +158,7 @@ async def test_climate_entity_set_preset_mode_handles_api_exception(
     """Test setting preset mode handles API exception."""
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_operation.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_preset_mode(hass, PRESET_COMFORT, CLIMATE_ENTITY_ID)
 
@@ -172,7 +172,7 @@ async def test_climate_entity_set_temperature_handles_api_exception(
 
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_target_temp.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_target_temp.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_temperature(hass, 24.0, CLIMATE_ENTITY_ID)
 

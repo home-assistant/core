@@ -8,6 +8,9 @@ from homeassistant.helpers.typing import StateType
 
 DOMAIN: Final = "fronius"
 
+CONF_MODBUS_PORT: Final = "modbus_port"
+DEFAULT_MODBUS_PORT: Final = 502
+
 type SolarNetId = str
 SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
@@ -20,6 +23,7 @@ class FroniusConfigEntryData(TypedDict):
 
     host: str
     is_logger: bool
+    modbus_port: int
 
 
 class FroniusDeviceInfo(NamedTuple):

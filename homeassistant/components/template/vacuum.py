@@ -1,10 +1,11 @@
 """Support for Template vacuums."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -18,7 +19,9 @@ from homeassistant.components.vacuum import (
     Segment,
     StateVacuumEntity,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
@@ -28,9 +31,10 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -41,7 +45,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -71,24 +75,24 @@ SCRIPT_FIELDS = (
 
 CLEAN_AREA_GROUP = "clean_area_group"
 
-VACUUM_COMMON_SCHEMA = vol.Schema(
+VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_FAN_SPEED): cv.template,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Inclusive(
+        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_FAN_SPEED): cv.template,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Inclusive(
             CONF_SEGMENTS,
             CLEAN_AREA_GROUP,
             f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ): cv.template,
-        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(
+        probatio.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+        probatio.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+        probatio.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+        probatio.Inclusive(
             CONF_CLEAN_SEGMENTS,
             CLEAN_AREA_GROUP,
             f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
@@ -96,12 +100,13 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
+)
 
-VACUUM_YAML_SCHEMA = vol.All(
+VACUUM_YAML_SCHEMA = probatio.All(
     VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-        make_template_entity_common_modern_attributes_schema(
-            VACUUM_DOMAIN, DEFAULT_NAME
-        ).schema
+        make_template_entity_common_schema(VACUUM_DOMAIN, DEFAULT_NAME).schema
     ),
     cv.key_dependency(CONF_SEGMENTS, CONF_UNIQUE_ID),
     cv.key_dependency(CONF_CLEAN_SEGMENTS, CONF_UNIQUE_ID),
@@ -168,13 +173,13 @@ def validate_segments(
     """Parse segment template to list of segments."""
 
     def parse(result: Any) -> list[Segment] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         segments: list[Segment] = []
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 option,
                 result,
@@ -184,7 +189,7 @@ def validate_segments(
 
         for item in result:
             if not isinstance(item, dict):
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     item,
@@ -199,7 +204,7 @@ def validate_segments(
                 or ("group" in item and not isinstance(item["group"], str))
                 or not set(item).issubset({"id", "name", "group"})
             ):
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     item,
@@ -214,12 +219,46 @@ def validate_segments(
     return parse
 
 
-class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
+@dataclass(kw_only=True)
+class VacuumExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template vacuum entities."""
+
+    activity: VacuumActivity | None
+    fan_speed: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the vacuum data."""
+        return {
+            "activity": self.activity.value if self.activity else None,
+            "fan_speed": self.fan_speed,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored vacuum state from a dict."""
+        try:
+            activity: VacuumActivity | None = None
+            if _activity := restored["activity"]:
+                activity = VacuumActivity(_activity)
+
+            return cls(
+                activity=activity,
+                fan_speed=restored["fan_speed"],
+            )
+        except KeyError, ValueError:
+            return None
+
+
+class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreEntity):
     """Representation of a template vacuum features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_extra_data = VacuumExtraStoredData
+    _restore_state_properties = ("_attr_activity",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -234,14 +273,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
-            template_validators.strenum(self, CONF_STATE, VacuumActivity),
+            tcv.strenum(self, CONF_STATE, VacuumActivity),
         )
         self.setup_template(
             CONF_FAN_SPEED,
             "_attr_fan_speed",
-            template_validators.item_in_list(
-                self, CONF_FAN_SPEED, self._attr_fan_speed_list
-            ),
+            tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
         )
 
         self.setup_template(
@@ -368,6 +405,21 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             await self.async_run_script(
                 script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> VacuumExtraStoredData:
+        """Return vacuum specific state data to be restored."""
+        return VacuumExtraStoredData(
+            activity=self._attr_activity,
+            fan_speed=self._attr_fan_speed,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: VacuumExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_activity = extra_data.activity
+        self._attr_fan_speed = extra_data.fan_speed
 
 
 class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):

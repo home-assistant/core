@@ -120,15 +120,15 @@ def _async_remove_old_device_identifiers(
 ) -> None:
     """Remove the non-unique device registry entries."""
     for device in hub.devices:
-        dev = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-        if dev is None:
-            continue
-        if config_entry_id in dev.config_entries:
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device.device_id), config_entry_id
+        )
+        if dev is not None:
             device_registry.async_remove_device(dev.id)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove bond config entry from a device."""
     data = config_entry.runtime_data
