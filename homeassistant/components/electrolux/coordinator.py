@@ -114,18 +114,6 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
                     translation_key="command_validation_failed",
                 ) from exception
 
-            if current_try < max_amount_retries:
-                _LOGGER.warning(
-                    "Failed to send command to appliance %s. Retrying... (%d/%d)",
-                    self._appliance_id,
-                    current_try + 1,
-                    max_amount_retries,
-                )
-                # retry the command
-                await self.send_command(command, max_amount_retries, current_try + 1)
-                # if retry didn't throw an error, return early
-                return
-
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="generic_error",
