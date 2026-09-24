@@ -110,7 +110,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "Home Assistant cannot migrate the LIFX entry \"{title}\" because its stored identifier \"{unique_id}\" is not a valid LIFX serial number.\n\nClick **Submit** to delete the entry then either wait for it to be rediscovered automatically or add it yourself manually.",
+            "description": "Home Assistant cannot migrate the LIFX entry \"{title}\" because its stored identifier \"{unique_id}\" is not a valid LIFX serial number.\n\nClick **Submit** to delete the entry then either wait for it to be rediscovered automatically or add it manually.",
             "title": "[%key:component::lifx::issues::invalid_serial::title%]"
           }
         }
