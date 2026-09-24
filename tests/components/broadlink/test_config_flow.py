@@ -31,12 +31,13 @@ def broadlink_setup_fixture():
         yield
 
 
-async def test_flow_user_works(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("device_name", ["Living Room", "Study"])
+async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
     """Test a config flow initiated by the user.
 
     Best case scenario with no errors or locks.
     """
-    device = get_device("Living Room")
+    device = get_device(device_name)
     mock_api = device.get_mock_api()
 
     result = await hass.config_entries.flow.async_init(
