@@ -101,11 +101,13 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         """Turn the light on, applying any requested brightness and color."""
         # Brightness is independent of color: a scene sends both at once, and
         # the color must not be dropped just because brightness came with it.
+        handled_command = False
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
             await self.coordinator.device_client.async_set_brightness(brightness)
             self.coordinator.data.dimming = brightness
             self._attr_brightness = brightness
+            handled_command = True
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
@@ -113,17 +115,28 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
             self.coordinator.data.cct = color_temp_kelvin
             self._attr_color_temp_kelvin = color_temp_kelvin
             self._attr_color_mode = ColorMode.COLOR_TEMP
-        elif ATTR_RGBW_COLOR in kwargs:
+            self.coordinator.data.effect = ""
+            self._attr_effect = None
+            handled_command = True
+
+        if ATTR_RGBW_COLOR in kwargs:
             rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
             await self.coordinator.device_client.async_set_rgbw(rgbw_color)
             self.coordinator.data.rgbw = rgbw_color
             self._attr_rgbw_color = rgbw_color
             self._attr_color_mode = ColorMode.RGBW
-        elif ATTR_EFFECT in kwargs:
+            self.coordinator.data.effect = ""
+            self._attr_effect = None
+            handled_command = True
+
+        if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
-            self._attr_effect = effect
             await self.coordinator.device_client.async_set_effect(effect)
-        else:
+            self.coordinator.data.effect = effect
+            self._attr_effect = effect
+            handled_command = True
+
+        if not handled_command:
             # Nothing was requested to apply, so just switch it on.
             await self.coordinator.device_client.async_turn_on()
 
