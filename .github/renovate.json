@@ -52,6 +52,17 @@
       "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ghcr.io/alexxit/go2rtc",
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the newest MariaDB entry (the latest LTS) in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStrings": [
+        "MARIADB_VERSIONS: \".*'mariadb:(?<currentValue>\\d+\\.\\d+\\.\\d+)','mysql:"
+      ],
+      "depNameTemplate": "mariadb",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
 
@@ -241,6 +252,21 @@
       "enabled": true,
       "minimumReleaseAge": null,
       "labels": ["dependency"]
+    },
+    {
+      "description": "Latest MariaDB LTS tested in CI (allowlisted). Since MariaDB 12, only the x.3 series are LTS.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "/^\\d+\\.3\\.\\d+$/",
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Only open a MariaDB PR for a new LTS series, not for its patch releases",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
     },
     {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
