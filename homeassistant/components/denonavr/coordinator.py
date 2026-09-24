@@ -85,8 +85,8 @@ async def async_refresh_audyssey(receiver: DenonAVR, *, force: bool = False) -> 
 
     async_update_audyssey() only updates the zone it is called on, so Zone2
     and Zone3 need their own fetch. Skipped while Telnet is healthy unless
-    force=True: Telnet never pushes on connect, so the initial fetch would
-    otherwise leave the data unset.
+    force=True: Telnet never pushes on connect, and unlike status, which
+    receiver.py reads before connecting, nothing else fetches this at setup.
     """
     if not force and receiver.telnet_connected and receiver.telnet_healthy:
         return

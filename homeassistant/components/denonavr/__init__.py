@@ -100,8 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         update_interval=update_interval,
         refresh_fn=async_refresh_status,
     )
-    # A receiver unreachable for basic status right after a successful
-    # connection is treated as not ready.
+    # Reads only without Telnet: with it, receiver.py already read status
+    # before connecting, so this is skipped. Either read failing is not ready.
     await coordinator.async_config_entry_first_refresh()
 
     audyssey_coordinator = DenonAvrDataUpdateCoordinator(
