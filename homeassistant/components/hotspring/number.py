@@ -107,7 +107,5 @@ class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
         target = round(value / self.native_step) * self.native_step
-        await self.coordinator.hotspring.set_temperature(
-            int(target) if target.is_integer() else target
-        )
+        await self.coordinator.hotspring.set_temperature(target)
         self.coordinator.async_set_updated_data(self.coordinator.data)

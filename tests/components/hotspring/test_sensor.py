@@ -1,7 +1,5 @@
 """Tests for the Hot Spring sensor platform."""
 
-from unittest.mock import MagicMock
-
 from hotspring import Spa, TemperatureUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -27,11 +25,10 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hotspring")
 async def test_temperature_sensor_celsius(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     device_fixture: Spa,
 ) -> None:
     """Test the temperature sensor when the spa is configured in Celsius."""

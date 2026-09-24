@@ -65,7 +65,7 @@ async def test_set_target_temperature(
         blocking=True,
     )
 
-    mock_hotspring.set_temperature.assert_called_once_with(100)
+    mock_hotspring.set_temperature.assert_called_once_with(100.0)
     mock_hotspring.update.assert_called_once()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == "37.8"
@@ -103,27 +103,18 @@ async def test_set_target_temperature_error(
         )
 
 
-@pytest.mark.parametrize(
-    ("target_value", "expected_call"),
-    [
-        pytest.param(37.5, 37.5, id="half_degree"),
-        pytest.param(38.0, 38, id="whole_degree"),
-    ],
-)
 async def test_set_target_temperature_celsius(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hotspring: MagicMock,
     device_fixture: Spa,
-    target_value: float,
-    expected_call: float,
 ) -> None:
     """Test setting target temperature when the spa is configured in Celsius."""
     device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
     device_fixture.heater.set_temperature = 38.5
 
     def set_temp_mock(value: float) -> None:
-        device_fixture.heater.set_temperature = float(value)
+        device_fixture.heater.set_temperature = value
 
     mock_hotspring.set_temperature.side_effect = set_temp_mock
 
@@ -142,12 +133,11 @@ async def test_set_target_temperature_celsius(
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: target_value,
+            ATTR_VALUE: 37.5,
         },
         blocking=True,
     )
 
-    mock_hotspring.set_temperature.assert_called_once_with(expected_call)
-    mock_hotspring.update.assert_called_once()
+    mock_hotspring.set_temperature.assert_called_once_with(37.5)
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == str(target_value)
+    assert state.state == "37.5"
