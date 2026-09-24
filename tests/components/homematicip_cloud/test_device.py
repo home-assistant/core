@@ -361,4 +361,6 @@ async def test_hmip_unknown_device_type(
     assert {entry.device_id for entry in entities} == {device.id}
 
     for entry in entities:
-        assert hass.states.get(entry.entity_id) is not None
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
