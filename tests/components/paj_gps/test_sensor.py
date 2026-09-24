@@ -188,14 +188,13 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
         TrackPoint(iddevice=2, speed=40),
     ]
 
-    failing_device_ids = {2}
+    device_sensor_data = {
+        1: AsyncMock(return_value=SensorData(did=1, volt=12400)),
+        2: AsyncMock(side_effect=PajGpsApiError("boom")),
+    }
 
     async def _get_last_sensor_data(device_id: int) -> SensorData:
-        if device_id == 1:
-            return SensorData(did=1, volt=12400)
-        if device_id in failing_device_ids:
-            raise PajGpsApiError("boom")
-        return SensorData(did=device_id, volt=12500)
+        return await device_sensor_data[device_id]()
 
     mock_paj_gps_api.get_last_sensor_data.side_effect = _get_last_sensor_data
 
@@ -221,7 +220,8 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
         == 1
     )
 
-    failing_device_ids.clear()
+    device_sensor_data[2].side_effect = None
+    device_sensor_data[2].return_value = SensorData(did=2, volt=12500)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
