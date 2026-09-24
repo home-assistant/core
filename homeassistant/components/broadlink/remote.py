@@ -248,7 +248,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         rf_flags = {RF_PACKET_TYPE_RM4, 0xB2, 0xB4, 0xD7}
         if not hasattr(device.api, "sweep_frequency") and any(
-            c[0] in rf_flags for codes in code_list for c in codes
+            c and c[0] in rf_flags for codes in code_list for c in codes
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
