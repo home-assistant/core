@@ -128,26 +128,43 @@ class EzvizVtmStreamView(HomeAssistantView):
         if camera is None or not hmac.compare_digest(access_token, camera.access_token):
             raise web.HTTPNotFound
 
-        process = await asyncio.create_subprocess_exec(
-            get_ffmpeg_manager(hass).binary,
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-f",
-            "mpeg",
-            "-i",
-            "pipe:0",
-            "-map",
-            "0",
-            "-c",
-            "copy",
-            "-f",
-            "mpegts",
-            "pipe:1",
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
+        # Track the handler before the first await, so unloading the entry at
+        # any point after authentication cancels it.
+        task = asyncio.current_task()
+        if task is not None:
+            camera.streams.add(task)
+        try:
+            return await _async_stream(hass, request, camera, serial)
+        finally:
+            if task is not None:
+                camera.streams.discard(task)
+
+
+async def _async_stream(
+    hass: HomeAssistant, request: web.Request, camera: VtmCamera, serial: str
+) -> web.StreamResponse:
+    """Remux the camera relay through FFmpeg into the HTTP response."""
+    process = await asyncio.create_subprocess_exec(
+        get_ffmpeg_manager(hass).binary,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-f",
+        "mpeg",
+        "-i",
+        "pipe:0",
+        "-map",
+        "0",
+        "-c",
+        "copy",
+        "-f",
+        "mpegts",
+        "pipe:1",
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    try:
         stdin = process.stdin
         stdout = process.stdout
         if stdin is None or stdout is None:  # pragma: no cover - PIPE requested
@@ -157,31 +174,32 @@ class EzvizVtmStreamView(HomeAssistantView):
         relay = VtmRelay(camera.client, serial, asyncio.get_running_loop(), queue)
         relay.start()
         feeder = asyncio.create_task(_feed_ffmpeg(queue, stdin))
-
-        response = web.StreamResponse(
-            headers={"Content-Type": "video/MP2T", "Cache-Control": "no-store"}
-        )
         _LOGGER.debug("%s: VTM stream opened", serial)
-        task = asyncio.current_task()
-        if task is not None:
-            camera.streams.add(task)
         try:
+            response = web.StreamResponse(
+                headers={"Content-Type": "video/MP2T", "Cache-Control": "no-store"}
+            )
             await response.prepare(request)
             while chunk := await stdout.read(READ_CHUNK):
                 await response.write(chunk)
         except ConnectionResetError:
             pass
         finally:
-            if task is not None:
-                camera.streams.discard(task)
             relay.stop()
             feeder.cancel()
-            if process.returncode is None:
-                process.kill()
-            await process.wait()
+            await _async_stop_process(process)
             await hass.async_add_executor_job(relay.join, RELAY_JOIN_TIMEOUT)
             _LOGGER.debug("%s: VTM stream closed", serial)
-        return response
+    finally:
+        await _async_stop_process(process)
+    return response
+
+
+async def _async_stop_process(process: asyncio.subprocess.Process) -> None:
+    """Kill FFmpeg if it is still running and reap it."""
+    if process.returncode is None:
+        process.kill()
+    await process.wait()
 
 
 class VtmRelay:
