@@ -1,7 +1,7 @@
 """Tests for the light module."""
 
 from contextlib import nullcontext
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -109,19 +109,29 @@ async def test_partial_attribute_change_holds_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    async def fail_color_temp(device, *args) -> bool:
+        device.last_response = Mock(message="color temperature rejected")
+        return False
+
+    async def set_brightness(device, *args) -> bool:
+        device.last_response = Mock(message="request success")
+        return True
+
     with (
         patch(
             "pyvesync.devices.vesyncbulb.VeSyncBulbESL100CW.set_color_temp",
-            return_value=False,
+            autospec=True,
+            side_effect=fail_color_temp,
         ),
         patch(
             "pyvesync.devices.vesyncbulb.VeSyncBulbESL100CW.set_brightness",
-            return_value=True,
+            autospec=True,
+            side_effect=set_brightness,
         ),
         patch(
             "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as mark_mock,
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="color temperature rejected"),
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
