@@ -1,5 +1,6 @@
 """Define tests for SimpliSafe setup."""
 
+import copy
 from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,14 +11,19 @@ from simplipy.errors import (
     RequestError,
     SimplipyError,
 )
+from simplipy.system.v3 import SystemV3
 from simplipy.websocket import WebsocketEvent
 
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -73,6 +79,36 @@ async def test_base_station_model_is_string(
     )
     assert device is not None
     assert isinstance(device.model, str)
+
+
+async def test_glass_break_device_class(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    patch_simplisafe_api: None,
+    system_v3: SystemV3,
+) -> None:
+    """Test the glass break binary sensor device class."""
+    system_v3.sensor_data = copy.deepcopy(system_v3.sensor_data)
+    system_v3.sensor_data["glass"] = {
+        "serial": "glass",
+        "type": 6,
+        "name": "Living Room",
+        "status": {"triggered": False},
+        "flags": {"lowBattery": False, "offline": False},
+    }
+    system_v3.generate_device_objects()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, "glass"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
 
 
 async def test_coordinator_update_triggers_reauth_on_invalid_credentials(
