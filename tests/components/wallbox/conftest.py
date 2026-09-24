@@ -1,7 +1,7 @@
 """Test fixtures for the Wallbox integration."""
 
-from datetime import datetime, timedelta
 from http import HTTPStatus
+import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
