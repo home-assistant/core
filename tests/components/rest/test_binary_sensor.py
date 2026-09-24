@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 import ssl
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
@@ -13,9 +14,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.rest import DOMAIN
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    CONF_NAME,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
     STATE_OFF,
@@ -25,6 +28,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from .conftest import async_setup_entry
 
 from tests.common import get_fixture_path
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -696,6 +701,39 @@ async def test_setup_get_basic_auth_utf8(
     )
 
     await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("async_mock_resource")
+async def test_setup_from_config_entry(
+    hass: HomeAssistant,
+    get_config_entry_data: dict[str, Any],
+    get_subentry_data: list[ConfigSubentryData],
+) -> None:
+    """Test platform setup from config_entry."""
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data,
+        [
+            ConfigSubentryData(
+                data=get_subentry_data[0]["data"] | {CONF_NAME: "foo"},
+                subentry_type=BINARY_SENSOR_DOMAIN,
+                title="binary sensor",
+                unique_id=f"{BINARY_SENSOR_DOMAIN}_1",
+            ),
+            ConfigSubentryData(
+                data=get_subentry_data[0]["data"] | {CONF_NAME: "foo"},
+                subentry_type="sensor",
+                title="non sensor",
+                unique_id="sensor_2",
+            ),
+        ],
+    )
+
+    assert entry.state == ConfigEntryState.LOADED
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("binary_sensor.foo")

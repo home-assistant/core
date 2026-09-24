@@ -14,19 +14,25 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.trigger_template_entity import (
     ManualTriggerSensorEntity,
     ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
-from .coordinator import RestCoordinator
+from . import convert_config_to_legacy_format
+from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME, DOMAIN
+from .coordinator import RestConfigEntry, RestCoordinator
 from .data import RestData
 from .entity import (
     RestEntity,
@@ -68,6 +74,44 @@ async def async_setup_platform(
             )
         ],
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Setup entities from Config Entry."""
+
+    for subentry_id, subentry in config_entry.subentries.items():
+        if subentry.subentry_type != Platform.SENSOR:
+            continue
+
+        config: ConfigType = {**subentry.data}
+        if CONF_JSON_ATTRS in config:
+            config[CONF_JSON_ATTRS] = [item["item"] for item in config[CONF_JSON_ATTRS]]
+        config = probatio.Schema(SENSOR_SCHEMA, extra=probatio.REMOVE_EXTRA)(
+            convert_config_to_legacy_format(config_entry.data)
+            | config
+            | {CONF_UNIQUE_ID: f"{DOMAIN}_{subentry_id}"}
+        )
+        trigger_entity_config = async_get_trigger_entity_config(
+            hass,
+            config,
+            DEFAULT_SENSOR_NAME,
+        )
+        async_add_entities(
+            [
+                RestSensor(
+                    hass,
+                    config_entry.runtime_data,
+                    config_entry.runtime_data.rest,
+                    config,
+                    trigger_entity_config,
+                )
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class RestSensor(ManualTriggerSensorEntity, RestEntity):
