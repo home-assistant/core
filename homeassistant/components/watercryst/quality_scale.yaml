@@ -72,7 +72,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow:
     status: exempt
-    comment: The BIOCAT Serial Number identifies a fixed device and credential changes are handled by reauthentication.
+    comment: The only configurable value is an API key, so changes belong in a reauthentication flow rather than a reconfiguration flow.
   repair-issues: todo
   stale-devices:
     status: exempt
