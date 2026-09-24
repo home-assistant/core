@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -29,6 +30,7 @@ from . import (
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
+    MOCK_SERIAL_ENTRY_DATA,
     MOCK_SW_VERSION,
     MOCK_TCP_INPUT,
     deny_meter_energy,
@@ -888,14 +890,28 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     assert hass.states.get(entity_id).state == "51.5"
 
 
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param(MOCK_TCP_INPUT, MOCK_ENTRY_DATA, id="legacy_tcp"),
+        pytest.param(
+            MOCK_SERIAL_ENTRY_DATA,
+            MOCK_SERIAL_ENTRY_DATA,
+            id="reconfigured_while_disabled",
+        ),
+    ],
+)
 async def test_migrate_entry_adds_the_connection_type(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    data: dict[str, Any],
+    expected: dict[str, Any],
 ) -> None:
-    """Test an entry predating the serial option is marked as Modbus TCP."""
+    """Test migration marks legacy entries as TCP and keeps a set type."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data=MOCK_TCP_INPUT,
+        data=data,
         title=MOCK_MODEL,
         minor_version=1,
     )
@@ -911,4 +927,4 @@ async def test_migrate_entry_adds_the_connection_type(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.minor_version == 2
-    assert entry.data == MOCK_ENTRY_DATA
+    assert entry.data == expected

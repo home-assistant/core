@@ -17,31 +17,35 @@ from homeassistant.components.sofar.config_flow import (
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     CONF_UNIT_ID,
-    DEFAULT_BAUDRATE,
     DEFAULT_NAME,
     DOMAIN,
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, MOCK_TCP_INPUT, seed_pv_inverter
+from . import (
+    MOCK_ENTRY_DATA,
+    MOCK_MODEL,
+    MOCK_SERIAL,
+    MOCK_SERIAL_ENTRY_DATA,
+    MOCK_SERIAL_INPUT,
+    MOCK_TCP_INPUT,
+    seed_pv_inverter,
+)
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
 
 # A recognized prefix with no model in sofar-modbus's own table.
 _UNMODELED_SERIAL = "SA1XXES100XX"
-
-MOCK_SERIAL_INPUT = {
-    CONF_DEVICE: "/dev/ttyUSB0",
-    CONF_BAUDRATE: DEFAULT_BAUDRATE,
-    CONF_UNIT_ID: 1,
-}
-MOCK_SERIAL_ENTRY_DATA = {CONF_TYPE: TYPE_SERIAL, **MOCK_SERIAL_INPUT}
 
 
 def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
@@ -317,6 +321,25 @@ async def test_reconfigure_offers_the_current_settings(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {CONF_TYPE: TYPE_SERIAL, **new_input}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_unmigrated_entry(hass: HomeAssistant) -> None:
+    """Test a disabled entry that skipped migration is treated as TCP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data=MOCK_TCP_INPUT,
+        minor_version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
+
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
+        == MOCK_TCP_INPUT[CONF_HOST]
+    )
 
 
 async def test_reconfigure_rejects_a_different_serial(hass: HomeAssistant) -> None:

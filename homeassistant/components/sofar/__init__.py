@@ -208,7 +208,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> b
     """Migrate an old config entry."""
     if entry.version == 1 and entry.minor_version == 1:
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_TYPE: TYPE_TCP}, minor_version=2
+            entry, data={CONF_TYPE: TYPE_TCP, **entry.data}, minor_version=2
         )
     return True
 

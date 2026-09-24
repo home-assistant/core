@@ -208,7 +208,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
 
         suggested = user_input or (
             entry.data
-            if entry.data[CONF_TYPE] == connection_type
+            if entry.data.get(CONF_TYPE, TYPE_TCP) == connection_type
             else {CONF_UNIT_ID: entry.data[CONF_UNIT_ID]}
         )
 
