@@ -1,13 +1,16 @@
 """Tests for the Anthropic repairs flow."""
 
 from types import SimpleNamespace
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from anthropic.pagination import AsyncPage
 
 from homeassistant.components.anthropic.const import CONF_CHAT_MODEL, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -25,7 +28,7 @@ def _make_entry(
     *,
     title: str,
     api_key: str,
-    subentries_data: list[dict[str, Any]],
+    subentries_data: list[ConfigSubentryData],
 ) -> MockConfigEntry:
     """Create a config entry with subentries and runtime data."""
     entry = MockConfigEntry(

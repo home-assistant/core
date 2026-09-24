@@ -316,12 +316,6 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return true if the device's event stream is connected."""
-        return self._camera.stream_connected
-
-    @property
-    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
@@ -332,19 +326,3 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callback when entity is added."""
-        await super().async_added_to_hass()
-
-        # Register callback with pyhik
-        self._camera.add_update_callback(self._update_callback, self._callback_id)
-
-    def _update_callback(self, msg: str) -> None:
-        """Update the sensor's state when callback is triggered.
-
-        This is called from pyhik's event stream thread, so we use
-        schedule_update_ha_state which is thread-safe.
-        """
-        self.schedule_update_ha_state()
