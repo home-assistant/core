@@ -105,7 +105,10 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
         if self.config_entry.options.get("native_mqtt", False):
-            await self._async_prepare_native(devices)
+            try:
+                await self._async_prepare_native(devices)
+            except UpdateFailed as err:
+                LOGGER.warning("Native bulb setup failed: %s", err)
         result = {}
         for device in devices:
             device_id = device["id"]
@@ -143,6 +146,10 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed("Unable to load native MQTT credentials") from err
         try:
             routes = await self.client.async_get_native_bulb_routes()
+        except XthingsCloudAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Invalid token, re-authentication required"
+            ) from err
         except XthingsCloudApiError as err:
             raise UpdateFailed("Unable to discover native bulb routes") from err
         starts = []
