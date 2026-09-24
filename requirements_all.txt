@@ -1529,7 +1529,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==6.5.1
+lifx-async==7.4.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2038,7 +2038,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.6
+pyHik==0.4.7
 
 # homeassistant.components.homee
 pyHomee==1.4.4
@@ -2750,7 +2750,7 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==3.0.0
+python-hotspring==3.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3251,7 +3251,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==1.0.1
+teslemetry-stream==1.0.2
 
 # homeassistant.components.tessie
 tessie-api==0.1.3

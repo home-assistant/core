@@ -19,7 +19,10 @@ from boschshcpy import (
     SHCShutterContact2,
     SHCShutterControl,
     SHCSmartPlug,
+    SHCSmartPlugCompact,
     SHCThermostat,
+    SHCThermostatGen2,
+    SHCTwinguard,
     ShutterControlService,
     ThermostatService,
 )
@@ -204,6 +207,8 @@ def smart_plug_device(
     device_id: str = "hdm:ZigBee:plug1",
     name: str = "Smart Plug",
     routing: RoutingService.State = RoutingService.State.DISABLED,
+    supports_energy_saving_mode: bool = False,
+    energy_saving_mode_enabled: bool = False,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -218,6 +223,31 @@ def smart_plug_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.routing = routing
+    device.supports_energy_saving_mode = supports_energy_saving_mode
+    device.energy_saving_mode_enabled = energy_saving_mode_enabled
+    return device
+
+
+def smart_plug_compact_device(
+    device_id: str = "hdm:ZigBee:plugcompact1",
+    name: str = "Smart Plug Compact",
+    supports_energy_saving_mode: bool = False,
+    energy_saving_mode_enabled: bool = False,
+) -> SHCSmartPlugCompact:
+    """Build a minimal device double for the smart_plugs_compact bucket."""
+    device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "PLUG_COMPACT"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.switchstate = PowerSwitchService.State.OFF
+    device.supports_energy_saving_mode = supports_energy_saving_mode
+    device.energy_saving_mode_enabled = energy_saving_mode_enabled
     return device
 
 
@@ -242,6 +272,28 @@ def thermostat_device(
     device.child_lock = child_lock
     device.position = position
     device.valvestate = valvestate
+    return device
+
+
+def thermostat_gen2_device(
+    device_id: str = "hdm:ZigBee:thermostatgen2_1",
+    name: str = "Thermostat Gen2",
+    supports_display_configuration: bool = False,
+    humidity_warning_enabled: bool = False,
+) -> SHCThermostatGen2:
+    """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
+    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TRV_GEN2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_display_configuration = supports_display_configuration
+    device.humidity_warning_enabled = humidity_warning_enabled
     return device
 
 
@@ -353,4 +405,26 @@ def motion_detector2_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
+    return device
+
+
+def twinguard_device(
+    device_id: str = "hdm:HomeMaticIP:twinguard1",
+    name: str = "Twinguard",
+    supports_nightly_promise: bool = False,
+    nightly_promise_enabled: bool = False,
+) -> SHCTwinguard:
+    """Build a minimal device double for the twinguards bucket."""
+    device = create_autospec(SHCTwinguard, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TWINGUARD"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_nightly_promise = supports_nightly_promise
+    device.nightly_promise_enabled = nightly_promise_enabled
     return device
