@@ -54,12 +54,14 @@ async def test_light_state(
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
 
 
+@pytest.mark.parametrize("api_response", [True, False])
 async def test_brightness_change_holds_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    api_response: bool,
 ) -> None:
-    """Test a brightness-only change starts the command grace period."""
+    """Test only a successful brightness change starts the command grace period."""
     mock_devices_response(aioclient_mock, "Dimmable Light")
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -68,7 +70,7 @@ async def test_brightness_change_holds_device(
     with (
         patch(
             "pyvesync.devices.vesyncbulb.VeSyncBulbESL100.set_brightness",
-            return_value=True,
+            return_value=api_response,
         ) as method_mock,
         patch(
             "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
@@ -82,4 +84,4 @@ async def test_brightness_change_holds_device(
         )
 
     method_mock.assert_called_once()
-    mark_mock.assert_called_once()
+    assert mark_mock.call_count == int(api_response)

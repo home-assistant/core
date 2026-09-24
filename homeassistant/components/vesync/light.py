@@ -104,6 +104,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
+        succeeded = True
         # set white temperature
         if (
             self.color_mode == ColorMode.COLOR_TEMP
@@ -125,7 +126,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 0-100
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
-            await self.device.set_color_temp(color_temp)
+            succeeded = await self.device.set_color_temp(color_temp) and succeeded
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -143,23 +144,24 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 1-100
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
-            await self.device.set_brightness(brightness)
+            succeeded = await self.device.set_brightness(brightness) and succeeded
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:
-            self.coordinator.async_mark_command(self.device)
+            if succeeded:
+                self.coordinator.async_mark_command(self.device)
             return
         # send turn_on command to pyvesync api
-        await self.device.turn_on()
-        self.coordinator.async_mark_command(self.device)
+        if await self.device.turn_on():
+            self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.device.turn_off()
-        self.coordinator.async_mark_command(self.device)
+        if await self.device.turn_off():
+            self.coordinator.async_mark_command(self.device)
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
