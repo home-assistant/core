@@ -9,7 +9,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
-from aiohttp import ClientPayloadError
+from aiohttp import ClientError, ClientPayloadError
 from pyezvizapi.exceptions import PyEzvizError
 import pytest
 
@@ -551,3 +551,39 @@ async def test_vtm_unload_ends_running_stream(
 
     assert not camera.streams
     assert SERIAL not in hass.data[DATA_VTM]
+
+
+async def test_vtm_unload_while_ffmpeg_starts(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test unloading during stream setup cancels the request before the relay."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    starting = asyncio.Event()
+
+    async def _pending_exec(*_args: object, **_kwargs: object) -> None:
+        starting.set()
+        await asyncio.Event().wait()
+
+    with (
+        patch(
+            "homeassistant.components.ezviz.vtm.asyncio.create_subprocess_exec",
+            side_effect=_pending_exec,
+        ),
+        patch("homeassistant.components.ezviz.vtm.open_cloud_stream") as mock_open,
+    ):
+        request = asyncio.create_task(client.get(path))
+        await starting.wait()
+        camera = hass.data[DATA_VTM][SERIAL]
+        assert camera.streams
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        with pytest.raises(ClientError):
+            await request
+
+    assert not camera.streams
+    mock_open.assert_not_called()
