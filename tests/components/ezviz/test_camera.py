@@ -4,10 +4,12 @@ import asyncio
 from collections.abc import Generator
 import logging
 import sys
+import threading
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
+from aiohttp import ClientPayloadError
 from pyezvizapi.exceptions import PyEzvizError
 import pytest
 
@@ -23,6 +25,7 @@ from homeassistant.components.stream import redact_credentials
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import NoURLAvailableError
 
 from . import setup_integration
 from .test_init import _mock_camera_data
@@ -106,6 +109,7 @@ async def test_vtm_stream_source_without_rtsp(
     mock_ezviz_client: AsyncMock,
 ) -> None:
     """Test devices without RTSP stream through the local VTM view."""
+    hass.config.internal_url = "http://ha.local:8123"
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
 
     state = hass.states.get(ENTITY_ID)
@@ -115,7 +119,7 @@ async def test_vtm_stream_source_without_rtsp(
     source = await async_get_stream_source(hass, ENTITY_ID)
     assert source is not None
     url = urlparse(source)
-    assert url.hostname == "127.0.0.1"
+    assert f"{url.scheme}://{url.netloc}" == "http://ha.local:8123"
     assert url.path == f"/api/ezviz/vtm/{SERIAL}.ts"
     # The token is in a query parameter the stream integration redacts.
     assert _token(source) not in redact_credentials(source)
@@ -491,3 +495,59 @@ async def test_rtsp_camera_not_exposed_through_vtm_view(
         "rtsp://test-username:test-password@192.168.1.100:554/Streaming/Channels/102"
     )
     assert "C666666" not in hass.data.get(DATA_VTM, {})
+
+
+async def test_vtm_stream_source_without_internal_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test there is no stream source when HA has no internal URL."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+
+    with patch(
+        "homeassistant.components.ezviz.vtm.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        assert await async_get_stream_source(hass, ENTITY_ID) is None
+
+
+async def test_vtm_unload_ends_running_stream(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    mock_ffmpeg_process: None,
+) -> None:
+    """Test unloading the config entry ends streams that are still running."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    streaming = threading.Event()
+    release = threading.Event()
+
+    def _packets() -> Generator[MagicMock]:
+        yield _packet(b"first")
+        streaming.set()
+        release.wait(10)
+
+    cloud_stream = MagicMock()
+    cloud_stream.__enter__.return_value.iter_packets.return_value = _packets()
+
+    with patch(
+        "homeassistant.components.ezviz.vtm.open_cloud_stream",
+        return_value=cloud_stream,
+    ):
+        request = asyncio.create_task(client.get(path))
+        assert await hass.async_add_executor_job(streaming.wait, 10)
+        camera = hass.data[DATA_VTM][SERIAL]
+        assert camera.streams
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        release.set()
+        response = await request
+        with pytest.raises(ClientPayloadError):
+            await response.read()
+
+    assert not camera.streams
+    assert SERIAL not in hass.data[DATA_VTM]
