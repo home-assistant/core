@@ -1,6 +1,9 @@
 """Tests for HomematicIP Cloud config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from homematicip.connection.connection_context import ConnectionContext
+from homematicip.connection.rest_connection import RestResult
 
 from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud.const import (
@@ -94,6 +97,37 @@ async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
         return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=DEFAULT_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "invalid_sgtin_or_pin"}
+
+
+async def test_flow_init_rejected_pin(
+    hass: HomeAssistant, simple_mock_auth: AsyncMock
+) -> None:
+    """Test the flow stays on the first step when the cloud rejects the PIN."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # the library hands a 400 back as a failed result instead of raising
+    simple_mock_auth.connection_request.return_value = RestResult(
+        status=400, text='{"errorCode":"INVALID_PIN"}'
+    )
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.Auth",
+            return_value=simple_mock_auth,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=DEFAULT_CONFIG
