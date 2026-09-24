@@ -81,7 +81,6 @@ ELECTROLUX_CARE_BUTTONS: tuple[
             appliance.get_current_appliance_state()
             in (APPLIANCE_STATE_READY_TO_START, APPLIANCE_STATE_IDLE)
         ),
-        # available_fn=lambda appliance: True,
         command_fn=lambda appliance: appliance.get_start_command(),
     ),
     ElectroluxButtonDescription(
