@@ -38,9 +38,9 @@ TEST_DEVICE_MAC = "00:80:41:19:69:90"
     [SERVICE_SET_HEATING_SCHEDULE_SCHEMA, SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA],
     ids=["heating", "hot_water"],
 )
-def test_set_schedule_requires_a_day(service_schema: vol.Schema) -> None:
+def test_set_schedule_requires_a_day(service_schema: probatio.Schema) -> None:
     """Test that setting a schedule requires at least one day."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         service_schema({"device_id": "test-device"})
 
 
@@ -621,7 +621,7 @@ async def test_too_many_slots_per_day(
 ) -> None:
     """Test that more than three slots for a day is rejected by the schema."""
     # BSB-LAN supports a maximum of three time slots per day
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             "set_hot_water_schedule",
