@@ -10,6 +10,7 @@ import pytest
 from skoda_public_api.models.enums import (
     AirConditioningState,
     AuxiliaryHeatingStartMode,
+    AuxiliaryHeatingState,
     ChargeType,
     ChargingState,
     TemperatureUnit,
@@ -183,6 +184,28 @@ def test_aux_heating_duration_returns_none_without_auxiliary_heating() -> None:
     sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
 
     assert sensor.native_value is None
+
+
+def test_aux_heating_duration_returns_none_when_off() -> None:
+    """No remaining duration is reported while auxiliary heating isn't running."""
+    auxiliary_heating = SimpleNamespace(
+        state=AuxiliaryHeatingState.OFF, duration_in_seconds=1200
+    )
+    coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
+    sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
+
+    assert sensor.native_value is None
+
+
+def test_aux_heating_duration_reports_remaining_time_while_heating() -> None:
+    """The remaining duration is reported while auxiliary heating is active."""
+    auxiliary_heating = SimpleNamespace(
+        state=AuxiliaryHeatingState.HEATING, duration_in_seconds=1200
+    )
+    coordinator = _make_auxiliary_heating_coordinator(auxiliary_heating)
+    sensor = SkodaSensor(coordinator, _description("aux_heating_duration"))
+
+    assert sensor.native_value == 1200
 
 
 def test_licence_plate_returns_none_without_license_plate() -> None:

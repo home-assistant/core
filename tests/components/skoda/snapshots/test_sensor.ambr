@@ -165,7 +165,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1200',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.enyaq_coupe_battery_state_of_charge-entry]
