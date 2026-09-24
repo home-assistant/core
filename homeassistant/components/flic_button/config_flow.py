@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from bleak import BleakError
+import probatio
 from pyflic_ble import (
     DeviceType,
     FlicAuthenticationError,
@@ -14,7 +15,6 @@ from pyflic_ble import (
     PushTwistMode,
 )
 from pyflic_ble.const import FLIC_SERVICE_UUID, PAIRING_TIMEOUT, TWIST_SERVICE_UUID
-import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -372,9 +372,9 @@ class FlicButtonOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_PUSH_TWIST_MODE, default=current_mode
                     ): SelectSelector(
                         SelectSelectorConfig(
