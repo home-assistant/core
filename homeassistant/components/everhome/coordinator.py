@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ecotracker import EcoTracker
 from ecotracker.data import EcoTrackerData
@@ -41,8 +42,12 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
         self.client = EcoTracker(host, port=80, session=async_get_clientsession(hass))
         self.host = host
 
+    @override
     async def _async_update_data(self) -> EcoTrackerData:
         """Fetch data from the EcoTracker device."""
         if await self.client.async_update():
             return self.client.get_data()
-        raise UpdateFailed("Failed to update EcoTracker data")
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+        )

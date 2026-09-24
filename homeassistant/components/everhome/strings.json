@@ -57,5 +57,10 @@
         "name": "Power phase {phase_number}"
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while fetching data from the EcoTracker device."
+    }
   }
 }

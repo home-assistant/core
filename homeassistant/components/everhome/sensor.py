@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ecotracker.data import EcoTrackerData
 
@@ -150,6 +151,7 @@ class EcoTrackerSensor(EcoTrackerEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

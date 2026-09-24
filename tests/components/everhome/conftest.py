@@ -1,7 +1,6 @@
 """Common fixtures for the everHome tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 from ecotracker.data import EcoTrackerData
@@ -10,7 +9,7 @@ import pytest
 from homeassistant.components.everhome.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -39,7 +38,7 @@ def mock_everhome_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.ip_address = "192.168.178.104"
         client.async_update.return_value = True
-        client.get_all_data.return_value = json.loads(load_fixture("data.json", DOMAIN))
+        client.get_all_data.return_value = load_json_object_fixture("data.json", DOMAIN)
         client.get_data.return_value = EcoTrackerData.from_json(
             load_fixture("data.json", DOMAIN)
         )

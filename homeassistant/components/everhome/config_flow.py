@@ -1,9 +1,9 @@
 """Config flow for the everHome integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from ecotracker import EcoTracker
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -12,7 +12,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
+CONFIG_SCHEMA: Final = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -30,6 +30,7 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         return client.get_data().serial
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -52,6 +53,7 @@ class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
