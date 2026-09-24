@@ -172,6 +172,40 @@ async def test_reauth_flow(
     assert mock_config_entry == snapshot
 
 
+async def test_reauth_flow_without_user_code(
+    hass: HomeAssistant,
+    mock_tuya_login_control: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication of an entry that predates the stored user code."""
+    mock_config_entry.add_to_hass(hass)
+    data = dict(mock_config_entry.data)
+    del data[CONF_USER_CODE]
+    hass.config_entries.async_update_entry(mock_config_entry, data=data)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_user_code"
+    mock_tuya_login_control.qr_code.assert_not_called()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USER_CODE: "12345"},
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "scan"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"
+
+
 async def test_reauth_flow_failed_qr_code(
     hass: HomeAssistant,
     mock_tuya_login_control: MagicMock,
