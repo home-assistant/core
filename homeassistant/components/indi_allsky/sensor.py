@@ -7,6 +7,7 @@ import re
 from typing import Any, override
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -14,14 +15,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEGREE,
-    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfPower,
-    UnitOfPressure,
-    UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -231,19 +226,6 @@ DEVICE_CLASS_KEYWORDS: tuple[tuple[tuple[str, ...], SensorDeviceClass], ...] = (
     (("duration",), SensorDeviceClass.DURATION),
 )
 
-DEVICE_CLASS_DEFAULT_UNITS: dict[SensorDeviceClass, str] = {
-    SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
-    SensorDeviceClass.HUMIDITY: PERCENTAGE,
-    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
-    SensorDeviceClass.WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
-    SensorDeviceClass.WIND_DIRECTION: DEGREE,
-    SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,
-    SensorDeviceClass.CURRENT: UnitOfElectricCurrent.AMPERE,
-    SensorDeviceClass.POWER: UnitOfPower.WATT,
-    SensorDeviceClass.DURATION: UnitOfTime.SECONDS,
-    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,
-}
-
 KNOWN_TRANSLATION_KEYS: set[str] = {
     "ambient_temperature",
     "humidity",
@@ -274,9 +256,13 @@ def _infer_sensor_metadata(
                 device_class = candidate_class
                 break
 
-    unit = raw_unit or (
-        DEVICE_CLASS_DEFAULT_UNITS.get(device_class) if device_class else None
-    )
+    unit = raw_unit
+    if (
+        device_class is not None
+        and (valid_units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and unit not in valid_units
+    ):
+        device_class = None
 
     if device_class == SensorDeviceClass.WIND_DIRECTION:
         state_class = SensorStateClass.MEASUREMENT_ANGLE

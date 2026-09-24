@@ -81,7 +81,18 @@ def mock_sensor_data() -> SensorData:
                 "humidity": 65.0,
                 "pressure": 1013.25,
             },
-            "sensor_user": [0, 0, 14.8],
+            "sensor_user": [
+                0,
+                50.0,
+                14.8,
+                10.2,
+                75.0,
+                22.1,
+                180.0,
+                21.4,
+                20.8,
+                15000.0,
+            ],
             "sensor_temp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45.2],
         }
     )

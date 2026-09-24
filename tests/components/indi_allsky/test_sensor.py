@@ -174,9 +174,41 @@ async def test_hardware_sensor_updates(
     assert state is not None
     assert state.state == "1013.25"
 
+    state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
+    assert state is not None
+    assert state.state == "50.0"
+
     state = hass.states.get("sensor.indi_allsky_dew_point")
     assert state is not None
     assert state.state == "14.8"
+
+    state = hass.states.get("sensor.indi_allsky_frost_point")
+    assert state is not None
+    assert state.state == "10.2"
+
+    state = hass.states.get("sensor.indi_allsky_fan_duty_cycle")
+    assert state is not None
+    assert state.state == "75.0"
+
+    state = hass.states.get("sensor.indi_allsky_heat_index")
+    assert state is not None
+    assert state.state == "22.1"
+
+    state = hass.states.get("sensor.indi_allsky_wind_direction")
+    assert state is not None
+    assert state.state == "180.0"
+
+    state = hass.states.get("sensor.indi_allsky_device_sqm")
+    assert state is not None
+    assert state.state == "21.4"
+
+    state = hass.states.get("sensor.indi_allsky_camera_sqm")
+    assert state is not None
+    assert state.state == "20.8"
+
+    state = hass.states.get("sensor.indi_allsky_camera_sqm_adu")
+    assert state is not None
+    assert state.state == "15000.0"
 
     state = hass.states.get("sensor.indi_allsky_cpu_temperature")
     assert state is not None
@@ -326,10 +358,15 @@ async def test_dynamic_hardware_sensor_discovery(
                 "sensor_d_lux": {
                     "name": "TSL2561 Lux",
                     "value": 150.0,
+                    "unit": "lx",
                 },
                 "sensor_e_status": {
                     "name": "Hardware Status",
                     "value": "Operational",
+                },
+                "sensor_f_no_unit_temp": {
+                    "name": "Generic Temperature Sensor",
+                    "value": 24.5,
                 },
                 "lamp_status": {
                     "name": "Dome Lamp Status",
@@ -369,6 +406,14 @@ async def test_dynamic_hardware_sensor_discovery(
     state = hass.states.get("sensor.indi_allsky_hardware_status")
     assert state is not None
     assert state.state == "Operational"
+    assert state.attributes.get("state_class") is None
+
+    # Verify sensor with no unit does not infer default unit or device class
+    state = hass.states.get("sensor.indi_allsky_generic_temperature_sensor")
+    assert state is not None
+    assert state.state == "24.5"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
     assert state.attributes.get("state_class") is None
 
     # Verify lamp_status does not incorrectly match 'amp' substring
