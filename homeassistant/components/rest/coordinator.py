@@ -62,7 +62,11 @@ class RestCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         await super()._async_update_data()
-        if self.config_entry is not None and self.rest.last_exception is not None:
+        if (
+            self.config_entry is not None
+            and self.rest.data is None
+            and self.rest.last_exception is not None
+        ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="endpoint_error",

@@ -18,6 +18,7 @@ from homeassistant.components.template.config_flow import (
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -52,6 +53,7 @@ from .const import (
     DOCS_URL_XML_CONVERT_SPEC,
     DOMAIN,
 )
+from .coordinator import RestConfigEntry
 from .data import RestData
 from .schema import (
     BINARY_SENSOR_SUBENTRY_FLOW_SCHEMA,
@@ -75,7 +77,7 @@ def _validate_sensor_input(
         attrs = [item["item"] for item in input[CONF_JSON_ATTRS]]
         try:
             parse_json_attributes_raise_error(
-                rest.data, attrs, input.get(CONF_JSON_ATTRS_PATH)
+                rest.data_without_xml(), attrs, input.get(CONF_JSON_ATTRS_PATH)
             )
         except HomeAssistantError as ex:
             if ex.translation_key is not None:
@@ -88,14 +90,14 @@ def _validate_sensor_input(
                         else CONF_JSON_ATTRS
                     ] = ex.translation_key
                     placeholders = ex.translation_placeholders or {}
-        try:
-            _validate_unit(input)
-        except Invalid as ex:
-            errors[CONF_UNIT_OF_MEASUREMENT] = str(ex)
-        try:
-            _validate_state_class(input)
-        except Invalid as ex:
-            errors[CONF_STATE_CLASS] = str(ex)
+    try:
+        _validate_unit(input)
+    except Invalid as ex:
+        errors[CONF_UNIT_OF_MEASUREMENT] = str(ex)
+    try:
+        _validate_state_class(input)
+    except Invalid as ex:
+        errors[CONF_STATE_CLASS] = str(ex)
 
     return errors, placeholders
 
@@ -234,18 +236,20 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 | None
             ) = SUBENTRY_CONFIG[Platform(self._subentry_type)][VALIDATOR]
             if validator is not None:
-                errors, placeholders = validator(
-                    user_input, self._get_entry().runtime_data.rest
-                )
+                entry: RestConfigEntry = self._get_entry()
+                if entry.state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="config_entry_not_loaded")
+                errors, placeholders = validator(user_input, entry.runtime_data.rest)
             if not errors:
                 title: str = user_input.get(
                     CONF_NAME, SUBENTRY_CONFIG[Platform(self._subentry_type)][CONF_NAME]
                 )
                 idx = 0
                 for subentry in self._get_entry().subentries.values():
-                    if subentry.subentry_type == self._subentry_type:
-                        if val := search(r"\d+", subentry.unique_id or "0"):
-                            idx = max(int(val.group(0)), idx)
+                    if (subentry.subentry_type == self._subentry_type) and (
+                        val := search(r"\d+", subentry.unique_id or "0")
+                    ):
+                        idx = max(int(val.group(0)), idx)
                 return self.async_create_entry(
                     title=title,
                     data=user_input,
