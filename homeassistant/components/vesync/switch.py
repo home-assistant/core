@@ -209,7 +209,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Unknown error turning off device, no response.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -219,4 +219,4 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Unknown error turning on device, no response.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)

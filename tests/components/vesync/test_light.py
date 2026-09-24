@@ -1,10 +1,19 @@
 """Tests for the light module."""
 
+from contextlib import nullcontext
+from unittest.mock import Mock, patch
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
@@ -49,3 +58,90 @@ async def test_light_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(True, nullcontext()), (False, pytest.raises(HomeAssistantError))],
+)
+async def test_brightness_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test a brightness change holds the device on success and raises on failure."""
+    mock_devices_response(aioclient_mock, "Dimmable Light")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        expectation,
+        patch(
+            "pyvesync.devices.vesyncbulb.VeSyncBulbESL100.set_brightness",
+            return_value=api_response,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    method_mock.assert_called_once()
+    assert mark_mock.call_count == int(api_response)
+
+
+async def test_partial_attribute_change_holds_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a half-failed attribute change raises but still holds the device."""
+    mock_devices_response(aioclient_mock, "Temperature Light")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def fail_color_temp(device, *args) -> bool:
+        device.last_response = Mock(message="color temperature rejected")
+        return False
+
+    async def set_brightness(device, *args) -> bool:
+        device.last_response = Mock(message="request success")
+        return True
+
+    with (
+        patch(
+            "pyvesync.devices.vesyncbulb.VeSyncBulbESL100CW.set_color_temp",
+            autospec=True,
+            side_effect=fail_color_temp,
+        ),
+        patch(
+            "pyvesync.devices.vesyncbulb.VeSyncBulbESL100CW.set_brightness",
+            autospec=True,
+            side_effect=set_brightness,
+        ),
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+        pytest.raises(HomeAssistantError, match="color temperature rejected"),
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.temperature_light",
+                ATTR_BRIGHTNESS: 128,
+                ATTR_COLOR_TEMP_KELVIN: 3000,
+            },
+            blocking=True,
+        )
+
+    mark_mock.assert_called_once()

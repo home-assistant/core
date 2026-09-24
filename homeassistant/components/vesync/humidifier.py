@@ -172,6 +172,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set humidity.")
 
+        self.coordinator.async_mark_command(self.device)
+
     @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the device."""
@@ -192,7 +194,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
             # a success even if display operation fails.
             await self.device.toggle_display(False)
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -203,7 +205,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to turn on humidifier.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -214,7 +216,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to turn off humidifier.")
 
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @property
     @override
