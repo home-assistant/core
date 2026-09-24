@@ -41,8 +41,8 @@ class AmazonBaseEntityDescription(SensorEntityDescription):
     """Shared Amazon Devices entity description."""
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
+    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
+        lambda device, key, coordinator: device.online
     )
     value_fn: ValueFn
 
@@ -51,10 +51,12 @@ class AmazonBaseEntityDescription(SensorEntityDescription):
 class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices sensor entity description."""
 
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-        and (sensor := device.sensors.get(key)) is not None
-        and sensor.error is False
+    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
+        lambda device, key, _: (
+            device.online
+            and (sensor := device.sensors.get(key)) is not None
+            and sensor.error is False
+        )
     )
     value_fn: ValueFn = lambda device, key, _: device.sensors[key].value
 
@@ -63,12 +65,21 @@ class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
 class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-        and (notification := device.notifications.get(key)) is not None
-        and notification.next_occurrence is not None
+    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
+        lambda device, key, coordinator: (
+            device.online
+            and (
+                notification := coordinator.notifications.get(
+                    device.serial_number, {}
+                ).get(key)
+            )
+            is not None
+            and notification.next_occurrence is not None
+        )
     )
-    value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
+    value_fn: ValueFn = lambda device, key, coordinator: (
+        coordinator.notifications[device.serial_number][key].next_occurrence
+    )
 
 
 SENSORS: Final = (
@@ -215,7 +226,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
         """Return if entity is available."""
         return (
             self.entity_description.is_available_fn(
-                self.device, self.entity_description.key
+                self.device, self.entity_description.key, self.coordinator
             )
             and super().available
         )
