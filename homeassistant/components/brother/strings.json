@@ -129,6 +129,15 @@
       "cyan_toner_remaining": {
         "name": "Cyan toner remaining"
       },
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "down": "Down",
+          "running": "Running",
+          "testing": "Testing",
+          "warning": "Warning"
+        }
+      },
       "drum_page_counter": {
         "name": "Drum page counter",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
@@ -146,6 +155,9 @@
       },
       "fuser_remaining_life": {
         "name": "Fuser remaining lifetime"
+      },
+      "ink_capture_box_remaining_life": {
+        "name": "Ink capture box remaining lifetime"
       },
       "laser_remaining_life": {
         "name": "Laser remaining lifetime"
@@ -176,6 +188,15 @@
       },
       "pf_kit_mp_remaining_life": {
         "name": "PF Kit MP remaining lifetime"
+      },
+      "printer_status": {
+        "name": "Printer status",
+        "state": {
+          "idle": "Idle",
+          "other": "Other",
+          "printing": "Printing",
+          "warmup": "Warming up"
+        }
       },
       "status": {
         "name": "Status"
