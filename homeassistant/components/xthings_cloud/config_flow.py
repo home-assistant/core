@@ -1,6 +1,5 @@
 """Config flow for Xthings Cloud."""
 
-import ssl
 from typing import Any, override
 
 from ha_xthings_cloud import (
@@ -17,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER
-from .coordinator import XthingsCloudConfigEntry, _load_mqtt_tls
+from .coordinator import XthingsCloudConfigEntry
 
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",
@@ -106,40 +105,22 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class XthingsOptionsFlow(OptionsFlow):
-    """Configure optional native MQTT support with local credentials."""
+    """Configure optional native MQTT support."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Validate TLS credentials before enabling native bulb connections."""
-        errors = {}
+        """Enable native bulb connections with the bundled app credential."""
         if user_input is not None:
-            if user_input["native_mqtt"]:
-                try:
-                    await self.hass.async_add_executor_job(
-                        _load_mqtt_tls,
-                        user_input.get("mqtt_certificate", ""),
-                        user_input.get("mqtt_private_key", ""),
-                    )
-                except OSError, ssl.SSLError:
-                    errors["base"] = "invalid_certificate"
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
-        options = self.config_entry.options
+            return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="init",
-            errors=errors,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        "native_mqtt", default=options.get("native_mqtt", False)
+                        "native_mqtt",
+                        default=self.config_entry.options.get("native_mqtt", False),
                     ): bool,
-                    probatio.Optional(
-                        "mqtt_certificate", default=options.get("mqtt_certificate", "")
-                    ): str,
-                    probatio.Optional(
-                        "mqtt_private_key", default=options.get("mqtt_private_key", "")
-                    ): str,
                 }
             ),
         )

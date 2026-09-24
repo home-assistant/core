@@ -12,7 +12,11 @@ from ha_xthings_cloud import (
     XthingsCloudAuthError,
     XthingsCloudWebSocket,
 )
-from ha_xthings_cloud.bulb import SUPPORTED_MODELS, NativeBulbClient
+from ha_xthings_cloud.bulb import (
+    SUPPORTED_MODELS,
+    NativeBulbClient,
+    create_bulb_ssl_context,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
@@ -24,13 +28,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
-
-
-def _load_mqtt_tls(certificate: str, private_key: str) -> ssl.SSLContext:
-    """Load caller-provided MQTT credentials off the event loop."""
-    context = ssl.create_default_context()
-    context.load_cert_chain(certificate, private_key)
-    return context
 
 
 def _native_status(state: dict[str, int]) -> dict[str, Any]:
@@ -140,11 +137,9 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._native_tls is None:
             try:
                 self._native_tls = await self.hass.async_add_executor_job(
-                    _load_mqtt_tls,
-                    self.config_entry.options["mqtt_certificate"],
-                    self.config_entry.options["mqtt_private_key"],
+                    create_bulb_ssl_context,
                 )
-            except (KeyError, OSError, ssl.SSLError) as err:
+            except (OSError, ssl.SSLError) as err:
                 raise UpdateFailed("Unable to load native MQTT credentials") from err
         try:
             routes = await self.client.async_get_native_bulb_routes()

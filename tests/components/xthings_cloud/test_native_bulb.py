@@ -78,8 +78,6 @@ async def test_native_readback_survives_http_poll_and_ws(
         data=mock_config_entry.data,
         options={
             "native_mqtt": True,
-            "mqtt_certificate": "/cert",
-            "mqtt_private_key": "/key",
         },
     )
     mock_api_client.async_get_native_bulb_routes.return_value = {"dev_light_001": 123}
@@ -89,7 +87,7 @@ async def test_native_readback_survives_http_poll_and_ws(
             autospec=True,
         ) as cls,
         patch(
-            "homeassistant.components.xthings_cloud.coordinator._load_mqtt_tls",
+            "homeassistant.components.xthings_cloud.coordinator.create_bulb_ssl_context",
             return_value=ssl.create_default_context(),
         ),
     ):
@@ -140,8 +138,6 @@ async def test_native_reports_do_not_postpone_account_refresh(
         data=mock_config_entry.data,
         options={
             "native_mqtt": True,
-            "mqtt_certificate": "/cert",
-            "mqtt_private_key": "/key",
         },
     )
     mock_api_client.async_get_native_bulb_routes.return_value = {"dev_light_001": 123}
@@ -151,7 +147,7 @@ async def test_native_reports_do_not_postpone_account_refresh(
             autospec=True,
         ) as cls,
         patch(
-            "homeassistant.components.xthings_cloud.coordinator._load_mqtt_tls",
+            "homeassistant.components.xthings_cloud.coordinator.create_bulb_ssl_context",
             return_value=ssl.create_default_context(),
         ),
     ):
@@ -179,8 +175,6 @@ async def test_native_startup_without_reply_is_unavailable(
         data=mock_config_entry.data,
         options={
             "native_mqtt": True,
-            "mqtt_certificate": "/cert",
-            "mqtt_private_key": "/key",
         },
     )
     mock_api_client.async_get_native_bulb_routes.return_value = {"dev_light_001": 123}
@@ -190,7 +184,7 @@ async def test_native_startup_without_reply_is_unavailable(
             autospec=True,
         ) as cls,
         patch(
-            "homeassistant.components.xthings_cloud.coordinator._load_mqtt_tls",
+            "homeassistant.components.xthings_cloud.coordinator.create_bulb_ssl_context",
             return_value=ssl.create_default_context(),
         ),
     ):
