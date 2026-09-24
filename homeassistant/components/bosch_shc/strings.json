@@ -119,6 +119,9 @@
       "routing": {
         "name": "Range extension"
       },
+      "silent_mode": {
+        "name": "Whisper mode"
+      },
       "smart_sensitivity_enabled": {
         "name": "Automatic sensitivity"
       },
