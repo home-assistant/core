@@ -1529,7 +1529,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==6.5.1
+lifx-async==7.4.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
