@@ -100,6 +100,36 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 raw_temp=merged_temp,
                 raw_user=merged_user,
                 raw_data=merged_data,
+                dew_heater=sensor.dew_heater
+                if sensor.dew_heater is not None
+                else self.latest_sensor.dew_heater,
+                dew_point=sensor.dew_point
+                if sensor.dew_point is not None
+                else self.latest_sensor.dew_point,
+                frost_point=sensor.frost_point
+                if sensor.frost_point is not None
+                else self.latest_sensor.frost_point,
+                fan_duty_cycle=sensor.fan_duty_cycle
+                if sensor.fan_duty_cycle is not None
+                else self.latest_sensor.fan_duty_cycle,
+                heat_index=sensor.heat_index
+                if sensor.heat_index is not None
+                else self.latest_sensor.heat_index,
+                wind_direction=sensor.wind_direction
+                if sensor.wind_direction is not None
+                else self.latest_sensor.wind_direction,
+                device_sqm=sensor.device_sqm
+                if sensor.device_sqm is not None
+                else self.latest_sensor.device_sqm,
+                camera_sqm=sensor.camera_sqm
+                if sensor.camera_sqm is not None
+                else self.latest_sensor.camera_sqm,
+                camera_sqm_adu=sensor.camera_sqm_adu
+                if sensor.camera_sqm_adu is not None
+                else self.latest_sensor.camera_sqm_adu,
+                cpu_temperature=sensor.cpu_temperature
+                if sensor.cpu_temperature is not None
+                else self.latest_sensor.cpu_temperature,
             )
         else:
             self.latest_sensor = sensor

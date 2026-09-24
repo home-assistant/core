@@ -80,8 +80,6 @@ def mock_sensor_data() -> SensorData:
                 "ambient_temperature": 21.5,
                 "humidity": 65.0,
                 "pressure": 1013.25,
-                "dewpoint": 14.8,
-                "cpu_temperature": 45.2,
             },
             "sensor_user": [0, 0, 14.8],
             "sensor_temp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45.2],

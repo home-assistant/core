@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEGREE,
+    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -35,40 +36,6 @@ from .coordinator import (
 from .entity import IndiAllSkyEntity
 
 PARALLEL_UPDATES = 0
-
-
-def _get_user_slot_value(data: IndiAllSkyData, index: int) -> float | None:
-    """Extract sensor value strictly from raw_user array index."""
-    if (
-        not data.sensor
-        or not data.sensor.raw_user
-        or len(data.sensor.raw_user) <= index
-    ):
-        return None
-
-    item = data.sensor.raw_user[index]
-    res = item.get("value") if isinstance(item, dict) else item
-    if res is not None:
-        with suppress(ValueError, TypeError):
-            return float(res)
-
-    return None
-
-
-def _get_cpu_temp_value(data: IndiAllSkyData) -> float | None:
-    """Extract CPU temperature strictly from raw_temp slot index 10."""
-    if not data.sensor or not data.sensor.raw_temp or len(data.sensor.raw_temp) <= 10:
-        return None
-
-    item = data.sensor.raw_temp[10]
-    res = item.get("value") if isinstance(item, dict) else item
-    if res is not None:
-        with suppress(ValueError, TypeError):
-            val = float(res)
-            if val > 0:
-                return round(val, 1)
-
-    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -134,7 +101,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         icon="mdi:heating-coil",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 1),
+        value_fn=lambda data: data.sensor.dew_heater if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="dewpoint",
@@ -142,7 +109,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 2),
+        value_fn=lambda data: data.sensor.dew_point if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="frost_point",
@@ -150,7 +117,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 3),
+        value_fn=lambda data: data.sensor.frost_point if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="fan_duty_cycle",
@@ -158,7 +125,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         icon="mdi:fan",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 4),
+        value_fn=lambda data: data.sensor.fan_duty_cycle if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="heat_index",
@@ -166,7 +133,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 5),
+        value_fn=lambda data: data.sensor.heat_index if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="wind_direction",
@@ -174,28 +141,28 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
-        value_fn=lambda data: _get_user_slot_value(data, 6),
+        value_fn=lambda data: data.sensor.wind_direction if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="device_sqm",
         translation_key="device_sqm",
         icon="mdi:weather-night",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 7),
+        value_fn=lambda data: data.sensor.device_sqm if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="camera_sqm",
         translation_key="camera_sqm",
         icon="mdi:weather-night",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 8),
+        value_fn=lambda data: data.sensor.camera_sqm if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="camera_sqm_adu",
         translation_key="camera_sqm_adu",
         icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: _get_user_slot_value(data, 9),
+        value_fn=lambda data: data.sensor.camera_sqm_adu if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="cpu_temperature",
@@ -205,7 +172,7 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=_get_cpu_temp_value,
+        value_fn=lambda data: data.sensor.cpu_temperature if data.sensor else None,
     ),
 )
 
@@ -252,6 +219,36 @@ IGNORED_DYNAMIC_KEYS: set[str] = {
 }
 
 
+DEVICE_CLASS_KEYWORDS: tuple[tuple[tuple[str, ...], SensorDeviceClass], ...] = (
+    (
+        ("temperature", "temp", "dewpoint", "dew_point", "heat_index", "frost_point"),
+        SensorDeviceClass.TEMPERATURE,
+    ),
+    (("humidity",), SensorDeviceClass.HUMIDITY),
+    (("pressure",), SensorDeviceClass.PRESSURE),
+    (("wind_speed", "wind_gust"), SensorDeviceClass.WIND_SPEED),
+    (("wind_direction", "wind_dir"), SensorDeviceClass.WIND_DIRECTION),
+    (("voltage", "volt"), SensorDeviceClass.VOLTAGE),
+    (("current", "amp"), SensorDeviceClass.CURRENT),
+    (("power", "watt"), SensorDeviceClass.POWER),
+    (("lux", "illuminance"), SensorDeviceClass.ILLUMINANCE),
+    (("duration",), SensorDeviceClass.DURATION),
+)
+
+DEVICE_CLASS_DEFAULT_UNITS: dict[SensorDeviceClass, str] = {
+    SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
+    SensorDeviceClass.HUMIDITY: PERCENTAGE,
+    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
+    SensorDeviceClass.WIND_DIRECTION: DEGREE,
+    SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,
+    SensorDeviceClass.CURRENT: UnitOfElectricCurrent.AMPERE,
+    SensorDeviceClass.POWER: UnitOfPower.WATT,
+    SensorDeviceClass.DURATION: UnitOfTime.SECONDS,
+    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,
+}
+
+
 def _infer_sensor_metadata(
     key: str,
     raw_name: str | None,
@@ -260,75 +257,31 @@ def _infer_sensor_metadata(
 ) -> tuple[str, SensorDeviceClass | None, str | None, SensorStateClass | None]:
     """Infer entity name, device class, native unit, and state class for dynamic hardware sensors."""
     device_class: SensorDeviceClass | None = None
-    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
 
     if raw_device_class:
         with suppress(ValueError):
             device_class = SensorDeviceClass(raw_device_class.lower())
 
-    unit = raw_unit
-    key_lower = key.lower()
     name_str = raw_name or key.replace("_", " ").capitalize()
+    key_lower = key.lower()
     name_lower = name_str.lower()
 
     if device_class is None:
-        if any(
-            x in key_lower or x in name_lower
-            for x in (
-                "temperature",
-                "temp",
-                "dewpoint",
-                "dew_point",
-                "heat_index",
-                "frost_point",
-            )
-        ):
-            device_class = SensorDeviceClass.TEMPERATURE
-        elif "humidity" in key_lower or "humidity" in name_lower:
-            device_class = SensorDeviceClass.HUMIDITY
-        elif "pressure" in key_lower or "pressure" in name_lower:
-            device_class = SensorDeviceClass.PRESSURE
-        elif (
-            "wind_speed" in key_lower
-            or "wind_speed" in name_lower
-            or "wind_gust" in key_lower
-        ):
-            device_class = SensorDeviceClass.WIND_SPEED
-        elif "wind_direction" in key_lower or "wind_dir" in name_lower:
-            device_class = SensorDeviceClass.WIND_DIRECTION
-        elif "voltage" in key_lower or "volt" in name_lower:
-            device_class = SensorDeviceClass.VOLTAGE
-        elif "current" in key_lower or "amp" in name_lower:
-            device_class = SensorDeviceClass.CURRENT
-        elif "power" in key_lower or "watt" in name_lower:
-            device_class = SensorDeviceClass.POWER
-        elif "lux" in key_lower or "illuminance" in name_lower:
-            device_class = SensorDeviceClass.ILLUMINANCE
-        elif "duration" in key_lower:
-            device_class = SensorDeviceClass.DURATION
+        for keywords, candidate_class in DEVICE_CLASS_KEYWORDS:
+            if any(kw in key_lower or kw in name_lower for kw in keywords):
+                device_class = candidate_class
+                break
 
-    if unit is None:
-        if device_class == SensorDeviceClass.TEMPERATURE:
-            unit = UnitOfTemperature.CELSIUS
-        elif device_class == SensorDeviceClass.HUMIDITY:
-            unit = PERCENTAGE
-        elif device_class == SensorDeviceClass.PRESSURE:
-            unit = UnitOfPressure.HPA
-        elif device_class == SensorDeviceClass.WIND_SPEED:
-            unit = UnitOfSpeed.METERS_PER_SECOND
-        elif device_class == SensorDeviceClass.WIND_DIRECTION:
-            unit = DEGREE
-        elif device_class == SensorDeviceClass.VOLTAGE:
-            unit = UnitOfElectricPotential.VOLT
-        elif device_class == SensorDeviceClass.CURRENT:
-            unit = UnitOfElectricCurrent.AMPERE
-        elif device_class == SensorDeviceClass.POWER:
-            unit = UnitOfPower.WATT
-        elif device_class == SensorDeviceClass.DURATION:
-            unit = UnitOfTime.SECONDS
+    unit = raw_unit or (
+        DEVICE_CLASS_DEFAULT_UNITS.get(device_class) if device_class else None
+    )
 
     if device_class == SensorDeviceClass.WIND_DIRECTION:
         state_class = SensorStateClass.MEASUREMENT_ANGLE
+    elif device_class is not None or unit is not None:
+        state_class = SensorStateClass.MEASUREMENT
+    else:
+        state_class = None
 
     return name_str, device_class, unit, state_class
 
@@ -341,7 +294,6 @@ async def async_setup_entry(
     """Set up INDI Allsky sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    # Always register predefined hardware & CPU sensors
     entities: list[SensorEntity] = [
         IndiAllSkySensor(coordinator, entry, description)
         for description in PREDEFINED_SENSOR_DESCRIPTIONS
@@ -465,6 +417,8 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
             if val is not None:
                 with suppress(ValueError, TypeError):
                     return float(val)
-                return str(val)
+                if self.state_class is None:
+                    return str(val)
+                return None
 
         return None
