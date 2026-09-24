@@ -1,8 +1,9 @@
 """Support for ZhongHong HVAC Controller."""
 
+from collections.abc import Callable
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
@@ -28,8 +29,8 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceAddress, ZhongHongConfigEntry, device_unique_id
 from .const import (
     ALL_FAN_MODES,
     BREAKS_IN_HA_VERSION,
@@ -42,6 +43,12 @@ from .const import (
     INTEGRATION_TITLE,
     LOGGER,
 )
+from .coordinator import (
+    DeviceAddress,
+    ZhongHongConfigEntry,
+    ZhongHongCoordinator,
+    device_unique_id,
+)
 
 # The gateway serializes everything onto a single socket, so there is nothing
 # to gain from issuing commands in parallel.
@@ -49,9 +56,9 @@ PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
     }
@@ -154,13 +161,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZhongHong climate entities from a config entry."""
+    data = entry.runtime_data
     async_add_entities(
-        ZhongHongClimate(entry, address, device)
-        for address, device in entry.runtime_data.devices.items()
+        ZhongHongClimate(data.coordinator, entry, address, device)
+        for address, device in data.devices.items()
     )
 
 
-class ZhongHongClimate(ClimateEntity):
+class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     """Representation of an air conditioner behind a ZhongHong gateway."""
 
     _attr_fan_modes = ALL_FAN_MODES
@@ -171,9 +179,6 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
-    # The gateway reports every change on its own socket, so there is nothing
-    # to poll for.
-    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -182,32 +187,23 @@ class ZhongHongClimate(ClimateEntity):
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # Two of the five speeds the gateway addresses have no name of their own in
+    # the climate component, so they are named here.
+    _attr_translation_key = "air_conditioner"
 
     def __init__(
         self,
+        coordinator: ZhongHongCoordinator,
         entry: ZhongHongConfigEntry,
         address: DeviceAddress,
         device: ZhongHongHVAC,
     ) -> None:
         """Set up a ZhongHong climate device."""
+        super().__init__(coordinator)
         self._device = device
         addr_out, addr_in = address
         self._attr_name = f"AC {addr_out}-{addr_in}"
         self._attr_unique_id = device_unique_id(entry, address)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Take the state the gateway pushes for this air conditioner."""
-        self._device.register_update_callback(self._handle_device_update)
-
-    def _handle_device_update(self, device: ZhongHongHVAC) -> None:
-        """Handle a state push from the gateway.
-
-        The library writes the new state into the device object before calling
-        this, and it does so on its own listener thread, so all that is left is
-        to ask for the entity to be written from that thread.
-        """
-        self.schedule_update_ha_state()
 
     @property
     @override
@@ -256,53 +252,61 @@ class ZhongHongClimate(ClimateEntity):
         """Return the maximum temperature."""
         return self._device.max_temp
 
-    def _command(self, sent: bool, command: str) -> None:
-        """Fail if the command did not go out.
+    async def _command(
+        self, command: str, send: Callable[..., bool], *args: Any
+    ) -> None:
+        """Send a command to the unit, and re-read it shortly after.
 
-        Nothing is written here on success: the unit reports the state it
-        actually reached, which is not always the one it was asked for.
+        The library talks to the gateway over a blocking socket, so the call
+        goes to the executor. The unit reports the new state itself once it
+        acts on the command, so the re-read is only there for the reports that
+        go missing.
         """
-        if not sent:
+        if not await self.hass.async_add_executor_job(send, *args):
             raise _send_failed(command)
 
+        self.coordinator.async_schedule_readback()
+
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on ac."""
-        self._command(self._device.turn_on(), "turn-on")
+        await self._command("turn-on", self._device.turn_on)
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off ac."""
-        self._command(self._device.turn_off(), "turn-off")
+        await self._command("turn-off", self._device.turn_off)
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._command(self._device.set_temperature(temperature), "temperature")
+            await self._command(
+                "temperature", self._device.set_temperature, temperature
+            )
 
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            self.set_hvac_mode(operation_mode)
+            await self.async_set_hvac_mode(operation_mode)
 
     @override
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
             if self.is_on:
-                self.turn_off()
+                await self.async_turn_off()
             return
 
         if not self.is_on:
-            self.turn_on()
+            await self.async_turn_on()
 
-        self._command(self._device.set_operation_mode(hvac_mode.upper()), "mode")
+        await self._command("mode", self._device.set_operation_mode, hvac_mode.upper())
 
     @override
-    def set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         mapped_mode = FAN_MODE_MAP.get(fan_mode)
         if not mapped_mode:
             LOGGER.error("Unsupported fan mode: %s", fan_mode)
             return
 
-        self._command(self._device.set_fan_mode(mapped_mode), "fan")
+        await self._command("fan", self._device.set_fan_mode, mapped_mode)

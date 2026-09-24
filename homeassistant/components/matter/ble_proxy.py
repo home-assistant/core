@@ -25,6 +25,7 @@ from matter_ble_proxy import (
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BluetoothCallbackReplay,
     BluetoothScanningMode,
     async_ble_device_from_address,
     async_register_callback,
@@ -77,6 +78,7 @@ class HaBluetoothScanSource(BleScanSource):
             _on_advertisement,
             None,
             BluetoothScanningMode.PASSIVE,
+            replay=BluetoothCallbackReplay.NEWEST_FIRST,
         )
 
     @override

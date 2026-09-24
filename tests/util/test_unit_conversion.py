@@ -692,6 +692,8 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
         (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_WATT_HOUR, 0.3412956, UnitOfEnergy.THERM),
+        (10, UnitOfEnergy.THERM, 293.001111, UnitOfEnergy.KILO_WATT_HOUR),
     ],
     EnergyDistanceConverter: [
         (
@@ -880,6 +882,11 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+        (1, UnitOfPressure.ATM, 101325, UnitOfPressure.PA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.HPA),
+        (1, UnitOfPressure.ATM, 1013.25, UnitOfPressure.MBAR),
+        (1, UnitOfPressure.ATM, 1.01325, UnitOfPressure.BAR),
+        (101325, UnitOfPressure.PA, 1, UnitOfPressure.ATM),
     ],
     RadiationConcentrationConverter: [
         (

@@ -905,10 +905,10 @@ async def test_issue_for_not_supported_lts_version(
 @pytest.mark.parametrize(
     "server_version",
     [
-        "12.4.0-MariaDB",  # non-LTS MariaDB release newer than we know about
-        "13.4.0-MariaDB",  # LTS MariaDB release newer than we know about
-        "9.8.0",  # non-LTS MySQL release newer than we know about
-        "10.4.0",  # LTS MySQL release newer than we know about
+        # One major above the newest series in the generated version data, so these
+        # stay newer than we know about when endoflife.date reports new releases.
+        f"{util.SUPPORTED_MARIA_DB_LTS.latest_non_lts_series[0] + 1}.0.0-MariaDB",
+        f"{util.SUPPORTED_MYSQL_LTS.latest_non_lts_series[0] + 1}.0.0",
     ],
 )
 async def test_no_issue_for_future_database_version(

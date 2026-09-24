@@ -104,9 +104,6 @@
     },
     "invalid_fan_mode": {
       "message": "The fan mode {fan_mode} is not supported by this device"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "services": {
