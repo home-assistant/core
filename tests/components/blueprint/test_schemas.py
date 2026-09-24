@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.blueprint import schemas
 
@@ -76,7 +76,7 @@ def test_blueprint_schema(blueprint) -> None:
     """Test different schemas."""
     try:
         schemas.BLUEPRINT_SCHEMA(blueprint)
-    except vol.Invalid:
+    except probatio.Invalid:
         _LOGGER.exception("%s", blueprint)
         pytest.fail("Expected schema to be valid")
 
@@ -144,7 +144,7 @@ def test_blueprint_schema(blueprint) -> None:
 )
 def test_blueprint_schema_invalid(blueprint) -> None:
     """Test different schemas."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schemas.BLUEPRINT_SCHEMA(blueprint)
 
 

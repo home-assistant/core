@@ -2,8 +2,8 @@
 
 from typing import Any, Final
 
+import probatio
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
-import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
 from homeassistant.core import (
@@ -35,10 +35,10 @@ from .const import (
 )
 from .coordinator import SeventeenTrackConfigEntry
 
-SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
+SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 multiple=True,
                 options=[
@@ -52,18 +52,18 @@ SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
     }
 )
 
-SERVICE_ADD_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ADD_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
-        vol.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
     }
 )
 
-SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
     }
 )
 

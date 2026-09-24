@@ -36,8 +36,8 @@ async def async_get_config_entry_diagnostics(
     # Gather information how this Nut device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, hass_data.unique_id)}
+    hass_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, hass_data.unique_id), entry.entry_id
     )
     # Device is always created
     assert hass_device is not None

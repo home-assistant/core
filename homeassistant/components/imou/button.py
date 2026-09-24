@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.const import PARAM_RESTART_DEVICE
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.button import (
@@ -10,17 +10,16 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 1
-# Button types
-PARAM_RESTART_DEVICE = "restart_device"
+# Button types not yet exported by pyimouapi (keep module-local).
 PARAM_MUTE = "mute"
 PARAM_PTZ_UP = "ptz_up"
 PARAM_PTZ_DOWN = "ptz_down"
@@ -90,14 +89,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_buttons)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_buttons in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_buttons)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_buttons))
     _add_buttons(coordinator.devices)
 
 
@@ -107,14 +99,12 @@ class ImouButton(ImouEntity, ButtonEntity):
     entity_description: ButtonEntityDescription
 
     @override
+    @async_wrap_imou_command("press_button_failed")
     async def async_press(self) -> None:
         """Handle button press."""
         duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
-        try:
-            await self.coordinator.device_manager.async_press_button(
-                self.device,
-                self._entity_type,
-                duration,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+        await self.coordinator.device_manager.async_press_button(
+            self.device,
+            self._entity_type,
+            duration,
+        )

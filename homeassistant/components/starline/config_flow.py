@@ -2,15 +2,14 @@
 
 from typing import TYPE_CHECKING, override
 
+import probatio
 from starline import StarlineAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
-    _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
     CONF_CAPTCHA_CODE,
@@ -23,6 +22,7 @@ from .const import (
     ERROR_AUTH_APP,
     ERROR_AUTH_MFA,
     ERROR_AUTH_USER,
+    LOGGER,
 )
 
 
@@ -107,13 +107,13 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_app",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_APP_ID, default=self._app_id or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_APP_ID, default=self._app_id or probatio.UNDEFINED
                     ): str,
-                    vol.Required(
-                        CONF_APP_SECRET, default=self._app_secret or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_APP_SECRET, default=self._app_secret or probatio.UNDEFINED
                     ): str,
                 }
             ),
@@ -132,13 +132,13 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=self._username or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_USERNAME, default=self._username or probatio.UNDEFINED
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=self._password or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_PASSWORD, default=self._password or probatio.UNDEFINED
                     ): str,
                 }
             ),
@@ -154,10 +154,10 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_mfa",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_MFA_CODE, default=self._mfa_code or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_MFA_CODE, default=self._mfa_code or probatio.UNDEFINED
                     ): str
                 }
             ),
@@ -174,10 +174,11 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_captcha",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_CAPTCHA_CODE, default=self._captcha_code or vol.UNDEFINED
+                    probatio.Required(
+                        CONF_CAPTCHA_CODE,
+                        default=self._captcha_code or probatio.UNDEFINED,
                     ): str
                 }
             ),
@@ -206,7 +207,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
             self._app_token = await self.hass.async_add_executor_job(_get_app_token)
             return self._async_form_auth_user(error)
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error auth StarLine: %s", err)
+            LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
     async def _async_authenticate_user(
@@ -241,7 +242,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
             raise Exception(data)  # noqa: TRY002, TRY301
         except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error auth user: %s", err)
+            LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
     async def _async_get_entry(self) -> ConfigFlowResult:

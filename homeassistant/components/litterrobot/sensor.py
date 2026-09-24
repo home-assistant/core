@@ -128,8 +128,8 @@ ROBOT_SENSOR_MAP: dict[
             value_fn=lambda robot: robot.cycle_count,
         ),
     ],
-    LitterRobot4: [
-        RobotSensorEntityDescription[LitterRobot4](
+    (LitterRobot4, LitterRobot5): [
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="hopper_status",
             translation_key="hopper_status",
             device_class=SensorDeviceClass.ENUM,
@@ -140,6 +140,10 @@ ROBOT_SENSOR_MAP: dict[
                 "motor_ot_amps",
                 "motor_disconnected",
                 "empty",
+                "litter_low",
+                "ready",
+                "jammed",
+                "offline",
             ],
             value_fn=(
                 lambda robot: (
@@ -147,8 +151,6 @@ ROBOT_SENSOR_MAP: dict[
                 )
             ),
         ),
-    ],
-    (LitterRobot4, LitterRobot5): [
         RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="litter_level",
             translation_key="litter_level",

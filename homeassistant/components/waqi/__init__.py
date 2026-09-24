@@ -100,8 +100,8 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
         if TYPE_CHECKING:
             assert entry.unique_id is not None
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.unique_id), entry.entry_id
         )
 
         for entity_entry in entities:

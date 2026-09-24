@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +17,7 @@ from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
-    async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_devices,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -41,34 +41,42 @@ CONF_STALE_DURATION = "sensor_stale_duration"
 DEFAULT_TOLERANCE = 3
 DEFAULT_NAME = "Generic Hygrostat"
 
-HYGROSTAT_SCHEMA = vol.Schema(
+HYGROSTAT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HUMIDIFIER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_DEVICE_CLASS): vol.In(
+        probatio.Required(CONF_HUMIDIFIER): cv.entity_id,
+        probatio.Required(CONF_SENSOR): cv.entity_id,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.In(
             [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
-        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_KEEP_ALIVE): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-        vol.Optional(CONF_AWAY_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_AWAY_FIXED): cv.boolean,
-        vol.Optional(CONF_STALE_DURATION): vol.All(
+        probatio.Optional(CONF_MAX_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_DUR): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_MIN_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(CONF_TARGET_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_KEEP_ALIVE): probatio.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        probatio.Optional(CONF_INITIAL_STATE): cv.boolean,
+        probatio.Optional(CONF_AWAY_HUMIDITY): probatio.Coerce(int),
+        probatio.Optional(CONF_AWAY_FIXED): cv.boolean,
+        probatio.Optional(CONF_STALE_DURATION): probatio.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [HYGROSTAT_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(cv.ensure_list, [HYGROSTAT_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,7 +162,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if source_device_id := async_entity_id_to_device_id(
                 hass, options[CONF_HUMIDIFIER]
             ):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,

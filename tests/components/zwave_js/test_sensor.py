@@ -440,22 +440,23 @@ async def test_node_status_sensor(
 
     # Assert a node status sensor entity is not created for the controller
     driver = client.driver
-    node = driver.controller.nodes[1]
-    assert node.is_controller_node
+    controller_node = driver.controller.nodes[1]
+    assert controller_node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
-            f"{get_valueless_base_unique_id(driver, node)}.node_status",
+            DOMAIN,
+            f"{get_valueless_base_unique_id(driver, controller_node)}.node_status",
         )
         is None
     )
 
     # Assert a controller status sensor entity is not created for a node
+    assert not node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN,
             "sensor",
+            DOMAIN,
             f"{get_valueless_base_unique_id(driver, node)}.controller_status",
         )
         is None

@@ -29,7 +29,7 @@ async def async_setup_entry(
         VeluxGatewayRebootButton(config_entry.entry_id, pyvlx)
     ]
     entities.extend(
-        VeluxIdentifyButton(node, config_entry.entry_id)
+        VeluxIdentifyButton(hass, node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, Node)
     )
@@ -42,9 +42,9 @@ class VeluxIdentifyButton(VeluxEntity, ButtonEntity):
     _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, node: Node, config_entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux identify button."""
-        super().__init__(node, config_entry_id)
+        super().__init__(hass, node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_identify"
 
     @wrap_pyvlx_call_exceptions

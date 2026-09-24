@@ -6,7 +6,7 @@ from http import HTTPStatus
 import logging
 from typing import override
 
-from aiohttp import ClientError, web
+from aiohttp import web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -21,7 +21,7 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 from google_nest_sdm.traits import TraitType
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
@@ -42,8 +42,6 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
     Unauthorized,
 )
 from homeassistant.helpers import (
@@ -78,27 +76,29 @@ from .types import DevicesAddedListener, NestConfigEntry, NestData
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
+SENSOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(cv.ensure_list)}
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(CONF_CLIENT_ID): cv.string,
+                probatio.Required(CONF_CLIENT_SECRET): cv.string,
                 # Required to use the new API (optional for compatibility)
-                vol.Optional(CONF_PROJECT_ID): cv.string,
-                vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
+                probatio.Optional(CONF_PROJECT_ID): cv.string,
+                probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
                 # Config that only currently works on the old API
-                vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_STRUCTURE): probatio.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Platforms for SDM API
@@ -145,8 +145,8 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = dr.async_get(self._hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), self._config_entry.entry_id
         )
         if not device_entry:
             return
@@ -251,20 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         )
 
     auth = await api.new_auth(hass, entry)
-    try:
-        await auth.async_get_access_token()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="reauth_required"
-        ) from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="auth_server_error"
-        ) from err
-    except ClientError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="auth_client_error"
-        ) from err
+    await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
@@ -273,7 +260,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
     # Use disk backed event media store
-    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
+    subscriber.cache_policy.store = await async_get_media_event_store(
+        hass, entry, subscriber
+    )
     subscriber.cache_policy.transcoder = await async_get_transcoder(hass)
 
     # The device manager has a single change callback. When the change

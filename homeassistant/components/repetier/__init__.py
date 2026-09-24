@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+import probatio
 import pyrepetierng as pyrepetier
-import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
@@ -119,7 +119,7 @@ API_PRINTER_METHODS: dict[str, APIMethods] = {
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer[CONF_NAME]) for printer in value]
-    vol.Schema(vol.Unique())(names)
+    probatio.Schema(probatio.Unique())(names)
     return value
 
 
@@ -186,34 +186,34 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
     ),
 }
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+        ): probatio.All(cv.ensure_list, [probatio.In(SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_PORT, default=3344): cv.port,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                        probatio.Required(CONF_API_KEY): cv.string,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_PORT, default=3344): cv.port,
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
                     }
                 )
             ],
             has_all_unique_names,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

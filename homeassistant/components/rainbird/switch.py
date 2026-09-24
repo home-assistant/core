@@ -8,6 +8,7 @@ from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyExcept
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -66,7 +67,11 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
                 name=device_name,
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer=MANUFACTURER,
-                via_device=(DOMAIN, coordinator.unique_id),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, coordinator.unique_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
             )
 
     @property

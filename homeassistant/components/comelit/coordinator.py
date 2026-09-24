@@ -5,7 +5,8 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import TypeVar, cast, override
 
-from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit import ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit.api import ComelitHttpApi
 from aiocomelit.const import (
     ALARM_AREA,
     ALARM_ZONE,
@@ -32,7 +33,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL, ObjectClassType
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, ObjectClassType
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
@@ -51,7 +52,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
     _hw_version: str
     config_entry: ComelitConfigEntry
-    api: ComelitCommonApi
+    api: ComelitHttpApi
 
     def __init__(
         self, hass: HomeAssistant, entry: ComelitConfigEntry, device: str, host: str
@@ -63,7 +64,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
         super().__init__(
             hass=hass,
-            logger=_LOGGER,
+            logger=LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
@@ -93,7 +94,11 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     f"{self.config_entry.entry_id}-{object_type}-{object_class.index}",
                 )
             },
-            via_device=(DOMAIN, self.config_entry.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.config_entry.entry_id),
+                config_entry_id=self.config_entry.entry_id,
+            ),
             name=object_class.name,
             model=f"{self._device} {object_type}",
             manufacturer="Comelit",
@@ -103,7 +108,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     @override
     async def _async_update_data(self) -> T:
         """Update device data."""
-        _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
+        LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
             await self.api.login()
             return await self._async_update_system_data()
@@ -139,20 +144,17 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
         for i in previous_list:
             if i not in current_list:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Detected change in %s devices: index %s removed",
                     dev_type,
                     i,
                 )
                 identifier = f"{self.config_entry.entry_id}-{dev_type}-{i}"
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, identifier)}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, identifier), self.config_entry.entry_id
                 )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
 
 class ComelitSerialBridge(ComelitBaseCoordinator[T]):

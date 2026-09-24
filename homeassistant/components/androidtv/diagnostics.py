@@ -35,8 +35,8 @@ async def async_get_config_entry_diagnostics(
     # Gather information how this AndroidTV device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(entry.unique_id))}
+    hass_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(entry.unique_id)), entry.entry_id
     )
     if not hass_device:
         return data

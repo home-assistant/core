@@ -168,7 +168,9 @@ def _reattach_device_to_hub(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, str(device_id))})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(device_id)), source_entry.entry_id
+    )
     if device is None:
         return
 

@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.switch import (
@@ -10,8 +10,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -20,14 +19,13 @@ from .const import (
     PARAM_CLOSE_CAMERA,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
-    PARAM_STATE,
     PARAM_WHITE_LIGHT,
     imou_device_identifier,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
@@ -97,14 +95,7 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_add_switches)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_switches in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_switches)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_switches))
     _add_switches(coordinator.devices)
 
 
@@ -129,14 +120,12 @@ class ImouSwitch(ImouEntity, SwitchEntity):
         """Turn the switch off."""
         await self._async_switch_operation(False)
 
+    @async_wrap_imou_command("switch_operation_failed")
     async def _async_switch_operation(self, enable: bool) -> None:
         """Call the vendor library to change switch state."""
-        try:
-            await self.coordinator.device_manager.async_switch_operation(
-                self.device,
-                self._entity_type,
-                enable,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+        await self.coordinator.device_manager.async_switch_operation(
+            self.device,
+            self._entity_type,
+            enable,
+        )
         await self.coordinator.async_request_refresh()
