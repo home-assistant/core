@@ -1,9 +1,12 @@
 """Tests for the Hot Spring sensor platform."""
 
+from unittest.mock import MagicMock
+
+from hotspring import Spa, TemperatureUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,3 +25,21 @@ async def test_sensors(
     """Test the sensor platform state."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_temperature_sensor_celsius(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+) -> None:
+    """Test the temperature sensor when the spa is configured in Celsius."""
+    device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
+    device_fixture.heater.current_temperature = 38.5
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.connectedspa_ddeeff_current_temperature")
+    assert state
+    assert state.state == "38.5"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS

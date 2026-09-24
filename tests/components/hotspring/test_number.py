@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa
+from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,7 +11,12 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -45,7 +50,7 @@ async def test_set_target_temperature(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == "40.0"
 
-    def set_temp_mock(value: int) -> None:
+    def set_temp_mock(value: float) -> None:
         device_fixture.heater.set_temperature = float(value)
 
     mock_hotspring.set_temperature.side_effect = set_temp_mock
@@ -96,3 +101,53 @@ async def test_set_target_temperature_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("target_value", "expected_call"),
+    [
+        pytest.param(37.5, 37.5, id="half_degree"),
+        pytest.param(38.0, 38, id="whole_degree"),
+    ],
+)
+async def test_set_target_temperature_celsius(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+    target_value: float,
+    expected_call: float,
+) -> None:
+    """Test setting target temperature when the spa is configured in Celsius."""
+    device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
+    device_fixture.heater.set_temperature = 38.5
+
+    def set_temp_mock(value: float) -> None:
+        device_fixture.heater.set_temperature = float(value)
+
+    mock_hotspring.set_temperature.side_effect = set_temp_mock
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "38.5"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes["min"] == 26.0
+    assert state.attributes["max"] == 40.0
+    assert state.attributes["step"] == 0.5
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_VALUE: target_value,
+        },
+        blocking=True,
+    )
+
+    mock_hotspring.set_temperature.assert_called_once_with(expected_call)
+    mock_hotspring.update.assert_called_once()
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == str(target_value)
