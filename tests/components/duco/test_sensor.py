@@ -614,21 +614,21 @@ async def test_unknown_node_logged_at_debug_when_data_changes(
     with caplog.at_level(logging.DEBUG, logger="homeassistant.components.duco"):
         await async_fire_coordinator_update(hass, freezer)
 
-    assert "has an unsupported device type" in caplog.text
+        assert "has an unsupported device type" in caplog.text
 
-    caplog.clear()
-    await async_fire_coordinator_update(hass, freezer)
+        caplog.clear()
+        await async_fire_coordinator_update(hass, freezer)
 
-    assert "has an unsupported device type" not in caplog.text
+        assert "has an unsupported device type" not in caplog.text
 
-    caplog.clear()
-    mock_duco_client.async_get_nodes.return_value = [
-        *mock_sensor_nodes,
-        replace(unknown_node, general=replace(unknown_node.general, identify=1)),
-    ]
-    await async_fire_coordinator_update(hass, freezer)
+        caplog.clear()
+        mock_duco_client.async_get_nodes.return_value = [
+            *mock_sensor_nodes,
+            replace(unknown_node, general=replace(unknown_node.general, identify=1)),
+        ]
+        await async_fire_coordinator_update(hass, freezer)
 
-    assert "has an unsupported device type" in caplog.text
+        assert "has an unsupported device type" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")
