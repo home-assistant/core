@@ -98,7 +98,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
-            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
@@ -148,13 +147,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
             device_registry = dr.async_get(self.hass)
             for lock_id in removed_locks:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(lock_id))}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(lock_id)), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
 
         # add new locks
         if new_locks := current_locks - self._locks_last_update:

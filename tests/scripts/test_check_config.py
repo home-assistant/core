@@ -134,7 +134,6 @@ def test_secrets() -> None:
         "cors_allowed_origins": ["http://google.com"],
         "ip_ban_enabled": True,
         "login_attempts_threshold": -1,
-        "server_port": 8123,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }

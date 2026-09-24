@@ -134,9 +134,13 @@ async def test_device_in_dr(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "a455b61e52394b2db5081ce025a430f3")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "a455b61e52394b2db5081ce025a430f3"), mock_config_entry.entry_id
     )
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:01"),
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:02"),
+    }
     assert device_entry.hw_version == "AME Smile 2.0 board"
     assert device_entry.manufacturer == "Plugwise"
     assert device_entry.model == "Gateway"
@@ -145,6 +149,29 @@ async def test_device_in_dr(
     assert device_entry.sw_version == "4.4.2"
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that a non-gateway device links to the gateway via via_device_id."""
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "da224107914542988a88561b4452b0f6"), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6"), mock_config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == gateway_device.id
+
+
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
@@ -167,7 +194,6 @@ async def test_migrate_unique_id_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -188,6 +214,7 @@ async def test_migrate_unique_id_temperature(
     assert entity_migrated.unique_id == new_unique_id
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize(
     ("entitydata", "old_unique_id", "new_unique_id"),
     [
@@ -219,7 +246,6 @@ async def test_migrate_unique_id_relay(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -263,7 +289,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 56
+        == 57
     )
     assert (
         len(
@@ -295,7 +321,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 63
+            == 64
         )
         assert (
             len(
@@ -305,8 +331,8 @@ async def test_update_device(
             )
             == 12
         )
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, "01234567890abcdefghijklmnopqrstu")}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "01234567890abcdefghijklmnopqrstu"), mock_config_entry.entry_id
         )
         assert device_entry is not None
 
@@ -326,7 +352,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 56
+            == 57
         )
         assert (
             len(
@@ -336,8 +362,8 @@ async def test_update_device(
             )
             == 11
         )
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, "1772a4ea304041adb83f357b751341ff")}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "1772a4ea304041adb83f357b751341ff"), mock_config_entry.entry_id
         )
         assert device_entry is None
 
@@ -355,8 +381,8 @@ async def test_delete_removed_device(
     """Test device removal after a coordinator refresh."""
     data = mock_smile_adam_heat_cool.async_update.return_value
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6"), mock_config_entry.entry_id
     )
     assert device_entry is not None
 
@@ -366,8 +392,8 @@ async def test_delete_removed_device(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6"), mock_config_entry.entry_id
     )
     assert device_entry is None
 
@@ -385,8 +411,8 @@ async def test_update_device_firmware(
     """Test device firmware update via coordinator."""
     data = mock_smile_adam_heat_cool.async_update.return_value
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "da224107914542988a88561b4452b0f6")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "da224107914542988a88561b4452b0f6"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert str(device_entry.sw_version) == "3.9.0"
@@ -397,8 +423,8 @@ async def test_update_device_firmware(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "da224107914542988a88561b4452b0f6")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "da224107914542988a88561b4452b0f6"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert str(device_entry.sw_version) == "3.10.13"

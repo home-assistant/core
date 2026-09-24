@@ -55,6 +55,14 @@
         }
       }
     },
+    "number": {
+      "auto_shut_off_duration_threshold": {
+        "name": "Auto shut-off duration threshold"
+      },
+      "auto_shut_off_volume_threshold": {
+        "name": "Auto shut-off volume threshold"
+      }
+    },
     "sensor": {
       "mqtt_up_since": {
         "name": "MQTT up since"
@@ -84,6 +92,11 @@
       },
       "wifi_up_since": {
         "name": "Wi-Fi up since"
+      }
+    },
+    "switch": {
+      "auto_shut_off": {
+        "name": "Auto shut-off"
       }
     }
   }

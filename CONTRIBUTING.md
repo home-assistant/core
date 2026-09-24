@@ -19,3 +19,10 @@ If you want to suggest a new feature for Home Assistant (e.g. new integrations),
 ## Issue Tracker
 
 If you want to report an issue, please [create an issue](https://github.com/home-assistant/core/issues) on GitHub.
+
+## AI policy
+
+This project follows the [Open Home Foundation AI Policy](AI_POLICY.md). In
+short: AI tools are welcome as an aid, but you must fully understand and be
+able to explain every change you submit. Contributions made by autonomous
+agents are not accepted.

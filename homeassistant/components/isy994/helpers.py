@@ -26,7 +26,6 @@ from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
-    _LOGGER,
     DEFAULT_PROGRAM_STRING,
     DOMAIN,
     FILTER_INSTEON_TYPE,
@@ -37,8 +36,10 @@ from .const import (
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
+    LOGGER,
     NODE_AUX_FILTERS,
     NODE_FILTERS,
+    NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
     SUBNODE_CLIMATE_COOL,
@@ -288,17 +289,18 @@ def _add_backlight_if_supported(isy_data: IsyData, node: Node) -> None:
     isy_data.aux_properties[Platform.NUMBER].append((node, CMD_BACKLIGHT))
 
 
-def _generate_device_info(node: Node) -> DeviceInfo:
+def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
     device_info = DeviceInfo(
         identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
         manufacturer=node.protocol.title(),
         name=node.name,
-        via_device=(DOMAIN, isy.uuid),
         configuration_url=isy.conn.url,
         suggested_area=node.folder,
     )
+    if via_device_id is not None:
+        device_info["via_device_id"] = via_device_id
 
     # ISYv5 Device Types can provide model and manufacturer
     model: str = str(node.address).rpartition(" ")[0] or node.address
@@ -328,7 +330,11 @@ def _generate_device_info(node: Node) -> DeviceInfo:
 
 
 def _categorize_nodes(
-    isy_data: IsyData, nodes: Nodes, ignore_identifier: str, sensor_identifier: str
+    isy_data: IsyData,
+    nodes: Nodes,
+    ignore_identifier: str,
+    sensor_identifier: str,
+    via_device_id: str | None,
 ) -> None:
     """Sort the nodes to their proper platforms."""
     for path, node in nodes:
@@ -339,7 +345,7 @@ def _categorize_nodes(
 
         if hasattr(node, "parent_node") and node.parent_node is None:
             # This is a physical device / parent node
-            isy_data.devices[node.address] = _generate_device_info(node)
+            isy_data.devices[node.address] = _generate_device_info(node, via_device_id)
             isy_data.root_nodes[Platform.BUTTON].append(node)
             # Any parent node can have communication errors:
             isy_data.aux_properties[Platform.SENSOR].append((node, PROP_COMMS_ERROR))
@@ -357,11 +363,22 @@ def _categorize_nodes(
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
             continue
 
-        if node.protocol == PROTO_INSTEON:
+        if node.protocol in (PROTO_INSTEON, PROTO_ZWAVE):
             for control in node.aux_properties:
                 if control in SKIP_AUX_PROPS:
                     continue
                 isy_data.aux_properties[Platform.SENSOR].append((node, control))
+
+        # Must run before the sensor_identifier override below -- Platform.EVENT
+        # is additive, not exclusive with a name/path-forced Platform.SENSOR.
+        for parallel_platform in NODE_PARALLEL_PLATFORMS:
+            if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
+                continue
+            if _check_for_insteon_type(
+                isy_data, node, single_platform=parallel_platform
+            ):
+                continue
+            _check_for_zwave_cat(isy_data, node, single_platform=parallel_platform)
 
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to
@@ -403,7 +420,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
             actions = None
             status = entity_folder.get_by_name(KEY_STATUS)
             if not status or status.protocol != PROTO_PROGRAM:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Program %s entity '%s' not loaded, invalid/missing status program",
                     platform,
                     entity_folder.name,
@@ -413,7 +430,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
             if platform != Platform.BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         (
                             "Program %s entity '%s' not loaded, invalid/missing actions"
                             " program"

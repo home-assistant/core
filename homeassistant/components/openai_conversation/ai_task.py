@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -138,7 +140,7 @@ class OpenAITaskEntity(
         else:
             mime_type = "image/png"
 
-        if hasattr(image_call, "size") and (size := image_call.size):
+        if size := image_call.size:
             width, height = tuple(size.split("x"))
         else:
             width, height = None, None

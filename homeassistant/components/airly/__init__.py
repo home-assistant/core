@@ -1,6 +1,5 @@
 """The Airly integration."""
 
-from datetime import timedelta
 import logging
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
@@ -9,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_USE_NEAREST, DOMAIN, MIN_UPDATE_INTERVAL
+from .const import CONF_USE_NEAREST, DOMAIN
 from .coordinator import AirlyConfigEntry, AirlyDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -43,16 +42,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> boo
             str(longitude),
         ),
     ):
-        device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
-        if device_entry and entry.entry_id in device_entry.config_entries:
+        device_entry = device_registry.async_get_device_by_identifier(
+            old_ids,  # type: ignore[arg-type]
+            entry.entry_id,
+        )
+        if device_entry:
             new_ids = (DOMAIN, f"{latitude}-{longitude}")
             device_registry.async_update_device(
                 device_entry.id, new_identifiers={new_ids}
             )
 
     websession = async_get_clientsession(hass)
-
-    update_interval = timedelta(minutes=MIN_UPDATE_INTERVAL)
 
     coordinator = AirlyDataUpdateCoordinator(
         hass,
@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> boo
         api_key,
         latitude,
         longitude,
-        update_interval,
         use_nearest,
     )
     await coordinator.async_config_entry_first_refresh()

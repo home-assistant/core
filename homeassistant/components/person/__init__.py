@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import persistent_notification, websocket_api
@@ -71,25 +71,25 @@ STORAGE_VERSION = 2
 # Device tracker states to ignore
 IGNORE_STATES = (STATE_UNKNOWN, STATE_UNAVAILABLE)
 
-PERSON_SCHEMA = vol.Schema(
+PERSON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_USER_ID): cv.string,
-        vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
+        probatio.Required(CONF_ID): cv.string,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_USER_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_TRACKERS, default=[]): probatio.All(
             cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
-        vol.Optional(CONF_PICTURE): cv.string,
+        probatio.Optional(CONF_PICTURE): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.All(
+        probatio.Optional(DOMAIN, default=[]): probatio.All(
             cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA]
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -165,22 +165,22 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_USER_ID): vol.Any(str, None),
-    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
+    probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
-    vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
 
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_USER_ID): vol.Any(str, None),
-    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
+    probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
-    vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
 }
 
 
@@ -201,8 +201,8 @@ class PersonStore(Store):
 class PersonStorageCollection(collection.DictStorageCollection):
     """Person collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(
         self,
@@ -611,19 +611,22 @@ class Person(
         self._in_zones = in_zones or []
 
         # A legacy scanner (one that doesn't report in_zones) reports "home"
-        # without coordinates. Use the home zone's coordinates for backwards
-        # compatibility with legacy zone conditions and triggers. Modern
-        # trackers report in_zones and keep their own (possibly absent)
-        # coordinates.
+        # without zone membership or coordinates. Synthesize home-zone
+        # membership and borrow the home zone's coordinates so zone counting,
+        # conditions and triggers keep working as they did before the in_zones
+        # model was introduced. Modern trackers report in_zones and keep their
+        # own (possibly absent) coordinates.
         if (
             in_zones is None
             and state.state == STATE_HOME
-            and self._latitude is None
-            and self._longitude is None
             and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
         ):
-            self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
-            self._longitude = home_zone.attributes.get(EntityStateAttribute.LONGITUDE)
+            self._in_zones = [ENTITY_ID_HOME]
+            if self._latitude is None and self._longitude is None:
+                self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+                self._longitude = home_zone.attributes.get(
+                    EntityStateAttribute.LONGITUDE
+                )
 
     @callback
     def _update_extra_state_attributes(self) -> None:

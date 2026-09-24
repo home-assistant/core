@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_hd-entry]
+# name: test_camera_entities_snapshot[platforms0-imou_mock_devices0][camera.device_1_live_view_hd-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_hd-state]
+# name: test_camera_entities_snapshot[platforms0-imou_mock_devices0][camera.device_1_live_view_hd-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
@@ -52,7 +52,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_sd-entry]
+# name: test_camera_entities_snapshot[platforms0-imou_mock_devices0][camera.device_1_live_view_sd-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -89,7 +89,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_sd-state]
+# name: test_camera_entities_snapshot[platforms0-imou_mock_devices0][camera.device_1_live_view_sd-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',

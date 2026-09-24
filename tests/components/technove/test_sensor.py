@@ -1,5 +1,6 @@
 """Tests for the TechnoVE sensor platform."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -71,7 +72,7 @@ async def test_no_wifi_support(
     """Test missing Wi-Fi information from TechnoVE device."""
     # Remove Wi-Fi info
     device = mock_technove.update.return_value
-    device.info.network_ssid = None
+    device.info = replace(device.info, network_ssid=None)
 
     # Setup
     mock_config_entry.add_to_hass(hass)

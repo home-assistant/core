@@ -27,16 +27,24 @@ from homeassistant.components.nobo_hub.const import (
     DOMAIN,
     OVERRIDE_TYPE_NOW,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import fire_hub_update
+from . import entity_unique_ids, fire_hub_update
+from .conftest import SERIAL
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 CLIMATE_ENTITY = "climate.living_room_living_room"
+BEDROOM_ZONE = {
+    "zone_id": "2",
+    "name": "Bedroom",
+    "week_profile_id": "0",
+    "temp_comfort_c": "22",
+    "temp_eco_c": "18",
+}
 
 
 @pytest.fixture
@@ -189,14 +197,14 @@ async def test_set_preset_with_override_type_now(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_zone_removed_marks_unavailable(
+async def test_zone_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A zone removed via the Nobø app must not crash and goes unavailable."""
+    """Removing a zone via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
-    assert hass.states.get(CLIMATE_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get(CLIMATE_ENTITY) is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -264,3 +272,43 @@ async def test_climate_action_wraps_library_error(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == expected_key
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_zone_adds_entity(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone added on the hub at runtime creates a climate entity."""
+    entry_id = mock_config_entry.entry_id
+    assert f"{SERIAL}:2" not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_readded_zone_reappears(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone removed and re-added under the same id (the hub reuses ids) reappears."""
+    entry_id = mock_config_entry.entry_id
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
+
+    del mock_nobo_hub.zones["2"]
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)

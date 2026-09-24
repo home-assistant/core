@@ -192,7 +192,7 @@ async def test_number_quirks_v2_metadata(
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity_id = "number.test_manf_test_number_model"
+    entity_id = "number.test_manf_test_number_model_temperature"
     hass_state = hass.states.get(entity_id)
     assert hass_state is not None
 

@@ -2,16 +2,12 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -28,22 +24,24 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.All(
+        probatio.Optional(DOMAIN, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_NAME, default=""): vol.Any(cv.string),
-                        vol.Required(CONF_ACCESSPOINT): cv.string,
-                        vol.Required(CONF_AUTHTOKEN): cv.string,
+                        probatio.Optional(CONF_NAME, default=""): probatio.Any(
+                            cv.string
+                        ),
+                        probatio.Required(CONF_ACCESSPOINT): cv.string,
+                        probatio.Required(CONF_AUTHTOKEN): cv.string,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -95,19 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
         EVENT_HOMEASSISTANT_STOP, hap.shutdown
     )
 
-    # Register hap as device in registry.
-    device_registry = dr.async_get(hass)
-
-    home = hap.home
-    hapname = home.label if home.label != entry.unique_id else f"Home-{home.label}"
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, home.id)},
-        manufacturer="eQ-3",
-        # Add the name from config entry.
-        name=hapname,
-    )
     return True
 
 

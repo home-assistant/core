@@ -60,6 +60,8 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
         options=list(STEAM_STATUSES.values()),
         entity_picture_fn=lambda x, _: x.avatarfull,
         name=None,
+        # Attributes game, game_id, game_image_header, game_image_main, game_icon,
+        # last_online, and level are deprecated and can be removed in 2027.2
         extra_state_attributes_fn=lambda x, icons: {
             "real_name": x.realname,
             "created": (
@@ -84,14 +86,24 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
                 if x.gameid is not None and (info := icons.get(x.gameid)) is not None
                 else None
             ),
-            "last_online": dt_util.utc_from_timestamp(x.lastlogoff),
+            "last_online": (
+                dt_util.utc_from_timestamp(x.lastlogoff)
+                if x.lastlogoff is not None
+                else None
+            ),
             "level": x.level,
         },
     ),
     SteamSensorEntityDescription(
         key=SteamSensor.LAST_ONLINE,
         translation_key=SteamSensor.LAST_ONLINE,
-        value_fn=(lambda x: dt_util.utc_from_timestamp(x.lastlogoff)),
+        value_fn=(
+            lambda x: (
+                dt_util.utc_from_timestamp(x.lastlogoff)
+                if x.lastlogoff is not None
+                else None
+            )
+        ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SteamSensorEntityDescription(
@@ -170,9 +182,3 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
             if (fn := self.entity_description.extra_state_attributes_fn) is not None
             else super().extra_state_attributes
         )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._steamid in self.coordinator.data

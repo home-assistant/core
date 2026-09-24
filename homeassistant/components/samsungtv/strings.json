@@ -6,9 +6,7 @@
       "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "id_missing": "This Samsung device doesn't have a serial number to identify it.",
-      "not_supported": "This Samsung device is currently not supported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "not_supported": "This Samsung device is currently not supported."
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
@@ -95,12 +93,6 @@
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type {trigger_type}."
-    }
-  },
-  "issues": {
-    "deprecated_implicit_wake_on_lan": {
-      "description": "Implicit Wake-On-LAN is deprecated and will be removed in a future version of Home Assistant. Please create an explicit Wake-On-LAN automation to turn on your TV, targeting MAC address `{mac_address}`.\n\nFor more information, see the [Wake-On-LAN documentation]({wol_documentation_url}).",
-      "title": "Implicit Wake-On-LAN is deprecated"
     }
   }
 }

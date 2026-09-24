@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyvolumio import CannotConnectError, Volumio
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT
@@ -18,8 +18,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT, default=3000): int}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_HOST): str, probatio.Required(CONF_PORT, default=3000): int}
 )
 
 

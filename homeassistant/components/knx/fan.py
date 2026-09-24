@@ -10,7 +10,7 @@ from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import (
@@ -25,17 +25,22 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, FanConf
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import FanSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_OSCILLATION,
     CONF_GA_SPEED,
     CONF_GA_STEP,
     CONF_GA_SWITCH,
     CONF_SPEED,
 )
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +122,7 @@ async def async_setup_entry(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.FAN):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.FAN):
         entities.extend(
             KnxUiFan(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -233,13 +238,10 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                str(self._device.speed.group_address)
-                if self._device.speed.group_address
-                else str(self._device.switch.group_address)
+            unique_id=build_yaml_unique_id(
+                self._device.speed.group_address or self._device.switch.group_address
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
@@ -251,16 +253,16 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
     _device: XknxFan
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of KNX fan."""
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         # max_step is required for step mode, thus can be used to differentiate modes
         max_step: int | None = knx_conf.get(CONF_SPEED, FanConf.MAX_STEP)
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
         if max_step:
             # step control
@@ -273,7 +275,7 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
 
         self._device = XknxFan(
             xknx=knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             group_address_speed=speed_write,
             group_address_speed_state=speed_state,
             group_address_oscillation=knx_conf.get_write(CONF_GA_OSCILLATION),
