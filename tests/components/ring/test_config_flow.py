@@ -7,6 +7,7 @@ import ring_doorbell
 
 from homeassistant import config_entries
 from homeassistant.components.ring import DOMAIN
+from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -128,6 +129,14 @@ async def test_reauth(
     mock_ring_auth: Mock,
 ) -> None:
     """Test reauth flow."""
+    listen_credentials = {"gcm": {"android_id": "stored-android-id"}}
+    hass.config_entries.async_update_entry(
+        mock_added_config_entry,
+        data={
+            **mock_added_config_entry.data,
+            CONF_LISTEN_CREDENTIALS: listen_credentials,
+        },
+    )
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -165,6 +174,7 @@ async def test_reauth(
         CONF_DEVICE_ID: MOCK_HARDWARE_ID,
         CONF_USERNAME: "foo@bar.com",
         CONF_TOKEN: "new-foobar",
+        CONF_LISTEN_CREDENTIALS: listen_credentials,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -311,6 +321,15 @@ async def test_reconfigure(
 ) -> None:
     """Test the reconfigure config flow."""
 
+    listen_credentials = {"gcm": {"android_id": "stored-android-id"}}
+    hass.config_entries.async_update_entry(
+        mock_added_config_entry,
+        data={
+            **mock_added_config_entry.data,
+            CONF_LISTEN_CREDENTIALS: listen_credentials,
+        },
+    )
+
     assert mock_added_config_entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
 
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
@@ -328,6 +347,7 @@ async def test_reconfigure(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert mock_added_config_entry.data[CONF_DEVICE_ID] == "new-hardware-id"
+    assert mock_added_config_entry.data[CONF_LISTEN_CREDENTIALS] == listen_credentials
 
 
 @pytest.mark.parametrize(
