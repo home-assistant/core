@@ -62,6 +62,11 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     )
     assert tool is not None
     assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
+    assert tool.title == "Get calendar events"
+    assert tool.integration == calendar.DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
 
     calls = async_mock_service(
         hass,

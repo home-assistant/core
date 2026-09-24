@@ -25,6 +25,7 @@ from . import (
     config_validation as cv,
     device_registry as dr,
     floor_registry as fr,
+    frame,
     intent,
     selector,
     service,
@@ -162,12 +163,29 @@ class ToolResult:
     error: bool = False
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ToolAnnotations:
+    """Properties describing how a tool behaves.
+
+    The defaults describe the least safe case, so a tool that declares nothing
+    is taken to write, to be destructive, and to reach outside Home Assistant.
+    """
+
+    read_only: bool = False
+    destructive: bool = True
+    idempotent: bool = False
+    open_world: bool = True
+
+
 class Tool:
     """LLM Tool base class."""
 
     name: str
+    title: str | None = None
     description: str | None = None
     parameters: probatio.Schema = probatio.Schema({})
+    annotations: ToolAnnotations = ToolAnnotations()
+    integration: str | None = None
 
     @abstractmethod
     async def async_call(
@@ -213,7 +231,28 @@ class APIInstance:
         result = await tool.async_call(self.api.hass, tool_input, self.llm_context)
         if isinstance(result, ToolResult):
             return result
+        frame.report_usage(
+            "returns a JSON object from a tool, which is deprecated; return a "
+            "ToolResult instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+            # The tool call has returned, so its frame is gone from the stack.
+            integration_domain=_tool_integration_domain(tool),
+        )
         return ToolResult(data=result)
+
+
+def _tool_integration_domain(tool: Tool) -> str | None:
+    """Return the domain of the integration that provides the tool."""
+    while isinstance(tool, NamespacedTool):
+        tool = tool.tool
+    module = type(tool).__module__
+    for prefix in ("custom_components.", "homeassistant.components."):
+        if module.startswith(prefix):
+            return module.removeprefix(prefix).partition(".")[0]
+    return None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -237,9 +276,16 @@ class IntentTool(Tool):
         self,
         name: str,
         intent_handler: intent.IntentHandler,
+        *,
+        title: str | None = None,
+        integration: str | None = None,
+        annotations: ToolAnnotations = ToolAnnotations(),
     ) -> None:
         """Init the class."""
         self.name = name
+        self.title = title
+        self.integration = integration
+        self.annotations = annotations
         self.intent_type = intent_handler.intent_type
         self.description = (
             intent_handler.description
@@ -335,8 +381,11 @@ class NamespacedTool(Tool):
         """Init the class."""
         self.namespace = namespace
         self.name = f"{namespace}__{tool.name}"
+        self.title = tool.title
         self.description = tool.description
         self.parameters = tool.parameters
+        self.annotations = tool.annotations
+        self.integration = tool.integration
         self.tool = tool
 
     @override
@@ -642,6 +691,7 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}__{action}"
+        self.integration = domain
         # Note: _get_cached_action_parameters only works for services which
         # add their description directly to the service description cache.
         # This is not the case for most services, but it is for scripts.
