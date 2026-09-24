@@ -75,7 +75,11 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=test_data
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -89,9 +93,10 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     Test when the form should show when user puts existing location
     in the config gui. Then the form should show with error.
     """
+    # Coordinates as the flow stores them: the schema validates them as floats.
     first_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_ELEVATION: 0},
+        data={CONF_LATITUDE: 0.0, CONF_LONGITUDE: 0.0, CONF_ELEVATION: 0},
     )
     first_entry.add_to_hass(hass)
     home_entry = MockConfigEntry(domain=DOMAIN, data={CONF_TRACK_HOME: True})
@@ -104,7 +109,11 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=test_data
     )
 
     assert result["type"] is FlowResultType.FORM

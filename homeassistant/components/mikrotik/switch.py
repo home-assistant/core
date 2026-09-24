@@ -69,8 +69,7 @@ class MikrotikSwitchEntity(MikrotikDeviceEntity, SwitchEntity):
                 f"/interface/{action}",
                 {".id": self._interface[".id"]},
             )
-        self._interface["disabled"] = action == "disable"
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -86,14 +86,24 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
                 if x.gameid is not None and (info := icons.get(x.gameid)) is not None
                 else None
             ),
-            "last_online": dt_util.utc_from_timestamp(x.lastlogoff),
+            "last_online": (
+                dt_util.utc_from_timestamp(x.lastlogoff)
+                if x.lastlogoff is not None
+                else None
+            ),
             "level": x.level,
         },
     ),
     SteamSensorEntityDescription(
         key=SteamSensor.LAST_ONLINE,
         translation_key=SteamSensor.LAST_ONLINE,
-        value_fn=(lambda x: dt_util.utc_from_timestamp(x.lastlogoff)),
+        value_fn=(
+            lambda x: (
+                dt_util.utc_from_timestamp(x.lastlogoff)
+                if x.lastlogoff is not None
+                else None
+            )
+        ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SteamSensorEntityDescription(

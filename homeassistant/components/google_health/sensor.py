@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntryType,
@@ -157,6 +158,8 @@ SLEEP_SENSORS: list[
         key="sleep_asleep",
         translation_key="sleep_asleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -169,6 +172,8 @@ SLEEP_SENSORS: list[
         key="sleep_awake",
         translation_key="sleep_awake",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -181,6 +186,8 @@ SLEEP_SENSORS: list[
         key="sleep_in_bed",
         translation_key="sleep_in_bed",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
@@ -314,7 +321,12 @@ async def async_setup_entry(
 
         @callback
         def async_add_device_entities() -> None:
-            """Add entities for new devices."""
+            """Add entities for new devices and remove stale devices."""
+            current_device_ids = set(device_coordinator.data)
+            # Drop any devices no longer present in the API. They will be removed below
+            added_device_ids.intersection_update(current_device_ids)
+
+            # Add any newly discovered devices
             new_entities: list[SensorEntity] = []
             for device in device_coordinator.data.values():
                 if device.device_id in added_device_ids:
@@ -331,6 +343,17 @@ async def async_setup_entry(
                 )
             if new_entities:
                 async_add_entities(new_entities)
+
+            # Remove any stale devices
+            device_registry = dr.async_get(hass)
+            active_identifiers = {(DOMAIN, entry.entry_id)} | {
+                (DOMAIN, device_id) for device_id in current_device_ids
+            }
+            for device_entry in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            ):
+                if not set(device_entry.identifiers) & active_identifiers:
+                    device_registry.async_remove_device(device_entry.id)
 
         async_add_device_entities()
         entry.async_on_unload(

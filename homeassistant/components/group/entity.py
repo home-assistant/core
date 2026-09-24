@@ -6,14 +6,15 @@ import logging
 from typing import Any, override
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_GROUP_ENTITIES,
     STATE_OFF,
     STATE_ON,
+    EntityCapabilityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -39,7 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
-    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES})
+    _unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_ID, EntityCapabilityAttribute.GROUP_ENTITIES}
+    )
 
     _attr_should_poll = False
     _entity_ids: list[str]
@@ -127,7 +130,7 @@ class GroupEntity(Entity):
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
-            if state.attributes.get(ATTR_ASSUMED_STATE):
+            if state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
                 self._attr_assumed_state = True
                 return
 
@@ -231,6 +234,7 @@ class Group(Entity):
         mode: bool | None,
         object_id: str | None,
         order: int | None,
+        context: Context | None,
     ) -> Group:
         """Initialize a group.
 
@@ -246,6 +250,9 @@ class Group(Entity):
             object_id=object_id,
             order=order,
         )
+
+        if context is not None:
+            group.async_set_context(context)
 
         # If called before the platform async_setup is called (test cases)
         await async_get_component(hass).async_add_entities([group])
@@ -430,7 +437,9 @@ class Group(Entity):
         domain = new_state.domain
         state = new_state.state
         registry = self._registry
-        self._assumed[entity_id] = bool(new_state.attributes.get(ATTR_ASSUMED_STATE))
+        self._assumed[entity_id] = bool(
+            new_state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
+        )
 
         if domain not in registry.on_states_by_domain:
             # Handle the group of a group case
@@ -462,11 +471,12 @@ class Group(Entity):
             return
 
         if tr_state is None or (
-            self._assumed_state and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
+            self._assumed_state
+            and not tr_state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
         ):
             self._assumed_state = self.mode(self._assumed.values())
 
-        elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
+        elif tr_state.attributes.get(EntityStateAttribute.ASSUMED_STATE):
             self._assumed_state = True
 
         num_on_states = len(self._on_states)

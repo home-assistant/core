@@ -253,8 +253,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: required key"
-                    " not provided @ data['agent_id']"
+                    "Message format incorrect: required key not provided at 'agent_id'"
                 )
             },
             0,
@@ -266,8 +265,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: required key"
-                    " not provided @ data['backup_id']"
+                    "Message format incorrect: required key not provided at 'backup_id'"
                 )
             },
             0,
@@ -283,9 +281,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: expected bool"
-                    " for dictionary value"
-                    " @ data['restore_database']"
+                    "Message format incorrect: expected bool at 'restore_database'"
                 )
             },
             0,
@@ -304,7 +300,7 @@ async def test_onboarding_backup_restore(
                     "Message format incorrect: expected"
                     " Folder or one of 'share',"
                     " 'addons/local', 'ssl', 'media'"
-                    " @ data['restore_folders'][0]"
+                    " at 'restore_folders[0]'"
                 )
             },
             0,

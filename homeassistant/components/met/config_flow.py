@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -73,18 +73,20 @@ def _has_generated_title(config_entry: ConfigEntry) -> bool:
 
 def _get_data_schema(
     hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> vol.Schema:
+) -> probatio.Schema:
     """Get a schema with default values."""
     # If tracking home or no config entry is passed in,
     # default value come from Home location
     if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_LATITUDE, default=hass.config.latitude): cv.latitude,
-                vol.Required(
+                probatio.Required(
+                    CONF_LATITUDE, default=hass.config.latitude
+                ): cv.latitude,
+                probatio.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
                 ): cv.longitude,
-                vol.Required(
+                probatio.Required(
                     CONF_ELEVATION, default=hass.config.elevation
                 ): NumberSelector(
                     NumberSelectorConfig(
@@ -95,15 +97,15 @@ def _get_data_schema(
             }
         )
     # Not tracking home, default values come from config entry
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
             ): cv.latitude,
-            vol.Required(
+            probatio.Required(
                 CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
             ): cv.longitude,
-            vol.Required(
+            probatio.Required(
                 CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
             ): NumberSelector(
                 NumberSelectorConfig(

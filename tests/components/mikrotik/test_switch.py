@@ -1,7 +1,9 @@
 """Tests for the Mikrotik switch platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -39,45 +41,64 @@ async def test_switch_no_matching_interfaces(hass: HomeAssistant) -> None:
     assert hass.states.async_entity_ids(SWITCH_DOMAIN) == []
 
 
-async def test_switch_turn_on(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test turning on a Mikrotik switch enables the interface."""
-    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
-        await setup_mikrotik_entry(hass, interface_data=[dict(WLAN1_INTERFACE)])
+@pytest.mark.parametrize(
+    (
+        "interface",
+        "entity_id",
+        "initial_state",
+        "service",
+        "command",
+        "final_state",
+    ),
+    [
+        pytest.param(
+            ETHER1_INTERFACE,
+            "switch.ether1_ethernet",
+            STATE_ON,
+            SERVICE_TURN_OFF,
+            "/interface/disable",
+            STATE_OFF,
+            id="turn_off",
+        ),
+        pytest.param(
+            WLAN1_INTERFACE,
+            "switch.wlan1_wlan",
+            STATE_OFF,
+            SERVICE_TURN_ON,
+            "/interface/enable",
+            STATE_ON,
+            id="turn_on",
+        ),
+    ],
+)
+async def test_switch_turn_on_off(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    interface: dict[str, Any],
+    entity_id: str,
+    initial_state: str,
+    service: str,
+    command: str,
+    final_state: str,
+) -> None:
+    """Test turning a Mikrotik switch on/off updates state via the coordinator."""
 
-    entity_id = "switch.wlan1_wlan"
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
+        await setup_mikrotik_entry(hass, interface_data=[interface])
+
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OFF
+    assert state.state == initial_state
+
+    mock_api.return_value = [{**interface, "disabled": final_state == STATE_OFF}]
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    mock_api.assert_called_with("/interface/enable", **{".id": "*2"})
+    mock_api.assert_any_call(command, **{".id": interface[".id"]})
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_ON
-
-
-async def test_switch_turn_off(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test turning off a Mikrotik switch disables the interface."""
-    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SWITCH]):
-        await setup_mikrotik_entry(hass, interface_data=[dict(ETHER1_INTERFACE)])
-
-    entity_id = "switch.ether1_ethernet"
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    mock_api.assert_called_with("/interface/disable", **{".id": "*1"})
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_OFF
+    assert state.state == final_state

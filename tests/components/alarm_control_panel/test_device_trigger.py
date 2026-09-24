@@ -169,11 +169,11 @@ async def test_get_trigger_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        entity_entry.entity_id, "attributes", {"supported_features": 15}
     )
 
     triggers = await async_get_device_automations(
@@ -208,11 +208,11 @@ async def test_get_trigger_capabilities_legacy(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        entity_entry.entity_id, "attributes", {"supported_features": 15}
     )
 
     triggers = await async_get_device_automations(

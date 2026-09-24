@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfConductivity,
     UnitOfTemperature,
 )
@@ -79,39 +80,45 @@ CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
 
-SCHEMA_SENSORS = vol.Schema(
+SCHEMA_SENSORS = probatio.Schema(
     {
-        vol.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
-        vol.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
-        vol.Optional(CONF_SENSOR_CONDUCTIVITY): cv.entity_id,
-        vol.Optional(CONF_SENSOR_TEMPERATURE): cv.entity_id,
-        vol.Optional(CONF_SENSOR_BRIGHTNESS): cv.entity_id,
+        probatio.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
+        probatio.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
+        probatio.Optional(CONF_SENSOR_CONDUCTIVITY): cv.entity_id,
+        probatio.Optional(CONF_SENSOR_TEMPERATURE): cv.entity_id,
+        probatio.Optional(CONF_SENSOR_BRIGHTNESS): cv.entity_id,
     }
 )
 
-PLANT_SCHEMA = vol.Schema(
+PLANT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
-        vol.Optional(
+        probatio.Required(CONF_SENSORS): probatio.Schema(SCHEMA_SENSORS),
+        probatio.Optional(
             CONF_MIN_BATTERY_LEVEL, default=DEFAULT_MIN_BATTERY_LEVEL
         ): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
-        vol.Optional(CONF_MIN_MOISTURE, default=DEFAULT_MIN_MOISTURE): cv.positive_int,
-        vol.Optional(CONF_MAX_MOISTURE, default=DEFAULT_MAX_MOISTURE): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(CONF_MIN_TEMPERATURE): probatio.Coerce(float),
+        probatio.Optional(CONF_MAX_TEMPERATURE): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_MIN_MOISTURE, default=DEFAULT_MIN_MOISTURE
+        ): cv.positive_int,
+        probatio.Optional(
+            CONF_MAX_MOISTURE, default=DEFAULT_MAX_MOISTURE
+        ): cv.positive_int,
+        probatio.Optional(
             CONF_MIN_CONDUCTIVITY, default=DEFAULT_MIN_CONDUCTIVITY
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_MAX_CONDUCTIVITY, default=DEFAULT_MAX_CONDUCTIVITY
         ): cv.positive_int,
-        vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
-        vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
-        vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
+        probatio.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
+        probatio.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
+        probatio.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=probatio.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -234,9 +241,9 @@ class Plant(Entity):
             raise HomeAssistantError(
                 f"Unknown reading from sensor {entity_id}: {value}"
             )
-        if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
+        if EntityStateAttribute.UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
         self._update_state()
 

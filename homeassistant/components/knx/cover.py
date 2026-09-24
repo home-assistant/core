@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
+from .const import CONF_SYNC_STATE, KNX_MODULE_KEY, CoverConf
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -40,7 +40,6 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import CoverSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_ANGLE,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
@@ -48,6 +47,7 @@ from .storage.const import (
     CONF_GA_STOP,
     CONF_GA_UP_DOWN,
 )
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
             KnxYamlCover(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.COVER):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.COVER):
         entities.extend(
             KnxUiCover(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -261,6 +261,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             invert_updown=config[CoverConf.INVERT_UPDOWN],
             invert_position=config[CoverConf.INVERT_POSITION],
             invert_angle=config[CoverConf.INVERT_ANGLE],
+            sync_state=config[CONF_SYNC_STATE],
         )
         super().__init__(
             knx_module=knx_module,
@@ -305,15 +306,15 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
     _device: XknxCover
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize KNX cover."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
         self._device = _create_ui_cover(
-            knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
+            knx_module.xknx, config.knx, config.entity.xknx_name
         )
         self.init_base()

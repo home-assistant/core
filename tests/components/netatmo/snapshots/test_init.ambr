@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_device_hierarchy
+  dict({
+    '0009999992': '12:34:56:30:d5:d4',
+    '0009999993': '12:34:56:30:d5:d4',
+    '00:11:22:33:00:11:45:fe': '12:34:56:80:60:40',
+    '1002003001': '91763b24c43d3e344f424e8b',
+    '12:34:56:00:00:a1:4c:da': '12:34:56:80:60:40',
+    '12:34:56:00:01:01:01:a1': '12:34:56:80:60:40',
+    '12:34:56:00:16:0e': '91763b24c43d3e344f424e8b',
+    '12:34:56:00:16:0e#0': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#1': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#2': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#3': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#4': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#5': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#6': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#7': '12:34:56:00:16:0e',
+    '12:34:56:00:16:0e#8': '12:34:56:00:16:0e',
+    '12:34:56:00:86:99': '12:34:56:00:f1:62',
+    '12:34:56:00:f1:62': '91763b24c43d3e344f424e8b',
+    '12:34:56:00:fa:d0': '91763b24c43d3e344f424e8b',
+    '12:34:56:03:1b:e4': '12:34:56:80:bb:26',
+    '12:34:56:10:b9:0e': '91763b24c43d3e344f424e8b',
+    '12:34:56:10:f1:66': '91763b24c43d3e344f424e8b',
+    '12:34:56:20:f5:44': '91763b24c43d3e344f424e8b',
+    '12:34:56:25:cf:a8': None,
+    '12:34:56:26:65:14': None,
+    '12:34:56:26:68:92': None,
+    '12:34:56:26:69:0c': None,
+    '12:34:56:30:d5:d4': '91763b24c43d3e344f424e8b',
+    '12:34:56:3e:c5:46': None,
+    '12:34:56:80:00:12:ac:f2': '12:34:56:80:60:40',
+    '12:34:56:80:1c:42': '12:34:56:80:bb:26',
+    '12:34:56:80:44:92': '12:34:56:80:bb:26',
+    '12:34:56:80:60:40': '91763b24c43d3e344f424e8b',
+    '12:34:56:80:7e:18': '12:34:56:80:bb:26',
+    '12:34:56:80:bb:26': '91763b24c43d3e344f424e8b',
+    '12:34:56:80:c1:ea': '12:34:56:80:bb:26',
+    '222452125': '91763b24c43d3e344f424e8b',
+    '2746182631': '91763b24c43d3e344f424e8b',
+    '2833524037': '91763b24c43d3e344f424e8b',
+    '2940411577': '91763b24c43d3e344f424e8b',
+    '91763b24c43d3e344f424e8b': None,
+    '91763b24c43d3e344f424e8c': None,
+    'Home avg': None,
+    'Home max': None,
+    'Home min': None,
+  })
+# ---
 # name: test_devices[netatmo-0009999992]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -26,7 +75,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-0009999993]
@@ -56,7 +105,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-00:11:22:33:00:11:45:fe]
@@ -86,7 +135,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-1002003001]
@@ -116,7 +165,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:00:a1:4c:da]
@@ -146,7 +195,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:01:01:01:a1]
@@ -176,7 +225,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#0]
@@ -206,7 +255,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#1]
@@ -236,7 +285,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#2]
@@ -266,7 +315,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#3]
@@ -296,7 +345,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#4]
@@ -326,7 +375,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#5]
@@ -356,7 +405,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#6]
@@ -386,7 +435,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#7]
@@ -416,7 +465,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#8]
@@ -446,7 +495,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e]
@@ -476,7 +525,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:86:99]
@@ -506,7 +555,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:f1:62]
@@ -536,7 +585,37 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[netatmo-12:34:56:00:fa:d0]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:00:fa:d0',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'Smart Thermostat Gateway',
+    'model_id': None,
+    'name': 'Thermostat',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:03:1b:e4]
@@ -566,7 +645,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:10:b9:0e]
@@ -596,7 +675,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:10:f1:66]
@@ -626,7 +705,37 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[netatmo-12:34:56:20:f5:44]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:20:f5:44',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'OpenTherm Gateway',
+    'model_id': None,
+    'name': 'Modulating Relay',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:25:cf:a8]
@@ -749,6 +858,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[netatmo-12:34:56:30:d5:d4]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:30:d5:d4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Bubbendorf',
+    'model': 'Gateway',
+    'model_id': None,
+    'name': 'module iDiamant',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
 # name: test_devices[netatmo-12:34:56:3e:c5:46]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -806,7 +945,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:1c:42]
@@ -836,7 +975,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:44:92]
@@ -866,7 +1005,37 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[netatmo-12:34:56:80:60:40]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '12:34:56:80:60:40',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Legrand',
+    'model': 'Gateway',
+    'model_id': None,
+    'name': 'Prise Control',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:7e:18]
@@ -896,7 +1065,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:bb:26]
@@ -926,7 +1095,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:c1:ea]
@@ -956,7 +1125,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-222452125]
@@ -982,11 +1151,11 @@
     'manufacturer': 'Netatmo',
     'model': 'OpenTherm Modulating Thermostat',
     'model_id': None,
-    'name': 'Bureau Modulate',
+    'name': 'Bureau',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-2746182631]
@@ -1016,7 +1185,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-2833524037]
@@ -1042,11 +1211,11 @@
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
     'model_id': None,
-    'name': 'Valve1',
+    'name': 'Entrada',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-2940411577]
@@ -1072,11 +1241,11 @@
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
     'model_id': None,
-    'name': 'Valve2',
+    'name': 'Cocina',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_devices[netatmo-91763b24c43d3e344f424e8b]
@@ -1084,7 +1253,7 @@
     'area_id': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
-    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
     'disabled_by': None,
@@ -1100,9 +1269,39 @@
     'labels': set({
     }),
     'manufacturer': 'Netatmo',
-    'model': 'Climate',
+    'model': 'Home',
     'model_id': None,
     'name': 'MYHOME',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[netatmo-91763b24c43d3e344f424e8c]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'https://home.netatmo.com/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '91763b24c43d3e344f424e8c',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'Home',
+    'model_id': None,
+    'name': 'Unknown',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,

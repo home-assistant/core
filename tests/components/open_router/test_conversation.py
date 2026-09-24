@@ -19,7 +19,7 @@ from homeassistant.components import conversation
 from homeassistant.const import Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import ToolInput
+from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
 
@@ -101,7 +101,7 @@ async def test_web_search(
     expected_server_tools: dict[str, str] | None,
     expected_model_suffix: str,
 ) -> None:
-    """Test that web search adds :online suffix to model."""
+    """Test that web search works correctly."""
     await setup_integration(hass, mock_config_entry)
     await conversation.async_converse(
         hass,
@@ -114,6 +114,42 @@ async def test_web_search(
     expected_model = "openai/gpt-3.5-turbo" + expected_model_suffix
     assert call["model"] == expected_model
     assert call["extra_body"].get("tools") == expected_server_tools
+
+
+@pytest.mark.parametrize(
+    ("web_search", "enable_assist"),
+    [("tool", True)],
+)
+async def test_web_search_with_assist(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    web_search: bool,
+    enable_assist: bool,
+) -> None:
+    """Test that the web search and assist tools don't overwrite each other."""
+    await setup_integration(hass, mock_config_entry)
+    await conversation.async_converse(
+        hass,
+        "hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.gpt_3_5_turbo",
+    )
+    call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    expected_model = "openai/gpt-3.5-turbo"
+    assert call["model"] == expected_model
+    assert call["extra_body"].get("tools")
+    # Ensure the web search tool is in the tools list
+    assert {"type": "openrouter:web_search", "parameters": {"engine": "auto"}} in call[
+        "extra_body"
+    ]["tools"]
+    # Ensure llm__GetDateTime is in the tools list
+    assert any(
+        tool.get("function", {}).get("name") == "llm__GetDateTime"
+        for tool in call["extra_body"]["tools"]
+    )
 
 
 async def test_empty_api_response(
@@ -181,12 +217,14 @@ async def test_function_call(
             agent_id="conversation.gpt_3_5_turbo",
             tool_call_id="mock_tool_call_id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(
