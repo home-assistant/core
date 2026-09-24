@@ -391,3 +391,35 @@ async def test_failed_speed_change_keeps_turn_on_hold(
         )
 
     mark_mock.assert_called_once()
+
+
+async def test_pedestal_fan_partial_oscillation_holds_device(
+    hass: HomeAssistant,
+    pedestal_fan_config_entry: MockConfigEntry,
+) -> None:
+    """Test a pedestal fan is held when only one oscillation axis changes."""
+    with (
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan.toggle_vertical_oscillation",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan."
+            "toggle_horizontal_oscillation",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            "oscillate",
+            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, "oscillating": True},
+            blocking=True,
+        )
+
+    mark_mock.assert_called_once()

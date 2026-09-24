@@ -371,13 +371,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             device = cast(VeSyncFanBase, self.device)
             vertical_ok = await device.toggle_vertical_oscillation(oscillating)
             horizontal_ok = await device.toggle_horizontal_oscillation(oscillating)
+            if vertical_ok or horizontal_ok:
+                self.coordinator.async_mark_command(self.device)
             if not vertical_ok or not horizontal_ok:
                 if self.device.last_response:
                     raise HomeAssistantError(self.device.last_response.message)
                 raise HomeAssistantError(
                     "Failed to set oscillation, no response found."
                 )
-            self.coordinator.async_mark_command(self.device)
             return
         if not hasattr(self.device, "toggle_oscillation"):
             raise HomeAssistantError("Oscillation not supported by this device.")

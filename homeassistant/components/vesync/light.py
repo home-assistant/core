@@ -1,7 +1,7 @@
 """Support for VeSync bulbs and wall dimmers."""
 
 import logging
-from typing import Any, override
+from typing import Any, NoReturn, override
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -104,7 +105,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
-        succeeded = False
+        results: list[bool] = []
         # set white temperature
         if (
             self.color_mode == ColorMode.COLOR_TEMP
@@ -126,7 +127,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 0-100
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
-            succeeded = await self.device.set_color_temp(color_temp) or succeeded
+            results.append(await self.device.set_color_temp(color_temp))
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -144,24 +145,34 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 1-100
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
-            succeeded = await self.device.set_brightness(brightness) or succeeded
+            results.append(await self.device.set_brightness(brightness))
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:
-            if succeeded:
+            if any(results):
                 self.coordinator.async_mark_command(self.device)
+            if not all(results):
+                self._raise_command_failed("change the light")
             return
         # send turn_on command to pyvesync api
-        if await self.device.turn_on():
-            self.coordinator.async_mark_command(self.device)
+        if not await self.device.turn_on():
+            self._raise_command_failed("turn on the light")
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if await self.device.turn_off():
-            self.coordinator.async_mark_command(self.device)
+        if not await self.device.turn_off():
+            self._raise_command_failed("turn off the light")
+        self.coordinator.async_mark_command(self.device)
+
+    def _raise_command_failed(self, action: str) -> NoReturn:
+        """Raise the cloud's error for a failed light command."""
+        if self.device.last_response:
+            raise HomeAssistantError(self.device.last_response.message)
+        raise HomeAssistantError(f"Failed to {action}, no response found.")
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):

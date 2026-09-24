@@ -1,5 +1,6 @@
 """Tests for the light module."""
 
+from contextlib import nullcontext
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
@@ -58,14 +60,18 @@ async def test_light_state(
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
 
 
-@pytest.mark.parametrize("api_response", [True, False])
-async def test_brightness_change_holds_device(
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(True, nullcontext()), (False, pytest.raises(HomeAssistantError))],
+)
+async def test_brightness_change(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     api_response: bool,
+    expectation,
 ) -> None:
-    """Test only a successful brightness change starts the command grace period."""
+    """Test a brightness change holds the device on success and raises on failure."""
     mock_devices_response(aioclient_mock, "Dimmable Light")
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -79,6 +85,7 @@ async def test_brightness_change_holds_device(
         patch(
             "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as mark_mock,
+        expectation,
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -96,7 +103,7 @@ async def test_partial_attribute_change_holds_device(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the grace period starts when only one of two attribute commands works."""
+    """Test a half-failed attribute change raises but still holds the device."""
     mock_devices_response(aioclient_mock, "Temperature Light")
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -114,6 +121,7 @@ async def test_partial_attribute_change_holds_device(
         patch(
             "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as mark_mock,
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
