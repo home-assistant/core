@@ -980,6 +980,8 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
     assert satellite is not None
     stream = MockResultStream(hass, "wav", b"")
     stream.supports_audio_interrupt = True
+    streaming_wav = bytearray(mock_wav)
+    streaming_wav[40:44] = struct.pack("<I", 0xFFFFFFFF)
     stream_requested = asyncio.Event()
     continue_stream = asyncio.Event()
 
@@ -991,7 +993,7 @@ async def test_streaming_tts_restarts_on_audio_interrupt(
         interrupt.side_effect = on_audio_interrupt
         stream_requested.set()
         await continue_stream.wait()
-        yield mock_wav
+        yield bytes(streaming_wav)
 
     stream.async_stream_result = async_stream_result
     mock_client.send_voice_assistant_event.reset_mock()

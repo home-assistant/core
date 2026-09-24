@@ -16,6 +16,7 @@ def _create_wav(
     sample_width: int = 2,
     sample_rate: int = 16000,
     data: bytes = b"\x00" * 1024,
+    streaming: bool = False,
 ) -> bytes:
     """Create a valid WAV file in bytes."""
     with io.BytesIO() as wav_io:
@@ -24,7 +25,10 @@ def _create_wav(
             wav_file.setsampwidth(sample_width)
             wav_file.setnchannels(channels)
             wav_file.writeframes(data)
-        return wav_io.getvalue()
+        wav_bytes = bytearray(wav_io.getvalue())
+        if streaming:
+            wav_bytes[40:44] = struct.pack("<I", 0xFFFFFFFF)
+        return bytes(wav_bytes)
 
 
 async def _async_generator(data: bytes, chunk_size: int = 128) -> AsyncIterable[bytes]:
@@ -61,7 +65,7 @@ async def test_stream_wav_discards_buffered_audio_on_interrupt() -> None:
     """Test interruption discards pending and partially buffered audio."""
     old_audio = b"a" * 700
     replacement_audio = b"b" * 1024
-    wav_bytes = _create_wav(data=old_audio + replacement_audio)
+    wav_bytes = _create_wav(data=old_audio + replacement_audio, streaming=True)
     header_size = len(wav_bytes) - len(old_audio) - len(replacement_audio)
     old_audio_buffered = asyncio.Event()
     continue_stream = asyncio.Event()
@@ -103,7 +107,7 @@ async def test_stream_wav_discards_remaining_audio_on_interrupt() -> None:
     audio_data = b"a" * 600
     audio_interrupt = asyncio.Event()
     chunks = stream_wav(
-        _async_generator(_create_wav(data=audio_data), chunk_size=1024),
+        _async_generator(_create_wav(data=audio_data, streaming=True), chunk_size=1024),
         expected_channels=1,
         expected_width=2,
         expected_sample_rate=16000,
@@ -116,6 +120,19 @@ async def test_stream_wav_discards_remaining_audio_on_interrupt() -> None:
 
     assert [chunk async for chunk in chunks] == []
     assert not audio_interrupt.is_set()
+
+
+async def test_stream_wav_rejects_finite_interruptible_stream() -> None:
+    """Test interruptible playback requires a streaming WAV header."""
+    with pytest.raises(ValueError, match="unknown-length data chunk"):
+        async for _ in stream_wav(
+            _async_generator(_create_wav()),
+            expected_channels=1,
+            expected_width=2,
+            expected_sample_rate=16000,
+            audio_interrupt=asyncio.Event(),
+        ):
+            pass
 
 
 async def test_stream_wav_unsupported_format() -> None:

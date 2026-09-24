@@ -98,8 +98,9 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
         The engine must discard its pending audio before invoking the callback,
         preserve the stream header, and yield only replacement audio afterward.
-        It must support the consumer's requested output options because these
-        streams bypass memory/disk caching and audio conversion.
+        It must advertise and honor the preferred format, sample rate, channel,
+        and sample-width options because these streams bypass memory/disk caching
+        and audio conversion. WAV output must use an unknown-length data chunk.
         """
         return self._attr_supports_audio_interrupt
 

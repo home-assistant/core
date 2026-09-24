@@ -109,6 +109,7 @@ async def stream_wav(
     bytes_buffer = bytearray()
     bytes_per_chunk_payload = samples_per_chunk * expected_width * expected_channels
     pending_chunk: bytes | None = None
+    interruptible_header_validated = False
 
     def discard_buffered_audio() -> None:
         nonlocal pending_chunk
@@ -128,6 +129,13 @@ async def stream_wav(
 
         if not parser.found_data and not parser.parse(bytes_buffer):
             continue
+        if (
+            audio_interrupt is not None
+            and not interruptible_header_validated
+            and parser.data_bytes_remaining != 0xFFFFFFFF
+        ):
+            raise ValueError("Interruptible WAV requires an unknown-length data chunk")
+        interruptible_header_validated = True
 
         while (
             parser.data_bytes_remaining >= bytes_per_chunk_payload

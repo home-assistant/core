@@ -113,6 +113,14 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_BYTES,
     ATTR_PREFERRED_BITRATE,
 }
+_INTERRUPTIBLE_OUTPUT_OPTIONS: Final[frozenset[str]] = frozenset(
+    {
+        ATTR_PREFERRED_FORMAT,
+        ATTR_PREFERRED_SAMPLE_RATE,
+        ATTR_PREFERRED_SAMPLE_CHANNELS,
+        ATTR_PREFERRED_SAMPLE_BYTES,
+    }
+)
 
 CONF_LANG = "language"
 
@@ -469,6 +477,47 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
+def _validate_interruptible_tts(
+    engine_instance: TextToSpeechEntity, options: dict[str, Any]
+) -> None:
+    """Validate an engine can provide the requested interruptible stream."""
+    if not engine_instance.async_supports_streaming_input():
+        raise HomeAssistantError("Interruptible TTS requires a streaming TTS engine")
+
+    if missing_options := {
+        option
+        for option in _INTERRUPTIBLE_OUTPUT_OPTIONS
+        if options.get(option) is None
+    }:
+        raise HomeAssistantError(
+            "Interruptible TTS requires explicit output options: "
+            f"{', '.join(sorted(missing_options))}"
+        )
+    if options[ATTR_PREFERRED_FORMAT] != "wav":
+        raise HomeAssistantError("Interruptible TTS requires WAV output")
+    try:
+        pcm_values = (
+            int(options[ATTR_PREFERRED_SAMPLE_RATE]),
+            int(options[ATTR_PREFERRED_SAMPLE_CHANNELS]),
+            int(options[ATTR_PREFERRED_SAMPLE_BYTES]),
+        )
+    except (TypeError, ValueError) as err:
+        raise HomeAssistantError(
+            "Interruptible TTS requires integer PCM output options"
+        ) from err
+    if any(value <= 0 for value in pcm_values):
+        raise HomeAssistantError(
+            "Interruptible TTS requires positive PCM output options"
+        )
+
+    supported_options = set(engine_instance.supported_options or ())
+    if unsupported_options := _INTERRUPTIBLE_OUTPUT_OPTIONS - supported_options:
+        raise HomeAssistantError(
+            "Interruptible TTS engine does not support required output options: "
+            f"{', '.join(sorted(unsupported_options))}"
+        )
+
+
 @dataclass
 class ResultStream:
     """Class that will stream the result when available."""
@@ -595,6 +644,21 @@ class ResultStream:
         on_audio_interrupt: Callable[[], None] | None = None,
     ) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
+        engine: TextToSpeechEntity | None = None
+        if on_audio_interrupt is not None:
+            if not self.supports_audio_interrupt:
+                raise HomeAssistantError(
+                    "This TTS stream does not support audio interruption"
+                )
+            if self._override_media_path is not None:
+                raise HomeAssistantError(
+                    "Overridden TTS streams do not support audio interruption"
+                )
+            engine_instance = get_engine_instance(self.hass, self.engine)
+            if not isinstance(engine_instance, TextToSpeechEntity):
+                raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
+            engine = engine_instance
+
         if self._override_media_path is not None:
             # Overridden
             async for chunk in self._async_stream_override_result():
@@ -626,10 +690,9 @@ class ResultStream:
                 raise HomeAssistantError(
                     "Interruptible TTS streams can only be consumed once"
                 )
+            assert engine is not None
+            _validate_interruptible_tts(engine, self.options)
             self._stream_claimed = True
-            engine = get_engine_instance(self.hass, self.engine)
-            if not isinstance(engine, TextToSpeechEntity):
-                raise HomeAssistantError(f"TTS engine {self.engine} is unavailable")
             async with aclosing(
                 self._manager.async_generate_tts_audio(
                     engine,
@@ -963,6 +1026,7 @@ class SpeechManager:
         result_stream.supports_audio_interrupt = (
             isinstance(engine_instance, TextToSpeechEntity)
             and engine_instance.supports_audio_interrupt
+            and supports_streaming_input
         )
         self.token_to_stream[token] = result_stream
         self.token_to_stream_cleanup.schedule()

@@ -41,6 +41,7 @@ from homeassistant.components.intent import (
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import get_url
@@ -116,7 +117,7 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
-_VOICE_ASSISTANT_TTS_STREAM_FLUSH = 1 << 7
+_VOICE_ASSISTANT_TTS_STREAM_FLUSH = VoiceAssistantFeature(1 << 7)
 _WAKE_WORD_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): str,
@@ -824,18 +825,23 @@ class EsphomeAssistSatellite(
                         with contextlib.suppress(TimeoutError):
                             await asyncio.wait_for(audio_interrupt.wait(), wait_time)
 
-        except ValueError as err:
+        except (HomeAssistantError, ValueError) as err:
             _LOGGER.error("Error streaming WAV: %s", err)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
-            if audio_stream is not None:
-                if supports_audio_interrupt:
-                    stream_closed = True
-                await audio_stream.aclose()
-            self.cli.send_voice_assistant_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
-            )
+            try:
+                if audio_stream is not None:
+                    if supports_audio_interrupt:
+                        stream_closed = True
+                    try:
+                        await audio_stream.aclose()
+                    except Exception:
+                        _LOGGER.exception("Error closing TTS audio stream")
+            finally:
+                self.cli.send_voice_assistant_event(
+                    VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
+                )
 
         # State change
         self.tts_response_finished()
