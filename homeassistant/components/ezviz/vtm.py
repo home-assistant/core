@@ -6,8 +6,10 @@ delivers MPEG-PS over TCP. This module opens that relay with pyezvizapi, remuxes
 it to MPEG-TS with FFmpeg (codec copy, no transcoding) and serves it on a local
 URL that the camera entity returns as its stream source.
 
-The URL carries a random per-start access token instead of HA auth, because the
-consumers (the stream worker and go2rtc) cannot send HA credentials.
+Each camera URL carries its own random access token instead of HA auth, because
+the consumers (the stream worker and go2rtc) cannot send HA credentials. The
+token is passed as the ``auth`` query parameter, which the stream integration
+redacts from its logs, and is dropped when the config entry unloads.
 """
 
 import asyncio
@@ -16,6 +18,7 @@ from dataclasses import dataclass, field
 import hmac
 import logging
 import secrets
+import socket
 import threading
 
 from aiohttp import web
@@ -25,6 +28,7 @@ from pyezvizapi.exceptions import PyEzvizError
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
 
@@ -32,39 +36,51 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VTM_URL = "/api/ezviz/vtm/{access_token}/{serial}.ts"
+VTM_URL = "/api/ezviz/vtm/{serial}.ts"
 READ_CHUNK = 65536
+# Relay packets are about 1.4 kB, so this caps the backlog at roughly 360 kB.
+QUEUE_SIZE = 256
+QUEUE_PUT_TIMEOUT = 1.0
+RELAY_JOIN_TIMEOUT = 5.0
 
 
 @dataclass
-class EzvizVtmData:
-    """Shared state for the VTM stream view."""
+class VtmCamera:
+    """A camera reachable through the VTM stream view."""
 
+    client: EzvizClient
     access_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
-    # serial -> client of the account the camera belongs to
-    clients: dict[str, EzvizClient] = field(default_factory=dict)
 
 
-DATA_VTM: HassKey[EzvizVtmData] = HassKey(f"{DOMAIN}_vtm")
+DATA_VTM: HassKey[dict[str, VtmCamera]] = HassKey(f"{DOMAIN}_vtm")
 
 
 @callback
-def async_setup_vtm(hass: HomeAssistant) -> EzvizVtmData:
-    """Register the VTM stream view once and return the shared state."""
-    if (data := hass.data.get(DATA_VTM)) is None:
-        data = hass.data[DATA_VTM] = EzvizVtmData()
+def async_register_vtm_camera(
+    hass: HomeAssistant, entry: ConfigEntry, serial: str, client: EzvizClient
+) -> None:
+    """Make a camera streamable until its config entry unloads."""
+    if (cameras := hass.data.get(DATA_VTM)) is None:
+        cameras = hass.data[DATA_VTM] = {}
         hass.http.register_view(EzvizVtmStreamView())
-    return data
+    camera = cameras[serial] = VtmCamera(client)
+
+    @callback
+    def _unregister() -> None:
+        if cameras.get(serial) is camera:
+            del cameras[serial]
+
+    entry.async_on_unload(_unregister)
 
 
 def vtm_stream_url(hass: HomeAssistant, serial: str) -> str | None:
     """Return the loopback URL serving the VTM stream of a camera."""
-    data = hass.data[DATA_VTM]
-    if (api := hass.config.api) is None:
+    camera = hass.data.get(DATA_VTM, {}).get(serial)
+    if camera is None or (api := hass.config.api) is None:
         return None
     scheme = "https" if api.use_ssl else "http"
-    path = VTM_URL.format(access_token=data.access_token, serial=serial)
-    return f"{scheme}://127.0.0.1:{api.port}{path}"
+    path = VTM_URL.format(serial=serial)
+    return f"{scheme}://127.0.0.1:{api.port}{path}?auth={camera.access_token}"
 
 
 def rtsp_available(camera_data: dict) -> bool:
@@ -86,17 +102,12 @@ class EzvizVtmStreamView(HomeAssistantView):
     name = "api:ezviz:vtm"
     requires_auth = False
 
-    async def get(
-        self, request: web.Request, access_token: str, serial: str
-    ) -> web.StreamResponse:
+    async def get(self, request: web.Request, serial: str) -> web.StreamResponse:
         """Open the relay and copy it to the HTTP client until it disconnects."""
         hass = request.app[KEY_HASS]
-        data = hass.data.get(DATA_VTM)
-        if (
-            data is None
-            or not hmac.compare_digest(access_token, data.access_token)
-            or (client := data.clients.get(serial)) is None
-        ):
+        camera = hass.data.get(DATA_VTM, {}).get(serial)
+        access_token = request.query.get("auth", "")
+        if camera is None or not hmac.compare_digest(access_token, camera.access_token):
             raise web.HTTPNotFound
 
         process = await asyncio.create_subprocess_exec(
@@ -124,18 +135,9 @@ class EzvizVtmStreamView(HomeAssistantView):
         if stdin is None or stdout is None:  # pragma: no cover - PIPE requested
             raise web.HTTPInternalServerError
 
-        loop = asyncio.get_running_loop()
-        queue: asyncio.Queue[bytes | None] = asyncio.Queue()
-        stop = threading.Event()
-        # The VTM client uses blocking sockets, so it gets its own thread
-        # instead of holding an executor worker for the whole session.
-        pump = threading.Thread(
-            target=_pump_vtm,
-            args=(client, serial, stop, loop, queue),
-            name=f"ezviz_vtm_{serial}",
-            daemon=True,
-        )
-        pump.start()
+        queue: asyncio.Queue[bytes | None] = asyncio.Queue(QUEUE_SIZE)
+        relay = VtmRelay(camera.client, serial, asyncio.get_running_loop(), queue)
+        relay.start()
         feeder = asyncio.create_task(_feed_ffmpeg(queue, stdin))
 
         response = web.StreamResponse(
@@ -149,44 +151,110 @@ class EzvizVtmStreamView(HomeAssistantView):
         except ConnectionResetError:
             pass
         finally:
-            stop.set()
+            relay.stop()
             feeder.cancel()
             if process.returncode is None:
                 process.kill()
             await process.wait()
+            await hass.async_add_executor_job(relay.join, RELAY_JOIN_TIMEOUT)
             _LOGGER.debug("%s: VTM stream closed", serial)
         return response
 
 
-def _pump_vtm(
-    client: EzvizClient,
-    serial: str,
-    stop: threading.Event,
-    loop: asyncio.AbstractEventLoop,
-    queue: asyncio.Queue[bytes | None],
-) -> None:
-    """Read VTM packets in a worker thread and hand their payloads to the loop."""
-    try:
-        with open_cloud_stream(client, serial) as stream:
-            stream.start()
-            for packet in stream.iter_packets():
-                if stop.is_set():
-                    break
-                if packet.encrypted:
-                    _LOGGER.error(
-                        "%s: VTM stream is encrypted, which is not supported;"
-                        " disable video encryption in the EZVIZ app",
-                        serial,
-                    )
-                    break
-                if packet.body:
-                    loop.call_soon_threadsafe(queue.put_nowait, packet.body)
-    except (PyEzvizError, OSError) as err:
-        if not stop.is_set():
-            _LOGGER.warning("%s: VTM stream failed: %s", serial, err)
-    finally:
-        with suppress(RuntimeError):  # event loop already closed
-            loop.call_soon_threadsafe(queue.put_nowait, None)
+class VtmRelay:
+    """Read the VTM relay in a worker thread and hand payloads to the loop.
+
+    The pyezvizapi VTM client uses blocking sockets, so it runs in its own
+    thread instead of holding an executor worker for the whole session. The
+    bounded queue blocks the thread when FFmpeg or the HTTP client fall behind.
+    """
+
+    def __init__(
+        self,
+        client: EzvizClient,
+        serial: str,
+        loop: asyncio.AbstractEventLoop,
+        queue: asyncio.Queue[bytes | None],
+    ) -> None:
+        """Initialize the relay reader."""
+        self._client = client
+        self._serial = serial
+        self._loop = loop
+        self._queue = queue
+        self._stop = threading.Event()
+        self._lock = threading.Lock()
+        self._sockets: list[socket.socket] = []
+        self._thread = threading.Thread(
+            target=self._run, name=f"ezviz_vtm_{serial}", daemon=True
+        )
+
+    def start(self) -> None:
+        """Start reading the relay."""
+        self._thread.start()
+
+    def stop(self) -> None:
+        """Stop reading and unblock a pending socket read."""
+        self._stop.set()
+        with self._lock:
+            for sock in self._sockets:
+                with suppress(OSError):
+                    sock.shutdown(socket.SHUT_RDWR)
+
+    def join(self, timeout: float) -> None:
+        """Wait for the reader thread to finish."""
+        self._thread.join(timeout)
+
+    def _connect(
+        self, address: tuple[str, int], timeout: float | None
+    ) -> socket.socket:
+        """Open a relay socket that stop() can shut down."""
+        sock = socket.create_connection(address, timeout)
+        with self._lock:
+            if self._stop.is_set():
+                sock.close()
+                raise OSError("VTM relay stopped")
+            self._sockets.append(sock)
+        return sock
+
+    def _put(self, item: bytes | None) -> bool:
+        """Queue an item, waiting for space; return False once stopped."""
+        future = asyncio.run_coroutine_threadsafe(self._queue.put(item), self._loop)
+        while True:
+            try:
+                future.result(QUEUE_PUT_TIMEOUT)
+            except TimeoutError:
+                if self._stop.is_set():
+                    future.cancel()
+                    return False
+            else:
+                return True
+
+    def _run(self) -> None:
+        """Copy relay packet bodies to the queue until stopped or closed."""
+        try:
+            with open_cloud_stream(
+                self._client, self._serial, socket_factory=self._connect
+            ) as stream:
+                stream.start()
+                for packet in stream.iter_packets():
+                    if self._stop.is_set():
+                        break
+                    if packet.encrypted:
+                        _LOGGER.error(
+                            "%s: VTM stream is encrypted, which is not supported;"
+                            " disable video encryption in the EZVIZ app",
+                            self._serial,
+                        )
+                        break
+                    if packet.body and not self._put(packet.body):
+                        break
+        except (PyEzvizError, OSError) as err:
+            if not self._stop.is_set():
+                _LOGGER.warning("%s: VTM stream failed: %s", self._serial, err)
+        finally:
+            if not self._stop.is_set():
+                with suppress(RuntimeError):  # event loop already closed
+                    self._put(None)
 
 
 async def _feed_ffmpeg(

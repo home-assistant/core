@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
-from .vtm import async_setup_vtm, rtsp_available, vtm_stream_url
+from .vtm import async_register_vtm_camera, rtsp_available, vtm_stream_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +44,10 @@ async def async_setup_entry(
     """Set up EZVIZ cameras based on a config entry."""
 
     coordinator = entry.runtime_data
-    vtm = async_setup_vtm(hass)
 
     camera_entities = []
 
     for camera, value in coordinator.data.items():
-        vtm.clients[camera] = coordinator.ezviz_client
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)
@@ -102,6 +100,12 @@ async def async_setup_entry(
             camera_password = None
             camera_rtsp_stream = None
 
+        # Prefer local RTSP; fall back to the VTM cloud relay when the device
+        # has no RTSP server or no RTSP credentials are configured.
+        use_vtm = camera_password is None or not rtsp_available(value)
+        if use_vtm:
+            async_register_vtm_camera(hass, entry, camera, coordinator.ezviz_client)
+
         camera_entities.append(
             EzvizCamera(
                 hass,
@@ -112,6 +116,7 @@ async def async_setup_entry(
                 camera_rtsp_stream,
                 value["local_rtsp_port"],
                 ffmpeg_arguments,
+                use_vtm,
             )
         )
 
@@ -139,6 +144,7 @@ class EzvizCamera(EzvizEntity, Camera):
         camera_rtsp_stream: str | None,
         local_rtsp_port: int,
         ffmpeg_arguments: str | None,
+        use_vtm: bool,
     ) -> None:
         """Initialize a EZVIZ security camera."""
         super().__init__(coordinator, serial)
@@ -151,10 +157,8 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_arguments
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
-        # Prefer local RTSP; fall back to the VTM cloud relay when the device
-        # has no RTSP server or no RTSP credentials are configured.
-        self._use_vtm = camera_password is None or not rtsp_available(self.data)
-        if camera_password or self._use_vtm:
+        self._use_vtm = use_vtm
+        if camera_password or use_vtm:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
@@ -212,11 +216,14 @@ class EzvizCamera(EzvizEntity, Camera):
         """Return a still image without waking a sleeping device.
 
         Opening the relay just for a snapshot would wake battery devices on
-        every dashboard refresh, so use a running stream if there is one and
-        the last alarm picture otherwise.
+        every dashboard refresh, so use the stream only while it has active
+        outputs (async_get_image would restart a stopped one) and the last
+        alarm picture otherwise.
         """
-        if self.stream is not None and (
-            image := await self.stream.async_get_image(width, height)
+        if (
+            self.stream is not None
+            and self.stream.outputs()
+            and (image := await self.stream.async_get_image(width, height))
         ):
             return image
 

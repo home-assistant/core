@@ -4,8 +4,9 @@ import asyncio
 from collections.abc import Generator
 import logging
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
-from urllib.parse import urlparse
+from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from urllib.parse import parse_qs, urlparse
 
 from pyezvizapi.exceptions import PyEzvizError
 import pytest
@@ -16,7 +17,9 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
+from homeassistant.components.ezviz.vtm import DATA_VTM
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.stream import redact_credentials
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -55,6 +58,19 @@ def mock_ffmpeg_process() -> Generator[None]:
         side_effect=_exec,
     ):
         yield
+
+
+def _local_url(source: str | None) -> str:
+    """Return the path and query of a stream source for the test client."""
+    assert source is not None
+    url = urlparse(source)
+    return f"{url.path}?{url.query}"
+
+
+def _token(source: str | None) -> str:
+    """Return the access token of a stream source."""
+    assert source is not None
+    return parse_qs(urlparse(source).query)["auth"][0]
 
 
 def _packet(body: bytes, *, encrypted: bool = False) -> MagicMock:
@@ -100,7 +116,9 @@ async def test_vtm_stream_source_without_rtsp(
     assert source is not None
     url = urlparse(source)
     assert url.hostname == "127.0.0.1"
-    assert url.path.startswith("/api/ezviz/vtm/")
+    assert url.path == f"/api/ezviz/vtm/{SERIAL}.ts"
+    # The token is in a query parameter the stream integration redacts.
+    assert _token(source) not in redact_credentials(source)
     assert url.path.endswith(f"/{SERIAL}.ts")
 
     # No RTSP credentials are needed, so no discovery flow asks for them.
@@ -133,7 +151,7 @@ async def test_vtm_view_streams_relay(
 ) -> None:
     """Test the view copies the relay payloads through the remux process."""
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
-    path = urlparse(await async_get_stream_source(hass, ENTITY_ID)).path
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
     client = await hass_client_no_auth()
 
     cloud_stream = _mock_cloud_stream(
@@ -148,7 +166,7 @@ async def test_vtm_view_streams_relay(
         assert response.headers["Content-Type"] == "video/MP2T"
         assert await response.read() == b"\x00\x00\x01\xbapayload"
 
-    mock_open.assert_called_once_with(mock_ezviz_client, SERIAL)
+    mock_open.assert_called_once_with(mock_ezviz_client, SERIAL, socket_factory=ANY)
     cloud_stream.__enter__.return_value.start.assert_called_once()
 
 
@@ -162,7 +180,7 @@ async def test_vtm_view_stops_on_encrypted_stream(
 ) -> None:
     """Test encrypted relay packets end the stream with an error."""
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
-    path = urlparse(await async_get_stream_source(hass, ENTITY_ID)).path
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
     client = await hass_client_no_auth()
 
     with patch(
@@ -187,7 +205,7 @@ async def test_vtm_view_relay_error(
 ) -> None:
     """Test a failing relay ends the stream and is logged."""
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
-    path = urlparse(await async_get_stream_source(hass, ENTITY_ID)).path
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
     client = await hass_client_no_auth()
 
     with (
@@ -206,8 +224,9 @@ async def test_vtm_view_relay_error(
 @pytest.mark.parametrize(
     "path",
     [
-        f"/api/ezviz/vtm/wrong-token/{SERIAL}.ts",
-        "/api/ezviz/vtm/{token}/C000000000.ts",
+        f"/api/ezviz/vtm/{SERIAL}.ts",
+        f"/api/ezviz/vtm/{SERIAL}.ts?auth=wrong-token",
+        "/api/ezviz/vtm/C000000000.ts?auth={token}",
     ],
 )
 async def test_vtm_view_not_found(
@@ -219,7 +238,7 @@ async def test_vtm_view_not_found(
 ) -> None:
     """Test the view rejects a wrong access token or an unknown serial."""
     await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
-    token = urlparse(await async_get_stream_source(hass, ENTITY_ID)).path.split("/")[4]
+    token = _token(await async_get_stream_source(hass, ENTITY_ID))
     client = await hass_client_no_auth()
 
     with patch("homeassistant.components.ezviz.vtm.open_cloud_stream") as mock_open:
@@ -259,11 +278,37 @@ async def test_vtm_camera_image_from_running_stream(
     )
     camera = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
     assert camera is not None
-    camera.stream = MagicMock(async_get_image=AsyncMock(return_value=b"keyframe"))
+    camera.stream = MagicMock(
+        outputs=MagicMock(return_value={"hls": MagicMock()}),
+        async_get_image=AsyncMock(return_value=b"keyframe"),
+    )
 
     image = await async_get_image(hass, ENTITY_ID)
 
     assert image.content == b"keyframe"
+
+
+async def test_vtm_camera_image_does_not_restart_stopped_stream(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a stopped stream is not restarted just for a still image."""
+    aioclient_mock.get(ALARM_PIC_URL, content=b"alarm-jpeg")
+    await _setup_vtm_camera(
+        hass, mock_config_entry, mock_ezviz_client, last_alarm_pic=ALARM_PIC_URL
+    )
+    camera = hass.data[DATA_COMPONENT].get_entity(ENTITY_ID)
+    assert camera is not None
+    camera.stream = MagicMock(
+        outputs=MagicMock(return_value={}), async_get_image=AsyncMock()
+    )
+
+    image = await async_get_image(hass, ENTITY_ID)
+
+    assert image.content == b"alarm-jpeg"
+    camera.stream.async_get_image.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -323,3 +368,126 @@ async def test_vtm_camera_image_decrypts_alarm_picture(
 
     mock_decrypt.assert_called_once_with(b"encrypted", "test-password")
     assert image.content == expected
+
+
+async def test_vtm_token_is_scoped_per_camera(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test one camera's token cannot open another camera's stream."""
+    mock_ezviz_client.load_cameras.return_value = {
+        SERIAL: _mock_camera_data(CONNECTION={"localRtspPort": 0}),
+        "C987654321": _mock_camera_data(
+            name="Camera 2", CONNECTION={"localRtspPort": 0}
+        ),
+    }
+    await setup_integration(hass, mock_config_entry)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    other = await async_get_stream_source(hass, "camera.camera_2")
+    assert _token(path) != _token(other)
+    client = await hass_client_no_auth()
+
+    with patch("homeassistant.components.ezviz.vtm.open_cloud_stream") as mock_open:
+        response = await client.get(path.replace(SERIAL, "C987654321"))
+
+    assert response.status == 404
+    mock_open.assert_not_called()
+
+
+async def test_vtm_view_unregistered_on_unload(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test stream URLs stop working once the config entry unloads."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.ezviz.vtm.open_cloud_stream") as mock_open:
+        response = await client.get(path)
+
+    assert response.status == 404
+    mock_open.assert_not_called()
+
+
+async def test_vtm_relay_socket_shut_down_after_stream(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    mock_ffmpeg_process: None,
+) -> None:
+    """Test the relay socket is shut down when the stream ends."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    sock = MagicMock()
+
+    def _open(*_args: object, socket_factory: Any) -> MagicMock:
+        assert socket_factory(("vtm.example.com", 8554), 10.0) is sock
+        return _mock_cloud_stream([_packet(b"payload")])
+
+    with (
+        patch(
+            "homeassistant.components.ezviz.vtm.socket.create_connection",
+            return_value=sock,
+        ),
+        patch(
+            "homeassistant.components.ezviz.vtm.open_cloud_stream", side_effect=_open
+        ),
+    ):
+        response = await client.get(path)
+        assert await response.read() == b"payload"
+
+    sock.shutdown.assert_called_once()
+
+
+async def test_vtm_view_small_queue_keeps_all_payloads(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    mock_ffmpeg_process: None,
+) -> None:
+    """Test the bounded relay queue applies backpressure without dropping data."""
+    await _setup_vtm_camera(hass, mock_config_entry, mock_ezviz_client)
+    path = _local_url(await async_get_stream_source(hass, ENTITY_ID))
+    client = await hass_client_no_auth()
+    payloads = [bytes([i]) * 100 for i in range(50)]
+
+    with (
+        patch("homeassistant.components.ezviz.vtm.QUEUE_SIZE", 1),
+        patch(
+            "homeassistant.components.ezviz.vtm.open_cloud_stream",
+            return_value=_mock_cloud_stream([_packet(p) for p in payloads]),
+        ),
+    ):
+        response = await client.get(path)
+        assert await response.read() == b"".join(payloads)
+
+
+async def test_rtsp_camera_not_exposed_through_vtm_view(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test cameras streaming over RTSP are not registered for the view."""
+    mock_camera_config_entry.add_to_hass(hass)
+    mock_ezviz_client.load_cameras.return_value = {
+        "C666666": _mock_camera_data(CONNECTION={"localRtspPort": 554})
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    source = await async_get_stream_source(hass, ENTITY_ID)
+    assert source == (
+        "rtsp://test-username:test-password@192.168.1.100:554/Streaming/Channels/102"
+    )
+    assert "C666666" not in hass.data.get(DATA_VTM, {})
