@@ -36,7 +36,7 @@ def _mock_battery_camera_data(work_mode: object) -> dict[str, object]:
         (BatteryCameraWorkMode.HIGH_PERFORMANCE.value, "high_performance"),
         (BatteryCameraWorkMode.POWER_SAVE.value, "power_save"),
         ("PLUGGED_IN", "plugged_in"),
-        (BatteryCameraWorkMode.HYBERNATE.value, STATE_UNKNOWN),
+        (BatteryCameraWorkMode.ALWAYS_ON_VIDEO.value, STATE_UNKNOWN),
         (BatteryCameraWorkMode.UNKNOWN.value, STATE_UNKNOWN),
         (99, STATE_UNKNOWN),
     ],

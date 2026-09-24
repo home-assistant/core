@@ -77,7 +77,7 @@ def battery_work_mode_current_option(ezvizSelect: EzvizSelect) -> str | None:
     except KeyError, ValueError:
         return None
     option = battery_work_mode.name.lower()
-    return option if option in ezvizSelect.entity_description.options else None
+    return option if option in (ezvizSelect.entity_description.options or ()) else None
 
 
 def battery_work_mode_select_option(
