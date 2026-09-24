@@ -20,6 +20,8 @@ from boschshcpy import (
     SHCShutterControl,
     SHCSmartPlug,
     SHCThermostat,
+    SHCThermostatGen2,
+    SHCTwinguard,
     ShutterControlService,
     ThermostatService,
 )
@@ -245,6 +247,28 @@ def thermostat_device(
     return device
 
 
+def thermostat_gen2_device(
+    device_id: str = "hdm:ZigBee:thermostatgen2_1",
+    name: str = "Thermostat Gen2",
+    supports_display_configuration: bool = False,
+    humidity_warning_enabled: bool = False,
+) -> SHCThermostatGen2:
+    """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
+    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TRV_GEN2"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_display_configuration = supports_display_configuration
+    device.humidity_warning_enabled = humidity_warning_enabled
+    return device
+
+
 def micromodule_relay_device(
     device_id: str = "hdm:ZigBee:relay1",
     name: str = "Relay",
@@ -353,4 +377,26 @@ def motion_detector2_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
+    return device
+
+
+def twinguard_device(
+    device_id: str = "hdm:HomeMaticIP:twinguard1",
+    name: str = "Twinguard",
+    supports_nightly_promise: bool = False,
+    nightly_promise_enabled: bool = False,
+) -> SHCTwinguard:
+    """Build a minimal device double for the twinguards bucket."""
+    device = create_autospec(SHCTwinguard, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TWINGUARD"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_nightly_promise = supports_nightly_promise
+    device.nightly_promise_enabled = nightly_promise_enabled
     return device

@@ -25,6 +25,8 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_device,
     thermostat_device,
+    thermostat_gen2_device,
+    twinguard_device,
 )
 
 from tests.common import MockConfigEntry
@@ -354,3 +356,163 @@ async def test_motion_detector2_pet_immunity(
         blocking=True,
     )
     assert device.pet_immunity_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "twinguards": [
+                twinguard_device(
+                    supports_nightly_promise=True, nightly_promise_enabled=False
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_nightly_promise(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Twinguard's nightly promise (Heartbeat) is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.twinguards[0]
+
+    state = hass.states.get("switch.twinguard_heartbeat")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        blocking=True,
+    )
+    assert device.nightly_promise_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.twinguard_heartbeat"},
+        blocking=True,
+    )
+    assert device.nightly_promise_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"twinguards": [twinguard_device(supports_nightly_promise=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_no_nightly_promise_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Twinguard without nightly-promise support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.twinguard_heartbeat") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_configuration=True,
+                    humidity_warning_enabled=False,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_gen2_humidity_warning(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Thermostat Gen2's humidity warning is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    state = hass.states.get("switch.thermostat_gen2_humidity_warning")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.thermostat_gen2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_no_humidity_warning_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a Gen-1 thermostat, which lacks display-configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.thermostat_gen2_humidity_warning") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostatgen2_1",
+                    name="Room Thermostat 2",
+                    supports_display_configuration=True,
+                    humidity_warning_enabled=False,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_roomthermostat_gen2_humidity_warning(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Room Thermostat 2's humidity warning is exposed and controllable as a switch."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.roomthermostats[0]
+
+    state = hass.states.get("switch.room_thermostat_2_humidity_warning")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.room_thermostat_2_humidity_warning"},
+        blocking=True,
+    )
+    assert device.humidity_warning_enabled is True
