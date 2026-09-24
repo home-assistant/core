@@ -6,7 +6,14 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_GROUP, CONF_LABEL, CONF_MAC_ADDRESS, CONF_SERIAL, CONF_TITLE
+from .const import (
+    CONF_GROUP,
+    CONF_LABEL,
+    CONF_MAC_ADDRESS,
+    CONF_NETWORK_NAME,
+    CONF_SERIAL,
+    CONF_TITLE,
+)
 from .coordinator import LIFXConfigEntry
 
 TO_REDACT = [
@@ -18,6 +25,7 @@ TO_REDACT = [
     CONF_MAC_ADDRESS,
     CONF_GROUP,
     CONF_LOCATION,
+    CONF_NETWORK_NAME,
 ]
 
 
