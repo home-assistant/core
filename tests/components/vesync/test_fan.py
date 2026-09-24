@@ -423,3 +423,26 @@ async def test_pedestal_fan_partial_oscillation_holds_device(
         )
 
     mark_mock.assert_called_once()
+
+
+async def test_set_preset_mode_fails_when_turn_on_fails(
+    hass: HomeAssistant,
+    fan_config_entry: MockConfigEntry,
+) -> None:
+    """Test a preset change on an off fan raises if turning it on fails."""
+    with (
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on",
+            return_value=False,
+        ),
+        patch("pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode") as method_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: "auto"},
+            blocking=True,
+        )
+
+    method_mock.assert_not_called()

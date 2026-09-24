@@ -301,8 +301,11 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             )
 
         if not self.device.is_on:
-            if await self.device.turn_on():
-                self.coordinator.async_mark_command(self.device)
+            if not await self.device.turn_on():
+                if self.device.last_response:
+                    raise HomeAssistantError(self.device.last_response.message)
+                raise HomeAssistantError("Failed to turn on fan, no response found.")
+            self.coordinator.async_mark_command(self.device)
 
         vs_mode = self._ha_to_vs_mode_map.get(preset_mode)
         success = False

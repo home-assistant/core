@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -54,7 +54,9 @@ async def test_command_holds_device_out_of_polling(
     manager.devices.outlets = []
     coordinator = VeSyncDataCoordinator(hass, config_entry, manager)
 
-    coordinator.async_mark_command(held)
+    with patch.object(coordinator, "async_update_listeners") as listeners_mock:
+        coordinator.async_mark_command(held)
+    listeners_mock.assert_called_once()
     await coordinator._async_update_data()
     held.update.assert_not_called()
     other.update.assert_called_once()
