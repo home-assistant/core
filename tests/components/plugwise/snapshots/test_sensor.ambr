@@ -1656,7 +1656,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_consumed-entry]
@@ -2113,7 +2113,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_pressure-entry]

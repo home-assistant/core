@@ -28,6 +28,7 @@ from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,
@@ -766,7 +767,7 @@ async def test_unix_socket_auth_with_supervisor_user(
     supervisor_user = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
     )
-    await hass.auth.async_create_refresh_token(supervisor_user)
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
 
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
@@ -798,16 +799,17 @@ async def test_unix_socket_auth_without_supervisor_user(
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_unix_socket_auth_caches_user_id(
+async def test_unix_socket_auth_removed_user(
     hass: HomeAssistant,
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test that Unix socket auth caches the Supervisor user ID."""
+    """Test that Unix socket requests fail once the Supervisor user was removed."""
     supervisor_user = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
     )
-    await hass.auth.async_create_refresh_token(supervisor_user)
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
+    await hass.auth.async_remove_user(supervisor_user)
 
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
@@ -816,20 +818,37 @@ async def test_unix_socket_auth_caches_user_id(
         "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
         return_value=True,
     ):
-        # First request triggers user lookup
         req = await client.get("/")
-        assert req.status == HTTPStatus.OK
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
-    # Second request should use cached user ID
-    with (
-        patch(
-            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
-            return_value=True,
-        ),
-        patch.object(
-            hass.auth, "async_get_users", wraps=hass.auth.async_get_users
-        ) as mock_get_users,
+
+async def test_unix_socket_auth_uses_provided_user(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test that Unix socket auth uses the user provided by hassio, not a name match.
+
+    A stale duplicate system user named Supervisor can be left behind in the
+    auth store; requests must be authenticated as the user hassio actually uses.
+    """
+    stale_user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    supervisor_user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
+
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    with patch(
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         req = await client.get("/")
-        assert req.status == HTTPStatus.OK
-        mock_get_users.assert_not_called()
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == supervisor_user.id
+    assert data["user_id"] != stale_user.id
