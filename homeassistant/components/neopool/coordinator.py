@@ -1,5 +1,6 @@
 """Data update coordinator for the NeoPool integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -19,6 +20,10 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
     CONF_USE_LIGHT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -26,6 +31,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Auxiliary relay timer blocks keyed by their enabling option.
+_AUX_TIMER_BLOCKS: dict[str, str] = {
+    CONF_USE_AUX1: "relay_aux1",
+    CONF_USE_AUX2: "relay_aux2",
+    CONF_USE_AUX3: "relay_aux3",
+    CONF_USE_AUX4: "relay_aux4",
+}
 
 
 type NeoPoolConfigEntry = ConfigEntry["NeoPoolCoordinator"]
@@ -54,6 +67,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
         self._follow_up_unsub: CALLBACK_TYPE | None = None
+        # Serializes masked read-modify-write across siblings sharing a register.
+        self.masked_write_lock = asyncio.Lock()
 
     def request_refresh_with_followup(
         self, delay: float = FOLLOW_UP_REFRESH_DELAY
@@ -120,16 +135,20 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _get_enabled_timers(self, data: dict[str, Any]) -> list[str]:
         """Return the list of timer block names to poll each cycle.
 
-        The light timer is polled only when the light entity is enabled in
-        the options and the lighting GPIO is valid; the entity gates on the
-        same condition, so relay_light_enable would have no consumer
-        otherwise.
+        The light timer is polled only when its option is enabled and the
+        lighting GPIO is valid. Auxiliary relay timers are polled per enabled
+        option; the aux switches read relay_aux*_enable as a manual-mode guard.
         """
         enabled: list[str] = []
         if self.config_entry.options.get(CONF_USE_LIGHT, False) and is_valid_relay_gpio(
             data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
         ):
             enabled.append("relay_light")
+        enabled.extend(
+            block
+            for option, block in _AUX_TIMER_BLOCKS.items()
+            if self.config_entry.options.get(option, False)
+        )
         return enabled
 
     async def _read_timers_into_data(self, data: dict[str, Any]) -> None:

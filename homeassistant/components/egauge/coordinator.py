@@ -98,7 +98,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             EgaugeException,
         ) as err:
             # will raise ConfigEntryAuthFailed once reauth is implemented
-            raise ConfigEntryError("Error fetching device info: {err}") from err
+            raise ConfigEntryError(f"Error fetching device info: {err}") from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 

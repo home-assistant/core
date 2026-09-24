@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "minor_version": 4,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "switch": {
+        "knx_es_01JWDFHP1ZG6NT62BX6ENR3MG7": {
+          "entity": {
+            "name": "valid",
+            "device_info": null,
+            "entity_category": "config"
+          },
+          "knx": {
+            "ga_switch": {
+              "write": "1/1/45",
+              "state": "1/0/45",
+              "passive": []
+            },
+            "invert": false,
+            "sync_state": true,
+            "respond_to_read": false
+          }
+        },
+        "knx_es_01JWDFKBG3PYPPRQDJZ3N3PMCB": {
+          "entity": {
+            "name": "invalid group address",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_switch": {
+              "write": "not a group address",
+              "state": null,
+              "passive": []
+            },
+            "invert": false,
+            "sync_state": true,
+            "respond_to_read": false
+          }
+        }
+      },
+      "light": {
+        "knx_es_01J85ZKTFHSZNG4X9DYBE592TF": {
+          "entity": {
+            "name": "missing defaults",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_switch": {
+              "write": "1/1/21",
+              "state": "1/0/21",
+              "passive": []
+            },
+            "sync_state": true
+          }
+        }
+      }
+    },
+    "expose": {},
+    "time_server": {}
+  }
+}

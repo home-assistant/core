@@ -2,14 +2,14 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 
 from .const import (
     CONF_SERVER_ID,
@@ -41,7 +41,10 @@ class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         if user_input is None:
             return self.async_show_form(step_id="user")
@@ -75,12 +78,12 @@ class SpeedTestOptionsFlowHandler(OptionsFlowWithReload):
         self._servers = self.config_entry.runtime_data.servers
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_SERVER_NAME,
                 default=self.config_entry.options.get(CONF_SERVER_NAME, DEFAULT_SERVER),
-            ): vol.In(self._servers.keys()),
+            ): probatio.In(self._servers.keys()),
         }
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options), errors=errors
+            step_id="init", data_schema=probatio.Schema(options), errors=errors
         )

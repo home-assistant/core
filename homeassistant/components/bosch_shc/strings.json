@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -54,6 +53,9 @@
       "humidity_rating": {
         "name": "Humidity rating"
       },
+      "open_windows_doors": {
+        "name": "Open doors and windows"
+      },
       "purity": {
         "name": "Purity"
       },
@@ -63,13 +65,61 @@
       "temperature_rating": {
         "name": "Temperature rating"
       },
+      "valve_tappet_state": {
+        "name": "Valve motor status",
+        "state": {
+          "error": "Error",
+          "fix_motor_logic_in_progress": "Motor logic fix in progress",
+          "fix_motor_logic_requested": "Motor logic fix requested",
+          "fix_motor_logic_successful": "Motor logic fix successful",
+          "in_start_position": "In start position",
+          "no_motor_error": "Error: no motor detected",
+          "no_valve_body_error": "Error: no valve body detected",
+          "not_available": "Not available",
+          "range_too_big": "Range too big",
+          "range_too_small": "Range too small",
+          "run_to_start_position": "Running to start position",
+          "start_position_requested": "Start position requested",
+          "unknown": "Unknown",
+          "valve_adaption_in_progress": "Adaptation in progress",
+          "valve_adaption_requested": "Adaptation requested",
+          "valve_adaption_successful": "Adaptation successful",
+          "valve_too_tight": "Valve too tight"
+        }
+      },
       "valvetappet": {
         "name": "Valvetappet"
       }
     },
     "switch": {
+      "bypass": {
+        "name": "Break function"
+      },
+      "bypass_infinite": {
+        "name": "Break function never expires"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "energy_saving_mode_enabled": {
+        "name": "Energy-saving mode"
+      },
+      "humidity_warning_enabled": {
+        "name": "Humidity warning"
+      },
+      "nightly_promise_enabled": {
+        "name": "Heartbeat"
+      },
+      "pet_immunity_enabled": {
+        "name": "Pet immunity"
+      },
       "routing": {
-        "name": "Routing"
+        "name": "Range extension"
+      }
+    },
+    "valve": {
+      "valve": {
+        "name": "Valve"
       }
     }
   }
