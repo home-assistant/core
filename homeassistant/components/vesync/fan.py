@@ -263,6 +263,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                         + self.device.last_response.message
                     )
                 raise HomeAssistantError("Failed to turn on fan, no response found.")
+            self.coordinator.async_mark_command(self.device)
 
         # Switch to manual mode if not already set
         if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
@@ -275,6 +276,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 raise HomeAssistantError(
                     "Failed to set manual mode, no response found."
                 )
+            self.coordinator.async_mark_command(self.device)
 
         # Calculate the speed level and set it
         if not await self.device.set_fan_speed(
@@ -299,7 +301,8 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             )
 
         if not self.device.is_on:
-            await self.device.turn_on()
+            if await self.device.turn_on():
+                self.coordinator.async_mark_command(self.device)
 
         vs_mode = self._ha_to_vs_mode_map.get(preset_mode)
         success = False

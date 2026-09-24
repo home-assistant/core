@@ -104,7 +104,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
-        succeeded = True
+        succeeded = False
         # set white temperature
         if (
             self.color_mode == ColorMode.COLOR_TEMP
@@ -126,7 +126,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 0-100
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
-            succeeded = await self.device.set_color_temp(color_temp) and succeeded
+            succeeded = await self.device.set_color_temp(color_temp) or succeeded
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -144,7 +144,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 1-100
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
-            succeeded = await self.device.set_brightness(brightness) and succeeded
+            succeeded = await self.device.set_brightness(brightness) or succeeded
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True

@@ -195,7 +195,7 @@ async def test_set_preset_mode(
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
 
 async def test_out_of_range_fan_level(
@@ -255,7 +255,7 @@ async def test_set_preset_mode_eco(
         await hass.async_block_till_done()
 
     method_mock.assert_awaited_once_with("eco")
-    update_mock.assert_called_once()
+    update_mock.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -354,3 +354,40 @@ async def test_oscillation_success(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+async def test_failed_speed_change_keeps_turn_on_hold(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a successful turn on is held even when the following speed change fails."""
+    mock_devices_response(
+        aioclient_mock, "Air Purifier 200s", details_override={"enabled": False}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.turn_on",
+            return_value=True,
+        ),
+        patch(
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.set_fan_speed",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.air_purifier_200s", ATTR_PERCENTAGE: 50},
+            blocking=True,
+        )
+
+    mark_mock.assert_called_once()
