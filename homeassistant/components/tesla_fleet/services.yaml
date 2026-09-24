@@ -1,0 +1,25 @@
+navigation_gps_request:
+  target:
+    entity:
+      integration: tesla_fleet
+  fields:
+    latitude:
+      required: true
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: any
+    longitude:
+      required: true
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: any
+    order:
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1

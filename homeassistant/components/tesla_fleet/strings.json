@@ -610,8 +610,17 @@
     "command_reason": {
       "message": "Command was unsuccessful: {reason}"
     },
+    "device_no_vin": {
+      "message": "Device {device_id} does not have a valid VIN."
+    },
+    "device_not_found": {
+      "message": "Device {device_id} not found."
+    },
     "homelink_no_location": {
       "message": "Vehicle location is not available. Ensure the vehicle is awake and that the location scope has been granted."
+    },
+    "instance_not_found": {
+      "message": "Tesla Fleet integration instance for device {device_id} not found."
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
@@ -650,6 +659,26 @@
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "description": "Sends GPS coordinates directly to the vehicle's navigation system.",
+      "fields": {
+        "latitude": {
+          "description": "Target latitude coordinate (-90 to 90).",
+          "name": "Latitude"
+        },
+        "longitude": {
+          "description": "Target longitude coordinate (-180 to 180).",
+          "name": "Longitude"
+        },
+        "order": {
+          "description": "Waypoint sequence order (optional).",
+          "name": "Order"
+        }
+      },
+      "name": "Send GPS navigation request"
     }
   }
 }

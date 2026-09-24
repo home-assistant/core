@@ -332,5 +332,10 @@
         "default": "mdi:speedometer-slow"
       }
     }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "service": "mdi:navigation"
+    }
   }
 }
