@@ -1,6 +1,6 @@
 """Tests for Xthings Cloud config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 import pytest
@@ -20,6 +20,41 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_native_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Native MQTT is opt-in and requires loadable client credentials."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    with patch(
+        "homeassistant.components.xthings_cloud.config_flow._load_mqtt_tls"
+    ) as load:
+        load.side_effect = OSError("invalid certificate")
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                "native_mqtt": True,
+                "mqtt_certificate": "/cert",
+                "mqtt_private_key": "/key",
+            },
+        )
+        assert result["errors"] == {"base": "invalid_certificate"}
+        load.side_effect = None
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                "native_mqtt": True,
+                "mqtt_certificate": "/cert",
+                "mqtt_private_key": "/key",
+            },
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert mock_config_entry.options["native_mqtt"] is True
 
 
 async def test_user_flow_success(

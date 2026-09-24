@@ -1,5 +1,6 @@
 """Light platform for Xthings Cloud."""
 
+import colorsys
 from typing import Any, override
 
 from homeassistant.components.light import (
@@ -38,9 +39,9 @@ class XthingsCloudBaseLight(XthingsCloudEntity, LightEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the light is on."""
-        return self.device_data["status"]["on"]
+        return self.device_data["status"].get("on")
 
     @property
     @override
@@ -76,6 +77,11 @@ class XthingsCloudLight(XthingsCloudBaseLight):
     ) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator, device_id, device_data)
+        self._native_units = device_data["model"] == "A19-C1"
+        if self._native_units:
+            self._attr_min_color_temp_kelvin = 2700
+            self._attr_supported_color_modes = {ColorMode.HS, ColorMode.COLOR_TEMP}
+            return
         # Determine supported color modes from device status
         status = device_data["status"]
         modes: set[ColorMode] = set()
@@ -116,6 +122,14 @@ class XthingsCloudLight(XthingsCloudBaseLight):
         hue = status.get("hue")
         saturation = status.get("saturation")
         if hue is not None and saturation is not None:
+            if self._native_units:
+                lightness = status.get("lightness")
+                if lightness is None:
+                    return None
+                h, s, _ = colorsys.rgb_to_hsv(
+                    *colorsys.hls_to_rgb(hue / 360, lightness / 100, saturation / 100)
+                )
+                return (h * 360, s * 100)
             return (hue, saturation)
         return None
 
@@ -123,11 +137,45 @@ class XthingsCloudLight(XthingsCloudBaseLight):
     @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
-        return self.device_data["status"].get("temperature")
+        temperature = self.device_data["status"].get("temperature")
+        if self._native_units and temperature is not None:
+            # Approximate interpolation of the advertised range, not calibration.
+            return round(2700 + (max(1, min(100, temperature)) - 1) * 3800 / 99)
+        return temperature
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
+        if self.coordinator.uses_native_mqtt(self._device_id):
+            changes = {"pw": 1}
+            if ATTR_BRIGHTNESS in kwargs:
+                changes["br"] = max(1, round(kwargs[ATTR_BRIGHTNESS] * 100 / 255))
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                changes.update(
+                    ct=1,
+                    tp=max(
+                        1,
+                        min(
+                            100,
+                            round(
+                                1 + (kwargs[ATTR_COLOR_TEMP_KELVIN] - 2700) * 99 / 3800
+                            ),
+                        ),
+                    ),
+                )
+            elif ATTR_HS_COLOR in kwargs:
+                hue, saturation = kwargs[ATTR_HS_COLOR]
+                h, lightness, saturation = colorsys.rgb_to_hls(
+                    *colorsys.hsv_to_rgb(hue / 360, saturation / 100, 1)
+                )
+                changes.update(
+                    ct=0,
+                    hu=round(h * 360),
+                    sa=round(saturation * 100),
+                    li=round(lightness * 100),
+                )
+            await self.coordinator.async_set_native_state(self._device_id, changes)
+            return
         client = self.coordinator.client
 
         if ATTR_HS_COLOR in kwargs:
@@ -138,6 +186,12 @@ class XthingsCloudLight(XthingsCloudBaseLight):
             if ATTR_BRIGHTNESS in kwargs:
                 lightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
                 cur_brightness = lightness
+            if self._native_units:
+                _, lightness, saturation = colorsys.rgb_to_hls(
+                    *colorsys.hsv_to_rgb(hue / 360, saturation / 100, 1)
+                )
+                lightness = round(lightness * 100)
+                saturation *= 100
             await client.async_brite_color(
                 self._device_id,
                 {
@@ -157,7 +211,22 @@ class XthingsCloudLight(XthingsCloudBaseLight):
                 self._device_id,
                 {
                     "colortype": 1,
-                    "temperature": kwargs[ATTR_COLOR_TEMP_KELVIN],
+                    "temperature": (
+                        max(
+                            1,
+                            min(
+                                100,
+                                round(
+                                    1
+                                    + (kwargs[ATTR_COLOR_TEMP_KELVIN] - 2700)
+                                    * 99
+                                    / 3800
+                                ),
+                            ),
+                        )
+                        if self._native_units
+                        else kwargs[ATTR_COLOR_TEMP_KELVIN]
+                    ),
                     "brightness": cur_brightness,
                 },
             )
@@ -170,6 +239,9 @@ class XthingsCloudLight(XthingsCloudBaseLight):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
+        if self.coordinator.uses_native_mqtt(self._device_id):
+            await self.coordinator.async_set_native_state(self._device_id, {"pw": 0})
+            return
         await self.coordinator.client.async_brite_off(self._device_id)
 
 
