@@ -402,8 +402,8 @@ def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]
     contributes. The cases never import each other, so checking them together
     reports the same errors as checking them one at a time.
 
-    Cases are keyed by their parametrize id, which pytest keeps unique, so two
-    cases that happen to share a snippet stay separate.
+    Cases are keyed by their ``pytest.param`` id, which must be unique across
+    all three tables, so two cases that happen to share a snippet stay separate.
 
     Each error is normalized to ``LINE: MESSAGE`` form.
     """
@@ -417,6 +417,9 @@ def mypy_errors(tmp_path_factory: pytest.TempPathFactory) -> dict[str, list[str]
         },
         **{case.id: case.values[0] for case in _FRAMEWORK_CASES},
     }
+    assert len(sources) == len(_PLAIN_ENUM_CASES) + len(_NO_FLAG_CASES) + len(
+        _FRAMEWORK_CASES
+    ), "Duplicate pytest.param id across case tables"
 
     case_id_by_module: dict[str, str] = {}
     paths: list[Path] = []
