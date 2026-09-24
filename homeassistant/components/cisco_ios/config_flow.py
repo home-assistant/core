@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from pexpect import pxssh
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -23,21 +23,21 @@ from homeassistant.helpers import config_validation as cv
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import CiscoIOSArpScanner
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD, default=""): str,
-        vol.Optional(CONF_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD, default=""): str,
+        probatio.Optional(CONF_PORT): cv.port,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(CONF_TRACK_NEW, default=False): bool,
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
+        probatio.Optional(CONF_TRACK_NEW, default=False): bool,
     }
 )
 
