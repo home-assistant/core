@@ -186,9 +186,18 @@ async def test_authentication_error_triggers_reauth(
         side_effect=error(
             "Call https://host:443/v2/api/site/default/trafficrules received 401 Unauthorized"
         ),
-    ):
+    ) as mock_update:
         await coordinator.async_refresh()
         await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        # An authentication failure must stop the polling loop, otherwise the
+        # retries keep hitting the controller and can trip its login rate limit.
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
 
     assert coordinator.last_update_success is False
     assert "Unexpected error fetching" not in caplog.text
