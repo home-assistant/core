@@ -9,6 +9,7 @@ from typing import override
 from skoda_public_api.models.enums import (
     AirConditioningState,
     AuxiliaryHeatingStartMode,
+    AuxiliaryHeatingState,
     ChargeType,
     ChargingState,
     TemperatureUnit,
@@ -235,9 +236,13 @@ def _auxiliary_heating_mode_value(entity: SkodaEntity) -> str | None:
 
 def _aux_heating_duration_value(entity: SkodaEntity) -> int | None:
     aux_heat = entity.open_api_auxiliary_heating
-    if aux_heat is not None:
-        return aux_heat.duration_in_seconds
-    return None
+    if not aux_heat or aux_heat.state in [
+        AuxiliaryHeatingState.OFF,
+        AuxiliaryHeatingState.UNKNOWN,
+        AuxiliaryHeatingState.UNSUPPORTED,
+    ]:
+        return None
+    return aux_heat.duration_in_seconds
 
 
 def _preset_temperature_value(entity: SkodaEntity) -> float | None:
