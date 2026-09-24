@@ -191,3 +191,27 @@ async def test_camera_unavailable_when_stream_disconnected(
     state = hass.states.get("camera.front_camera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_camera_callback_removed_with_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the pyhik callback is unregistered when the entity is removed."""
+    camera = mock_hikcamera.return_value
+    await setup_integration(hass, mock_config_entry)
+
+    added = [
+        c.args
+        for c in camera.add_update_callback.call_args_list
+        if ".camera." in c.args[1]
+    ]
+    assert len(added) == 1
+    camera.remove_update_callback.assert_not_called()
+
+    entity_registry.async_remove("camera.front_camera")
+    await hass.async_block_till_done()
+
+    camera.remove_update_callback.assert_called_once_with(*added[0])
