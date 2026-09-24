@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -39,26 +39,28 @@ TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): probatio.Schema(
         {
             cv.string: {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
+                    TYPE_STANDARD, TYPE_INVERTED
+                ),
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         }
     ),
@@ -66,7 +68,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -20,10 +20,9 @@ from homeassistant.components.sofar.sensor import (
     SofarSensorDescription,
     SofarTotalSensor,
 )
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import (
     MOCK_HYBRID_MODEL,
@@ -103,13 +102,13 @@ async def test_sensor_entities_created_and_state(
 @pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 72, 22, id="pv"),
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 74, 21, id="pv"),
         pytest.param(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            138,
-            45,
+            145,
+            44,
             id="hybrid",
         ),
     ],
@@ -262,11 +261,11 @@ async def test_total_sensor_restore_data_parsing(
     device = runtime_data.readings.device
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
     )
 
-    device.energy.load_consumption_total = None
+    device.meter_energy.load_consumption_total = None
     sensor = SofarTotalSensor(runtime_data, description)
     sensor.hass = hass
     sensor.async_get_last_sensor_data = AsyncMock(
@@ -291,11 +290,11 @@ async def test_total_sensor_restore_data_parsing(
     await blank_sensor.async_added_to_hass()
     assert blank_sensor.native_value is None
 
-    device.energy.load_consumption_total = 120.0
+    device.meter_energy.load_consumption_total = 120.0
     total_sensor = SofarTotalSensor(runtime_data, description)
     assert total_sensor.native_value == 120.0
 
-    device.energy.load_consumption_total = None
+    device.meter_energy.load_consumption_total = None
     unset_sensor = SofarTotalSensor(runtime_data, description)
     assert unset_sensor.native_value is None
 
@@ -308,7 +307,7 @@ async def test_total_sensor_seeds_high_water_from_restored_value(
     device = runtime_data.readings.device
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
     )
@@ -317,7 +316,7 @@ async def test_total_sensor_seeds_high_water_from_restored_value(
     sensor.async_get_last_sensor_data = AsyncMock(
         return_value=SimpleNamespace(native_value="555.5")
     )
-    with patch.object(device.energy, "seed_high_water") as mock_seed:
+    with patch.object(device.meter_energy, "seed_high_water") as mock_seed:
         await sensor.async_added_to_hass()
     mock_seed.assert_called_once_with("load_consumption_total", 555.5)
 
@@ -343,7 +342,7 @@ async def test_total_sensor_dead_link_unavailable(
     runtime_data = init_integration.runtime_data
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
     )
@@ -391,144 +390,15 @@ async def test_total_sensor_total_increasing_uses_corrected_value(
     runtime_data = init_integration.runtime_data
     description = SofarSensorDescription(
         key="load_consumption_total",
-        component="energy",
+        component="meter_energy",
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
     )
     device = runtime_data.readings.device
     sensor = SofarTotalSensor(runtime_data, description)
-    with patch.object(device.energy, "corrected", return_value=42.0) as mock_corrected:
+    with patch.object(
+        device.meter_energy, "corrected", return_value=42.0
+    ) as mock_corrected:
         assert sensor.native_value == 42.0
     mock_corrected.assert_called_once_with("load_consumption_total")
     assert sensor.available
-
-
-async def test_idle_countdown_reports_no_deadline(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a countdown at zero reports nothing, not a moment already past."""
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
-    )
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-
-async def test_countdown_holds_its_deadline_until_it_restarts(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a countdown ticking with the clock keeps one deadline."""
-    mock_config_entry.add_to_hass(hass)
-    unit = mock_connection.for_unit(1)
-    unit.holding[0x0404] = 0  # Waiting
-    unit.holding[0x0417] = 300
-
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
-    )
-    assert entity_id is not None
-    # The exact moment: a wrong sign or unit must not slip through.
-    deadline = (dt_util.utcnow() + timedelta(seconds=300)).isoformat(timespec="seconds")
-    assert hass.states.get(entity_id).state == deadline
-
-    # A second of poll jitter must not republish the deadline as a new one.
-    unit.holding[0x0417] = 296
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == deadline
-
-    # Restarted, so it really is a different moment now.
-    unit.holding[0x0417] = 600
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state != deadline
-
-
-async def test_countdown_ignores_a_stale_register_while_grid_connected(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a positive register is ignored once the inverter is connected."""
-    mock_config_entry.add_to_hass(hass)
-    unit = mock_connection.for_unit(1)
-    unit.holding[0x0404] = 2  # Grid connected
-    unit.holding[0x0417] = 60  # Left over from the last startup wait
-
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
-    )
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-
-async def test_countdown_restarting_after_idle_gets_a_new_deadline(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a finished countdown's deadline is not reused by the next one."""
-    mock_config_entry.add_to_hass(hass)
-    unit = mock_connection.for_unit(1)
-    unit.holding[0x0404] = 0  # Waiting
-    unit.holding[0x0417] = 10
-
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
-    )
-    assert entity_id is not None
-    finished = hass.states.get(entity_id).state
-
-    unit.holding[0x0417] = 0
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-    # Close enough to the old deadline to fall inside the variance window.
-    unit.holding[0x0417] = 5
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    restarted = (dt_util.utcnow() + timedelta(seconds=5)).isoformat(timespec="seconds")
-    assert hass.states.get(entity_id).state == restarted
-    assert hass.states.get(entity_id).state != finished

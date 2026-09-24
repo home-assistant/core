@@ -9,6 +9,7 @@ from homeassistant.const import Platform
 DOMAIN: Final = "lametric"
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

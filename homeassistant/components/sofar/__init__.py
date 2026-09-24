@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
@@ -12,22 +13,33 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     restore_state,
 )
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .const import (
+    BATTERY_COMPONENTS,
+    CONF_UNIT_ID,
+    DOMAIN,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .sensor import SENSOR_DESCRIPTIONS
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SELECT,
     Platform.SENSOR,
@@ -35,6 +47,18 @@ PLATFORMS: list[Platform] = [
 ]
 
 _IDENTITY_ATTEMPTS = 3
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+def _async_remove_stale_waiting_time(hass: HomeAssistant, serial: str) -> None:
+    """Drop the removed waiting-time entity so it doesn't linger unavailable."""
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_waiting_time"
+    )
+    if entity_id is not None:
+        registry.async_remove(entity_id)
 
 
 async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
@@ -73,10 +97,17 @@ def _async_seed_high_water_marks(
         )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sofar integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
     """Set up Sofar Inverter Modbus from a config entry."""
     serial = entry.unique_id
     assert serial is not None
+    _async_remove_stale_waiting_time(hass, serial)
     inverter_type, model = identify(serial)
     if not inverter_type:
         raise ConfigEntryError(
@@ -127,6 +158,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+def _battery_pack_number(serial: str, identifier: str) -> int | None:
+    """The battery pack a device identifier names, if it names one."""
+    prefix = f"{serial}_battery_"
+    if not identifier.startswith(prefix):
+        return None
+    suffix = identifier.removeprefix(prefix)
+    number = int(suffix) if suffix.isdecimal() else None
+    return number if number in BATTERY_COMPONENTS else None
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SofarConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a battery pack the inverter no longer reports."""
+    serial = config_entry.unique_id
+    if TYPE_CHECKING:
+        assert serial is not None
+    runtime_data = (
+        config_entry.runtime_data
+        if config_entry.state is ConfigEntryState.LOADED
+        else None
+    )
+    packs: set[int] = set()
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
+            return False
+        if (number := _battery_pack_number(serial, identifier)) is None:
+            continue
+        if runtime_data is not None and runtime_data.pack_is_wired(number):
+            return False
+        packs.add(number)
+
+    if runtime_data is not None:
+        runtime_data.wired_packs -= packs
     return True
 
 

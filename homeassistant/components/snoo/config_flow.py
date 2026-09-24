@@ -4,9 +4,9 @@ import logging
 from typing import Any, override
 
 import jwt
+import probatio
 from python_snoo.exceptions import InvalidSnooAuth, SnooAuthException
 from python_snoo.snoo import Snoo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -16,10 +16,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -49,7 +49,7 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidSnooAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
-                _LOGGER.exception("Unexpected exception %s")
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 user_uuid = jwt.decode(

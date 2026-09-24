@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiovodafone import exceptions as aiovodafone_exceptions
 from aiovodafone.models import get_device_type, init_device_class
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -32,19 +32,19 @@ from .coordinator import VodafoneConfigEntry
 from .utils import async_client_session
 
 
-def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     """Return user form schema."""
     user_input = user_input or {}
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-            vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+            probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -218,14 +218,14 @@ class VodafoneStationOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+                ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=900))
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
