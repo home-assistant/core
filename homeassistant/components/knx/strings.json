@@ -176,9 +176,8 @@
       },
       "status": {
         "address": "Address: {address}",
-        "connected": "Connected",
-        "disconnected": "Disconnected",
-        "via": "via {interface}"
+        "connected": "[%key:common::state::connected%]",
+        "disconnected": "[%key:common::state::disconnected%]"
       },
       "time_server": {
         "description": "Broadcast the current local time and date to the KNX bus",
