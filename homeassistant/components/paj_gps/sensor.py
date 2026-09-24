@@ -138,3 +138,14 @@ class PajGpsSensor(PajGpsEntity, SensorEntity):
         if sensor_data is None:
             return None
         return sensor_data_value_fn(sensor_data)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        if self.entity_description.key != "voltage":
+            return super().available
+
+        return (
+            super().available and self._device_id in self.coordinator.data.sensor_data
+        )
