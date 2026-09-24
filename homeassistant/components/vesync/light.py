@@ -149,6 +149,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:
+            self.coordinator.async_mark_command(self.device)
             return
         # send turn_on command to pyvesync api
         await self.device.turn_on()

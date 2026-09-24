@@ -1,9 +1,12 @@
 """Tests for the light module."""
 
+from unittest.mock import patch
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -49,3 +52,34 @@ async def test_light_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+async def test_brightness_change_holds_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a brightness-only change starts the command grace period."""
+    mock_devices_response(aioclient_mock, "Dimmable Light")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "pyvesync.devices.vesyncbulb.VeSyncBulbESL100.set_brightness",
+            return_value=True,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    method_mock.assert_called_once()
+    mark_mock.assert_called_once()

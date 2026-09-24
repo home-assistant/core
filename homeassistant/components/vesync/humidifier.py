@@ -172,6 +172,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set humidity.")
 
+        self.coordinator.async_mark_command(self.device)
+
     @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the device."""

@@ -151,6 +151,9 @@ async def test_set_target_humidity(
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200300S.set_humidity",
             return_value=api_response,
         ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
@@ -160,6 +163,7 @@ async def test_set_target_humidity(
         )
         await hass.async_block_till_done()
         method_mock.assert_called_once()
+    assert mark_mock.call_count == int(api_response)
 
 
 @pytest.mark.parametrize(
