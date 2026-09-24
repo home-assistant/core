@@ -16,7 +16,6 @@ from aioshelly.const import (
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     DEVICES,
-    DEFAULT_HTTPS_PORT,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -677,28 +676,14 @@ def get_host(host: str) -> str:
 
 def get_device_url(data: Mapping[str, Any]) -> str:
     """Get the base URL of the device from config entry data."""
-    host = get_host(data[CONF_HOST])
     port = get_http_port(data)
-    scheme = "https" if use_ssl(port) else "http"
-
-    if port in (DEFAULT_HTTP_PORT, DEFAULT_HTTPS_PORT):
-        return f"{scheme}://{host}"
-
-    return f"{scheme}://{host}:{port}"
-
-
-def get_absolute_url(url: str | None, base_url: str) -> str | None:
-    """Get absolute URL for a URL reported by the device."""
-    if not url:
-        return None
-
-    if url.startswith(("http://", "https://")):
-        return url
-
-    if url.startswith("/"):
-        return f"{base_url}{url}"
-
-    return None
+    return str(
+        URL.build(
+            scheme="https" if use_ssl(port) else "http",
+            host=data[CONF_HOST],
+            port=port,
+        )
+    )
 
 
 @callback

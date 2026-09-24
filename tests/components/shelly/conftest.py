@@ -491,6 +491,14 @@ MOCK_CAMERA_STATUS = {
     }
 }
 
+MOCK_STORAGE_STATUS = {
+    "id": 0,
+    "present": True,
+    "active": True,
+    "fs_size": 31914983424,
+    "fs_free": 1048576000,
+}
+
 MOCK_STORAGE_ITEMS = [
     {
         "media_id": "11111111-1111-1111-1111-111111111111",
@@ -1435,8 +1443,15 @@ def mock_ledstrip_rpc_device(
 
 
 @pytest.fixture
-def mock_camera_storage(mock_camera_rpc_device: Mock) -> Mock:
-    """Mock storage list for a camera device."""
+def mock_camera_storage(
+    mock_camera_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> Mock:
+    """Mock active storage for a camera device."""
+    monkeypatch.setattr(
+        mock_camera_rpc_device,
+        "status",
+        {**MOCK_CAMERA_STATUS, "storage:0": deepcopy(MOCK_STORAGE_STATUS)},
+    )
     mock_camera_rpc_device.get_storage_list = AsyncMock(
         return_value=deepcopy(MOCK_STORAGE_ITEMS)
     )

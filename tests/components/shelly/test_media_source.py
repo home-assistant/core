@@ -1,6 +1,6 @@
 """Tests for Shelly camera storage media source."""
 
-from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_CAMERA
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-from .conftest import MOCK_STORAGE_ITEMS
+from .conftest import MOCK_CAMERA_STATUS, MOCK_STORAGE_ITEMS
 
 
 async def test_root_lists_camera(
@@ -33,16 +33,43 @@ async def test_root_lists_camera(
     assert result.children is not None
     assert len(result.children) == 1
     child = result.children[0]
-    assert child.identifier == f"{entry.entry_id}:0"
+    assert child.identifier == entry.entry_id
     assert child.title == "Test name"
     assert child.can_expand is True
     assert child.can_play is False
 
 
+@pytest.mark.parametrize(
+    "status",
+    [
+        MOCK_CAMERA_STATUS,
+        {**MOCK_CAMERA_STATUS, "storage:0": {"present": False, "active": False}},
+        {
+            **MOCK_CAMERA_STATUS,
+            "storage:0": {"present": True, "active": False, "fs_free": 0},
+        },
+    ],
+)
+async def test_root_skips_inactive_storage(
+    hass: HomeAssistant,
+    mock_camera_storage: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    status: dict[str, Any],
+) -> None:
+    """Test root browsing skips devices without active storage."""
+    monkeypatch.setattr(mock_camera_storage, "status", status)
+    assert await async_setup_component(hass, "media_source", {})
+    await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    result = await media_source.async_browse_media(hass, "media-source://shelly")
+
+    assert result.children == []
+
+
 async def test_root_skips_non_camera(
     hass: HomeAssistant, mock_rpc_device: Mock
 ) -> None:
-    """Test root browsing skips entries without a camera."""
+    """Test root browsing skips devices without storage."""
     assert await async_setup_component(hass, "media_source", {})
     await init_integration(hass, 2)
 
@@ -60,7 +87,7 @@ async def test_browse_storage(
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
     result = await media_source.async_browse_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0"
+        hass, f"media-source://shelly/{entry.entry_id}"
     )
 
     assert result.children is not None
@@ -81,7 +108,7 @@ async def test_browse_storage_relative_thumbnail(
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
     result = await media_source.async_browse_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0"
+        hass, f"media-source://shelly/{entry.entry_id}"
     )
 
     assert result.children is not None
@@ -105,7 +132,7 @@ async def test_browse_storage_empty(
     entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
     result = await media_source.async_browse_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0"
+        hass, f"media-source://shelly/{entry.entry_id}"
     )
 
     assert result.children == []
@@ -131,7 +158,7 @@ async def test_resolve_media(
     media_id = MOCK_STORAGE_ITEMS[index]["media_id"]
 
     result = await media_source.async_resolve_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
+        hass, f"media-source://shelly/{entry.entry_id}:{media_id}", None
     )
 
     assert result.url == expected_url
@@ -164,30 +191,23 @@ async def test_resolve_media_device_port(
     media_id = MOCK_STORAGE_ITEMS[0]["media_id"]
 
     result = await media_source.async_resolve_media(
-        hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
+        hass, f"media-source://shelly/{entry.entry_id}:{media_id}", None
     )
 
     assert result.url == expected_url
 
 
-@pytest.mark.parametrize(
-    "identifier",
-    [
-        pytest.param("bad", id="no_separator"),
-        pytest.param("a:b:c:d", id="too_many_parts"),
-        pytest.param("missing:0", id="unknown_entry"),
-    ],
-)
+@pytest.mark.parametrize("template", ["bad", "a:b:c:d", "{entry_id}:0"])
 async def test_browse_bad_identifier(
-    hass: HomeAssistant, mock_camera_storage: Mock, identifier: str
+    hass: HomeAssistant, mock_camera_storage: Mock, template: str
 ) -> None:
     """Test browsing with a malformed identifier raises BrowseError."""
     assert await async_setup_component(hass, "media_source", {})
-    await init_integration(hass, 3, model=MODEL_CAMERA)
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
 
     with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
-            hass, f"media-source://shelly/{identifier}"
+            hass, f"media-source://shelly/{template.format(entry_id=entry.entry_id)}"
         )
 
     assert excinfo.value.translation_key == "unexpected_identifier"
@@ -195,13 +215,7 @@ async def test_browse_bad_identifier(
 
 @pytest.mark.parametrize(
     "template",
-    [
-        pytest.param("bad", id="no_separator"),
-        pytest.param("a:b:c:d", id="too_many_parts"),
-        pytest.param("{entry_id}:0", id="folder_identifier"),
-        pytest.param("{entry_id}:nan", id="invalid_storage_id"),
-        pytest.param("{entry_id}:0:does-not-exist", id="unknown_media"),
-    ],
+    ["bad", "a:b:c:d", "{entry_id}", "{entry_id}:", "{entry_id}:does-not-exist"],
 )
 async def test_resolve_bad_identifier(
     hass: HomeAssistant, mock_camera_storage: Mock, template: str
@@ -220,6 +234,41 @@ async def test_resolve_bad_identifier(
     assert excinfo.value.translation_key == "unexpected_identifier"
 
 
+async def test_browse_storage_inactive(
+    hass: HomeAssistant, mock_camera_storage: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test browsing raises without querying the device when storage is inactive."""
+    monkeypatch.setattr(mock_camera_storage, "status", MOCK_CAMERA_STATUS)
+    assert await async_setup_component(hass, "media_source", {})
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
+
+    with pytest.raises(BrowseError) as excinfo:
+        await media_source.async_browse_media(
+            hass, f"media-source://shelly/{entry.entry_id}"
+        )
+
+    assert excinfo.value.translation_key == "storage_unavailable"
+    assert mock_camera_storage.get_storage_list.await_count == 0
+
+
+async def test_resolve_storage_inactive(
+    hass: HomeAssistant, mock_camera_storage: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test resolving raises without querying the device when storage is inactive."""
+    monkeypatch.setattr(mock_camera_storage, "status", MOCK_CAMERA_STATUS)
+    assert await async_setup_component(hass, "media_source", {})
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
+    media_id = MOCK_STORAGE_ITEMS[0]["media_id"]
+
+    with pytest.raises(Unresolvable) as excinfo:
+        await media_source.async_resolve_media(
+            hass, f"media-source://shelly/{entry.entry_id}:{media_id}", None
+        )
+
+    assert excinfo.value.translation_key == "storage_unavailable"
+    assert mock_camera_storage.get_storage_list.await_count == 0
+
+
 @pytest.mark.parametrize("side_effect", [DeviceConnectionError(), RpcCallError(999)])
 async def test_browse_storage_unavailable(
     hass: HomeAssistant, mock_camera_storage: Mock, side_effect: Exception
@@ -231,7 +280,7 @@ async def test_browse_storage_unavailable(
 
     with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
-            hass, f"media-source://shelly/{entry.entry_id}:0"
+            hass, f"media-source://shelly/{entry.entry_id}"
         )
 
     assert excinfo.value.translation_key == "storage_unavailable"
@@ -247,45 +296,8 @@ async def test_browse_storage_auth_error(
 
     with pytest.raises(BrowseError) as excinfo:
         await media_source.async_browse_media(
-            hass, f"media-source://shelly/{entry.entry_id}:0"
+            hass, f"media-source://shelly/{entry.entry_id}"
         )
 
     assert excinfo.value.translation_key == "auth_error"
     assert mock_camera_storage.shutdown.await_count == 1
-
-
-async def test_browse_storage_private(
-    hass: HomeAssistant, mock_camera_storage: Mock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test browsing storage raises when camera privacy mode is enabled."""
-    assert await async_setup_component(hass, "media_source", {})
-    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
-    new_status = deepcopy(mock_camera_storage.status)
-    new_status["camera:0"]["privacy"] = True
-    monkeypatch.setattr(mock_camera_storage, "status", new_status)
-
-    with pytest.raises(BrowseError) as excinfo:
-        await media_source.async_browse_media(
-            hass, f"media-source://shelly/{entry.entry_id}:0"
-        )
-
-    assert excinfo.value.translation_key == "storage_private"
-
-
-async def test_resolve_storage_private(
-    hass: HomeAssistant, mock_camera_storage: Mock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test resolving storage raises when camera privacy mode is enabled."""
-    assert await async_setup_component(hass, "media_source", {})
-    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
-    new_status = deepcopy(mock_camera_storage.status)
-    new_status["camera:0"]["privacy"] = True
-    monkeypatch.setattr(mock_camera_storage, "status", new_status)
-    media_id = MOCK_STORAGE_ITEMS[0]["media_id"]
-
-    with pytest.raises(Unresolvable) as excinfo:
-        await media_source.async_resolve_media(
-            hass, f"media-source://shelly/{entry.entry_id}:0:{media_id}", None
-        )
-
-    assert excinfo.value.translation_key == "storage_private"

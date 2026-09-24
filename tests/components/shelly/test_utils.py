@@ -26,7 +26,6 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.components.shelly.utils import (
     ShellyReceiver,
-    get_absolute_url,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
@@ -310,22 +309,6 @@ def test_get_host(host: str, expected: str) -> None:
 def test_get_device_url(data: dict[str, Any], expected: str) -> None:
     """Test get_device_url function."""
     assert get_device_url(data) == expected
-
-
-@pytest.mark.parametrize(
-    ("url", "expected"),
-    [
-        ("http://192.168.178.12/media.mp4", "http://192.168.178.12/media.mp4"),
-        ("https://example.com/media.mp4", "https://example.com/media.mp4"),
-        ("/storage/0/media.mp4", "http://10.10.10.10/storage/0/media.mp4"),
-        ("storage/0/media.mp4", None),
-        ("", None),
-        (None, None),
-    ],
-)
-def test_get_absolute_url(url: str | None, expected: str | None) -> None:
-    """Test get_absolute_url function."""
-    assert get_absolute_url(url, "http://10.10.10.10") == expected
 
 
 @pytest.mark.parametrize(

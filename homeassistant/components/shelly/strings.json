@@ -939,9 +939,6 @@
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
     },
-    "storage_private": {
-      "message": "Camera privacy mode is enabled for {device}"
-    },
     "storage_unavailable": {
       "message": "Storage unavailable for {device}"
     },
