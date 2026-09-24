@@ -9,6 +9,7 @@ import aiounifi
 from aiounifi import EndpointNotFound, LoginRequired, Unauthorized
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
@@ -169,36 +170,40 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
 @pytest.mark.parametrize("error", [Unauthorized, LoginRequired])
 async def test_authentication_error_triggers_reauth(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     config_entry_setup: MockConfigEntry,
     error: type[Exception],
 ) -> None:
     """Ensure an authentication error starts reauth instead of looping."""
-    coordinator = (
-        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
-            config_entry_setup.runtime_data.api.traffic_rules
-        )
-    )
+    api = config_entry_setup.runtime_data.api
 
     with patch.object(
-        coordinator.handler,
+        api.traffic_rules,
         "update",
         side_effect=error(
             "Call https://host:443/v2/api/site/default/trafficrules received 401 Unauthorized"
         ),
     ) as mock_update:
-        await coordinator.async_refresh()
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert mock_update.call_count == 1
 
         # An authentication failure must stop the polling loop, otherwise the
         # retries keep hitting the controller and can trip its login rate limit.
-        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert mock_update.call_count == 1
 
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            api.traffic_rules
+        )
+    )
     assert coordinator.last_update_success is False
     assert "Unexpected error fetching" not in caplog.text
 
