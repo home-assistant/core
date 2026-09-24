@@ -770,7 +770,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python and restore venv
         id: python
-        uses: ./.github/actions/restore-or-build-venv
+        uses: $/.github/actions/restore-or-build-venv
         with:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
