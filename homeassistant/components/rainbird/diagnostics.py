@@ -7,14 +7,9 @@ from typing import Any
 from pyrainbird.const import DayOfWeek
 from pyrainbird.data import Schedule
 
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERIAL_NUMBER
 from .types import RainbirdConfigEntry
-
-TO_REDACT = {CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_SERIAL_NUMBER}
 
 
 def _minutes(duration: datetime.timedelta) -> int:
@@ -73,10 +68,7 @@ async def async_get_config_entry_diagnostics(
     state = data.coordinator.data
     schedule = data.schedule_coordinator.data
     return {
-        "config_entry": {
-            "data": async_redact_data(entry.data, TO_REDACT),
-            "options": dict(entry.options),
-        },
+        "options": dict(entry.options),
         "model": {
             "model": f"{model.model:04X}",
             "name": model.model_name,

@@ -1,23 +1,15 @@
 # serializer version: 1
 # name: test_diagnostics[no_schedule]
   dict({
-    'config_entry': dict({
-      'data': dict({
-        'host': '**REDACTED**',
-        'mac': '**REDACTED**',
-        'password': '**REDACTED**',
-        'serial_number': '**REDACTED**',
-      }),
-      'options': dict({
-        'duration': 6,
-      }),
-    }),
     'model': dict({
       'firmware': '9.12',
       'max_programs': 3,
       'max_stations': 12,
       'model': '0005',
       'name': 'ESP-TM2',
+    }),
+    'options': dict({
+      'duration': 6,
     }),
     'schedule': None,
     'state': dict({
@@ -39,23 +31,15 @@
 # ---
 # name: test_diagnostics[schedule]
   dict({
-    'config_entry': dict({
-      'data': dict({
-        'host': '**REDACTED**',
-        'mac': '**REDACTED**',
-        'password': '**REDACTED**',
-        'serial_number': '**REDACTED**',
-      }),
-      'options': dict({
-        'duration': 6,
-      }),
-    }),
     'model': dict({
       'firmware': '9.12',
       'max_programs': 3,
       'max_stations': 12,
       'model': '0005',
       'name': 'ESP-TM2',
+    }),
+    'options': dict({
+      'duration': 6,
     }),
     'schedule': dict({
       'controller_info': dict({
