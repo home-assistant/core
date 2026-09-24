@@ -9,7 +9,8 @@ URL that the camera entity returns as its stream source.
 Each camera URL carries its own random access token instead of HA auth, because
 the consumers (the stream worker and go2rtc) cannot send HA credentials. The
 token is passed as the ``auth`` query parameter, which the stream integration
-redacts from its logs, and is dropped when the config entry unloads.
+redacts from its logs. Unloading the config entry drops the token and ends the
+streams that are still running.
 """
 
 import asyncio
@@ -30,6 +31,7 @@ from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -50,6 +52,8 @@ class VtmCamera:
 
     client: EzvizClient
     access_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
+    # Request handler tasks currently streaming this camera.
+    streams: set[asyncio.Task] = field(default_factory=set)
 
 
 DATA_VTM: HassKey[dict[str, VtmCamera]] = HassKey(f"{DOMAIN}_vtm")
@@ -69,18 +73,32 @@ def async_register_vtm_camera(
     def _unregister() -> None:
         if cameras.get(serial) is camera:
             del cameras[serial]
+        for task in camera.streams:
+            task.cancel()
 
     entry.async_on_unload(_unregister)
 
 
 def vtm_stream_url(hass: HomeAssistant, serial: str) -> str | None:
-    """Return the loopback URL serving the VTM stream of a camera."""
-    camera = hass.data.get(DATA_VTM, {}).get(serial)
-    if camera is None or (api := hass.config.api) is None:
+    """Return the internal URL serving the VTM stream of a camera.
+
+    The consumer may be go2rtc on another host, so use the configured internal
+    URL rather than loopback.
+    """
+    if (camera := hass.data.get(DATA_VTM, {}).get(serial)) is None:
         return None
-    scheme = "https" if api.use_ssl else "http"
+    try:
+        base_url = get_url(
+            hass,
+            allow_external=False,
+            allow_cloud=False,
+            allow_ip=True,
+            prefer_external=False,
+        )
+    except NoURLAvailableError:
+        return None
     path = VTM_URL.format(serial=serial)
-    return f"{scheme}://127.0.0.1:{api.port}{path}?auth={camera.access_token}"
+    return f"{base_url}{path}?auth={camera.access_token}"
 
 
 def rtsp_available(camera_data: dict) -> bool:
@@ -144,6 +162,9 @@ class EzvizVtmStreamView(HomeAssistantView):
             headers={"Content-Type": "video/MP2T", "Cache-Control": "no-store"}
         )
         _LOGGER.debug("%s: VTM stream opened", serial)
+        task = asyncio.current_task()
+        if task is not None:
+            camera.streams.add(task)
         try:
             await response.prepare(request)
             while chunk := await stdout.read(READ_CHUNK):
@@ -151,6 +172,8 @@ class EzvizVtmStreamView(HomeAssistantView):
         except ConnectionResetError:
             pass
         finally:
+            if task is not None:
+                camera.streams.discard(task)
             relay.stop()
             feeder.cancel()
             if process.returncode is None:
