@@ -1,7 +1,6 @@
 """Test the Insteon All-Link Database APIs."""
 
 import asyncio
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -26,14 +25,14 @@ from homeassistant.core import HomeAssistant
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="aldb_data", scope="module")
 def aldb_data_fixture():
     """Load the controller state fixture data."""
-    return json.loads(load_fixture("insteon/aldb_data.json"))
+    return load_json_object_fixture("insteon/aldb_data.json")
 
 
 async def _setup(

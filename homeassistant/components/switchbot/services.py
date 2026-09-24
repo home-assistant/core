@@ -2,11 +2,10 @@
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -31,31 +30,8 @@ def _async_get_switchbot_entry_for_device_id(
     hass: HomeAssistant, device_id: str
 ) -> SwitchbotConfigEntry:
     """Return the loaded SwitchBot config entry for a device id."""
-    config_entry: SwitchbotConfigEntry | None
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=DOMAIN
-    )
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    if config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_belonging",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_entry_not_loaded",
-            translation_placeholders={"device_id": device_id},
-        )
-
+    config_entry: SwitchbotConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return config_entry
 
 

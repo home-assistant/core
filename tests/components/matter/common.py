@@ -109,6 +109,8 @@ FIXTURES = [
     "silabs_water_heater",
     "switchbot_k11_plus",
     "tado_smart_radiator_thermostat_x",
+    "wago_home_blind_control",
+    "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
 ]

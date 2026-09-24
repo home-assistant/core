@@ -6,9 +6,8 @@ from typing import Any, cast, override
 import voluptuous as vol
 
 from homeassistant.components import fan, switch
-from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, PERCENTAGE, Platform
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -26,15 +25,8 @@ from . import (
 )
 
 OPTIONS_SCHEMA = {
-    vol.Required(CONF_DEVICE_CLASS): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[
-                HumidifierDeviceClass.HUMIDIFIER,
-                HumidifierDeviceClass.DEHUMIDIFIER,
-            ],
-            translation_key=CONF_DEVICE_CLASS,
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        ),
+    vol.Required(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+        selector.DeviceClassSelectorConfig(domain=Platform.HUMIDIFIER)
     ),
     vol.Required(CONF_SENSOR): selector.EntitySelector(
         selector.EntitySelectorConfig(

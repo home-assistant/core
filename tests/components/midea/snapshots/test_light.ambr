@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_state_snapshot[light.bedroom_ac-entry]
+# name: test_light_state_snapshot[light.light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27,7 +27,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.bedroom_ac',
+    'entity_id': 'light.light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -50,7 +50,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_state_snapshot[light.bedroom_ac-state]
+# name: test_light_state_snapshot[light.light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
@@ -65,7 +65,7 @@
         'cinema',
         'night',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         26.812,
         34.87,
@@ -87,7 +87,7 @@
       ),
     }),
     'context': <ANY>,
-    'entity_id': 'light.bedroom_ac',
+    'entity_id': 'light.light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

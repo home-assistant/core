@@ -1,6 +1,5 @@
 """Test Subaru diagnostics."""
 
-import json
 from unittest.mock import patch
 
 import pytest
@@ -18,7 +17,7 @@ from .conftest import (
     advance_time_to_next_fetch,
 )
 
-from tests.common import async_load_fixture
+from tests.common import async_load_json_object_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -58,7 +57,7 @@ async def test_device_diagnostics(
     )
     assert reg_device is not None
 
-    raw_data = json.loads(await async_load_fixture(hass, "raw_api_data.json", DOMAIN))
+    raw_data = await async_load_json_object_fixture(hass, "raw_api_data.json", DOMAIN)
     with patch(MOCK_API_GET_RAW_DATA, return_value=raw_data) as mock_get_raw_data:
         assert (
             await get_diagnostics_for_device(

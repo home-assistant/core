@@ -10,7 +10,6 @@ from xknx.exceptions import ConversionError
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.number import (
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberDeviceClass,
     NumberMode,
 )
 from homeassistant.components.sensor import (
@@ -408,19 +407,21 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
             probatio.Optional(CONF_GA_COLOR_TEMP): GASelector(
                 write_required=True, dpt=ColorTempModes
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MIN, default=2700
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MIN, default=2700): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
-            probatio.Required(
-                CONF_COLOR_TEMP_MAX, default=6000
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
-                )
+            probatio.Required(CONF_COLOR_TEMP_MAX, default=6000): AllSerializeFirst(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
+                ),
+                probatio.Coerce(int),
             ),
             probatio.Optional(CONF_COLOR): GroupSelect(
                 GroupSelectOption(
@@ -575,13 +576,8 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
                     custom_value=True,
                 ),
             ),
-            probatio.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in NumberDeviceClass],
-                    # should align with sensor
-                    translation_key="component.knx.selector.sensor_device_class",
-                    sort=True,
-                )
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
             ),
             probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         },

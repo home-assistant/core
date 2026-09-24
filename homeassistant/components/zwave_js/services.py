@@ -606,6 +606,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_GET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -618,6 +619,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -630,6 +632,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_CLEAR_LOCK_USERCODE,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -641,6 +644,7 @@ class ZWaveServices:
             self._hass,
             const.DOMAIN,
             const.SERVICE_SET_LOCK_CONFIGURATION,
+            admin_only=True,
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Required(const.ATTR_OPERATION_TYPE): vol.All(

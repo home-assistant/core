@@ -42,6 +42,17 @@
       "scan_status": {
         "name": "DALI scan"
       }
+    },
+    "sensor": {
+      "dali_line_status": {
+        "name": "Status",
+        "state": {
+          "low_power": "Low bus power",
+          "no_power": "Bus power failure",
+          "not_reachable": "Not reachable",
+          "ok": "OK"
+        }
+      }
     }
   },
   "exceptions": {

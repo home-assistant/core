@@ -17,6 +17,7 @@ from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
     CONF_KEY,
     CONF_SERVER,
+    CONF_SN,
     CONF_SUBTYPE,
     DOMAIN,
 )
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
@@ -44,9 +46,11 @@ from .const import (
     TEST_DEVICE_ID,
     TEST_IP_ADDRESS,
     TEST_KEY,
+    TEST_MAC_ADDRESS,
     TEST_MODEL,
     TEST_PORT,
     TEST_PROTOCOL,
+    TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
     TEST_TYPE,
@@ -104,6 +108,8 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         CONF_SUBTYPE: TEST_SUBTYPE,
         CONF_TOKEN: TEST_TOKEN,
         CONF_KEY: TEST_KEY,
+        CONF_MAC: TEST_MAC_ADDRESS,
+        CONF_SN: TEST_SERIAL_NUMBER,
     }
 
 
@@ -1056,7 +1062,13 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
 ) -> None:
     """Test v1/v2 devices are added without ever using the cloud, even if it is down."""
     mock_devices = {
-        TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE, CONF_PROTOCOL: protocol},
+        TEST_DEVICE_ID: {
+            **BASE_DATA,
+            CONF_TYPE: TEST_TYPE,
+            CONF_PROTOCOL: protocol,
+            CONF_MAC: TEST_MAC_ADDRESS,
+            CONF_SN: TEST_SERIAL_NUMBER,
+        },
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -1105,6 +1117,8 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_PROTOCOL] == protocol
+    assert result["data"][CONF_MAC] == TEST_MAC_ADDRESS
+    assert result["data"][CONF_SN] == TEST_SERIAL_NUMBER
 
 
 async def test_login_credentials_step_renders_with_cloud_servers(

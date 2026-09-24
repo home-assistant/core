@@ -1,8 +1,8 @@
 """The smtp integration."""
 
 import logging
-from smtplib import SMTPAuthenticationError
-from socket import gaierror
+
+from aiosmtplib import SMTP, SMTPAuthenticationError, SMTPException
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
-    CONF_SENDER,
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -25,23 +24,14 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.ssl import create_client_context
+from homeassistant.util.ssl import client_context, client_context_no_verify
 
-from .const import (
-    CONF_ENCRYPTION,
-    CONF_ENTRY,
-    CONF_OLD_RECIPIENT,
-    CONF_SENDER_NAME,
-    CONF_SERVER,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
-from .helpers import SmtpClient
+from .const import CONF_ENCRYPTION, CONF_ENTRY, CONF_OLD_RECIPIENT, CONF_SERVER, DOMAIN
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-type SmtpConfigEntry = ConfigEntry[SmtpClient]
+type SmtpConfigEntry = ConfigEntry[SMTP]
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY]
 
@@ -75,30 +65,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
             {},
         )
     )
-    client = SmtpClient(
-        server=entry.data[CONF_SERVER],
+
+    client = SMTP(
+        hostname=entry.data[CONF_SERVER],
         port=entry.data[CONF_PORT],
-        timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        sender=entry.data[CONF_SENDER],
-        encryption=entry.data[CONF_ENCRYPTION],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
-        sender_name=entry.data.get(CONF_SENDER_NAME),
-        verify_ssl=entry.data[CONF_VERIFY_SSL],
-        ssl_context=(
-            await hass.async_add_executor_job(create_client_context)
+        timeout=entry.options.get(CONF_TIMEOUT),
+        use_tls=entry.data[CONF_ENCRYPTION] == "tls",
+        start_tls=entry.data[CONF_ENCRYPTION] == "starttls",
+        tls_context=(
+            client_context()
             if entry.data[CONF_VERIFY_SSL]
-            else None
+            else client_context_no_verify()
         ),
     )
     try:
-        await hass.async_add_executor_job(lambda: client.connect().quit())
+        async with client:
+            pass
     except SMTPAuthenticationError as e:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from e
-    except (gaierror, ConnectionRefusedError) as e:
+    except SMTPException as e:
         _LOGGER.debug("Full exception:", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

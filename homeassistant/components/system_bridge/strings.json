@@ -153,9 +153,6 @@
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
-    "device_not_found": {
-      "message": "Could not find device {device}"
-    },
     "no_data_received": {
       "message": "No data received from {host}"
     },

@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -68,42 +68,70 @@ async def async_setup_entry(
     config_entry: MonzoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Defer sensor setup to the shared sensor module."""
+    """Set up Monzo sensors and discover new resources."""
     coordinator = config_entry.runtime_data.coordinator
 
-    accounts = [
-        MonzoSensor(
-            coordinator,
-            entity_description,
-            account_id,
-            (
-                account["name"]
-                if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
-                else DEVICE_MODEL_ACCOUNT
-            ),
-            get_account_name(account),
-            account["balance"]["currency"],
-            lambda x: x.accounts,
-        )
-        for entity_description in ACCOUNT_SENSORS
-        for account_id, account in coordinator.data.accounts.items()
-    ]
+    known_account_ids: set[str] = set()
+    known_pot_ids: set[str] = set()
 
-    pots = [
-        MonzoSensor(
-            coordinator,
-            entity_description,
-            pot_id,
-            DEVICE_MODEL_POT,
-            pot["name"],
-            pot["currency"],
-            lambda x: x.pots,
-        )
-        for entity_description in POT_SENSORS
-        for pot_id, pot in coordinator.data.pots.items()
-    ]
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add sensors for newly discovered accounts and pots."""
+        current_account_ids = set(coordinator.data.accounts)
+        current_pot_ids = set(coordinator.data.pots)
+        known_account_ids.intersection_update(current_account_ids)
+        known_pot_ids.intersection_update(current_pot_ids)
+        new_account_ids = current_account_ids - known_account_ids
+        new_pot_ids = current_pot_ids - known_pot_ids
+        if not new_account_ids and not new_pot_ids:
+            return
+        new_accounts = [
+            (account_id, coordinator.data.accounts[account_id])
+            for account_id in sorted(new_account_ids)
+        ]
+        new_pots = [
+            (pot_id, coordinator.data.pots[pot_id]) for pot_id in sorted(new_pot_ids)
+        ]
 
-    async_add_entities(accounts + pots)
+        async_add_entities(
+            [
+                MonzoSensor(
+                    coordinator,
+                    entity_description,
+                    account_id,
+                    (
+                        account["name"]
+                        if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
+                        else DEVICE_MODEL_ACCOUNT
+                    ),
+                    get_account_name(account),
+                    account["balance"]["currency"],
+                    lambda x: x.accounts,
+                )
+                for entity_description in ACCOUNT_SENSORS
+                for account_id, account in new_accounts
+            ]
+            + [
+                MonzoSensor(
+                    coordinator,
+                    entity_description,
+                    pot_id,
+                    DEVICE_MODEL_POT,
+                    pot["name"],
+                    pot["currency"],
+                    lambda x: x.pots,
+                )
+                for entity_description in POT_SENSORS
+                for pot_id, pot in new_pots
+            ]
+        )
+        known_account_ids.update(new_account_ids)
+        known_pot_ids.update(new_pot_ids)
+
+    _async_add_new_entities()
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_new_entities)
+    )
 
 
 class MonzoSensor(MonzoBaseEntity, SensorEntity):

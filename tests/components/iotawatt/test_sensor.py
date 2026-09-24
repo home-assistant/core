@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.components.sensor import (
@@ -19,11 +20,12 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import INPUT_SENSOR, OUTPUT_SENSOR
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_type_input(
@@ -88,3 +90,35 @@ async def test_sensor_type_output(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.my_watthour_sensor") is None
+
+
+async def test_output_sensor_not_attached_to_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    mock_iotawatt: MagicMock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test only sensors with a unique ID are attached to the device."""
+    mock_iotawatt.getSensors.return_value["sensors"] = {
+        "my_sensor_key": INPUT_SENSOR,
+        "my_watthour_sensor_key": OUTPUT_SENSOR,
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "mock-mac"), entry.entry_id
+    )
+    assert device is not None
+
+    input_entry = entity_registry.async_get("sensor.test_device_my_sensor")
+    assert input_entry is not None
+    assert input_entry.device_id == device.id
+
+    # Outputs have no unique ID, hence no registry entry to attach a device to.
+    assert hass.states.get("sensor.my_watthour_sensor") is not None
+    assert entity_registry.async_get("sensor.my_watthour_sensor") is None
+
+    assert "attempts to attach a device to an entity" not in caplog.text

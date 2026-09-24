@@ -1,11 +1,10 @@
 """Number platform for Lyngdorf integration."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf.device import Receiver
-from lyngdorf.models.base import NumericRange
+from lyngdorf import LyngdorfReceiver, NumericControl, NumericRange, Trim
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -27,9 +26,11 @@ PARALLEL_UPDATES = 1
 class LyngdorfNumberEntityDescription(NumberEntityDescription):
     """Describe a Lyngdorf number entity."""
 
-    value_fn: Callable[[Receiver], float | None]
-    set_value_fn: Callable[[Receiver, float], None]
-    range_fn: Callable[[Receiver], NumericRange | None]
+    # Whether the model has this control at all. Must not depend on the device
+    # having reported a value, or the entity is dropped at startup.
+    range_fn: Callable[[LyngdorfReceiver], NumericRange | None]
+    control_fn: Callable[[LyngdorfReceiver], NumericControl | None]
+    set_value_fn: Callable[[NumericControl, float], Awaitable[None]]
 
 
 NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
@@ -39,28 +40,28 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.lipsync,
-        # The device takes lip sync as whole milliseconds.
-        set_value_fn=lambda r, v: r.set_lipsync(round(v)),
         range_fn=lambda r: r.lipsync_range,
+        control_fn=lambda r: r.lipsync,
+        # The device takes lip sync as whole milliseconds.
+        set_value_fn=lambda c, v: c.set(round(v)),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_bass",
         translation_key="trim_bass",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_bass,
-        set_value_fn=lambda r, v: r.set_trim_bass(v),
-        range_fn=lambda r: r.trim_bass_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.BASS)) else None,
+        control_fn=lambda r: r.trims.get(Trim.BASS),
+        set_value_fn=lambda c, v: c.set(v),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_treble",
         translation_key="trim_treble",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_treble,
-        set_value_fn=lambda r, v: r.set_trim_treble(v),
-        range_fn=lambda r: r.trim_treble_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.TREBLE)) else None,
+        control_fn=lambda r: r.trims.get(Trim.TREBLE),
+        set_value_fn=lambda c, v: c.set(v),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_centre",
@@ -68,9 +69,9 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_centre,
-        set_value_fn=lambda r, v: r.set_trim_centre(v),
-        range_fn=lambda r: r.trim_centre_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.CENTER)) else None,
+        control_fn=lambda r: r.trims.get(Trim.CENTER),
+        set_value_fn=lambda c, v: c.set(v),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_height",
@@ -78,9 +79,9 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_height,
-        set_value_fn=lambda r, v: r.set_trim_height(v),
-        range_fn=lambda r: r.trim_height_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.HEIGHT)) else None,
+        control_fn=lambda r: r.trims.get(Trim.HEIGHT),
+        set_value_fn=lambda c, v: c.set(v),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_lfe",
@@ -88,9 +89,9 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_lfe,
-        set_value_fn=lambda r, v: r.set_trim_lfe(v),
-        range_fn=lambda r: r.trim_lfe_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.LFE)) else None,
+        control_fn=lambda r: r.trims.get(Trim.LFE),
+        set_value_fn=lambda c, v: c.set(v),
     ),
     LyngdorfNumberEntityDescription(
         key="trim_surround",
@@ -98,9 +99,9 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: r.trim_surround,
-        set_value_fn=lambda r, v: r.set_trim_surround(v),
-        range_fn=lambda r: r.trim_surround_range,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.SURROUND)) else None,
+        control_fn=lambda r: r.trims.get(Trim.SURROUND),
+        set_value_fn=lambda c, v: c.set(v),
     ),
 )
 
@@ -114,7 +115,6 @@ async def async_setup_entry(
     runtime_data = config_entry.runtime_data
     receiver = runtime_data.receiver
 
-    # A None range means the model has no such control at all.
     async_add_entities(
         LyngdorfNumber(receiver, config_entry, runtime_data.device_info, description)
         for description in NUMBER_ENTITIES
@@ -129,7 +129,7 @@ class LyngdorfNumber(LyngdorfEntity, NumberEntity):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         description: LyngdorfNumberEntityDescription,
@@ -172,9 +172,11 @@ class LyngdorfNumber(LyngdorfEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self.entity_description.value_fn(self._receiver)
+        control = self.entity_description.control_fn(self._receiver)
+        return control.value if control is not None else None
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
-        self.entity_description.set_value_fn(self._receiver, value)
+        if (control := self.entity_description.control_fn(self._receiver)) is not None:
+            await self.entity_description.set_value_fn(control, value)

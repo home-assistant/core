@@ -71,6 +71,7 @@
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
       "power_factor_phase": { "name": "Power factor {phase}" },
+      "ssid": { "name": "SSID" },
       "voltage_phase": { "name": "Voltage {phase}" }
     }
   },
@@ -83,6 +84,9 @@
     },
     "no_meter_data": {
       "message": "No meter data available from {host} yet"
+    },
+    "ota_failed": {
+      "message": "Failed to start the firmware update."
     },
     "update_failed": {
       "message": "Failed to fetch data: {error}"

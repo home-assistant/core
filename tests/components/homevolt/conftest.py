@@ -1,7 +1,6 @@
 """Common fixtures for the Homevolt tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homevolt import DeviceMetadata, Sensor
@@ -11,7 +10,7 @@ from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 DEVICE_IDENTIFIER = "ems_40580137858664"
 
@@ -60,7 +59,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.unique_id = "40580137858664"
 
         # Load sensor data from fixture and convert to Sensor objects
-        sensors_data = json.loads(load_fixture("sensors.json", DOMAIN))
+        sensors_data = load_json_object_fixture("sensors.json", DOMAIN)
         client.sensors = {
             key: Sensor(
                 value=value,
@@ -71,7 +70,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         }
 
         # Load device metadata from fixture and convert to DeviceMetadata objects
-        metadata_data = json.loads(load_fixture("device_metadata.json", DOMAIN))
+        metadata_data = load_json_object_fixture("device_metadata.json", DOMAIN)
         client.device_metadata = {
             key: DeviceMetadata(
                 name=metadata["name"],
@@ -81,7 +80,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         }
 
         # Load schedule data from fixture
-        client.current_schedule = json.loads(load_fixture("schedule.json", DOMAIN))
+        client.current_schedule = load_json_object_fixture("schedule.json", DOMAIN)
 
         # Switch (local mode) support
         client.local_mode_enabled = False

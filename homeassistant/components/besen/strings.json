@@ -38,6 +38,19 @@
     }
   },
   "entity": {
+    "sensor": {
+      "charging_power": { "name": "Charging power" },
+      "external_temperature": { "name": "External temperature" },
+      "internal_temperature": { "name": "Internal temperature" },
+      "l1_current": { "name": "L1 current" },
+      "l1_voltage": { "name": "L1 voltage" },
+      "l2_current": { "name": "L2 current" },
+      "l2_voltage": { "name": "L2 voltage" },
+      "l3_current": { "name": "L3 current" },
+      "l3_voltage": { "name": "L3 voltage" },
+      "session_energy": { "name": "Session energy" },
+      "total_energy": { "name": "Total energy" }
+    },
     "switch": {
       "charging": { "name": "Charge" }
     }

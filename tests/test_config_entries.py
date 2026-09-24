@@ -1384,6 +1384,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_setup_lock",
         "update_listeners",
         "reason",
+        "error_reason_translation_domain",
         "error_reason_translation_key",
         "error_reason_translation_placeholders",
         "_async_cancel_retry_setup",
@@ -1789,6 +1790,50 @@ async def test_setup_raise_not_ready(
     await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_state"),
+    [
+        (ConfigEntryError, config_entries.ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryAuthFailed, config_entries.ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryNotReady, config_entries.ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["error", "auth_failed", "not_ready"],
+)
+async def test_setup_error_foreign_translation_domain(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    exc: type[Exception],
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test a setup error translated by another integration."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_manager(manager)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=exc(
+            translation_domain="other_domain",
+            translation_key="test_key",
+            translation_placeholders={"item": "42"},
+        )
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    with patch("homeassistant.config_entries.async_call_later"):
+        await manager.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+    assert entry.error_reason_translation_domain == "other_domain"
+    assert entry.error_reason_translation_key == "test_key"
+    assert entry.error_reason_translation_placeholders == {"item": "42"}
+
+    loaded = json_loads(json_dumps(entry.as_json_fragment))
+    assert loaded["error_reason_translation_domain"] == "other_domain"
+    assert loaded["error_reason_translation_key"] == "test_key"
+    assert loaded["error_reason_translation_placeholders"] == {"item": "42"}
 
 
 async def test_setup_not_ready_exponential_backoff(

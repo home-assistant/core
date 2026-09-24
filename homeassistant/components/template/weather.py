@@ -55,7 +55,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -219,6 +219,10 @@ WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=WeatherEntityStateAttribute
+)
+
 
 WEATHER_YAML_SCHEMA = (
     vol.Schema(
@@ -229,14 +233,14 @@ WEATHER_YAML_SCHEMA = (
     .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
     .extend(
         make_template_entity_common_schema(
-            WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+            WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
         ).schema
     )
 )
 
 WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     make_template_entity_common_schema(
-        WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+        WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -343,11 +347,11 @@ def validate_forecast(
     )
 
     def validate(result: Any) -> list[Forecast] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 option,
                 result,
@@ -358,7 +362,7 @@ def validate_forecast(
         for forecast in result:
             if not isinstance(forecast, dict):
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -371,7 +375,7 @@ def validate_forecast(
             diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
             if diff_result:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -381,7 +385,7 @@ def validate_forecast(
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -391,7 +395,7 @@ def validate_forecast(
                 )
             if "datetime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -477,6 +481,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     _optimistic_entity = True
     _restore_state_extra_data = WeatherExtraStoredData
     _restore_state_properties = ("_attr_condition",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -491,17 +496,17 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
         # Required options
         self.setup_state_template(
             "_attr_condition",
-            template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
+            tcv.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
         )
         self.setup_template(
             CONF_HUMIDITY,
             "_attr_humidity",
-            template_validators.number(self, CONF_HUMIDITY, 0.0, 100.0),
+            tcv.number(self, CONF_HUMIDITY, 0.0, 100.0),
         )
         self.setup_template(
             CONF_TEMPERATURE,
             "_attr_native_temperature",
-            template_validators.number(self, CONF_TEMPERATURE),
+            tcv.number(self, CONF_TEMPERATURE),
         )
 
         # Optional options
@@ -527,9 +532,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
             (CONF_WIND_GUST_SPEED, "_attr_native_wind_gust_speed"),
             (CONF_WIND_SPEED, "_attr_native_wind_speed"),
         ):
-            self.setup_template(
-                option, attribute, template_validators.number(self, option)
-            )
+            self.setup_template(option, attribute, tcv.number(self, option))
 
         # Forecasts
 

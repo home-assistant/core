@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
 
-from homeassistant.components.besen.const import DOMAIN
+from homeassistant.components.besen.const import DOMAIN, PLATFORMS
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
@@ -52,6 +52,8 @@ def charger_state(
     charger_status: bool | None = True,
     available: bool = True,
     authenticated: bool = True,
+    phases: int = 1,
+    charge: ChargeStatus | None = None,
 ) -> BesenData:
     """Return a populated charger state."""
 
@@ -59,19 +61,30 @@ def charger_state(
         info=ChargerInfo(
             address=FIXTURE_ADDRESS,
             serial="SERIAL",
-            phases=1,
+            phases=phases,
             manufacturer="Besen",
             model="BS20",
             hardware_version="HW1",
             software_version="SW1",
         ),
         config=ChargerConfig(device_name="Garage", rssi=-55),
-        charge=ChargeStatus(
-            charger_status=charger_status,
-            current_energy=3500,
-            total_energy=1.2,
-            current_amount=12.3,
-            inner_temp_c=24.5,
+        charge=(
+            charge
+            if charge is not None
+            else ChargeStatus(
+                charger_status=charger_status,
+                power=3500,
+                total_energy=12.3,
+                session_energy=1.2,
+                inner_temp_c=24.5,
+                outer_temp=22.5,
+                l1_voltage=230.0,
+                l1_amperage=15.2,
+                l2_voltage=231.0,
+                l2_amperage=15.1,
+                l3_voltage=232.0,
+                l3_amperage=15.0,
+            )
         ),
         available=available,
         authenticated=authenticated,
@@ -179,9 +192,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def setup_integration(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    platforms: list[Platform] | None = None,
 ) -> None:
     """Set up the Besen integration."""
 
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.besen.PLATFORMS",
+        platforms if platforms is not None else PLATFORMS,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()

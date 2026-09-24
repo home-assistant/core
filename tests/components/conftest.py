@@ -1185,6 +1185,8 @@ async def _check_config_flow_result_translations(
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
             return
+        if (abort_domain := result.get("translation_domain")) is not None:
+            integration = abort_domain
         await _validate_translation(
             flow.hass,
             translation_errors,

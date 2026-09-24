@@ -16,13 +16,20 @@ from homeassistant.components.imou.const import (
     CONF_APP_SECRET,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="127.0.0.1",
+    hostname="imou",
+    macaddress="1c4d895f7a29",
+)
 
 
 async def test_user_flow_success(
@@ -150,3 +157,108 @@ async def test_user_flow_success_per_region(
     assert result["title"] == "Imou"
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_APP_ID]
+
+
+async def test_dhcp_discovery_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
+) -> None:
+    """DHCP discovery opens the existing user login form and creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Imou"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_aborts_when_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Any existing Imou entry suppresses further DHCP discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_aborts_when_user_flow_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """DHCP discovery does not sit beside an unfinished manual setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_dhcp_discovery_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
+) -> None:
+    """Bad credentials stay on the user step, then recover to CREATE_ENTRY."""
+    mock_imou_openapi_client.async_get_token.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "invalid_auth"
+
+    mock_imou_openapi_client.async_get_token.reset_mock(side_effect=True)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Imou"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
+    assert len(mock_setup_entry.mock_calls) == 1

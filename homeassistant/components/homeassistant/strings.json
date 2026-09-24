@@ -1,7 +1,17 @@
 {
   "config": {
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "step": {}
   },
@@ -39,6 +49,12 @@
     "oauth2_helper_refresh_transient": {
       "message": "Temporary error refreshing credentials for {domain}, try again later"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth2_unknown_implementation": {
+      "message": "The configured authentication method is no longer available, re-authentication required"
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },
@@ -62,6 +78,12 @@
     },
     "service_config_entry_wrong_domain": {
       "message": "Config entry {entry_title} does not belong to integration {domain}."
+    },
+    "service_device_not_found": {
+      "message": "Device with ID {device_id} was not found."
+    },
+    "service_device_wrong_domain": {
+      "message": "Device {device_name} does not belong to integration {domain}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."

@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     Platform,
@@ -194,6 +195,22 @@ class EventSchema:
 #############
 
 
+def _unique_id_duplicate_validator(entities: list[dict]) -> list[dict]:
+    """Validate that user-defined unique_ids are unique within a platform.
+
+    The same unique_id on different platforms is allowed - the entity registry
+    scopes uniqueness per (entity domain, integration).
+    """
+    seen: set[str] = set()
+    for entity in entities:
+        if (unique_id := entity.get(CONF_UNIQUE_ID)) is None:
+            continue
+        if unique_id in seen:
+            raise vol.Invalid(f"duplicate 'unique_id' not allowed: {unique_id}")
+        seen.add(unique_id)
+    return entities
+
+
 class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
@@ -205,7 +222,7 @@ class KNXPlatformSchema(ABC):
         """Return a schema node for the platform."""
         return {
             vol.Optional(str(cls.PLATFORM)): vol.All(
-                cv.ensure_list, [cls.ENTITY_SCHEMA]
+                cv.ensure_list, [cls.ENTITY_SCHEMA], _unique_id_duplicate_validator
             )
         }
 
@@ -242,6 +259,7 @@ def _entity_base_schema(platform: Platform) -> vol.Schema:
                 cv.entity_id, cv.entity_domain(platform)
             ),
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): vol.All(cv.string, vol.Length(min=1)),
         }
     )
 

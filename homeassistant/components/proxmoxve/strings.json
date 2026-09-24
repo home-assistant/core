@@ -139,6 +139,9 @@
       "hibernate": {
         "name": "Suspend"
       },
+      "pause": {
+        "name": "Pause"
+      },
       "reset": {
         "name": "Reset"
       },
@@ -292,6 +295,11 @@
       },
       "vm_uptime": {
         "name": "Uptime"
+      }
+    },
+    "update": {
+      "node_update": {
+        "name": "Software update"
       }
     }
   },

@@ -2,11 +2,9 @@
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN, SERVICE_START_CHARGE_SESSION
 
@@ -25,27 +23,10 @@ async def start_charge_session(service_call: ServiceCall) -> None:
     # When no charge card is provided, use the default charge card
     # set in the config flow.
     charging_card_id = service_call.data[CHARGING_CARD_ID]
-    device_id = service_call.data[CONF_DEVICE_ID]
 
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        service_call.hass, device_id, domain=DOMAIN
+    device, config_entry = service.async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, service_call.data[CONF_DEVICE_ID]
     )
-
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="invalid_device_id"
-        )
-
-    if not config_entry:
-        # The device is not connected to a valid blue_current config entry.
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="no_config_entry"
-        )
-
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-        )
 
     connector = config_entry.runtime_data
 

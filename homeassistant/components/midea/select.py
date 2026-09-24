@@ -21,6 +21,8 @@ class MideaSelectEntityDescription(SelectEntityDescription):
     models: list[DeviceType]
     options_attribute: str
     """Device property name returning the list of valid option strings."""
+    requires_power: bool = False
+    """Entity is only operable while the device's ``power`` attribute is on."""
 
 
 SELECTS: list[MideaSelectEntityDescription] = [
@@ -47,18 +49,21 @@ SELECTS: list[MideaSelectEntityDescription] = [
         translation_key="wind_lr_angle",
         models=[DeviceType.AC],
         options_attribute="wind_lr_angles",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="wind_ud_angle",
         translation_key="wind_ud_angle",
         models=[DeviceType.AC],
         options_attribute="wind_ud_angles",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="rate_select",
         translation_key="rate_select",
         models=[DeviceType.AC],
         options_attribute="rate_selects",
+        requires_power=True,
     ),
     MideaSelectEntityDescription(
         key="silent_level",
@@ -125,6 +130,16 @@ class MideaSelect(MideaEntity, SelectEntity):
     """Represent a Midea select."""
 
     entity_description: MideaSelectEntityDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return entity availability."""
+        if not super().available:
+            return False
+        if self.entity_description.requires_power:
+            return bool(self._device.get_attribute("power"))
+        return True
 
     @property
     @override

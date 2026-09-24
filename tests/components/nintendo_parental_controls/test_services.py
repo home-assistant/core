@@ -13,7 +13,7 @@ from homeassistant.components.nintendo_parental_controls.services import (
     NintendoParentalServices,
 )
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import device_registry as dr
 
@@ -48,36 +48,42 @@ async def test_add_bonus_time(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload", "exception_key"),
+    ("service", "payload", "exception_domain", "exception_key"),
     [
         (
             NintendoParentalServices.ADD_BONUS_TIME,
             {ATTR_DEVICE_ID: "invalid_device", ATTR_BONUS_TIME: 15},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "1234"},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123"},
+            DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123456789"},
+            DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "0000"},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "abc"},
+            DOMAIN,
             "invalid_pin_length",
         ),
     ],
@@ -88,6 +94,7 @@ async def test_service_no_device_exceptions(
     mock_nintendo_client: AsyncMock,
     service: NintendoParentalServices,
     payload: dict[str, Any],
+    exception_domain: str,
     exception_key: str,
 ) -> None:
     """Test service exceptions."""
@@ -99,7 +106,7 @@ async def test_service_no_device_exceptions(
             payload,
             blocking=True,
         )
-    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_domain == exception_domain
     assert err.value.translation_key == exception_key
 
 

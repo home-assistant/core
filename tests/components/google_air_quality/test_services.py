@@ -1,7 +1,6 @@
 """Test services for Google Air Quality."""
 
 from datetime import timedelta
-import json
 from unittest.mock import AsyncMock
 
 from google_air_quality_api.model import AirQualityForecastData
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -36,7 +35,7 @@ async def test_get_forecast_service(
     assert device is not None
 
     forecast = AirQualityForecastData.from_dict(
-        json.loads(await async_load_fixture(hass, "air_quality_forecast.json", DOMAIN))
+        await async_load_json_object_fixture(hass, "air_quality_forecast.json", DOMAIN)
     )
     mock_api.async_get_forecast.return_value = forecast
 
@@ -74,4 +73,4 @@ async def test_get_forecast_service_unknown_subentry(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "device_not_found"
+    assert exc_info.value.translation_key == "service_device_not_found"

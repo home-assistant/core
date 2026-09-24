@@ -28,11 +28,10 @@ EXPECTED_TRANSLATION_KEYS = {
 }
 
 
-@pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
+@pytest.mark.usefixtures("init_integration")
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    init_integration: MagicMock,
 ) -> None:
     """Test loading and unloading the config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED

@@ -14,6 +14,7 @@ from duco_connectivity.exceptions import (
 )
 from duco_connectivity.models import (
     BoardInfo,
+    BypassSupplyTemperatureTarget,
     Node,
     NodeListActionItemList,
     NodeName,
@@ -30,6 +31,7 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
+
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
@@ -42,6 +44,7 @@ class DucoData:
     rssi_wifi: int | None
     time_filter_remain: int | None
     ventilation_temperatures: VentilationTemperatureInfo | None
+    bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget]
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -51,6 +54,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     board_info: BoardInfo
     _supports_time_filter_remain: bool
     _supports_ventilation_temperatures: bool
+    _supports_bypass_supply_temperature_targets: bool
     _configured_node_names: dict[int, str]
 
     def __init__(
@@ -71,6 +75,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         self._configured_node_names = {}
         self._supports_time_filter_remain = True
         self._supports_ventilation_temperatures = True
+        self._supports_bypass_supply_temperature_targets = True
 
     async def _async_load_node_names(self) -> None:
         """Load configured Duco node names during setup."""
@@ -201,10 +206,31 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     "Could not fetch Duco ventilation temperatures", exc_info=err
                 )
 
+        bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget] = {}
+        if self._supports_bypass_supply_temperature_targets:
+            try:
+                bypass_supply_temperature_targets = (
+                    await self.client.async_get_bypass_supply_temperature_targets()
+                )
+            except DucoUnsupportedCapabilityError:
+                bypass_supply_temperature_targets = {}
+                self._supports_bypass_supply_temperature_targets = False
+            except DucoConnectionError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from err
+            except DucoError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                ) from err
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
             ventilation_temperatures=ventilation_temperatures,
+            bypass_supply_temperature_targets=bypass_supply_temperature_targets,
         )

@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import validators as template_validators
+from . import validators as tcv
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -67,9 +67,11 @@ LOCK_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(attributes=LockEntityStateAttribute)
+
 LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
     make_template_entity_common_schema(
-        LOCK_DOMAIN, DEFAULT_NAME, LockEntityStateAttribute
+        LOCK_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -169,6 +171,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = LockExtraStoredData
     _restore_state_properties = ("_attr_is_locked",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -181,7 +184,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):
 
         self.setup_state_template(
             "_lock_state",
-            template_validators.strenum(
+            tcv.strenum(
                 self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
             ),
             self._set_state,

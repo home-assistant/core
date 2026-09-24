@@ -5,10 +5,9 @@ from typing import Any, Concatenate
 
 from demetriek import LaMetricConnectionError, LaMetricError
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import service
 
 from .const import DOMAIN
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
@@ -51,15 +50,6 @@ def async_get_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> LaMetricDataUpdateCoordinator:
     """Get the LaMetric coordinator for this device ID."""
-    config_entry: LaMetricConfigEntry | None
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        hass, device_id, domain=DOMAIN
-    )
-
-    if device is None:
-        raise ValueError(f"Unknown LaMetric device ID: {device_id}")
-
-    if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
-        raise ValueError(f"No coordinator for device ID: {device_id}")
-
+    config_entry: LaMetricConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return config_entry.runtime_data

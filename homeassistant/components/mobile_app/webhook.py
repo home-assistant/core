@@ -23,10 +23,17 @@ from homeassistant.components import (
     notify as hass_notify,
     tag,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -751,7 +758,7 @@ async def webhook_get_config(
     for entry in er.async_entries_for_config_entry(
         er.async_get(hass), config_entry.entry_id
     ):
-        if entry.domain in ("binary_sensor", "sensor"):
+        if entry.domain in (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN):
             unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
         else:
             unique_id = entry.unique_id

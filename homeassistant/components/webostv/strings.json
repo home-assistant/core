@@ -83,6 +83,9 @@
     "notify_icon_not_found": {
       "message": "Icon {icon_path} not found when sending notification for device {name}"
     },
+    "screen_control_not_supported": {
+      "message": "{name} does not support turning the screen on or off."
+    },
     "source_not_found": {
       "message": "Source {source} not found in the sources list for {name}."
     },
