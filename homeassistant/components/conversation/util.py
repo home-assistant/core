@@ -18,10 +18,10 @@ def async_get_result_from_chat_log(
 ) -> ConversationResult:
     """Get the result from the chat log."""
     tool_results = [
-        content.tool_result
+        content.result.data
         for content in chat_log.content[chat_log.llm_input_provided_index :]
         if isinstance(content, ToolResultContent)
-        and isinstance(content.tool_result, llm.IntentResponseDict)
+        and isinstance(content.result.data, llm.IntentResponseDict)
     ]
 
     if tool_results:

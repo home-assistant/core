@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiocomelit.api import (
-    ComelitSerialBridgeObject,
+    ComelitDeviceObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
@@ -117,7 +117,7 @@ async def test_serial_bridge_sensor_dynamic(
     assert hass.states.get(entity_id)
 
     mock_serial_bridge.get_all_devices.return_value[OTHER] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Switch0",
             status=0,
@@ -129,7 +129,7 @@ async def test_serial_bridge_sensor_dynamic(
             power=0.0,
             power_unit=WATT,
         ),
-        1: ComelitSerialBridgeObject(
+        1: ComelitDeviceObject(
             index=1,
             name="Switch1",
             status=0,

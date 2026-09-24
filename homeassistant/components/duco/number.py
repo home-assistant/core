@@ -1,6 +1,6 @@
 """Number platform for the Duco integration."""
 
-from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
+from dataclasses import replace
 import logging
 from typing import override
 
@@ -54,14 +54,6 @@ async def async_setup_entry(
         for description in NUMBER_DESCRIPTIONS:
             for zone_id, target in targets.items():
                 if (description.key, zone_id) in known_entities:
-                    continue
-
-                # Skip incomplete metadata because guessing valid limits would expose an invalid control.
-                if (
-                    target.minimum is None
-                    or target.maximum is None
-                    or target.increment is None
-                ):
                     continue
 
                 known_entities.add((description.key, zone_id))
@@ -130,32 +122,18 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         )
         return target.value if target else None
 
-    def _normalize_step_value(self, value: float) -> float:
-        """Normalize converted temperature values to the nearest supported native step."""
-        if self.unit_of_measurement == self.native_unit_of_measurement:
-            return value
-
-        # Home Assistant converts service values from the configured temperature
-        # unit first, which can land between valid Duco Celsius increments.
-        minimum = Decimal(str(self.native_min_value))
-        step = Decimal(str(self.native_step))
-        steps = ((Decimal(str(value)) - minimum) / step).to_integral_value(
-            rounding=ROUND_HALF_UP
-        )
-        # Rounding up may overshoot when the range is not a whole number of steps.
-        max_steps = (
-            (Decimal(str(self.native_max_value)) - minimum) / step
-        ).to_integral_value(rounding=ROUND_DOWN)
-        return float(minimum + (min(steps, max_steps) * step))
-
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the bypass supply temperature target."""
-        value = self._normalize_step_value(value)
-        if (
-            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
-            / Decimal(str(self.native_step))
-        ) % 1 != 0:
+        target = self.coordinator.data.bypass_supply_temperature_targets[self._zone_id]
+
+        try:
+            if self.unit_of_measurement != self.native_unit_of_measurement:
+                value = target.normalize_value(value)
+            updated_target = await self.coordinator.client.async_set_bypass_supply_temperature_target(
+                self._zone_id, value, target=target
+            )
+        except ValueError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_bypass_supply_temperature_target_step",
@@ -164,12 +142,7 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                     "minimum": str(self.native_min_value),
                     "increment": str(self.native_step),
                 },
-            )
-
-        try:
-            await self.coordinator.client.async_set_bypass_supply_temperature_target(
-                self._zone_id, value
-            )
+            ) from err
         except DucoRateLimitError as err:
             _LOGGER.warning(
                 "Duco write rate limit exceeded for bypass target zone %s",
@@ -185,4 +158,14 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 translation_key="failed_to_set_bypass_supply_temperature_target",
             ) from err
 
-        await self.coordinator.async_request_refresh()
+        # Do not let a completed write mask a concurrent coordinator refresh failure.
+        if self.coordinator.last_update_success:
+            self.coordinator.async_set_updated_data(
+                replace(
+                    self.coordinator.data,
+                    bypass_supply_temperature_targets={
+                        **self.coordinator.data.bypass_supply_temperature_targets,
+                        self._zone_id: updated_target,
+                    },
+                )
+            )

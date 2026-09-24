@@ -20,11 +20,23 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "expected_state"),
     [
-        ZonneplanAuthenticationError("bad token"),
-        ZonneplanTimeoutError("timed out"),
-        ZonneplanConnectionError("boom"),
+        pytest.param(
+            ZonneplanAuthenticationError("bad token"),
+            ConfigEntryState.SETUP_ERROR,
+            id="authentication_error",
+        ),
+        pytest.param(
+            ZonneplanTimeoutError("timed out"),
+            ConfigEntryState.SETUP_RETRY,
+            id="timeout_error",
+        ),
+        pytest.param(
+            ZonneplanConnectionError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            id="connection_error",
+        ),
     ],
 )
 async def test_setup_entry_update_failed(
@@ -32,6 +44,7 @@ async def test_setup_entry_update_failed(
     mock_config_entry: MockConfigEntry,
     mock_zonneplan_client: AsyncMock,
     exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test errors while fetching data mark the entry for retry."""
     mock_zonneplan_client.async_get_account.side_effect = exception
@@ -40,7 +53,7 @@ async def test_setup_entry_update_failed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 async def test_setup_entry_persists_rotated_token(
