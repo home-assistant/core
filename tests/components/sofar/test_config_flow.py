@@ -27,7 +27,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -109,11 +109,21 @@ async def _start_flow(hass: HomeAssistant, connection_type: str) -> str:
 
 
 @pytest.mark.parametrize(
-    ("connection_type", "user_input", "expected_data"),
+    ("connection_type", "user_input", "expected_params", "expected_data"),
     [
-        pytest.param(TYPE_TCP, MOCK_TCP_INPUT, MOCK_ENTRY_DATA, id="tcp"),
         pytest.param(
-            TYPE_SERIAL, MOCK_SERIAL_INPUT, MOCK_SERIAL_ENTRY_DATA, id="serial"
+            TYPE_TCP,
+            {**MOCK_TCP_INPUT, CONF_PORT: 1502},
+            ModbusTcpParams(host="192.168.1.100", port=1502),
+            {**MOCK_ENTRY_DATA, CONF_PORT: 1502},
+            id="tcp",
+        ),
+        pytest.param(
+            TYPE_SERIAL,
+            {**MOCK_SERIAL_INPUT, CONF_BAUDRATE: 19200},
+            ModbusSerialParams(device="/dev/ttyUSB0", baudrate=19200),
+            {**MOCK_SERIAL_ENTRY_DATA, CONF_BAUDRATE: 19200},
+            id="serial",
         ),
     ],
 )
@@ -122,6 +132,7 @@ async def test_user_step_success(
     mock_setup_entry: AsyncMock,
     connection_type: str,
     user_input: dict[str, Any],
+    expected_params: ModbusSerialParams | ModbusTcpParams,
     expected_data: dict[str, Any],
 ) -> None:
     """Test each connection type probes the inverter and creates an entry."""
@@ -129,9 +140,10 @@ async def test_user_step_success(
     seed_pv_inverter(mock_conn.for_unit(1))
     flow_id = await _start_flow(hass, connection_type)
 
-    with _patch_temporary_unit(mock_conn):
+    with _patch_temporary_unit(mock_conn) as mock_temporary_unit:
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
 
+    mock_temporary_unit.assert_called_once_with(hass, expected_params, 1)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_MODEL
     assert result["data"] == expected_data

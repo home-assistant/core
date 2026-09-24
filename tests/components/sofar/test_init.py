@@ -6,19 +6,26 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
+from modbus_connection import (
+    ModbusConnectionError,
+    ModbusError,
+    ModbusSerialParams,
+    ModbusTcpParams,
+    ModbusTimeoutError,
+)
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
+    CONF_BAUDRATE,
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -93,6 +100,45 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_params"),
+    [
+        pytest.param(
+            {**MOCK_ENTRY_DATA, CONF_PORT: 1502},
+            ModbusTcpParams(host="192.168.1.100", port=1502),
+            id="tcp",
+        ),
+        pytest.param(
+            {**MOCK_SERIAL_ENTRY_DATA, CONF_BAUDRATE: 19200},
+            ModbusSerialParams(device="/dev/ttyUSB0", baudrate=19200),
+            id="serial",
+        ),
+    ],
+)
+async def test_setup_connects_over_the_configured_link(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    data: dict[str, Any],
+    expected_params: ModbusSerialParams | ModbusTcpParams,
+) -> None:
+    """Test setup opens the link the entry is configured for."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=data, title=MOCK_MODEL
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ) as mock_get_unit:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_unit.assert_called_once_with(hass, entry, expected_params, 1)
 
 
 async def test_setup_removes_the_stale_waiting_time_entity(
