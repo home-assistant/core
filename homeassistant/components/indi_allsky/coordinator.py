@@ -148,8 +148,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
-                await self.client.fetch_sensors()
-            elif self.latest_sensor is None:
+            if self.latest_sensor is None:
                 await self.client.fetch_sensors()
         except IndiAllSkyError as err:
             raise UpdateFailed(

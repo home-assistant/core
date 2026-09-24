@@ -331,6 +331,10 @@ async def test_dynamic_hardware_sensor_discovery(
                     "name": "Hardware Status",
                     "value": "Operational",
                 },
+                "lamp_status": {
+                    "name": "Dome Lamp Status",
+                    "value": "Off",
+                },
             }
         }
     )
@@ -366,3 +370,39 @@ async def test_dynamic_hardware_sensor_discovery(
     assert state is not None
     assert state.state == "Operational"
     assert state.attributes.get("state_class") is None
+
+    # Verify lamp_status does not incorrectly match 'amp' substring
+    state = hass.states.get("sensor.indi_allsky_dome_lamp_status")
+    assert state is not None
+    assert state.state == "Off"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+
+
+async def test_initial_sensor_fetch_preserved(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_sensor_data: SensorData,
+) -> None:
+    """Test initial sensor fetch result is preserved during setup before websocket stream."""
+
+    def _fetch_sensors_side_effect() -> bool:
+        for cb in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+            cb(mock_sensor_data)
+        return True
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = _fetch_sensors_side_effect
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    # Ambient temperature and dew point should be immediately present
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert state.state == "21.5"
+
+    state = hass.states.get("sensor.indi_allsky_dew_point")
+    assert state is not None
+    assert state.state == "14.8"

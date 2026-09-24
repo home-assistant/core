@@ -135,7 +135,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-night',
+    'original_icon': None,
     'original_name': 'Camera SQM',
     'platform': 'indi_allsky',
     'previous_unique_id': None,
@@ -150,7 +150,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Camera SQM',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-night',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -189,7 +188,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:counter',
+    'original_icon': None,
     'original_name': 'Camera SQM ADU',
     'platform': 'indi_allsky',
     'previous_unique_id': None,
@@ -204,7 +203,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Camera SQM ADU',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -301,7 +299,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-night',
+    'original_icon': None,
     'original_name': 'Device SQM',
     'platform': 'indi_allsky',
     'previous_unique_id': None,
@@ -316,7 +314,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Device SQM',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-night',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -355,7 +352,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:heating-coil',
+    'original_icon': None,
     'original_name': 'Dew heater duty cycle',
     'platform': 'indi_allsky',
     'previous_unique_id': None,
@@ -370,7 +367,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Dew heater duty cycle',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
@@ -526,7 +522,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:fan',
+    'original_icon': None,
     'original_name': 'Fan duty cycle',
     'platform': 'indi_allsky',
     'previous_unique_id': None,
@@ -541,7 +537,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INDI Allsky Fan duty cycle',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:fan',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),

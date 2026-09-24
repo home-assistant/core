@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+import re
 from typing import Any, override
 
 from homeassistant.components.sensor import (
@@ -98,7 +99,6 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
     IndiAllSkySensorEntityDescription(
         key="dew_heater",
         translation_key="dew_heater",
-        icon="mdi:heating-coil",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.dew_heater if data.sensor else None,
@@ -122,7 +122,6 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
     IndiAllSkySensorEntityDescription(
         key="fan_duty_cycle",
         translation_key="fan_duty_cycle",
-        icon="mdi:fan",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.fan_duty_cycle if data.sensor else None,
@@ -146,21 +145,18 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
     IndiAllSkySensorEntityDescription(
         key="device_sqm",
         translation_key="device_sqm",
-        icon="mdi:weather-night",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.device_sqm if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="camera_sqm",
         translation_key="camera_sqm",
-        icon="mdi:weather-night",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.camera_sqm if data.sensor else None,
     ),
     IndiAllSkySensorEntityDescription(
         key="camera_sqm_adu",
         translation_key="camera_sqm_adu",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.sensor.camera_sqm_adu if data.sensor else None,
     ),
@@ -221,13 +217,13 @@ IGNORED_DYNAMIC_KEYS: set[str] = {
 
 DEVICE_CLASS_KEYWORDS: tuple[tuple[tuple[str, ...], SensorDeviceClass], ...] = (
     (
-        ("temperature", "temp", "dewpoint", "dew_point", "heat_index", "frost_point"),
+        ("temperature", "temp", "dewpoint", "dew point", "heat index", "frost point"),
         SensorDeviceClass.TEMPERATURE,
     ),
     (("humidity",), SensorDeviceClass.HUMIDITY),
     (("pressure",), SensorDeviceClass.PRESSURE),
-    (("wind_speed", "wind_gust"), SensorDeviceClass.WIND_SPEED),
-    (("wind_direction", "wind_dir"), SensorDeviceClass.WIND_DIRECTION),
+    (("wind speed", "wind gust"), SensorDeviceClass.WIND_SPEED),
+    (("wind direction", "wind dir"), SensorDeviceClass.WIND_DIRECTION),
     (("voltage", "volt"), SensorDeviceClass.VOLTAGE),
     (("current", "amp"), SensorDeviceClass.CURRENT),
     (("power", "watt"), SensorDeviceClass.POWER),
@@ -248,6 +244,12 @@ DEVICE_CLASS_DEFAULT_UNITS: dict[SensorDeviceClass, str] = {
     SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,
 }
 
+KNOWN_TRANSLATION_KEYS: set[str] = {
+    "ambient_temperature",
+    "humidity",
+    "pressure",
+}
+
 
 def _infer_sensor_metadata(
     key: str,
@@ -263,12 +265,12 @@ def _infer_sensor_metadata(
             device_class = SensorDeviceClass(raw_device_class.lower())
 
     name_str = raw_name or key.replace("_", " ").capitalize()
-    key_lower = key.lower()
-    name_lower = name_str.lower()
+    tokens = re.findall(r"[a-z0-9]+", f"{key} {name_str}".lower())
+    normalized_phrase = f" {' '.join(tokens)} "
 
     if device_class is None:
         for keywords, candidate_class in DEVICE_CLASS_KEYWORDS:
-            if any(kw in key_lower or kw in name_lower for kw in keywords):
+            if any(f" {kw} " in normalized_phrase for kw in keywords):
                 device_class = candidate_class
                 break
 
@@ -392,7 +394,9 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
             self._sensor_key, raw_name, raw_device_class, raw_unit
         )
 
-        if "translation_key" not in self.__dict__ and not hasattr(
+        if self._sensor_key in KNOWN_TRANSLATION_KEYS:
+            self._attr_translation_key = self._sensor_key
+        elif "translation_key" not in self.__dict__ and not hasattr(
             self, "_attr_translation_key"
         ):
             self._attr_name = name_str
