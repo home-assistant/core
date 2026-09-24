@@ -83,7 +83,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DEFAULT_NAME} (0, 0)"
+    # The schema validates the coordinates as floats.
+    assert result["title"] == f"{DEFAULT_NAME} (0.0, 0.0)"
     assert result["data"] == test_data
 
 
