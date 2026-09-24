@@ -20,7 +20,11 @@
       "scheduleCount": 0,
       "timerRemain": 0,
       "efficientModeTimeRemain": 0,
-      "errorCode": 0
+      "errorCode": 0,
+      "autoPreference": {
+        "autoPreferenceType": "default",
+        "roomSize": 0
+      }
     }
   }
 }

@@ -4,6 +4,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -49,3 +50,33 @@ async def test_sensor_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("light_detection", "room_dark", "expected_state"),
+    [(1, 1, STATE_ON), (1, 0, STATE_OFF), (0, 1, STATE_OFF)],
+)
+async def test_dark_room_needs_light_detection(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    light_detection: int,
+    room_dark: int,
+    expected_state: str,
+) -> None:
+    """Test the dark room sensor only reports dark while light detection is on."""
+    mock_devices_response(
+        aioclient_mock,
+        "Air Purifier Vital 200S",
+        details_override={
+            "lightDetectionSwitch": light_detection,
+            "environmentLightState": room_dark,
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.air_purifier_vital_200s_dark_room")
+    assert state is not None
+    assert state.state == expected_state

@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, is_outlet, is_wall_switch, rgetattr
+from .common import is_humidifier, is_outlet, is_purifier, is_wall_switch, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -51,6 +51,13 @@ def _toggle_child_lock(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
     if hasattr(device, "toggle_child_lock"):
         return device.toggle_child_lock(*args)
     raise HomeAssistantError("Device does not support toggling child lock.")
+
+
+def _toggle_light_detection(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
+    """Toggle the light detection feature of a purifier."""
+    if hasattr(device, "toggle_light_detection"):
+        return device.toggle_light_detection(*args)
+    raise HomeAssistantError("Device does not support toggling light detection.")
 
 
 def _toggle_auto_stop(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
@@ -110,6 +117,20 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         translation_key="child_lock",
         on_fn=lambda device: _toggle_child_lock(device, True),
         off_fn=lambda device: _toggle_child_lock(device, False),
+    ),
+    VeSyncSwitchEntityDescription(
+        key="light_detection",
+        is_on=lambda device: device.state.light_detection_switch == "on",
+        exists_fn=(
+            lambda device: (
+                is_purifier(device)
+                and rgetattr(device, "supports_light_detection") is True
+            )
+        ),
+        translation_key="light_detection",
+        entity_category=EntityCategory.CONFIG,
+        on_fn=lambda device: _toggle_light_detection(device, True),
+        off_fn=lambda device: _toggle_light_detection(device, False),
     ),
     VeSyncSwitchEntityDescription(
         key="auto_off_config",
