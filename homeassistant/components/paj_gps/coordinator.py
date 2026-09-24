@@ -127,15 +127,15 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             )
 
             for device_id, result in zip(voltage_device_ids, results, strict=False):
-            if isinstance(result, PajGpsApiError):
-                _LOGGER.debug(
-                    "Failed to fetch voltage sensor data for device %s: %s",
-                    device_id,
-                    result,
-                )
-                continue
-            if isinstance(result, BaseException):
-                raise result
-            sensor_data[device_id] = result
+                if isinstance(result, PajGpsApiError):
+                    _LOGGER.debug(
+                        "Failed to fetch voltage sensor data for device %s: %s",
+                        device_id,
+                        result,
+                    )
+                    continue
+                if isinstance(result, BaseException):
+                    raise result
+                sensor_data[device_id] = result
 
         return PajGpsData(devices=devices, positions=positions, sensor_data=sensor_data)
