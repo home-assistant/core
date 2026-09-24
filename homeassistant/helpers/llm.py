@@ -215,17 +215,13 @@ class APIInstance:
     def __post_init__(self) -> None:
         """Report a tool that does not record the integration providing it."""
         for tool in self.tools:
-            # A merged API wraps tools whose own API instance already checked them.
-            if isinstance(tool, NamespacedTool) or tool.integration is not None:
+            if tool.integration is not None:
                 continue
-            frame.report_usage(
-                f"provides the LLM tool {tool.name} without an integration",
-                breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
-                core_behavior=frame.ReportBehavior.ERROR,
-                core_integration_behavior=frame.ReportBehavior.ERROR,
-                custom_integration_behavior=frame.ReportBehavior.LOG,
-                integration_domain=_tool_integration_domain(tool),
-            )
+            # A tool whose class lives outside an integration, such as a shared
+            # helper tool, is reported by the llm integration, which knows the
+            # domain of the platform that returned it.
+            if (domain := _tool_integration_domain(tool)) is not None:
+                report_untagged_tool(tool, domain)
 
     async def async_call_tool(self, tool_input: ToolInput) -> ToolResult:
         """Call a LLM tool, validate args and return the response."""
@@ -259,6 +255,21 @@ class APIInstance:
             integration_domain=_tool_integration_domain(tool),
         )
         return ToolResult(data=result)
+
+
+@callback
+def report_untagged_tool(tool: Tool, domain: str) -> None:
+    """Report a tool that does not record the integration providing it."""
+    while isinstance(tool, NamespacedTool):
+        tool = tool.tool
+    frame.report_usage(
+        f"provides the LLM tool {tool.name} without an integration",
+        breaks_in_ha_version=TOOL_INTEGRATION_BREAKS_IN_HA_VERSION,
+        core_behavior=frame.ReportBehavior.ERROR,
+        core_integration_behavior=frame.ReportBehavior.ERROR,
+        custom_integration_behavior=frame.ReportBehavior.LOG,
+        integration_domain=domain,
+    )
 
 
 def _tool_integration_domain(tool: Tool) -> str | None:

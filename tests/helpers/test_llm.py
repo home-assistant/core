@@ -278,6 +278,27 @@ async def test_api_instance_raises_untagged_tool_for_core_integration(
         )
 
 
+async def test_merged_api_reports_untagged_tool_once(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a merged API reports the wrapped tool under its own name."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+
+    api = MyAPI(hass=hass, id="api-1", name="API 1")
+    api.tools = [_untagged_tool("custom_components.my_custom.llm")]
+    llm.async_register_api(hass, api)
+    other = MyAPI(hass=hass, id="api-2", name="API 2")
+    llm.async_register_api(hass, other)
+
+    await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+
+    assert "provides the LLM tool test_tool without an integration" in caplog.text
+    # The wrapper reports the tool it wraps, so the report is not repeated.
+    assert caplog.text.count("without an integration") == 1
+
+
 def test_tool_metadata_defaults() -> None:
     """Test a tool that declares no metadata is taken to be unsafe."""
 

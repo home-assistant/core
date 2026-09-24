@@ -189,6 +189,49 @@ async def test_get_tools_reports_unprefixed_tool_names(
     assert record.levelno == expected_level
 
 
+async def test_get_tools_untagged_tool_raises_for_core(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test a core integration must record the integration on its tools."""
+    tools = [_StubTool("test__untagged", integration=None)]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(
+            RuntimeError,
+            match="provides the LLM tool test__untagged without an integration",
+        ),
+    ):
+        await async_get_tools(hass, llm_context, "assist")
+
+
+async def test_get_tools_untagged_tool_reported_for_custom(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a custom integration is warned about tools without an integration."""
+    tools = [_StubTool("test__untagged", integration=None)]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools), built_in=False)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await async_get_tools(hass, llm_context, "assist")
+
+    # The tool is still returned until the requirement starts to fail.
+    assert "test__untagged" in [tool.name for tool in result.tools]
+    assert (
+        "Detected that custom integration 'test' provides the LLM tool test__untagged "
+        "without an integration. This will stop working in Home Assistant 2027.10"
+        in caplog.text
+    )
+
+
 async def test_get_tools_prefixed_tool_names_not_reported(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
