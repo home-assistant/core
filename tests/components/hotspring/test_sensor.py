@@ -4,7 +4,7 @@ from hotspring import Spa, TemperatureUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform, UnitOfTemperature
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,13 +30,11 @@ async def test_temperature_sensor_celsius(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_fixture: Spa,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the temperature sensor when the spa is configured in Celsius."""
     device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
     device_fixture.heater.current_temperature = 38.5
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
-    state = hass.states.get("sensor.connectedspa_ddeeff_current_temperature")
-    assert state
-    assert state.state == "38.5"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert hass.states.get("sensor.connectedspa_ddeeff_current_temperature") == snapshot

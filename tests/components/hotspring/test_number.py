@@ -11,12 +11,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -108,6 +103,7 @@ async def test_set_target_temperature_celsius(
     mock_config_entry: MockConfigEntry,
     mock_hotspring: MagicMock,
     device_fixture: Spa,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting target temperature when the spa is configured in Celsius."""
     device_fixture.heater.temperature_unit = TemperatureUnit.CELSIUS
@@ -120,13 +116,7 @@ async def test_set_target_temperature_celsius(
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
 
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == "38.5"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-    assert state.attributes["min"] == 26.0
-    assert state.attributes["max"] == 40.0
-    assert state.attributes["step"] == 0.5
+    assert hass.states.get(ENTITY_ID) == snapshot
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
