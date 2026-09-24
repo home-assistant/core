@@ -11,8 +11,20 @@ from openai import (
 )
 import pytest
 
-from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
+from homeassistant.components.litellm.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+    InvalidResponse,
+    _get_models,
+    _normalize_url,
+)
+from homeassistant.components.litellm.const import (
+    CONF_PROMPT,
+    CONF_STT_CUSTOM_PROMPT_KEYWORDS,
+    CONF_STT_KEYWORDS,
+    CONF_STT_PROMPT,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -20,13 +32,139 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
 
 from . import get_subentry_id, setup_integration
-from .conftest import TEST_URL, models_response
+from .conftest import MODEL_INFO, MODELS, TEST_URL
 
 from tests.common import MockConfigEntry
 
+
+@pytest.mark.parametrize(
+    ("url", "normalized"),
+    [
+        (
+            "http://localhost:4000",
+            "http://localhost:4000/v1",
+        ),
+        (
+            "http://localhost:4000/api/",
+            "http://localhost:4000/api/v1",
+        ),
+        (
+            "http://localhost:4000/api/v1",
+            "http://localhost:4000/api/v1",
+        ),
+    ],
+)
+def test_normalize_url(url: str, normalized: str) -> None:
+    """Test LiteLLM API URL normalization."""
+    assert _normalize_url(url) == normalized
+
+
+async def test_get_models_requests_model_info(hass: HomeAssistant) -> None:
+    """Test the OpenAI client requests LiteLLM model info with bearer auth."""
+    requests: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={"data": MODEL_INFO})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        with patch(
+            "homeassistant.components.litellm.config_flow.get_async_client",
+            return_value=client,
+        ):
+            models = await _get_models(hass, TEST_URL, "bla")
+
+    assert models == MODELS
+    assert len(requests) == 1
+    assert requests[0].method == "GET"
+    assert str(requests[0].url) == "http://localhost:4000/v1/model/info"
+    assert requests[0].headers["Authorization"] == "Bearer bla"
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({}, id="missing-data"),
+        pytest.param({"data": None}, id="data-not-a-list"),
+        pytest.param({"data": [{"model_name": "gpt"}]}, id="missing-model-info"),
+        pytest.param(
+            {"data": [{"model_name": "gpt", "model_info": None}]},
+            id="model-info-not-a-dict",
+        ),
+    ],
+)
+async def test_get_models_rejects_invalid_response(
+    hass: HomeAssistant, response: dict[str, object]
+) -> None:
+    """Test invalid model-info response structures are rejected."""
+
+    def respond(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=response)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        with (
+            patch(
+                "homeassistant.components.litellm.config_flow.get_async_client",
+                return_value=client,
+            ),
+            pytest.raises(InvalidResponse),
+        ):
+            await _get_models(hass, TEST_URL, "bla")
+
+
+@pytest.mark.parametrize(
+    ("api_model", "expected"),
+    [
+        pytest.param(
+            {"model_name": "chat", "model_info": {"mode": "chat"}},
+            {
+                "model_name": "chat",
+                "mode": "chat",
+                "supported_endpoints": [],
+            },
+            id="missing-endpoints",
+        ),
+        pytest.param(
+            {
+                "model_name": "transcribe",
+                "model_info": {"supported_endpoints": ["/v1/audio/transcriptions"]},
+            },
+            {
+                "model_name": "transcribe",
+                "mode": None,
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            },
+            id="missing-mode",
+        ),
+        pytest.param(
+            {"model_name": 123, "model_info": {}},
+            {"model_name": "123", "mode": None, "supported_endpoints": []},
+            id="missing-mode-and-endpoints-cast-name",
+        ),
+    ],
+)
+async def test_get_models_defaults_missing_capabilities(
+    hass: HomeAssistant,
+    api_model: dict[str, object],
+    expected: dict[str, object],
+) -> None:
+    """Test missing model capabilities default without rejecting the model."""
+
+    def respond(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"data": [api_model]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        with patch(
+            "homeassistant.components.litellm.config_flow.get_async_client",
+            return_value=client,
+        ):
+            models = await _get_models(hass, TEST_URL, "bla")
+
+    assert models == [expected]
+
+
 CONVERSATION_MODEL_OPTIONS = [
-    {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},
-    {"value": "gpt-4", "label": "gpt-4"},
+    {"value": "gpt-4o", "label": "gpt-4o"},
 ]
 
 
@@ -73,6 +211,7 @@ async def test_full_flow_without_api_key(hass: HomeAssistant) -> None:
     [
         (InvalidAuth, "invalid_auth"),
         (CannotConnect, "cannot_connect"),
+        (InvalidResponse, "invalid_response"),
         (Exception, "unknown"),
     ],
 )
@@ -101,7 +240,7 @@ async def test_form_errors(
         assert result["errors"] == {"base": error}
 
         mock_get_models.side_effect = None
-        mock_get_models.return_value = {"gpt-3.5-turbo": {}}
+        mock_get_models.return_value = MODELS
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_URL: "http://localhost:4000", CONF_API_KEY: "bla"}
@@ -142,9 +281,7 @@ async def test_user_step_proxy_errors(
     with patch(
         "homeassistant.components.litellm.config_flow.AsyncOpenAI"
     ) as mock_client:
-        mock_client.return_value.with_options.return_value.models.list.side_effect = (
-            side_effect
-        )
+        mock_client.return_value.with_options.return_value.get.side_effect = side_effect
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -177,7 +314,347 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_models")
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
+        (InvalidResponse(), "invalid_response"),
+        (Exception("unexpected"), "unknown"),
+    ],
+)
+async def test_stt_subentry_exceptions(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test STT subentry flow aborts when model info cannot be fetched."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "stt"),
+            context={"source": SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_create_stt_subentry(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an STT subentry."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        return_value=[
+            {
+                "model_name": "gpt-4o-transcribe",
+                "mode": "audio_transcription",
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            },
+            {
+                "model_name": "gpt-4o",
+                "mode": "chat",
+                "supported_endpoints": ["/v1/chat/completions"],
+            },
+            {
+                "model_name": "gpt-realtime",
+                "mode": "audio_transcription",
+                "supported_endpoints": ["/v1/realtime"],
+            },
+            {"model_name": "custom-stt", "mode": None, "supported_endpoints": []},
+            {
+                "model_name": "mode-unspecified-stt-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            },
+            {
+                "model_name": "mode-unspecified-chat-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/chat/completions"],
+            },
+            {
+                "model_name": "mode-unspecified-realtime-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/realtime"],
+            },
+            {
+                "model_name": "mode-unspecified-both-endpoints",
+                "mode": None,
+                "supported_endpoints": [
+                    "/v1/chat/completions",
+                    "/v1/audio/transcriptions",
+                ],
+            },
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "stt"),
+            context={"source": SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert schema["model"].config["options"] == [
+        {"value": "gpt-4o-transcribe", "label": "gpt-4o-transcribe"},
+        {"value": "custom-stt", "label": "custom-stt"},
+        {
+            "value": "mode-unspecified-stt-endpoint",
+            "label": "mode-unspecified-stt-endpoint",
+        },
+        {
+            "value": "mode-unspecified-both-endpoints",
+            "label": "mode-unspecified-both-endpoints",
+        },
+    ]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4o-transcribe", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "gpt-4o-transcribe"
+    assert result["data"] == {
+        CONF_MODEL: "gpt-4o-transcribe",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+    }
+
+    subentry_id = get_subentry_id(mock_config_entry, "stt")
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        return_value=[
+            {
+                "model_name": "gpt-4o-transcribe",
+                "mode": "audio_transcription",
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            }
+        ],
+    ):
+        result = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry_id
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_MODEL: "gpt-4o-transcribe", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "mode", "endpoints", "user_input", "expected_data"),
+    [
+        pytest.param(
+            "conversation",
+            None,
+            [],
+            {CONF_MODEL: "custom-model"},
+            {
+                CONF_MODEL: "custom-model",
+                CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+            },
+            id="conversation-no-capabilities",
+        ),
+        pytest.param(
+            "stt",
+            "audio_transcription",
+            [],
+            {
+                CONF_MODEL: "custom-model",
+                CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            },
+            {
+                CONF_MODEL: "custom-model",
+                CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            },
+            id="stt-no-endpoints-defaults-to-stt",
+        ),
+        pytest.param(
+            "stt",
+            None,
+            ["/v1/audio/transcriptions"],
+            {
+                CONF_MODEL: "custom-model",
+                CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            },
+            {
+                CONF_MODEL: "custom-model",
+                CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            },
+            id="stt-no-mode-uses-advertised-stt-endpoint",
+        ),
+    ],
+)
+async def test_models_with_incomplete_metadata_can_be_selected(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    mode: str | None,
+    endpoints: list[str],
+    user_input: dict[str, object],
+    expected_data: dict[str, object],
+) -> None:
+    """Test incomplete model capabilities do not block model selection."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        return_value=[
+            {
+                "model_name": "custom-model",
+                "mode": mode,
+                "supported_endpoints": endpoints,
+            }
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, subentry_type),
+            context={"source": SOURCE_USER},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["data_schema"].schema["model"].config["options"] == [
+            {"value": "custom-model", "label": "custom-model"}
+        ]
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == expected_data
+
+
+async def _create_stt_with_hints(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> str:
+    """Create an STT subentry with both optional hints enabled."""
+    await setup_integration(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "stt"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4o-transcribe", CONF_STT_CUSTOM_PROMPT_KEYWORDS: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-4o-transcribe",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+            CONF_STT_PROMPT: "Old prompt",
+            CONF_STT_KEYWORDS: "Old, keywords",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    return get_subentry_id(mock_config_entry, "stt")
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_model_info")
+@pytest.mark.parametrize(
+    ("hints", "expected_hints"),
+    [
+        pytest.param({}, {}, id="clear-both-omitted"),
+        pytest.param(
+            {CONF_STT_KEYWORDS: "Old, keywords"},
+            {CONF_STT_KEYWORDS: "Old, keywords"},
+            id="clear-prompt",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "Old prompt"},
+            {CONF_STT_PROMPT: "Old prompt"},
+            id="clear-keywords",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "", CONF_STT_KEYWORDS: ""},
+            {},
+            id="clear-both-empty",
+        ),
+        pytest.param(
+            {CONF_STT_PROMPT: "New prompt", CONF_STT_KEYWORDS: "New, keywords"},
+            {CONF_STT_PROMPT: "New prompt", CONF_STT_KEYWORDS: "New, keywords"},
+            id="edit-both",
+        ),
+    ],
+)
+async def test_reconfigure_stt_hints(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hints: dict[str, str],
+    expected_hints: dict[str, str],
+) -> None:
+    """Test saved STT hints reflect the submitted form fields."""
+    subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "gpt-4o-transcribe",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+            **hints,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {
+        CONF_MODEL: "gpt-4o-transcribe",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
+        **expected_hints,
+    }
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_model_info")
+async def test_reconfigure_stt_disable_hints(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test disabling hints clears both saved STT fields."""
+    subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4o-transcribe", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "gpt-4o-transcribe", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {
+        CONF_MODEL: "gpt-4o-transcribe",
+        CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+    }
+
+
+@pytest.mark.usefixtures("mock_model_info")
 async def test_create_conversation_agent(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
@@ -200,22 +677,22 @@ async def test_create_conversation_agent(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            CONF_MODEL: "gpt-3.5-turbo",
+            CONF_MODEL: "gpt-4o",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: ["assist"],
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "gpt-3.5-turbo"
+    assert result["title"] == "gpt-4o"
     assert result["data"] == {
-        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_MODEL: "gpt-4o",
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: ["assist"],
     }
 
 
-@pytest.mark.usefixtures("mock_models")
+@pytest.mark.usefixtures("mock_model_info")
 async def test_create_conversation_agent_no_control(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
@@ -232,7 +709,7 @@ async def test_create_conversation_agent_no_control(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            CONF_MODEL: "gpt-3.5-turbo",
+            CONF_MODEL: "gpt-4o",
             CONF_PROMPT: "you are an assistant",
             CONF_LLM_HASS_API: [],
         },
@@ -240,7 +717,7 @@ async def test_create_conversation_agent_no_control(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_MODEL: "gpt-3.5-turbo",
+        CONF_MODEL: "gpt-4o",
         CONF_PROMPT: "you are an assistant",
         CONF_LLM_HASS_API: [],
     }
@@ -255,12 +732,59 @@ async def test_conversation_agent_model_options(
     await setup_integration(hass, mock_config_entry)
 
     with patch(
-        "homeassistant.components.litellm.config_flow.AsyncOpenAI"
-    ) as mock_client:
-        mock_client.return_value.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response("gpt-4o", "gpt-5")
-        )
-
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        return_value=[
+            {
+                "model_name": "gpt-4o",
+                "mode": "chat",
+                "supported_endpoints": ["/v1/chat/completions"],
+            },
+            {
+                "model_name": "gpt-4o-transcribe",
+                "mode": "audio_transcription",
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            },
+            {
+                "model_name": "legacy-completion",
+                "mode": "chat",
+                "supported_endpoints": ["/v1/completions"],
+            },
+            {
+                "model_name": "realtime",
+                "mode": "audio_transcription",
+                "supported_endpoints": ["/v1/realtime"],
+            },
+            {
+                "model_name": "incomplete-metadata",
+                "mode": None,
+                "supported_endpoints": [],
+            },
+            {
+                "model_name": "mode-unspecified-chat-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/chat/completions"],
+            },
+            {
+                "model_name": "mode-unspecified-stt-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/audio/transcriptions"],
+            },
+            {
+                "model_name": "mode-unspecified-realtime-endpoint",
+                "mode": None,
+                "supported_endpoints": ["/v1/realtime"],
+            },
+            {
+                "model_name": "mode-unspecified-both-endpoints",
+                "mode": None,
+                "supported_endpoints": [
+                    "/v1/chat/completions",
+                    "/v1/audio/transcriptions",
+                ],
+            },
+        ],
+    ):
         result = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
             context={"source": SOURCE_USER},
@@ -269,19 +793,31 @@ async def test_conversation_agent_model_options(
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "gpt-4o", "label": "gpt-4o"},
-        {"value": "gpt-5", "label": "gpt-5"},
+        {
+            "value": "incomplete-metadata",
+            "label": "incomplete-metadata",
+        },
+        {
+            "value": "mode-unspecified-chat-endpoint",
+            "label": "mode-unspecified-chat-endpoint",
+        },
+        {
+            "value": "mode-unspecified-both-endpoints",
+            "label": "mode-unspecified-both-endpoints",
+        },
     ]
 
 
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
-        (InvalidAuth, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
-        (Exception, "unknown"),
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
+        (InvalidResponse(), "invalid_response"),
+        (Exception("unexpected"), "unknown"),
     ],
 )
-async def test_subentry_exceptions(
+async def test_conversation_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -305,7 +841,7 @@ async def test_subentry_exceptions(
     assert result["reason"] == reason
 
 
-@pytest.mark.usefixtures("mock_models")
+@pytest.mark.usefixtures("mock_model_info")
 async def test_reconfigure_conversation_agent(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
@@ -323,7 +859,7 @@ async def test_reconfigure_conversation_agent(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            CONF_MODEL: "gpt-4",
+            CONF_MODEL: "gpt-4o",
             CONF_PROMPT: "updated prompt",
             CONF_LLM_HASS_API: ["assist"],
         },
@@ -333,13 +869,13 @@ async def test_reconfigure_conversation_agent(
     assert result["reason"] == "reconfigure_successful"
 
     subentry = mock_config_entry.subentries[subentry_id]
-    assert subentry.title == "gpt-4"
-    assert subentry.data[CONF_MODEL] == "gpt-4"
+    assert subentry.title == "gpt-4o"
+    assert subentry.data[CONF_MODEL] == "gpt-4o"
     assert subentry.data[CONF_PROMPT] == "updated prompt"
     assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
 
 
-@pytest.mark.usefixtures("mock_models")
+@pytest.mark.usefixtures("mock_model_info")
 async def test_reconfigure_conversation_agent_disable_llm_api(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
@@ -354,7 +890,7 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
-            CONF_MODEL: "gpt-4",
+            CONF_MODEL: "gpt-4o",
             CONF_PROMPT: "updated prompt",
             CONF_LLM_HASS_API: [],
         },
@@ -369,15 +905,17 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     assert key.default() == []
 
 
+@pytest.mark.parametrize("subentry_type", ["conversation", "stt"])
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
 ) -> None:
     """Test reconfiguring aborts when the main entry is not loaded."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": SOURCE_USER},
     )
 
@@ -393,7 +931,7 @@ async def test_reconfigure_entry_not_loaded(
         (["assist", "non-existent"], ["assist"], ["assist"]),
     ],
 )
-@pytest.mark.usefixtures("mock_models")
+@pytest.mark.usefixtures("mock_model_info")
 async def test_reconfigure_conversation_subentry_llm_api_schema(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
