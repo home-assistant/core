@@ -20,6 +20,7 @@ from boschshcpy import (
     SHCShutterControl,
     SHCSmartPlug,
     SHCThermostat,
+    SHCTwinguard,
     ShutterControlService,
     ThermostatService,
 )
@@ -353,4 +354,26 @@ def motion_detector2_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.pet_immunity_enabled = pet_immunity_enabled
+    return device
+
+
+def twinguard_device(
+    device_id: str = "hdm:HomeMaticIP:twinguard1",
+    name: str = "Twinguard",
+    supports_nightly_promise: bool = False,
+    nightly_promise_enabled: bool = False,
+) -> SHCTwinguard:
+    """Build a minimal device double for the twinguards bucket."""
+    device = create_autospec(SHCTwinguard, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "TWINGUARD"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.supports_nightly_promise = supports_nightly_promise
+    device.nightly_promise_enabled = nightly_promise_enabled
     return device
