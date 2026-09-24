@@ -37,7 +37,6 @@ from .const import (
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
-    DOMAIN,
     KNX_MODULE_KEY,
     ClimateConf,
 )
@@ -51,7 +50,6 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import ClimateSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_ACTIVE,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
@@ -73,7 +71,11 @@ from .storage.const import (
     CONF_IGNORE_AUTO_MODE,
     CONF_TARGET_TEMPERATURE,
 )
-from .storage.entity_store_schema import ConfClimateFanSpeedMode, ConfSetpointShiftMode
+from .storage.entity_store_schema import (
+    ConfClimateFanSpeedMode,
+    ConfSetpointShiftMode,
+    KnxEntityData,
+)
 from .storage.util import ConfigExtractor
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -103,7 +105,7 @@ async def async_setup_entry(
             KnxYamlClimate(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.CLIMATE):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.CLIMATE):
         entities.extend(
             KnxUiClimate(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -114,6 +116,7 @@ async def async_setup_entry(
 
 def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
+    sync_state = config[CONF_SYNC_STATE]
     climate_mode = XknxClimateMode(
         xknx,
         name=f"{config[CONF_NAME]} Mode",
@@ -151,6 +154,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_heat_cool_state=config.get(
             ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         operation_modes=config.get(ClimateConf.OPERATION_MODES),
         controller_modes=config.get(ClimateConf.CONTROLLER_MODES),
     )
@@ -182,6 +186,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_command_value_state=config.get(
             ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
         ),
+        sync_state=sync_state,
         min_temp=config.get(ClimateConf.MIN_TEMP),
         max_temp=config.get(ClimateConf.MAX_TEMP),
         mode=climate_mode,
@@ -551,7 +556,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
     @property
     @override
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
 
         fan_speed = self._device.current_fan_speed
@@ -560,6 +565,10 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             return self.fan_zero_mode
 
         if self._device.fan_speed_mode is FanSpeedMode.STEP:
+            # DPT 5.010 fits any 1-byte value (0-255), so a gateway may report
+            # a step beyond the configured fan_max_step
+            if fan_speed >= len(self._attr_fan_modes):
+                return None
             return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage
@@ -691,17 +700,17 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
     _device: XknxClimate
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         self._device = _create_climate_ui(
-            knx_module.xknx, knx_conf, config[CONF_ENTITY][CONF_NAME]
+            knx_module.xknx, knx_conf, config.entity.xknx_name
         )
 
         default_hvac_mode = HVACMode(knx_conf.get(ClimateConf.DEFAULT_CONTROLLER_MODE))

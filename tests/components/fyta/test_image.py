@@ -15,6 +15,7 @@ from homeassistant.components.image import ImageEntity
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_platform
 
@@ -147,6 +148,9 @@ async def test_update_image(
 
     assert image_entity.image_url == "http://www.plant_picture.com/picture1"
     assert image_state_1 != image_state_2
+
+    # The state is image_last_updated serialized, so it has to carry a timezone
+    assert dt_util.parse_datetime(image_state_2.state).tzinfo is not None
 
 
 async def test_update_user_image_error(

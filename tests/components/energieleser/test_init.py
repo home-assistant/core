@@ -87,8 +87,8 @@ async def test_device_exposes_discovery_sw_version(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, STROMLESER_DEVICE_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, STROMLESER_DEVICE_ID), entry.entry_id
     )
     assert device is not None
     assert device.sw_version == STROMLESER_SW_VERSION

@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the israel rail integration."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -38,6 +38,22 @@ def departure_time(train_route: TrainRoute) -> datetime | None:
     return start_datetime.astimezone() if start_datetime else None
 
 
+def is_upcoming(train_route: TrainRoute, now: datetime) -> bool:
+    """Return whether the route has not left its origin yet.
+
+    A reported delay pushes back the moment the train actually leaves, so the route
+    stays upcoming until its scheduled departure plus that delay. A negative delay is
+    ignored so an early running train does not disappear before its scheduled time,
+    and a route whose departure cannot be parsed is kept, so an API format change
+    surfaces as an unknown state instead of silently dropping departures.
+    """
+    scheduled = departure_time(train_route)
+    if scheduled is None:
+        return True
+    delay = max(train_route.trains[0].departure_delay, 0)
+    return scheduled + timedelta(minutes=delay) >= now
+
+
 type IsraelRailConfigEntry = ConfigEntry[IsraelRailDataUpdateCoordinator]
 
 
@@ -68,13 +84,14 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
 
     @override
     async def _async_update_data(self) -> list[DataConnection]:
+        query_time = dt_util.now()
         try:
             train_routes = await self.hass.async_add_executor_job(
                 self._train_schedule.query,
                 self._start,
                 self._destination,
-                datetime.now().strftime("%Y-%m-%d"),  # pylint: disable=home-assistant-enforce-naive-now
-                datetime.now().strftime("%H:%M"),  # pylint: disable=home-assistant-enforce-naive-now
+                query_time.strftime("%Y-%m-%d"),
+                query_time.strftime("%H:%M"),
             )
         except Exception as e:
             raise UpdateFailed(
@@ -87,8 +104,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
             route = train_routes[offset]
             if route is None:
                 break
-            route_departure = departure_time(route)
-            if route_departure is None or route_departure >= now:
+            if is_upcoming(route, now):
                 break
             offset += 1
 

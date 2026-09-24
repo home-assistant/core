@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass
 import logging
 from typing import Any, Literal, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -28,6 +28,7 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -54,7 +55,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -65,7 +66,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -165,74 +166,102 @@ LEGACY_OPTIONS = {
 
 # These options that are templates all have _template. These fields will
 # enter deprecation after legacy templates are removed.
-WEATHER_COMMON_LEGACY_SCHEMA = vol.Schema(
+WEATHER_COMMON_LEGACY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
-        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
-        vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
-        vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
-        vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
-        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
-        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        probatio.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        probatio.Required(CONF_CONDITION_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        probatio.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
+        probatio.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
+        probatio.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
+        probatio.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        probatio.Optional(CONF_OZONE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRECIPITATION_UNIT): probatio.In(
+            DistanceConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRESSURE_UNIT): probatio.In(
+            PressureConverter.VALID_UNITS
+        ),
+        probatio.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_UNIT): probatio.In(
+            TemperatureConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        probatio.Optional(CONF_VISIBILITY_UNIT): probatio.In(
+            DistanceConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
+        probatio.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        probatio.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+        probatio.Optional(CONF_WIND_SPEED_UNIT): probatio.In(
+            SpeedConverter.VALID_UNITS
+        ),
     }
 )
 
-WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
+WEATHER_COMMON_MODERN_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
-        vol.Optional(CONF_ATTRIBUTION): cv.template,
-        vol.Optional(CONF_CLOUD_COVERAGE): cv.template,
-        vol.Required(CONF_CONDITION): cv.template,
-        vol.Optional(CONF_DEW_POINT): cv.template,
-        vol.Optional(CONF_FORECAST_DAILY): cv.template,
-        vol.Optional(CONF_FORECAST_HOURLY): cv.template,
-        vol.Optional(CONF_FORECAST_TWICE_DAILY): cv.template,
-        vol.Required(CONF_HUMIDITY): cv.template,
-        vol.Optional(CONF_OZONE): cv.template,
-        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_PRESSURE): cv.template,
-        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-        vol.Required(CONF_TEMPERATURE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(CONF_UV_INDEX): cv.template,
-        vol.Optional(CONF_VISIBILITY): cv.template,
-        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
-        vol.Optional(CONF_WIND_BEARING): cv.template,
-        vol.Optional(CONF_WIND_GUST_SPEED): cv.template,
-        vol.Optional(CONF_WIND_SPEED): cv.template,
-        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        probatio.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_ATTRIBUTION): cv.template,
+        probatio.Optional(CONF_CLOUD_COVERAGE): cv.template,
+        probatio.Required(CONF_CONDITION): cv.template,
+        probatio.Optional(CONF_DEW_POINT): cv.template,
+        probatio.Optional(CONF_FORECAST_DAILY): cv.template,
+        probatio.Optional(CONF_FORECAST_HOURLY): cv.template,
+        probatio.Optional(CONF_FORECAST_TWICE_DAILY): cv.template,
+        probatio.Required(CONF_HUMIDITY): cv.template,
+        probatio.Optional(CONF_OZONE): cv.template,
+        probatio.Optional(CONF_PRECIPITATION_UNIT): probatio.In(
+            DistanceConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_PRESSURE): cv.template,
+        probatio.Optional(CONF_PRESSURE_UNIT): probatio.In(
+            PressureConverter.VALID_UNITS
+        ),
+        probatio.Required(CONF_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_UNIT): probatio.In(
+            TemperatureConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_UV_INDEX): cv.template,
+        probatio.Optional(CONF_VISIBILITY): cv.template,
+        probatio.Optional(CONF_VISIBILITY_UNIT): probatio.In(
+            DistanceConverter.VALID_UNITS
+        ),
+        probatio.Optional(CONF_WIND_BEARING): cv.template,
+        probatio.Optional(CONF_WIND_GUST_SPEED): cv.template,
+        probatio.Optional(CONF_WIND_SPEED): cv.template,
+        probatio.Optional(CONF_WIND_SPEED_UNIT): probatio.In(
+            SpeedConverter.VALID_UNITS
+        ),
     }
+)
+
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=WeatherEntityStateAttribute
 )
 
 
 WEATHER_YAML_SCHEMA = (
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
+            probatio.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
         }
     )
     .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
     .extend(
-        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+        ).schema
     )
 )
 
 WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
-    make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        WEATHER_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
 )
 
 WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
@@ -338,11 +367,11 @@ def validate_forecast(
     )
 
     def validate(result: Any) -> list[Forecast] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 option,
                 result,
@@ -353,7 +382,7 @@ def validate_forecast(
         for forecast in result:
             if not isinstance(forecast, dict):
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -366,7 +395,7 @@ def validate_forecast(
             diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
             if diff_result:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -376,7 +405,7 @@ def validate_forecast(
                 )
             if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -386,7 +415,7 @@ def validate_forecast(
                 )
             if "datetime" not in forecast:
                 raised = True
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     result,
@@ -472,6 +501,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     _optimistic_entity = True
     _restore_state_extra_data = WeatherExtraStoredData
     _restore_state_properties = ("_attr_condition",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -486,17 +516,17 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
         # Required options
         self.setup_state_template(
             "_attr_condition",
-            template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
+            tcv.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
         )
         self.setup_template(
             CONF_HUMIDITY,
             "_attr_humidity",
-            template_validators.number(self, CONF_HUMIDITY, 0.0, 100.0),
+            tcv.number(self, CONF_HUMIDITY, 0.0, 100.0),
         )
         self.setup_template(
             CONF_TEMPERATURE,
             "_attr_native_temperature",
-            template_validators.number(self, CONF_TEMPERATURE),
+            tcv.number(self, CONF_TEMPERATURE),
         )
 
         # Optional options
@@ -504,7 +534,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
         self.setup_template(
             CONF_ATTRIBUTION,
             "_attribution",
-            vol.Coerce(str),
+            probatio.Coerce(str),
         )
         self.setup_template(
             CONF_WIND_BEARING, "_attr_wind_bearing", None, self._update_wind_bearing
@@ -522,9 +552,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
             (CONF_WIND_GUST_SPEED, "_attr_native_wind_gust_speed"),
             (CONF_WIND_SPEED, "_attr_native_wind_speed"),
         ):
-            self.setup_template(
-                option, attribute, template_validators.number(self, option)
-            )
+            self.setup_template(option, attribute, tcv.number(self, option))
 
         # Forecasts
 
@@ -582,9 +610,9 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     @callback
     def _update_wind_bearing(self, result: Any) -> None:
         try:
-            self._attr_wind_bearing = vol.Coerce(float)(result)
-        except vol.Invalid:
-            self._attr_wind_bearing = vol.Coerce(str)(result)
+            self._attr_wind_bearing = probatio.Coerce(float)(result)
+        except probatio.Invalid:
+            self._attr_wind_bearing = probatio.Coerce(str)(result)
 
     @callback
     def _update_forecast(

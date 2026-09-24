@@ -16,7 +16,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -112,7 +112,7 @@ class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, registry: DeviceRegistry
+        self, hass: HomeAssistant, entry: ConfigEntry, registry: dr.DeviceRegistry
     ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
@@ -508,8 +508,8 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the device registry."""
-        for device in self._dev_reg.devices.get_devices_for_config_entry_id(
-            self._entry.entry_id
+        for device in dr.async_entries_for_config_entry(
+            self._dev_reg, self._entry.entry_id
         ):
             if not (identifier := next(iter(device.identifiers), None)):
                 continue

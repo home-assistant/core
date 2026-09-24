@@ -1,8 +1,11 @@
 """Test KNX switch."""
 
+import pytest
+
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
@@ -64,6 +67,7 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CONF_NAME: "test",
                 KNX_ADDRESS: _ADDRESS,
                 CONF_STATE_ADDRESS: _STATE_ADDRESS,
+                CONF_SYNC_STATE: "init",
             },
         }
     )
@@ -111,6 +115,24 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # switch does not respond to read by default
     await knx.receive_read(_ADDRESS)
     await knx.assert_telegram_count(0)
+
+
+async def test_switch_sync_state_false_invalid(
+    hass: HomeAssistant, knx: KNXTestKit, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test entities having a writable address don't allow disabling state updates."""
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: "1/1/1",
+                CONF_STATE_ADDRESS: "2/2/2",
+                CONF_SYNC_STATE: False,
+            },
+        }
+    )
+    assert "Sync state can not be disabled for this platform" in caplog.text
+    assert hass.states.get("switch.test") is None
 
 
 async def test_switch_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -216,6 +238,6 @@ async def test_switch_ui_load(knx: KNXTestKit) -> None:
     # unrelated light in config store
     await knx.assert_read("1/0/21", response=True, ignore_order=True)
     knx.assert_state(
-        "switch.test",  # has_entity_name with unregistered device
+        "switch.knx_test",  # has_entity_name with device named after config entry
         STATE_ON,
     )

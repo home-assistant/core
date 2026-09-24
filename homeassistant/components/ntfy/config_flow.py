@@ -13,7 +13,7 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant import data_entry_flow
@@ -62,25 +62,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
+        probatio.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Required(SECTION_AUTH): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(SECTION_AUTH): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT,
                             autocomplete="username",
                         ),
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -93,39 +93,39 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_PASSWORD, ATTR_CREDENTIALS): TextSelector(
+        probatio.Exclusive(CONF_PASSWORD, ATTR_CREDENTIALS): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_USERNAME, ATTR_CREDENTIALS): TextSelector(
+        probatio.Exclusive(CONF_USERNAME, ATTR_CREDENTIALS): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD, default=""): TextSelector(
+        probatio.Optional(CONF_PASSWORD, default=""): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
     }
 )
 
-TOPIC_FILTER_SCHEMA = vol.Schema(
+TOPIC_FILTER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PRIORITY): SelectSelector(
+        probatio.Optional(CONF_PRIORITY): SelectSelector(
             SelectSelectorConfig(
                 multiple=True,
                 options=["5", "4", "3", "2", "1"],
@@ -133,25 +133,25 @@ TOPIC_FILTER_SCHEMA = vol.Schema(
                 translation_key="priority",
             )
         ),
-        vol.Optional(CONF_TAGS): TextSelector(
+        probatio.Optional(CONF_TAGS): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_TITLE): str,
-        vol.Optional(CONF_MESSAGE): str,
+        probatio.Optional(CONF_TITLE): str,
+        probatio.Optional(CONF_MESSAGE): str,
     }
 )
 
 
-STEP_USER_TOPIC_SCHEMA = vol.Schema(
+STEP_USER_TOPIC_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOPIC): str,
+        probatio.Required(CONF_TOPIC): str,
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME): str,
-        vol.Required(SECTION_FILTER): data_entry_flow.section(
+        probatio.Optional(CONF_NAME): str,
+        probatio.Required(SECTION_FILTER): data_entry_flow.section(
             TOPIC_FILTER_SCHEMA,
             {"collapsed": True},
         ),

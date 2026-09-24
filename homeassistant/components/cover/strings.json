@@ -2,6 +2,7 @@
   "common": {
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
+    "field_speed_name": "Speed",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -210,9 +211,20 @@
       "name": "Window"
     }
   },
+  "exceptions": {
+    "not_valid_speed": {
+      "message": "Speed {speed} is not valid. Valid speeds are: {supported_speeds}."
+    }
+  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
+      "fields": {
+        "speed": {
+          "description": "Speed at which to close the cover.",
+          "name": "[%key:component::cover::common::field_speed_name%]"
+        }
+      },
       "name": "Close cover"
     },
     "close_cover_tilt": {
@@ -221,6 +233,12 @@
     },
     "open_cover": {
       "description": "Opens a cover.",
+      "fields": {
+        "speed": {
+          "description": "Speed at which to open the cover.",
+          "name": "[%key:component::cover::common::field_speed_name%]"
+        }
+      },
       "name": "Open cover"
     },
     "open_cover_tilt": {
@@ -233,6 +251,10 @@
         "position": {
           "description": "Target position.",
           "name": "Position"
+        },
+        "speed": {
+          "description": "Speed at which to move the cover.",
+          "name": "[%key:component::cover::common::field_speed_name%]"
         }
       },
       "name": "Set cover position"

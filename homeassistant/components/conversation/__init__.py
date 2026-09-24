@@ -5,7 +5,7 @@ import logging
 from typing import Any, Literal
 
 from hassil.recognize import RecognizeResult
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL, SERVICE_RELOAD
@@ -91,34 +91,34 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PROCESS_SCHEMA = vol.Schema(
+SERVICE_PROCESS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TEXT): cv.string,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
+        probatio.Required(ATTR_TEXT): cv.string,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
 
-SERVICE_RELOAD_SCHEMA = vol.Schema(
+SERVICE_RELOAD_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        probatio.Optional(ATTR_LANGUAGE): cv.string,
+        probatio.Optional(ATTR_AGENT_ID): agent_id_validator,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN): vol.Schema(
+        probatio.Optional(DOMAIN): probatio.Schema(
             {
-                vol.Optional("intents"): vol.Schema(
-                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
+                probatio.Optional("intents"): probatio.Schema(
+                    {cv.string: probatio.All(cv.ensure_list, [cv.string])}
                 )
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

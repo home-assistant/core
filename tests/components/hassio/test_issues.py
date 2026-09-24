@@ -33,6 +33,7 @@ from homeassistant.components.hassio.coordinator import (
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1434,6 +1435,59 @@ async def test_supervisor_issues_periodic_refresh_backstop(
     await hass.async_block_till_done()
 
     supervisor_client.resolution.info.assert_called_once()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_issue_repair_recreated_when_registry_entry_missing(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repair deleted from the registry is re-created for an unchanged issue.
+
+    A finished repair flow deletes the issue registry entry even when applying
+    the suggestion failed in Supervisor. The issue then comes back unchanged on
+    the next refresh and must be re-created instead of skipped as known.
+    """
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.MOUNT_FAILED,
+                context=ContextType.MOUNT,
+                reference="m1",
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_RELOAD,
+                    context=ContextType.MOUNT,
+                    reference="m1",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
+
+    # Simulate a finished repair flow whose suggestion failed to apply in
+    # Supervisor: the registry entry is gone, the supervisor issue unchanged
+    ir.async_delete_issue(hass, DOMAIN, issue_uuid.hex)
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_uuid.hex)
 
 
 @pytest.mark.usefixtures("all_setup_requests")

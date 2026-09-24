@@ -31,7 +31,9 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify main device created with hostname
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "ABC123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC123456"), mock_config_entry.entry_id
+    )
     assert device_entry
     assert device_entry == snapshot
 

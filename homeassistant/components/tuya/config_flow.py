@@ -3,8 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from tuya_sharing import LoginControl
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
@@ -60,9 +60,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USER_CODE, default=user_input.get(CONF_USER_CODE, "")
                     ): str,
                 }
@@ -78,9 +78,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="scan",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Optional("QR"): selector.QrCodeSelector(
+                        probatio.Optional("QR"): selector.QrCodeSelector(
                             config=selector.QrCodeSelectorConfig(
                                 data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
                                 scale=5,
@@ -103,9 +103,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="scan",
                 errors={"base": "login_error"},
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Optional("QR"): selector.QrCodeSelector(
+                        probatio.Optional("QR"): selector.QrCodeSelector(
                             config=selector.QrCodeSelectorConfig(
                                 data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
                                 scale=5,
@@ -149,9 +149,23 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Tuya."""
         if CONF_USER_CODE in entry_data:
-            success, _ = await self.__async_get_qr_code(entry_data[CONF_USER_CODE])
-            if success:
-                return await self.async_step_scan()
+            self.__user_code = entry_data[CONF_USER_CODE]
+            return await self.async_step_reauth_confirm()
+
+        return await self.async_step_reauth_user_code()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with Tuya."""
+        # The QR code expires in minutes, while a reauth flow can sit untouched
+        # for days. Request the code when the user is ready to scan it.
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        success, _ = await self.__async_get_qr_code(self.__user_code)
+        if success:
+            return await self.async_step_scan()
 
         return await self.async_step_reauth_user_code()
 
@@ -179,9 +193,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_user_code",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USER_CODE, default=user_input.get(CONF_USER_CODE, "")
                     ): str,
                 }
