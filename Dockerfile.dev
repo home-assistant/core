@@ -34,7 +34,8 @@ WORKDIR /usr/src
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-USER 1000
+# hadolint ignore=DL3066
+USER vscode
 
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 # Force "uv run" to use the configured virtual environment for all commands
