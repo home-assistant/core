@@ -42,8 +42,10 @@ class XthingsCloudEntity(CoordinatorEntity[XthingsCloudCoordinator]):
     @override
     def available(self) -> bool:
         """Return whether device is available (online)."""
-        return (
-            super().available
-            and self._device_id in self.coordinator.data
-            and self.device_data["online"]
-        )
+        if self._device_id not in self.coordinator.data:
+            return False
+        if self.coordinator.uses_native_mqtt(self._device_id):
+            # Native bulbs confirm their own state; a failed account poll does
+            # not make a bulb that is still answering unreachable.
+            return self.device_data["online"]
+        return super().available and self.device_data["online"]
