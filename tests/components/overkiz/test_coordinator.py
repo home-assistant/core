@@ -557,6 +557,40 @@ async def test_gateway_down_marks_its_entities_unavailable(
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
 
 
+async def test_state_from_device_clears_its_gateway(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Traffic from a device proves the gateway that carried it is back.
+
+    GATEWAY_ALIVE is otherwise the only way out, so a missed one would strand
+    every entity on that gateway until the config entry reloads.
+    """
+    await setup_overkiz_integration(fixture=POOL_PUMP.fixture)
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [gateway_down_event(MAIN_GATEWAY_ID)]
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                POOL_PUMP.device_url,
+                [{"name": OverkizState.CORE_ON_OFF.value, "type": 3, "value": "on"}],
+            )
+        ],
+    )
+
+    assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_gateway_down_leaves_other_gateways_alone(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

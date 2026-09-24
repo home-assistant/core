@@ -278,8 +278,13 @@ async def on_device_state_changed(
     if event.device_url not in coordinator.devices:
         return
 
-    # A state coming from the device is proof it is reachable again.
+    # A state coming from the device is proof it is reachable again, and that
+    # its gateway carried it. GATEWAY_ALIVE is otherwise the only way out of
+    # unreachable_gateways, so a missed one would strand every entity on it.
     coordinator.unreachable_devices.discard(event.device_url)
+    coordinator.unreachable_gateways.discard(
+        coordinator.devices[event.device_url].identifier.gateway_id
+    )
 
     for state in event.device_states:
         device = coordinator.devices[event.device_url]
