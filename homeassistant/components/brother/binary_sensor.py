@@ -135,6 +135,8 @@ async def async_setup_entry(
     """Add Brother entities from a config_entry."""
     coordinator = entry.runtime_data
 
+    # printer_errors is None only if the printer does not support the OID that returns
+    # errors, in that case, we do not create binary sensors
     if coordinator.data.printer_errors is None:
         return
 
