@@ -923,6 +923,12 @@ def remove_stale_blu_trv_devices(
             # Device is not a sub-device, skip
             continue
 
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
+            continue
+
         if any(
             identifier[0] == DOMAIN and identifier[1] in trv_addrs
             for identifier in device.identifiers

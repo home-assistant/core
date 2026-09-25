@@ -7,7 +7,12 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
+from aioshelly.const import (
+    DEFAULT_HTTPS_PORT,
+    MODEL_2PM_G3,
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_PLUS_2PM,
+)
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -42,6 +47,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    EVENT_DEVICE_REGISTRY_UPDATED,
     DeviceRegistry,
     format_mac,
 )
@@ -50,7 +56,11 @@ from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_json_object_fixture,
+)
 
 
 async def test_custom_coap_port(
@@ -831,6 +841,25 @@ async def test_empty_device_removal(
 
     # verify that the empty sub-device is removed
     assert device_registry.async_get(sub_device_entry.id) is None
+
+
+async def test_sub_device_kept_on_reload(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test channel sub-devices are not removed as stale BLU TRV devices."""
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    config_entry = await init_integration(hass, gen=3, model=MODEL_2PM_G3)
+    events = async_capture_events(hass, EVENT_DEVICE_REGISTRY_UPDATED)
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not [event for event in events if event.data["action"] == "remove"]
 
 
 async def test_rpc_waits_for_ble_scanner_at_startup(
