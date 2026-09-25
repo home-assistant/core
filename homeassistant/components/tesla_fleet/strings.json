@@ -677,13 +677,13 @@
     "navigation_request": {
       "description": "Sets vehicle navigation to the provided destination, which can be an address, a place name or a map link.",
       "fields": {
-        "device_id": {
-          "description": "Vehicle to send the destination to.",
-          "name": "Vehicle"
-        },
         "destination": {
           "description": "Address, place name or map link to navigate to.",
           "name": "Destination"
+        },
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
         }
       },
       "name": "Navigate to destination"
