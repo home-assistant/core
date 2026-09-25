@@ -18,6 +18,7 @@ from boschshcpy import (
     SHCPresenceSimulationSystem,
     SHCShutterContact,
     SHCShutterContact2,
+    SHCShutterContact2Plus,
     SHCShutterControl,
     SHCSmartPlug,
     SHCSmartPlugCompact,
@@ -415,6 +416,30 @@ def shutter_contact2_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    return device
+
+
+def shutter_contact2_plus_device(
+    device_id: str = "hdm:ZigBee:shuttercontact1",
+    name: str = "Shutter contact",
+    bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
+    bypass_infinite: bool = False,
+    vibration_enabled: bool = False,
+) -> SHCShutterContact2Plus:
+    """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
+    device = create_autospec(SHCShutterContact2Plus, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD2_PLUS"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.bypass = bypass
+    device.bypass_infinite = bypass_infinite
+    device.enabled = vibration_enabled
     return device
 
 

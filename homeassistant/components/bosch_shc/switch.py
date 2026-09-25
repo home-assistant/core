@@ -10,6 +10,7 @@ from boschshcpy import (
     PowerSwitchService,
     PrivacyModeService,
     SHCShutterContact2,
+    SHCShutterContact2Plus,
     SHCSmartPlug,
     SilentModeService,
     ThermostatService,
@@ -180,6 +181,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "vibration_enabled": SHCSwitchEntityDescription(
+        key="vibration_enabled",
+        translation_key="vibration_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="enabled",
+        on_value=True,
+        should_poll=False,
+    ),
 }
 
 
@@ -327,6 +337,19 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
         )
         for switch in session.device_helper.shutter_contacts2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["vibration_enabled"],
+            unique_id_suffix="vibration_enabled",
+        )
+        for switch in session.device_helper.shutter_contacts2
+        if isinstance(switch, SHCShutterContact2Plus)
     )
 
     entities.extend(

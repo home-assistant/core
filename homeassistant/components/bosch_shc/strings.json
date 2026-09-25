@@ -127,6 +127,9 @@
       },
       "tamper_protection_enabled": {
         "name": "Sabotage detection"
+      },
+      "vibration_enabled": {
+        "name": "Vibration detection"
       }
     },
     "valve": {
