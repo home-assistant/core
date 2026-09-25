@@ -1,5 +1,8 @@
 """Handle Home Assistant Devices for the KNX integration."""
 
+import asyncio
+import logging
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.io.gateway_scanner import GatewayDescriptor
@@ -10,6 +13,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+GATEWAY_INFO_TIMEOUT = 10
 
 
 class KNXInterfaceDevice:
@@ -36,7 +43,14 @@ class KNXInterfaceDevice:
 
     async def update(self) -> None:
         """Update interface properties on new connection."""
-        self.gateway_descriptor = await self.xknx.knxip_interface.gateway_info()
+        # Some interfaces never answer, and a pending task here blocks shutdown.
+        try:
+            async with asyncio.timeout(GATEWAY_INFO_TIMEOUT):
+                gateway_descriptor = await self.xknx.knxip_interface.gateway_info()
+        except TimeoutError:
+            _LOGGER.debug("Timed out requesting the KNX interface description")
+            return
+        self.gateway_descriptor = gateway_descriptor
 
         self.device_registry.async_update_device(
             device_id=self.device.id,

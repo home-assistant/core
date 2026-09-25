@@ -1,9 +1,11 @@
 """Test KNX interface device."""
 
-from unittest.mock import patch
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from xknx.core import XknxConnectionState, XknxConnectionType
+from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.telegram import IndividualAddress
 
 from homeassistant.components.knx.sensor import SCAN_INTERVAL
@@ -137,3 +139,38 @@ async def test_remove_interface_device(
         res["error"]["message"]
         == "Failed to remove device entry, rejected by integration"
     )
+
+
+async def test_interface_device_gateway_info_timeout(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a gateway description that never arrives doesn't leave a pending task."""
+    await knx.setup_integration()
+    interface_device = dr.async_entries_for_config_entry(
+        device_registry, knx.mock_config_entry.entry_id
+    )[0]
+
+    def reconnect() -> None:
+        knx.xknx.connection_manager.connection_state_changed(
+            state=XknxConnectionState.DISCONNECTED
+        )
+        knx.xknx.connection_manager.connection_state_changed(
+            state=XknxConnectionState.CONNECTED,
+            connection_type=XknxConnectionType.TUNNEL_TCP,
+        )
+
+    knx.xknx.knxip_interface.gateway_info = AsyncMock(
+        return_value=GatewayDescriptor(ip_addr="192.168.0.10", port=3671, name="Test")
+    )
+    reconnect()
+    await hass.async_block_till_done()
+    assert device_registry.async_get(interface_device.id).model == "Test"
+
+    # the interface never answers the description request on this reconnect
+    knx.xknx.knxip_interface.gateway_info = AsyncMock(side_effect=asyncio.Event().wait)
+    with patch("homeassistant.components.knx.device.GATEWAY_INFO_TIMEOUT", 0):
+        reconnect()
+        await hass.async_block_till_done()
+    assert device_registry.async_get(interface_device.id).model == "Test"
