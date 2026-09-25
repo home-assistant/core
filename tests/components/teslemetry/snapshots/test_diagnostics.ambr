@@ -4,6 +4,7 @@
     'energysites': list([
       dict({
         'history': dict({
+          '_period_start': '2024-09-18T00:00:00+10:00',
           'battery_energy_exported': 36,
           'battery_energy_imported_from_generator': 0,
           'battery_energy_imported_from_grid': 0,
@@ -114,7 +115,7 @@
           'default_real_mode': 'self_consumption',
           'id': '1233-abcd',
           'installation_date': '**REDACTED**',
-          'installation_time_zone': '',
+          'installation_time_zone': 'Australia/Brisbane',
           'max_site_meter_power_ac': 1000000000,
           'min_site_meter_power_ac': -1000000000,
           'nameplate_energy': 40500,
