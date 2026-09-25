@@ -13,6 +13,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ATTR_OPENING_TIMES
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
@@ -48,6 +49,7 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
     _attr_translation_key = "status"
+    _unrecorded_attributes = frozenset({ATTR_OPENING_TIMES})
 
     def __init__(
         self,
@@ -60,9 +62,9 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         self._attr_unique_id = f"{station.id}_status"
         attrs: dict[str, Any] = {}
         if station.whole_day:
-            attrs["opening_times"] = [dict(WHOLE_DAY_OPENING_TIME)]
+            attrs[ATTR_OPENING_TIMES] = [dict(WHOLE_DAY_OPENING_TIME)]
         elif station.opening_times:
-            attrs["opening_times"] = [
+            attrs[ATTR_OPENING_TIMES] = [
                 {
                     "start": opening_time.start,
                     "end": opening_time.end,
