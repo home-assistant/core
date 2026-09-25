@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from homematicip.connection.rest_connection import RestResult
 from homematicip.functionalHomes import SecurityAndAlarmHome
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -42,7 +42,7 @@ async def async_setup_entry(
 
     entity_platform.async_get_current_platform().async_register_entity_service(
         SERVICE_ARM_ANYWAY,
-        {vol.Required(ATTR_MODE): vol.In([MODE_HOME, MODE_AWAY])},
+        {probatio.Required(ATTR_MODE): probatio.In([MODE_HOME, MODE_AWAY])},
         "async_arm_anyway",
     )
 
