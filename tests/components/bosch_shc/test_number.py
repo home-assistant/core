@@ -75,3 +75,27 @@ async def test_micromodule_impulse_relay_no_impulse_length_support(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(IMPULSE_LENGTH_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_impulse_relays": [
+                micromodule_relay_device(impulse_length_raises_key_error=True)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_micromodule_impulse_relay_impulse_length_partial_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The entity is still created if the initial poll omits the field."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(IMPULSE_LENGTH_ENTITY_ID)
+    assert state is not None
+    assert state.state == "unknown"
