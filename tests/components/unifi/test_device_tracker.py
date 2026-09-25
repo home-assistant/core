@@ -28,7 +28,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.device_tracker import NETWORK_DEVICE_HEARTBEAT
-from homeassistant.components.unifi.hub.client_store import storage_key
+from homeassistant.components.unifi.hub.client_store import SAVE_DELAY, storage_key
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -903,7 +903,8 @@ async def test_network_api_client_tracker(
         "one missed poll is not a departure"
     )
 
-    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME + 1))
+    # The detection time counts from the last poll that listed the client
+    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME + 1) - POLL_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1016,3 +1017,10 @@ async def test_network_api_stale_client_pruned(
     assert hass.states.get("device_tracker.recent").state == STATE_NOT_HOME
     assert entity_registry.async_get(stale_entity_id) is None
     assert hass.states.get("device_tracker.stale") is None
+
+    # The poll listed no client, so nothing else triggers a save
+    async_fire_time_changed(hass, now + timedelta(seconds=SAVE_DELAY + 1))
+    await hass.async_block_till_done()
+
+    stored = hass_storage[storage_key(network_api_config_entry)]["data"]
+    assert set(stored) == {"00:00:00:00:00:01"}, "the stale client is gone from storage"

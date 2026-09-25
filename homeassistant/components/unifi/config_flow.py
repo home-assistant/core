@@ -470,11 +470,22 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
-        clients_to_block = {}
-        for client in self.hub.api.clients.values():
-            clients_to_block[client.mac] = (
-                f"{client.name or client.hostname} ({client.mac})"
-            )
+        clients_to_block: dict[str, str] = {}
+        if self.hub.config.uses_api_key:
+            # The Integration API cannot block a client, so none is offered
+            clients = {
+                mac: f"{client.name or 'Unknown'} ({mac})"
+                for mac, client in self.hub.api.network.clients.items()
+            }
+        else:
+            for client in self.hub.api.clients.values():
+                clients_to_block[client.mac] = (
+                    f"{client.name or client.hostname} ({client.mac})"
+                )
+            clients = {
+                client.mac: f"{client.name or client.hostname} ({client.mac})"
+                for client in self.hub.api.clients.values()
+            }
 
         selected_clients_to_block = [
             client
@@ -482,10 +493,6 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             if client in clients_to_block
         ]
 
-        clients = {
-            client.mac: f"{client.name or client.hostname} ({client.mac})"
-            for client in self.hub.api.clients.values()
-        }
         clients |= {
             mac: f"Unknown ({mac})"
             for mac in self.options.get(CONF_CLIENT_SOURCE, [])

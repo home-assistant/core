@@ -8,6 +8,7 @@ with when they were last listed, and puts them back into the aiounifi
 cache on start.
 """
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, TypedDict
 
@@ -49,6 +50,7 @@ class UnifiNetworkClientStore:
         )
         self._clients: Clients | None = None
         self._stored: dict[str, StoredClient] = {}
+        self._unsubscribe: Callable[[], None] | None = None
 
     async def async_load(self) -> None:
         """Load the stored clients."""
@@ -72,9 +74,28 @@ class UnifiNetworkClientStore:
                 last_seen is None or now - last_seen > CLIENT_RESTORE_MAX_AGE
             ):
                 pruned.append(mac)
+                del self._stored[mac]
                 continue
             clients.restore(stored["raw"], last_seen)
+        self._unsubscribe = clients.subscribe(self.schedule_save)
+        if pruned:
+            # A poll that lists no client sends no event, so write the
+            # pruning out now rather than when a client next changes
+            self.schedule_save()
         return pruned
+
+    async def async_unload(self) -> None:
+        """Stop following the cache and write it out.
+
+        Done when the entry unloads, so no delayed save is left to fire
+        after it, which would put the file back after `async_remove` has
+        deleted it.
+        """
+        if self._unsubscribe is not None:
+            self._unsubscribe()
+            self._unsubscribe = None
+        if self._clients is not None:
+            await self._store.async_save(self._data_to_save())
 
     @callback
     def schedule_save(self, *_: Any) -> None:

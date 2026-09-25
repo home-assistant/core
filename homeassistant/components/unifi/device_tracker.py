@@ -182,15 +182,11 @@ def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 def async_network_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if a client of the Integration API is connected.
 
-    The API lists connected clients only, so a client counts as connected
-    until it has been missing for the detection time, as with the classic
-    API, rather than the moment one poll leaves it out.
+    A client the latest poll listed is connected. One the poll left out is
+    not, but its tracker stays home until the heartbeat its last listing
+    set lapses, one detection time later, as with the classic API.
     """
-    last_seen = hub.api.network.clients.last_seen(obj_id)
-    return (
-        last_seen is not None
-        and dt_util.utcnow() - last_seen <= hub.config.option_detection_time
-    )
+    return hub.api.network.clients.is_connected(obj_id)
 
 
 @dataclass(frozen=True, kw_only=True)

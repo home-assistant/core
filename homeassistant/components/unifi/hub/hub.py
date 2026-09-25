@@ -204,6 +204,8 @@ class UnifiHub:
         if not unload_ok:
             return False
 
+        if self.network_clients is not None:
+            await self.network_clients.async_unload()
         self._entity_helper.reset()
 
         return True

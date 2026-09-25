@@ -566,6 +566,59 @@ async def test_option_flow(
     }
 
 
+@pytest.mark.parametrize(
+    "network_client_payload",
+    [
+        [
+            {
+                "type": "WIRELESS",
+                "id": "f9edef13-b667-369f-9556-bc36978095af",
+                "name": "phone",
+                "macAddress": "00:00:00:00:00:01",
+                "access": {"type": "DEFAULT"},
+            },
+            {
+                "type": "WIRED",
+                "id": "0d2c5e8a-2d6b-3d4f-9a0e-1a2b3c4d5e6f",
+                "name": None,
+                "macAddress": "00:00:00:00:00:02",
+                "access": {"type": "DEFAULT"},
+            },
+        ]
+    ],
+)
+async def test_option_flow_api_key(
+    hass: HomeAssistant, network_api_config_entry_setup: MockConfigEntry
+) -> None:
+    """Test the options of an API key entry offer the Integration API's clients."""
+    config_entry = network_api_config_entry_setup
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    more_options = schema[CONF_MORE_OPTIONS].schema.schema
+    assert more_options[CONF_CLIENT_SOURCE].options == {
+        "00:00:00:00:00:01": "phone (00:00:00:00:00:01)",
+        "00:00:00:00:00:02": "Unknown (00:00:00:00:00:02)",
+    }
+    assert schema[CONF_BLOCK_CLIENT].options == {}, "the API cannot block a client"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_CLIENTS: True,
+            CONF_TRACK_DEVICES: True,
+            CONF_BLOCK_CLIENT: [],
+            CONF_MORE_OPTIONS: {CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CLIENT_SOURCE] == ["00:00:00:00:00:02"]
+
+
 async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value="192.168.1.1"):

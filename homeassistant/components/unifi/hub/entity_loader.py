@@ -151,9 +151,6 @@ class UnifiEntityLoader:
             network.clients, set(hub.config.option_supported_clients)
         )
         self._remove_clients(pruned)
-        hub.config.entry.async_on_unload(
-            network.clients.subscribe(hub.network_clients.schedule_save)
-        )
 
         await self._refresh_data(
             [

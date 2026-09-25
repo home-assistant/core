@@ -1,9 +1,11 @@
 """Test UniFi Network integration setup process."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import unifi
@@ -14,8 +16,9 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.unifi.hub.client_store import storage_key
+from homeassistant.components.unifi.hub.client_store import SAVE_DELAY, storage_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +31,7 @@ from .conftest import (
     WebsocketMessageMock,
 )
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -305,6 +308,7 @@ async def test_setup_entry_with_rejected_api_key_triggers_reauth(
 async def test_remove_entry_with_api_key_deletes_stored_clients(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
     network_api_config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test removing an entry set up with an API key deletes its stored clients."""
@@ -315,7 +319,18 @@ async def test_remove_entry_with_api_key_deletes_stored_clients(
     await flush_store(hub.network_clients._store)
     assert key in hass_storage
 
+    # A poll leaves a delayed save pending when the entry goes
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert key not in hass_storage
+
+    freezer.tick(timedelta(seconds=SAVE_DELAY + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert key not in hass_storage, "the pending save did not put the file back"
