@@ -164,16 +164,12 @@ class _EncodingSelector(selector.TextSelector):
 
 
 class _ObjectSelector(selector.ObjectSelector):
-    def __init__(
-        self,
-        translation_key: str,
-        key_field_selector: selector.TextSelector | selector.TemplateSelector,
-    ) -> None:
+    def __init__(self, translation_key: str) -> None:
         super().__init__(
             selector.ObjectSelectorConfig(
                 fields={
                     "key": selector.ObjectSelectorField(
-                        required=True, selector=key_field_selector
+                        required=True, selector=selector.TextSelector()
                     ),
                     "value": selector.ObjectSelectorField(
                         required=True, selector=selector.TemplateSelector()
@@ -243,11 +239,10 @@ def RESOURCE_FLOW_SCHEMA(collapse_auth: bool = True) -> probatio.Schema:
                 options=SectionConfig(collapsed=collapse_auth),
             ),
             probatio.Optional(CONF_HEADERS): _ObjectSelector(
-                translation_key=CONF_HEADERS, key_field_selector=selector.TextSelector()
+                translation_key=CONF_HEADERS
             ),
             probatio.Optional(CONF_PARAMS): _ObjectSelector(
-                translation_key=CONF_PARAMS,
-                key_field_selector=selector.TemplateSelector(),
+                translation_key=CONF_PARAMS
             ),
             probatio.Optional(CONF_PAYLOAD): selector.TemplateSelector(),
             probatio.Required(CONF_SSL_SECTION): section(
