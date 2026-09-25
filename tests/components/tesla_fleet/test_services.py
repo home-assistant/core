@@ -68,7 +68,7 @@ async def test_navigation_request(
 
 @pytest.mark.parametrize(
     ("service_data", "expected_order"),
-    [({}, 0), ({ATTR_ORDER: 3}, 3)],
+    [({}, 1), ({ATTR_ORDER: 3}, 3)],
 )
 async def test_navigation_gps_request(
     hass: HomeAssistant,
