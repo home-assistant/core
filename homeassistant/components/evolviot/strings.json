@@ -1,0 +1,16 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This EvolvIOT account is already configured.",
+      "authorization_denied": "Pairing was denied in the EvolvIOT app.",
+      "authorization_expired": "The pairing session expired. Start pairing again.",
+      "cannot_connect": "Failed to connect to EvolvIOT.",
+      "invalid_auth": "EvolvIOT could not authorize Home Assistant.",
+      "unknown": "Unexpected error."
+    },
+    "progress": {
+      "pair": "In the EvolvIOT app, go to Profile > Third party services > Home Assistant and enter `{user_code}`. Home Assistant will continue automatically after you approve pairing."
+    },
+    "step": {}
+  }
+}
