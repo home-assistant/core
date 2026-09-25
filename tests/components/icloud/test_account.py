@@ -267,3 +267,33 @@ async def test_a_device_without_battery_still_reports_its_location(
     device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
     assert device.location == LOCATION
     assert device.battery_level is None
+
+
+async def test_a_device_gaining_a_battery_is_announced_again(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test that a battery arriving later still creates the battery sensor.
+
+    A device kept for its location alone is added without one, and the sensor
+    platform only builds from the new-device signal. Without announcing the
+    device again the battery it starts reporting would go unnoticed until
+    Home Assistant restarts.
+    """
+    account = await _set_up_with(hass, mock_store, DEVICE_WITHOUT_BATTERY)
+    device = account.devices[DEVICE_WITHOUT_BATTERY["id"]]
+    assert device.battery_level is None
+
+    with patch("homeassistant.components.icloud.account.dispatcher_send") as dispatcher:
+        device.update(
+            {
+                **DEVICE_WITHOUT_BATTERY,
+                "batteryStatus": "NotCharging",
+                "batteryLevel": 0.4,
+            }
+        )
+
+    assert device.battery_level == 40
+    assert account.signal_device_new in [
+        call.args[1] for call in dispatcher.call_args_list
+    ]

@@ -441,6 +441,11 @@ class IcloudDevice:
         self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
         device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
         if self._battery_status != "Unknown" and device_battery_level is not None:
+            if self._battery_level is None:
+                # The battery sensor is created from the new-device signal,
+                # and a device kept for its location alone was added without
+                # one. Nothing else reports that it has a battery now.
+                dispatcher_send(self._account.hass, self._account.signal_device_new)
             self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
