@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import OutdoorSirenService, SHCOutdoorSiren
@@ -18,20 +17,10 @@ from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
 
-# Rarely-changing config state; without this, should_poll=True entities
-# default to HA's 15s interval.
-SCAN_INTERVAL = timedelta(minutes=15)
-
 
 @dataclass(frozen=True, kw_only=True)
 class SHCSelectEntityDescription[_DeviceT: SHCDevice](SelectEntityDescription):
-    """Describes a SHC select entity.
-
-    ``current_option_fn``/``select_option_fn`` capture the per-select-type
-    variation (which device attribute/service to read, which enum to look
-    values up in, which async setter to await) so a single generic entity
-    class (``SHCSelect``) can drive every select type.
-    """
+    """Describes a SHC select entity."""
 
     unique_id_suffix: str
     current_option_fn: Callable[[_DeviceT, Sequence[str] | None], str | None]
