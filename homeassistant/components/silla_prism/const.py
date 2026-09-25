@@ -25,6 +25,6 @@ MIN_CURRENT: Final = 6
 MAX_CURRENT: Final = 32
 
 #: Prism has no last will or heartbeat and publishes a topic only when its
-#: value changes, but mains voltage fluctuates enough that a live Prism is
-#: never silent this long.
+#: value changes, but the grid power reported by its meter changes every few
+#: seconds, so a live Prism is never silent this long.
 OFFLINE_TIMEOUT: Final = timedelta(seconds=150)
