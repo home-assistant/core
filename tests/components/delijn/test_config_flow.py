@@ -12,6 +12,10 @@ from pydelijn import (
 )
 import pytest
 
+from homeassistant.components.delijn.config_flow import (
+    VALIDATION_LATITUDE,
+    VALIDATION_LONGITUDE,
+)
 from homeassistant.components.delijn.const import (
     CONF_NUMBER_OF_DEPARTURES,
     CONF_STOP_NUMBER,
@@ -68,7 +72,10 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "De Lijn"
     assert result["data"] == {CONF_API_KEY: API_KEY}
-    mock_delijn_client.get_stops_near.assert_awaited_once()
+    # Key validation must use the fixed public location, never the home coordinates.
+    mock_delijn_client.get_stops_near.assert_awaited_once_with(
+        VALIDATION_LATITUDE, VALIDATION_LONGITUDE, max_results=1
+    )
 
 
 async def test_user_flow_duplicate_key(

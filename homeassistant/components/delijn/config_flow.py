@@ -55,6 +55,11 @@ from .util import stop_delijn_url, stop_label, stop_map_url, stop_title
 MAX_SEARCH_RESULTS = 10
 PREVIEW_PASSAGES = 3
 
+# Brussels-North station: a fixed public location used to validate the API
+# key so the user's home coordinates are never sent just to test a credential.
+VALIDATION_LATITUDE = 50.8605
+VALIDATION_LONGITUDE = 4.3611
+
 
 class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for De Lijn: the account (API key) only."""
@@ -67,7 +72,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         client = DeLijnClient(api_key, async_get_clientsession(self.hass))
         try:
             await client.get_stops_near(
-                self.hass.config.latitude, self.hass.config.longitude, max_results=1
+                VALIDATION_LATITUDE, VALIDATION_LONGITUDE, max_results=1
             )
         except DeLijnAuthError:
             return {"base": "invalid_auth"}
