@@ -50,6 +50,7 @@ class HomematicipVentilationFan(HomematicipGenericEntity, FanEntity):
             hap,
             device=device,
             channel=channel,
+            channel_real_index=channel,
             post="ventilation",
             is_multi_channel=True,
             feature_id="ventilation",
