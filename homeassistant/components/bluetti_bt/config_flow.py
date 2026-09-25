@@ -10,7 +10,6 @@ from probatio import Schema
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_API_VERSION, CONF_MODEL
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_ENCRYPTION, CONF_SERIAL, DOMAIN
 
@@ -29,10 +28,10 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
-        _LOGGER.debug("Discovered matching device")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
+        _LOGGER.debug("Discovered matching device at %s", discovery_info.address)
         self.context["title_placeholders"] = {"name": discovery_info.name}
         return await self.async_step_user()
 
@@ -103,10 +102,12 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_detect_bluetti_device(self, address: str) -> dict | None:
         _LOGGER.debug("Starting device detection")
 
-        ble_device = bluetooth.async_ble_device_from_address(self.hass, address)
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, address, connectable=True
+        )
 
         if ble_device is None:
-            raise HomeAssistantError("Device not found")
+            return None
 
         result = await recognize_device(
             address,

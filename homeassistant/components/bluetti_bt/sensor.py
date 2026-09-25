@@ -72,7 +72,7 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = details.device_class
         self._attr_state_class = details.state_class
 
-        self._logger = logging.getLogger(f"{DOMAIN}")
+        self._logger = logging.getLogger(f"{__name__}.{coordinator.mac_str}")
 
     @override
     async def async_added_to_hass(self) -> None:
