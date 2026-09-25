@@ -21,6 +21,7 @@ from boschshcpy import (
     SHCMicromoduleRelay,
     SHCMotionDetector,
     SHCMotionDetector2,
+    SHCOutdoorSiren,
     SHCPresenceSimulationSystem,
     SHCShutterContact,
     SHCShutterContact2,
@@ -38,6 +39,7 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    OutdoorSirenService,
     PresenceSimulationConfigurationService,
     ValveTappetService,
 )
@@ -90,6 +92,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "micromodule_shutter_controls",
         "motion_detectors",
         "motion_detectors2",
+        "outdoor_sirens",
         "roomthermostats",
         "shutter_contacts",
         "shutter_contacts2",
@@ -205,6 +208,28 @@ def camera_outdoor_gen2_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.privacymode = privacymode
+    return device
+
+
+def outdoor_siren_device(
+    device_id: str = "hdm:ZigBee:outdoorsiren1",
+    name: str = "Outdoor Siren",
+    sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
+) -> SHCOutdoorSiren:
+    """Build a minimal device double for the outdoor_sirens bucket."""
+    device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "OUTDOOR_SIREN"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    siren_service = create_autospec(OutdoorSirenService, instance=True)
+    siren_service.sound_level = sound_level
+    device.siren = siren_service
     return device
 
 
