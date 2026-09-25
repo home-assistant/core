@@ -46,7 +46,6 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "no_unconfigured_devices"
             return self.async_abort(reason="no_unconfigured_devices")
 
-        # Handle discovery proceed setup
         if user_input is not None:
             await self.async_set_unique_id(
                 self._discovery_info.address, raise_on_progress=False
@@ -59,7 +58,6 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_device"
                 return self.async_abort(reason="unsupported_device")
 
-            # Save entry
             return self.async_create_entry(
                 title=str(data.get(CONF_MODEL)),
                 data=data,
@@ -103,7 +101,6 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_detect_bluetti_device(self, address: str) -> dict | None:
         _LOGGER.debug("Starting device detection")
 
-        # Run model detection
         result = await recognize_device(address, self.hass.loop.create_future)
 
         _LOGGER.debug("Device detection complete")

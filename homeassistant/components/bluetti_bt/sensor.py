@@ -108,6 +108,8 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
             self._logger.debug(
                 "No data available for (%s)", str(self._attr_translation_key)
             )
+            self._attr_native_value = None
+            self.async_write_ha_state()
             return
 
         if (
@@ -125,11 +127,8 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
             )
             return
 
-        # Different for enum and numeric
         if isinstance(response_data, Enum):
-            # Enum
             self._attr_native_value = response_data.name
         else:
-            # Numeric
             self._attr_native_value = response_data
         self.async_write_ha_state()
