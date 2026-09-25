@@ -361,6 +361,42 @@ async def test_motion_detector2_pet_immunity(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(tamper_protection_enabled=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_tamper_protection(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector 2's tamper protection setting is exposed and controllable."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    state = hass.states.get("switch.motion_detector_sabotage_detection")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        blocking=True,
+    )
+    assert device.tamper_protection_enabled is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.motion_detector_sabotage_detection"},
+        blocking=True,
+    )
+    assert device.tamper_protection_enabled is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [
         {
             "twinguards": [

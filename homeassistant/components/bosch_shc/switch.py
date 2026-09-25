@@ -144,6 +144,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "tamper_protection_enabled": SHCSwitchEntityDescription(
+        key="tamper_protection_enabled",
+        translation_key="tamper_protection_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="tamper_protection_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
 }
 
 
@@ -301,6 +310,18 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["pet_immunity_enabled"],
             unique_id_suffix="pet_immunity",
+        )
+        for switch in session.device_helper.motion_detectors2
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["tamper_protection_enabled"],
+            unique_id_suffix="tamper_protection",
         )
         for switch in session.device_helper.motion_detectors2
     )

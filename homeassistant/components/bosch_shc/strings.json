@@ -115,6 +115,9 @@
       },
       "routing": {
         "name": "Range extension"
+      },
+      "tamper_protection_enabled": {
+        "name": "Sabotage detection"
       }
     },
     "valve": {
