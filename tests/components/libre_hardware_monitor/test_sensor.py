@@ -141,7 +141,7 @@ async def test_sensor_invalid_auth_during_startup(
         (
             "gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput",
             "gpu-nvidia-0-throughput-1",
-            "792150000.0",
+            "811161600.0",
             "792150.0",
         ),
     ],

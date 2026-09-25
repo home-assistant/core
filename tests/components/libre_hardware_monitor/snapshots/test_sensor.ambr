@@ -1376,7 +1376,7 @@
         'suggested_display_precision': 1,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+        'suggested_unit_of_measurement': <UnitOfDataRate.KIBIBYTES_PER_SECOND: 'KiB/s'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
@@ -1388,7 +1388,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test_entry_id_gpu-nvidia-0-throughput-1',
-    'unit_of_measurement': <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+    'unit_of_measurement': <UnitOfDataRate.KIBIBYTES_PER_SECOND: 'KiB/s'>,
   })
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput-state]
@@ -1396,17 +1396,17 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-      'max_value': 374999.0,
-      'min_value': 1.0,
+      'max_value': 366209.9609375,
+      'min_value': 0.9765625,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KIBIBYTES_PER_SECOND: 'KiB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '292149.2',
+    'state': '285301.953125',
   })
 # ---
 # name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_video_engine_load-entry]
@@ -1845,17 +1845,17 @@
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': 374999.0,
-        'min_value': 1.0,
+        'max_value': 366209.9609375,
+        'min_value': 0.9765625,
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KIBIBYTES_PER_SECOND: 'KiB/s'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '292149.2',
+      'state': '285301.953125',
     }),
   ])
 # ---
@@ -2239,17 +2239,17 @@
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU PCIe Tx Throughput',
-        'max_value': 374999.0,
-        'min_value': 1.0,
+        'max_value': 366209.9609375,
+        'min_value': 0.9765625,
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KILOBYTES_PER_SECOND: 'kB/s'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.KIBIBYTES_PER_SECOND: 'KiB/s'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '292149.2',
+      'state': '285301.953125',
     }),
   ])
 # ---

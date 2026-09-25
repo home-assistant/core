@@ -19,7 +19,7 @@ def async_custom_equivalent_units(
 
     return {
         registry_entry.entity_id: {
-            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KILOBYTES_PER_SECOND
+            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KIBIBYTES_PER_SECOND
         }
         for config_entry in hass.config_entries.async_entries(DOMAIN)
         for registry_entry in er.async_entries_for_config_entry(
